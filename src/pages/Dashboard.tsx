@@ -3,12 +3,15 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus, MessageSquare, Settings, BarChart3, Code, Users, Bot, Palette, Webhook } from "lucide-react";
+import { Plus, MessageSquare, Settings, BarChart3, Code, Users, Bot, Palette, Webhook, Inbox, FileText } from "lucide-react";
 import { AgentList } from "@/components/AgentList";
 import { CreateAgentDialog } from "@/components/CreateAgentDialog";
 import { AdvancedChatPreview } from "@/components/AdvancedChatPreview";
 import { AgentBuilder } from "@/components/AgentBuilder";
 import { UserManagement } from "@/components/UserManagement";
+import { ConversationManager } from "@/components/ConversationManager";
+import { Reports } from "@/components/Reports";
+import { Settings as SettingsComponent } from "@/components/Settings";
 
 const Dashboard = () => {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
@@ -28,7 +31,7 @@ const Dashboard = () => {
                   <h1 className="text-2xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">
                     AgentConnect
                   </h1>
-                  <p className="text-sm text-gray-600">Next-generation chat platform</p>
+                  <p className="text-sm text-gray-600">Enterprise Chat Platform</p>
                 </div>
               </div>
             </div>
@@ -102,29 +105,47 @@ const Dashboard = () => {
           </div>
 
           {/* Enhanced Tabs */}
-          <Tabs defaultValue="agents" className="space-y-6">
-            <TabsList className="bg-white/50 backdrop-blur-sm border border-white/20 shadow-sm p-1">
+          <Tabs defaultValue="conversations" className="space-y-6">
+            <TabsList className="bg-white/50 backdrop-blur-sm border border-white/20 shadow-sm p-1 grid grid-cols-7">
+              <TabsTrigger value="conversations" className="flex items-center gap-2 data-[state=active]:bg-white data-[state=active]:shadow-sm">
+                <Inbox className="h-4 w-4" />
+                Conversations
+              </TabsTrigger>
               <TabsTrigger value="agents" className="flex items-center gap-2 data-[state=active]:bg-white data-[state=active]:shadow-sm">
                 <Bot className="h-4 w-4" />
                 Agents
               </TabsTrigger>
               <TabsTrigger value="builder" className="flex items-center gap-2 data-[state=active]:bg-white data-[state=active]:shadow-sm">
                 <Settings className="h-4 w-4" />
-                Agent Builder
+                Builder
               </TabsTrigger>
               <TabsTrigger value="preview" className="flex items-center gap-2 data-[state=active]:bg-white data-[state=active]:shadow-sm">
                 <Palette className="h-4 w-4" />
-                Widget Designer
+                Designer
               </TabsTrigger>
               <TabsTrigger value="users" className="flex items-center gap-2 data-[state=active]:bg-white data-[state=active]:shadow-sm">
                 <Users className="h-4 w-4" />
                 Team
               </TabsTrigger>
-              <TabsTrigger value="analytics" className="flex items-center gap-2 data-[state=active]:bg-white data-[state=active]:shadow-sm">
+              <TabsTrigger value="reports" className="flex items-center gap-2 data-[state=active]:bg-white data-[state=active]:shadow-sm">
                 <BarChart3 className="h-4 w-4" />
-                Analytics
+                Reports
+              </TabsTrigger>
+              <TabsTrigger value="settings" className="flex items-center gap-2 data-[state=active]:bg-white data-[state=active]:shadow-sm">
+                <FileText className="h-4 w-4" />
+                Settings
               </TabsTrigger>
             </TabsList>
+
+            <TabsContent value="conversations" className="space-y-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="text-2xl font-bold text-gray-900">Live Conversations</h2>
+                  <p className="text-gray-600">Manage customer conversations in real-time</p>
+                </div>
+              </div>
+              <ConversationManager />
+            </TabsContent>
 
             <TabsContent value="agents" className="space-y-6">
               <div className="flex items-center justify-between">
@@ -166,27 +187,12 @@ const Dashboard = () => {
               <UserManagement />
             </TabsContent>
 
-            <TabsContent value="analytics" className="space-y-6">
-              <Card className="bg-white/50 backdrop-blur-sm border border-white/20">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <BarChart3 className="h-6 w-6 text-purple-600" />
-                    Analytics & Performance
-                  </CardTitle>
-                  <CardDescription>
-                    Comprehensive insights into your agent performance and user engagement
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-center py-12">
-                    <BarChart3 className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-                    <h3 className="text-xl font-semibold text-gray-700 mb-2">Advanced Analytics Coming Soon</h3>
-                    <p className="text-gray-600 max-w-md mx-auto">
-                      Get detailed insights into conversation metrics, user satisfaction, agent performance, and more.
-                    </p>
-                  </div>
-                </CardContent>
-              </Card>
+            <TabsContent value="reports" className="space-y-6">
+              <Reports />
+            </TabsContent>
+
+            <TabsContent value="settings" className="space-y-6">
+              <SettingsComponent />
             </TabsContent>
           </Tabs>
         </div>
