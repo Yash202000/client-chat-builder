@@ -84,7 +84,7 @@ export const ConversationManager = () => {
       if (ws.current) {
         ws.current.close();
       }
-      ws.current = new WebSocket(`ws://localhost:8000/api/v1/conversations/ws/${companyId}/${selectedAgentId}/test_session`);
+      ws.current = new WebSocket(`ws://localhost:8000/ws/conversations/ws/${companyId}/${selectedAgentId}/test_session`);
 
       ws.current.onopen = () => {
         console.log("WebSocket connected");

@@ -191,15 +191,7 @@ export const AgentList = () => {
   };
 
   const handleCopyEmbedCode = (agentId: number, agentName: string) => {
-    const embedCode = `<script>
-  (function() {
-    var script = document.createElement('script');
-    script.src = 'http://localhost:8080/widget.js'; // Assuming frontend runs on 8080
-    script.setAttribute('data-agent-id', '${agentId}');
-    script.setAttribute('data-company-id', '${companyId}'); // Add company ID
-    document.head.appendChild(script);
-  })();
-</script>`;
+    const embedCode = `<script id="agent-connect-widget-script" data-agent-id="${agentId}" data-company-id="${companyId}" src="http://localhost:8080/widget.js"></script>`;
     
     navigator.clipboard.writeText(embedCode);
     toast({
