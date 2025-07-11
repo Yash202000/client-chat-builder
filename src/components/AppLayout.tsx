@@ -18,7 +18,8 @@ import {
   Palette,
   Menu,
   X,
-  Key
+  Key,
+  BookOpen
 } from "lucide-react";
 import { CreateAgentDialog } from "@/components/CreateAgentDialog";
 
@@ -31,6 +32,7 @@ const sidebarItems = [
   { title: "Reports", url: "/dashboard/reports", icon: BarChart3 },
   { title: "Settings", url: "/dashboard/settings", icon: FileText },
   { title: "API Vault", url: "/dashboard/vault", icon: Key },
+  { title: "Knowledge Bases", url: "/dashboard/knowledge-bases", icon: BookOpen },
 ];
 
 const AppLayout = () => {

@@ -216,7 +216,8 @@ export const AgentBuilder = ({ agent, onSave, onCancel }: AgentBuilderProps) => 
   };
 
   useEffect(() => {
-    setAgentConfig({
+    setAgentConfig(prevConfig => ({
+      ...prevConfig,
       name: agent.name,
       welcome_message: agent.welcome_message,
       prompt: agent.prompt,
@@ -226,7 +227,7 @@ export const AgentBuilder = ({ agent, onSave, onCancel }: AgentBuilderProps) => 
       credential_id: agent.credential_id,
       is_active: agent.is_active !== undefined ? agent.is_active : true,
       knowledge_base_id: agent.knowledge_base_id,
-    });
+    }));
   }, [agent]);
 
   const addWebhook = () => {
