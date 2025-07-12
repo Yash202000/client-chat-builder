@@ -49,6 +49,7 @@ export const ConversationManager = () => {
   const [message, setMessage] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [sessionId, setSessionId] = useState<string | null>(null);
   const ws = useRef<WebSocket | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -66,9 +67,9 @@ export const ConversationManager = () => {
     return response.json();
   }});
 
-  const { data: chatMessages, isLoading: isLoadingMessages, isError: isErrorMessages } = useQuery<ChatMessage[]>({ queryKey: ['chatMessages', selectedAgentId, "test_session", companyId], queryFn: async () => {
-    if (!selectedAgentId) return [];
-    const response = await fetch(`http://localhost:8000/api/v1/conversations/${selectedAgentId}/sessions/test_session/messages`, {
+  const { data: chatMessages, isLoading: isLoadingMessages, isError: isErrorMessages } = useQuery<ChatMessage[]>({ queryKey: ['chatMessages', selectedAgentId, sessionId, companyId], queryFn: async () => {
+    if (!selectedAgentId || !sessionId) return [];
+    const response = await fetch(`http://localhost:8000/api/v1/conversations/${selectedAgentId}/sessions/${sessionId}/messages`, {
       headers: {
         "X-Company-ID": companyId.toString(),
       },
@@ -80,11 +81,11 @@ export const ConversationManager = () => {
   }, enabled: !!selectedAgentId});
 
   useEffect(() => {
-    if (selectedAgentId) {
+    if (selectedAgentId && sessionId) {
       if (ws.current) {
         ws.current.close();
       }
-      ws.current = new WebSocket(`ws://localhost:8000/ws/conversations/ws/${companyId}/${selectedAgentId}/test_session`);
+      ws.current = new WebSocket(`ws://localhost:8000/ws/conversations/ws/${companyId}/${selectedAgentId}/${sessionId}`);
 
       ws.current.onopen = () => {
         console.log("WebSocket connected");
@@ -92,7 +93,7 @@ export const ConversationManager = () => {
 
       ws.current.onmessage = (event) => {
         // Invalidate the chatMessages query to refetch the latest messages
-        queryClient.invalidateQueries(['chatMessages', selectedAgentId, "test_session"]);
+        queryClient.invalidateQueries(['chatMessages', selectedAgentId, sessionId]);
       };
 
       ws.current.onclose = () => {
@@ -109,17 +110,17 @@ export const ConversationManager = () => {
         ws.current.close();
       }
     };
-  }, [selectedAgentId, queryClient]);
+  }, [selectedAgentId, sessionId, queryClient]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [chatMessages]);
 
   const sendMessage = () => {
-    if (ws.current && message.trim() && selectedAgentId) {
+    if (ws.current && message.trim() && selectedAgentId && sessionId) {
       ws.current.send(message);
       // Invalidate the chatMessages query to refetch the latest messages
-      queryClient.invalidateQueries(['chatMessages', selectedAgentId, "test_session"]);
+      queryClient.invalidateQueries(['chatMessages', selectedAgentId, sessionId]);
       setMessage("");
     }
   };
@@ -188,7 +189,10 @@ export const ConversationManager = () => {
               className={`p-4 border-b cursor-pointer hover:bg-gradient-to-r hover:from-blue-50 hover:to-purple-50 transition-all duration-200 ${
                 selectedAgentId === agent.id ? 'bg-gradient-to-r from-blue-100 to-purple-100 border-l-4 border-l-blue-500 shadow-md' : ''
               }`}
-              onClick={() => setSelectedAgentId(agent.id)}
+              onClick={() => {
+                setSelectedAgentId(agent.id);
+                setSessionId(crypto.randomUUID());
+              }}
             >
               <div className="flex items-start gap-3">
                 <div className="relative">
@@ -282,9 +286,12 @@ export const ConversationManager = () => {
                     className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg shadow-md ${
                       msg.sender === "user"
                         ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white'
+                        : msg.sender === "tool"
+                        ? 'bg-purple-100 border border-purple-300 text-purple-800'
                         : 'bg-white border border-gray-200'
                     }`}
                   >
+                    {msg.sender === "tool" && <p className="text-xs font-semibold mb-1">Tool Output:</p>}
                     <p className="text-sm">{msg.message}</p>
                     <p className={`text-xs mt-1 ${
                       msg.sender === "user" ? 'text-blue-100' : 'text-gray-500'

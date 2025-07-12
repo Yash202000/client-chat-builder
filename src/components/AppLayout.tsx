@@ -32,7 +32,8 @@ const sidebarItems = [
   { title: "Reports", url: "/dashboard/reports", icon: BarChart3 },
   { title: "Settings", url: "/dashboard/settings", icon: FileText },
   { title: "API Vault", url: "/dashboard/vault", icon: Key },
-  { title: "Knowledge Bases", url: "/dashboard/knowledge-bases", icon: BookOpen },
+  { title: "Knowledge Bases", url: "/dashboard/knowledge-base/manage", icon: BookOpen },
+  { title: "Tools", url: "/dashboard/tools", icon: Zap },
 ];
 
 const AppLayout = () => {

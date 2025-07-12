@@ -1,5 +1,6 @@
 
 import { useState, useEffect } from "react";
+import { ResourceSelector } from './ResourceSelector';
 import { useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Agent, Credential, Webhook } from "@/types";
@@ -51,6 +52,7 @@ export const AgentBuilder = ({ agent, onSave, onCancel }: AgentBuilderProps) => 
         credential_id: undefined,
         is_active: true,
         knowledge_base_id: undefined,
+        tool_ids: [],
       };
     }
     return {
@@ -63,6 +65,7 @@ export const AgentBuilder = ({ agent, onSave, onCancel }: AgentBuilderProps) => 
       credential_id: agent.credential_id,
       is_active: agent.is_active !== undefined ? agent.is_active : true,
       knowledge_base_id: agent.knowledge_base_id,
+      tool_ids: agent.tool_ids || [],
     };
   });
 
@@ -103,6 +106,18 @@ export const AgentBuilder = ({ agent, onSave, onCancel }: AgentBuilderProps) => 
     });
     if (!response.ok) {
       throw new Error("Failed to fetch knowledge bases");
+    }
+    return response.json();
+  }});
+
+  const { data: tools, isLoading: isLoadingTools } = useQuery<Tool[]>({ queryKey: ['tools', companyId], queryFn: async () => {
+    const response = await fetch(`http://localhost:8000/api/v1/tools/`, {
+      headers: {
+        "X-Company-ID": companyId.toString(),
+      },
+    });
+    if (!response.ok) {
+      throw new Error("Failed to fetch tools");
     }
     return response.json();
   }});
@@ -212,6 +227,7 @@ export const AgentBuilder = ({ agent, onSave, onCancel }: AgentBuilderProps) => 
       ...agentConfig,
       credential_id: agentConfig.credential_id === 0 ? undefined : agentConfig.credential_id,
       knowledge_base_id: agentConfig.knowledge_base_id === 0 ? undefined : agentConfig.knowledge_base_id,
+      tool_ids: agentConfig.tool_ids,
     } as Agent);
   };
 
@@ -227,6 +243,7 @@ export const AgentBuilder = ({ agent, onSave, onCancel }: AgentBuilderProps) => 
       credential_id: agent.credential_id,
       is_active: agent.is_active !== undefined ? agent.is_active : true,
       knowledge_base_id: agent.knowledge_base_id,
+      tool_ids: agent.tool_ids || [],
     }));
   }, [agent]);
 
@@ -269,12 +286,13 @@ export const AgentBuilder = ({ agent, onSave, onCancel }: AgentBuilderProps) => 
         </CardHeader>
         <CardContent>
           <Tabs defaultValue="basic" className="w-full">
-            <TabsList className="grid w-full grid-cols-4">
+            <TabsList className="grid w-full grid-cols-6">
               <TabsTrigger value="basic">Basic Info</TabsTrigger>
               <TabsTrigger value="webhooks">Webhooks</TabsTrigger>
               <TabsTrigger value="integrations">Integrations</TabsTrigger>
               <TabsTrigger value="credentials">Credentials</TabsTrigger>
               <TabsTrigger value="knowledge-base">Knowledge Base</TabsTrigger>
+              <TabsTrigger value="tools">Tools</TabsTrigger>
             </TabsList>
 
             <TabsContent value="basic" className="space-y-6">
@@ -539,67 +557,53 @@ export const AgentBuilder = ({ agent, onSave, onCancel }: AgentBuilderProps) => 
                 })}
               </div>
             </TabsContent>
-
-            <TabsContent value="credentials" className="space-y-6">
-              <h3 className="text-lg font-semibold">Credential Management</h3>
-              <div className="space-y-4">
-                <div>
-                  <Label htmlFor="credential">Select Credential</Label>
-                  <select
-                    id="credential"
-                    value={agentConfig.credential_id || ""}
-                    onChange={(e) => setAgentConfig({ ...agentConfig, credential_id: parseInt(e.target.value) || undefined })}
-                    className="w-full mt-1 p-2 border rounded-md"
-                  >
-                    <option value="">No Credential</option>
-                    {isLoadingCredentials ? (
-                      <option disabled>Loading credentials...</option>
-                    ) : credentials && credentials.length > 0 ? (
-                      credentials.map((cred) => (
-                        <option key={cred.id} value={cred.id}>
-                          {cred.name}
-                        </option>
-                      ))
-                    ) : (
-                      <option disabled>No credentials available</option>
-                    )}
-                  </select>
-                </div>
-                <Button variant="outline" onClick={() => navigate("/dashboard/vault")}>
-                  Manage Credentials
-                </Button>
-              </div>
+            
+            <TabsContent value="tools" className="space-y-6">
+              <h3 className="text-lg font-semibold">Tool Selection</h3>
+              <ResourceSelector
+                resources={tools || []}
+                selectedIds={agentConfig.tool_ids || []}
+                onSelect={(ids) => setAgentConfig({ ...agentConfig, tool_ids: ids })}
+                title="Select Tools"
+                triggerButtonText="Browse Tools"
+                isLoading={isLoadingTools}
+                allowMultiple
+              />
+              <Button variant="outline" onClick={() => navigate("/dashboard/tools")}>
+                Manage Tools
+              </Button>
             </TabsContent>
 
             <TabsContent value="knowledge-base" className="space-y-6">
-              <h3 className="text-lg font-semibold">Knowledge Base Integration</h3>
-              <div className="space-y-4">
-                <div>
-                  <Label htmlFor="knowledgeBase">Select Knowledge Base</Label>
-                  <select
-                    id="knowledgeBase"
-                    value={agentConfig.knowledge_base_id || ""}
-                    onChange={(e) => setAgentConfig({ ...agentConfig, knowledge_base_id: parseInt(e.target.value) || undefined })}
-                    className="w-full mt-1 p-2 border rounded-md"
-                  >
-                    <option value="">No Knowledge Base</option>
-                    {isLoadingKnowledgeBases ? (
-                      <option disabled>Loading knowledge bases...</option>
-                    ) : knowledgeBases && knowledgeBases.length > 0 ? (
-                      knowledgeBases.map((kb) => (
-                        <option key={kb.id} value={kb.id}>
-                          {kb.name}
-                        </option>
-                      ))
-                    ) : (
-                      <option disabled>No knowledge bases available</option>
-                    )}
-                  </select>
-                </div>
-                <Button variant="outline" onClick={() => alert("Navigate to Knowledge Base Management Page")}>
-                  Manage Knowledge Bases
-                </Button>
-              </div>
+              <h3 className="text-lg font-semibold">Knowledge Base</h3>
+              <ResourceSelector
+                resources={knowledgeBases || []}
+                selectedIds={agentConfig.knowledge_base_id ? [agentConfig.knowledge_base_id] : []}
+                onSelect={(ids) => setAgentConfig({ ...agentConfig, knowledge_base_id: ids[0] })}
+                title="Select Knowledge Base"
+                triggerButtonText="Browse Knowledge Bases"
+                isLoading={isLoadingKnowledgeBases}
+                allowMultiple={false}
+              />
+              <Button variant="outline" onClick={() => navigate("/dashboard/knowledge-base/manage")}>
+                Manage Knowledge Bases
+              </Button>
+            </TabsContent>
+
+            <TabsContent value="credentials" className="space-y-6">
+              <h3 className="text-lg font-semibold">Credential Management</h3>
+              <ResourceSelector
+                resources={credentials || []}
+                selectedIds={agentConfig.credential_id ? [agentConfig.credential_id] : []}
+                onSelect={(ids) => setAgentConfig({ ...agentConfig, credential_id: ids[0] })}
+                title="Select Credential"
+                triggerButtonText="Browse Credentials"
+                isLoading={isLoadingCredentials}
+                allowMultiple={false}
+              />
+              <Button variant="outline" onClick={() => navigate("/dashboard/vault")}>
+                Manage Credentials
+              </Button>
             </TabsContent>
           </Tabs>
         </CardContent>

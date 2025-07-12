@@ -14,7 +14,9 @@ import TeamPage from "./pages/TeamPage";
 import ReportsPage from "./pages/ReportsPage";
 import SettingsPage from "./pages/SettingsPage";
 import VaultPage from "./pages/VaultPage";
-import KnowledgeBasePage from "./pages/KnowledgeBasePage";
+import KnowledgeBaseListPage from "./pages/KnowledgeBaseListPage";
+import ToolManagementPage from "./pages/ToolManagementPage";
+import KnowledgeBaseManagementPage from "./pages/KnowledgeBaseManagementPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -32,12 +34,15 @@ const App = () => (
             <Route path="conversations" element={<ConversationsPage />} />
             <Route path="agents" element={<AgentsPage />} />
             <Route path="builder" element={<BuilderPage />} />
+            <Route path="builder/:agentId" element={<BuilderPage />} />
             <Route path="designer" element={<DesignerPage />} />
             <Route path="team" element={<TeamPage />} />
             <Route path="reports" element={<ReportsPage />} />
             <Route path="settings" element={<SettingsPage />} />
             <Route path="vault" element={<VaultPage />} />
-            <Route path="knowledge-bases" element={<KnowledgeBasePage />} />
+            <Route path="knowledge-base" element={<KnowledgeBaseListPage />} />
+            <Route path="tools" element={<ToolManagementPage />} />
+            <Route path="knowledge-base/manage" element={<KnowledgeBaseManagementPage />} />
           </Route>
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />

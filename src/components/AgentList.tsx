@@ -1,5 +1,6 @@
 
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -13,14 +14,13 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { toast } from "@/hooks/use-toast";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Agent, Credential } from "@/types";
+import { Agent } from "@/types";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { AgentBuilder } from "./AgentBuilder";
+import { Select, SelectContent, SelectItem, SelectValue } from "@/components/ui/select";
 import { ConversationDetail } from "./ConversationDetail";
 
 interface ChatMessage {
@@ -30,22 +30,9 @@ interface ChatMessage {
   timestamp: string;
 }
 
-interface Agent {
-  id: number;
-  name: string;
-  welcome_message: string;
-  prompt: string;
-  personality?: string;
-  language?: string;
-  timezone?: string;
-  credential_id?: number;
-  is_active?: boolean;
-}
-
 export const AgentList = () => {
   const queryClient = useQueryClient();
-  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-  const [currentAgent, setCurrentAgent] = useState<Agent | null>(null);
+  const navigate = useNavigate();
   const [selectedAgent, setSelectedAgent] = useState<Agent | null>(null);
   const [selectedSessionId, setSelectedSessionId] = useState<string | null>(null);
   console.log("AgentList Render - selectedAgent:", selectedAgent, "selectedSessionId:", selectedSessionId);
@@ -97,18 +84,6 @@ export const AgentList = () => {
     enabled: !!selectedAgent && !!selectedSessionId, // Only run this query if both agent and session are selected
   });
 
-  const { data: credentials, isLoading: isLoadingCredentials } = useQuery<Credential[]>({ queryKey: ['credentials', companyId], queryFn: async () => {
-    const response = await fetch(`http://localhost:8000/api/v1/credentials/`, {
-      headers: {
-        "X-Company-ID": companyId.toString(),
-      },
-    });
-    if (!response.ok) {
-      throw new Error("Failed to fetch credentials");
-    }
-    return response.json();
-  }});
-
   const deleteAgentMutation = useMutation({
     mutationFn: async (agentId: number) => {
       const response = await fetch(`http://localhost:8000/api/v1/agents/${agentId}`, {
@@ -138,56 +113,8 @@ export const AgentList = () => {
     },
   });
 
-  const updateAgentMutation = useMutation({
-    mutationFn: async (updatedAgent: Agent) => {
-      const response = await fetch(`http://localhost:8000/api/v1/agents/${updatedAgent.id}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          "X-Company-ID": companyId.toString(),
-        },
-        body: JSON.stringify(updatedAgent),
-      });
-      if (!response.ok) {
-        throw new Error("Failed to update agent");
-      }
-      return response.json();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['agents'] });
-      toast({
-        title: "Agent updated successfully!",
-        description: "The agent details have been updated.",
-      });
-      setIsEditDialogOpen(false);
-      setCurrentAgent(null);
-    },
-    onError: (error) => {
-      toast({
-        title: "Failed to update agent",
-        description: error.message || "An unexpected error occurred.",
-        variant: "destructive",
-      });
-    },
-  });
-
-  const handleEditClick = (agent: Agent) => {
-    setCurrentAgent(agent);
-    setIsEditDialogOpen(true);
-  };
-
-  const handleEditSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (currentAgent) {
-      updateAgentMutation.mutate({
-        ...currentAgent,
-        credential_id: currentAgent.credential_id === 0 ? undefined : currentAgent.credential_id, // Ensure 0 is treated as undefined
-      });
-    }
-  };
-
-  const handleSelectChange = (value: string) => {
-    setCurrentAgent(prev => prev ? { ...prev, credential_id: value === "null" ? undefined : parseInt(value) } : null);
+  const handleEditClick = (agentId: number) => {
+    navigate(`/dashboard/builder/${agentId}`);
   };
 
   const handleCopyEmbedCode = (agentId: number, agentName: string) => {
@@ -262,7 +189,7 @@ export const AgentList = () => {
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
-                      <DropdownMenuItem onClick={() => handleEditClick(agent)}>
+                      <DropdownMenuItem onClick={() => handleEditClick(agent.id)}>
                         <Edit className="h-4 w-4 mr-2" />
                         Edit Agent
                       </DropdownMenuItem>
@@ -308,33 +235,6 @@ export const AgentList = () => {
           </Card>
         ))
       )}
-
-      {/* Edit Agent Dialog */}
-      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent className="sm:max-w-[600px] max-h-[80vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Edit Chat Agent</DialogTitle>
-            <DialogDescription>
-              Modify the details of your chat agent.
-            </DialogDescription>
-          </DialogHeader>
-          
-          {currentAgent && (
-            <AgentBuilder
-              agent={currentAgent}
-              onSave={() => {
-                queryClient.invalidateQueries({ queryKey: ['agents'] });
-                setIsEditDialogOpen(false);
-                setCurrentAgent(null);
-              }}
-              onCancel={() => {
-                setIsEditDialogOpen(false);
-                setCurrentAgent(null);
-              }}
-            />
-          )}
-        </DialogContent>
-      </Dialog>
     </div>
   );
 };
