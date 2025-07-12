@@ -49,6 +49,8 @@ export const AgentBuilder = ({ agent, onSave, onCancel }: AgentBuilderProps) => 
         personality: "helpful",
         language: "en",
         timezone: "UTC",
+        response_style: "",
+        instructions: "",
         credential_id: undefined,
         is_active: true,
         knowledge_base_id: undefined,
@@ -240,6 +242,8 @@ export const AgentBuilder = ({ agent, onSave, onCancel }: AgentBuilderProps) => 
       personality: agent.personality || "helpful",
       language: agent.language || "en",
       timezone: agent.timezone || "UTC",
+      response_style: agent.response_style || "",
+      instructions: agent.instructions || "",
       credential_id: agent.credential_id,
       is_active: agent.is_active !== undefined ? agent.is_active : true,
       knowledge_base_id: agent.knowledge_base_id,
@@ -394,6 +398,30 @@ export const AgentBuilder = ({ agent, onSave, onCancel }: AgentBuilderProps) => 
                       onChange={(e) => setAgentConfig({...agentConfig, prompt: e.target.value})}
                       className="mt-1"
                       rows={5}
+                    />
+                  </div>
+
+                  <div>
+                    <Label htmlFor="responseStyle">Response Style</Label>
+                    <Textarea
+                      id="responseStyle"
+                      value={agentConfig.response_style}
+                      onChange={(e) => setAgentConfig({...agentConfig, response_style: e.target.value})}
+                      className="mt-1"
+                      rows={3}
+                      placeholder="e.g., concise, verbose, direct, empathetic"
+                    />
+                  </div>
+
+                  <div>
+                    <Label htmlFor="instructions">Specific Instructions</Label>
+                    <Textarea
+                      id="instructions"
+                      value={agentConfig.instructions}
+                      onChange={(e) => setAgentConfig({...agentConfig, instructions: e.target.value})}
+                      className="mt-1"
+                      rows={5}
+                      placeholder="e.g., Always ask for confirmation before performing an action. Never use slang."
                     />
                   </div>
                 </div>
