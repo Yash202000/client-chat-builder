@@ -387,56 +387,33 @@ export const AgentBuilder = ({ agent, onSave, onCancel }: AgentBuilderProps) => 
                       onChange={(e) => setAgentConfig({...agentConfig, welcome_message: e.target.value})}
                       className="mt-1"
                       rows={3}
-                    />
-                  </div>
-
-                  <div>
-                    <Label htmlFor="prompt">Prompt</Label>
-                    <Textarea
-                      id="prompt"
-                      value={agentConfig.prompt}
-                      onChange={(e) => setAgentConfig({...agentConfig, prompt: e.target.value})}
-                      className="mt-1"
-                      rows={5}
-                    />
-                  </div>
-
-                  <div>
-                    <Label htmlFor="responseStyle">Response Style</Label>
-                    <Textarea
-                      id="responseStyle"
-                      value={agentConfig.response_style}
-                      onChange={(e) => setAgentConfig({...agentConfig, response_style: e.target.value})}
-                      className="mt-1"
-                      rows={3}
-                      placeholder="e.g., concise, verbose, direct, empathetic"
-                    />
-                  </div>
-
-                  <div>
-                    <Label htmlFor="instructions">Specific Instructions</Label>
-                    <Textarea
-                      id="instructions"
-                      value={agentConfig.instructions}
-                      onChange={(e) => setAgentConfig({...agentConfig, instructions: e.target.value})}
-                      className="mt-1"
-                      rows={5}
-                      placeholder="e.g., Always ask for confirmation before performing an action. Never use slang."
+                      placeholder="e.g., Hello! How can I help you today?"
                     />
                   </div>
                 </div>
               </div>
-              <div className="flex justify-end gap-2 mt-6">
-                <Button type="button" variant="outline" onClick={onCancel}>
-                  Cancel
-                </Button>
-                <Button type="button" onClick={handleSave} disabled={updateAgentMutation.isPending}>
-                  {updateAgentMutation.isPending ? "Saving..." : "Save Changes"}
-                </Button>
-              </div>
             </TabsContent>
 
-            
+            <TabsContent value="prompt" className="space-y-4">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>System Prompt</CardTitle>
+                    <CardDescription>
+                      Define the agent's core identity, instructions, and constraints. This is the most important part of the agent's configuration.
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <Textarea
+                      id="prompt"
+                      value={agentConfig.prompt}
+                      onChange={(e) => setAgentConfig({...agentConfig, prompt: e.target.value})}
+                      className="mt-1 font-mono"
+                      rows={15}
+                      placeholder="e.g., You are a helpful AI assistant..."
+                    />
+                  </CardContent>
+                </Card>
+            </TabsContent>
 
             <TabsContent value="webhooks" className="space-y-6">
               <div className="flex items-center justify-between">
@@ -634,6 +611,14 @@ export const AgentBuilder = ({ agent, onSave, onCancel }: AgentBuilderProps) => 
               </Button>
             </TabsContent>
           </Tabs>
+          <div className="flex justify-end gap-2 mt-6">
+            <Button type="button" variant="outline" onClick={onCancel}>
+              Cancel
+            </Button>
+            <Button type="button" onClick={handleSave} disabled={updateAgentMutation.isPending}>
+              {updateAgentMutation.isPending ? "Saving..." : "Save Changes"}
+            </Button>
+          </div>
         </CardContent>
       </Card>
     </div>
