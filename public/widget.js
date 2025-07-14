@@ -109,16 +109,17 @@
             return;
         }
         sessionId = generateSessionId();
-        ws = new WebSocket(`${backendUrl}/ws/conversations/ws/${companyId}/${agentId}/${sessionId}`);
+        // Corrected WebSocket URL
+        ws = new WebSocket(`${backendUrl}/ws/${companyId}/${agentId}/${sessionId}`);
 
         ws.onopen = () => {
             console.log('WebSocket connected');
-            addMessage('Agent', 'Hello! How can I help you today?', 'agent');
         };
 
         ws.onmessage = (event) => {
-            const data = JSON.parse(event.data);
-            addMessage(data.sender === 'user' ? 'You' : 'Agent', data.message, data.sender);
+            // The agent's response is now a direct string
+            const messageText = event.data;
+            addMessage('Agent', messageText, 'agent');
         };
 
         ws.onclose = () => {

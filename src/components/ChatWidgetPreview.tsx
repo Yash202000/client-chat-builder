@@ -4,7 +4,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { MessageSquare, Send, Minimize2, X } from "lucide-react";
+import { MessageSquare, Send, Minimize2, X, User } from "lucide-react";
+import { toast } from "@/hooks/use-toast";
 
 interface ChatMessage {
   id: number;
@@ -28,25 +29,30 @@ export const ChatWidgetPreview = () => {
   useEffect(() => {
     if (isExpanded) {
       // Establish WebSocket connection
-      ws.current = new WebSocket(`ws://localhost:8000/api/v1/chat/ws/${companyId}/${agentId}/${sessionId}`);
+      ws.current = new WebSocket(`ws://localhost:8000/ws/conversations/${companyId}/${agentId}/${sessionId}`);
 
       ws.current.onopen = () => {
         console.log("WebSocket connected");
-        setMessages([{ id: 1, text: "Hi! How can I help you today?", sender: "bot", timestamp: new Date() }]);
+        // The backend will send the welcome message upon connection.
       };
 
       ws.current.onmessage = (event) => {
-        const receivedMessage = JSON.parse(event.data);
-        console.log("Received message:", receivedMessage);
-        setMessages((prevMessages) => [
-          ...prevMessages,
-          {
-            id: prevMessages.length + 1,
-            text: receivedMessage.message,
-            sender: receivedMessage.sender,
-            timestamp: new Date(),
-          },
-        ]);
+        const receivedData = JSON.parse(event.data);
+        console.log("Received data:", receivedData);
+
+        // Only process and display messages that have content.
+        // This ignores broadcast messages like { "type": "new_message", ... }
+        if (receivedData.message) {
+          setMessages((prevMessages) => [
+            ...prevMessages,
+            {
+              id: prevMessages.length + 1,
+              text: receivedData.message,
+              sender: receivedData.sender === 'agent' ? 'bot' : receivedData.sender, // Treat 'agent' as 'bot' for styling
+              timestamp: new Date(),
+            },
+          ]);
+        }
       };
 
       ws.current.onclose = () => {
@@ -113,6 +119,31 @@ export const ChatWidgetPreview = () => {
     setMessage("");
   };
 
+  const handleHandoff = async () => {
+    try {
+      const response = await fetch(`http://localhost:8000/api/v1/conversations/${sessionId}/handoff`, {
+        method: 'POST',
+        headers: {
+          'X-Company-ID': companyId.toString(),
+        },
+      });
+      if (!response.ok) {
+        throw new Error('Failed to handoff conversation');
+      }
+      toast({
+        title: 'Success',
+        description: 'You will be connected to a human agent shortly.',
+      });
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: 'Failed to connect to a human agent.',
+        variant: 'destructive',
+      });
+      console.error('Error handing off conversation:', error);
+    }
+  };
+
   return (
     <Card>
       <CardHeader>
@@ -148,6 +179,14 @@ export const ChatWidgetPreview = () => {
                     </div>
                   </div>
                   <div className="flex items-center space-x-2">
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="text-white hover:bg-blue-700 p-1 h-6 w-6"
+                      onClick={handleHandoff}
+                    >
+                      <User className="h-3 w-3" />
+                    </Button>
                     <Button
                       size="sm"
                       variant="ghost"

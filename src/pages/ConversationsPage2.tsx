@@ -1,10 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ConversationDetail } from '@/components/ConversationDetail';
-import { ContactProfile } from '@/components/ContactProfile';
 import { useWebSocket } from '@/hooks/use-websocket';
 import { toast } from '@/hooks/use-toast';
 import { Agent, Session, User } from '@/types';
@@ -55,7 +54,7 @@ const ConversationsPage: React.FC = () => {
     enabled: !!selectedAgentId,
   });
 
-  useWebSocket(`ws://localhost:8000/ws/${companyId}/${selectedAgentId}/${selectedSessionId}`, {
+  useWebSocket(`ws://localhost:8000/ws/conversations/${companyId}/null/null`, {
     onMessage: (event) => {
       const eventData = JSON.parse(event.data);
       toast({
@@ -87,8 +86,8 @@ const ConversationsPage: React.FC = () => {
   };
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-12 gap-6 h-[calc(100vh-4rem)]">
-      <div className="md:col-span-3 flex flex-col gap-4">
+    <div className="grid grid-cols-1 md:grid-cols-4 gap-6 h-[calc(100vh-4rem)]">
+      <div className="md:col-span-1 flex flex-col gap-4">
         <Card>
           <CardHeader>
             <CardTitle>Agents</CardTitle>
@@ -118,7 +117,7 @@ const ConversationsPage: React.FC = () => {
           </CardHeader>
           <CardContent>
             {isLoadingSessions ? <p>Loading...</p> : (
-              <div className="flex flex-col space-y-2 overflow-y-auto">
+              <div className="flex flex-col space-y-2">
                 {sessions && sessions.length > 0 ? sessions.map((session) => (
                   <Button
                     key={session.session_id}
@@ -126,7 +125,7 @@ const ConversationsPage: React.FC = () => {
                     onClick={() => setSelectedSessionId(session.session_id)}
                     className="h-auto justify-start items-start flex-col"
                   >
-                    <div className="font-bold text-sm truncate">{session.session_id}</div>
+                    <div className="font-bold text-sm">{session.session_id}</div>
                     <div className="flex items-center gap-2 text-xs">
                       <Badge variant={getStatusBadgeVariant(session.status)}>{session.status}</Badge>
                       {session.status === 'assigned' && <span>to {getAssigneeEmail(session.assignee_id)}</span>}
@@ -138,21 +137,12 @@ const ConversationsPage: React.FC = () => {
           </CardContent>
         </Card>
       </div>
-      <div className="md:col-span-6">
+      <div className="md:col-span-3">
         {selectedSessionId && selectedAgentId ? (
           <ConversationDetail sessionId={selectedSessionId} agentId={selectedAgentId} />
         ) : (
           <div className="flex items-center justify-center h-full">
             <p className="text-gray-500">Select a session to view the conversation.</p>
-          </div>
-        )}
-      </div>
-      <div className="md:col-span-3">
-        {selectedSessionId ? (
-          <ContactProfile sessionId={selectedSessionId} />
-        ) : (
-          <div className="flex items-center justify-center h-full">
-            <p className="text-gray-500">Select a session to view contact details.</p>
           </div>
         )}
       </div>
