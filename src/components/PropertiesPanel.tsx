@@ -4,6 +4,7 @@ import { toast } from 'sonner';
 
 const PropertiesPanel = ({ selectedNode, setNodes, deleteNode }) => {
   const [tools, setTools] = useState([]);
+  const [knowledgeBases, setKnowledgeBases] = useState([]);
 
   useEffect(() => {
     const fetchTools = async () => {
@@ -19,7 +20,22 @@ const PropertiesPanel = ({ selectedNode, setNodes, deleteNode }) => {
         toast.error("Failed to load tools.");
       }
     };
+    const fetchKnowledgeBases = async () => {
+      try {
+        const response = await fetch('http://localhost:8000/api/v1/knowledge-bases/?company_id=1', { // Hardcoded company ID
+          headers: { 'X-Company-ID': '1' },
+        });
+        if (!response.ok) throw new Error('Failed to fetch knowledge bases');
+        const data = await response.json();
+        setKnowledgeBases(data);
+      } catch (error) {
+        console.error('Error fetching knowledge bases:', error);
+        toast.error("Failed to load knowledge bases.");
+      }
+    };
+
     fetchTools();
+    fetchKnowledgeBases();
   }, []);
 
   const updateNodeData = (data) => {
@@ -36,7 +52,13 @@ const PropertiesPanel = ({ selectedNode, setNodes, deleteNode }) => {
 
   const onToolChange = (toolName) => {
     const tool = tools.find(t => t.name === toolName);
-    updateNodeData({ tool: toolName, params: {} }); // Reset params when tool changes
+    updateNodeData({ 
+      tool: toolName, 
+      // Pass the tool's parameters to the node so we can render handles
+      toolParameters: tool?.parameters?.properties || {},
+      // Reset user-set params when tool changes
+      params: {} 
+    });
   };
 
   const onParamChange = (paramName, value) => {
@@ -60,6 +82,7 @@ const PropertiesPanel = ({ selectedNode, setNodes, deleteNode }) => {
               onChange={(e) => onParamChange(paramName, e.target.value)}
               style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ccc' }}
               placeholder={`e.g., {{context.value}} or {{step1.output}}`}
+              readOnly={selectedNode.data.params?.[paramName]?.startsWith('{{')}
             />
           </div>
         ))}
@@ -79,6 +102,51 @@ const PropertiesPanel = ({ selectedNode, setNodes, deleteNode }) => {
               <option>User message</option>
               <option>API call</option>
             </select>
+          </div>
+        );
+      case 'llm':
+        return (
+          <div>
+            <div style={{ marginBottom: '10px' }}>
+              <label style={{ display: 'block', marginBottom: '5px' }}>Node Label:</label>
+              <input type="text" value={selectedNode.data.label} onChange={onLabelChange} style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ccc' }} />
+            </div>
+            <div style={{ marginBottom: '10px' }}>
+              <label style={{ display: 'block', marginBottom: '5px' }}>Model:</label>
+              <input
+                type="text"
+                value={selectedNode.data.model || ''}
+                onChange={(e) => updateNodeData({ model: e.target.value })}
+                style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ccc' }}
+                placeholder="e.g., gemini-pro or {{prev_step.output}}"
+                readOnly={selectedNode.data.model?.startsWith('{{')}
+              />
+            </div>
+            <div style={{ marginBottom: '10px' }}>
+              <label style={{ display: 'block', marginBottom: '5px' }}>Knowledge Base:</label>
+              <select
+                value={selectedNode.data.knowledge_base_id || ''}
+                onChange={(e) => updateNodeData({ knowledge_base_id: e.target.value ? parseInt(e.target.value) : null })}
+                style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ccc' }}
+              >
+                <option value="">None</option>
+                {knowledgeBases.map((kb) => (
+                  <option key={kb.id} value={kb.id}>
+                    {kb.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div style={{ marginBottom: '10px' }}>
+              <label style={{ display: 'block', marginBottom: '5px' }}>Prompt:</label>
+              <textarea
+                value={selectedNode.data.prompt || ''}
+                onChange={(e) => updateNodeData({ prompt: e.target.value })}
+                style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ccc', minHeight: '100px' }}
+                placeholder="e.g., What is the capital of {{country}}? or {{prev_step.output}}"
+                readOnly={selectedNode.data.prompt?.startsWith('{{')}
+              />
+            </div>
           </div>
         );
       case 'output':

@@ -14,12 +14,12 @@ import { toast } from "sonner";
 import Sidebar from './Sidebar';
 import PropertiesPanel from './PropertiesPanel';
 import CreateWorkflowDialog from './CreateWorkflowDialog';
-import { LlmNode, ToolNode, ConditionNode, OutputNode } from './CustomNodes'; // Import custom nodes
+import { LlmNode, ToolNode, ConditionNode, OutputNode, StartNode } from './CustomNodes'; // Import custom nodes
 
 const initialNodes = [
   {
     id: 'start-node',
-    type: 'input',
+    type: 'start',
     data: { label: 'Start' },
     position: { x: 250, y: 5 },
   },
@@ -41,7 +41,8 @@ const VisualWorkflowBuilder = () => {
     llm: LlmNode, 
     tool: ToolNode, 
     condition: ConditionNode, 
-    output: OutputNode 
+    output: OutputNode, 
+    start: StartNode
   }), []);
 
   const fetchWorkflows = async () => {
@@ -105,7 +106,39 @@ const VisualWorkflowBuilder = () => {
     }
   };
   
-  const onConnect = useCallback((params) => setEdges((eds) => addEdge(params, eds)), [setEdges]);
+  const onConnect = useCallback((params) => {
+    setEdges((eds) => addEdge(params, eds));
+
+    // If a connection is made to a target handle (input parameter)
+    if (params.targetHandle) {
+      const sourceNode = nodes.find(node => node.id === params.source);
+
+      // The source node's output should be linked to the target node's input parameter.
+      // The 'start' node provides the initial user message. Other nodes provide their execution result.
+      if (sourceNode) {
+        setNodes((nds) =>
+          nds.map((node) => {
+            if (node.id === params.target) {
+              // Ensure the params object exists before trying to modify it
+              const currentParams = node.data.params || {};
+              const newParams = {
+                ...currentParams,
+                [params.targetHandle]: `{{${params.source}.output}}`, // e.g., {{start-node.output}}
+              };
+              return {
+                ...node,
+                data: {
+                  ...node.data,
+                  params: newParams,
+                },
+              };
+            }
+            return node;
+          }),
+        );
+      }
+    }
+  }, [setEdges, setNodes, nodes]);
   const onDragOver = useCallback((event) => {
     event.preventDefault();
     event.dataTransfer.dropEffect = 'move';
@@ -129,8 +162,32 @@ const VisualWorkflowBuilder = () => {
 
   const deleteNode = useCallback(() => {
     if (selectedNode) {
-      setNodes((nds) => nds.filter((node) => node.id !== selectedNode.id));
-      setEdges((eds) => eds.filter((edge) => edge.source !== selectedNode.id && edge.target !== selectedNode.id));
+      const deletedNodeId = selectedNode.id;
+
+      // Update nodes: remove the selected node and clear references in other nodes' params
+      setNodes((nds) =>
+        nds.filter((node) => node.id !== deletedNodeId).map((node) => {
+          if (node.data.params) {
+            const newParams = { ...node.data.params };
+            let paramsChanged = false;
+            for (const paramName in newParams) {
+              // Check if the parameter value is a reference to the deleted node's output
+              if (typeof newParams[paramName] === 'string' && newParams[paramName].includes(`{{${deletedNodeId}.output}}`)) {
+                newParams[paramName] = ''; // Clear the parameter value
+                paramsChanged = true;
+              }
+            }
+            if (paramsChanged) {
+              return { ...node, data: { ...node.data, params: newParams } };
+            }
+          }
+          return node;
+        }),
+      );
+
+      // Update edges: remove edges connected to the deleted node
+      setEdges((eds) => eds.filter((edge) => edge.source !== deletedNodeId && edge.target !== deletedNodeId));
+
       setSelectedNode(null);
       toast.success("Node deleted.");
     }
@@ -143,43 +200,58 @@ const VisualWorkflowBuilder = () => {
     const backendSteps = { steps: {} };
     const nodeMap = new Map(nodes.map(node => [node.id, node]));
 
-    // Sort nodes to ensure a somewhat logical order for step processing (e.g., by y-position)
-    // This is a heuristic; a more robust solution might involve explicit step ordering in the UI
-    const sortedNodes = [...nodes].sort((a, b) => a.position.y - b.position.y);
+    nodes.forEach(node => {
+      // Use the unique node ID as the step name (key) for the backend
+      const stepName = node.id;
 
-    sortedNodes.forEach(node => {
-      // Exclude input and output nodes from backend steps as they are visual only
-      if (node.type === 'input' || node.type === 'output') return; 
+      // Start nodes are the entry point and don't become an executable step themselves
+      if (node.type === 'start') return;
 
-      const stepName = node.data.label || node.id; // Use label as step name, fallback to ID
-      const toolName = node.data.tool;
-      const params = node.data.params || {};
+      let stepConfig: { tool: string; params: any; next_step_on_success?: string | null; next_step_on_failure?: string | null; } = {
+        tool: '',
+        params: {},
+      };
 
-      // Find outgoing edges from this node to determine next steps
-      const outgoingEdges = edges.filter(edge => edge.source === node.id);
-
-      let next_step_on_success = null;
-      let next_step_on_failure = null; // For condition nodes
-
-      if (node.type === 'condition') {
-        // For condition nodes, we expect two outgoing edges: one for 'true' and one for 'false'
-        const trueEdge = outgoingEdges.find(edge => edge.sourceHandle === 'true');
-        const falseEdge = outgoingEdges.find(edge => edge.sourceHandle === 'false');
-        if (trueEdge) next_step_on_success = nodeMap.get(trueEdge.target)?.data?.label || trueEdge.target;
-        if (falseEdge) next_step_on_failure = nodeMap.get(falseEdge.target)?.data?.label || falseEdge.target;
-      } else {
-        // For other nodes, assume a single next step on success
-        const nextEdge = outgoingEdges[0]; // Assuming only one outgoing edge for non-condition nodes
-        if (nextEdge) next_step_on_success = nodeMap.get(nextEdge.target)?.data?.label || nextEdge.target;
+      if (node.type === 'llm') {
+        stepConfig.tool = 'llm_tool';
+        stepConfig.params = {
+          model: node.data.model,
+          prompt: node.data.prompt,
+        };
+      } else if (node.type === 'tool') {
+        stepConfig.tool = node.data.tool;
+        stepConfig.params = node.data.params || {};
+      } else if (node.type === 'condition') {
+        stepConfig.tool = 'condition_tool';
+        stepConfig.params = {}; // Future-proofing
       }
 
-      backendSteps.steps[stepName] = {
-        tool: toolName,
-        params: params,
-        next_step_on_success: next_step_on_success,
-        ...(node.type === 'condition' && { next_step_on_failure: next_step_on_failure })
-      };
+      // Find outgoing edges to determine the next step's unique ID
+      const outgoingEdges = edges.filter(edge => edge.source === node.id);
+
+      if (node.type === 'condition') {
+        const trueEdge = outgoingEdges.find(edge => edge.sourceHandle === 'true');
+        const falseEdge = outgoingEdges.find(edge => edge.sourceHandle === 'false');
+        if (trueEdge) stepConfig.next_step_on_success = trueEdge.target; // Use target node ID
+        if (falseEdge) stepConfig.next_step_on_failure = falseEdge.target; // Use target node ID
+      } else {
+        // For non-condition nodes, find the next step by the edge connection
+        const nextEdge = outgoingEdges[0];
+        if (nextEdge) stepConfig.next_step_on_success = nextEdge.target; // Use target node ID
+      }
+
+      backendSteps.steps[stepName] = stepConfig;
     });
+
+    // Determine the very first step of the workflow
+    const startNode = nodes.find(node => node.type === 'start');
+    if (startNode) {
+      const firstEdge = edges.find(edge => edge.source === startNode.id);
+      if (firstEdge) {
+        backendSteps.first_step = first_step.target; // The ID of the node connected to the start node
+      }
+    }
+
 
     const flowVisualData = { nodes, edges };
 

@@ -238,42 +238,32 @@ const ToolManagementPage = () => {
 };
 
 const ToolForm = ({ tool, onSubmit }: { tool?: Tool, onSubmit: (values: any) => void }) => {
-  const [values, setValues] = useState(tool || { name: "", description: "", code: "", parameters: {} });
-  const [parametersJson, setParametersJson] = useState(JSON.stringify(values.parameters, null, 2));
-  const [jsonError, setJsonError] = useState<string | null>(null);
+  const [values, setValues] = useState(tool || { name: "", description: "", code: "", parameters: { type: "object", properties: {}, required: [] } });
 
-  useEffect(() => {
-    setParametersJson(JSON.stringify(values.parameters, null, 2));
-  }, [values.parameters]);
-
-  const handleParametersChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    const newJsonString = e.target.value;
-    setParametersJson(newJsonString);
-    try {
-      const parsed = JSON.parse(newJsonString);
-      setValues({ ...values, parameters: parsed });
-      setJsonError(null);
-    } catch (error) {
-      setJsonError("Invalid JSON format");
-    }
+  const handleParameterChange = (index, field, value) => {
+    const newProperties = { ...values.parameters.properties };
+    const key = Object.keys(newProperties)[index];
+    newProperties[key][field] = value;
+    setValues({ ...values, parameters: { ...values.parameters, properties: newProperties } });
   };
 
-  const handleFormatJson = () => {
-    try {
-      const parsed = JSON.parse(parametersJson);
-      setParametersJson(JSON.stringify(parsed, null, 2));
-      setJsonError(null);
-    } catch (error) {
-      setJsonError("Invalid JSON format - cannot format");
-    }
+  const addParameter = () => {
+    const newParamName = `param${Object.keys(values.parameters.properties).length + 1}`;
+    const newProperties = { ...values.parameters.properties, [newParamName]: { type: "string", description: "" } };
+    const newRequired = [...values.parameters.required, newParamName];
+    setValues({ ...values, parameters: { ...values.parameters, properties: newProperties, required: newRequired } });
+  };
+
+  const removeParameter = (index) => {
+    const newProperties = { ...values.parameters.properties };
+    const key = Object.keys(newProperties)[index];
+    delete newProperties[key];
+    const newRequired = values.parameters.required.filter(p => p !== key);
+    setValues({ ...values, parameters: { ...values.parameters, properties: newProperties, required: newRequired } });
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (jsonError) {
-      alert("Please correct the JSON format before submitting.");
-      return;
-    }
     onSubmit(values);
   };
 
@@ -296,20 +286,37 @@ const ToolForm = ({ tool, onSubmit }: { tool?: Tool, onSubmit: (values: any) => 
         rows={10}
       />
       <div>
-        <Label htmlFor="parameters-json">Parameters (JSON Schema)</Label>
-        <Textarea
-          id="parameters-json"
-          value={parametersJson}
-          onChange={handleParametersChange}
-          rows={8}
-          className={jsonError ? "border-red-500" : ""}
-        />
-        {jsonError && <p className="text-red-500 text-sm mt-1">{jsonError}</p>}
-        <Button type="button" variant="outline" onClick={handleFormatJson} className="mt-2">
-          Format JSON
+        <Label>Parameters</Label>
+        {Object.keys(values.parameters.properties).map((key, index) => (
+          <div key={index} className="flex items-center gap-2 p-2 border rounded-lg">
+            <Input
+              placeholder="Name"
+              value={key}
+              disabled // Editing the name directly is complex, so we disable it for now
+            />
+            <Input
+              placeholder="Description"
+              value={values.parameters.properties[key].description}
+              onChange={(e) => handleParameterChange(index, "description", e.target.value)}
+            />
+            <select
+              value={values.parameters.properties[key].type}
+              onChange={(e) => handleParameterChange(index, "type", e.target.value)}
+            >
+              <option value="string">string</option>
+              <option value="number">number</option>
+              <option value="boolean">boolean</option>
+            </select>
+            <Button type="button" variant="destructive" onClick={() => removeParameter(index)}>
+              <Trash2 className="h-4 w-4" />
+            </Button>
+          </div>
+        ))}
+        <Button type="button" variant="outline" onClick={addParameter} className="mt-2">
+          <Plus className="mr-2 h-4 w-4" /> Add Parameter
         </Button>
       </div>
-      <Button type="submit" disabled={!!jsonError}>
+      <Button type="submit">
         {tool ? "Update" : "Create"}
       </Button>
     </form>
