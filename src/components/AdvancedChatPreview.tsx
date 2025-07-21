@@ -10,6 +10,7 @@ import { MessageSquare, Send, Minimize2, X, Palette, Code, Save } from "lucide-r
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { Agent } from "@/types";
+import { useAuth } from "@/hooks/useAuth";
 
 const companyId = 1; // Replace with actual company ID from context or global state
 
@@ -56,13 +57,13 @@ export const AdvancedChatPreview = () => {
       timestamp: new Date()
     }
   ]);
+  const { authFetch } = useAuth(); 
+  
 
   useEffect(() => {
     const fetchAgents = async () => {
       try {
-        const response = await fetch(`http://localhost:8000/api/v1/agents/`, {
-          headers: { "X-Company-ID": companyId.toString() },
-        });
+        const response = await authFetch(`http://localhost:8000/api/v1/agents/`);
         if (response.ok) {
           const data = await response.json();
           setAgents(data);
@@ -82,7 +83,7 @@ export const AdvancedChatPreview = () => {
 
     const fetchWidgetSettings = async () => {
       try {
-        const response = await fetch(`http://localhost:8000/api/v1/agents/${selectedAgentId}/widget-settings`);
+        const response = await authFetch(`http://localhost:8000/api/v1/agents/${selectedAgentId}/widget-settings`);
         if (response.ok) {
           const data = await response.json();
           // Ensure all fields are present, falling back to initial state
@@ -114,7 +115,7 @@ export const AdvancedChatPreview = () => {
       delete (settingsToSave as any).id;
 
 
-      const response = await fetch(`http://localhost:8000/api/v1/agents/${selectedAgentId}/widget-settings`, {
+      const response = await authFetch(`http://localhost:8000/api/v1/agents/${selectedAgentId}/widget-settings`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(settingsToSave)

@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react';
 import { LiveKitRoom, VideoConference } from '@livekit/components-react';
 import '@livekit/components-styles';
+import { useAuth } from "@/hooks/useAuth";
 
 interface VideoCallModalProps {
   sessionId: string;
@@ -11,11 +12,12 @@ interface VideoCallModalProps {
 
 export const VideoCallModal: React.FC<VideoCallModalProps> = ({ sessionId, userId, onClose }) => {
   const [token, setToken] = useState('');
+  const { authFetch } = useAuth();
 
   useEffect(() => {
     (async () => {
       try {
-        const resp = await fetch(
+        const resp = await authFetch(
           `http://localhost:8000/api/v1/calls/token?session_id=${sessionId}&user_id=${userId}`
         );
         const data = await resp.json();

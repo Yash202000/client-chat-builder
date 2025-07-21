@@ -1,4 +1,7 @@
 
+import { useAuth } from "@/hooks/useAuth";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { CircleUser } from "lucide-react";
 import { useState } from "react";
 import { Outlet, NavLink } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -34,11 +37,13 @@ const sidebarItems = [
   { title: "Knowledge Bases", url: "/dashboard/knowledge-base/manage", icon: BookOpen },
   { title: "Tools", url: "/dashboard/tools", icon: Zap },
   { title: "Workflows", url: "/dashboard/workflows", icon: WorkflowIcon },
+  { title: "Subscription", url: "/dashboard/subscription", icon: Sparkles },
 ];
 
 const AppLayout = () => {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const { logout } = useAuth();
 
   return (
     <div className="h-screen w-screen flex flex-col bg-gray-50 overflow-hidden">
@@ -70,6 +75,22 @@ const AppLayout = () => {
                 <Plus className="h-4 w-4 mr-2" />
                 Create Agent
               </Button>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="secondary" size="icon" className="rounded-full">
+                    <CircleUser className="h-5 w-5" />
+                    <span className="sr-only">Toggle user menu</span>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuLabel>My Account</DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem asChild>
+                    <NavLink to="/dashboard/profile">Profile</NavLink>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={logout}>Logout</DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
           </div>
         </div>

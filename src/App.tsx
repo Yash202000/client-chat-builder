@@ -4,6 +4,11 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { AuthProvider } from "./hooks/useAuth";
+import { ProtectedRoute } from "./components/ProtectedRoute";
+import { LoginPage } from "./pages/LoginPage";
+import { SignupPage } from "./pages/SignupPage";
+import { DashboardPage } from "./pages/DashboardPage";
 import Index from "./pages/Index";
 import AppLayout from "./components/AppLayout";
 import ConversationsPage from "./pages/ConversationsPage";
@@ -18,6 +23,8 @@ import KnowledgeBaseListPage from "./pages/KnowledgeBaseListPage";
 import ToolManagementPage from "./pages/ToolManagementPage";
 import KnowledgeBaseManagementPage from "./pages/KnowledgeBaseManagementPage";
 import WorkflowManagementPage from "./pages/WorkflowManagementPage";
+import { ProfilePage } from "./pages/ProfilePage";
+import { SubscriptionManagementPage } from "./pages/SubscriptionManagementPage";
 import NotFound from "./pages/NotFound";
 import UserVideoCallPage from "./pages/UserVideoCallPage";
 
@@ -29,28 +36,36 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Index />} />
-          <Route path="/dashboard" element={<AppLayout />}>
-            <Route index element={<Navigate to="/dashboard/conversations" replace />} />
-            <Route path="conversations" element={<ConversationsPage />} />
-            <Route path="agents" element={<AgentsPage />} />
-            <Route path="builder" element={<BuilderPage />} />
-            <Route path="builder/:agentId" element={<BuilderPage />} />
-            <Route path="designer" element={<DesignerPage />} />
-            <Route path="team" element={<TeamPage />} />
-            <Route path="reports" element={<ReportsPage />} />
-            <Route path="settings" element={<SettingsPage />} />
-            <Route path="vault" element={<VaultPage />} />
-            <Route path="knowledge-base" element={<KnowledgeBaseListPage />} />
-            <Route path="tools" element={<ToolManagementPage />} />
-            <Route path="knowledge-base/manage" element={<KnowledgeBaseManagementPage />} />
-            <Route path="workflows" element={<WorkflowManagementPage />} />
-          </Route>
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-          <Route path="/video-call" element={<UserVideoCallPage />} />
-          <Route path="*" element={<NotFound />} />
-        </Routes>
+        <AuthProvider>
+          <Routes>
+            <Route path="/" element={<Index />} />
+            <Route path="/login" element={<LoginPage />} />
+            <Route path="/signup" element={<SignupPage />} />
+            <Route path="/dashboard" element={<ProtectedRoute />}>
+              <Route element={<AppLayout />}>
+                <Route index element={<Navigate to="/dashboard/conversations" replace />} />
+                <Route path="conversations" element={<ConversationsPage />} />
+                <Route path="agents" element={<AgentsPage />} />
+                <Route path="builder" element={<BuilderPage />} />
+                <Route path="builder/:agentId" element={<BuilderPage />} />
+                <Route path="designer" element={<DesignerPage />} />
+                <Route path="team" element={<TeamPage />} />
+                <Route path="reports" element={<ReportsPage />} />
+                <Route path="settings" element={<SettingsPage />} />
+                <Route path="vault" element={<VaultPage />} />
+                <Route path="knowledge-base" element={<KnowledgeBaseListPage />} />
+                <Route path="tools" element={<ToolManagementPage />} />
+                <Route path="knowledge-base/manage" element={<KnowledgeBaseManagementPage />} />
+                <Route path="workflows" element={<WorkflowManagementPage />} />
+                <Route path="profile" element={<ProfilePage />} />
+                <Route path="subscription" element={<SubscriptionManagementPage />} />
+              </Route>
+            </Route>
+            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+            <Route path="/video-call" element={<UserVideoCallPage />} />
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>

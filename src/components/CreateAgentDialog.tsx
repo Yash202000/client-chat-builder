@@ -18,6 +18,7 @@ import { toast } from "@/hooks/use-toast";
 import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Credential } from "@/types";
+import { useAuth } from "@/hooks/useAuth";
 
 interface CreateAgentDialogProps {
   open: boolean;
@@ -37,13 +38,11 @@ export const CreateAgentDialog = ({ open, onOpenChange }: CreateAgentDialogProps
   });
 
   const companyId = 1; // Hardcoded company ID for now
+  const { authFetch } = useAuth();
+  
 
   const { data: credentials, isLoading: isLoadingCredentials } = useQuery<Credential[]>({ queryKey: ['credentials', companyId], queryFn: async () => {
-    const response = await fetch(`http://localhost:8000/api/v1/credentials/`, {
-      headers: {
-        "X-Company-ID": companyId.toString(),
-      },
-    });
+    const response = await authFetch(`http://localhost:8000/api/v1/credentials/`);
     if (!response.ok) {
       throw new Error("Failed to fetch credentials");
     }
@@ -52,11 +51,10 @@ export const CreateAgentDialog = ({ open, onOpenChange }: CreateAgentDialogProps
 
   const createAgentMutation = useMutation({
     mutationFn: async (newAgent: { name: string; welcome_message: string; prompt: string; credential_id?: number }) => {
-      const response = await fetch(`http://localhost:8000/api/v1/agents/`, {
+      const response = await authFetch(`http://localhost:8000/api/v1/agents/`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "X-Company-ID": companyId.toString(),
         },
         body: JSON.stringify(newAgent),
       });

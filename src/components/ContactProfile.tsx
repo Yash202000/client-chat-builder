@@ -8,6 +8,7 @@ import { Contact } from '@/types';
 import { Mail, Phone, User, Edit, Save } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { toast } from '@/hooks/use-toast';
+import { useAuth } from "@/hooks/useAuth";
 
 interface ContactProfileProps {
   sessionId: string;
@@ -18,13 +19,12 @@ export const ContactProfile: React.FC<ContactProfileProps> = ({ sessionId }) => 
   const companyId = 1; // Hardcoded company ID
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState<Partial<Contact>>({});
+  const { authFetch } = useAuth();
 
   const { data: contact, isLoading } = useQuery<Contact>({
     queryKey: ['contact', sessionId],
     queryFn: async () => {
-      const response = await fetch(`http://localhost:8000/api/v1/contacts/by_session/${sessionId}`, {
-        headers: { 'X-Company-ID': companyId.toString() },
-      });
+      const response = await authFetch(`http://localhost:8000/api/v1/contacts/by_session/${sessionId}`);
       if (!response.ok) throw new Error('Failed to fetch contact');
       return response.json();
     },
@@ -41,9 +41,9 @@ export const ContactProfile: React.FC<ContactProfileProps> = ({ sessionId }) => 
   }, [contact]);
 
   const updateContactMutation = useMutation({
-    mutationFn: (updatedContact: Partial<Contact>) => fetch(`http://localhost:8000/api/v1/contacts/${contact!.id}`, {
+    mutationFn: (updatedContact: Partial<Contact>) => authFetch(`http://localhost:8000/api/v1/contacts/${contact!.id}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json', 'X-Company-ID': companyId.toString() },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(updatedContact),
     }).then(res => { if (!res.ok) throw new Error('Failed to update contact'); return res.json() }),
     onSuccess: () => {

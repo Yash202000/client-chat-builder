@@ -22,6 +22,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectValue } from "@/components/ui/select";
 import { ConversationDetail } from "./ConversationDetail";
+import { useAuth } from "@/hooks/useAuth";
 
 interface ChatMessage {
   id: number;
@@ -37,13 +38,10 @@ export const AgentList = () => {
   const [selectedSessionId, setSelectedSessionId] = useState<string | null>(null);
   console.log("AgentList Render - selectedAgent:", selectedAgent, "selectedSessionId:", selectedSessionId);
   const companyId = 1; // Hardcoded company ID for now
+  const { authFetch } = useAuth(); 
 
   const { data: agents, isLoading, isError } = useQuery<Agent[]>({ queryKey: ['agents', companyId], queryFn: async () => {
-    const response = await fetch(`http://localhost:8000/api/v1/agents/`, {
-      headers: {
-        "X-Company-ID": companyId.toString(),
-      },
-    });
+    const response = await authFetch(`http://localhost:8000/api/v1/agents/`);
     if (!response.ok) {
       throw new Error("Failed to fetch agents");
     }
@@ -54,11 +52,7 @@ export const AgentList = () => {
     queryKey: ['sessions', selectedAgent?.id, companyId], 
     queryFn: async () => {
       if (!selectedAgent) return [];
-      const response = await fetch(`http://localhost:8000/api/v1/conversations/${selectedAgent.id}/sessions`, {
-        headers: {
-          "X-Company-ID": companyId.toString(),
-        },
-      });
+      const response = await authFetch(`http://localhost:8000/api/v1/conversations/${selectedAgent.id}/sessions`);
       if (!response.ok) {
         throw new Error("Failed to fetch sessions");
       }
@@ -71,11 +65,7 @@ export const AgentList = () => {
     queryKey: ['messages', selectedAgent?.id, selectedSessionId, companyId], 
     queryFn: async () => {
       if (!selectedAgent || !selectedSessionId) return [];
-      const response = await fetch(`http://localhost:8000/api/v1/conversations/${selectedAgent.id}/sessions/${selectedSessionId}/messages`, {
-        headers: {
-          "X-Company-ID": companyId.toString(),
-        },
-      });
+      const response = await authFetch(`http://localhost:8000/api/v1/conversations/${selectedAgent.id}/sessions/${selectedSessionId}/messages`);
       if (!response.ok) {
         throw new Error("Failed to fetch messages");
       }
@@ -86,11 +76,8 @@ export const AgentList = () => {
 
   const deleteAgentMutation = useMutation({
     mutationFn: async (agentId: number) => {
-      const response = await fetch(`http://localhost:8000/api/v1/agents/${agentId}`, {
+      const response = await authFetch(`http://localhost:8000/api/v1/agents/${agentId}`, {
         method: "DELETE",
-        headers: {
-          "X-Company-ID": companyId.toString(),
-        },
       });
       if (!response.ok) {
         throw new Error("Failed to delete agent");

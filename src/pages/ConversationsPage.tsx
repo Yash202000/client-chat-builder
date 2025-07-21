@@ -8,19 +8,19 @@ import { ContactProfile } from '@/components/ContactProfile';
 import { useWebSocket } from '@/hooks/use-websocket';
 import { toast } from '@/hooks/use-toast';
 import { Agent, Session, User } from '@/types';
+import { useAuth } from "@/hooks/useAuth";
 
 const ConversationsPage: React.FC = () => {
   const queryClient = useQueryClient();
   const companyId = 1; // Hardcoded company ID
   const [selectedAgentId, setSelectedAgentId] = useState<number | null>(null);
   const [selectedSessionId, setSelectedSessionId] = useState<string | null>(null);
+  const { authFetch } = useAuth(); 
 
   const { data: agents, isLoading: isLoadingAgents } = useQuery<Agent[]>({
     queryKey: ['agents', companyId],
     queryFn: async () => {
-      const response = await fetch(`http://localhost:8000/api/v1/agents/`, {
-        headers: { 'X-Company-ID': companyId.toString() },
-      });
+      const response = await authFetch(`http://localhost:8000/api/v1/agents/`);
       if (!response.ok) throw new Error('Failed to fetch agents');
       return response.json();
     },
@@ -34,9 +34,7 @@ const ConversationsPage: React.FC = () => {
   const { data: users } = useQuery<User[]>({
     queryKey: ['users', companyId],
     queryFn: async () => {
-      const response = await fetch(`http://localhost:8000/api/v1/users/`, {
-        headers: { 'X-Company-ID': companyId.toString() },
-      });
+      const response = await authFetch(`http://localhost:8000/api/v1/users/`);
       if (!response.ok) throw new Error('Failed to fetch users');
       return response.json();
     },
@@ -46,9 +44,7 @@ const ConversationsPage: React.FC = () => {
     queryKey: ['sessions', selectedAgentId],
     queryFn: async () => {
       if (!selectedAgentId) return [];
-      const response = await fetch(`http://localhost:8000/api/v1/conversations/${selectedAgentId}/sessions`, {
-        headers: { 'X-Company-ID': companyId.toString() },
-      });
+      const response = await authFetch(`http://localhost:8000/api/v1/conversations/${selectedAgentId}/sessions`);
       if (!response.ok) throw new Error('Failed to fetch sessions');
       return response.json();
     },

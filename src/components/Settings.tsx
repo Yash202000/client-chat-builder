@@ -20,6 +20,7 @@ import {
 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/components/ui/use-toast";
+import { useAuth } from "@/hooks/useAuth";
 
 export const Settings = () => {
   const { toast } = useToast();
@@ -40,26 +41,16 @@ export const Settings = () => {
 
   const userId = 1; // Hardcoded user ID for now
   const companyId = 1; // Hardcoded company ID for now
+  const { authFetch } = useAuth();
+  
 
   useEffect(() => {
     const fetchSettings = async () => {
       try {
         const [userResponse, companyResponse, notificationResponse] = await Promise.all([
-          fetch(`http://localhost:8000/api/v1/settings/${userId}`, {
-            headers: {
-              "X-Company-ID": companyId.toString(),
-            },
-          }),
-          fetch(`http://localhost:8000/api/v1/company-settings/`, {
-            headers: {
-              "X-Company-ID": companyId.toString(),
-            },
-          }),
-          fetch(`http://localhost:8000/api/v1/notification-settings/`, {
-            headers: {
-              "X-Company-ID": companyId.toString(),
-            },
-          }),
+          authFetch(`http://localhost:8000/api/v1/settings/`),
+          authFetch(`http://localhost:8000/api/v1/company-settings/`),
+          authFetch(`http://localhost:8000/api/v1/notification-settings/`),
         ]);
 
         if (userResponse.ok && companyResponse.ok && notificationResponse.ok) {
@@ -105,19 +96,17 @@ export const Settings = () => {
   const handleSaveChanges = async () => {
     try {
       const [userResponse, companyResponse, notificationResponse] = await Promise.all([
-        fetch(`http://localhost:8000/api/v1/settings/${userId}`, {
+        authFetch(`http://localhost:8000/api/v1/settings/`, {
           method: "PUT",
           headers: {
-            "Content-Type": "application/json",
-            "X-Company-ID": companyId.toString(),
+            "Content-Type": "application/json"
           },
           body: JSON.stringify({ dark_mode: settings.darkMode }),
         }),
-        fetch(`http://localhost:8000/api/v1/company-settings/`, {
+        authFetch(`http://localhost:8000/api/v1/company-settings/`, {
           method: "PUT",
           headers: {
-            "Content-Type": "application/json",
-            "X-Company-ID": companyId.toString(),
+            "Content-Type": "application/json"
           },
           body: JSON.stringify({
             company_name: settings.companyName,
@@ -127,11 +116,10 @@ export const Settings = () => {
             business_hours: settings.businessHours,
           }),
         }),
-        fetch(`http://localhost:8000/api/v1/notification-settings/`, {
+        authFetch(`http://localhost:8000/api/v1/notification-settings/`, {
           method: "PUT",
           headers: {
-            "Content-Type": "application/json",
-            "X-Company-ID": companyId.toString(),
+            "Content-Type": "application/json"
           },
           body: JSON.stringify({
             email_notifications_enabled: settings.emailNotifications,

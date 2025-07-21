@@ -29,6 +29,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { toast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/useAuth";
 
 const KnowledgeBasePage = () => {
   const queryClient = useQueryClient();
@@ -53,15 +54,12 @@ const KnowledgeBasePage = () => {
 
   const [isAppendMode, setIsAppendMode] = useState(false);
   const [selectedKbToAppendId, setSelectedKbToAppendId] = useState<number | undefined>(undefined);
+  const { authFetch } = useAuth();
 
   const { data: knowledgeBases, isLoading, isError } = useQuery<KnowledgeBase[]>({
     queryKey: ['knowledgeBases', companyId],
     queryFn: async () => {
-      const response = await fetch(`http://localhost:8000/api/v1/knowledge-bases/`, {
-        headers: {
-          "X-Company-ID": companyId.toString(),
-        },
-      });
+      const response = await authFetch(`http://localhost:8000/api/v1/knowledge-bases/`);
       if (!response.ok) {
         throw new Error("Failed to fetch knowledge bases");
       }
@@ -71,11 +69,10 @@ const KnowledgeBasePage = () => {
 
   const createKnowledgeBaseMutation = useMutation({
     mutationFn: async (newKb: Omit<KnowledgeBase, "id">) => {
-      const response = await fetch(`http://localhost:8000/api/v1/knowledge-bases/`, {
+      const response = await authFetch(`http://localhost:8000/api/v1/knowledge-bases/`, {
         method: "POST",
         headers: {
-          "Content-Type": "application/json",
-          "X-Company-ID": companyId.toString(),
+          "Content-Type": "application/json"
         },
         body: JSON.stringify(newKb),
       });
@@ -104,11 +101,10 @@ const KnowledgeBasePage = () => {
 
   const importKnowledgeBaseMutation = useMutation({
     mutationFn: async (newKb: { url: string; name: string; description?: string; knowledge_base_id?: number }) => {
-      const response = await fetch(`http://localhost:8000/api/v1/knowledge-bases/from-url`, {
+      const response = await authFetch(`http://localhost:8000/api/v1/knowledge-bases/from-url`, {
         method: "POST",
         headers: {
-          "Content-Type": "application/json",
-          "X-Company-ID": companyId.toString(),
+          "Content-Type": "application/json"
         },
         body: JSON.stringify(newKb),
       });
@@ -137,11 +133,10 @@ const KnowledgeBasePage = () => {
 
   const updateKnowledgeBaseMutation = useMutation({
     mutationFn: async (updatedKb: KnowledgeBase) => {
-      const response = await fetch(`http://localhost:8000/api/v1/knowledge-bases/${updatedKb.id}`, {
+      const response = await authFetch(`http://localhost:8000/api/v1/knowledge-bases/${updatedKb.id}`, {
         method: "PUT",
         headers: {
-          "Content-Type": "application/json",
-          "X-Company-ID": companyId.toString(),
+          "Content-Type": "application/json"
         },
         body: JSON.stringify(updatedKb),
       });
@@ -170,11 +165,8 @@ const KnowledgeBasePage = () => {
 
   const deleteKnowledgeBaseMutation = useMutation({
     mutationFn: async (kbId: number) => {
-      const response = await fetch(`http://localhost:8000/api/v1/knowledge-bases/${kbId}`, {
+      const response = await authFetch(`http://localhost:8000/api/v1/knowledge-bases/${kbId}`, {
         method: "DELETE",
-        headers: {
-          "X-Company-ID": companyId.toString(),
-        },
       });
       if (!response.ok) {
         throw new Error("Failed to delete knowledge base");
@@ -199,11 +191,10 @@ const KnowledgeBasePage = () => {
 
   const generateQnAMutation = useMutation({
     mutationFn: async (data: { knowledge_base_id: number; prompt: string }) => {
-      const response = await fetch(`http://localhost:8000/api/v1/knowledge-bases/${data.knowledge_base_id}/generate-qna`, {
+      const response = await authFetch(`http://localhost:8000/api/v1/knowledge-bases/${data.knowledge_base_id}/generate-qna`, {
         method: "POST",
         headers: {
-          "Content-Type": "application/json",
-          "X-Company-ID": companyId.toString(),
+          "Content-Type": "application/json"
         },
         body: JSON.stringify({ prompt: data.prompt, knowledge_base_id: data.knowledge_base_id }),
       });

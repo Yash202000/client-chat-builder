@@ -1,3 +1,5 @@
+import { useAuth } from "@/hooks/useAuth";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useState } from "react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -16,15 +18,15 @@ export const VaultSettings = () => {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [currentCredential, setCurrentCredential] = useState<Credential | null>(null);
   const [formData, setFormData] = useState({
-    platform: "",
+    provider_name: "",
     api_key: "",
   });
-
-    const companyId = 1; // Hardcoded company ID for now
+  const { authFetch, companyId } = useAuth();
 
   const { data: credentials, isLoading, isError } = useQuery<Credential[]>({ queryKey: ['credentials', companyId], queryFn: async () => {
+    if (!companyId) return [];
     console.log(`Fetching credentials for companyId: ${companyId}`);
-    const response = await fetch(`http://localhost:8000/api/v1/credentials/`, {
+    const response = await authFetch(`http://localhost:8000/api/v1/credentials/`, {
       headers: {
         "X-Company-ID": companyId.toString(),
       },
@@ -36,8 +38,11 @@ export const VaultSettings = () => {
   }});
 
   const createCredentialMutation = useMutation({
-    mutationFn: async (newCredential: { platform: string; api_key: string }) => {
-      const response = await fetch(`http://localhost:8000/api/v1/credentials/`, {
+    mutationFn: async (newCredential: { provider_name: string; api_key: string }) => {
+      if (!companyId) {
+        throw new Error("Company ID is not available.");
+      }
+      const response = await authFetch(`http://localhost:8000/api/v1/credentials/`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -57,7 +62,7 @@ export const VaultSettings = () => {
         title: "Credential created successfully!",
         description: "Your API key has been securely stored.",
       });
-      setFormData({ platform: "", api_key: "" });
+      setFormData({ provider_name: "", api_key: "" });
       setIsCreateDialogOpen(false);
     },
     onError: (error) => {
@@ -71,7 +76,10 @@ export const VaultSettings = () => {
 
   const updateCredentialMutation = useMutation({
     mutationFn: async (updatedCredential: Credential) => {
-      const response = await fetch(`http://localhost:8000/api/v1/credentials/${updatedCredential.id}`, {
+      if (!companyId) {
+        throw new Error("Company ID is not available.");
+      }
+      const response = await authFetch(`http://localhost:8000/api/v1/credentials/${updatedCredential.id}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
@@ -105,7 +113,7 @@ export const VaultSettings = () => {
 
   const deleteCredentialMutation = useMutation({
     mutationFn: async (credentialId: number) => {
-      const response = await fetch(`http://localhost:8000/api/v1/credentials/${credentialId}`, {
+      const response = await authFetch(`http://localhost:8000/api/v1/credentials/${credentialId}`, {
         method: "DELETE",
         headers: {
           "X-Company-ID": companyId.toString(),
@@ -140,7 +148,7 @@ export const VaultSettings = () => {
 
   const handleEditClick = (credential: Credential) => {
     setCurrentCredential(credential);
-    setFormData({ platform: credential.platform, api_key: "" }); // API key is not returned, so set to empty
+    setFormData({ provider_name: credential.provider_name, api_key: "" }); // API key is not returned, so set to empty
     setIsEditDialogOpen(true);
   };
 
@@ -149,7 +157,7 @@ export const VaultSettings = () => {
     if (currentCredential) {
       updateCredentialMutation.mutate({
         ...currentCredential,
-        platform: formData.platform,
+        provider_name: formData.provider_name,
         api_key: formData.api_key || currentCredential.api_key, // Only update if new key is provided
       });
     }
@@ -172,7 +180,7 @@ export const VaultSettings = () => {
             {credentials.map((credential) => (
               <div key={credential.id} className="flex items-center justify-between p-4 border rounded-md">
                 <div>
-                  <p className="text-lg font-medium">{credential.platform}</p>
+                  <p className="text-lg font-medium">{credential.provider_name}</p>
                   <p className="text-sm text-gray-500">Last updated: {new Date(credential.updated_at).toLocaleDateString()}</p>
                 </div>
                 <div className="flex items-center space-x-2">
@@ -190,7 +198,7 @@ export const VaultSettings = () => {
                         <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
                         <AlertDialogDescription>
                           This action cannot be undone. This will permanently delete the
-                          <span className="font-bold"> {credential.platform} </span>
+                          <span className="font-bold"> {credential.provider_name} </span>
                           API key from your vault.
                         </AlertDialogDescription>
                       </AlertDialogHeader>
@@ -219,13 +227,37 @@ export const VaultSettings = () => {
           </DialogHeader>
           <form onSubmit={handleCreateSubmit} className="space-y-4">
             <div>
-              <Label htmlFor="platform">Platform Name (e.g., groq, openai, gemini)</Label>
-              <Input
-                id="platform"
-                value={formData.platform}
-                onChange={(e) => setFormData({ ...formData, platform: e.target.value })}
-                required
-              />
+              <Label htmlFor="provider_name">Provider Name</Label>
+              <Select
+                onValueChange={(value) => {
+                  if (value === "custom") {
+                    setFormData({ ...formData, provider_name: "" }); // Clear for custom input
+                  } else {
+                    setFormData({ ...formData, provider_name: value });
+                  }
+                }}
+                value={formData.provider_name === "" ? "custom" : formData.provider_name}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select a provider" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="groq">Groq</SelectItem>
+                  <SelectItem value="gemini">Gemini</SelectItem>
+                  <SelectItem value="openai">OpenAI</SelectItem>
+                  <SelectItem value="custom">Add Custom Provider</SelectItem>
+                </SelectContent>
+              </Select>
+              {formData.provider_name === "" && (
+                <Input
+                  id="custom_provider_name"
+                  placeholder="Enter custom provider name"
+                  value={formData.provider_name}
+                  onChange={(e) => setFormData({ ...formData, provider_name: e.target.value })}
+                  className="mt-2"
+                  required
+                />
+              )}
             </div>
             <div>
               <Label htmlFor="api_key">API Key</Label>
@@ -257,13 +289,37 @@ export const VaultSettings = () => {
           </DialogHeader>
           <form onSubmit={handleEditSubmit} className="space-y-4">
             <div>
-              <Label htmlFor="edit-platform">Platform Name</Label>
-              <Input
-                id="edit-platform"
-                value={formData.platform}
-                onChange={(e) => setFormData({ ...formData, platform: e.target.value })}
-                required
-              />
+              <Label htmlFor="edit-provider_name">Provider Name</Label>
+              <Select
+                onValueChange={(value) => {
+                  if (value === "custom") {
+                    setFormData({ ...formData, provider_name: "" }); // Clear for custom input
+                  } else {
+                    setFormData({ ...formData, provider_name: value });
+                  }
+                }}
+                value={formData.provider_name === "" ? "custom" : formData.provider_name}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select a provider" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="groq">Groq</SelectItem>
+                  <SelectItem value="gemini">Gemini</SelectItem>
+                  <SelectItem value="openai">OpenAI</SelectItem>
+                  <SelectItem value="custom">Add Custom Provider</SelectItem>
+                </SelectContent>
+              </Select>
+              {formData.provider_name === "" && (
+                <Input
+                  id="edit-custom_provider_name"
+                  placeholder="Enter custom provider name"
+                  value={formData.provider_name}
+                  onChange={(e) => setFormData({ ...formData, provider_name: e.target.value })}
+                  className="mt-2"
+                  required
+                />
+              )}
             </div>
             <div>
               <Label htmlFor="edit-api_key">API Key (Leave blank to keep current)</Label>

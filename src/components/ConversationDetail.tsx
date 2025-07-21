@@ -11,6 +11,7 @@ import { toast } from '@/hooks/use-toast';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 import { VideoCallModal } from './VideoCallModal';
+import { useAuth } from "@/hooks/useAuth";
 
 interface ConversationDetailProps {
   sessionId: string;
@@ -29,15 +30,13 @@ export const ConversationDetail: React.FC<ConversationDetailProps> = ({ sessionI
   const [feedbackNotes, setFeedbackNotes] = useState<string>('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const ws = useRef<WebSocket | null>(null);
+  const { authFetch } = useAuth();
 
   const { data: messages, isLoading } = useQuery<ChatMessage[]>({
     queryKey: ['messages', agentId, sessionId, companyId],
     queryFn: async () => {
       // Limit messages to 10
-      const response = await fetch(`http://localhost:8000/api/v1/conversations/${agentId}/${sessionId}`,
-       {
-        headers: { 'X-Company-ID': companyId.toString() },
-      });
+      const response = await authFetch(`http://localhost:8000/api/v1/conversations/${agentId}/${sessionId}`);
       if (!response.ok) throw new Error('Failed to fetch messages');
       return response.json();
     },
@@ -85,9 +84,7 @@ export const ConversationDetail: React.FC<ConversationDetailProps> = ({ sessionI
   const { data: users } = useQuery<User[]>({
     queryKey: ['users', companyId],
     queryFn: async () => {
-      const response = await fetch(`http://localhost:8000/api/v1/users/`, {
-        headers: { 'X-Company-ID': companyId.toString() },
-      });
+      const response = await authFetch(`http://localhost:8000/api/v1/users/`);
       if (!response.ok) throw new Error('Failed to fetch users');
       return response.json();
     },
@@ -104,7 +101,7 @@ export const ConversationDetail: React.FC<ConversationDetailProps> = ({ sessionI
 
     const fetchWidgetSettings = async () => {
       try {
-        const response = await fetch(`http://localhost:8000/api/v1/agents/${agentId}/widget-settings`);
+        const response = await authFetch(`http://localhost:8000/api/v1/agents/${agentId}/widget-settings`);
         if (response.ok) {
           const data = await response.json();
           setWidgetSettings(data);
@@ -120,7 +117,7 @@ export const ConversationDetail: React.FC<ConversationDetailProps> = ({ sessionI
     if (messages && messages.length > 0 && widgetSettings?.suggestions_enabled) {
       const fetchSuggestions = async () => {
         try {
-          const response = await fetch(`http://localhost:8000/api/v1/suggestions/suggest-replies`, {
+          const response = await authFetch(`http://localhost:8000/api/v1/suggestions/suggest-replies`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ conversation_history: messages.map(m => m.message) })
@@ -156,9 +153,9 @@ export const ConversationDetail: React.FC<ConversationDetailProps> = ({ sessionI
   });
 
   const statusMutation = useMutation({
-    mutationFn: (newStatus: string) => fetch(`http://localhost:8000/api/v1/conversations/${sessionId}/status`, {
+    mutationFn: (newStatus: string) => authFetch(`http://localhost:8000/api/v1/conversations/${sessionId}/status`, {
       method: 'PUT',
-      headers: { 'Content-Type': 'application/json', 'X-Company-ID': companyId.toString() },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ status: newStatus }),
     }).then(res => { if (!res.ok) throw new Error('Failed to update status'); return res.json() }),
     onSuccess: () => {
@@ -172,9 +169,9 @@ export const ConversationDetail: React.FC<ConversationDetailProps> = ({ sessionI
   });
 
   const feedbackMutation = useMutation({
-    mutationFn: ({ rating, notes }: { rating: number, notes: string }) => fetch(`http://localhost:8000/api/v1/conversations/${sessionId}/feedback`, {
+    mutationFn: ({ rating, notes }: { rating: number, notes: string }) => authFetch(`http://localhost:8000/api/v1/conversations/${sessionId}/feedback`, {
       method: 'PUT',
-      headers: { 'Content-Type': 'application/json', 'X-Company-ID': companyId.toString() },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ feedback_rating: rating, feedback_notes: notes }),
     }).then(res => { if (!res.ok) throw new Error('Failed to submit feedback'); return res.json() }),
     onSuccess: () => {
@@ -185,7 +182,7 @@ export const ConversationDetail: React.FC<ConversationDetailProps> = ({ sessionI
   });
 
   const startCallMutation = useMutation({
-    mutationFn: () => fetch(`http://localhost:8000/api/v1/calls/start`, {
+    mutationFn: () => authFetch(`http://localhost:8000/api/v1/calls/start`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ session_id: sessionId }),
@@ -202,9 +199,9 @@ export const ConversationDetail: React.FC<ConversationDetailProps> = ({ sessionI
   });
 
   const assigneeMutation = useMutation({
-    mutationFn: (newAssigneeId: number) => fetch(`http://localhost:8000/api/v1/conversations/${sessionId}/assignee`, {
+    mutationFn: (newAssigneeId: number) => authFetch(`http://localhost:8000/api/v1/conversations/${sessionId}/assignee`, {
       method: 'PUT',
-      headers: { 'Content-Type': 'application/json', 'X-Company-ID': companyId.toString() },
+      headers: { 'Content-Type': 'application/json'},
       body: JSON.stringify({ user_id: newAssigneeId }),
     }).then(res => { if (!res.ok) throw new Error('Failed to update assignee'); return res.json() }),
     onSuccess: () => {

@@ -106,3 +106,14 @@ export interface Contact {
   custom_attributes?: Record<string, any>;
   company_id: number;
 }
+
+export interface SubscriptionPlan {
+  id: number;
+  name: string;
+  price: number;
+  currency: string;
+  features?: string;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}

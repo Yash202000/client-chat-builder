@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { MessageSquare, Send, Minimize2, X, User } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/useAuth";
 
 interface ChatMessage {
   id: number;
@@ -20,6 +21,7 @@ export const ChatWidgetPreview = () => {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const ws = useRef<WebSocket | null>(null);
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
+  const { authFetch } = useAuth();
 
   // Dummy IDs for preview purposes - replace with actual agent/company/session IDs
   const companyId = 1; 
@@ -121,11 +123,8 @@ export const ChatWidgetPreview = () => {
 
   const handleHandoff = async () => {
     try {
-      const response = await fetch(`http://localhost:8000/api/v1/conversations/${sessionId}/handoff`, {
+      const response = await authFetch(`http://localhost:8000/api/v1/conversations/${sessionId}/handoff`, {
         method: 'POST',
-        headers: {
-          'X-Company-ID': companyId.toString(),
-        },
       });
       if (!response.ok) {
         throw new Error('Failed to handoff conversation');

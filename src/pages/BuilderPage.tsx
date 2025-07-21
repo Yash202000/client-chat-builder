@@ -1,4 +1,5 @@
 
+import { useAuth } from "@/hooks/useAuth";
 import { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -10,23 +11,20 @@ import { Agent } from "@/types";
 const BuilderPage = () => {
   const { agentId } = useParams<{ agentId: string }>();
   const [isCreateAgentDialogOpen, setIsCreateAgentDialogOpen] = useState(false);
-  const companyId = 1; // Hardcoded for now
+  const companyId = localStorage.getItem("companyId");
+  const { authFetch } = useAuth();
 
   const { data: agent, isLoading, isError } = useQuery<Agent>({
     queryKey: ['agent', agentId, companyId],
     queryFn: async () => {
-      if (!agentId) return null; // Or throw an error if agentId is required
-      const response = await fetch(`http://localhost:8000/api/v1/agents/${agentId}`, {
-        headers: {
-          "X-Company-ID": companyId.toString(),
-        },
-      });
+      if (!agentId) return null;
+      const response = await authFetch(`http://localhost:8000/api/v1/agents/${agentId}`);
       if (!response.ok) {
         throw new Error("Failed to fetch agent");
       }
       return response.json();
     },
-    enabled: !!agentId, // Only run this query if agentId is present
+    enabled: !!agentId,
   });
 
   if (isLoading) return <div>Loading agent...</div>;

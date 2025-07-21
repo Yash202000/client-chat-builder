@@ -1,6 +1,7 @@
 
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { toast } from 'sonner';
+import { useAuth } from "@/hooks/useAuth";
 
 // A new component for a text input with a variable selector dropdown
 const VariableInput = ({ value, onChange, placeholder, availableVars }) => {
@@ -94,6 +95,7 @@ const VariableInput = ({ value, onChange, placeholder, availableVars }) => {
 const PropertiesPanel = ({ selectedNode, nodes, setNodes, deleteNode }) => {
   const [tools, setTools] = useState([]);
   const [knowledgeBases, setKnowledgeBases] = useState([]);
+  const { authFetch } = useAuth();
 
   // Memoize the calculation of available variables
   const availableVariables = useMemo(() => {
@@ -123,9 +125,7 @@ const PropertiesPanel = ({ selectedNode, nodes, setNodes, deleteNode }) => {
   useEffect(() => {
     const fetchTools = async () => {
       try {
-        const response = await fetch('http://localhost:8000/api/v1/tools/?company_id=1', { // Hardcoded company ID
-          headers: { 'X-Company-ID': '1' },
-        });
+        const response = await authFetch('http://localhost:8000/api/v1/tools/?company_id=1');
         if (!response.ok) throw new Error('Failed to fetch tools');
         const data = await response.json();
         setTools(data);
@@ -136,9 +136,7 @@ const PropertiesPanel = ({ selectedNode, nodes, setNodes, deleteNode }) => {
     };
     const fetchKnowledgeBases = async () => {
       try {
-        const response = await fetch('http://localhost:8000/api/v1/knowledge-bases/?company_id=1', { // Hardcoded company ID
-          headers: { 'X-Company-ID': '1' },
-        });
+        const response = await authFetch('http://localhost:8000/api/v1/knowledge-bases/?company_id=1');
         if (!response.ok) throw new Error('Failed to fetch knowledge bases');
         const data = await response.json();
         setKnowledgeBases(data);

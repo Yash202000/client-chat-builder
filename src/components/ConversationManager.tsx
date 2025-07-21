@@ -14,32 +14,29 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/hooks/useAuth";
 
-// Mock function to get sessions - replace with your actual API call
-async function getSessions(agentId: number, companyId: number): Promise<Session[]> {
-  const response = await fetch(`http://localhost:8000/api/v1/conversations/${agentId}/sessions`, {
-    headers: {
-      "X-Company-ID": companyId.toString(),
-    },
-  });
-  if (!response.ok) {
-    throw new Error("Failed to fetch sessions");
-  }
-  return response.json();
-}
 
 export const ConversationManager = () => {
   const [selectedAgentId, setSelectedAgentId] = useState<number | null>(null);
   const [selectedSessionId, setSelectedSessionId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const companyId = 1; // Hardcoded company ID
+  const { authFetch } = useAuth();
+
+  // Mock function to get sessions - replace with your actual API call
+  async function getSessions(agentId: number, companyId: number): Promise<Session[]> {
+    const response = await authFetch(`http://localhost:8000/api/v1/conversations/${agentId}/sessions`);
+    if (!response.ok) {
+      throw new Error("Failed to fetch sessions");
+    }
+    return response.json();
+  }
 
   const { data: agents, isLoading: isLoadingAgents } = useQuery<Agent[]>({ 
     queryKey: ['agents', companyId], 
     queryFn: async () => {
-      const response = await fetch(`http://localhost:8000/api/v1/agents/`, {
-        headers: { "X-Company-ID": companyId.toString() },
-      });
+      const response = await authFetch(`http://localhost:8000/api/v1/agents/`);
       if (!response.ok) throw new Error("Failed to fetch agents");
       return response.json();
     },

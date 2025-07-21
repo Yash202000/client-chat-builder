@@ -15,6 +15,7 @@ import Sidebar from './Sidebar';
 import PropertiesPanel from './PropertiesPanel';
 import CreateWorkflowDialog from './CreateWorkflowDialog';
 import { LlmNode, ToolNode, ConditionNode, OutputNode, StartNode, ListenNode, PromptNode } from './CustomNodes'; // Import custom nodes
+import { useAuth } from "@/hooks/useAuth";
 
 const initialNodes = [
   {
@@ -35,6 +36,7 @@ const VisualWorkflowBuilder = () => {
   const [isCreateDialogOpen, setCreateDialogOpen] = useState(false);
 
   const reactFlowWrapper = useRef(null);
+  const { authFetch } = useAuth();
 
   // Define custom node types
   const nodeTypes = useMemo(() => ({ 
@@ -49,9 +51,7 @@ const VisualWorkflowBuilder = () => {
 
   const fetchWorkflows = async () => {
     try {
-      const response = await fetch('http://localhost:8000/api/v1/workflows/?company_id=1', {
-        headers: { 'X-Company-ID': '1' },
-      });
+      const response = await authFetch('http://localhost:8000/api/v1/workflows/?company_id=1');
       if (!response.ok) throw new Error('Failed to fetch workflows');
       const data = await response.json();
       setWorkflows(data);
@@ -286,10 +286,10 @@ const VisualWorkflowBuilder = () => {
     };
 
     try {
-      const response = await fetch(`http://localhost:8000/api/v1/workflows/${selectedWorkflow.id}`,
+      const response = await authFetch(`http://localhost:8000/api/v1/workflows/${selectedWorkflow.id}`,
         {
           method: 'PUT',
-          headers: { 'Content-Type': 'application/json', 'X-Company-ID': '1' },
+          headers: { 'Content-Type': 'application/json'},
           body: JSON.stringify(updatedWorkflow),
         });
       if (!response.ok) {
@@ -313,9 +313,9 @@ const VisualWorkflowBuilder = () => {
     };
 
     try {
-      const response = await fetch('http://localhost:8000/api/v1/workflows/?company_id=1', {
+      const response = await authFetch('http://localhost:8000/api/v1/workflows/?company_id=1', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'X-Company-ID': '1' },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(newWorkflowPayload),
       });
       if (!response.ok) {
@@ -335,9 +335,8 @@ const VisualWorkflowBuilder = () => {
     if (!selectedWorkflow) return toast.error("No workflow selected.");
     if (window.confirm(`Delete "${selectedWorkflow.name}"?`)) {
       try {
-        const response = await fetch(`http://localhost:8000/api/v1/workflows/${selectedWorkflow.id}`, {
+        const response = await authFetch(`http://localhost:8000/api/v1/workflows/${selectedWorkflow.id}`, {
           method: 'DELETE',
-          headers: { 'X-Company-ID': '1' },
         });
         if (!response.ok) throw new Error('Deletion failed');
         toast.success("Workflow deleted.");

@@ -9,18 +9,16 @@ import { Plus, Trash2, Edit, LinkIcon, Brain } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/useAuth";
 
 const KnowledgeBaseManagementPage = () => {
   const queryClient = useQueryClient();
   const companyId = 1; // Hardcoded for now
   const { toast } = useToast();
+  const { authFetch } = useAuth();
 
   const { data: knowledgeBases, isLoading } = useQuery<KnowledgeBase[]>({ queryKey: ['knowledgeBases', companyId], queryFn: async () => {
-    const response = await fetch(`http://localhost:8000/api/v1/knowledge-bases/`, {
-      headers: {
-        "X-Company-ID": companyId.toString(),
-      },
-    });
+    const response = await authFetch(`http://localhost:8000/api/v1/knowledge-bases/`);
     if (!response.ok) {
       throw new Error("Failed to fetch knowledge bases");
     }
@@ -29,11 +27,10 @@ const KnowledgeBaseManagementPage = () => {
 
   const createKnowledgeBaseMutation = useMutation({
     mutationFn: async (newKnowledgeBase: Omit<KnowledgeBase, 'id'>) => {
-      const response = await fetch(`http://localhost:8000/api/v1/knowledge-bases/`, {
+      const response = await authFetch(`http://localhost:8000/api/v1/knowledge-bases/`, {
         method: "POST",
         headers: {
-          "Content-Type": "application/json",
-          "X-Company-ID": companyId.toString(),
+          "Content-Type": "application/json"
         },
         body: JSON.stringify(newKnowledgeBase),
       });
@@ -53,11 +50,10 @@ const KnowledgeBaseManagementPage = () => {
 
   const createKnowledgeBaseFromUrlMutation = useMutation({
     mutationFn: async (data: { url: string; name: string; description?: string; knowledge_base_id?: number }) => {
-      const response = await fetch(`http://localhost:8000/api/v1/knowledge-bases/from-url`, {
+      const response = await authFetch(`http://localhost:8000/api/v1/knowledge-bases/from-url`, {
         method: "POST",
         headers: {
-          "Content-Type": "application/json",
-          "X-Company-ID": companyId.toString(),
+          "Content-Type": "application/json"
         },
         body: JSON.stringify(data),
       });
@@ -77,11 +73,10 @@ const KnowledgeBaseManagementPage = () => {
 
   const generateQnAMutation = useMutation({
     mutationFn: async (data: { knowledge_base_id: number; prompt: string }) => {
-      const response = await fetch(`http://localhost:8000/api/v1/knowledge-bases/${data.knowledge_base_id}/generate-qna`, {
+      const response = await authFetch(`http://localhost:8000/api/v1/knowledge-bases/${data.knowledge_base_id}/generate-qna`, {
         method: "POST",
         headers: {
-          "Content-Type": "application/json",
-          "X-Company-ID": companyId.toString(),
+          "Content-Type": "application/json"
         },
         body: JSON.stringify({ knowledge_base_id: data.knowledge_base_id, prompt: data.prompt }),
       });
@@ -101,11 +96,10 @@ const KnowledgeBaseManagementPage = () => {
 
   const updateKnowledgeBaseMutation = useMutation({
     mutationFn: async (updatedKnowledgeBase: KnowledgeBase) => {
-      const response = await fetch(`http://localhost:8000/api/v1/knowledge-bases/${updatedKnowledgeBase.id}`, {
+      const response = await authFetch(`http://localhost:8000/api/v1/knowledge-bases/${updatedKnowledgeBase.id}`, {
         method: "PUT",
         headers: {
-          "Content-Type": "application/json",
-          "X-Company-ID": companyId.toString(),
+          "Content-Type": "application/json"
         },
         body: JSON.stringify(updatedKnowledgeBase),
       });
@@ -125,11 +119,8 @@ const KnowledgeBaseManagementPage = () => {
 
   const deleteKnowledgeBaseMutation = useMutation({
     mutationFn: async (knowledgeBaseId: number) => {
-      const response = await fetch(`http://localhost:8000/api/v1/knowledge-bases/${knowledgeBaseId}`, {
+      const response = await authFetch(`http://localhost:8000/api/v1/knowledge-bases/${knowledgeBaseId}`, {
         method: "DELETE",
-        headers: {
-          "X-Company-ID": companyId.toString(),
-        },
       });
       if (!response.ok) {
         throw new Error("Failed to delete knowledge base");
