@@ -275,8 +275,8 @@ export const ConversationDetail: React.FC<ConversationDetailProps> = ({ sessionI
         {isLoading ? (
           <p>Loading messages...</p>
         ) : (
-          messages?.map((msg) => (
-            <div key={msg.id} className={`flex items-end gap-2 ${msg.sender === 'user' ? 'justify-start' : 'justify-end'}`}>
+          messages?.map((msg, index) => (
+            <div key={`${msg.id}-${msg.timestamp}-${index}`} className={`flex items-end gap-2 ${msg.sender === 'user' ? 'justify-start' : 'justify-end'}`}>
               {msg.message_type === 'note' ? (
                 <div className="w-full my-2 flex items-center gap-2">
                   <div className="h-px flex-1 bg-yellow-300"></div>

@@ -159,7 +159,7 @@
     function initWebSocket() {
         if (ws && ws.readyState === WebSocket.OPEN) return;
         sessionId = generateSessionId();
-        ws = new WebSocket(`${wsBackendUrl}/ws/${companyId}/${agentId}/${sessionId}?user_type=user`);
+        ws = new WebSocket(`${wsBackendUrl}/api/v1/ws/public/${companyId}/${agentId}/${sessionId}?user_type=user`);
 
         ws.onopen = () => {
             if (isProactiveSession) {
@@ -253,7 +253,50 @@
     }
 
     function addVideoCallInvitation(messageText) {
-        // ... (existing video call logic)
+        const msgDiv = document.createElement('div');
+        msgDiv.style.alignSelf = 'center';
+        msgDiv.style.textAlign = 'center';
+        msgDiv.style.margin = '10px 0';
+
+        const bubble = document.createElement('div');
+        bubble.style.maxWidth = '85%';
+        bubble.style.padding = '12px';
+        bubble.style.borderRadius = '12px';
+        bubble.style.backgroundColor = '#f0f0f0';
+        bubble.style.border = '1px solid #ddd';
+
+        const message = document.createElement('p');
+        message.textContent = messageText;
+        message.style.margin = '0 0 10px 0';
+
+        const joinButton = document.createElement('button');
+        joinButton.textContent = 'Join Video Call';
+        joinButton.style.backgroundColor = widgetSettings.primary_color;
+        joinButton.style.color = 'white';
+        joinButton.style.border = 'none';
+        joinButton.style.padding = '10px 15px';
+        joinButton.style.borderRadius = '8px';
+        joinButton.style.cursor = 'pointer';
+
+        joinButton.onclick = () => {
+            fetch(`${httpBackendUrl}/api/v1/calls/token?session_id=${sessionId}&user_id=${sessionId}`)
+                .then(res => res.json())
+                .then(data => {
+                    const livekitURL = widgetSettings.livekit_url;
+                    const videoCallPageURL = `${widgetSettings.frontend_url}/video-call?token=${data.token}&livekitUrl=${encodeURIComponent(livekitURL)}&sessionId=${sessionId}`;
+                    window.open(videoCallPageURL, '_blank', 'width=800,height=600');
+                })
+                .catch(err => {
+                    console.error('Failed to get join token', err);
+                    alert('Failed to start video call. Please try again.');
+                });
+        };
+
+        bubble.appendChild(message);
+        bubble.appendChild(joinButton);
+        msgDiv.appendChild(bubble);
+        chatMessages.appendChild(msgDiv);
+        chatMessages.scrollTop = chatMessages.scrollHeight;
     }
 
     function sendMessage(messageText) {

@@ -21,16 +21,10 @@ export const VaultSettings = () => {
     provider_name: "",
     api_key: "",
   });
-  const { authFetch, companyId } = useAuth();
+  const { authFetch } = useAuth();
 
-  const { data: credentials, isLoading, isError } = useQuery<Credential[]>({ queryKey: ['credentials', companyId], queryFn: async () => {
-    if (!companyId) return [];
-    console.log(`Fetching credentials for companyId: ${companyId}`);
-    const response = await authFetch(`/api/v1/credentials/`, {
-      headers: {
-        "X-Company-ID": companyId.toString(),
-      },
-    });
+  const { data: credentials, isLoading, isError } = useQuery<Credential[]>({ queryKey: ['credentials'], queryFn: async () => {
+    const response = await authFetch(`/api/v1/credentials/`);
     if (!response.ok) {
       throw new Error("Failed to fetch credentials");
     }
@@ -39,14 +33,10 @@ export const VaultSettings = () => {
 
   const createCredentialMutation = useMutation({
     mutationFn: async (newCredential: { provider_name: string; api_key: string }) => {
-      if (!companyId) {
-        throw new Error("Company ID is not available.");
-      }
       const response = await authFetch(`/api/v1/credentials/`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "X-Company-ID": companyId.toString(),
         },
         body: JSON.stringify(newCredential),
       });
@@ -76,14 +66,10 @@ export const VaultSettings = () => {
 
   const updateCredentialMutation = useMutation({
     mutationFn: async (updatedCredential: Credential) => {
-      if (!companyId) {
-        throw new Error("Company ID is not available.");
-      }
       const response = await authFetch(`/api/v1/credentials/${updatedCredential.id}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
-          "X-Company-ID": companyId.toString(),
         },
         body: JSON.stringify(updatedCredential),
       });
@@ -115,9 +101,6 @@ export const VaultSettings = () => {
     mutationFn: async (credentialId: number) => {
       const response = await authFetch(`/api/v1/credentials/${credentialId}`, {
         method: "DELETE",
-        headers: {
-          "X-Company-ID": companyId.toString(),
-        },
       });
       if (!response.ok) {
         const errorData = await response.json();
