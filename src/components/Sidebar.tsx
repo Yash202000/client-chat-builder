@@ -1,5 +1,5 @@
 import React from 'react';
-import { Bot, Cog, GitBranch, MessageSquare, Ear, HelpCircle } from 'lucide-react';
+import { Bot, Cog, GitBranch, MessageSquare, Ear, HelpCircle, BookOpen, Code, SquareStack, Globe } from 'lucide-react';
 
 const DraggableNode = ({ type, label, icon }) => {
   const onDragStart = (event, nodeType) => {
@@ -47,6 +47,10 @@ const Sidebar = () => {
       <DraggableNode type="listen" label="Listen for Input" icon={<Ear size={20} />} />
       <DraggableNode type="prompt" label="Prompt for Input" icon={<HelpCircle size={20} />} />
       <DraggableNode type="condition" label="Condition" icon={<GitBranch size={20} />} />
+      <DraggableNode type="knowledge" label="Knowledge Search" icon={<BookOpen size={20} />} />
+      <DraggableNode type="code" label="Code" icon={<Code size={20} />} />
+      <DraggableNode type="data_manipulation" label="Data Manipulation" icon={<SquareStack size={20} />} />
+      <DraggableNode type="http_request" label="HTTP Request" icon={<Globe size={20} />} />
       <DraggableNode type="output" label="Output" icon={<MessageSquare size={20} />} />
     </aside>
   );

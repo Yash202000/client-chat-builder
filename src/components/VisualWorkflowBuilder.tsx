@@ -14,7 +14,7 @@ import { toast } from "sonner";
 import Sidebar from './Sidebar';
 import PropertiesPanel from './PropertiesPanel';
 import CreateWorkflowDialog from './CreateWorkflowDialog';
-import { LlmNode, ToolNode, ConditionNode, OutputNode, StartNode, ListenNode, PromptNode } from './CustomNodes'; // Import custom nodes
+import { LlmNode, ToolNode, ConditionNode, OutputNode, StartNode, ListenNode, PromptNode, KnowledgeNode, CodeNode, DataManipulationNode, HttpRequestNode } from './CustomNodes'; // Import custom nodes
 import { useAuth } from "@/hooks/useAuth";
 
 const initialNodes = [
@@ -46,7 +46,11 @@ const VisualWorkflowBuilder = () => {
     output: OutputNode, 
     start: StartNode,
     listen: ListenNode,
-    prompt: PromptNode
+    prompt: PromptNode,
+    knowledge: KnowledgeNode,
+    code: CodeNode,
+    data_manipulation: DataManipulationNode,
+    http_request: HttpRequestNode
   }), []);
 
   const fetchWorkflows = async () => {
@@ -83,7 +87,7 @@ const VisualWorkflowBuilder = () => {
       // Prioritize visual_steps for rendering if available
       if (workflow.visual_steps) {
         try {
-          const visualFlow = JSON.parse(workflow.visual_steps);
+          const visualFlow = workflow.visual_steps;
           setNodes(visualFlow.nodes || initialNodes);
           setEdges(visualFlow.edges || []);
         } catch (e) {
@@ -247,7 +251,32 @@ const VisualWorkflowBuilder = () => {
         stepConfig.params = { ...node.data.params, options };
       } else if (node.type === 'condition') {
         stepConfig.tool = 'condition_tool';
-        stepConfig.params = {}; // Future-proofing
+        stepConfig.params = { condition: node.data.condition };
+      } else if (node.type === 'knowledge') {
+        stepConfig.tool = 'knowledge_retrieval_tool';
+        stepConfig.params = {
+          knowledge_base_id: node.data.knowledge_base_id,
+          query: node.data.query,
+        };
+      } else if (node.type === 'http_request') {
+        stepConfig.tool = 'http_request_tool';
+        stepConfig.params = {
+          url: node.data.url,
+          method: node.data.method,
+          headers: node.data.headers ? JSON.parse(node.data.headers) : {},
+          body: node.data.body ? JSON.parse(node.data.body) : {},
+        };
+      } else if (node.type === 'data_manipulation') {
+        stepConfig.tool = 'data_manipulation_tool';
+        stepConfig.params = {
+          expression: node.data.expression,
+          output_variable: node.data.output_variable,
+        };
+      } else if (node.type === 'code') {
+        stepConfig.tool = 'code_execution_tool';
+        stepConfig.params = {
+          code: node.data.code,
+        };
       }
 
       // Find outgoing edges to determine the next step's unique ID
@@ -282,7 +311,7 @@ const VisualWorkflowBuilder = () => {
     const updatedWorkflow = {
       ...selectedWorkflow,
       steps: backendSteps, // Backend executable steps
-      visual_steps: JSON.stringify(flowVisualData) // Frontend visual data
+      visual_steps: flowVisualData // Frontend visual data
     };
 
     try {
@@ -309,7 +338,7 @@ const VisualWorkflowBuilder = () => {
       description,
       agent_id: 1,
       steps: { nodes: initialNodes, edges: [] }, // Initial backend steps (empty for now)
-      visual_steps: JSON.stringify({ nodes: initialNodes, edges: [] }) // Initial visual steps
+      visual_steps: { nodes: initialNodes, edges: [] } // Initial visual steps
     };
 
     try {

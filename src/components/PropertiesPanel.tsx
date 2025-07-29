@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { toast } from 'sonner';
 import { useAuth } from "@/hooks/useAuth";
@@ -201,77 +200,41 @@ const PropertiesPanel = ({ selectedNode, nodes, setNodes, deleteNode }) => {
   const renderNodeProperties = () => {
     if (!selectedNode) return <div style={{ color: '#888', padding: '20px' }}>Select a node to view its properties.</div>;
 
-    switch (selectedNode.type) {
-      case 'listen':
-        return (
-            <div>
-                <div style={{ marginBottom: '10px' }}>
-                    <label style={{ display: 'block', marginBottom: '5px' }}>Node Label:</label>
-                    <input type="text" value={selectedNode.data.label} onChange={onLabelChange} style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ccc' }} />
-                </div>
-                <div style={{ marginTop: '15px' }}>
-                    <label style={{ display: 'block', marginBottom: '5px', fontWeight: '500' }}>Save User Input to Variable</label>
-                    <input
-                        type="text"
-                        value={(selectedNode.data.params && selectedNode.data.params.save_to_variable) || ''}
-                        onChange={(e) => onParamChange('save_to_variable', e.target.value)}
-                        style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ddd' }}
-                        placeholder="e.g., user_email"
-                    />
-                </div>
+    const commonInputStyle = { width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid #d0d0d0', fontSize: '14px', boxSizing: 'border-box' };
+    const labelStyle = { display: 'block', marginBottom: '6px', fontWeight: '500', fontSize: '14px', color: '#333' };
+    const sectionStyle = { marginBottom: '20px', padding: '15px', background: '#f9f9f9', borderRadius: '8px', border: '1px solid #eee' };
+
+    return (
+      <div style={{ padding: '10px' }}>
+        <div style={sectionStyle}>
+          <h3 style={{ fontSize: '16px', marginBottom: '15px', color: '#222' }}>Node Settings</h3>
+          <div style={{ marginBottom: '15px' }}>
+            <label style={labelStyle}>Node Label:</label>
+            <input type="text" value={selectedNode.data.label || ''} onChange={onLabelChange} style={commonInputStyle} />
+          </div>
+        </div>
+
+        {selectedNode.type === 'llm' && (
+          <div style={sectionStyle}>
+            <h3 style={{ fontSize: '16px', marginBottom: '15px', color: '#222' }}>LLM Configuration</h3>
+            <div style={{ marginBottom: '15px' }}>
+              <label style={labelStyle}>Model:</label>
+              <select
+                value={selectedNode.data.model || ''}
+                onChange={(e) => updateNodeData({ model: e.target.value })}
+                style={commonInputStyle}
+              >
+                <option value="">Select a model</option>
+                <option value="groq/llama3-8b-8192">Groq Llama3 8b</option>
+                <option value="gemini/gemini-pro">Gemini Pro</option>
+              </select>
             </div>
-        );
-      case 'prompt':
-        return (
-            <div>
-                <div style={{ marginBottom: '10px' }}>
-                    <label style={{ display: 'block', marginBottom: '5px' }}>Node Label:</label>
-                    <input type="text" value={selectedNode.data.label} onChange={onLabelChange} style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ccc' }} />
-                </div>
-                <div style={{ marginTop: '15px' }}>
-                    <label style={{ display: 'block', marginBottom: '5px', fontWeight: '500' }}>Prompt Text</label>
-                    <VariableInput
-                        value={(selectedNode.data.params && selectedNode.data.params.prompt_text) || ''}
-                        onChange={(e) => onParamChange('prompt_text', e.target.value)}
-                        placeholder="Ask the user a question..."
-                        availableVars={availableVariables}
-                    />
-                </div>
-                <div style={{ marginTop: '15px' }}>
-                    <label style={{ display: 'block', marginBottom: '5px', fontWeight: '500' }}>Options (comma-separated)</label>
-                    <input
-                        type="text"
-                        value={(selectedNode.data.params && selectedNode.data.params.options) || ''}
-                        onChange={(e) => onParamChange('options', e.target.value)}
-                        style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ddd' }}
-                        placeholder="e.g., Yes, No, Maybe"
-                    />
-                </div>
-                <div style={{ marginTop: '15px' }}>
-                    <label style={{ display: 'block', marginBottom: '5px', fontWeight: '500' }}>Save User Input to Variable</label>
-                    <input
-                        type="text"
-                        value={(selectedNode.data.params && selectedNode.data.params.save_to_variable) || ''}
-                        onChange={(e) => onParamChange('save_to_variable', e.target.value)}
-                        style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ddd' }}
-                        placeholder="e.g., user_choice"
-                    />
-                </div>
-            </div>
-        );
-      case 'llm':
-        return (
-          <div>
-            <div style={{ marginBottom: '10px' }}>
-              <label style={{ display: 'block', marginBottom: '5px' }}>Node Label:</label>
-              <input type="text" value={selectedNode.data.label} onChange={onLabelChange} style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ccc' }} />
-            </div>
-            <div style={{ marginBottom: '10px' }}>
-              <label style={{ display: 'block', marginBottom: '5px' }}>Knowledge Base:</label>
+            <div style={{ marginBottom: '15px' }}>
+              <label style={labelStyle}>Knowledge Base:</label>
               <select
                 value={selectedNode.data.knowledge_base_id || ''}
                 onChange={(e) => updateNodeData({ knowledge_base_id: e.target.value ? parseInt(e.target.value) : null })}
-                style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ccc' }}
+                style={commonInputStyle}
               >
                 <option value="">None</option>
                 {knowledgeBases.map((kb) => (
@@ -281,8 +244,8 @@ const PropertiesPanel = ({ selectedNode, nodes, setNodes, deleteNode }) => {
                 ))}
               </select>
             </div>
-            <div style={{ marginBottom: '10px' }}>
-              <label style={{ display: 'block', marginBottom: '5px' }}>Prompt:</label>
+            <div style={{ marginBottom: '15px' }}>
+              <label style={labelStyle}>Prompt:</label>
               <VariableInput
                 value={selectedNode.data.prompt || ''}
                 onChange={(e) => updateNodeData({ prompt: e.target.value })}
@@ -291,33 +254,253 @@ const PropertiesPanel = ({ selectedNode, nodes, setNodes, deleteNode }) => {
               />
             </div>
           </div>
-        );
-      default: // Covers 'tool' and any other types
-        return (
-          <div>
-            <div style={{ marginBottom: '10px' }}>
-              <label style={{ display: 'block', marginBottom: '5px' }}>Node Label:</label>
-              <input type="text" value={selectedNode.data.label} onChange={onLabelChange} style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ccc' }} />
+        )}
+
+        {selectedNode.type === 'tool' && (
+          <div style={sectionStyle}>
+            <h3 style={{ fontSize: '16px', marginBottom: '15px', color: '#222' }}>Tool Configuration</h3>
+            <div style={{ marginBottom: '15px' }}>
+              <label style={labelStyle}>Tool:</label>
+              <select 
+                style={commonInputStyle} 
+                onChange={(e) => onToolChange(e.target.value)} 
+                value={selectedNode.data.tool || ''}
+              >
+                <option value="">Select a tool</option>
+                {tools.map(tool => <option key={tool.id} value={tool.name}>{tool.name}</option>)}
+              </select>
             </div>
-            {selectedNode.type === 'tool' && (
-              <>
-                <div style={{ marginBottom: '10px' }}>
-                  <label style={{ display: 'block', marginBottom: '5px' }}>Tool:</label>
-                  <select 
-                    style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ccc' }} 
-                    onChange={(e) => onToolChange(e.target.value)} 
-                    value={selectedNode.data.tool || ''}
-                  >
-                    <option value="">Select a tool</option>
-                    {tools.map(tool => <option key={tool.id} value={tool.name}>{tool.name}</option>)}
-                  </select>
-                </div>
-                {renderToolParams()}
-              </>
-            )}
+            {renderToolParams()}
           </div>
-        );
-    }
+        )}
+
+        {selectedNode.type === 'condition' && (
+          <div style={sectionStyle}>
+            <h3 style={{ fontSize: '16px', marginBottom: '15px', color: '#222' }}>Condition Logic</h3>
+            <div style={{ marginBottom: '15px' }}>
+              <label style={labelStyle}>Condition Expression:</label>
+              <VariableInput
+                value={selectedNode.data.condition || ''}
+                onChange={(e) => updateNodeData({ condition: e.target.value })}
+                placeholder="e.g., {{context.variable}} == 'some_value'" 
+                availableVars={availableVariables}
+              />
+            </div>
+          </div>
+        )}
+
+        {selectedNode.type === 'knowledge' && (
+          <div style={sectionStyle}>
+            <h3 style={{ fontSize: '16px', marginBottom: '15px', color: '#222' }}>Knowledge Search</h3>
+            <div style={{ marginBottom: '15px' }}>
+              <label style={labelStyle}>Knowledge Base:</label>
+              <select
+                value={selectedNode.data.knowledge_base_id || ''}
+                onChange={(e) => updateNodeData({ knowledge_base_id: e.target.value ? parseInt(e.target.value) : null })}
+                style={commonInputStyle}
+              >
+                <option value="">None</option>
+                {knowledgeBases.map((kb) => (
+                  <option key={kb.id} value={kb.id}>
+                    {kb.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div style={{ marginBottom: '15px' }}>
+              <label style={labelStyle}>Query:</label>
+              <VariableInput
+                value={selectedNode.data.query || ''}
+                onChange={(e) => updateNodeData({ query: e.target.value })}
+                placeholder="e.g., What is the capital of {{context.country}}?"
+                availableVars={availableVariables}
+              />
+            </div>
+          </div>
+        )}
+
+        {selectedNode.type === 'http_request' && (
+          <div style={sectionStyle}>
+            <h3 style={{ fontSize: '16px', marginBottom: '15px', color: '#222' }}>HTTP Request</h3>
+            <div style={{ marginBottom: '15px' }}>
+              <label style={labelStyle}>Node Label:</label>
+              <input type="text" value={selectedNode.data.label || ''} onChange={onLabelChange} style={commonInputStyle} />
+            </div>
+            <div style={{ marginBottom: '15px'}}> 
+              <label style={labelStyle}>URL:</label>
+              <VariableInput
+                value={selectedNode.data.url || ''}
+                onChange={(e) => updateNodeData({ url: e.target.value })}
+                placeholder="e.g., https://api.example.com/data"
+                availableVars={availableVariables}
+              />
+            </div>
+            <div style={{ marginBottom: '15px'}}> 
+              <label style={labelStyle}>Method:</label>
+              <select
+                value={selectedNode.data.method || 'GET'}
+                onChange={(e) => updateNodeData({ method: e.target.value })}
+                style={commonInputStyle}
+              >
+                <option value="GET">GET</option>
+                <option value="POST">POST</option>
+                <option value="PUT">PUT</option>
+                <option value="DELETE">DELETE</option>
+              </select>
+            </div>
+            <div style={{ marginBottom: '15px'}}> 
+              <label style={labelStyle}>Headers (JSON):</label>
+              <textarea
+                value={selectedNode.data.headers || ''}
+                onChange={(e) => updateNodeData({ headers: e.target.value })}
+                placeholder='e.g., {"Content-Type": "application/json"}'
+                rows={4}
+                style={{ ...commonInputStyle, fontFamily: 'monospace' }}
+              />
+            </div>
+            <div style={{ marginBottom: '15px'}}> 
+              <label style={labelStyle}>Body (JSON):</label>
+              <textarea
+                value={selectedNode.data.body || ''}
+                onChange={(e) => updateNodeData({ body: e.target.value })}
+                placeholder='e.g., {"key": "{{context.value}}"}'
+                rows={6}
+                style={{ ...commonInputStyle, fontFamily: 'monospace' }}
+              />
+            </div>
+          </div>
+        )}
+
+        {selectedNode.type === 'data_manipulation' && (
+          <div style={sectionStyle}>
+            <h3 style={{ fontSize: '16px', marginBottom: '15px', color: '#222' }}>Data Manipulation</h3>
+            <div style={{ marginBottom: '15px' }}>
+              <label style={labelStyle}>Node Label:</label>
+              <input type="text" value={selectedNode.data.label || ''} onChange={onLabelChange} style={commonInputStyle} />
+            </div>
+            <div style={{ marginBottom: '15px' }}>
+              <label style={labelStyle}>Expression (Python):</label>
+              <textarea
+                value={selectedNode.data.expression || ''}
+                onChange={(e) => updateNodeData({ expression: e.target.value })}
+                placeholder="e.g., context.user_input.upper()"
+                rows={5}
+                style={{ ...commonInputStyle, fontFamily: 'monospace' }}
+              />
+            </div>
+            <div style={{ marginBottom: '15px' }}>
+              <label style={labelStyle}>Output Variable Name:</label>
+              <input
+                type="text"
+                value={selectedNode.data.output_variable || ''}
+                onChange={(e) => updateNodeData({ output_variable: e.target.value })}
+                style={commonInputStyle}
+                placeholder="e.g., transformed_data"
+              />
+            </div>
+          </div>
+        )}
+
+        {selectedNode.type === 'code' && (
+          <div style={sectionStyle}>
+            <h3 style={{ fontSize: '16px', marginBottom: '15px', color: '#222' }}>Code Execution</h3>
+            <div style={{ marginBottom: '15px' }}>
+              <label style={labelStyle}>Python Code:</label>
+              <textarea
+                value={selectedNode.data.code || ''}
+                onChange={(e) => updateNodeData({ code: e.target.value })}
+                placeholder="e.g., print('Hello, World!') result = context.user_input * 2"
+                rows={10}
+                style={{ ...commonInputStyle, fontFamily: 'monospace' }}
+              />
+            </div>
+          </div>
+        )}
+
+        {selectedNode.type === 'listen' && (
+          <div style={sectionStyle}>
+            <h3 style={{ fontSize: '16px', marginBottom: '15px', color: '#222' }}>Listen for Input</h3>
+            <div style={{ marginBottom: '15px' }}>
+              <label style={labelStyle}>Save User Input to Variable:</label>
+              <input
+                type="text"
+                value={(selectedNode.data.params && selectedNode.data.params.save_to_variable) || ''}
+                onChange={(e) => onParamChange('save_to_variable', e.target.value)}
+                style={commonInputStyle}
+                placeholder="e.g., user_email"
+              />
+            </div>
+          </div>
+        )}
+
+        {selectedNode.type === 'prompt' && (
+          <div style={sectionStyle}>
+            <h3 style={{ fontSize: '16px', marginBottom: '15px', color: '#222' }}>Prompt for Input</h3>
+            <div style={{ marginBottom: '15px' }}>
+              <label style={labelStyle}>Prompt Text:</label>
+              <VariableInput
+                value={(selectedNode.data.params && selectedNode.data.params.prompt_text) || ''}
+                onChange={(e) => onParamChange('prompt_text', e.target.value)}
+                placeholder="Ask the user a question..."
+                availableVars={availableVariables}
+              />
+            </div>
+            <div style={{ marginBottom: '15px' }}>
+              <label style={labelStyle}>Options (comma-separated):</label>
+              <input
+                type="text"
+                value={(selectedNode.data.params && selectedNode.data.params.options) || ''}
+                onChange={(e) => onParamChange('options', e.target.value)}
+                style={commonInputStyle}
+                placeholder="e.g., Yes, No, Maybe"
+              />
+            </div>
+            <div style={{ marginBottom: '15px' }}>
+              <label style={labelStyle}>Save User Input to Variable:</label>
+              <input
+                type="text"
+                value={(selectedNode.data.params && selectedNode.data.params.save_to_variable) || ''}
+                onChange={(e) => onParamChange('save_to_variable', e.target.value)}
+                style={commonInputStyle}
+                placeholder="e.g., user_choice"
+              />
+            </div>
+          </div>
+        )}
+
+        {selectedNode.type === 'output' && (
+          <div style={sectionStyle}>
+            <h3 style={{ fontSize: '16px', marginBottom: '15px', color: '#222' }}>Output Node</h3>
+            <div style={{ marginBottom: '15px' }}>
+              <label style={labelStyle}>Output Value:</label>
+              <VariableInput
+                value={selectedNode.data.output_value || ''}
+                onChange={(e) => updateNodeData({ output_value: e.target.value })}
+                placeholder="e.g., {{llm_node_id.output}}"
+                availableVars={availableVariables}
+              />
+            </div>
+          </div>
+        )}
+
+        {selectedNode.type === 'start' && (
+          <div style={sectionStyle}>
+            <h3 style={{ fontSize: '16px', marginBottom: '15px', color: '#222' }}>Start Node</h3>
+            <p style={{ fontSize: '14px', color: '#555' }}>This node marks the beginning of your workflow.</p>
+            <div style={{ marginBottom: '15px' }}>
+              <label style={labelStyle}>Initial Input Variable Name:</label>
+              <input
+                type="text"
+                value={selectedNode.data.initial_input_variable || 'user_message'}
+                onChange={(e) => updateNodeData({ initial_input_variable: e.target.value })}
+                style={commonInputStyle}
+                placeholder="e.g., user_query"
+              />
+            </div>
+          </div>
+        )}
+      </div>
+    );
   };
 
   return (
