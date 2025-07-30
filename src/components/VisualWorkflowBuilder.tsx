@@ -34,6 +34,8 @@ const VisualWorkflowBuilder = () => {
   const [workflows, setWorkflows] = useState([]);
   const [selectedWorkflow, setSelectedWorkflow] = useState(null);
   const [isCreateDialogOpen, setCreateDialogOpen] = useState(false);
+  const [workflowName, setWorkflowName] = useState('');
+  const [workflowDescription, setWorkflowDescription] = useState('');
 
   const reactFlowWrapper = useRef(null);
   const { authFetch } = useAuth();
@@ -84,6 +86,8 @@ const VisualWorkflowBuilder = () => {
   const handleWorkflowSelection = (workflow) => {
     setSelectedWorkflow(workflow);
     if (workflow) {
+      setWorkflowName(workflow.name);
+      setWorkflowDescription(workflow.description || '');
       // Prioritize visual_steps for rendering if available
       if (workflow.visual_steps) {
         try {
@@ -314,6 +318,8 @@ const VisualWorkflowBuilder = () => {
 
     const updatedWorkflow = {
       ...selectedWorkflow,
+      name: workflowName,
+      description: workflowDescription,
       steps: backendSteps, // Backend executable steps
       visual_steps: flowVisualData // Frontend visual data
     };
@@ -390,17 +396,32 @@ const VisualWorkflowBuilder = () => {
         onSubmit={createWorkflow} 
       />
       <div className="dndflow" style={{ height: '100vh', display: 'flex', flexDirection: 'column' }}>
-        <div style={{ padding: '10px', borderBottom: '1px solid #eee', display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <select 
-            onChange={(e) => handleWorkflowSelection(workflows.find(w => w.id === parseInt(e.target.value)))}
-            value={selectedWorkflow ? selectedWorkflow.id : ''}
-            style={{ padding: '8px' }}
-          >
-            {workflows.map(w => <option key={w.id} value={w.id}>{w.name}</option>)}
-          </select>
-          <button onClick={() => setCreateDialogOpen(true)} style={{ padding: '8px', background: '#4CAF50', color: 'white', border: 'none', borderRadius: '5px' }}>Create New</button>
-          <button onClick={saveWorkflow} style={{ padding: '8px', background: '#3B82F6', color: 'white', border: 'none', borderRadius: '5px' }}>Save Current</button>
-          <button onClick={deleteWorkflow} style={{ padding: '8px', background: '#f44336', color: 'white', border: 'none', borderRadius: '5px' }}>Delete Current</button>
+        <div style={{ padding: '10px', borderBottom: '1px solid #eee', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', width: '100%' }}>
+            <select 
+              onChange={(e) => handleWorkflowSelection(workflows.find(w => w.id === parseInt(e.target.value)))}
+              value={selectedWorkflow ? selectedWorkflow.id : ''}
+              style={{ padding: '8px', flexShrink: 0 }}
+            >
+              {workflows.map(w => <option key={w.id} value={w.id}>{w.name}</option>)}
+            </select>
+            <input
+              type="text"
+              value={workflowName}
+              onChange={(e) => setWorkflowName(e.target.value)}
+              placeholder="Workflow Name"
+              style={{ padding: '8px', flexGrow: 1, border: '1px solid #ccc', borderRadius: '4px' }}
+            />
+            <button onClick={() => setCreateDialogOpen(true)} style={{ padding: '8px', background: '#4CAF50', color: 'white', border: 'none', borderRadius: '5px' }}>Create New</button>
+            <button onClick={saveWorkflow} style={{ padding: '8px', background: '#3B82F6', color: 'white', border: 'none', borderRadius: '5px' }}>Save Current</button>
+            <button onClick={deleteWorkflow} style={{ padding: '8px', background: '#f44336', color: 'white', border: 'none', borderRadius: '5px' }}>Delete Current</button>
+          </div>
+          <textarea
+            value={workflowDescription}
+            onChange={(e) => setWorkflowDescription(e.target.value)}
+            placeholder="Workflow Description"
+            style={{ padding: '8px', width: 'calc(100% - 20px)', border: '1px solid #ccc', borderRadius: '4px', resize: 'vertical', minHeight: '40px' }}
+          />
         </div>
         <div style={{ display: 'flex', flexGrow: 1 }}>
           <ReactFlowProvider>
