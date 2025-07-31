@@ -1,7 +1,8 @@
 
 import React from 'react';
 import { Handle, Position } from 'reactflow';
-import { Bot, Cog, GitBranch, MessageSquare, Ear, HelpCircle, BookOpen, Code, SquareStack, Globe } from 'lucide-react'; // Import HelpCircle icon
+import { Bot, Cog, GitBranch, MessageSquare, Ear, HelpCircle, BookOpen, Code, SquareStack, Globe, ClipboardList } from 'lucide-react'; // Import HelpCircle icon
+
 
 // ... (Keep existing LlmNode, ToolNode, ConditionNode, OutputNode, StartNode, ListenNode components as they are)
 
@@ -139,5 +140,17 @@ export const HttpRequestNode = ({ data }) => (
     <div style={{ fontSize: '12px', color: '#777' }}>Makes an HTTP request</div>
     <Handle type="source" position={Position.Bottom} id="output" style={{ background: '#555' }} />
     <Handle type="source" position={Position.Right} id="error" style={{ background: '#f44336' }} />
+  </div>
+);
+
+export const FormNode = ({ data }) => (
+  <div className="react-flow__node-default" style={{ padding: '15px', border: '1px solid #e0e0e0', borderRadius: '8px', background: '#f5f0ff', boxShadow: '0 2px 5px rgba(0,0,0,0.05)' }}>
+    <Handle type="target" position={Position.Top} style={{ background: '#555' }} />
+    <div style={{ display: 'flex', alignItems: 'center', marginBottom: '8px' }}>
+      <ClipboardList size={18} style={{ marginRight: '8px', color: '#7a42f4' }} />
+      <strong style={{ fontSize: '15px', color: '#333' }}>{data.label || 'Display Form'}</strong>
+    </div>
+    <div style={{ fontSize: '12px', color: '#777' }}>Pauses for user to fill form</div>
+    <Handle type="source" position={Position.Bottom} id="output" style={{ background: '#555' }} />
   </div>
 );

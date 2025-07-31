@@ -110,7 +110,7 @@ const PropertiesPanel = ({ selectedNode, nodes, setNodes, deleteNode }) => {
             });
         }
         // Add context variables from listen/prompt nodes
-        if ((node.type === 'listen' || node.type === 'prompt') && node.data.params?.save_to_variable) {
+        if ((node.type === 'listen' || node.type === 'prompt' || node.type === 'form') && node.data.params?.save_to_variable) {
             const varName = node.data.params.save_to_variable;
             const contextVar = { label: `Variable "${varName}"`, value: `{{context.${varName}}}` };
             if (!vars.some(v => v.value === contextVar.value)) {
@@ -173,6 +173,12 @@ const PropertiesPanel = ({ selectedNode, nodes, setNodes, deleteNode }) => {
   const onParamChange = (paramName, value) => {
     const newParams = { ...selectedNode.data.params, [paramName]: value };
     updateNodeData({ params: newParams });
+  };
+
+  const handleFieldChange = (index, key, value) => {
+    const newFields = [...selectedNode.data.params.fields];
+    newFields[index] = { ...newFields[index], [key]: value };
+    onParamChange('fields', newFields);
   };
 
   const renderToolParams = () => {
@@ -496,6 +502,72 @@ const PropertiesPanel = ({ selectedNode, nodes, setNodes, deleteNode }) => {
                 style={commonInputStyle}
                 placeholder="e.g., user_choice"
               />
+            </div>
+          </div>
+        )}
+
+        {selectedNode.type === 'form' && (
+          <div style={sectionStyle}>
+            <h3 style={{ fontSize: '16px', marginBottom: '15px', color: '#222' }}>Form Configuration</h3>
+            <div style={{ marginBottom: '15px' }}>
+              <label style={labelStyle}>Form Title:</label>
+              <input
+                type="text"
+                value={(selectedNode.data.params && selectedNode.data.params.title) || ''}
+                onChange={(e) => onParamChange('title', e.target.value)}
+                style={commonInputStyle}
+                placeholder="e.g., Customer Information"
+              />
+            </div>
+            <div style={{ marginBottom: '20px' }}>
+              <label style={labelStyle}>Save Form Data to Variable:</label>
+              <input
+                type="text"
+                value={(selectedNode.data.params && selectedNode.data.params.save_to_variable) || ''}
+                onChange={(e) => onParamChange('save_to_variable', e.target.value)}
+                style={commonInputStyle}
+                placeholder="e.g., customer_data"
+              />
+            </div>
+            
+            <div>
+              <h4 style={{ fontSize: '15px', marginBottom: '10px', color: '#333' }}>Form Fields</h4>
+              {(selectedNode.data.params?.fields || []).map((field, index) => (
+                <div key={index} style={{ border: '1px solid #e0e0e0', borderRadius: '6px', padding: '10px', marginBottom: '10px', background: 'white' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+                    <strong style={{ fontSize: '14px' }}>Field #{index + 1}</strong>
+                    <button onClick={() => {
+                      const newFields = [...selectedNode.data.params.fields];
+                      newFields.splice(index, 1);
+                      onParamChange('fields', newFields);
+                    }} style={{ color: '#d9534f', background: 'none', border: 'none', cursor: 'pointer' }}>Remove</button>
+                  </div>
+                  <div style={{ marginBottom: '8px' }}>
+                    <label style={{...labelStyle, fontSize: '13px'}}>Name (Variable Key):</label>
+                    <input type="text" value={field.name} onChange={(e) => handleFieldChange(index, 'name', e.target.value)} style={{...commonInputStyle, fontSize: '13px', padding: '8px'}} placeholder="e.g., full_name" />
+                  </div>
+                  <div style={{ marginBottom: '8px' }}>
+                    <label style={{...labelStyle, fontSize: '13px'}}>Label (Display Text):</label>
+                    <input type="text" value={field.label} onChange={(e) => handleFieldChange(index, 'label', e.target.value)} style={{...commonInputStyle, fontSize: '13px', padding: '8px'}} placeholder="e.g., Full Name" />
+                  </div>
+                  <div>
+                    <label style={{...labelStyle, fontSize: '13px'}}>Type:</label>
+                    <select value={field.type} onChange={(e) => handleFieldChange(index, 'type', e.target.value)} style={{...commonInputStyle, fontSize: '13px', padding: '8px'}}>
+                      <option value="text">Text</option>
+                      <option value="email">Email</option>
+                      <option value="number">Number</option>
+                      <option value="tel">Phone</option>
+                      <option value="textarea">Text Area</option>
+                    </select>
+                  </div>
+                </div>
+              ))}
+              <button onClick={() => {
+                const newFields = [...(selectedNode.data.params?.fields || []), { name: '', label: '', type: 'text' }];
+                onParamChange('fields', newFields);
+              }} style={{ width: '100%', padding: '10px', background: '#e8f0fe', border: '1px dashed #a9c7f7', borderRadius: '5px', cursor: 'pointer', color: '#3B82F6' }}>
+                + Add Field
+              </button>
             </div>
           </div>
         )}

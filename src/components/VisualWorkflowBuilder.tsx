@@ -18,7 +18,7 @@ import Sidebar from './Sidebar';
 import PropertiesPanel from './PropertiesPanel';
 import CreateWorkflowDialog from './CreateWorkflowDialog';
 import { WorkflowDetailsDialog } from './WorkflowDetailsDialog';
-import { LlmNode, ToolNode, ConditionNode, OutputNode, StartNode, ListenNode, PromptNode, KnowledgeNode, CodeNode, DataManipulationNode, HttpRequestNode } from './CustomNodes';
+import { LlmNode, ToolNode, ConditionNode, OutputNode, StartNode, ListenNode, PromptNode, KnowledgeNode, CodeNode, DataManipulationNode, HttpRequestNode, FormNode } from './CustomNodes';
 import { useAuth } from "@/hooks/useAuth";
 
 const initialNodes = [
@@ -54,7 +54,8 @@ const VisualWorkflowBuilder = () => {
     knowledge: KnowledgeNode,
     code: CodeNode,
     data_manipulation: DataManipulationNode,
-    http_request: HttpRequestNode
+    http_request: HttpRequestNode,
+    form: FormNode
   }), []);
 
   const fetchWorkflows = async () => {

@@ -19,6 +19,7 @@ export const ChatWidgetPreview = () => {
   const [isExpanded, setIsExpanded] = useState(false);
   const [message, setMessage] = useState("");
   const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [currentForm, setCurrentForm] = useState(null);
   const ws = useRef<WebSocket | null>(null);
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
   const { authFetch } = useAuth();
@@ -31,7 +32,7 @@ export const ChatWidgetPreview = () => {
   useEffect(() => {
     if (isExpanded) {
       // Establish WebSocket connection
-      ws.current = new WebSocket(`ws://localhost:8000/ws/conversations/${companyId}/${agentId}/${sessionId}`);
+      ws.current = new WebSocket(`ws://localhost:8000/ws/public/${companyId}/${agentId}/${sessionId}?user_type=user`);
 
       ws.current.onopen = () => {
         console.log("WebSocket connected");
@@ -42,15 +43,28 @@ export const ChatWidgetPreview = () => {
         const receivedData = JSON.parse(event.data);
         console.log("Received data:", receivedData);
 
-        // Only process and display messages that have content.
-        // This ignores broadcast messages like { "type": "new_message", ... }
-        if (receivedData.message) {
+        if (receivedData.message_type === 'form') {
+          setCurrentForm({
+            title: receivedData.message,
+            fields: receivedData.fields,
+          });
+          // Add a message indicating the form needs to be filled
+          setMessages((prevMessages) => [
+            ...prevMessages,
+            {
+              id: prevMessages.length + 1,
+              text: receivedData.message || 'Please fill out the form below.',
+              sender: 'bot',
+              timestamp: new Date(),
+            },
+          ]);
+        } else if (receivedData.message) {
           setMessages((prevMessages) => [
             ...prevMessages,
             {
               id: prevMessages.length + 1,
               text: receivedData.message,
-              sender: receivedData.sender === 'agent' ? 'bot' : receivedData.sender, // Treat 'agent' as 'bot' for styling
+              sender: receivedData.sender === 'agent' ? 'bot' : receivedData.sender,
               timestamp: new Date(),
             },
           ]);
@@ -105,7 +119,7 @@ export const ChatWidgetPreview = () => {
     setMessages((prevMessages) => [...prevMessages, newMessage]);
 
     if (ws.current && ws.current.readyState === WebSocket.OPEN) {
-      ws.current.send(message);
+      ws.current.send(JSON.stringify({ message: message, sender: 'user' }));
     } else {
       console.error("WebSocket is not open.");
       setMessages((prevMessages) => [
@@ -119,6 +133,32 @@ export const ChatWidgetPreview = () => {
       ]);
     }
     setMessage("");
+  };
+
+  const handleFormSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const formData = new FormData(e.currentTarget);
+    const data = Object.fromEntries(formData.entries());
+
+    if (ws.current && ws.current.readyState === WebSocket.OPEN) {
+      // Send the form data back as a JSON string
+      ws.current.send(JSON.stringify({ message: data, sender: 'user' }));
+    } else {
+      console.error("WebSocket is not open.");
+    }
+
+    // Add a confirmation message to the chat
+    setMessages((prevMessages) => [
+      ...prevMessages,
+      {
+        id: prevMessages.length + 1,
+        text: "Form submitted. Thank you!",
+        sender: "user",
+        timestamp: new Date(),
+      },
+    ]);
+
+    setCurrentForm(null); // Hide the form and show the regular input again
   };
 
   const handleHandoff = async () => {
@@ -230,10 +270,42 @@ export const ChatWidgetPreview = () => {
 
                 {/* Input */}
                 <div className="p-4 border-t">
-                  <div className="flex space-x-2">
-                    <Input
-                      value={message}
-                      onChange={(e) => setMessage(e.target.value)}
+                  {currentForm ? (
+                    <form onSubmit={handleFormSubmit} className="space-y-3">
+                      <h4 className="font-semibold text-sm text-center">{currentForm.title}</h4>
+                      {currentForm.fields.map((field) => (
+                        <div key={field.name}>
+                          <label className="text-xs font-medium text-gray-700 block mb-1" htmlFor={field.name}>
+                            {field.label}
+                          </label>
+                          <Input
+                            id={field.name}
+                            name={field.name}
+                            type={field.type}
+                            required
+                            className="w-full text-sm"
+                          />
+                        </div>
+                      ))}
+                      <Button size="sm" type="submit" className="w-full">
+                        Submit
+                      </Button>
+                    </form>
+                  ) : (
+                    <div className="flex space-x-2">
+                      <Input
+                        value={message}
+                        onChange={(e) => setMessage(e.target.value)}
+                        placeholder="Type a message..."
+                        className="flex-1 text-sm"
+                        onKeyPress={(e) => e.key === "Enter" && handleSendMessage()}
+                      />
+                      <Button size="sm" onClick={handleSendMessage}>
+                        <Send className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  )}
+                </div>t.value)}
                       placeholder="Type a message..."
                       className="flex-1 text-sm"
                       onKeyPress={(e) => e.key === "Enter" && handleSendMessage()}

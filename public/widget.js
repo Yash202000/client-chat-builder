@@ -132,7 +132,8 @@
             <div class="chat-messages" style="flex-grow:1; padding:0.75rem; overflow-y:auto; display:flex; flex-direction:column; gap:0.5rem;"></div>
             <div class="typing-indicator" style="display:none; padding:0.75rem; font-style:italic; color:#888;">Agent is typing...</div>
             <div class="chat-options" style="padding: 0 0.75rem 0.75rem; display: flex; flex-wrap: wrap; gap: 0.5rem;"></div>
-            <div style="padding:0.75rem; border-top:1px solid #eee; display:flex; gap:0.5rem;">
+            <div class="chat-form" style="padding: 0 0.75rem 0.75rem;"></div>
+            <div class="chat-input-container" style="padding:0.75rem; border-top:1px solid #eee; display:flex; gap:0.5rem;">
                 <input type="text" placeholder="${widgetSettings.input_placeholder}" class="chat-input" style="flex-grow:1; padding:0.5rem; border:1px solid #ddd; border-radius:5px;">
                 <button class="send-button" style="background-color:${widgetSettings.primary_color}; color:white; border:none; padding:0.5rem 1rem; border-radius:5px; cursor:pointer;">Send</button>
             </div>
@@ -206,6 +207,9 @@
                 if (data.options && data.options.length > 0) {
                     addOptionsButtons(data.options);
                 }
+            } else if (data.message_type === 'form') {
+                addMessage(data.sender, data.message, data.sender_type || 'agent');
+                renderForm(data.fields);
             } else if (data.message_type === 'typing_on') {
                 showTypingIndicator();
             } else if (data.message_type === 'typing_off') {
@@ -326,21 +330,108 @@
         chatMessages.scrollTop = chatMessages.scrollHeight;
     }
 
+    function renderForm(fields) {
+        const formContainer = chatWindow.querySelector('.chat-form');
+        const inputContainer = chatWindow.querySelector('.chat-input-container');
+        const optionsContainer = chatWindow.querySelector('.chat-options');
+        
+        // Clear previous form/options and hide the regular input
+        formContainer.innerHTML = '';
+        optionsContainer.innerHTML = '';
+        inputContainer.style.display = 'none';
+
+        const form = document.createElement('form');
+        
+        fields.forEach(field => {
+            const fieldDiv = document.createElement('div');
+            fieldDiv.style.marginBottom = '10px';
+
+            const label = document.createElement('label');
+            label.textContent = field.label;
+            label.style.display = 'block';
+            label.style.marginBottom = '4px';
+            label.style.fontSize = '14px';
+            label.style.color = widgetSettings.dark_mode ? '#f0f0f0' : '#333';
+            fieldDiv.appendChild(label);
+
+            const input = document.createElement('input');
+            input.type = field.type || 'text';
+            input.name = field.name;
+            input.required = true;
+            input.style.width = '100%';
+            input.style.padding = '8px';
+            input.style.borderRadius = '4px';
+            input.style.border = '1px solid #ccc';
+            input.style.boxSizing = 'border-box';
+            fieldDiv.appendChild(input);
+
+            form.appendChild(fieldDiv);
+        });
+
+        const submitButton = document.createElement('button');
+        submitButton.type = 'submit';
+        submitButton.textContent = 'Submit';
+        submitButton.style.width = '100%';
+        submitButton.style.padding = '10px';
+        submitButton.style.border = 'none';
+        submitButton.style.borderRadius = '5px';
+        submitButton.style.cursor = 'pointer';
+        submitButton.style.backgroundColor = widgetSettings.primary_color;
+        submitButton.style.color = 'white';
+        form.appendChild(submitButton);
+
+        form.onsubmit = (e) => {
+            e.preventDefault();
+            const formData = new FormData(form);
+            const data = Object.fromEntries(formData.entries());
+            
+            // Use a different message text to indicate form submission
+            sendMessage(JSON.stringify(data)); 
+            
+            // Clean up UI
+            formContainer.innerHTML = '';
+            inputContainer.style.display = 'flex';
+        };
+
+        formContainer.appendChild(form);
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+
     function sendMessage(messageText) {
         const message = messageText.trim();
         if (message) {
-            addMessage('user', message, 'user'); // Optimistically add message to UI
+            // Check if the message is a JSON object (from form submission)
+            let isFormSubmission = false;
+            try {
+                const parsed = JSON.parse(message);
+                if (typeof parsed === 'object' && parsed !== null) {
+                    isFormSubmission = true;
+                    addMessage('user', 'Form submitted', 'user');
+                }
+            } catch (e) {
+                // Not a JSON string, treat as regular message
+            }
+
+            if (!isFormSubmission) {
+                addMessage('user', message, 'user'); // Optimistically add message to UI
+            }
             
             // Clear any existing option buttons
             const optionsContainer = chatWindow.querySelector('.chat-options');
             optionsContainer.innerHTML = '';
 
             if (ws && ws.readyState === WebSocket.OPEN) {
-                ws.send(JSON.stringify({ message, message_type: 'message', sender: 'user' }));
+                // The backend expects a JSON object with message and sender
+                const payload = {
+                    message: isFormSubmission ? JSON.parse(message) : message,
+                    message_type: 'message',
+                    sender: 'user'
+                };
+                ws.send(JSON.stringify(payload));
             }
             chatInput.value = '';
         }
     }
-
+    
     fetchAndApplySettings();
 })();
