@@ -2,18 +2,15 @@ import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { toast } from 'sonner';
 import { useAuth } from "@/hooks/useAuth";
 
-// A new component for a text input with a variable selector dropdown
 const VariableInput = ({ value, onChange, placeholder, availableVars }) => {
     const [showVars, setShowVars] = useState(false);
     const containerRef = useRef(null);
 
     const handleSelectVar = (varValue) => {
-        // The onChange prop expects an event-like object
         onChange({ target: { value: varValue } });
         setShowVars(false);
     };
 
-    // Close dropdown if clicked outside
     useEffect(() => {
         function handleClickOutside(event) {
             if (containerRef.current && !containerRef.current.contains(event.target)) {
@@ -37,35 +34,18 @@ const VariableInput = ({ value, onChange, placeholder, availableVars }) => {
                 onClick={() => setShowVars(!showVars)}
                 title="Select a variable"
                 style={{ 
-                    position: 'absolute', 
-                    right: '1px', 
-                    top: '1px', 
-                    bottom: '1px',
-                    border: 'none',
-                    background: '#f0f0f0',
-                    cursor: 'pointer',
-                    padding: '0 10px',
-                    borderTopRightRadius: '4px',
-                    borderBottomRightRadius: '4px'
+                    position: 'absolute', right: '1px', top: '1px', bottom: '1px',
+                    border: 'none', background: '#f0f0f0', cursor: 'pointer',
+                    padding: '0 10px', borderTopRightRadius: '4px', borderBottomRightRadius: '4px'
                 }}
             >
                 {`{...}`}
             </button>
             {showVars && (
                 <ul style={{ 
-                    position: 'absolute', 
-                    top: '100%', 
-                    left: 0, 
-                    right: 0, 
-                    background: 'white', 
-                    border: '1px solid #ccc', 
-                    listStyle: 'none', 
-                    padding: '5px 0', 
-                    margin: '2px 0 0', 
-                    zIndex: 10,
-                    maxHeight: '200px',
-                    overflowY: 'auto',
-                    borderRadius: '4px',
+                    position: 'absolute', top: '100%', left: 0, right: 0, background: 'white', 
+                    border: '1px solid #ccc', listStyle: 'none', padding: '5px 0', margin: '2px 0 0', 
+                    zIndex: 10, maxHeight: '200px', overflowY: 'auto', borderRadius: '4px',
                     boxShadow: '0 4px 8px rgba(0,0,0,0.1)'
                 }}>
                     {availableVars.length === 0 ? (
@@ -90,26 +70,27 @@ const VariableInput = ({ value, onChange, placeholder, availableVars }) => {
     );
 };
 
-
 const PropertiesPanel = ({ selectedNode, nodes, setNodes, deleteNode }) => {
   const [tools, setTools] = useState([]);
   const [knowledgeBases, setKnowledgeBases] = useState([]);
   const { authFetch } = useAuth();
 
-  // Memoize the calculation of available variables
+  // *** THE FIX: Find the most up-to-date version of the selected node from the nodes list ***
+  const currentNode = useMemo(() => {
+    if (!selectedNode) return null;
+    return nodes.find(n => n.id === selectedNode.id);
+  }, [selectedNode, nodes]);
+
   const availableVariables = useMemo(() => {
-    if (!selectedNode) return [];
-    
+    if (!currentNode) return [];
     const vars = [];
     nodes.forEach(node => {
-        // Add node outputs (excluding the current node itself)
-        if (node.id !== selectedNode.id) {
+        if (node.id !== currentNode.id) {
             vars.push({
                 label: `Output of "${node.data.label || node.id}"`,
                 value: `{{${node.id}.output}}`
             });
         }
-        // Add context variables from listen/prompt nodes
         if ((node.type === 'listen' || node.type === 'prompt' || node.type === 'form') && node.data.params?.save_to_variable) {
             const varName = node.data.params.save_to_variable;
             const contextVar = { label: `Variable "${varName}"`, value: `{{context.${varName}}}` };
@@ -119,70 +100,74 @@ const PropertiesPanel = ({ selectedNode, nodes, setNodes, deleteNode }) => {
         }
     });
     return vars;
-  }, [selectedNode, nodes]);
+  }, [currentNode, nodes]);
 
   useEffect(() => {
-    const fetchTools = async () => {
+    const fetchResources = async () => {
       try {
-        const response = await authFetch('/api/v1/tools/?company_id=1');
-        if (!response.ok) throw new Error('Failed to fetch tools');
-        const data = await response.json();
-        setTools(data);
+        const [toolsRes, kbRes] = await Promise.all([
+          authFetch('/api/v1/tools/?company_id=1'),
+          authFetch('/api/v1/knowledge-bases/?company_id=1')
+        ]);
+        if (!toolsRes.ok) throw new Error('Failed to fetch tools');
+        if (!kbRes.ok) throw new Error('Failed to fetch knowledge bases');
+        const toolsData = await toolsRes.json();
+        const kbData = await kbRes.json();
+        setTools(toolsData);
+        setKnowledgeBases(kbData);
       } catch (error) {
-        console.error('Error fetching tools:', error);
-        toast.error("Failed to load tools.");
+        toast.error("Failed to load resources.");
       }
     };
-    const fetchKnowledgeBases = async () => {
-      try {
-        const response = await authFetch('/api/v1/knowledge-bases/?company_id=1');
-        if (!response.ok) throw new Error('Failed to fetch knowledge bases');
-        const data = await response.json();
-        setKnowledgeBases(data);
-      } catch (error) {
-        console.error('Error fetching knowledge bases:', error);
-        toast.error("Failed to load knowledge bases.");
-      }
-    };
+    fetchResources();
+  }, [authFetch]);
 
-    fetchTools();
-    fetchKnowledgeBases();
-  }, []);
-
-  const updateNodeData = (data) => {
+  const handleDataChange = (key, value) => {
+    if (!currentNode) return;
     setNodes((nds) =>
-      nds.map((node) =>
-        node.id === selectedNode.id ? { ...node, data: { ...node.data, ...data } } : node
-      )
+      nds.map((node) => {
+        if (node.id === currentNode.id) {
+          const newData = { ...node.data, [key]: value };
+          return { ...node, data: newData };
+        }
+        return node;
+      })
     );
   };
 
-  const onLabelChange = (event) => {
-    updateNodeData({ label: event.target.value });
+  const handleParamsChange = (key, value) => {
+    if (!currentNode) return;
+    const newParams = { ...(currentNode.data.params || {}), [key]: value };
+    handleDataChange('params', newParams);
+  };
+
+  const handleFieldChange = (index, key, value) => {
+    const newFields = [...(currentNode.data.params?.fields || [])];
+    newFields[index] = { ...newFields[index], [key]: value };
+    handleParamsChange('fields', newFields);
   };
 
   const onToolChange = (toolName) => {
     const tool = tools.find(t => t.name === toolName);
-    updateNodeData({ 
-      tool: toolName, 
-      toolParameters: tool?.parameters?.properties || {},
-      params: {} 
-    });
-  };
-
-  const onParamChange = (paramName, value) => {
-    const newParams = { ...selectedNode.data.params, [paramName]: value };
-    updateNodeData({ params: newParams });
-  };
-
-  const handleFieldChange = (index, key, value) => {
-    const newFields = [...selectedNode.data.params.fields];
-    newFields[index] = { ...newFields[index], [key]: value };
-    onParamChange('fields', newFields);
+    setNodes(nds => nds.map(n => {
+      if (n.id === currentNode.id) {
+        return {
+          ...n,
+          data: {
+            ...n.data,
+            tool: toolName,
+            params: {
+              toolParameters: tool?.parameters?.properties || {}
+            }
+          }
+        }
+      }
+      return n;
+    }))
   };
 
   const renderToolParams = () => {
-    const tool = tools.find(t => t.name === selectedNode.data.tool);
+    const tool = tools.find(t => t.name === currentNode.data.tool);
     if (!tool || !tool.parameters || !tool.parameters.properties) return null;
 
     return (
@@ -192,8 +177,8 @@ const PropertiesPanel = ({ selectedNode, nodes, setNodes, deleteNode }) => {
           <div key={paramName} style={{ marginBottom: '10px' }}>
             <label style={{ display: 'block', marginBottom: '5px', fontSize: '14px' }}>{param.title || paramName}</label>
             <VariableInput
-              value={selectedNode.data.params?.[paramName]}
-              onChange={(e) => onParamChange(paramName, e.target.value)}
+              value={currentNode.data.params?.[paramName] || ''}
+              onChange={(e) => handleParamsChange(paramName, e.target.value)}
               placeholder={param.description}
               availableVars={availableVariables}
             />
@@ -204,7 +189,7 @@ const PropertiesPanel = ({ selectedNode, nodes, setNodes, deleteNode }) => {
   };
 
   const renderNodeProperties = () => {
-    if (!selectedNode) return <div style={{ color: '#888', padding: '20px' }}>Select a node to view its properties.</div>;
+    if (!currentNode) return <div style={{ color: '#888', padding: '20px' }}>Select a node to view its properties.</div>;
 
     const commonInputStyle = { width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid #d0d0d0', fontSize: '14px', boxSizing: 'border-box' };
     const labelStyle = { display: 'block', marginBottom: '6px', fontWeight: '500', fontSize: '14px', color: '#333' };
@@ -216,18 +201,18 @@ const PropertiesPanel = ({ selectedNode, nodes, setNodes, deleteNode }) => {
           <h3 style={{ fontSize: '16px', marginBottom: '15px', color: '#222' }}>Node Settings</h3>
           <div style={{ marginBottom: '15px' }}>
             <label style={labelStyle}>Node Label:</label>
-            <input type="text" value={selectedNode.data.label || ''} onChange={onLabelChange} style={commonInputStyle} />
+            <input type="text" value={currentNode.data.label || ''} onChange={(e) => handleDataChange('label', e.target.value)} style={commonInputStyle} />
           </div>
         </div>
 
-        {selectedNode.type === 'llm' && (
+        {currentNode.type === 'llm' && (
           <div style={sectionStyle}>
             <h3 style={{ fontSize: '16px', marginBottom: '15px', color: '#222' }}>LLM Configuration</h3>
             <div style={{ marginBottom: '15px' }}>
               <label style={labelStyle}>Model:</label>
               <select
-                value={selectedNode.data.model || ''}
-                onChange={(e) => updateNodeData({ model: e.target.value })}
+                value={currentNode.data.model || ''}
+                onChange={(e) => handleDataChange('model', e.target.value)}
                 style={commonInputStyle}
               >
                 <option value="">Select a model</option>
@@ -238,23 +223,21 @@ const PropertiesPanel = ({ selectedNode, nodes, setNodes, deleteNode }) => {
             <div style={{ marginBottom: '15px' }}>
               <label style={labelStyle}>Knowledge Base:</label>
               <select
-                value={selectedNode.data.knowledge_base_id || ''}
-                onChange={(e) => updateNodeData({ knowledge_base_id: e.target.value ? parseInt(e.target.value) : null })}
+                value={currentNode.data.knowledge_base_id || ''}
+                onChange={(e) => handleDataChange('knowledge_base_id', e.target.value ? parseInt(e.target.value) : null)}
                 style={commonInputStyle}
               >
                 <option value="">None</option>
                 {knowledgeBases.map((kb) => (
-                  <option key={kb.id} value={kb.id}>
-                    {kb.name}
-                  </option>
+                  <option key={kb.id} value={kb.id}>{kb.name}</option>
                 ))}
               </select>
             </div>
             <div style={{ marginBottom: '15px' }}>
               <label style={labelStyle}>Prompt:</label>
               <VariableInput
-                value={selectedNode.data.prompt || ''}
-                onChange={(e) => updateNodeData({ prompt: e.target.value })}
+                value={currentNode.data.prompt || ''}
+                onChange={(e) => handleDataChange('prompt', e.target.value)}
                 placeholder="e.g., What is the capital of {{context.country}}?"
                 availableVars={availableVariables}
               />
@@ -262,7 +245,7 @@ const PropertiesPanel = ({ selectedNode, nodes, setNodes, deleteNode }) => {
           </div>
         )}
 
-        {selectedNode.type === 'tool' && (
+        {currentNode.type === 'tool' && (
           <div style={sectionStyle}>
             <h3 style={{ fontSize: '16px', marginBottom: '15px', color: '#222' }}>Tool Configuration</h3>
             <div style={{ marginBottom: '15px' }}>
@@ -270,7 +253,7 @@ const PropertiesPanel = ({ selectedNode, nodes, setNodes, deleteNode }) => {
               <select 
                 style={commonInputStyle} 
                 onChange={(e) => onToolChange(e.target.value)} 
-                value={selectedNode.data.tool || ''}
+                value={currentNode.data.tool || ''}
               >
                 <option value="">Select a tool</option>
                 {tools.map(tool => <option key={tool.id} value={tool.name}>{tool.name}</option>)}
@@ -280,14 +263,14 @@ const PropertiesPanel = ({ selectedNode, nodes, setNodes, deleteNode }) => {
           </div>
         )}
 
-        {selectedNode.type === 'condition' && (
+        {currentNode.type === 'condition' && (
           <div style={sectionStyle}>
             <h3 style={{ fontSize: '16px', marginBottom: '15px', color: '#222' }}>Condition Logic</h3>
             <div style={{ marginBottom: '15px' }}>
               <label style={labelStyle}>Variable:</label>
               <select
-                value={selectedNode.data.variable || ''}
-                onChange={(e) => updateNodeData({ variable: e.target.value })}
+                value={currentNode.data.variable || ''}
+                onChange={(e) => handleDataChange('variable', e.target.value)}
                 style={commonInputStyle}
               >
                 <option value="">Select a variable</option>
@@ -299,8 +282,8 @@ const PropertiesPanel = ({ selectedNode, nodes, setNodes, deleteNode }) => {
             <div style={{ marginBottom: '15px' }}>
               <label style={labelStyle}>Operator:</label>
               <select
-                value={selectedNode.data.operator || 'equals'}
-                onChange={(e) => updateNodeData({ operator: e.target.value })}
+                value={currentNode.data.operator || 'equals'}
+                onChange={(e) => handleDataChange('operator', e.target.value)}
                 style={commonInputStyle}
               >
                 <option value="equals">Equals</option>
@@ -316,40 +299,37 @@ const PropertiesPanel = ({ selectedNode, nodes, setNodes, deleteNode }) => {
               <label style={labelStyle}>Value:</label>
               <input
                 type="text"
-                value={selectedNode.data.value || ''}
-                onChange={(e) => updateNodeData({ value: e.target.value })}
+                value={currentNode.data.value || ''}
+                onChange={(e) => handleDataChange('value', e.target.value)}
                 style={commonInputStyle}
                 placeholder="Value to compare against"
-                // Disable if operator doesn't need a value
-                disabled={['is_set', 'is_not_set'].includes(selectedNode.data.operator)}
+                disabled={['is_set', 'is_not_set'].includes(currentNode.data.operator)}
               />
             </div>
           </div>
         )}
 
-        {selectedNode.type === 'knowledge' && (
+        {currentNode.type === 'knowledge' && (
           <div style={sectionStyle}>
             <h3 style={{ fontSize: '16px', marginBottom: '15px', color: '#222' }}>Knowledge Search</h3>
             <div style={{ marginBottom: '15px' }}>
               <label style={labelStyle}>Knowledge Base:</label>
               <select
-                value={selectedNode.data.knowledge_base_id || ''}
-                onChange={(e) => updateNodeData({ knowledge_base_id: e.target.value ? parseInt(e.target.value) : null })}
+                value={currentNode.data.knowledge_base_id || ''}
+                onChange={(e) => handleDataChange('knowledge_base_id', e.target.value ? parseInt(e.target.value) : null)}
                 style={commonInputStyle}
               >
                 <option value="">None</option>
                 {knowledgeBases.map((kb) => (
-                  <option key={kb.id} value={kb.id}>
-                    {kb.name}
-                  </option>
+                  <option key={kb.id} value={kb.id}>{kb.name}</option>
                 ))}
               </select>
             </div>
             <div style={{ marginBottom: '15px' }}>
               <label style={labelStyle}>Query:</label>
               <VariableInput
-                value={selectedNode.data.query || ''}
-                onChange={(e) => updateNodeData({ query: e.target.value })}
+                value={currentNode.data.query || ''}
+                onChange={(e) => handleDataChange('query', e.target.value)}
                 placeholder="e.g., What is the capital of {{context.country}}?"
                 availableVars={availableVariables}
               />
@@ -357,18 +337,14 @@ const PropertiesPanel = ({ selectedNode, nodes, setNodes, deleteNode }) => {
           </div>
         )}
 
-        {selectedNode.type === 'http_request' && (
+        {currentNode.type === 'http_request' && (
           <div style={sectionStyle}>
             <h3 style={{ fontSize: '16px', marginBottom: '15px', color: '#222' }}>HTTP Request</h3>
             <div style={{ marginBottom: '15px' }}>
-              <label style={labelStyle}>Node Label:</label>
-              <input type="text" value={selectedNode.data.label || ''} onChange={onLabelChange} style={commonInputStyle} />
-            </div>
-            <div style={{ marginBottom: '15px'}}> 
               <label style={labelStyle}>URL:</label>
               <VariableInput
-                value={selectedNode.data.url || ''}
-                onChange={(e) => updateNodeData({ url: e.target.value })}
+                value={currentNode.data.url || ''}
+                onChange={(e) => handleDataChange('url', e.target.value)}
                 placeholder="e.g., https://api.example.com/data"
                 availableVars={availableVariables}
               />
@@ -376,8 +352,8 @@ const PropertiesPanel = ({ selectedNode, nodes, setNodes, deleteNode }) => {
             <div style={{ marginBottom: '15px'}}> 
               <label style={labelStyle}>Method:</label>
               <select
-                value={selectedNode.data.method || 'GET'}
-                onChange={(e) => updateNodeData({ method: e.target.value })}
+                value={currentNode.data.method || 'GET'}
+                onChange={(e) => handleDataChange('method', e.target.value)}
                 style={commonInputStyle}
               >
                 <option value="GET">GET</option>
@@ -389,8 +365,8 @@ const PropertiesPanel = ({ selectedNode, nodes, setNodes, deleteNode }) => {
             <div style={{ marginBottom: '15px'}}> 
               <label style={labelStyle}>Headers (JSON):</label>
               <textarea
-                value={selectedNode.data.headers || ''}
-                onChange={(e) => updateNodeData({ headers: e.target.value })}
+                value={currentNode.data.headers || ''}
+                onChange={(e) => handleDataChange('headers', e.target.value)}
                 placeholder='e.g., {"Content-Type": "application/json"}'
                 rows={4}
                 style={{ ...commonInputStyle, fontFamily: 'monospace' }}
@@ -399,8 +375,8 @@ const PropertiesPanel = ({ selectedNode, nodes, setNodes, deleteNode }) => {
             <div style={{ marginBottom: '15px'}}> 
               <label style={labelStyle}>Body (JSON):</label>
               <textarea
-                value={selectedNode.data.body || ''}
-                onChange={(e) => updateNodeData({ body: e.target.value })}
+                value={currentNode.data.body || ''}
+                onChange={(e) => handleDataChange('body', e.target.value)}
                 placeholder='e.g., {"key": "{{context.value}}"}'
                 rows={6}
                 style={{ ...commonInputStyle, fontFamily: 'monospace' }}
@@ -409,18 +385,14 @@ const PropertiesPanel = ({ selectedNode, nodes, setNodes, deleteNode }) => {
           </div>
         )}
 
-        {selectedNode.type === 'data_manipulation' && (
+        {currentNode.type === 'data_manipulation' && (
           <div style={sectionStyle}>
             <h3 style={{ fontSize: '16px', marginBottom: '15px', color: '#222' }}>Data Manipulation</h3>
             <div style={{ marginBottom: '15px' }}>
-              <label style={labelStyle}>Node Label:</label>
-              <input type="text" value={selectedNode.data.label || ''} onChange={onLabelChange} style={commonInputStyle} />
-            </div>
-            <div style={{ marginBottom: '15px' }}>
               <label style={labelStyle}>Expression (Python):</label>
               <textarea
-                value={selectedNode.data.expression || ''}
-                onChange={(e) => updateNodeData({ expression: e.target.value })}
+                value={currentNode.data.expression || ''}
+                onChange={(e) => handleDataChange('expression', e.target.value)}
                 placeholder="e.g., context.user_input.upper()"
                 rows={5}
                 style={{ ...commonInputStyle, fontFamily: 'monospace' }}
@@ -430,8 +402,8 @@ const PropertiesPanel = ({ selectedNode, nodes, setNodes, deleteNode }) => {
               <label style={labelStyle}>Output Variable Name:</label>
               <input
                 type="text"
-                value={selectedNode.data.output_variable || ''}
-                onChange={(e) => updateNodeData({ output_variable: e.target.value })}
+                value={currentNode.data.output_variable || ''}
+                onChange={(e) => handleDataChange('output_variable', e.target.value)}
                 style={commonInputStyle}
                 placeholder="e.g., transformed_data"
               />
@@ -439,14 +411,14 @@ const PropertiesPanel = ({ selectedNode, nodes, setNodes, deleteNode }) => {
           </div>
         )}
 
-        {selectedNode.type === 'code' && (
+        {currentNode.type === 'code' && (
           <div style={sectionStyle}>
             <h3 style={{ fontSize: '16px', marginBottom: '15px', color: '#222' }}>Code Execution</h3>
             <div style={{ marginBottom: '15px' }}>
               <label style={labelStyle}>Python Code:</label>
               <textarea
-                value={selectedNode.data.code || ''}
-                onChange={(e) => updateNodeData({ code: e.target.value })}
+                value={currentNode.data.code || ''}
+                onChange={(e) => handleDataChange('code', e.target.value)}
                 placeholder="e.g., print('Hello, World!') result = context.user_input * 2"
                 rows={10}
                 style={{ ...commonInputStyle, fontFamily: 'monospace' }}
@@ -455,15 +427,15 @@ const PropertiesPanel = ({ selectedNode, nodes, setNodes, deleteNode }) => {
           </div>
         )}
 
-        {selectedNode.type === 'listen' && (
+        {currentNode.type === 'listen' && (
           <div style={sectionStyle}>
             <h3 style={{ fontSize: '16px', marginBottom: '15px', color: '#222' }}>Listen for Input</h3>
             <div style={{ marginBottom: '15px' }}>
               <label style={labelStyle}>Save User Input to Variable:</label>
               <input
                 type="text"
-                value={(selectedNode.data.params && selectedNode.data.params.save_to_variable) || ''}
-                onChange={(e) => onParamChange('save_to_variable', e.target.value)}
+                value={(currentNode.data.params?.save_to_variable) || ''}
+                onChange={(e) => handleParamsChange('save_to_variable', e.target.value)}
                 style={commonInputStyle}
                 placeholder="e.g., user_email"
               />
@@ -471,14 +443,14 @@ const PropertiesPanel = ({ selectedNode, nodes, setNodes, deleteNode }) => {
           </div>
         )}
 
-        {selectedNode.type === 'prompt' && (
+        {currentNode.type === 'prompt' && (
           <div style={sectionStyle}>
             <h3 style={{ fontSize: '16px', marginBottom: '15px', color: '#222' }}>Prompt for Input</h3>
             <div style={{ marginBottom: '15px' }}>
               <label style={labelStyle}>Prompt Text:</label>
               <VariableInput
-                value={(selectedNode.data.params && selectedNode.data.params.prompt_text) || ''}
-                onChange={(e) => onParamChange('prompt_text', e.target.value)}
+                value={(currentNode.data.params?.prompt_text) || ''}
+                onChange={(e) => handleParamsChange('prompt_text', e.target.value)}
                 placeholder="Ask the user a question..."
                 availableVars={availableVariables}
               />
@@ -487,8 +459,8 @@ const PropertiesPanel = ({ selectedNode, nodes, setNodes, deleteNode }) => {
               <label style={labelStyle}>Options (comma-separated):</label>
               <input
                 type="text"
-                value={(selectedNode.data.params && selectedNode.data.params.options) || ''}
-                onChange={(e) => onParamChange('options', e.target.value)}
+                value={(currentNode.data.params?.options) || ''}
+                onChange={(e) => handleParamsChange('options', e.target.value)}
                 style={commonInputStyle}
                 placeholder="e.g., Yes, No, Maybe"
               />
@@ -497,8 +469,8 @@ const PropertiesPanel = ({ selectedNode, nodes, setNodes, deleteNode }) => {
               <label style={labelStyle}>Save User Input to Variable:</label>
               <input
                 type="text"
-                value={(selectedNode.data.params && selectedNode.data.params.save_to_variable) || ''}
-                onChange={(e) => onParamChange('save_to_variable', e.target.value)}
+                value={(currentNode.data.params?.save_to_variable) || ''}
+                onChange={(e) => handleParamsChange('save_to_variable', e.target.value)}
                 style={commonInputStyle}
                 placeholder="e.g., user_choice"
               />
@@ -506,15 +478,15 @@ const PropertiesPanel = ({ selectedNode, nodes, setNodes, deleteNode }) => {
           </div>
         )}
 
-        {selectedNode.type === 'form' && (
+        {currentNode.type === 'form' && (
           <div style={sectionStyle}>
             <h3 style={{ fontSize: '16px', marginBottom: '15px', color: '#222' }}>Form Configuration</h3>
             <div style={{ marginBottom: '15px' }}>
               <label style={labelStyle}>Form Title:</label>
               <input
                 type="text"
-                value={(selectedNode.data.params && selectedNode.data.params.title) || ''}
-                onChange={(e) => onParamChange('title', e.target.value)}
+                value={(currentNode.data.params?.title) || ''}
+                onChange={(e) => handleParamsChange('title', e.target.value)}
                 style={commonInputStyle}
                 placeholder="e.g., Customer Information"
               />
@@ -523,8 +495,8 @@ const PropertiesPanel = ({ selectedNode, nodes, setNodes, deleteNode }) => {
               <label style={labelStyle}>Save Form Data to Variable:</label>
               <input
                 type="text"
-                value={(selectedNode.data.params && selectedNode.data.params.save_to_variable) || ''}
-                onChange={(e) => onParamChange('save_to_variable', e.target.value)}
+                value={(currentNode.data.params?.save_to_variable) || ''}
+                onChange={(e) => handleParamsChange('save_to_variable', e.target.value)}
                 style={commonInputStyle}
                 placeholder="e.g., customer_data"
               />
@@ -532,14 +504,14 @@ const PropertiesPanel = ({ selectedNode, nodes, setNodes, deleteNode }) => {
             
             <div>
               <h4 style={{ fontSize: '15px', marginBottom: '10px', color: '#333' }}>Form Fields</h4>
-              {(selectedNode.data.params?.fields || []).map((field, index) => (
+              {(currentNode.data.params?.fields || []).map((field, index) => (
                 <div key={index} style={{ border: '1px solid #e0e0e0', borderRadius: '6px', padding: '10px', marginBottom: '10px', background: 'white' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
                     <strong style={{ fontSize: '14px' }}>Field #{index + 1}</strong>
                     <button onClick={() => {
-                      const newFields = [...selectedNode.data.params.fields];
+                      const newFields = [...currentNode.data.params.fields];
                       newFields.splice(index, 1);
-                      onParamChange('fields', newFields);
+                      handleParamsChange('fields', newFields);
                     }} style={{ color: '#d9534f', background: 'none', border: 'none', cursor: 'pointer' }}>Remove</button>
                   </div>
                   <div style={{ marginBottom: '8px' }}>
@@ -563,8 +535,8 @@ const PropertiesPanel = ({ selectedNode, nodes, setNodes, deleteNode }) => {
                 </div>
               ))}
               <button onClick={() => {
-                const newFields = [...(selectedNode.data.params?.fields || []), { name: '', label: '', type: 'text' }];
-                onParamChange('fields', newFields);
+                const newFields = [...(currentNode.data.params?.fields || []), { name: '', label: '', type: 'text' }];
+                handleParamsChange('fields', newFields);
               }} style={{ width: '100%', padding: '10px', background: '#e8f0fe', border: '1px dashed #a9c7f7', borderRadius: '5px', cursor: 'pointer', color: '#3B82F6' }}>
                 + Add Field
               </button>
@@ -572,14 +544,14 @@ const PropertiesPanel = ({ selectedNode, nodes, setNodes, deleteNode }) => {
           </div>
         )}
 
-        {selectedNode.type === 'output' && (
+        {currentNode.type === 'output' && (
           <div style={sectionStyle}>
             <h3 style={{ fontSize: '16px', marginBottom: '15px', color: '#222' }}>Output Node</h3>
             <div style={{ marginBottom: '15px' }}>
               <label style={labelStyle}>Output Value:</label>
               <VariableInput
-                value={selectedNode.data.output_value || ''}
-                onChange={(e) => updateNodeData({ output_value: e.target.value })}
+                value={currentNode.data.output_value || ''}
+                onChange={(e) => handleDataChange('output_value', e.target.value)}
                 placeholder="e.g., {{llm_node_id.output}}"
                 availableVars={availableVariables}
               />
@@ -587,7 +559,7 @@ const PropertiesPanel = ({ selectedNode, nodes, setNodes, deleteNode }) => {
           </div>
         )}
 
-        {selectedNode.type === 'start' && (
+        {currentNode.type === 'start' && (
           <div style={sectionStyle}>
             <h3 style={{ fontSize: '16px', marginBottom: '15px', color: '#222' }}>Start Node</h3>
             <p style={{ fontSize: '14px', color: '#555' }}>This node marks the beginning of your workflow.</p>
@@ -595,8 +567,8 @@ const PropertiesPanel = ({ selectedNode, nodes, setNodes, deleteNode }) => {
               <label style={labelStyle}>Initial Input Variable Name:</label>
               <input
                 type="text"
-                value={selectedNode.data.initial_input_variable || 'user_message'}
-                onChange={(e) => updateNodeData({ initial_input_variable: e.target.value })}
+                value={currentNode.data.initial_input_variable || 'user_message'}
+                onChange={(e) => handleDataChange('initial_input_variable', e.target.value)}
                 style={commonInputStyle}
                 placeholder="e.g., user_query"
               />
@@ -608,10 +580,10 @@ const PropertiesPanel = ({ selectedNode, nodes, setNodes, deleteNode }) => {
   };
 
   return (
-    <div style={{ padding: '20px', height: '100%' }}>
-      <div style={{ fontWeight: 'bold', fontSize: '16px', marginBottom: '20px' }}>Properties</div>
+    <div style={{ padding: '20px', height: '100%', overflowY: 'auto', background: '#fff' }}>
+      <div style={{ fontWeight: 'bold', fontSize: '16px', marginBottom: '20px', borderBottom: '1px solid #eee', paddingBottom: '10px' }}>Properties</div>
       {renderNodeProperties()}
-      {selectedNode && (
+      {currentNode && (
         <button onClick={deleteNode} style={{ marginTop: '20px', padding: '10px', background: '#f44336', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer', width: '100%' }}>
           Delete Node
         </button>

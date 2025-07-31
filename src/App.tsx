@@ -30,6 +30,7 @@ import { UserManagementPage } from "./pages/UserManagementPage";
 import ClientPortalPage from "./pages/ClientPortalPage";
 import NotFound from "./pages/NotFound";
 import UserVideoCallPage from "./pages/UserVideoCallPage";
+import VisualWorkflowBuilder from "./components/VisualWorkflowBuilder";
 
 const queryClient = new QueryClient();
 
@@ -50,7 +51,7 @@ const App = () => (
                 <Route path="conversations" element={<ConversationsPage />} />
                 <Route path="agents" element={<AgentsPage />} />
                 <Route path="builder" element={<BuilderPage />} />
-                <Route path="builder/:agentId" element={<BuilderPage />} />
+                <Route path="builder/:workflowId" element={<VisualWorkflowBuilder />} />
                 <Route path="designer" element={<DesignerPage />} />
                 <Route path="team" element={<TeamPage />} />
                 <Route path="reports" element={<ReportsPage />} />
