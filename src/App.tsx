@@ -30,7 +30,8 @@ import { UserManagementPage } from "./pages/UserManagementPage";
 import ClientPortalPage from "./pages/ClientPortalPage";
 import NotFound from "./pages/NotFound";
 import UserVideoCallPage from "./pages/UserVideoCallPage";
-import VisualWorkflowBuilder from "./components/VisualWorkflowBuilder";
+import VoicesPage from "./pages/VoicesPage";
+import VoiceLabPage from "./pages/VoiceLabPage";
 
 const queryClient = new QueryClient();
 
@@ -61,6 +62,8 @@ const App = () => (
                 <Route path="tools" element={<ToolManagementPage />} />
                 <Route path="knowledge-base/manage" element={<KnowledgeBaseManagementPage />} />
                 <Route path="workflows" element={<WorkflowManagementPage />} />
+                <Route path="voices" element={<VoicesPage />} />
+                <Route path="voice-lab" element={<VoiceLabPage />} />
                 <Route path="profile" element={<ProfilePage />} />
                 <Route path="billing" element={<ClientBillingPage />} />
                 <Route path="users" element={<UserManagementPage />} />

@@ -27,7 +27,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/hooks/useAuth";
 
-
+const VOICE_ENGINE_URL = 'http://localhost:8001';
 
 interface AgentBuilderProps {
   agent: Agent;
@@ -57,6 +57,7 @@ export const AgentBuilder = ({ agent, onSave, onCancel }: AgentBuilderProps) => 
         is_active: true,
         knowledge_base_id: undefined,
         tool_ids: [],
+        voice_id: 'default',
       };
     }
     return {
@@ -70,7 +71,19 @@ export const AgentBuilder = ({ agent, onSave, onCancel }: AgentBuilderProps) => 
       is_active: agent.is_active !== undefined ? agent.is_active : true,
       knowledge_base_id: agent.knowledge_base_id,
       tool_ids: agent.tool_ids || [],
+      voice_id: agent.voice_id || 'default',
+      tts_provider: agent.tts_provider || 'voice_engine',
+      stt_provider: agent.stt_provider || 'deepgram',
     };
+  });
+
+  const { data: voices, isLoading: isLoadingVoices } = useQuery<string[]>({
+    queryKey: ['voices'],
+    queryFn: async () => {
+        const response = await fetch(`${VOICE_ENGINE_URL}/api/v1/voices`);
+        if (!response.ok) throw new Error('Failed to fetch voices');
+        return response.json();
+    },
   });
 
   const { data: credentials, isLoading: isLoadingCredentials } = useQuery<Credential[]>({ queryKey: ['credentials', companyId], queryFn: async () => {
@@ -228,6 +241,9 @@ export const AgentBuilder = ({ agent, onSave, onCancel }: AgentBuilderProps) => 
       is_active: agent.is_active !== undefined ? agent.is_active : true,
       knowledge_base_id: agent.knowledge_base_id,
       tool_ids: agent.tool_ids || [],
+      voice_id: agent.voice_id || 'default',
+      tts_provider: agent.tts_provider || 'voice_engine',
+      stt_provider: agent.stt_provider || 'deepgram',
     }));
   }, [agent]);
 
@@ -345,6 +361,47 @@ export const AgentBuilder = ({ agent, onSave, onCancel }: AgentBuilderProps) => 
                       <option value="America/New_York">Eastern Time</option>
                       <option value="America/Chicago">Central Time</option>
                       <option value="America/Los_Angeles">Pacific Time</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <Label htmlFor="ttsProvider">TTS Provider</Label>
+                    <select
+                      id="ttsProvider"
+                      value={agentConfig.tts_provider}
+                      onChange={(e) => setAgentConfig({...agentConfig, tts_provider: e.target.value})}
+                      className="w-full mt-1 p-2 border rounded-md"
+                    >
+                      <option value="voice_engine">Custom Voice Engine</option>
+                      <option value="localai">Local AI</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <Label htmlFor="sttProvider">STT Provider</Label>
+                    <select
+                      id="sttProvider"
+                      value={agentConfig.stt_provider}
+                      onChange={(e) => setAgentConfig({...agentConfig, stt_provider: e.target.value})}
+                      className="w-full mt-1 p-2 border rounded-md"
+                    >
+                      <option value="deepgram">Deepgram</option>
+                      <option value="groq">Groq</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <Label htmlFor="voice">Voice</Label>
+                    <select
+                      id="voice"
+                      value={agentConfig.voice_id || 'default'}
+                      onChange={(e) => setAgentConfig({...agentConfig, voice_id: e.target.value})}
+                      className="w-full mt-1 p-2 border rounded-md"
+                      disabled={isLoadingVoices || agentConfig.tts_provider !== 'voice_engine'}
+                    >
+                      {voices?.map(voice => (
+                        <option key={voice} value={voice}>{voice}</option>
+                      ))}
                     </select>
                   </div>
 

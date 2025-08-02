@@ -22,6 +22,15 @@
     let chatContainer, chatWindow, chatMessages, chatInput, widgetButton;
     let isProactiveSession = false;
 
+    // Voice specific variables
+    let voiceWs = null;
+    let mediaRecorder = null;
+    let isRecording = false;
+    let audioContext;
+    let audioQueue = [];
+    let isPlaying = false;
+    const defaultVoiceId = "21m00Tcm4TlvDq8ikWAM"; // Default ElevenLabs voice
+
     const widgetSizes = {
         small: { width: '300px', height: '400px' },
         medium: { width: '350px', height: '500px' },
@@ -133,9 +142,12 @@
             <div class="typing-indicator" style="display:none; padding:0.75rem; font-style:italic; color:#888;">Agent is typing...</div>
             <div class="chat-options" style="padding: 0 0.75rem 0.75rem; display: flex; flex-wrap: wrap; gap: 0.5rem;"></div>
             <div class="chat-form" style="padding: 0 0.75rem 0.75rem;"></div>
-            <div class="chat-input-container" style="padding:0.75rem; border-top:1px solid #eee; display:flex; gap:0.5rem;">
+            <div class="chat-input-container" style="padding:0.75rem; border-top:1px solid #eee; display:flex; gap:0.5rem; align-items:center;">
                 <input type="text" placeholder="${widgetSettings.input_placeholder}" class="chat-input" style="flex-grow:1; padding:0.5rem; border:1px solid #ddd; border-radius:5px;">
                 <button class="send-button" style="background-color:${widgetSettings.primary_color}; color:white; border:none; padding:0.5rem 1rem; border-radius:5px; cursor:pointer;">Send</button>
+                <button class="mic-button" style="background:none; border:none; cursor:pointer; padding:0.5rem;">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="22"></line></svg>
+                </button>
             </div>
         `;
         chatContainer.appendChild(chatWindow);
@@ -145,27 +157,170 @@
         const sendButton = chatWindow.querySelector('.send-button');
         const closeButton = chatWindow.querySelector('.agent-connect-close');
         const typingIndicator = chatWindow.querySelector('.typing-indicator');
-
-        function showTypingIndicator() {
-            if (widgetSettings.typing_indicator_enabled) {
-                typingIndicator.style.display = 'block';
-                typingIndicator.style.padding = '10px';
-                typingIndicator.style.textAlign = 'center';
-                typingIndicator.style.color = '#555';
-                typingIndicator.textContent = 'Agent is typing...';
-                chatMessages.scrollTop = chatMessages.scrollHeight; // Scroll to bottom
-            }
-        }
-
-        function hideTypingIndicator() {
-            typingIndicator.style.display = 'none';
-            typingIndicator.textContent = '';
-        }
+        const micButton = chatWindow.querySelector('.mic-button');
 
         widgetButton.onclick = toggleChatWindow;
         closeButton.onclick = toggleChatWindow;
         sendButton.onclick = () => sendMessage(chatInput.value);
         chatInput.onkeypress = (e) => { if (e.key === 'Enter') sendMessage(chatInput.value); };
+        micButton.onclick = toggleRecording;
+    }
+
+    let audioChunks = [];
+
+    function toggleRecording() {
+        if (isRecording) {
+            stopRecording();
+        } else {
+            startRecording();
+        }
+    }
+
+    async function startRecording() {
+        console.log('AgentConnect: startRecording called');
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+            alert('Your browser does not support audio recording.');
+            return;
+        }
+
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            console.log('AgentConnect: Microphone stream obtained');
+            
+            audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            
+            isRecording = true;
+            audioChunks = [];
+            mediaRecorder = new MediaRecorder(stream, { mimeType: 'audio/webm' });
+            initVoiceWebSocket();
+
+            mediaRecorder.ondataavailable = (e) => {
+                if (e.data.size > 0) {
+                    audioChunks.push(e.data);
+                }
+            };
+            
+            mediaRecorder.onstop = () => {
+                console.log('AgentConnect: MediaRecorder stopped.');
+                const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+                if (voiceWs && voiceWs.readyState === WebSocket.OPEN) {
+                    voiceWs.send(audioBlob);
+                }
+            };
+
+            mediaRecorder.start();
+            const micButton = chatWindow.querySelector('.mic-button');
+            micButton.style.color = 'red';
+
+        } catch (err) {
+            console.error('Error starting recording:', err);
+            alert('Could not access the microphone. Please allow microphone access.');
+        }
+    }
+
+    function stopRecording() {
+        if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+            mediaRecorder.stop();
+            isRecording = false;
+            const micButton = chatWindow.querySelector('.mic-button');
+            micButton.style.color = 'currentColor';
+        }
+    }
+
+    function initVoiceWebSocket() {
+        if (voiceWs && voiceWs.readyState === WebSocket.OPEN) return;
+        if (!sessionId) sessionId = generateSessionId();
+        
+        const voiceUrl = `${wsBackendUrl}/api/v1/ws/public/voice/${companyId}/${agentId}/${sessionId}?user_type=user&voice_id=${defaultVoiceId}&stt_provider=groq`;
+        voiceWs = new WebSocket(voiceUrl);
+
+        voiceWs.onopen = () => {
+            console.log('AgentConnect: Voice WebSocket connected.');
+            // Initialize AudioContext after user interaction
+            if (!audioContext || audioContext.state === 'closed') {
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                console.log('AgentConnect: AudioContext created.');
+            }
+            // Resume AudioContext if it's suspended
+            if (audioContext.state === 'suspended') {
+                audioContext.resume().then(() => {
+                    console.log('AgentConnect: AudioContext resumed successfully.');
+                });
+            }
+        };
+
+        let incomingAudioChunks = [];
+        let audioPlaybackTimer = null;
+
+        voiceWs.onmessage = async (event) => {
+            console.log('AgentConnect: Received message on voice WebSocket', event.data);
+            if (event.data instanceof Blob) {
+                console.log('AgentConnect: Received audio blob for playback.');
+                incomingAudioChunks.push(event.data);
+                
+                // Reset the timer every time a new chunk arrives
+                if (audioPlaybackTimer) {
+                    clearTimeout(audioPlaybackTimer);
+                }
+                
+                // Set a timer to play the audio after a short period of inactivity
+                audioPlaybackTimer = setTimeout(() => {
+                    if (incomingAudioChunks.length > 0) {
+                        const fullAudioBlob = new Blob(incomingAudioChunks, { type: 'audio/wav' });
+                        const audioUrl = URL.createObjectURL(fullAudioBlob);
+                        const audio = new Audio(audioUrl);
+                        audio.play();
+                        incomingAudioChunks = [];
+                    }
+                }, 500); // 500ms of inactivity
+
+            } else {
+                console.log('AgentConnect: Received non-audio message on voice WebSocket:', event.data);
+            }
+        };
+
+        voiceWs.onerror = (error) => console.error('AgentConnect: Voice WebSocket error:', error);
+        voiceWs.onclose = () => {
+            console.log('AgentConnect: Voice WebSocket disconnected.');
+            // Final check to play any remaining audio
+            if (audioPlaybackTimer) {
+                clearTimeout(audioPlaybackTimer);
+            }
+            if (incomingAudioChunks.length > 0) {
+                const fullAudioBlob = new Blob(incomingAudioChunks, { type: 'audio/wav' });
+                const audioUrl = URL.createObjectURL(fullAudioBlob);
+                const audio = new Audio(audioUrl);
+                audio.play();
+                incomingAudioChunks = [];
+            }
+        };
+    }
+
+    async function playNextInQueue() {
+        if (audioQueue.length === 0) {
+            console.log('AgentConnect: Audio queue is empty. Stopping playback.');
+            isPlaying = false;
+            return;
+        }
+        isPlaying = true;
+        const arrayBuffer = audioQueue.shift();
+        console.log(`AgentConnect: Playing next audio chunk from queue. Size: ${arrayBuffer.byteLength}`);
+        try {
+            const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
+            console.log('AgentConnect: Audio data decoded successfully.');
+            const source = audioContext.createBufferSource();
+            source.buffer = audioBuffer;
+            source.connect(audioContext.destination);
+            source.onended = () => {
+                console.log('AgentConnect: Finished playing audio chunk.');
+                playNextInQueue(); // Play the next chunk when this one finishes
+            };
+            source.start();
+            console.log('AgentConnect: Audio source started.');
+        } catch (e) {
+            console.error("AgentConnect: Error decoding audio data", e);
+            isPlaying = false; // Stop playback on error
+        }
     }
 
     function toggleChatWindow() {

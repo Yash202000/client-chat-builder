@@ -22,7 +22,8 @@ import {
   X,
   Key,
   BookOpen,
-  CreditCard
+  CreditCard,
+  Mic
 } from "lucide-react";
 import { CreateAgentDialog } from "@/components/CreateAgentDialog";
 
@@ -38,6 +39,8 @@ const sidebarItems = [
   { title: "Knowledge Bases", url: "/dashboard/knowledge-base/manage", icon: BookOpen },
   { title: "Tools", url: "/dashboard/tools", icon: Zap },
   { title: "Workflows", url: "/dashboard/workflows", icon: WorkflowIcon },
+  { title: "Voices", url: "/dashboard/voices", icon: Mic },
+  { title: "Voice Lab", url: "/dashboard/voice-lab", icon: Mic },
   { title: "Billing", url: "/dashboard/billing", icon: CreditCard },
   { title: "User Management", url: "/dashboard/users", icon: Users },
   { title: "Manage Plans", url: "/dashboard/admin/subscriptions", icon: Sparkles },

@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { ChatMessage, User } from '@/types';
-import { Paperclip, Send, CornerDownRight, Book, UserCheck, CheckCircle, Users, Video, Bot } from 'lucide-react';
+import { Paperclip, Send, CornerDownRight, Book, UserCheck, CheckCircle, Users, Video, Bot, Mic } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from '@/hooks/use-toast';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -14,6 +14,7 @@ import { Switch } from "@/components/ui/switch";
 import { VideoCallModal } from './VideoCallModal';
 import { useAuth } from "@/hooks/useAuth";
 import { Label } from './ui/label';
+import { useVoiceConnection } from '@/hooks/use-voice-connection';
 
 interface ConversationDetailProps {
   sessionId: string;
@@ -34,6 +35,15 @@ export const ConversationDetail: React.FC<ConversationDetailProps> = ({ sessionI
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const ws = useRef<WebSocket | null>(null);
   const { authFetch, token } = useAuth();
+  const { isRecording, startRecording, stopRecording } = useVoiceConnection(agentId, sessionId);
+
+  const handleMicClick = () => {
+    if (isRecording) {
+      stopRecording();
+    } else {
+      startRecording();
+    }
+  };
 
   const { data: sessionDetails, isLoading: isLoadingSession } = useQuery({
     queryKey: ['sessionDetails', sessionId],
@@ -367,6 +377,9 @@ export const ConversationDetail: React.FC<ConversationDetailProps> = ({ sessionI
               <div className="absolute top-2 right-2 flex items-center gap-2">
                 <Button variant="ghost" size="sm"><Paperclip className="h-4 w-4" /></Button>
                 <Button size="sm" onClick={handleSendMessage} disabled={sendMessageMutation.isPending}><Send className="h-4 w-4" /></Button>
+                <Button variant={isRecording ? "destructive" : "outline"} size="sm" onClick={handleMicClick}>
+                  <Mic className="h-4 w-4" />
+                </Button>
               </div>
             </div>
             <div className="mt-2">
