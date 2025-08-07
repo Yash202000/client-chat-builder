@@ -1,5 +1,9 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { ResourceSelector } from './ResourceSelector';
+import { useNavigate } from "react-router-dom";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { Agent, Credential, Webhook } from "@/types";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,7 +14,6 @@ import { Badge } from "@/components/ui/badge";
 import { 
   Bot, 
   MessageSquare, 
-  Webhook, 
   Zap, 
   Plus, 
   Trash2, 
@@ -18,89 +21,256 @@ import {
   Settings,
   Brain,
   Globe,
-  Database
+  Database,
+  Webhook as WebhookIcon
 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useAuth } from "@/hooks/useAuth";
 
-interface FlowNode {
-  id: string;
-  type: 'trigger' | 'condition' | 'action' | 'response';
-  title: string;
-  content: string;
-  position: { x: number; y: number };
+const VOICE_ENGINE_URL = 'http://localhost:8001';
+
+interface AgentBuilderProps {
+  agent: Agent;
+  onSave: () => void;
+  onCancel: () => void;
 }
 
-export const AgentBuilder = () => {
-  const [agentConfig, setAgentConfig] = useState({
-    name: "New Agent",
-    description: "Intelligent customer support agent",
-    avatar: "",
-    personality: "helpful",
-    language: "en",
-    timezone: "UTC"
+export const AgentBuilder = ({ agent, onSave, onCancel }: AgentBuilderProps) => {
+  console.log("AgentBuilder - agent prop:", agent);
+  const queryClient = useQueryClient();
+  const navigate = useNavigate();
+  const companyId = 1; // Hardcoded company ID for now
+  const { authFetch } = useAuth(); 
+
+  const [agentConfig, setAgentConfig] = useState(() => {
+    if (!agent) {
+      return {
+        name: "",
+        welcome_message: "",
+        prompt: "",
+        personality: "helpful",
+        language: "en",
+        timezone: "UTC",
+        response_style: "",
+        instructions: "",
+        credential_id: undefined,
+        is_active: true,
+        knowledge_base_id: undefined,
+        tool_ids: [],
+        voice_id: 'default',
+      };
+    }
+    return {
+      name: agent.name,
+      welcome_message: agent.welcome_message,
+      prompt: agent.prompt,
+      personality: agent.personality || "helpful",
+      language: agent.language || "en",
+      timezone: agent.timezone || "UTC",
+      credential_id: agent.credential_id,
+      is_active: agent.is_active !== undefined ? agent.is_active : true,
+      knowledge_base_id: agent.knowledge_base_id,
+      tool_ids: agent.tool_ids || [],
+      voice_id: agent.voice_id || 'default',
+      tts_provider: agent.tts_provider || 'voice_engine',
+      stt_provider: agent.stt_provider || 'deepgram',
+    };
   });
 
-  const [webhooks, setWebhooks] = useState([
-    {
-      id: "1",
-      name: "Slack Notification",
-      url: "https://hooks.slack.com/services/...",
-      trigger: "new_message",
-      active: true
+  const { data: voices, isLoading: isLoadingVoices } = useQuery<string[]>({
+    queryKey: ['voices'],
+    queryFn: async () => {
+        const response = await fetch(`${VOICE_ENGINE_URL}/api/v1/voices`);
+        if (!response.ok) throw new Error('Failed to fetch voices');
+        return response.json();
     },
-    {
-      id: "2",
-      name: "CRM Integration",
-      url: "https://api.hubspot.com/webhook",
-      trigger: "conversation_end",
-      active: false
-    }
-  ]);
+  });
 
-  const [flowNodes, setFlowNodes] = useState<FlowNode[]>([
-    {
-      id: "1",
-      type: "trigger",
-      title: "User Says Hello",
-      content: "greeting, hi, hello, hey",
-      position: { x: 100, y: 100 }
+  const { data: credentials, isLoading: isLoadingCredentials } = useQuery<Credential[]>({ queryKey: ['credentials', companyId], queryFn: async () => {
+    const response = await authFetch(`/api/v1/credentials/`);
+    if (!response.ok) {
+      throw new Error("Failed to fetch credentials");
+    }
+    return response.json();
+  }});
+
+  const { data: webhooksData, isLoading: isLoadingWebhooks } = useQuery<Webhook[]>({ 
+    queryKey: ['webhooks', agent?.id, companyId], 
+    queryFn: async () => {
+      if (!agent?.id) return [];
+      const response = await authFetch(`/api/v1/webhooks/by_agent/${agent.id}`);
+      if (!response.ok) {
+        throw new Error("Failed to fetch webhooks");
+      }
+      return response.json();
     },
-    {
-      id: "2",
-      type: "response",
-      title: "Welcome Response",
-      content: "Hi there! How can I help you today?",
-      position: { x: 400, y: 100 }
-    }
-  ]);
+    enabled: !!agent?.id,
+  });
 
-  const nodeTypes = [
-    { type: 'trigger', icon: Zap, label: 'Trigger', color: 'bg-yellow-500' },
-    { type: 'condition', icon: Brain, label: 'Condition', color: 'bg-purple-500' },
-    { type: 'action', icon: Settings, label: 'Action', color: 'bg-blue-500' },
-    { type: 'response', icon: MessageSquare, label: 'Response', color: 'bg-green-500' }
-  ];
+  const { data: knowledgeBases, isLoading: isLoadingKnowledgeBases } = useQuery<KnowledgeBase[]>({ queryKey: ['knowledgeBases', companyId], queryFn: async () => {
+    const response = await authFetch(`/api/v1/knowledge-bases/`);
+    if (!response.ok) {
+      throw new Error("Failed to fetch knowledge bases");
+    }
+    return response.json();
+  }});
+
+  const { data: tools, isLoading: isLoadingTools } = useQuery<Tool[]>({ queryKey: ['tools', companyId], queryFn: async () => {
+    const response = await authFetch(`/api/v1/tools/`);
+    if (!response.ok) {
+      throw new Error("Failed to fetch tools");
+    }
+    return response.json();
+  }});
+
+  const [localWebhooks, setLocalWebhooks] = useState<Webhook[]>([]);
+
+  useEffect(() => {
+    if (webhooksData) {
+      setLocalWebhooks(webhooksData);
+    }
+  }, [webhooksData]);
+
+  const updateAgentMutation = useMutation({
+    mutationFn: async (updatedAgent: Agent) => {
+      const response = await authFetch(`/api/v1/agents/${updatedAgent.id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(updatedAgent),
+      });
+      if (!response.ok) {
+        throw new Error("Failed to update agent");
+      }
+      return response.json();
+    },
+    onSuccess: () => {
+      onSave();
+    },
+    onError: (error) => {
+      console.error("Failed to update agent:", error);
+      // Optionally show a toast or other error feedback
+    },
+  });
+
+  const createWebhookMutation = useMutation({
+    mutationFn: async (newWebhook: Omit<Webhook, "id">) => {
+      const response = await authFetch(`/api/v1/webhooks/`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(newWebhook),
+      });
+      if (!response.ok) {
+        throw new Error("Failed to create webhook");
+      }
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['webhooks', agent.id] });
+    },
+    onError: (error) => {
+      console.error("Failed to create webhook:", error);
+    },
+  });
+
+  const updateWebhookMutation = useMutation({
+    mutationFn: async (updatedWebhook: Webhook) => {
+      const response = await authFetch(`/api/v1/webhooks/${updatedWebhook.id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(updatedWebhook),
+      });
+      if (!response.ok) {
+        throw new Error("Failed to update webhook");
+      }
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['webhooks', agent.id] });
+    },
+    onError: (error) => {
+      console.error("Failed to update webhook:", error);
+    },
+  });
+
+  const deleteWebhookMutation = useMutation({
+    mutationFn: async (webhookId: number) => {
+      const response = await authFetch(`/api/v1/webhooks/${webhookId}`, {
+        method: "DELETE",
+      });
+      if (!response.ok) {
+        throw new Error("Failed to delete webhook");
+      }
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['webhooks', agent.id] });
+    },
+    onError: (error) => {
+      console.error("Failed to delete webhook:", error);
+    },
+  });
+
+  const handleSave = () => {
+    updateAgentMutation.mutate({
+      id: agent.id,
+      ...agentConfig,
+      credential_id: agentConfig.credential_id === 0 ? undefined : agentConfig.credential_id,
+      knowledge_base_id: agentConfig.knowledge_base_id === 0 ? undefined : agentConfig.knowledge_base_id,
+      tool_ids: agentConfig.tool_ids,
+    } as Agent);
+  };
+
+  useEffect(() => {
+    setAgentConfig(prevConfig => ({
+      ...prevConfig,
+      name: agent.name,
+      welcome_message: agent.welcome_message,
+      prompt: agent.prompt,
+      personality: agent.personality || "helpful",
+      language: agent.language || "en",
+      timezone: agent.timezone || "UTC",
+      response_style: agent.response_style || "",
+      instructions: agent.instructions || "",
+      credential_id: agent.credential_id,
+      is_active: agent.is_active !== undefined ? agent.is_active : true,
+      knowledge_base_id: agent.knowledge_base_id,
+      tool_ids: agent.tool_ids || [],
+      voice_id: agent.voice_id || 'default',
+      tts_provider: agent.tts_provider || 'voice_engine',
+      stt_provider: agent.stt_provider || 'deepgram',
+    }));
+  }, [agent]);
 
   const addWebhook = () => {
-    const newWebhook = {
-      id: Date.now().toString(),
+    createWebhookMutation.mutate({
+      agent_id: agent.id,
       name: "New Webhook",
       url: "",
-      trigger: "new_message",
-      active: false
-    };
-    setWebhooks([...webhooks, newWebhook]);
+      trigger_event: "new_message",
+      is_active: false,
+    });
   };
 
-  const updateWebhook = (id: string, field: string, value: string | boolean) => {
-    setWebhooks(webhooks.map(webhook => 
-      webhook.id === id ? { ...webhook, [field]: value } : webhook
-    ));
+  const updateWebhook = (id: number, field: keyof Webhook, value: any) => {
+    const webhookToUpdate = webhooksData?.find((w) => w.id === id);
+    if (webhookToUpdate) {
+      // Map frontend field names to backend field names
+      const backendField = field === 'trigger' ? 'trigger_event' : field === 'active' ? 'is_active' : field;
+      updateWebhookMutation.mutate({ ...webhookToUpdate, [backendField]: value });
+    }
   };
 
-  const removeWebhook = (id: string) => {
-    setWebhooks(webhooks.filter(webhook => webhook.id !== id));
+  const removeWebhook = (id: number) => {
+    deleteWebhookMutation.mutate(id);
   };
+
+  
 
   return (
     <div className="space-y-6">
@@ -116,11 +286,13 @@ export const AgentBuilder = () => {
         </CardHeader>
         <CardContent>
           <Tabs defaultValue="basic" className="w-full">
-            <TabsList className="grid w-full grid-cols-4">
+            <TabsList className="grid w-full grid-cols-6">
               <TabsTrigger value="basic">Basic Info</TabsTrigger>
-              <TabsTrigger value="flow">Conversation Flow</TabsTrigger>
               <TabsTrigger value="webhooks">Webhooks</TabsTrigger>
               <TabsTrigger value="integrations">Integrations</TabsTrigger>
+              <TabsTrigger value="credentials">Credentials</TabsTrigger>
+              <TabsTrigger value="knowledge-base">Knowledge Base</TabsTrigger>
+              <TabsTrigger value="tools">Tools</TabsTrigger>
             </TabsList>
 
             <TabsContent value="basic" className="space-y-6">
@@ -143,16 +315,7 @@ export const AgentBuilder = () => {
                     </div>
                   </div>
 
-                  <div>
-                    <Label htmlFor="description">Description</Label>
-                    <Textarea
-                      id="description"
-                      value={agentConfig.description}
-                      onChange={(e) => setAgentConfig({...agentConfig, description: e.target.value})}
-                      className="mt-1"
-                      rows={3}
-                    />
-                  </div>
+                  
                 </div>
 
                 <div className="space-y-4">
@@ -200,60 +363,93 @@ export const AgentBuilder = () => {
                       <option value="America/Los_Angeles">Pacific Time</option>
                     </select>
                   </div>
+
+                  <div>
+                    <Label htmlFor="ttsProvider">TTS Provider</Label>
+                    <select
+                      id="ttsProvider"
+                      value={agentConfig.tts_provider}
+                      onChange={(e) => setAgentConfig({...agentConfig, tts_provider: e.target.value})}
+                      className="w-full mt-1 p-2 border rounded-md"
+                    >
+                      <option value="voice_engine">Custom Voice Engine</option>
+                      <option value="localai">Local AI</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <Label htmlFor="sttProvider">STT Provider</Label>
+                    <select
+                      id="sttProvider"
+                      value={agentConfig.stt_provider}
+                      onChange={(e) => setAgentConfig({...agentConfig, stt_provider: e.target.value})}
+                      className="w-full mt-1 p-2 border rounded-md"
+                    >
+                      <option value="deepgram">Deepgram</option>
+                      <option value="groq">Groq</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <Label htmlFor="voice">Voice</Label>
+                    <select
+                      id="voice"
+                      value={agentConfig.voice_id || 'default'}
+                      onChange={(e) => setAgentConfig({...agentConfig, voice_id: e.target.value})}
+                      className="w-full mt-1 p-2 border rounded-md"
+                      disabled={isLoadingVoices || agentConfig.tts_provider !== 'voice_engine'}
+                    >
+                      {voices?.map(voice => (
+                        <option key={voice} value={voice}>{voice}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <Label htmlFor="isActive">Active</Label>
+                    <input
+                      type="checkbox"
+                      id="isActive"
+                      checked={agentConfig.is_active}
+                      onChange={(e) => setAgentConfig({...agentConfig, is_active: e.target.checked})}
+                      className="mt-1 ml-2"
+                    />
+                  </div>
+
+                  <div>
+                    <Label htmlFor="welcomeMessage">Welcome Message</Label>
+                    <Textarea
+                      id="welcomeMessage"
+                      value={agentConfig.welcome_message}
+                      onChange={(e) => setAgentConfig({...agentConfig, welcome_message: e.target.value})}
+                      className="mt-1"
+                      rows={3}
+                      placeholder="e.g., Hello! How can I help you today?"
+                    />
+                  </div>
                 </div>
               </div>
             </TabsContent>
 
-            <TabsContent value="flow" className="space-y-6">
-              <div className="flex items-center justify-between">
-                <h3 className="text-lg font-semibold">Conversation Flow Builder</h3>
-                <div className="flex gap-2">
-                  {nodeTypes.map((nodeType) => {
-                    const IconComponent = nodeType.icon;
-                    return (
-                      <Button
-                        key={nodeType.type}
-                        size="sm"
-                        variant="outline"
-                        className="flex items-center gap-2"
-                      >
-                        <div className={`w-3 h-3 rounded-full ${nodeType.color}`}></div>
-                        <IconComponent className="h-4 w-4" />
-                        {nodeType.label}
-                      </Button>
-                    );
-                  })}
-                </div>
-              </div>
-
-              <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 min-h-[400px] bg-gray-50 relative">
-                <div className="text-center text-gray-500">
-                  <Brain className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                  <p className="text-lg font-medium">Drag & Drop Flow Builder</p>
-                  <p className="text-sm">Create your conversation logic by connecting nodes</p>
-                </div>
-
-                {/* Sample Flow Nodes */}
-                <div className="absolute top-4 left-4 space-y-4">
-                  {flowNodes.map((node) => {
-                    const nodeType = nodeTypes.find(t => t.type === node.type);
-                    const IconComponent = nodeType?.icon || MessageSquare;
-                    return (
-                      <div
-                        key={node.id}
-                        className="bg-white p-3 rounded-lg shadow-md border-l-4 border-blue-500 min-w-[200px] cursor-move hover:shadow-lg transition-shadow"
-                      >
-                        <div className="flex items-center gap-2 mb-2">
-                          <IconComponent className="h-4 w-4 text-blue-600" />
-                          <span className="font-medium text-sm">{node.title}</span>
-                          <GripVertical className="h-4 w-4 text-gray-400 ml-auto" />
-                        </div>
-                        <p className="text-xs text-gray-600 truncate">{node.content}</p>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
+            <TabsContent value="prompt" className="space-y-4">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>System Prompt</CardTitle>
+                    <CardDescription>
+                      Define the agent's core identity, instructions, and constraints. This is the most important part of the agent's configuration.
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <Textarea
+                      id="prompt"
+                      value={agentConfig.prompt}
+                      onChange={(e) => setAgentConfig({...agentConfig, prompt: e.target.value})}
+                      className="mt-1 font-mono"
+                      rows={15}
+                      placeholder="e.g., You are a helpful AI assistant..."
+                    />
+                  </CardContent>
+                </Card>
             </TabsContent>
 
             <TabsContent value="webhooks" className="space-y-6">
@@ -266,30 +462,46 @@ export const AgentBuilder = () => {
               </div>
 
               <div className="space-y-4">
-                {webhooks.map((webhook) => (
-                  <Card key={webhook.id} className="border-l-4 border-l-orange-500">
+                {isLoadingWebhooks ? (
+                  <div>Loading webhooks...</div>
+                ) : webhooksData && webhooksData.length > 0 ? (
+                  <>
+                    {webhooksData.map((webhook) => (
+                      <Card key={webhook.id} className="border-l-4 border-l-orange-500">
                     <CardContent className="p-4">
                       <div className="flex items-start justify-between">
                         <div className="flex-1 space-y-3">
                           <div className="flex items-center gap-3">
-                            <Webhook className="h-5 w-5 text-orange-600" />
+                            <WebhookIcon className="h-5 w-5 text-orange-600" />
                             <Input
-                              value={webhook.name}
-                              onChange={(e) => updateWebhook(webhook.id, 'name', e.target.value)}
+                              value={localWebhooks.find(w => w.id === webhook.id)?.name || ''}
+                              onChange={(e) => {
+                                const updatedWebhooks = localWebhooks.map(w =>
+                                  w.id === webhook.id ? { ...w, name: e.target.value } : w
+                                );
+                                setLocalWebhooks(updatedWebhooks);
+                              }}
+                              onBlur={(e) => updateWebhook(webhook.id, 'name', e.target.value)}
                               className="font-medium"
                               placeholder="Webhook name"
-                            />
-                            <Badge variant={webhook.active ? "default" : "secondary"}>
-                              {webhook.active ? "Active" : "Inactive"}
-                            </Badge>
-                          </div>
-                          
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                            <div>
-                              <Label className="text-xs">Webhook URL</Label>
+                              />
+                                <Badge variant={webhook.is_active ? "default" : "secondary"}>
+                                  {webhook.is_active ? "Active" : "Inactive"}
+                                </Badge>
+                              </div>
+                              
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                <div>
+                                  <Label className="text-xs">Webhook URL</Label>
                               <Input
-                                value={webhook.url}
-                                onChange={(e) => updateWebhook(webhook.id, 'url', e.target.value)}
+                                value={localWebhooks.find(w => w.id === webhook.id)?.url || ''}
+                                onChange={(e) => {
+                                  const updatedWebhooks = localWebhooks.map(w =>
+                                    w.id === webhook.id ? { ...w, url: e.target.value } : w
+                                  );
+                                  setLocalWebhooks(updatedWebhooks);
+                                }}
+                                onBlur={(e) => updateWebhook(webhook.id, 'url', e.target.value)}
                                 placeholder="https://api.example.com/webhook"
                                 className="text-sm"
                               />
@@ -297,39 +509,55 @@ export const AgentBuilder = () => {
                             <div>
                               <Label className="text-xs">Trigger Event</Label>
                               <select
-                                value={webhook.trigger}
-                                onChange={(e) => updateWebhook(webhook.id, 'trigger', e.target.value)}
-                                className="w-full p-2 border rounded-md text-sm"
-                              >
-                                <option value="new_message">New Message</option>
-                                <option value="conversation_start">Conversation Start</option>
-                                <option value="conversation_end">Conversation End</option>
-                                <option value="agent_handoff">Agent Handoff</option>
-                              </select>
+                                value={localWebhooks.find(w => w.id === webhook.id)?.trigger_event || ''}
+                                onChange={(e) => {
+                                  const updatedWebhooks = localWebhooks.map(w =>
+                                    w.id === webhook.id ? { ...w, trigger_event: e.target.value } : w
+                                  );
+                                  setLocalWebhooks(updatedWebhooks);
+                                }}
+                                onBlur={(e) => updateWebhook(webhook.id, 'trigger_event', e.target.value)}
+                                    className="w-full p-2 border rounded-md text-sm"
+                                  >
+                                    <option value="new_message">New Message</option>
+                                    <option value="conversation_start">Conversation Start</option>
+                                    <option value="conversation_end">Conversation End</option>
+                                    <option value="agent_handoff">Agent Handoff</option>
+                                  </select>
+                                </div>
+                              </div>
                             </div>
-                          </div>
-                        </div>
-                        
-                        <div className="flex items-center gap-2 ml-4">
-                          <Button
+                            
+                            <div className="flex items-center gap-2 ml-4">
+                              <Button
                             size="sm"
                             variant="outline"
-                            onClick={() => updateWebhook(webhook.id, 'active', !webhook.active)}
+                            onClick={() => {
+                              const updatedWebhooks = localWebhooks.map(w =>
+                                w.id === webhook.id ? { ...w, is_active: !w.is_active } : w
+                              );
+                              setLocalWebhooks(updatedWebhooks);
+                              updateWebhook(webhook.id, 'is_active', !webhook.is_active);
+                            }}
                           >
-                            {webhook.active ? "Disable" : "Enable"}
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="destructive"
-                            onClick={() => removeWebhook(webhook.id)}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
+                            {webhook.is_active ? "Disable" : "Enable"}
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="destructive"
+                                onClick={() => removeWebhook(webhook.id)}
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </>
+                ) : (
+                  <div>No webhooks configured.</div>
+                )}
               </div>
             </TabsContent>
 
@@ -371,7 +599,63 @@ export const AgentBuilder = () => {
                 })}
               </div>
             </TabsContent>
+            
+            <TabsContent value="tools" className="space-y-6">
+              <h3 className="text-lg font-semibold">Tool Selection</h3>
+              <ResourceSelector
+                resources={tools || []}
+                selectedIds={agentConfig.tool_ids || []}
+                onSelect={(ids) => setAgentConfig({ ...agentConfig, tool_ids: ids })}
+                title="Select Tools"
+                triggerButtonText="Browse Tools"
+                isLoading={isLoadingTools}
+                allowMultiple
+              />
+              <Button variant="outline" onClick={() => navigate("/dashboard/tools")}>
+                Manage Tools
+              </Button>
+            </TabsContent>
+
+            <TabsContent value="knowledge-base" className="space-y-6">
+              <h3 className="text-lg font-semibold">Knowledge Base</h3>
+              <ResourceSelector
+                resources={knowledgeBases || []}
+                selectedIds={agentConfig.knowledge_base_id ? [agentConfig.knowledge_base_id] : []}
+                onSelect={(ids) => setAgentConfig({ ...agentConfig, knowledge_base_id: ids[0] })}
+                title="Select Knowledge Base"
+                triggerButtonText="Browse Knowledge Bases"
+                isLoading={isLoadingKnowledgeBases}
+                allowMultiple={false}
+              />
+              <Button variant="outline" onClick={() => navigate("/dashboard/knowledge-base/manage")}>
+                Manage Knowledge Bases
+              </Button>
+            </TabsContent>
+
+            <TabsContent value="credentials" className="space-y-6">
+              <h3 className="text-lg font-semibold">Credential Management</h3>
+              <ResourceSelector
+                resources={(credentials || []).map(c => ({ ...c, name: `${c.name} (${c.service})` }))}
+                selectedIds={agentConfig.credential_id ? [agentConfig.credential_id] : []}
+                onSelect={(ids) => setAgentConfig({ ...agentConfig, credential_id: ids[0] })}
+                title="Select Credential"
+                triggerButtonText="Browse Credentials"
+                isLoading={isLoadingCredentials}
+                allowMultiple={false}
+              />
+              <Button variant="outline" onClick={() => navigate("/dashboard/vault")}>
+                Manage Credentials
+              </Button>
+            </TabsContent>
           </Tabs>
+          <div className="flex justify-end gap-2 mt-6">
+            <Button type="button" variant="outline" onClick={onCancel}>
+              Cancel
+            </Button>
+            <Button type="button" onClick={handleSave} disabled={updateAgentMutation.isPending}>
+              {updateAgentMutation.isPending ? "Saving..." : "Save Changes"}
+            </Button>
+          </div>
         </CardContent>
       </Card>
     </div>

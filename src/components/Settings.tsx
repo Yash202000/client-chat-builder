@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -16,29 +16,173 @@ import {
   Mail,
   Lock,
   Users,
-  Database
+  Database,
+  Building,
+  ChevronsUpDown
 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useToast } from "@/components/ui/use-toast";
+import { useAuth } from "@/hooks/useAuth";
+import { IntegrationsList } from "./IntegrationsList";
+import { ApiKeys } from "./ApiKeys";
+import { ProactiveMessageTester } from "./ProactiveMessageTester";
+import { ApiDocs } from "./ApiDocs";
+import { useQuery } from "@tanstack/react-query";
+import { Company } from "@/types";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+
 
 export const Settings = () => {
+  const { toast } = useToast();
+  const { user, companyId, setCompanyId, authFetch } = useAuth();
+
   const [settings, setSettings] = useState({
-    companyName: "AgentConnect",
-    companyLogo: "",
-    supportEmail: "support@agentconnect.com",
-    timezone: "UTC",
-    language: "en",
-    emailNotifications: true,
+    companyName: "",
+    supportEmail: "",
+    timezone: "",
+    language: "",
+    businessHours: false,
+    businessHoursStartTime: "09:00",
+    businessHoursEndTime: "17:00",
+    businessHoursDays: "Monday - Friday",
+    darkMode: false,
+    emailNotifications: false,
     slackNotifications: false,
-    autoAssignment: true,
-    businessHours: true,
-    requireAuth: true,
-    allowFileUploads: true,
-    maxFileSize: "10",
-    sessionTimeout: "30"
+    autoAssignment: false,
+    logoUrl: "",
+    primaryColor: "",
+    secondaryColor: "",
+    customDomain: "",
+    maxFileSize: 10, // Initialize with default value
+    sessionTimeout: 30, // Initialize with default value
   });
+
+  const { data: companies } = useQuery<Company[]>({
+    queryKey: ['companies'],
+    queryFn: async () => {
+      const response = await authFetch(`/api/v1/companies/`);
+      if (!response.ok) throw new Error("Failed to fetch companies");
+      return response.json();
+    },
+    enabled: !!user?.is_super_admin,
+  });
+
+  const currentCompany = companies?.find(c => c.id === companyId);
+
+  useEffect(() => {
+    const fetchSettings = async () => {
+      if (!companyId) return;
+      try {
+        const [userResponse, companyResponse, notificationResponse] = await Promise.all([
+          authFetch(`/api/v1/settings/`),
+          authFetch(`/api/v1/company-settings/`),
+          authFetch(`/api/v1/notification-settings/`),
+        ]);
+
+        if (userResponse.ok && companyResponse.ok && notificationResponse.ok) {
+          const userData = await userResponse.json();
+          const companyData = await companyResponse.json();
+          const notificationData = await notificationResponse.json();
+          setSettings(prev => ({
+            ...prev,
+            darkMode: userData.dark_mode,
+            companyName: companyData.company_name,
+            supportEmail: companyData.support_email,
+            timezone: companyData.timezone,
+            language: companyData.language,
+            businessHours: companyData.business_hours,
+            logoUrl: companyData.logo_url,
+            primaryColor: companyData.primary_color,
+            secondaryColor: companyData.secondary_color,
+            customDomain: companyData.custom_domain,
+            emailNotifications: notificationData.email_notifications_enabled,
+            slackNotifications: notificationData.slack_notifications_enabled,
+            autoAssignment: notificationData.auto_assignment_enabled,
+          }));
+        } else {
+          toast({
+            title: "Error",
+            description: "Failed to fetch settings.",
+            variant: "destructive",
+          });
+        }
+      } catch (error) {
+        console.error("Failed to fetch settings", error);
+        toast({
+          title: "Error",
+          description: "An unexpected error occurred.",
+          variant: "destructive",
+        });
+      }
+    };
+
+    fetchSettings();
+  }, [companyId, authFetch, toast]);
 
   const handleSettingChange = (key: string, value: any) => {
     setSettings(prev => ({ ...prev, [key]: value }));
+  };
+
+  const handleSaveChanges = async () => {
+    try {
+      const [userResponse, companyResponse, notificationResponse] = await Promise.all([
+        authFetch(`/api/v1/settings/`, {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({ dark_mode: settings.darkMode }),
+        }),
+        authFetch(`/api/v1/company-settings/`, {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            company_name: settings.companyName,
+            support_email: settings.supportEmail,
+            timezone: settings.timezone,
+            language: settings.language,
+            business_hours: settings.businessHours,
+            logo_url: settings.logoUrl,
+            primary_color: settings.primaryColor,
+            secondary_color: settings.secondaryColor,
+            custom_domain: settings.customDomain,
+          }),
+        }),
+        authFetch(`/api/v1/notification-settings/`, {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            email_notifications_enabled: settings.emailNotifications,
+            slack_notifications_enabled: settings.slackNotifications,
+            auto_assignment_enabled: settings.autoAssignment,
+          }),
+        }),
+      ]);
+
+      if (userResponse.ok && companyResponse.ok && notificationResponse.ok) {
+        toast({
+          title: "Success",
+          description: "Settings saved successfully.",
+        });
+      } else {
+        toast({
+          title: "Error",
+          description: "Failed to save settings.",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      console.error("Failed to save settings", error);
+      toast({
+        title: "Error",
+        description: "An unexpected error occurred.",
+        variant: "destructive",
+      });
+    }
   };
 
   return (
@@ -55,10 +199,39 @@ export const Settings = () => {
           <TabsTrigger value="security">Security</TabsTrigger>
           <TabsTrigger value="integrations">Integrations</TabsTrigger>
           <TabsTrigger value="appearance">Appearance</TabsTrigger>
-          <TabsTrigger value="advanced">Advanced</TabsTrigger>
+          <TabsTrigger value="developer">Developer</TabsTrigger>
         </TabsList>
 
         <TabsContent value="general" className="space-y-6">
+          {user?.is_super_admin && companies && (
+            <Card>
+              <CardHeader>
+                <CardTitle>Company Context</CardTitle>
+                <CardDescription>Switch between companies to manage their settings and data.</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="outline" className="w-full md:w-1/2 flex items-center justify-between gap-2">
+                      <div className="flex items-center gap-2">
+                        <Building className="h-4 w-4" />
+                        <span>{currentCompany?.name || "Select Company"}</span>
+                      </div>
+                      <ChevronsUpDown className="h-4 w-4 opacity-50" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent className="w-full md:w-1/2">
+                    <DropdownMenuLabel>Switch Company</DropdownMenuLabel>
+                    {companies.map(c => (
+                      <DropdownMenuItem key={c.id} onSelect={() => setCompanyId(c.id)}>
+                        {c.name}
+                      </DropdownMenuItem>
+                    ))}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </CardContent>
+            </Card>
+          )}
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
@@ -140,16 +313,31 @@ export const Settings = () => {
                 {settings.businessHours && (
                   <div className="grid grid-cols-3 gap-4 mt-4">
                     <div>
-                      <Label>Start Time</Label>
-                      <Input type="time" defaultValue="09:00" />
+                      <Label htmlFor="businessHoursStartTime">Start Time</Label>
+                      <Input
+                        id="businessHoursStartTime"
+                        type="time"
+                        value={settings.businessHoursStartTime}
+                        onChange={(e) => handleSettingChange("businessHoursStartTime", e.target.value)}
+                      />
                     </div>
                     <div>
-                      <Label>End Time</Label>
-                      <Input type="time" defaultValue="17:00" />
+                      <Label htmlFor="businessHoursEndTime">End Time</Label>
+                      <Input
+                        id="businessHoursEndTime"
+                        type="time"
+                        value={settings.businessHoursEndTime}
+                        onChange={(e) => handleSettingChange("businessHoursEndTime", e.target.value)}
+                      />
                     </div>
                     <div>
-                      <Label>Days</Label>
-                      <select className="w-full p-2 border rounded-md">
+                      <Label htmlFor="businessHoursDays">Days</Label>
+                      <select
+                        id="businessHoursDays"
+                        value={settings.businessHoursDays}
+                        onChange={(e) => handleSettingChange("businessHoursDays", e.target.value)}
+                        className="w-full p-2 border rounded-md"
+                      >
                         <option>Monday - Friday</option>
                         <option>Monday - Saturday</option>
                         <option>Every Day</option>
@@ -227,8 +415,7 @@ export const Settings = () => {
                     <p className="text-sm text-gray-600">Require users to authenticate before chatting</p>
                   </div>
                   <Switch
-                    checked={settings.requireAuth}
-                    onCheckedChange={(checked) => handleSettingChange("requireAuth", checked)}
+                    checked={true}
                   />
                 </div>
 
@@ -238,8 +425,7 @@ export const Settings = () => {
                     <p className="text-sm text-gray-600">Allow customers to upload files in chat</p>
                   </div>
                   <Switch
-                    checked={settings.allowFileUploads}
-                    onCheckedChange={(checked) => handleSettingChange("allowFileUploads", checked)}
+                    checked={true}
                   />
                 </div>
 
@@ -248,8 +434,9 @@ export const Settings = () => {
                   <Input
                     id="maxFileSize"
                     type="number"
-                    value={settings.maxFileSize}
-                    onChange={(e) => handleSettingChange("maxFileSize", e.target.value)}
+                    value="10"
+                    // value={maxFileSize}
+                    // onChange={(e) => setMaxFileSize(Number(e.target.value))}
                     className="w-32"
                   />
                 </div>
@@ -259,8 +446,9 @@ export const Settings = () => {
                   <Input
                     id="sessionTimeout"
                     type="number"
-                    value={settings.sessionTimeout}
-                    onChange={(e) => handleSettingChange("sessionTimeout", e.target.value)}
+                    value="30"
+                    // value={settings.sessionTimeout}
+                    // onChange={(e) => handleSettingChange("sessionTimeout", Number(e.target.value))}
                     className="w-32"
                   />
                 </div>
@@ -270,40 +458,7 @@ export const Settings = () => {
         </TabsContent>
 
         <TabsContent value="integrations" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Zap className="h-5 w-5" />
-                Third-party Integrations
-              </CardTitle>
-              <CardDescription>Connect with external services</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {[
-                  { name: "Slack", description: "Team communication", connected: true },
-                  { name: "Zapier", description: "Automation workflows", connected: false },
-                  { name: "HubSpot", description: "CRM integration", connected: false },
-                  { name: "Salesforce", description: "Sales management", connected: false },
-                  { name: "Stripe", description: "Payment processing", connected: true },
-                  { name: "Intercom", description: "Customer messaging", connected: false }
-                ].map((integration) => (
-                  <div key={integration.name} className="flex items-center justify-between p-4 border rounded-lg">
-                    <div>
-                      <h4 className="font-medium">{integration.name}</h4>
-                      <p className="text-sm text-gray-600">{integration.description}</p>
-                    </div>
-                    <Button 
-                      variant={integration.connected ? "destructive" : "default"}
-                      size="sm"
-                    >
-                      {integration.connected ? "Disconnect" : "Connect"}
-                    </Button>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
+          <IntegrationsList />
         </TabsContent>
 
         <TabsContent value="appearance" className="space-y-6">
@@ -319,70 +474,80 @@ export const Settings = () => {
               <div>
                 <Label>Theme</Label>
                 <div className="grid grid-cols-3 gap-4 mt-2">
-                  {["Light", "Dark", "Auto"].map((theme) => (
-                    <div key={theme} className="p-4 border rounded-lg cursor-pointer hover:bg-gray-50">
-                      <div className="text-center">
-                        <div className={`w-full h-12 rounded mb-2 ${
-                          theme === "Light" ? "bg-white border" :
-                          theme === "Dark" ? "bg-gray-900" : "bg-gradient-to-r from-white to-gray-900"
-                        }`}></div>
-                        <span className="text-sm">{theme}</span>
-                      </div>
+                  <div onClick={() => handleSettingChange("darkMode", false)} className={`p-4 border rounded-lg cursor-pointer ${!settings.darkMode ? 'bg-gray-50' : ''}`}>
+                    <div className="text-center">
+                      <div className="w-full h-12 rounded mb-2 bg-white border"></div>
+                      <span className="text-sm">Light</span>
                     </div>
-                  ))}
+                  </div>
+                  <div onClick={() => handleSettingChange("darkMode", true)} className={`p-4 border rounded-lg cursor-pointer ${settings.darkMode ? 'bg-gray-900 text-white' : ''}`}>
+                    <div className="text-center">
+                      <div className="w-full h-12 rounded mb-2 bg-gray-900"></div>
+                      <span className="text-sm">Dark</span>
+                    </div>
+                  </div>
                 </div>
+              </div>
+              <div>
+                <Label htmlFor="logoUrl">Logo URL</Label>
+                <Input
+                  id="logoUrl"
+                  value={settings.logoUrl}
+                  onChange={(e) => handleSettingChange("logoUrl", e.target.value)}
+                />
+              </div>
+              <div>
+                <Label htmlFor="primaryColor">Primary Color</Label>
+                <Input
+                  id="primaryColor"
+                  type="color"
+                  value={settings.primaryColor}
+                  onChange={(e) => handleSettingChange("primaryColor", e.target.value)}
+                />
+              </div>
+              <div>
+                <Label htmlFor="secondaryColor">Secondary Color</Label>
+                <Input
+                  id="secondaryColor"
+                  type="color"
+                  value={settings.secondaryColor}
+                  onChange={(e) => handleSettingChange("secondaryColor", e.target.value)}
+                />
+              </div>
+              <div>
+                <Label htmlFor="customDomain">Custom Domain</Label>
+                <Input
+                  id="customDomain"
+                  value={settings.customDomain}
+                  onChange={(e) => handleSettingChange("customDomain", e.target.value)}
+                />
               </div>
             </CardContent>
           </Card>
         </TabsContent>
 
-        <TabsContent value="advanced" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Database className="h-5 w-5" />
-                Advanced Configuration
-              </CardTitle>
-              <CardDescription>Advanced platform settings</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div>
-                <Label htmlFor="apiKey">API Key</Label>
-                <div className="flex gap-2">
-                  <Input
-                    id="apiKey"
-                    type="password"
-                    value="sk-1234567890abcdef"
-                    readOnly
-                    className="flex-1"
-                  />
-                  <Button variant="outline">Regenerate</Button>
-                </div>
-              </div>
-
-              <div>
-                <Label htmlFor="webhookUrl">Webhook URL</Label>
-                <Input
-                  id="webhookUrl"
-                  placeholder="https://your-app.com/webhook"
-                />
-              </div>
-
-              <div>
-                <Label>Data Export</Label>
-                <div className="flex gap-2 mt-2">
-                  <Button variant="outline">Export Conversations</Button>
-                  <Button variant="outline">Export Analytics</Button>
-                  <Button variant="outline">Export Users</Button>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+        <TabsContent value="developer" className="space-y-6">
+          <Tabs defaultValue="api-keys" className="space-y-6">
+            <TabsList>
+              <TabsTrigger value="api-keys">API Keys</TabsTrigger>
+              <TabsTrigger value="tester">Tester</TabsTrigger>
+              <TabsTrigger value="documentation">Documentation</TabsTrigger>
+            </TabsList>
+            <TabsContent value="api-keys">
+              <ApiKeys />
+            </TabsContent>
+            <TabsContent value="tester">
+              <ProactiveMessageTester />
+            </TabsContent>
+            <TabsContent value="documentation">
+              <ApiDocs />
+            </TabsContent>
+          </Tabs>
         </TabsContent>
       </Tabs>
 
       <div className="flex justify-end">
-        <Button>Save Changes</Button>
+        <Button onClick={handleSaveChanges}>Save Changes</Button>
       </div>
     </div>
   );

@@ -1,8 +1,10 @@
 
+import { useAuth } from "@/hooks/useAuth";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { CircleUser } from "lucide-react";
 import { useState } from "react";
-import { Outlet, NavLink, useLocation } from "react-router-dom";
+import { Outlet, NavLink } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import { 
   Plus, 
   MessageSquare, 
@@ -13,42 +15,50 @@ import {
   Inbox, 
   FileText, 
   Sparkles, 
+  WorkflowIcon as WorkflowIcon,
   Zap, 
-  TrendingUp,
   Palette,
   Menu,
-  X
+  X,
+  Key,
+  BookOpen,
+  CreditCard,
+  Mic,
+  Building
 } from "lucide-react";
 import { CreateAgentDialog } from "@/components/CreateAgentDialog";
-
-const sidebarItems = [
-  { title: "Conversations", url: "/dashboard/conversations", icon: Inbox },
-  { title: "Agents", url: "/dashboard/agents", icon: Bot },
-  { title: "Agent Builder", url: "/dashboard/builder", icon: Settings },
-  { title: "Widget Designer", url: "/dashboard/designer", icon: Palette },
-  { title: "Team Management", url: "/dashboard/team", icon: Users },
-  { title: "Reports", url: "/dashboard/reports", icon: BarChart3 },
-  { title: "Settings", url: "/dashboard/settings", icon: FileText },
-];
+import { Permission } from "./Permission";
 
 const AppLayout = () => {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(true);
-  const location = useLocation();
+  const { user, logout } = useAuth();
+  console.log("Logged in user:", user);
+
+  const sidebarItems = [
+    { title: "Conversations", url: "/dashboard/conversations", icon: Inbox, permission: "conversation:read" },
+    { title: "Agents", url: "/dashboard/agents", icon: Bot, permission: "agent:read" },
+    { title: "Agent Builder", url: "/dashboard/builder", icon: Settings, permission: "agent:update" },
+    { title: "Widget Designer", url: "/dashboard/designer", icon: Palette, permission: "company_settings:update" },
+    { title: "Team Management", url: "/dashboard/team", icon: Users, permission: "user:read" },
+    { title: "Reports", url: "/dashboard/reports", icon: BarChart3, permission: "analytics:read" },
+    { title: "Settings", url: "/dashboard/settings", icon: FileText, permission: "company_settings:update" },
+    { title: "API Vault", url: "/dashboard/vault", icon: Key, permission: "company_settings:update" },
+    { title: "Knowledge Bases", url: "/dashboard/knowledge-base/manage", icon: BookOpen, permission: "knowledgebase:read" },
+    { title: "Tools", url: "/dashboard/tools", icon: Zap, permission: "tool:read" },
+    { title: "Workflows", url: "/dashboard/workflows", icon: WorkflowIcon, permission: "workflow:read" },
+    { title: "Voice Lab", url: "/dashboard/voice-lab", icon: Mic, permission: "voice:create" }, 
+    { title: "Billing", url: "/dashboard/billing", icon: CreditCard, permission: "billing:manage" },
+    { title: "Manage Plans", url: "/dashboard/admin/subscriptions", icon: Sparkles, admin: true },
+    { title: "Companies", url: "/dashboard/companies", icon: Building, admin: true },
+  ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 relative overflow-hidden">
-      {/* Animated background elements */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-4 -right-4 w-72 h-72 bg-gradient-to-br from-purple-300/20 to-pink-300/20 rounded-full blur-3xl animate-pulse"></div>
-        <div className="absolute top-1/2 -left-8 w-64 h-64 bg-gradient-to-br from-blue-300/20 to-cyan-300/20 rounded-full blur-3xl animate-pulse delay-1000"></div>
-        <div className="absolute bottom-8 right-1/3 w-48 h-48 bg-gradient-to-br from-green-300/20 to-emerald-300/20 rounded-full blur-3xl animate-pulse delay-2000"></div>
-      </div>
-
-      {/* Header with Analytics */}
-      <header className="bg-white/90 backdrop-blur-xl border-b border-white/30 sticky top-0 z-50 shadow-lg">
-        <div className="px-6 py-4">
-          <div className="flex items-center justify-between mb-4">
+    <div className="h-screen w-screen flex flex-col bg-gray-50 overflow-hidden">
+      {/* Header */}
+      <header className="flex-shrink-0 bg-white border-b z-20">
+        <div className="px-6 py-3">
+          <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
               <Button
                 variant="ghost"
@@ -59,140 +69,72 @@ const AppLayout = () => {
                 {sidebarOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
               </Button>
               <div className="flex items-center space-x-3">
-                <div className="p-3 bg-gradient-to-br from-blue-600 via-purple-600 to-pink-600 rounded-2xl shadow-lg animate-scale-in">
-                  <MessageSquare className="h-7 w-7 text-white" />
+                 <div className="p-2 bg-gradient-to-br from-blue-600 via-purple-600 to-pink-600 rounded-lg shadow-md">
+                  <MessageSquare className="h-6 w-6 text-white" />
                 </div>
-                <div>
-                  <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-900 via-purple-900 to-pink-900 bg-clip-text text-transparent">
-                    AgentConnect
-                  </h1>
-                  <p className="text-sm text-gray-600 font-medium">Enterprise Chat Platform</p>
-                </div>
+                <h1 className="text-xl font-bold text-gray-800">AgentConnect</h1>
               </div>
             </div>
             <div className="flex items-center gap-3">
-              <div className="hidden md:flex items-center gap-4 text-sm">
-                <div className="flex items-center gap-1 text-green-600 font-medium">
-                  <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                  Live Status
-                </div>
-              </div>
-              <Button 
-                onClick={() => setIsCreateDialogOpen(true)} 
-                className="bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 hover:from-blue-700 hover:via-purple-700 hover:to-pink-700 text-white shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-105"
-              >
-                <Plus className="h-4 w-4 mr-2" />
-                Create Agent
-                <Sparkles className="h-4 w-4 ml-2" />
-              </Button>
+              <Permission permission="agent:create">
+                <Button 
+                  onClick={() => setIsCreateDialogOpen(true)} 
+                  className="bg-blue-600 hover:bg-blue-700 text-white"
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Create Agent
+                </Button>
+              </Permission>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="secondary" size="icon" className="rounded-full">
+                    <CircleUser className="h-5 w-5" />
+                    <span className="sr-only">Toggle user menu</span>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuLabel>My Account</DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem asChild>
+                    <NavLink to="/dashboard/profile">Profile</NavLink>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={logout}>Logout</DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
-          </div>
-
-          {/* Analytics Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            <Card className="bg-gradient-to-br from-blue-500 to-blue-600 text-white border-0 shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-105">
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-blue-100 text-sm font-medium">Active Agents</p>
-                    <p className="text-2xl font-bold mt-1">12</p>
-                    <div className="flex items-center gap-1 mt-1">
-                      <TrendingUp className="h-3 w-3 text-green-300" />
-                      <p className="text-blue-200 text-xs">+2 this week</p>
-                    </div>
-                  </div>
-                  <div className="p-2 bg-white/20 rounded-xl">
-                    <Bot className="h-6 w-6 text-blue-100" />
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="bg-gradient-to-br from-green-500 to-emerald-600 text-white border-0 shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-105">
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-green-100 text-sm font-medium">Live Conversations</p>
-                    <p className="text-2xl font-bold mt-1">247</p>
-                    <div className="flex items-center gap-1 mt-1">
-                      <Zap className="h-3 w-3 text-yellow-300" />
-                      <p className="text-green-200 text-xs">8 websites active</p>
-                    </div>
-                  </div>
-                  <div className="p-2 bg-white/20 rounded-xl">
-                    <MessageSquare className="h-6 w-6 text-green-100" />
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="bg-gradient-to-br from-purple-500 to-pink-600 text-white border-0 shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-105">
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-purple-100 text-sm font-medium">Response Rate</p>
-                    <p className="text-2xl font-bold mt-1">98.5%</p>
-                    <div className="flex items-center gap-1 mt-1">
-                      <TrendingUp className="h-3 w-3 text-green-300" />
-                      <p className="text-purple-200 text-xs">+5% improvement</p>
-                    </div>
-                  </div>
-                  <div className="p-2 bg-white/20 rounded-xl">
-                    <BarChart3 className="h-6 w-6 text-purple-100" />
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="bg-gradient-to-br from-orange-500 to-red-600 text-white border-0 shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-105">
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-orange-100 text-sm font-medium">Satisfaction</p>
-                    <p className="text-2xl font-bold mt-1">4.9★</p>
-                    <div className="flex items-center gap-1 mt-1">
-                      <Sparkles className="h-3 w-3 text-yellow-300" />
-                      <p className="text-orange-200 text-xs">Average rating</p>
-                    </div>
-                  </div>
-                  <div className="p-2 bg-white/20 rounded-xl">
-                    <Settings className="h-6 w-6 text-orange-100" />
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
           </div>
         </div>
       </header>
 
-      <div className="flex relative z-10">
+      <div className="flex flex-1 overflow-hidden">
         {/* Sidebar */}
-        <aside className={`${sidebarOpen ? 'w-64' : 'w-0'} transition-all duration-300 overflow-hidden bg-white/80 backdrop-blur-xl border-r border-white/30 shadow-xl`}>
-          <nav className="p-4 space-y-2">
-            {sidebarItems.map((item) => (
-              <NavLink
-                key={item.url}
-                to={item.url}
-                className={({ isActive }) =>
-                  `flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 ${
-                    isActive
-                      ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg'
-                      : 'text-gray-700 hover:bg-gradient-to-r hover:from-blue-50 hover:to-purple-50 hover:text-blue-600'
-                  }`
-                }
-              >
-                <item.icon className="h-5 w-5" />
-                <span className="font-medium">{item.title}</span>
-              </NavLink>
-            ))}
+        <aside className={`w-64 flex-shrink-0 bg-white border-r transition-all duration-300 ${sidebarOpen ? '' : '-ml-64'}`}>
+          <nav className="p-4 space-y-1 h-full flex flex-col">
+            <div className="flex-1">
+              {sidebarItems.map((item) => (
+                <Permission key={item.url} permission={item.permission}>
+                  <NavLink
+                    to={item.url}
+                    className={({ isActive }) =>
+                      `flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium transition-all duration-200 ${
+                        isActive
+                          ? 'bg-blue-50 text-blue-700'
+                          : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+                      }`
+                    }
+                  >
+                    <item.icon className="h-5 w-5" />
+                    <span>{item.title}</span>
+                  </NavLink>
+                </Permission>
+              ))}
+            </div>
           </nav>
         </aside>
 
         {/* Main Content */}
-        <main className="flex-1 p-6">
-          <div className="max-w-7xl mx-auto">
-            <Outlet />
-          </div>
+        <main className="flex-1 overflow-y-auto">
+          <Outlet />
         </main>
       </div>
 

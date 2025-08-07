@@ -1,10 +1,26 @@
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { MessageSquare, Users, Settings, Code } from "lucide-react";
+import { MessageSquare, Users, Settings, Code, CheckCircle } from "lucide-react";
 import { Link } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
+import { useAuth } from "@/hooks/useAuth";
+import { SubscriptionPlan } from "@/types";
 
 const Index = () => {
+  const { authFetch } = useAuth();
+
+  const { data: plans, isLoading, isError } = useQuery<SubscriptionPlan[]>({ 
+    queryKey: ['subscriptionPlans'], 
+    queryFn: async () => {
+      const response = await authFetch("/api/v1/subscription/plans/");
+      if (!response.ok) {
+        throw new Error("Failed to fetch subscription plans");
+      }
+      return response.json();
+    }
+  });
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
       {/* Navigation */}
@@ -112,6 +128,42 @@ const Index = () => {
               </CardContent>
             </Card>
           </div>
+        </div>
+      </section>
+
+      {/* Pricing Section */}
+      <section className="py-16 px-4 sm:px-6 lg:px-8 bg-gray-50">
+        <div className="max-w-7xl mx-auto text-center">
+          <h2 className="text-3xl font-bold text-gray-900 mb-4">Simple, Transparent Pricing</h2>
+          <p className="text-gray-600 max-w-2xl mx-auto mb-12">
+            Choose the plan that best fits your agency's needs. No hidden fees, no surprises.
+          </p>
+          {isLoading && <div>Loading plans...</div>}
+          {isError && <div>Error loading plans.</div>}
+          {plans && plans.length > 0 && (
+            <div className="grid md:grid-cols-3 gap-8">
+              {plans.map((plan) => (
+                <Card key={plan.id} className="flex flex-col justify-between p-6 shadow-lg hover:shadow-xl transition-shadow duration-300">
+                  <div>
+                    <CardTitle className="text-2xl font-bold mb-4">{plan.name}</CardTitle>
+                    <CardDescription className="text-4xl font-bold text-blue-600 mb-6">
+                      {plan.price} {plan.currency}
+                      <span className="text-lg text-gray-500">/month</span>
+                    </CardDescription>
+                    <ul className="text-left text-gray-700 space-y-3 mb-8">
+                      {plan.features && plan.features.split(',').map((feature, index) => (
+                        <li key={index} className="flex items-center">
+                          <CheckCircle className="h-5 w-5 text-green-500 mr-2" />
+                          {feature.trim()}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                  <Button className="w-full">Choose Plan</Button>
+                </Card>
+              ))}
+            </div>
+          )}
         </div>
       </section>
 
