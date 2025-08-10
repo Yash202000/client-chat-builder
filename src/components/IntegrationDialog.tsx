@@ -97,10 +97,25 @@ export const IntegrationDialog: React.FC<IntegrationDialogProps> = ({ isOpen, on
   };
 
   const renderCredentialFields = () => {
+    const webhookUrlBase = `${window.location.origin}/api/v1/webhooks/channels`;
     switch (type) {
       case 'whatsapp':
         return (
           <>
+            <div className="space-y-2 p-4 border rounded-lg bg-gray-50">
+              <h4 className="font-medium text-sm">Webhook Configuration</h4>
+              <p className="text-xs text-gray-600">
+                Use these values in your Meta for Developers App configuration.
+              </p>
+              <div className="space-y-1">
+                <Label htmlFor="webhook_url" className="text-xs">Webhook URL</Label>
+                <Input id="webhook_url" readOnly value={`${webhookUrlBase}/whatsapp`} />
+              </div>
+              <div className="space-y-1">
+                <Label htmlFor="verify_token" className="text-xs">Verify Token</Label>
+                <Input id="verify_token" readOnly value="YOUR_VERIFY_TOKEN" /> 
+              </div>
+            </div>
             <div className="space-y-2">
               <Label htmlFor="phone_number_id">Phone Number ID</Label>
               <Input
@@ -111,12 +126,12 @@ export const IntegrationDialog: React.FC<IntegrationDialogProps> = ({ isOpen, on
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="api_token">API Token</Label>
+              <Label htmlFor="access_token">Access Token</Label>
               <Input
-                id="api_token"
+                id="access_token"
                 type="password"
-                value={credentials.api_token || ''}
-                onChange={(e) => handleCredentialChange('api_token', e.target.value)}
+                value={credentials.access_token || ''}
+                onChange={(e) => handleCredentialChange('access_token', e.target.value)}
                 placeholder="Your WhatsApp Permanent Access Token"
               />
             </div>
@@ -125,6 +140,20 @@ export const IntegrationDialog: React.FC<IntegrationDialogProps> = ({ isOpen, on
       case 'messenger':
         return (
           <>
+            <div className="space-y-2 p-4 border rounded-lg bg-gray-50">
+              <h4 className="font-medium text-sm">Webhook Configuration</h4>
+               <p className="text-xs text-gray-600">
+                Use these values in your Meta for Developers App configuration.
+              </p>
+              <div className="space-y-1">
+                <Label htmlFor="webhook_url" className="text-xs">Webhook URL</Label>
+                <Input id="webhook_url" readOnly value={`${webhookUrlBase}/messenger`} />
+              </div>
+              <div className="space-y-1">
+                <Label htmlFor="verify_token" className="text-xs">Verify Token</Label>
+                <Input id="verify_token" readOnly value="YOUR_VERIFY_TOKEN" />
+              </div>
+            </div>
             <div className="space-y-2">
               <Label htmlFor="page_id">Page ID</Label>
               <Input
@@ -142,6 +171,92 @@ export const IntegrationDialog: React.FC<IntegrationDialogProps> = ({ isOpen, on
                 value={credentials.page_access_token || ''}
                 onChange={(e) => handleCredentialChange('page_access_token', e.target.value)}
                 placeholder="Your Facebook Page Access Token"
+              />
+            </div>
+          </>
+        );
+      case 'instagram':
+        return (
+          <>
+            <div className="space-y-2 p-4 border rounded-lg bg-gray-50">
+              <h4 className="font-medium text-sm">Webhook Configuration</h4>
+               <p className="text-xs text-gray-600">
+                Use these values in your Meta for Developers App configuration.
+              </p>
+              <div className="space-y-1">
+                <Label htmlFor="webhook_url" className="text-xs">Webhook URL</Label>
+                <Input id="webhook_url" readOnly value={`${webhookUrlBase}/instagram`} />
+              </div>
+              <div className="space-y-1">
+                <Label htmlFor="verify_token" className="text-xs">Verify Token</Label>
+                <Input id="verify_token" readOnly value="YOUR_VERIFY_TOKEN" />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="page_id">Page ID</Label>
+              <Input
+                id="page_id"
+                value={credentials.page_id || ''}
+                onChange={(e) => handleCredentialChange('page_id', e.target.value)}
+                placeholder="Your Instagram Page ID"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="access_token">Access Token</Label>
+              <Input
+                id="access_token"
+                type="password"
+                value={credentials.access_token || ''}
+                onChange={(e) => handleCredentialChange('access_token', e.target.value)}
+                placeholder="Your Instagram Access Token"
+              />
+            </div>
+          </>
+        );
+      case 'gmail':
+        return (
+          <>
+            <div className="space-y-2">
+              <Label htmlFor="client_id">Client ID</Label>
+              <Input
+                id="client_id"
+                value={credentials.client_id || ''}
+                onChange={(e) => handleCredentialChange('client_id', e.target.value)}
+                placeholder="Your Google Cloud Client ID"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="client_secret">Client Secret</Label>
+              <Input
+                id="client_secret"
+                type="password"
+                value={credentials.client_secret || ''}
+                onChange={(e) => handleCredentialChange('client_secret', e.target.value)}
+                placeholder="Your Google Cloud Client Secret"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="redirect_uri">Redirect URI</Label>
+              <Input
+                id="redirect_uri"
+                value={credentials.redirect_uri || ''}
+                onChange={(e) => handleCredentialChange('redirect_uri', e.target.value)}
+                placeholder="Your Google Cloud Redirect URI"
+              />
+            </div>
+          </>
+        );
+      case 'telegram':
+        return (
+          <>
+            <div className="space-y-2">
+              <Label htmlFor="bot_token">Bot Token</Label>
+              <Input
+                id="bot_token"
+                type="password"
+                value={credentials.bot_token || ''}
+                onChange={(e) => handleCredentialChange('bot_token', e.target.value)}
+                placeholder="Your Telegram Bot Token"
               />
             </div>
           </>
@@ -171,6 +286,9 @@ export const IntegrationDialog: React.FC<IntegrationDialogProps> = ({ isOpen, on
               <SelectContent>
                 <SelectItem value="whatsapp">WhatsApp</SelectItem>
                 <SelectItem value="messenger">Messenger</SelectItem>
+                <SelectItem value="instagram">Instagram</SelectItem>
+                <SelectItem value="gmail">Gmail</SelectItem>
+                <SelectItem value="telegram">Telegram</SelectItem>
               </SelectContent>
             </Select>
           </div>

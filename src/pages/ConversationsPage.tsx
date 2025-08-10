@@ -9,7 +9,7 @@ import { useWebSocket } from '@/hooks/use-websocket';
 import { toast } from '@/hooks/use-toast';
 import { Session, User } from '@/types';
 import { useAuth } from "@/hooks/useAuth";
-import { MessageSquare, Phone, Globe } from 'lucide-react'; // Icons for channels
+import { MessageSquare, Phone, Globe, Instagram, Mail, Send } from 'lucide-react'; // Icons for channels
 
 const ConversationsPage: React.FC = () => {
   const queryClient = useQueryClient();
@@ -86,6 +86,9 @@ const ConversationsPage: React.FC = () => {
     switch (channel) {
       case 'whatsapp': return <Phone className="h-4 w-4 text-green-500" />;
       case 'messenger': return <MessageSquare className="h-4 w-4 text-blue-600" />;
+      case 'instagram': return <Instagram className="h-4 w-4 text-pink-500" />;
+      case 'gmail': return <Mail className="h-4 w-4 text-red-500" />;
+      case 'telegram': return <Send className="h-4 w-4 text-blue-400" />;
       case 'web':
       default:
         return <Globe className="h-4 w-4 text-gray-500" />;
