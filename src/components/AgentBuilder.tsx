@@ -27,14 +27,14 @@ const initialNodes = (agentName) => [
     id: 'agent-node',
     type: 'agent',
     data: { label: agentName },
-    position: { x: 250, y: 5 },
+    position: { x: 250, y: 80 },
     deletable: false,
   },
   {
     id: 'chat-message-node',
     type: 'chat_message',
     data: { label: 'Chat Message' },
-    position: { x: 250, y: 250 },
+    position: { x: 250, y: 0 },
     deletable: false,
   },
 ];
@@ -75,7 +75,7 @@ export const AgentBuilder = ({ agent }: AgentBuilderProps) => {
                 id: `tools-${tool.id}`,
                 type: 'tools',
                 data: { label: tool.name, id: tool.id, tool_type: tool.tool_type, mcp_server_url: tool.mcp_server_url },
-                position: { x: 50 + index * 250, y: 150 },
+                position: { x: 50 + index * 250, y: 200 },
             };
             nodesToAdd.push(toolNode);
             edgesToAdd.push({ id: `agent-tool-edge-${tool.id}`, source: 'agent-node', target: toolNode.id, animated: true });

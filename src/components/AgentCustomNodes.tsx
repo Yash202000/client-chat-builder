@@ -49,7 +49,7 @@ const getBorderColor = (toolType) => {
 export const ToolsNode = ({ data }) => {
   const { handleInspect } = useContext(AgentBuilderContext);
   const isParent = data.tool_type === 'mcp';
-  const style = isParent ? { width: 250, minHeight: 150, position: 'relative' } : {};
+  const style = isParent ? { width: 250, minHeight: 70, position: 'relative' } : {};
 
   return (
     <div className={`${nodeWrapperStyle} ${getBorderColor(data.tool_type)}`} style={style}>
