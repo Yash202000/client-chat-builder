@@ -56,8 +56,8 @@ function DatePicker({ date, setDate, placeholder }) {
 export const Reports = () => {
   const { authFetch, companyId } = useAuth();
   const [dateRange, setDateRange] = useState({
-    from: new Date(2024, 0, 1),
-    to: new Date(2024, 11, 31),
+    from: new Date(),
+    to: new Date(),
   });
 
   const buildUrl = (baseUrl) => {
