@@ -33,20 +33,20 @@ export const AgentKnowledgePage = () => {
     },
   });
 
-  const [selectedKbId, setSelectedKbId] = useState<number | null>(null);
+  const [selectedKbIds, setSelectedKbIds] = useState<number[]>([]);
 
   useEffect(() => {
     if (agent) {
-      setSelectedKbId(agent.knowledge_base_id);
+      setSelectedKbIds(agent.knowledge_bases?.map((kb) => kb.id) || []);
     }
   }, [agent]);
 
   const mutation = useMutation({
-    mutationFn: (knowledgeBaseId: number | null) => {
+    mutationFn: (knowledgeBaseIds: number[]) => {
       return authFetch(`/api/v1/agents/${agentId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ knowledge_base_id: knowledgeBaseId }),
+        body: JSON.stringify({ knowledge_base_ids: knowledgeBaseIds }),
       });
     },
     onSuccess: async () => {
@@ -59,7 +59,7 @@ export const AgentKnowledgePage = () => {
   });
 
   const handleSave = () => {
-    mutation.mutate(selectedKbId);
+    mutation.mutate(selectedKbIds);
   };
 
   if (isLoadingAgent) return <div>Loading...</div>;
@@ -73,17 +73,17 @@ export const AgentKnowledgePage = () => {
       <Card>
         <CardHeader>
           <CardTitle>Knowledge Base</CardTitle>
-          <CardDescription>Select the knowledge base this agent can use.</CardDescription>
+          <CardDescription>Select the knowledge bases this agent can use.</CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
           <ResourceSelector
             resources={knowledgeBases || []}
-            selectedIds={selectedKbId ? [selectedKbId] : []}
-            onSelect={(ids) => setSelectedKbId(ids[0] || null)}
-            title="Select Knowledge Base"
+            selectedIds={selectedKbIds}
+            onSelect={setSelectedKbIds}
+            title="Select Knowledge Bases"
             triggerButtonText="Browse Knowledge Bases"
             isLoading={isLoadingKnowledgeBases}
-            allowMultiple={false}
+            allowMultiple={true}
           />
           <div className="flex justify-end">
             <Button onClick={handleSave} disabled={mutation.isPending}>

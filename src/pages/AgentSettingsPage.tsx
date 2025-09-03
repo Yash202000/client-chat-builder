@@ -33,6 +33,9 @@ export const AgentSettingsPage = () => {
     tts_provider: "voice_engine",
     stt_provider: "deepgram",
     voice_id: "default",
+    llm_provider: "groq",
+    embedding_model: "gemini",
+    model_name: "llama-3.1-8b-instant",
   });
 
   useEffect(() => {
@@ -45,12 +48,16 @@ export const AgentSettingsPage = () => {
         tts_provider: agent.tts_provider || "voice_engine",
         stt_provider: agent.stt_provider || "deepgram",
         voice_id: agent.voice_id || "default",
+        llm_provider: agent.llm_provider || "groq",
+        embedding_model: agent.embedding_model || "gemini",
+        model_name: agent.model_name || "llama-3.1-8b-instant",
       });
     }
   }, [agent]);
 
   const mutation = useMutation({
     mutationFn: (updatedConfig: Partial<Agent>) => {
+      console.log("Updating agent with config:", updatedConfig);
       return authFetch(`/api/v1/agents/${agentId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
@@ -139,6 +146,40 @@ export const AgentSettingsPage = () => {
                   <option value="America/New_York">Eastern Time</option>
                   <option value="America/Chicago">Central Time</option>
                   <option value="America/Los_Angeles">Pacific Time</option>
+                </select>
+              </div>
+              <div>
+                <Label htmlFor="llmProvider">LLM Provider</Label>
+                <select
+                  id="llmProvider"
+                  value={agentConfig.llm_provider}
+                  onChange={(e) => setAgentConfig({ ...agentConfig, llm_provider: e.target.value })}
+                  className="w-full mt-1 p-2 border rounded-md"
+                >
+                  <option value="groq">Groq</option>
+                  <option value="gemini">Gemini</option>
+                </select>
+              </div>
+              <div>
+                <Label htmlFor="modelName">Model Name</Label>
+                <Input
+                  id="modelName"
+                  value={agentConfig.model_name}
+                  onChange={(e) => setAgentConfig({ ...agentConfig, model_name: e.target.value })}
+                  className="mt-1"
+                />
+              </div>
+              <div>
+                <Label htmlFor="embeddingModel">Embedding Model</Label>
+                <select
+                  id="embeddingModel"
+                  value={agentConfig.embedding_model}
+                  onChange={(e) => setAgentConfig({ ...agentConfig, embedding_model: e.target.value })}
+                  className="w-full mt-1 p-2 border rounded-md"
+                >
+                  <option value="gemini">Gemini</option>
+                  <option value="nvidia">NVIDIA Llama 3.2 (Local)</option>
+                  <option value="nvidia_api">NVIDIA API</option>
                 </select>
               </div>
             </div>

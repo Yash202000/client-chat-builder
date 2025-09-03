@@ -27,11 +27,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const authFetch = useCallback(async (url: string, options: RequestInit = {}) => {
     const currentToken = localStorage.getItem('accessToken');
-    const headers = {
+    const headers: HeadersInit = {
       ...options.headers,
       'Authorization': `Bearer ${currentToken}`,
-      'Content-Type': 'application/json',
     };
+
+    // Let the browser set the Content-Type for FormData
+    if (!(options.body instanceof FormData)) {
+      headers['Content-Type'] = 'application/json';
+    }
 
     const response = await fetch(url, { ...options, headers });
 

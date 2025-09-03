@@ -299,7 +299,7 @@ export const AgentBuilder = ({ agent }: AgentBuilderProps) => {
     <div className="flex h-[80vh] w-full border-2 border-dashed rounded-lg">
       <AgentBuilderContext.Provider value={contextValue}>
         <ReactFlowProvider>
-          <AgentComponentSidebar />
+          <AgentComponentSidebar agent={agent} />
           <div className="flex-grow" >
             <ReactFlow
               nodes={nodes}
