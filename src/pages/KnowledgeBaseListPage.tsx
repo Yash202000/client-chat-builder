@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Plus, Edit, Trash2, BookOpen } from "lucide-react";
+import { Plus, Edit, Trash2, BookOpen, Eye } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -30,6 +30,8 @@ import {
 } from "@/components/ui/alert-dialog";
 import { toast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
+import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
+import { solarizedlight } from 'react-syntax-highlighter/dist/esm/styles/prism';
 
 const KnowledgeBasePage = () => {
   const queryClient = useQueryClient();
@@ -38,6 +40,7 @@ const KnowledgeBasePage = () => {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isImportDialogOpen, setIsImportDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isPreviewDialogOpen, setIsPreviewDialogOpen] = useState(false);
   const [currentKnowledgeBase, setCurrentKnowledgeBase] = useState<KnowledgeBase | null>(null);
 
   const [formData, setFormData] = useState({
@@ -65,6 +68,19 @@ const KnowledgeBasePage = () => {
       }
       return response.json();
     },
+  });
+
+  const { data: previewContent, isLoading: isLoadingPreview } = useQuery<{ content: string }>({ 
+    queryKey: ['knowledgeBaseContent', currentKnowledgeBase?.id],
+    queryFn: async () => {
+      if (!currentKnowledgeBase) return { content: "" };
+      const response = await authFetch(`/api/v1/knowledge-bases/${currentKnowledgeBase.id}/content`);
+      if (!response.ok) {
+        throw new Error("Failed to fetch knowledge base content");
+      }
+      return response.json();
+    },
+    enabled: isPreviewDialogOpen && !!currentKnowledgeBase,
   });
 
   const createKnowledgeBaseMutation = useMutation({
@@ -245,6 +261,11 @@ const KnowledgeBasePage = () => {
     setIsEditDialogOpen(true);
   };
 
+  const handlePreviewClick = (kb: KnowledgeBase) => {
+    setCurrentKnowledgeBase(kb);
+    setIsPreviewDialogOpen(true);
+  };
+
   const handleGenerateQnA = () => {
     if (currentKnowledgeBase) {
       generateQnAMutation.mutate({
@@ -296,6 +317,9 @@ const KnowledgeBasePage = () => {
                   {kb.name}
                 </CardTitle>
                 <div className="flex items-center space-x-2">
+                  <Button variant="ghost" size="sm" onClick={() => handlePreviewClick(kb)}>
+                    <Eye className="h-4 w-4" />
+                  </Button>
                   <Button variant="ghost" size="sm" onClick={() => handleEditClick(kb)}>
                     <Edit className="h-4 w-4" />
                   </Button>
@@ -324,11 +348,27 @@ const KnowledgeBasePage = () => {
               </div>
             </CardHeader>
             <CardContent>
-              <CardDescription className="line-clamp-3">{kb.description || "No description provided."}</CardDescription>
+              <CardDescription className="line-clamp-3">{kb.description || "No description provided."}</CardDescription>.
             </CardContent>
           </Card>
         ))}
       </div>
+
+      {/* Preview Knowledge Base Dialog */}
+      <Dialog open={isPreviewDialogOpen} onOpenChange={setIsPreviewDialogOpen}>
+        <DialogContent className="sm:max-w-[80vw] max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Preview: {currentKnowledgeBase?.name}</DialogTitle>
+          </DialogHeader>
+          {isLoadingPreview ? (
+            <p>Loading content...</p>
+          ) : (
+            <SyntaxHighlighter language="javascript" style={solarizedlight} customStyle={{ maxHeight: '60vh', overflowY: 'auto' }}>
+              {previewContent?.content || ""}
+            </SyntaxHighlighter>
+          )}
+        </DialogContent>
+      </Dialog>
 
       {/* Create Knowledge Base Dialog */}
       <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>

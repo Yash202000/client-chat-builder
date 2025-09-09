@@ -36,12 +36,12 @@ const AppLayout = () => {
   console.log("Logged in user:", user);
 
   const sidebarItems = [
-    { title: "Conversations", url: "/dashboard/conversations", icon: Inbox, permission: "conversation:read" },
-    
+    { title: "Active Clients", url: "/dashboard/conversations", icon: Inbox, permission: "conversation:read" },
     { title: "Agents", url: "/dashboard/agents", icon: Bot, permission: "agent:read" },
     { title: "Agent Builder", url: "/dashboard/builder", icon: Settings, permission: "agent:update" },
     { title: "Widget Designer", url: "/dashboard/designer", icon: Palette, permission: "company_settings:update" },
     { title: "Team Management", url: "/dashboard/team", icon: Users, permission: "user:read" },
+    { title: "Team Chat", url: "/dashboard/team-chat", icon: MessageSquare, permission: "user:read" },
     { title: "Reports", url: "/dashboard/reports", icon: BarChart3, permission: "analytics:read" },
     { title: "Settings", url: "/dashboard/settings", icon: FileText, permission: "company_settings:update" },
     { title: "API Vault", url: "/dashboard/vault", icon: Key, permission: "company_settings:update" },
@@ -52,6 +52,9 @@ const AppLayout = () => {
     { title: "Billing", url: "/dashboard/billing", icon: CreditCard, permission: "billing:manage" },
     { title: "Manage Plans", url: "/dashboard/admin/subscriptions", icon: Sparkles, admin: true },
     { title: "Companies", url: "/dashboard/companies", icon: Building, admin: true },
+    { title: "AI Image Generator", url: "/dashboard/ai-image-generator", icon: Sparkles, permission: "image:create" },
+    { title: "AI Image Gallery", url: "/dashboard/ai-image-gallery", icon: FileText, permission: "image:read" },
+    { title: "AI Chat", url: "/dashboard/ai-chat", icon: MessageSquare, permission: "chat:read" },
   ];
 
   return (

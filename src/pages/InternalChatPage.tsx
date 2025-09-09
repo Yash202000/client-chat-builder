@@ -5,8 +5,8 @@ import {
   getChannels,
   createChannel,
   getChannelMessages,
-  sendMessage,
-  joinChannel,
+  getChannelMembers,
+  createChannelMessage,
 } from '@/services/chatService';
 import {
   Card,
@@ -17,14 +17,18 @@ import {
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { Bot, User, Send, Loader2, Video, Plus } from 'lucide-react';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Bot, User, Send, Loader2, Video, Plus, Users } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { useAuth } from '@/hooks/useAuth';
 import axios from 'axios';
 import { useToast } from '@/components/ui/use-toast';
+import CreateChannelModal from '@/components/CreateChannelModal';
+import ManageChannelMembersModal from '@/components/ManageChannelMembersModal';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { useWebSocket } from '@/hooks/use-websocket';
 
 // Define types for chat data
 interface ChatChannel {
@@ -49,8 +53,19 @@ interface ChatMessage {
     email: string;
     first_name?: string;
     last_name?: string;
+    profile_picture_url?: string;
     presence_status: string;
   };
+}
+
+interface UserPresence {
+  [key: number]: 'online' | 'offline';
+}
+
+interface ActiveVideoCall {
+  room_name: string;
+  livekit_token: string;
+  livekit_url: string;
 }
 
 const InternalChatPage: React.FC = () => {
@@ -61,57 +76,44 @@ const InternalChatPage: React.FC = () => {
   const [selectedChannel, setSelectedChannel] = useState<ChatChannel | null>(null);
   const [inputValue, setInputValue] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const [newChannelName, setNewChannelName] = useState('');
-  const ws = useRef<WebSocket | null>(null);
+  const [isCreateChannelModalOpen, setCreateChannelModalOpen] = useState(false);
+  const [isManageMembersModalOpen, setManageMembersModalOpen] = useState(false);
+  const [userPresences, setUserPresences] = useState<UserPresence>({});
+  const [activeVideoCallInfo, setActiveVideoCallInfo] = useState<ActiveVideoCall | null>(null);
   const { toast } = useToast();
 
-  // WebSocket connection for real-time chat
-  useEffect(() => {
-    if (!selectedChannel?.id || !user?.id) {
-      ws.current?.close();
-      return;
-    }
+  const wsUrl = selectedChannel?.id
+    ? `${(import.meta.env.VITE_API_URL || 'http://localhost:8000').replace('http', 'ws')}/api/v1/ws/wschat/${selectedChannel.id}?token=${localStorage.getItem('accessToken')}`
+    : null;
 
-    const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
-    const token = localStorage.getItem('accessToken');
-    const wsUrl = `${API_URL.replace('http', 'ws')}/api/v1/ws/chat/${selectedChannel.id}?token=${token}`;
-
-    ws.current = new WebSocket(wsUrl);
-
-    ws.current.onopen = () => {
-      console.log(`Connected to WebSocket for channel ${selectedChannel.id}`);
-    };
-
-    ws.current.onmessage = (event) => {
-      const newMessage = JSON.parse(event.data);
-      // Invalidate query to refetch messages and update UI
-      queryClient.invalidateQueries(['channelMessages', selectedChannel.id]);
-      // Optionally, show a toast notification for new message
-      if (newMessage.sender_id !== user.id) {
-        toast({
-          title: `New message in ${selectedChannel.name || 'Direct Message'}`,
-          description: `${newMessage.sender.first_name || newMessage.sender.email}: ${newMessage.content}`,
+  useWebSocket(wsUrl, {
+    onMessage: (event) => {
+      const wsMessage = JSON.parse(event.data);
+      if (wsMessage.type === 'new_message') {
+        const newMessage = wsMessage.payload;
+        queryClient.setQueryData<ChatMessage[]>(['channelMessages', selectedChannel!.id], (oldMessages = []) => {
+          if (oldMessages.some(msg => msg.id === newMessage.id)) {
+            return oldMessages;
+          }
+          return [...oldMessages, newMessage];
         });
+      } else if (wsMessage.type === 'presence_update') {
+        const { user_id, status } = wsMessage.payload;
+        setUserPresences(prevPresences => ({
+          ...prevPresences,
+          [user_id]: status,
+        }));
       }
-    };
-
-    ws.current.onclose = () => {
-      console.log(`Disconnected from WebSocket for channel ${selectedChannel.id}`);
-    };
-
-    ws.current.onerror = (error) => {
+    },
+    onError: (error) => {
       console.error('WebSocket error:', error);
       toast({
         title: 'WebSocket Error',
         description: 'Failed to connect to real-time chat. Please refresh.',
         variant: 'destructive',
       });
-    };
-
-    return () => {
-      ws.current?.close();
-    };
-  }, [selectedChannel?.id, user?.id, queryClient, toast]);
+    }
+  });
 
   // Fetch channels
   const {
@@ -120,33 +122,10 @@ const InternalChatPage: React.FC = () => {
     error: channelsError,
   } = useQuery<ChatChannel[], Error>({ queryKey: ['chatChannels'], queryFn: getChannels });
 
-  // Query to check for active video call
-  const { data: activeVideoCall } = useQuery({
-    queryKey: ['activeVideoCall', selectedChannel?.id],
-    queryFn: async () => {
-      if (!selectedChannel?.id) return null;
-      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
-      const token = localStorage.getItem('accessToken');
-      try {
-        const response = await axios.get(
-          `${API_URL}/api/v1/video-calls/channels/${selectedChannel.id}/active`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
-        return response.data; // Expecting { room_name, livekit_token, livekit_url } or similar
-      } catch (error) {
-        if (axios.isAxiosError(error) && error.response?.status === 404) {
-          return null; // No active call found
-        }
-        console.error('Error checking for active video call:', error);
-        return null;
-      }
-    },
+  const { data: channelMembers } = useQuery<any[], Error>({
+    queryKey: ['channelMembers', selectedChannel?.id],
+    queryFn: () => getChannelMembers(selectedChannel!.id),
     enabled: !!selectedChannel?.id,
-    refetchInterval: 5000, // Poll every 5 seconds to check for active calls
   });
 
   // Fetch messages for selected channel
@@ -158,32 +137,56 @@ const InternalChatPage: React.FC = () => {
     queryKey: ['channelMessages', selectedChannel?.id],
     queryFn: () => getChannelMessages(selectedChannel!.id),
     enabled: !!selectedChannel?.id,
-    onSuccess: () => {
+    onSuccess: (data) => {
+      console.log("Messages after successful fetch:", data);
+      const presences: UserPresence = {};
+      data.forEach(msg => {
+        presences[msg.sender.id] = msg.sender.presence_status as 'online' | 'offline';
+      });
+      setUserPresences(presences);
       scrollToBottom();
     },
   });
 
   // Create channel mutation
   const createChannelMutation = useMutation({
-    mutationFn: createChannel,
+    mutationFn: (channelData: { name: string; description: string }) => createChannel({
+      name: channelData.name,
+      description: channelData.description,
+      channel_type: 'TEAM', // Default to team channel for now
+    }),
     onSuccess: () => {
-      queryClient.invalidateQueries(['chatChannels']);
-      setNewChannelName('');
+      queryClient.invalidateQueries({ queryKey: ['chatChannels'] });
+      setCreateChannelModalOpen(false);
+      toast({
+        title: 'Channel Created',
+        description: 'Your new channel has been created successfully.',
+      });
     },
     onError: (err) => {
       console.error('Failed to create channel:', err);
+      toast({
+        title: 'Error',
+        description: 'Failed to create channel. Please try again.',
+        variant: 'destructive',
+      });
     },
   });
 
-  // Send message mutation
-  const sendMessageMutation = useMutation({
-    mutationFn: (content: string) => sendMessage(selectedChannel!.id, content),
+  const createMessageMutation = useMutation({
+    mutationFn: ({ channelId, content }: { channelId: number; content: string }) =>
+      createChannelMessage(channelId, content),
     onSuccess: () => {
-      queryClient.invalidateQueries(['channelMessages', selectedChannel?.id]);
-      setInputValue('');
+      // The message will be added via WebSocket, so we don't need to invalidate here.
+      // queryClient.invalidateQueries({ queryKey: ['channelMessages', selectedChannel?.id] });
     },
     onError: (err) => {
       console.error('Failed to send message:', err);
+      toast({
+        title: 'Error',
+        description: 'Failed to send message. Please try again.',
+        variant: 'destructive',
+      });
     },
   });
 
@@ -192,9 +195,7 @@ const InternalChatPage: React.FC = () => {
     mutationFn: async (channelId: number) => {
       const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
       const token = localStorage.getItem('accessToken');
-      const endpoint = activeVideoCall ? 
-        `${API_URL}/api/v1/video-calls/channels/${channelId}/join` : 
-        `${API_URL}/api/v1/video-calls/channels/${channelId}/initiate`;
+      const endpoint = `${API_URL}/api/v1/video-calls/channels/${channelId}/initiate`;
 
       const response = await axios.post(
         endpoint,
@@ -215,28 +216,28 @@ const InternalChatPage: React.FC = () => {
       );
     },
     onError: (err) => {
-      console.error('Failed to initiate/join video call:', err);
-      alert('Failed to initiate/join video call. Please try again.');
+      console.error('Failed to initiate video call:', err);
+      alert('Failed to initiate video call. Please try again.');
     },
   });
 
   const handleSendMessage = () => {
     if (inputValue.trim() && selectedChannel?.id) {
-      sendMessageMutation.mutate(inputValue.trim());
+      createMessageMutation.mutate({ channelId: selectedChannel.id, content: inputValue.trim() });
+      setInputValue('');
     }
   };
 
-  const handleCreateChannel = () => {
-    if (newChannelName.trim()) {
-      createChannelMutation.mutate({
-        name: newChannelName.trim(),
-        channel_type: 'TEAM', // Default to team channel for now
-      });
-    }
+  const handleCreateChannel = (name: string, description: string) => {
+    createChannelMutation.mutate({ name, description });
   };
 
   const handleVideoCallAction = () => {
-    if (selectedChannel?.id) {
+    if (activeVideoCallInfo) {
+      navigate(
+        `/internal-video-call?roomName=${activeVideoCallInfo.room_name}&livekitToken=${activeVideoCallInfo.livekit_token}&livekitUrl=${activeVideoCallInfo.livekit_url}&channelId=${selectedChannel?.id}`
+      );
+    } else if (selectedChannel?.id) {
       initiateVideoCallMutation.mutate(selectedChannel.id);
     }
   };
@@ -263,180 +264,209 @@ const InternalChatPage: React.FC = () => {
     );
 
   return (
-    <div className="flex h-screen bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-100">
-      {/* Left Sidebar: Channel List */}
-      <Card className="w-80 flex-shrink-0 border-r dark:border-gray-700 rounded-none">
-        <CardHeader className="flex flex-row items-center justify-between p-4 pb-2">
-          <CardTitle className="text-lg">Channels</CardTitle>
-          <Button variant="ghost" size="icon" onClick={() => {}}>
-            <Plus className="h-5 w-5" />
-          </Button>
-        </CardHeader>
-        <CardContent className="p-0">
-          <div className="p-2">
-            <Input
-              placeholder="New channel name"
-              value={newChannelName}
-              onChange={(e) => setNewChannelName(e.target.value)}
-              onKeyPress={(e) => e.key === 'Enter' && handleCreateChannel()}
-            />
-            <Button
-              onClick={handleCreateChannel}
-              className="w-full mt-2"
-              disabled={createChannelMutation.isLoading}
-            >
-              {createChannelMutation.isLoading ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                'Create Channel'
-              )}
-            </Button>
-          </div>
-          <ScrollArea className="h-[calc(100vh-180px)]">
-            {channels?.map((channel) => (
-              <div
-                key={channel.id}
-                className={cn(
-                  'flex items-center p-3 cursor-pointer hover:bg-gray-200 dark:hover:bg-gray-800',
-                  selectedChannel?.id === channel.id &&
-                    'bg-blue-100 dark:bg-blue-900 hover:bg-blue-100 dark:hover:bg-blue-900'
-                )}
-                onClick={() => setSelectedChannel(channel)}
-              >
-                <Avatar className="h-8 w-8 mr-3">
-                  <AvatarFallback className="bg-blue-500 text-white">
-                    {channel.name ? channel.name[0].toUpperCase() : '#'}
-                  </AvatarFallback>
-                </Avatar>
-                <div>
-                  <p className="font-semibold">{channel.name || 'Direct Message'}</p>
-                  <p className="text-sm text-gray-500 dark:text-gray-400">
-                    {channel.description || 'No description'}
-                  </p>
+    <TooltipProvider>
+      <div className="flex h-screen bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-100">
+        {/* Left Sidebar: Channel List */}
+        <Card className="w-80 flex-shrink-0 border-r dark:border-gray-700 rounded-none">
+          <CardHeader className="flex flex-row items-center justify-between p-4 pb-2">
+            <CardTitle className="text-lg">Channels</CardTitle>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button variant="ghost" size="icon" onClick={() => setCreateChannelModalOpen(true)}>
+                  <Plus className="h-5 w-5" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Create Channel</p>
+              </TooltipContent>
+            </Tooltip>
+          </CardHeader>
+          <CardContent className="p-0">
+            <ScrollArea className="h-[calc(100vh-80px)]">
+              {channels?.map((channel) => (
+                <div
+                  key={channel.id}
+                  className={cn(
+                    'flex items-center p-3 cursor-pointer hover:bg-gray-200 dark:hover:bg-gray-800',
+                    selectedChannel?.id === channel.id &&
+                      'bg-blue-100 dark:bg-blue-900 hover:bg-blue-100 dark:hover:bg-blue-900'
+                  )}
+                  onClick={() => setSelectedChannel(channel)}
+                >
+                  <Avatar className="h-8 w-8 mr-3">
+                    <AvatarFallback className="bg-blue-500 text-white">
+                      {channel.name ? channel.name[0].toUpperCase() : '#'}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div>
+                    <p className="font-semibold">{channel.name || 'Direct Message'}</p>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">
+                      {channel.description || 'No description'}
+                    </p>
+                  </div>
                 </div>
-              </div>
-            ))}
-          </ScrollArea>
-        </CardContent>
-      </Card>
+              ))}
+            </ScrollArea>
+          </CardContent>
+        </Card>
 
-      {/* Main Chat Area */}
-      <div className="flex-1 flex flex-col">
-        {selectedChannel ? (
-          <>
-            <CardHeader className="flex flex-row items-center justify-between p-4 pb-2 border-b dark:border-gray-700">
-              <CardTitle className="text-xl">
-                {selectedChannel.name || 'Direct Message'}
-              </CardTitle>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={handleVideoCallAction}
-                disabled={initiateVideoCallMutation.isLoading}
-              >
-                {initiateVideoCallMutation.isLoading ? (
-                  <Loader2 className="h-5 w-5 animate-spin" />
-                ) : (
-                  <Video className="h-5 w-5" />
-                )}
-                {activeVideoCall ? "Join Call" : "Start Call"}
-              </Button>
-            </CardHeader>
-            <CardContent className="flex-1 p-4 flex flex-col overflow-hidden">
-              <ScrollArea className="flex-1 pr-4">
-                <div className="space-y-4">
-                  {isLoadingMessages ? (
-                    <div className="flex justify-center items-center h-full">
-                      <Loader2 className="h-8 w-8 animate-spin" />
+        {/* Main Chat Area */}
+        <div className="flex-1 flex flex-col">
+          {selectedChannel ? (
+            <>
+              <CardHeader className="flex flex-row items-center justify-between p-4 pb-2 border-b dark:border-gray-700 transition-all duration-300 ease-in-out">
+                <div>
+                  <CardTitle className="text-2xl font-bold">{selectedChannel.name || 'Direct Message'}</CardTitle>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">{selectedChannel.description || 'No description'}</p>
+                  <div className="flex items-center mt-2">
+                    <div className="flex -space-x-2 overflow-hidden">
+                      {channelMembers?.length}
                     </div>
-                  ) : messagesError ? (
-                    <div className="text-red-500 text-center p-4">
-                      Error loading messages: {messagesError.message}
-                    </div>
-                  ) : (
-                    messages?.map((msg) => (
-                      <div
-                        key={msg.id}
-                        className={cn(
-                          'flex w-full',
-                          msg.sender_id === user?.id ? 'justify-end' : 'justify-start'
-                        )}
+                    <span className="ml-2 text-sm text-gray-500 dark:text-gray-400">{channelMembers?.length} members</span>
+                  </div>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => setManageMembersModalOpen(true)}
                       >
+                        <Users className="h-5 w-5" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Manage Members</p>
+                    </TooltipContent>
+                  </Tooltip>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={handleVideoCallAction}
+                        disabled={initiateVideoCallMutation.isLoading}
+                      >
+                        {initiateVideoCallMutation.isLoading ? (
+                          <Loader2 className="h-5 w-5 animate-spin" />
+                        ) : (
+                          <Video className="h-5 w-5" />
+                        )}
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>{activeVideoCallInfo ? "Join Call" : "Start Call"}</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </div>
+              </CardHeader>
+              <CardContent className="flex-1 p-4 flex flex-col overflow-hidden">
+                <ScrollArea className="flex-1 pr-4">
+                  <div className="space-y-4">
+                    {isLoadingMessages ? (
+                      <div className="flex justify-center items-center h-full">
+                        <Loader2 className="h-8 w-8 animate-spin" />
+                      </div>
+                    ) : messagesError ? (
+                      <div className="text-red-500 text-center p-4">
+                        Error loading messages: {messagesError.message}
+                      </div>
+                    ) : (
+                      messages?.map((msg) => (
                         <div
+                          key={msg.id}
                           className={cn(
-                            'max-w-[85%] p-3 rounded-lg',
-                            msg.sender_id === user?.id
-                              ? 'bg-blue-500 text-white'
-                              : 'bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-100'
+                            'flex w-full',
+                            msg.sender_id === user?.id ? 'justify-end' : 'justify-start'
                           )}
                         >
-                          <div className="flex items-center justify-between gap-2 mb-2">
-                            <div className="flex items-center gap-2">
-                              <Avatar className="h-5 w-5">
-                                <AvatarFallback className="bg-transparent text-xs">
-                                  {msg.sender_id === user?.id ? (
-                                    <User size={14} />
-                                  ) : (
-                                    <Bot size={14} />
-                                  )}
-                                </AvatarFallback>
-                              </Avatar>
-                              <span className="text-xs font-semibold">
-                                {msg.sender_id === user?.id
-                                  ? 'You'
-                                  : msg.sender.first_name || msg.sender.email}
+                          <div
+                            className={cn(
+                              'max-w-[85%] p-3 rounded-lg',
+                              msg.sender_id === user?.id
+                                ? 'bg-blue-500 text-white'
+                                : 'bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-100'
+                            )}
+                          >
+                            <div className="flex items-center justify-between gap-2 mb-2">
+                              <div className="flex items-center gap-2">
+                                <Avatar className="h-5 w-5">
+                                  <AvatarImage src={msg.sender?.profile_picture_url} />
+                                  <AvatarFallback className="bg-transparent text-xs">
+                                    {msg.sender_id === user?.id ? (
+                                      <User size={14} />
+                                    ) : (
+                                      <Bot size={14} />
+                                    )}
+                                  </AvatarFallback>
+                                </Avatar>
+                                <span className="text-xs font-semibold">
+                                  {msg.sender_id === user?.id
+                                    ? 'You'
+                                    : msg.sender?.first_name || msg.sender?.email}
+                                </span>
+                                <div className={cn('h-2 w-2 rounded-full', userPresences[msg.sender_id] === 'online' ? 'bg-green-500' : 'bg-gray-400')} />
+                              </div>
+                              <span className="text-xs text-gray-500 dark:text-gray-400">
+                                {new Date(msg.created_at).toLocaleTimeString([], {
+                                  hour: '2-digit',
+                                  minute: '2-digit',
+                                })}
                               </span>
                             </div>
-                            <span className="text-xs text-gray-500 dark:text-gray-400">
-                              {new Date(msg.created_at).toLocaleTimeString([], {
-                                hour: '2-digit',
-                                minute: '2-digit',
-                              })}
-                            </span>
-                          </div>
-                          <div className="prose prose-sm max-w-full dark:prose-invert">
-                            <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                              {msg.content}
-                            </ReactMarkdown>
+                            <div className="prose prose-sm max-w-full dark:prose-invert">
+                              <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                                {msg.content}
+                              </ReactMarkdown>
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    ))
-                  )}
-                  <div ref={messagesEndRef} />
-                </div>
-              </ScrollArea>
-            </CardContent>
-            <div className="p-4 border-t dark:border-gray-700 bg-white dark:bg-gray-800">
-              <div className="flex items-center gap-2">
-                <Input
-                  placeholder="Type your message..."
-                  value={inputValue}
-                  onChange={(e) => setInputValue(e.target.value)}
-                  onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
-                  className="flex-1 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100"
-                  disabled={sendMessageMutation.isLoading}
-                />
-                <Button
-                  onClick={handleSendMessage}
-                  disabled={sendMessageMutation.isLoading}
-                >
-                  {sendMessageMutation.isLoading ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                  ) : (
+                      ))
+                    )}
+                    <div ref={messagesEndRef} />
+                  </div>
+                </ScrollArea>
+              </CardContent>
+              <div className="p-4 border-t dark:border-gray-700 bg-white dark:bg-gray-800">
+                <div className="flex items-center gap-2">
+                  <Input
+                    placeholder="Type your message..."
+                    value={inputValue}
+                    onChange={(e) => setInputValue(e.target.value)}
+                    onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
+                    className="flex-1 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100"
+                  />
+                  <Button
+                    onClick={handleSendMessage}
+                  >
                     <Send className="h-4 w-4" />
-                  )}
-                </Button>
+                  </Button>
+                </div>
               </div>
+            </>
+          ) : (
+            <div className="flex-1 flex items-center justify-center text-gray-500 dark:text-gray-400">
+              Select a channel to start chatting
             </div>
-          </>
-        ) : (
-          <div className="flex-1 flex items-center justify-center text-gray-500 dark:text-gray-400">
-            Select a channel to start chatting
-          </div>
-        )}
+          )}
+        </div>
       </div>
-    </div>
+      <CreateChannelModal
+        isOpen={isCreateChannelModalOpen}
+        onClose={() => setCreateChannelModalOpen(false)}
+        onSubmit={handleCreateChannel}
+        isLoading={createChannelMutation.isLoading}
+      />
+      {selectedChannel && (
+        <ManageChannelMembersModal
+          isOpen={isManageMembersModalOpen}
+          onClose={() => setManageMembersModalOpen(false)}
+          channelId={selectedChannel.id}
+          userPresences={userPresences}
+        />
+      )}
+    </TooltipProvider>
   );
 };
 

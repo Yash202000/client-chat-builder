@@ -46,6 +46,9 @@ import { AgentWebhooksPage } from "./pages/AgentWebhooksPage";
 import { AgentCredentialsPage } from "./pages/AgentCredentialsPage";
 import GoogleCallback from "./pages/GoogleCallback";
 import PublishedPreviewPage from "./pages/PublishedPreviewPage";
+import AIImageGeneratorPage from "./pages/AIImageGeneratorPage";
+import AIImageGalleryPage from "./pages/AIImageGalleryPage";
+import AIChatPage from "./pages/AIChatPage";
 
 const queryClient = new QueryClient();
 
@@ -74,6 +77,7 @@ const AppRoutes = () => {
           <Route path="builder/:agentId/credentials" element={<AgentCredentialsPage />} />
           <Route path="designer" element={<DesignerPage />} />
           <Route path="team" element={<TeamPage />} />
+          <Route path="team-chat" element={<InternalChatPage />} />
           <Route path="reports" element={<ReportsPage />} />
           <Route path="settings" element={<SettingsPage />} />
           <Route path="vault" element={<VaultPage />} />
@@ -89,6 +93,9 @@ const AppRoutes = () => {
           <Route path="users" element={<TeamPage />} />
           {user?.is_super_admin && <Route path="companies" element={<CompaniesPage />} />}
           <Route path="admin/subscriptions" element={<SubscriptionManagementPage />} />
+          <Route path="ai-image-generator" element={<AIImageGeneratorPage />} />
+          <Route path="ai-image-gallery" element={<AIImageGalleryPage />} />
+          <Route path="ai-chat" element={<AIChatPage />} />
         </Route>
       </Route>
       <Route path="/client-portal" element={<ProtectedRoute />}>

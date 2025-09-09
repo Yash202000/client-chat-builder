@@ -24,7 +24,7 @@ export default defineConfig(({ mode }) => ({
       "style-src 'self' 'unsafe-inline'; " +
       "img-src 'self' http://localhost:8000 data: blob:; " +
       "font-src 'self' data:; " +
-      "connect-src 'self' http://localhost:8000 ws: wss:;"
+      "connect-src 'self' http://localhost:8000 https://*.livekit.cloud wss://*.livekit.cloud ws: wss:;"
     }
   },
   plugins: [

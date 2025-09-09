@@ -34,13 +34,14 @@ export const getChannelMessages = async (channelId: number) => {
   return response.data;
 };
 
-export const sendMessage = async (channelId: number, content: string) => {
-  const messageData = { content, channel_id: channelId };
-  const response = await axios.post(`${API_URL}/api/v1/chat/channels/${channelId}/messages`, messageData, {
+export const createChannelMessage = async (channelId: number, content: string) => {
+  const response = await axios.post(`${API_URL}/api/v1/chat/channels/${channelId}/messages`, { content }, {
     headers: getAuthHeaders(),
   });
   return response.data;
 };
+
+
 
 // Membership API calls
 export const joinChannel = async (channelId: number) => {
@@ -52,6 +53,27 @@ export const joinChannel = async (channelId: number) => {
 
 export const leaveChannel = async (channelId: number) => {
   const response = await axios.post(`${API_URL}/api/v1/chat/channels/${channelId}/leave`, {}, {
+    headers: getAuthHeaders(),
+  });
+  return response.data;
+};
+
+export const getChannelMembers = async (channelId: number) => {
+  const response = await axios.get(`${API_URL}/api/v1/chat/channels/${channelId}/members`, {
+    headers: getAuthHeaders(),
+  });
+  return response.data;
+};
+
+export const addChannelMember = async (channelId: number, userId: number) => {
+  const response = await axios.post(`${API_URL}/api/v1/chat/channels/${channelId}/members`, { user_id: userId }, {
+    headers: getAuthHeaders(),
+  });
+  return response.data;
+};
+
+export const removeChannelMember = async (channelId: number, userId: number) => {
+  const response = await axios.delete(`${API_URL}/api/v1/chat/channels/${channelId}/members/${userId}`, {
     headers: getAuthHeaders(),
   });
   return response.data;

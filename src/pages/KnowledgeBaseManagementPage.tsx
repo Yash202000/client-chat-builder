@@ -5,11 +5,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Plus, Trash2, Edit, LinkIcon, Brain } from "lucide-react";
+import { Plus, Trash2, Edit, LinkIcon, Brain, Eye } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
+import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
+import { solarizedlight } from 'react-syntax-highlighter/dist/esm/styles/prism';
 
 const KnowledgeBaseManagementPage = () => {
   const queryClient = useQueryClient();
@@ -166,7 +168,21 @@ const KnowledgeBaseManagementPage = () => {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isImportUrlDialogOpen, setIsImportUrlDialogOpen] = useState(false);
   const [isGenerateQnADialogOpen, setIsGenerateQnADialogOpen] = useState(false);
+  const [isPreviewDialogOpen, setIsPreviewDialogOpen] = useState(false);
   const [selectedKb, setSelectedKb] = useState<KnowledgeBase | null>(null);
+
+  const { data: previewContent, isLoading: isLoadingPreview } = useQuery<{ content: string }>({
+    queryKey: ['knowledgeBaseContent', selectedKb?.id],
+    queryFn: async () => {
+      if (!selectedKb) return { content: "" };
+      const response = await authFetch(`/api/v1/knowledge-bases/${selectedKb.id}/content`);
+      if (!response.ok) {
+        throw new Error("Failed to fetch knowledge base content");
+      }
+      return response.json();
+    },
+    enabled: isPreviewDialogOpen && !!selectedKb,
+  });
 
   const handleCreate = (values: Omit<KnowledgeBase, 'id'>, file?: File, vectorStoreType?: string) => {
     if (values.type === 'local') {
@@ -248,6 +264,28 @@ const KnowledgeBaseManagementPage = () => {
                   <p className="text-sm text-gray-500">{kb.description}</p>
                 </div>
                 <div className="flex items-center gap-2">
+                  <Dialog open={isPreviewDialogOpen && selectedKb?.id === kb.id} onOpenChange={(isOpen) => {
+                    if (!isOpen) {
+                      setSelectedKb(null);
+                    }
+                    setIsPreviewDialogOpen(isOpen);
+                  }}>
+                    <DialogTrigger asChild>
+                      <Button variant="outline" onClick={() => setSelectedKb(kb)}><Eye className="h-4 w-4" /></Button>
+                    </DialogTrigger>
+                    <DialogContent className="sm:max-w-[80vw] max-h-[80vh] overflow-y-auto">
+                      <DialogHeader>
+                        <DialogTitle>Preview: {selectedKb?.name}</DialogTitle>
+                      </DialogHeader>
+                      {isLoadingPreview ? (
+                        <p>Loading content...</p>
+                      ) : (
+                        <SyntaxHighlighter language="javascript" style={solarizedlight} customStyle={{ maxHeight: '60vh', overflowY: 'auto' }}>
+                          {previewContent?.content || ""}
+                        </SyntaxHighlighter>
+                      )}
+                    </DialogContent>
+                  </Dialog>
                   <Dialog open={isGenerateQnADialogOpen && selectedKb?.id === kb.id} onOpenChange={(isOpen) => {
                     if (!isOpen) {
                       setSelectedKb(null);
