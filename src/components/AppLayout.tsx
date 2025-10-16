@@ -29,6 +29,7 @@ import {
 } from "lucide-react";
 import { CreateAgentDialog } from "@/components/CreateAgentDialog";
 import { Permission } from "./Permission";
+import { PresenceSelector } from "@/components/PresenceSelector";
 
 const AppLayout = () => {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
@@ -108,6 +109,9 @@ const AppLayout = () => {
                   <Moon className="h-5 w-5 text-slate-700" />
                 )}
               </Button>
+
+              {/* Presence Selector */}
+              <PresenceSelector currentStatus={user?.presence_status} showLabel={false} />
 
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>

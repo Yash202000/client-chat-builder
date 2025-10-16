@@ -92,7 +92,9 @@ const Widget = ({ agentId, companyId, backendUrl }: WidgetProps) => {
         const response = await fetch(`${backendUrl}/api/v1/agents/${agentId}/widget-settings`);
         if (!response.ok) throw new Error('Failed to fetch settings');
         const data = await response.json();
-        console.log('Fetched widget settings:', data);
+        console.log('AgentConnect Widget: Fetched settings:', data);
+        console.log('AgentConnect Widget: Avatar URL:', data.agent_avatar_url);
+        console.log('AgentConnect Widget: Header Title:', data.header_title);
         setSettings(data);
       } catch (error) {
         console.error('AgentConnect: Error fetching settings:', error);

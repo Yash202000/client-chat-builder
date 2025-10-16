@@ -200,14 +200,25 @@ export const AgentBuilder = ({ agent }: AgentBuilderProps) => {
     const inspectPromises = mcpToolNodesToInspect.map(async (mcpToolNode) => {
       try {
         const tool = agent.tools.find(t => t.id === mcpToolNode.data.id);
-        if (!tool || !tool.mcp_server_url) return null;
+        if (!tool || !tool.mcp_server_url) {
+          // Mark as inspected even if no URL to prevent retry
+          return { newNodes: [], newEdges: [], inspectedToolId: mcpToolNode.data.id };
+        }
 
         const response = await authFetch(`/api/v1/mcp/inspect`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ url: tool.mcp_server_url }),
         });
-        if (!response.ok) throw new Error('Failed to inspect MCP server');
+
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error(`MCP server inspection failed for ${tool.name}:`, errorText);
+          toast.error(`Failed to inspect MCP server "${tool.name}": ${response.status} ${response.statusText}`);
+          // Mark as inspected even on failure to prevent infinite retries
+          return { newNodes: [], newEdges: [], inspectedToolId: mcpToolNode.data.id };
+        }
+
         const mcpToolsData = await response.json();
 
         const newNodes = mcpToolsData.tools.map((subTool, index) => ({
@@ -226,8 +237,10 @@ export const AgentBuilder = ({ agent }: AgentBuilderProps) => {
 
         return { newNodes, newEdges, inspectedToolId: mcpToolNode.data.id };
       } catch (error) {
-        toast.error(error.message);
-        return null;
+        console.error(`Error inspecting MCP tool ${mcpToolNode.data.id}:`, error);
+        toast.error(`Error connecting to MCP server: ${error.message}`);
+        // Mark as inspected even on error to prevent infinite retries
+        return { newNodes: [], newEdges: [], inspectedToolId: mcpToolNode.data.id };
       }
     });
 

@@ -130,6 +130,8 @@ export const ConversationDetail: React.FC<ConversationDetailProps> = ({ sessionI
     }).then(res => res.json()),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['sessions', agentId] });
+      queryClient.invalidateQueries({ queryKey: ['sessions', companyId] });
+      queryClient.invalidateQueries({ queryKey: ['sessionDetails', sessionId] });
       toast({ title: 'Success', description: 'Conversation status updated.' });
     },
     onError: (e: Error) => toast({ title: 'Error', description: e.message, variant: 'destructive' }),
@@ -167,6 +169,8 @@ export const ConversationDetail: React.FC<ConversationDetailProps> = ({ sessionI
     }).then(res => res.json()),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['sessions', agentId] });
+      queryClient.invalidateQueries({ queryKey: ['sessions', companyId] });
+      queryClient.invalidateQueries({ queryKey: ['sessionDetails', sessionId] });
       toast({ title: 'Success', description: 'Conversation assigned.' });
     },
     onError: (e: Error) => toast({ title: 'Error', description: e.message, variant: 'destructive' }),
@@ -242,7 +246,10 @@ export const ConversationDetail: React.FC<ConversationDetailProps> = ({ sessionI
             {/* Assign To */}
             <div className="flex items-center gap-2 bg-white dark:bg-slate-900 rounded-lg px-3 py-2 border border-slate-200 dark:border-slate-700 card-shadow">
               <Users className="h-4 w-4 text-muted-foreground" />
-              <Select onValueChange={(value) => assigneeMutation.mutate(parseInt(value))}>
+              <Select
+                value={sessionDetails?.assignee_id?.toString() || undefined}
+                onValueChange={(value) => assigneeMutation.mutate(parseInt(value))}
+              >
                 <SelectTrigger className="border-0 h-auto p-0 focus:ring-0 w-[180px]">
                   <SelectValue placeholder="Assign to..." />
                 </SelectTrigger>

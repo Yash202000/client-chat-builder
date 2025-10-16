@@ -112,6 +112,8 @@ export interface User {
   role?: Role;
   is_super_admin?: boolean;
   last_login_at?: string;
+  presence_status?: string;
+  last_seen?: string;
   subscription_plan_id?: number;
   subscription_status?: string;
   subscription_start_date?: string;

@@ -52,15 +52,24 @@ export const TeamManagement = () => {
   const [isCreateTeamModalOpen, setCreateTeamModalOpen] = useState(false);
   const [isAddMemberModalOpen, setAddMemberModalOpen] = useState(false);
   const [isRoleModalOpen, setRoleModalOpen] = useState(false);
-  
+  const [isEditTeamModalOpen, setEditTeamModalOpen] = useState(false);
+  const [isEditUserModalOpen, setEditUserModalOpen] = useState(false);
+
   const [selectedTeamForMember, setSelectedTeamForMember] = useState<Team | null>(null);
   const [selectedRole, setSelectedRole] = useState<Role | null>(null);
+  const [selectedTeamForEdit, setSelectedTeamForEdit] = useState<Team | null>(null);
+  const [selectedUserForEdit, setSelectedUserForEdit] = useState<User | null>(null);
 
   // Form State
   const [newUserEmail, setNewUserEmail] = useState("");
   const [newUserPassword, setNewUserPassword] = useState("");
   const [newTeamName, setNewTeamName] = useState("");
-  const [selectedUserId, setSelectedUserId] = useState("");
+  const [editTeamName, setEditTeamName] = useState("");
+  const [editUserEmail, setEditUserEmail] = useState("");
+  const [editUserFirstName, setEditUserFirstName] = useState("");
+  const [editUserLastName, setEditUserLastName] = useState("");
+  const [editUserPassword, setEditUserPassword] = useState("");
+  const [selectedUserIds, setSelectedUserIds] = useState<number[]>([]);
   const [selectedMemberRole, setSelectedMemberRole] = useState("member");
   const [roleName, setRoleName] = useState("");
   const [roleDescription, setRoleDescription] = useState("");
@@ -145,9 +154,6 @@ export const TeamManagement = () => {
     }).then(res => { if (!res.ok) throw new Error('Failed to add member'); return res.json() }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['teams', companyId] });
-      toast({ title: 'Success', description: 'Member added successfully.' });
-      setAddMemberModalOpen(false);
-      setSelectedUserId("");
     },
     onError: (e: Error) => toast({ title: 'Error', description: e.message, variant: 'destructive' }),
   });
@@ -194,6 +200,56 @@ export const TeamManagement = () => {
     onError: (e: Error) => toast({ title: 'Error', description: e.message, variant: 'destructive' }),
   });
 
+  const updateTeamMutation = useMutation({
+    mutationFn: ({ teamId, name }: { teamId: number; name: string }) => authFetch(`/api/v1/teams/${teamId}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name }),
+    }).then(res => { if (!res.ok) throw new Error('Failed to update team'); return res.json() }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['teams', companyId] });
+      toast({ title: 'Success', description: 'Team updated successfully.' });
+      setEditTeamModalOpen(false);
+      setEditTeamName("");
+    },
+    onError: (e: Error) => toast({ title: 'Error', description: e.message, variant: 'destructive' }),
+  });
+
+  const deleteTeamMutation = useMutation({
+    mutationFn: (teamId: number) => authFetch(`/api/v1/teams/${teamId}`, {
+      method: 'DELETE',
+    }).then(res => { if (!res.ok) throw new Error('Failed to delete team'); return res.json() }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['teams', companyId] });
+      toast({ title: 'Success', description: 'Team deleted successfully.' });
+    },
+    onError: (e: Error) => toast({ title: 'Error', description: e.message, variant: 'destructive' }),
+  });
+
+  const deleteUserMutation = useMutation({
+    mutationFn: (userId: number) => authFetch(`/api/v1/users/${userId}`, {
+      method: 'DELETE',
+    }).then(res => { if (!res.ok) throw new Error('Failed to delete user'); return res.json() }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['users', companyId] });
+      toast({ title: 'Success', description: 'User deleted successfully.' });
+    },
+    onError: (e: Error) => toast({ title: 'Error', description: e.message, variant: 'destructive' }),
+  });
+
+  const toggleUserActiveMutation = useMutation({
+    mutationFn: ({ userId, isActive }: { userId: number; isActive: boolean }) => authFetch(`/api/v1/users/${userId}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ is_active: isActive }),
+    }).then(res => { if (!res.ok) throw new Error('Failed to update user status'); return res.json() }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['users', companyId] });
+      toast({ title: 'Success', description: 'User status updated successfully.' });
+    },
+    onError: (e: Error) => toast({ title: 'Error', description: e.message, variant: 'destructive' }),
+  });
+
   // --- EVENT HANDLERS ---
   const handleCreateUser = () => {
     if (newUserEmail && newUserPassword) createUserMutation.mutate({ email: newUserEmail, password: newUserPassword });
@@ -203,18 +259,40 @@ export const TeamManagement = () => {
     if (newTeamName) createTeamMutation.mutate({ name: newTeamName });
   };
 
-  const handleAddMember = () => {
-    if (selectedTeamForMember && selectedUserId) {
-      addMemberMutation.mutate({
-        teamId: selectedTeamForMember.id,
-        userId: parseInt(selectedUserId),
-        role: selectedMemberRole,
-      });
+  const handleAddMember = async () => {
+    if (selectedTeamForMember && selectedUserIds.length > 0) {
+      // Add members sequentially
+      for (const userId of selectedUserIds) {
+        try {
+          await addMemberMutation.mutateAsync({
+            teamId: selectedTeamForMember.id,
+            userId: userId,
+            role: selectedMemberRole,
+          });
+        } catch (error) {
+          console.error(`Failed to add user ${userId}:`, error);
+          // Continue with other users even if one fails
+        }
+      }
+      // Close modal and reset after all members are added
+      setAddMemberModalOpen(false);
+      setSelectedUserIds([]);
+      toast({ title: 'Success', description: `${selectedUserIds.length} member(s) added successfully.` });
     }
+  };
+
+  const handleUserSelectionToggle = (userId: number) => {
+    setSelectedUserIds(prev =>
+      prev.includes(userId)
+        ? prev.filter(id => id !== userId)
+        : [...prev, userId]
+    );
   };
 
   const openAddMemberModal = (team: Team) => {
     setSelectedTeamForMember(team);
+    setSelectedUserIds([]); // Reset selection
+    setSelectedMemberRole("member"); // Reset role
     setAddMemberModalOpen(true);
   };
 
@@ -278,7 +356,75 @@ export const TeamManagement = () => {
     updateUserMutation.mutate({ userId, updateData: { role_id: parseInt(roleId, 10) } });
   };
 
+  const openEditTeamModal = (team: Team) => {
+    setSelectedTeamForEdit(team);
+    setEditTeamName(team.name);
+    setEditTeamModalOpen(true);
+  };
+
+  const handleUpdateTeam = () => {
+    if (selectedTeamForEdit && editTeamName) {
+      updateTeamMutation.mutate({ teamId: selectedTeamForEdit.id, name: editTeamName });
+    }
+  };
+
+  const handleDeleteTeam = (teamId: number) => {
+    if (confirm('Are you sure you want to delete this team? This action cannot be undone.')) {
+      deleteTeamMutation.mutate(teamId);
+    }
+  };
+
+  const openEditUserModal = (user: User) => {
+    setSelectedUserForEdit(user);
+    setEditUserEmail(user.email);
+    setEditUserFirstName(user.first_name || "");
+    setEditUserLastName(user.last_name || "");
+    setEditUserPassword(""); // Reset password field
+    setEditUserModalOpen(true);
+  };
+
+  const handleUpdateUser = () => {
+    if (selectedUserForEdit) {
+      const updateData: any = {
+        email: editUserEmail,
+        first_name: editUserFirstName,
+        last_name: editUserLastName,
+      };
+
+      // Only include password if it's been changed
+      if (editUserPassword && editUserPassword.trim() !== "") {
+        updateData.password = editUserPassword;
+      }
+
+      updateUserMutation.mutate({
+        userId: selectedUserForEdit.id,
+        updateData,
+      });
+      setEditUserModalOpen(false);
+    }
+  };
+
+  const handleDeleteUser = (userId: number) => {
+    if (confirm('Are you sure you want to delete this user? This action cannot be undone.')) {
+      deleteUserMutation.mutate(userId);
+    }
+  };
+
+  const handleToggleUserActive = (userId: number, currentStatus: boolean) => {
+    toggleUserActiveMutation.mutate({ userId, isActive: !currentStatus });
+  };
+
   const filteredUsers = users.filter(user => user.email.toLowerCase().includes(searchQuery.toLowerCase()));
+
+  // Get available users (not already in the selected team)
+  const getAvailableUsers = () => {
+    if (!selectedTeamForMember) return users;
+
+    const existingMemberIds = selectedTeamForMember.members.map(member => member.user_id);
+    return users.filter(user => !existingMemberIds.includes(user.id));
+  };
+
+  const availableUsers = getAvailableUsers();
 
   return (
     <div className="space-y-6 p-4 md:p-6 animate-fade-in">
@@ -395,12 +541,26 @@ export const TeamManagement = () => {
                             <TableRow key={user.id} className="border-b border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
                               <TableCell className="py-4">
                                 <div className="flex items-center gap-3">
-                                  <Avatar className="h-10 w-10 border-2 border-slate-200 dark:border-slate-600">
-                                    <AvatarImage src={user.profile_picture_url} />
-                                    <AvatarFallback className="bg-gradient-to-br from-blue-100 to-indigo-100 dark:from-blue-900/50 dark:to-indigo-900/50 text-blue-700 dark:text-blue-300 font-semibold">
-                                      {user.email.charAt(0).toUpperCase()}
-                                    </AvatarFallback>
-                                  </Avatar>
+                                  <div className="relative">
+                                    <Avatar className="h-10 w-10 border-2 border-slate-200 dark:border-slate-600">
+                                      <AvatarImage src={user.profile_picture_url} />
+                                      <AvatarFallback className="bg-gradient-to-br from-blue-100 to-indigo-100 dark:from-blue-900/50 dark:to-indigo-900/50 text-blue-700 dark:text-blue-300 font-semibold">
+                                        {user.email.charAt(0).toUpperCase()}
+                                      </AvatarFallback>
+                                    </Avatar>
+                                    {user.presence_status && (
+                                      <span
+                                        className={`absolute bottom-0 right-0 h-3 w-3 rounded-full border-2 border-white dark:border-slate-800 ${
+                                          user.presence_status === 'online'
+                                            ? 'bg-green-500'
+                                            : user.presence_status === 'busy'
+                                            ? 'bg-yellow-500'
+                                            : 'bg-gray-400'
+                                        }`}
+                                        title={user.presence_status}
+                                      />
+                                    )}
+                                  </div>
                                   <div>
                                     <div className="font-medium dark:text-white">{user.first_name} {user.last_name}</div>
                                     <div className="text-sm text-muted-foreground dark:text-gray-400">{user.email}</div>
@@ -442,14 +602,23 @@ export const TeamManagement = () => {
                                     </Button>
                                   </DropdownMenuTrigger>
                                   <DropdownMenuContent align="end" className="dark:bg-slate-800 dark:border-slate-700">
-                                    <DropdownMenuItem className="dark:text-white dark:focus:bg-slate-700">
+                                    <DropdownMenuItem
+                                      className="dark:text-white dark:focus:bg-slate-700"
+                                      onClick={() => openEditUserModal(user)}
+                                    >
                                       <Edit className="h-4 w-4 mr-2" />
                                       Edit
                                     </DropdownMenuItem>
-                                    <DropdownMenuItem className="dark:text-white dark:focus:bg-slate-700">
+                                    <DropdownMenuItem
+                                      className="dark:text-white dark:focus:bg-slate-700"
+                                      onClick={() => handleToggleUserActive(user.id, user.is_active)}
+                                    >
                                       {user.is_active ? "Deactivate" : "Activate"}
                                     </DropdownMenuItem>
-                                    <DropdownMenuItem className="text-red-500 dark:text-red-400 dark:focus:bg-slate-700">
+                                    <DropdownMenuItem
+                                      className="text-red-500 dark:text-red-400 dark:focus:bg-slate-700"
+                                      onClick={() => handleDeleteUser(user.id)}
+                                    >
                                       <Trash2 className="h-4 w-4 mr-2" />
                                       Delete
                                     </DropdownMenuItem>
@@ -528,12 +697,37 @@ export const TeamManagement = () => {
                   teams.map((team) => (
                     <Card key={team.id} className="flex flex-col card-shadow-lg border-slate-200 dark:border-slate-700 dark:bg-slate-900/50 hover:shadow-xl transition-shadow">
                       <CardHeader className="border-b border-slate-200 dark:border-slate-700 bg-gradient-to-r from-slate-50 to-slate-100 dark:from-slate-800/50 dark:to-slate-900/50">
-                        <CardTitle className="dark:text-white flex items-center gap-2">
-                          <div className="h-8 w-8 rounded-full bg-gradient-to-br from-blue-100 to-indigo-100 dark:from-blue-900/50 dark:to-indigo-900/50 flex items-center justify-center">
-                            <Users className="h-4 w-4 text-blue-600 dark:text-blue-400" />
-                          </div>
-                          {team.name}
-                        </CardTitle>
+                        <div className="flex items-center justify-between">
+                          <CardTitle className="dark:text-white flex items-center gap-2">
+                            <div className="h-8 w-8 rounded-full bg-gradient-to-br from-blue-100 to-indigo-100 dark:from-blue-900/50 dark:to-indigo-900/50 flex items-center justify-center">
+                              <Users className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                            </div>
+                            {team.name}
+                          </CardTitle>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" size="icon" className="hover:bg-slate-100 dark:hover:bg-slate-700">
+                                <MoreHorizontal className="h-4 w-4 dark:text-gray-400" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end" className="dark:bg-slate-800 dark:border-slate-700">
+                              <DropdownMenuItem
+                                className="dark:text-white dark:focus:bg-slate-700"
+                                onClick={() => openEditTeamModal(team)}
+                              >
+                                <Edit className="h-4 w-4 mr-2" />
+                                Edit
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                className="text-red-500 dark:text-red-400 dark:focus:bg-slate-700"
+                                onClick={() => handleDeleteTeam(team.id)}
+                              >
+                                <Trash2 className="h-4 w-4 mr-2" />
+                                Delete
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </div>
                       </CardHeader>
                       <CardContent className="flex-grow pt-4">
                         <div className="flex items-center justify-between mb-3">
@@ -551,17 +745,17 @@ export const TeamManagement = () => {
                               >
                                 <div className="flex items-center gap-2 flex-1 min-w-0">
                                   <Avatar className="h-6 w-6">
-                                    <AvatarImage src={member.profile_picture_url} />
+                                    <AvatarImage src={member.user?.profile_picture_url} />
                                     <AvatarFallback className="text-xs bg-gradient-to-br from-blue-100 to-indigo-100 dark:from-blue-900/50 dark:to-indigo-900/50 text-blue-700 dark:text-blue-300">
-                                      {member.email.charAt(0).toUpperCase()}
+                                      {member.user?.email?.charAt(0).toUpperCase() || 'U'}
                                     </AvatarFallback>
                                   </Avatar>
-                                  <span className="dark:text-white truncate">{member.email}</span>
+                                  <span className="dark:text-white truncate">{member.user?.email || 'Unknown'}</span>
                                 </div>
                                 <Button
                                   variant="ghost"
                                   size="sm"
-                                  onClick={() => removeMemberMutation.mutate({ teamId: team.id, userId: member.id })}
+                                  onClick={() => removeMemberMutation.mutate({ teamId: team.id, userId: member.user_id })}
                                   className="hover:bg-red-50 dark:hover:bg-red-900/20"
                                 >
                                   <Trash2 className="h-4 w-4 text-red-500 dark:text-red-400" />
@@ -702,28 +896,67 @@ export const TeamManagement = () => {
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div>
-              <Label htmlFor="user-select" className="text-sm dark:text-gray-300 mb-1.5 block">
-                Select User
-              </Label>
-              <Select onValueChange={setSelectedUserId} value={selectedUserId}>
-                <SelectTrigger id="user-select" className="dark:bg-slate-900 dark:border-slate-600 dark:text-white">
-                  <SelectValue placeholder="Choose a user to add" />
-                </SelectTrigger>
-                <SelectContent className="dark:bg-slate-800 dark:border-slate-700">
-                  {users.map((user) => (
-                    <SelectItem
+              <div className="flex items-center justify-between mb-2">
+                <Label className="text-sm dark:text-gray-300">
+                  Select Members
+                </Label>
+                <span className="text-xs px-2 py-1 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 font-medium">
+                  {selectedUserIds.length} selected
+                </span>
+              </div>
+              {availableUsers.length === 0 ? (
+                <div className="text-center py-8 border border-slate-200 dark:border-slate-700 rounded-lg bg-slate-50 dark:bg-slate-900">
+                  <p className="text-sm text-gray-500 dark:text-gray-400">All users are already members of this team.</p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 gap-2 max-h-80 overflow-y-auto p-3 border rounded-lg bg-slate-50 dark:bg-slate-900/50 border-slate-200 dark:border-slate-700">
+                  {availableUsers.map((user) => (
+                    <div
                       key={user.id}
-                      value={user.id.toString()}
-                      className="dark:text-white dark:focus:bg-slate-700"
+                      className={`flex items-center space-x-3 p-3 rounded-lg border transition-all cursor-pointer hover:shadow-sm ${
+                        selectedUserIds.includes(user.id)
+                          ? 'bg-blue-50 dark:bg-blue-900/30 border-blue-300 dark:border-blue-700'
+                          : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-600'
+                      }`}
+                      onClick={() => handleUserSelectionToggle(user.id)}
                     >
-                      <div className="flex items-center gap-2">
-                        <Mail className="h-4 w-4" />
-                        {user.email}
+                      <Checkbox
+                        id={`user-${user.id}`}
+                        checked={selectedUserIds.includes(user.id)}
+                        onCheckedChange={() => handleUserSelectionToggle(user.id)}
+                        className="dark:border-slate-500"
+                      />
+                      <div className="flex items-center gap-2 flex-1">
+                        <div className="relative">
+                          <Avatar className="h-8 w-8">
+                            <AvatarImage src={user.profile_picture_url} />
+                            <AvatarFallback className="text-xs bg-gradient-to-br from-blue-100 to-indigo-100 dark:from-blue-900/50 dark:to-indigo-900/50 text-blue-700 dark:text-blue-300">
+                              {user.email.charAt(0).toUpperCase()}
+                            </AvatarFallback>
+                          </Avatar>
+                          {user.presence_status && (
+                            <span
+                              className={`absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full border-2 border-white dark:border-slate-800 ${
+                                user.presence_status === 'online'
+                                  ? 'bg-green-500'
+                                  : user.presence_status === 'busy'
+                                  ? 'bg-yellow-500'
+                                  : 'bg-gray-400'
+                              }`}
+                            />
+                          )}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="text-sm font-medium dark:text-white truncate">
+                            {user.first_name} {user.last_name}
+                          </div>
+                          <div className="text-xs text-gray-500 dark:text-gray-400 truncate">{user.email}</div>
+                        </div>
                       </div>
-                    </SelectItem>
+                    </div>
                   ))}
-                </SelectContent>
-              </Select>
+                </div>
+              )}
             </div>
             <div>
               <Label htmlFor="role-select" className="text-sm dark:text-gray-300 mb-1.5 block">
@@ -760,7 +993,7 @@ export const TeamManagement = () => {
             </Button>
             <Button
               onClick={handleAddMember}
-              disabled={addMemberMutation.isPending}
+              disabled={addMemberMutation.isPending || selectedUserIds.length === 0}
               className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white"
             >
               {addMemberMutation.isPending ? (
@@ -771,9 +1004,106 @@ export const TeamManagement = () => {
               ) : (
                 <>
                   <UserPlus className="h-4 w-4 mr-2" />
-                  Add Member
+                  Add {selectedUserIds.length > 0 ? `${selectedUserIds.length} ` : ''}Member{selectedUserIds.length !== 1 ? 's' : ''}
                 </>
               )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Team Modal */}
+      <Dialog open={isEditTeamModalOpen} onOpenChange={setEditTeamModalOpen}>
+        <DialogContent className="dark:bg-slate-800 dark:border-slate-700">
+          <DialogHeader>
+            <DialogTitle className="dark:text-white">Edit Team</DialogTitle>
+          </DialogHeader>
+          <div className="py-4">
+            <Label htmlFor="edit-team-name" className="text-sm dark:text-gray-300 mb-1.5 block">Team Name</Label>
+            <Input
+              id="edit-team-name"
+              placeholder="Enter team name"
+              value={editTeamName}
+              onChange={(e) => setEditTeamName(e.target.value)}
+              className="dark:bg-slate-900 dark:border-slate-600 dark:text-white"
+            />
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditTeamModalOpen(false)} className="dark:border-slate-600 dark:text-white dark:hover:bg-slate-700">
+              Cancel
+            </Button>
+            <Button
+              onClick={handleUpdateTeam}
+              disabled={updateTeamMutation.isPending}
+              className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white"
+            >
+              {updateTeamMutation.isPending ? "Updating..." : "Update Team"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit User Modal */}
+      <Dialog open={isEditUserModalOpen} onOpenChange={setEditUserModalOpen}>
+        <DialogContent className="dark:bg-slate-800 dark:border-slate-700">
+          <DialogHeader>
+            <DialogTitle className="dark:text-white">Edit User</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div>
+              <Label htmlFor="edit-user-email" className="text-sm dark:text-gray-300 mb-1.5 block">Email Address</Label>
+              <Input
+                id="edit-user-email"
+                placeholder="user@example.com"
+                type="email"
+                value={editUserEmail}
+                onChange={(e) => setEditUserEmail(e.target.value)}
+                className="dark:bg-slate-900 dark:border-slate-600 dark:text-white"
+              />
+            </div>
+            <div>
+              <Label htmlFor="edit-user-first-name" className="text-sm dark:text-gray-300 mb-1.5 block">First Name</Label>
+              <Input
+                id="edit-user-first-name"
+                placeholder="First Name"
+                value={editUserFirstName}
+                onChange={(e) => setEditUserFirstName(e.target.value)}
+                className="dark:bg-slate-900 dark:border-slate-600 dark:text-white"
+              />
+            </div>
+            <div>
+              <Label htmlFor="edit-user-last-name" className="text-sm dark:text-gray-300 mb-1.5 block">Last Name</Label>
+              <Input
+                id="edit-user-last-name"
+                placeholder="Last Name"
+                value={editUserLastName}
+                onChange={(e) => setEditUserLastName(e.target.value)}
+                className="dark:bg-slate-900 dark:border-slate-600 dark:text-white"
+              />
+            </div>
+            <div>
+              <Label htmlFor="edit-user-password" className="text-sm dark:text-gray-300 mb-1.5 block">New Password</Label>
+              <Input
+                id="edit-user-password"
+                placeholder="Leave blank to keep current password"
+                type="password"
+                value={editUserPassword}
+                onChange={(e) => setEditUserPassword(e.target.value)}
+                className="dark:bg-slate-900 dark:border-slate-600 dark:text-white"
+              />
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Only fill this field if you want to change the user's password</p>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditUserModalOpen(false)} className="dark:border-slate-600 dark:text-white dark:hover:bg-slate-700">
+              Cancel
+            </Button>
+            <Button
+              onClick={handleUpdateUser}
+              disabled={updateUserMutation.isPending}
+              className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white"
+            >
+              {updateUserMutation.isPending ? "Updating..." : "Update User"}
             </Button>
           </DialogFooter>
         </DialogContent>
