@@ -191,16 +191,16 @@ export const ConversationDetail: React.FC<ConversationDetailProps> = ({ sessionI
   return (
     <div className="flex h-full bg-white dark:bg-slate-800 card-shadow-lg rounded-lg overflow-hidden">
       <div className="flex flex-col flex-grow">
-        <header className="flex-shrink-0 border-b border-slate-200 dark:border-slate-700 bg-gradient-to-r from-slate-50 to-slate-100 dark:from-slate-800 dark:to-slate-900">
+        <header className="flex-shrink-0 border-b border-slate-200 dark:border-slate-700 bg-gradient-to-r from-white to-slate-50 dark:from-slate-800 dark:to-slate-900 shadow-sm">
           {/* Top Row - Title and Quick Actions */}
-          <div className="flex items-center justify-between px-6 py-3 border-b">
+          <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200 dark:border-slate-700">
             <div className="flex items-center gap-3">
-              <div className="h-10 w-10 rounded-lg bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
-                <MessageSquare className="h-5 w-5 text-white" />
+              <div className="h-12 w-12 rounded-lg bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center shadow-md">
+                <MessageSquare className="h-6 w-6 text-white" />
               </div>
               <div>
-                <h2 className="text-lg font-bold dark:text-white">Conversation</h2>
-                <p className="text-xs text-muted-foreground">ID: {sessionId.slice(0, 12)}...</p>
+                <h2 className="text-xl font-bold dark:text-white">Conversation</h2>
+                <p className="text-xs text-muted-foreground">Session ID: {sessionId.slice(0, 12)}...</p>
               </div>
             </div>
 
