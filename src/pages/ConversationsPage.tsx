@@ -11,7 +11,7 @@ import { useWebSocket } from '@/hooks/use-websocket';
 import { toast } from '@/hooks/use-toast';
 import { Session, User } from '@/types';
 import { useAuth } from "@/hooks/useAuth";
-import { MessageSquare, Phone, Globe, Instagram, Mail, Send, Search, Filter, Archive } from 'lucide-react'; // Icons for channels
+import { MessageSquare, Phone, Globe, Instagram, Mail, Send, Search, Filter, Archive, ChevronLeft, ChevronRight } from 'lucide-react'; // Icons for channels
 
 const ConversationsPage: React.FC = () => {
   const queryClient = useQueryClient();
@@ -20,6 +20,7 @@ const ConversationsPage: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [activeTab, setActiveTab] = useState<'mine' | 'open' | 'resolved' | 'all'>('mine');
   const [unreadAssignments, setUnreadAssignments] = useState(0);
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
   const companyId = useMemo(() => user?.company_id, [user]);
 
@@ -409,15 +410,26 @@ const ConversationsPage: React.FC = () => {
     <div className="h-full w-full overflow-hidden">
       <div className="grid grid-cols-1 md:grid-cols-12 gap-4 h-full p-4">
         {/* Left Sidebar - Conversation List */}
-        <div className="md:col-span-3 h-full overflow-hidden">
-          <Card className="h-full flex flex-col card-shadow-lg bg-white dark:bg-slate-800">
-            <CardHeader className="border-b border-slate-200 dark:border-slate-700 bg-gradient-to-r from-slate-50 to-slate-100 dark:from-slate-800 dark:to-slate-900 flex-shrink-0 py-3 space-y-3">
-              <div className="flex items-center justify-between">
-                <CardTitle className="text-lg dark:text-white">Inbox</CardTitle>
-                <Badge variant="outline" className="ml-2 dark:border-slate-600 dark:text-slate-300">
-                  {sessionCounts?.all || 0}
-                </Badge>
-              </div>
+        <div className={`h-full overflow-hidden transition-all duration-300 ${isSidebarCollapsed ? 'md:col-span-1' : 'md:col-span-3'}`}>
+          <Card className="h-full flex flex-col card-shadow-lg bg-white dark:bg-slate-800 relative">
+            {/* Collapse/Expand Button */}
+            <button
+              onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+              className="absolute -right-3 top-1/2 -translate-y-1/2 z-10 bg-blue-600 hover:bg-blue-700 text-white rounded-full p-1.5 shadow-lg transition-all"
+              title={isSidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+            >
+              {isSidebarCollapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
+            </button>
+
+            <CardHeader className={`border-b border-slate-200 dark:border-slate-700 bg-gradient-to-r from-slate-50 to-slate-100 dark:from-slate-800 dark:to-slate-900 flex-shrink-0 py-3 ${isSidebarCollapsed ? 'px-2' : 'space-y-3'}`}>
+              {!isSidebarCollapsed && (
+                <>
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="text-lg dark:text-white">Inbox</CardTitle>
+                    <Badge variant="outline" className="ml-2 dark:border-slate-600 dark:text-slate-300">
+                      {sessionCounts?.all || 0}
+                    </Badge>
+                  </div>
 
               {/* Search Bar */}
               <div className="relative">
@@ -431,9 +443,9 @@ const ConversationsPage: React.FC = () => {
                 />
               </div>
 
-              {/* Tabs */}
-              <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'mine' | 'open' | 'resolved' | 'all')} className="w-full">
-                <TabsList className="w-full grid grid-cols-4 bg-white dark:bg-slate-900">
+                  {/* Tabs */}
+                  <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'mine' | 'open' | 'resolved' | 'all')} className="w-full">
+                    <TabsList className="w-full grid grid-cols-4 bg-white dark:bg-slate-900">
                   <TabsTrigger value="mine" className="text-xs font-semibold relative">
                     <span className="flex items-center gap-1">
                       <span className="text-amber-600 dark:text-amber-400">👤</span>
@@ -451,13 +463,29 @@ const ConversationsPage: React.FC = () => {
                   <TabsTrigger value="resolved" className="text-xs">
                     Resolved ({sessionCounts?.resolved || 0})
                   </TabsTrigger>
-                  <TabsTrigger value="all" className="text-xs">
-                    All ({sessionCounts?.all || 0})
-                  </TabsTrigger>
-                </TabsList>
-              </Tabs>
+                      <TabsTrigger value="all" className="text-xs">
+                        All ({sessionCounts?.all || 0})
+                      </TabsTrigger>
+                    </TabsList>
+                  </Tabs>
+                </>
+              )}
+
+              {/* Collapsed view - show icon tabs only */}
+              {isSidebarCollapsed && (
+                <div className="flex flex-col gap-2 items-center py-2">
+                  <Badge variant="outline" className="text-xs">
+                    {sessionCounts?.all || 0}
+                  </Badge>
+                  {unreadAssignments > 0 && (
+                    <span className="bg-red-500 text-white text-[10px] font-bold rounded-full h-5 w-5 flex items-center justify-center animate-pulse">
+                      {unreadAssignments}
+                    </span>
+                  )}
+                </div>
+              )}
             </CardHeader>
-            <CardContent className="flex-1 overflow-y-auto p-0 bg-white dark:bg-slate-800">
+            <CardContent className={`flex-1 overflow-y-auto bg-white dark:bg-slate-800 ${isSidebarCollapsed ? 'p-0' : ''}`}>
               {isLoadingSessions ? (
                 <div className="flex items-center justify-center h-full">
                   <div className="text-center">
@@ -465,7 +493,7 @@ const ConversationsPage: React.FC = () => {
                     <p className="text-sm text-muted-foreground">Loading conversations...</p>
                   </div>
                 </div>
-              ) : filteredSessions.length > 0 ? (
+              ) : filteredSessions.length > 0 && !isSidebarCollapsed ? (
                 <div className="space-y-1">
                   {/* Group conversations by status */}
                   {filteredSessions.filter(s => s.status === 'active').length > 0 && (
@@ -546,6 +574,34 @@ const ConversationsPage: React.FC = () => {
                     </>
                   )}
                 </div>
+              ) : isSidebarCollapsed && filteredSessions.length > 0 ? (
+                <div className="flex flex-col gap-1 p-1">
+                  {filteredSessions.slice(0, 10).map((session) => {
+                    const assignedToMe = session.assignee_id === user?.id && session.status === 'assigned';
+                    return (
+                      <button
+                        key={session.conversation_id}
+                        onClick={() => setSelectedSessionId(session.conversation_id)}
+                        className={`p-2 rounded transition-all relative ${
+                          selectedSessionId === session.conversation_id
+                            ? 'bg-blue-100 dark:bg-blue-900'
+                            : 'hover:bg-gray-100 dark:hover:bg-slate-700'
+                        }`}
+                        title={session.contact_name || 'Unknown Contact'}
+                      >
+                        <div className="flex flex-col items-center gap-1">
+                          {getChannelIcon(session.channel)}
+                          {assignedToMe && session.is_client_connected && (
+                            <span className="h-2 w-2 bg-green-500 rounded-full animate-pulse"></span>
+                          )}
+                          {assignedToMe && !session.is_client_connected && (
+                            <span className="h-2 w-2 bg-red-500 rounded-full"></span>
+                          )}
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
               ) : (
                 <div className="flex items-center justify-center h-full p-6">
                   <div className="text-center">
@@ -561,7 +617,7 @@ const ConversationsPage: React.FC = () => {
         </div>
 
         {/* Center - Conversation Detail */}
-        <div className="md:col-span-6 h-full overflow-hidden">
+        <div className={`h-full overflow-hidden transition-all duration-300 ${isSidebarCollapsed ? 'md:col-span-8' : 'md:col-span-6'}`}>
           {selectedSessionId ? (
             <ConversationDetail sessionId={selectedSessionId} agentId={1} />
           ) : (

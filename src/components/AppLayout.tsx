@@ -2,7 +2,7 @@
 import { useAuth } from "@/hooks/useAuth";
 import { useTheme } from "@/hooks/useTheme";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { CircleUser, Moon, Sun } from "lucide-react";
+import { CircleUser, Moon, Sun, ChevronLeft, ChevronRight } from "lucide-react";
 import { useState } from "react";
 import { Outlet, NavLink } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -34,6 +34,7 @@ import { PresenceSelector } from "@/components/PresenceSelector";
 const AppLayout = () => {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const { user, logout } = useAuth();
   const { theme, toggleTheme } = useTheme();
   console.log("Logged in user:", user);
@@ -137,11 +138,20 @@ const AppLayout = () => {
       <div className="flex flex-1 overflow-hidden">
         {/* Enhanced Sidebar with Dark Mode */}
         <aside
-          className={`w-64 flex-shrink-0 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-700 transition-all duration-300 ${
+          className={`flex-shrink-0 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-700 transition-all duration-300 relative ${
             sidebarOpen ? '' : '-ml-64 lg:ml-0'
-          }`}
+          } ${sidebarCollapsed ? 'w-16' : 'w-64'}`}
         >
-          <nav className="p-3 space-y-1 h-full flex flex-col overflow-y-auto">
+          {/* Collapse/Expand Button for Desktop */}
+          <button
+            onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+            className="hidden lg:flex absolute -right-3 top-8 z-20 bg-blue-600 hover:bg-blue-700 text-white rounded-full p-1.5 shadow-lg transition-all"
+            title={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+          >
+            {sidebarCollapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
+          </button>
+
+          <nav className={`p-3 space-y-1 h-full flex flex-col overflow-y-auto ${sidebarCollapsed ? 'items-center' : ''}`}>
             <div className="flex-1 space-y-1">
               {sidebarItems.map((item) => {
                 // Only show admin items if user is super admin
@@ -152,21 +162,24 @@ const AppLayout = () => {
                     <NavLink
                       to={item.url}
                       className={({ isActive }) =>
-                        `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 group ${
+                        `flex items-center rounded-lg text-sm font-medium transition-all duration-200 group ${
+                          sidebarCollapsed ? 'justify-center p-2.5' : 'gap-3 px-3 py-2.5'
+                        } ${
                           isActive
                             ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-md'
                             : 'text-gray-700 dark:text-gray-300 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-gray-900 dark:hover:text-white'
                         }`
                       }
+                      title={sidebarCollapsed ? item.title : undefined}
                     >
                       {({ isActive }) => (
                         <>
                           <item.icon
                             className={`h-5 w-5 transition-transform duration-200 ${
                               isActive ? '' : 'group-hover:scale-110'
-                            }`}
+                            } ${sidebarCollapsed ? 'flex-shrink-0' : ''}`}
                           />
-                          <span className="truncate">{item.title}</span>
+                          {!sidebarCollapsed && <span className="truncate">{item.title}</span>}
                         </>
                       )}
                     </NavLink>
@@ -176,12 +189,21 @@ const AppLayout = () => {
             </div>
 
             {/* Sidebar Footer */}
-            <div className="pt-4 mt-4 border-t border-slate-200 dark:border-slate-700">
-              <div className="px-3 py-2 text-xs text-gray-600 dark:text-gray-400">
-                <p className="font-semibold mb-1 text-gray-900 dark:text-gray-100">{user?.email}</p>
-                <p className="truncate text-gray-500 dark:text-gray-400">{user?.company_name || 'AgentConnect'}</p>
+            {!sidebarCollapsed && (
+              <div className="pt-4 mt-4 border-t border-slate-200 dark:border-slate-700">
+                <div className="px-3 py-2 text-xs text-gray-600 dark:text-gray-400">
+                  <p className="font-semibold mb-1 text-gray-900 dark:text-gray-100">{user?.email}</p>
+                  <p className="truncate text-gray-500 dark:text-gray-400">{user?.company_name || 'AgentConnect'}</p>
+                </div>
               </div>
-            </div>
+            )}
+            {sidebarCollapsed && (
+              <div className="pt-4 mt-4 border-t border-slate-200 dark:border-slate-700 flex justify-center">
+                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-600 to-purple-600 flex items-center justify-center text-white font-semibold text-xs">
+                  {user?.email?.charAt(0).toUpperCase() || 'U'}
+                </div>
+              </div>
+            )}
           </nav>
         </aside>
 
