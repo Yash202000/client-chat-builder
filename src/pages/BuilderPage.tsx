@@ -95,7 +95,7 @@ const BuilderPage = () => {
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['agentHistory'] });
-      queryClient.invalidateQueries({ queryKey: ['agent', data.id] });
+      queryClient.invalidateQueries({ queryKey: ['agent', data.id.toString()] });
       toast({ title: `Agent version ${data.version_number} activated!` });
       setIsHistoryDialogOpen(false);
     },
@@ -104,33 +104,69 @@ const BuilderPage = () => {
     },
   });
 
-  if (isLoading) return <div>Loading agent...</div>;
-  if (isError) return <div>Error loading agent.</div>;
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-[80vh]">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Loading agent...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <div className="flex items-center justify-center h-[80vh]">
+        <div className="text-center">
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-red-100 dark:bg-red-900/20 mb-4">
+            <span className="text-3xl">⚠️</span>
+          </div>
+          <h3 className="text-lg font-semibold mb-2 dark:text-white">Error Loading Agent</h3>
+          <p className="text-muted-foreground">Please try again or select a different agent</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="space-y-6 animate-fade-in">
-      <div className="flex justify-between items-center">
+    <div className="space-y-6 p-6 animate-fade-in">
+      {/* Enhanced Header */}
+      <div className="flex justify-between items-start">
         <div>
-          <h2 className="text-3xl font-bold bg-gradient-to-r from-green-900 to-emerald-900 bg-clip-text text-transparent">
+          <h2 className="text-4xl font-bold bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent mb-2">
             Agent Builder
           </h2>
-          <p className="text-gray-600 mt-1">Design conversation flows with drag-and-drop interface</p>
+          <p className="text-muted-foreground text-lg">Design conversation flows with drag-and-drop interface</p>
         </div>
-        <div className="flex space-x-2">
+        <div className="flex gap-2">
           {agentId && agent && (
-            <Button variant="outline" onClick={() => createNewVersionMutation.mutate(agent.id)} disabled={createNewVersionMutation.isPending}>
+            <Button
+              variant="outline"
+              onClick={() => createNewVersionMutation.mutate(agent.id)}
+              disabled={createNewVersionMutation.isPending}
+              className="btn-hover-lift"
+            >
               <PlusCircle className="mr-2 h-4 w-4" />
-              {createNewVersionMutation.isPending ? "Creating Version..." : "Create New Version"}
+              {createNewVersionMutation.isPending ? "Creating..." : "New Version"}
             </Button>
           )}
           {agentId && (
-            <Button variant="outline" onClick={() => setIsHistoryDialogOpen(true)}>
+            <Button
+              variant="outline"
+              onClick={() => setIsHistoryDialogOpen(true)}
+              className="btn-hover-lift"
+            >
               <History className="mr-2 h-4 w-4" />
-              Version History
+              History
             </Button>
           )}
           {!agentId && (
-            <Button onClick={() => setIsCreateAgentDialogOpen(true)}>
+            <Button
+              onClick={() => setIsCreateAgentDialogOpen(true)}
+              className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white btn-hover-lift"
+            >
+              <PlusCircle className="mr-2 h-4 w-4" />
               Create New Agent
             </Button>
           )}
@@ -146,24 +182,33 @@ const BuilderPage = () => {
           />
         </>
       ) : !agentId && (
-        <div className="flex flex-col items-center justify-center h-64 border-2 border-dashed rounded-lg">
-          <p className="mb-4 text-lg text-gray-600">Select an agent to begin</p>
-          {isLoadingAgents ? (
-            <p>Loading agents...</p>
-          ) : (
-            <Select onValueChange={(value) => navigate(`/dashboard/builder/${value}`)}>
-              <SelectTrigger className="w-[280px]">
-                <SelectValue placeholder="Select an agent" />
-              </SelectTrigger>
-              <SelectContent>
-                {agents?.map((agent) => (
-                  <SelectItem key={agent.id} value={String(agent.id)}>
-                    {agent.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          )}
+        <div className="flex flex-col items-center justify-center h-[60vh] border-2 border-dashed border-slate-300 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-800 card-shadow">
+          <div className="text-center p-8">
+            <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-gradient-to-br from-green-100 to-emerald-100 dark:from-green-900/30 dark:to-emerald-900/30 mb-6">
+              <span className="text-4xl">🤖</span>
+            </div>
+            <h3 className="text-2xl font-bold mb-2 dark:text-white">Select an Agent</h3>
+            <p className="mb-6 text-lg text-muted-foreground">Choose an agent to start building</p>
+            {isLoadingAgents ? (
+              <div className="flex items-center justify-center">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600"></div>
+                <p className="ml-3 text-muted-foreground">Loading agents...</p>
+              </div>
+            ) : (
+              <Select onValueChange={(value) => navigate(`/dashboard/builder/${value}`)}>
+                <SelectTrigger className="w-[320px] h-12">
+                  <SelectValue placeholder="Select an agent" />
+                </SelectTrigger>
+                <SelectContent>
+                  {agents?.map((agent) => (
+                    <SelectItem key={agent.id} value={String(agent.id)}>
+                      {agent.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
+          </div>
         </div>
       )}
 
@@ -172,46 +217,79 @@ const BuilderPage = () => {
         onOpenChange={setIsCreateAgentDialogOpen}
       />
 
-      {/* Version History Dialog */}
+      {/* Enhanced Version History Dialog */}
       <Dialog open={isHistoryDialogOpen} onOpenChange={setIsHistoryDialogOpen}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-3xl bg-white dark:bg-slate-800">
           <DialogHeader>
-            <DialogTitle>Version History for {agent?.name}</DialogTitle>
+            <DialogTitle className="text-2xl font-bold dark:text-white">
+              Version History
+            </DialogTitle>
+            <p className="text-muted-foreground">
+              Manage versions for <span className="font-semibold text-green-600 dark:text-green-400">{agent?.name}</span>
+            </p>
           </DialogHeader>
           {isLoadingHistory ? (
-            <div>Loading history...</div>
+            <div className="flex items-center justify-center py-12">
+              <div className="text-center">
+                <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-green-600 mx-auto mb-3"></div>
+                <p className="text-muted-foreground">Loading history...</p>
+              </div>
+            </div>
           ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Version</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Created At</TableHead>
-                  <TableHead>Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {agentHistory?.map((version) => (
-                  <TableRow key={version.id}>
-                    <TableCell>{version.version_number}</TableCell>
-                    <TableCell>{version.status}</TableCell>
-                    <TableCell>{new Date(version.created_at).toLocaleString()}</TableCell>
-                    <TableCell>
-                      {version.status !== "active" && (
-                        <Button 
-                          variant="outline" 
-                          size="sm" 
-                          onClick={() => activateVersionMutation.mutate(version.id)}
-                          disabled={activateVersionMutation.isPending}
-                        >
-                          {activateVersionMutation.isPending ? "Activating..." : "Activate"}
-                        </Button>
-                      )}
-                    </TableCell>
+            <div className="rounded-lg border border-slate-200 dark:border-slate-700 overflow-hidden">
+              <Table>
+                <TableHeader className="bg-slate-50 dark:bg-slate-900">
+                  <TableRow>
+                    <TableHead className="font-semibold dark:text-gray-300">Version</TableHead>
+                    <TableHead className="font-semibold dark:text-gray-300">Status</TableHead>
+                    <TableHead className="font-semibold dark:text-gray-300">Created At</TableHead>
+                    <TableHead className="font-semibold dark:text-gray-300">Actions</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {agentHistory?.map((version) => (
+                    <TableRow key={version.id} className="hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
+                      <TableCell className="font-medium dark:text-white">
+                        <div className="flex items-center gap-2">
+                          <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center text-white font-bold text-sm">
+                            v{version.version_number}
+                          </div>
+                          Version {version.version_number}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        {version.status === "active" ? (
+                          <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400 border border-green-200 dark:border-green-800">
+                            <span className="w-2 h-2 bg-green-600 dark:bg-green-400 rounded-full mr-2"></span>
+                            Active
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
+                            Inactive
+                          </span>
+                        )}
+                      </TableCell>
+                      <TableCell className="text-sm text-muted-foreground">
+                        {new Date(version.created_at).toLocaleString()}
+                      </TableCell>
+                      <TableCell>
+                        {version.status !== "active" && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => activateVersionMutation.mutate(version.id)}
+                            disabled={activateVersionMutation.isPending}
+                            className="btn-hover-lift bg-green-50 dark:bg-green-900/20 hover:bg-green-100 dark:hover:bg-green-900/40 border-green-200 dark:border-green-800 text-green-700 dark:text-green-400"
+                          >
+                            {activateVersionMutation.isPending ? "Activating..." : "Activate"}
+                          </Button>
+                        )}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
           )}
         </DialogContent>
       </Dialog>

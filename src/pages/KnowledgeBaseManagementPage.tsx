@@ -5,11 +5,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Plus, Trash2, Edit, LinkIcon, Brain } from "lucide-react";
+import { Plus, Trash2, Edit, LinkIcon, Brain, Eye } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
+import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
+import { solarizedlight } from 'react-syntax-highlighter/dist/esm/styles/prism';
 
 const KnowledgeBaseManagementPage = () => {
   const queryClient = useQueryClient();
@@ -26,6 +28,28 @@ const KnowledgeBaseManagementPage = () => {
   }});
 
   const createKnowledgeBaseMutation = useMutation({
+    mutationFn: async (formData: FormData) => {
+      const response = await authFetch(`/api/v1/knowledge-bases/upload`, {
+        method: "POST",
+        body: formData,
+      });
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ message: "Failed to create knowledge base" }));
+        throw new Error(errorData.message);
+      }
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['knowledgeBases', companyId] });
+      toast({ title: "Success", description: "Knowledge Base created successfully." });
+      setIsCreateDialogOpen(false);
+    },
+    onError: (error: Error) => {
+      toast({ title: "Error", description: `Failed to create Knowledge Base: ${error.message}`, variant: "destructive" });
+    },
+  });
+
+  const createRemoteKnowledgeBaseMutation = useMutation({
     mutationFn: async (newKnowledgeBase: Omit<KnowledgeBase, 'id'>) => {
       const response = await authFetch(`/api/v1/knowledge-bases/`, {
         method: "POST",
@@ -35,18 +59,22 @@ const KnowledgeBaseManagementPage = () => {
         body: JSON.stringify(newKnowledgeBase),
       });
       if (!response.ok) {
-        throw new Error("Failed to create knowledge base");
+        const errorData = await response.json().catch(() => ({ message: "Failed to create remote knowledge base" }));
+        throw new Error(errorData.message);
       }
       return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['knowledgeBases', companyId] });
-      toast({ title: "Success", description: "Knowledge Base created." });
+      toast({ title: "Success", description: "Remote Knowledge Base created." });
+      setIsCreateDialogOpen(false);
     },
-    onError: (error) => {
-      toast({ title: "Error", description: `Failed to create Knowledge Base: ${error.message}`, variant: "destructive" });
+    onError: (error: Error) => {
+      toast({ title: "Error", description: `Failed to create remote Knowledge Base: ${error.message}`, variant: "destructive" });
     },
   });
+
+
 
   const createKnowledgeBaseFromUrlMutation = useMutation({
     mutationFn: async (data: { url: string; name: string; description?: string; knowledge_base_id?: number }) => {
@@ -140,11 +168,40 @@ const KnowledgeBaseManagementPage = () => {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isImportUrlDialogOpen, setIsImportUrlDialogOpen] = useState(false);
   const [isGenerateQnADialogOpen, setIsGenerateQnADialogOpen] = useState(false);
+  const [isPreviewDialogOpen, setIsPreviewDialogOpen] = useState(false);
   const [selectedKb, setSelectedKb] = useState<KnowledgeBase | null>(null);
 
-  const handleCreate = (newKb: Omit<KnowledgeBase, 'id'>) => {
-    createKnowledgeBaseMutation.mutate(newKb);
-    setIsCreateDialogOpen(false);
+  const { data: previewContent, isLoading: isLoadingPreview } = useQuery<{ content: string }>({
+    queryKey: ['knowledgeBaseContent', selectedKb?.id],
+    queryFn: async () => {
+      if (!selectedKb) return { content: "" };
+      const response = await authFetch(`/api/v1/knowledge-bases/${selectedKb.id}/content`);
+      if (!response.ok) {
+        throw new Error("Failed to fetch knowledge base content");
+      }
+      return response.json();
+    },
+    enabled: isPreviewDialogOpen && !!selectedKb,
+  });
+
+  const handleCreate = (values: Omit<KnowledgeBase, 'id'>, file?: File, vectorStoreType?: string) => {
+    if (values.type === 'local') {
+      if (!file) {
+        toast({ title: "Error", description: "A file is required for local knowledge bases.", variant: "destructive" });
+        return;
+      }
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('name', values.name);
+      formData.append('description', values.description || '');
+      formData.append('embedding_model', 'nvidia'); // Or make this selectable
+      if (vectorStoreType) {
+        formData.append('vector_store_type', vectorStoreType);
+      }
+      createKnowledgeBaseMutation.mutate(formData);
+    } else {
+      createRemoteKnowledgeBaseMutation.mutate(values);
+    }
   };
 
   const handleUpdate = (updatedKb: KnowledgeBase) => {
@@ -207,6 +264,28 @@ const KnowledgeBaseManagementPage = () => {
                   <p className="text-sm text-gray-500">{kb.description}</p>
                 </div>
                 <div className="flex items-center gap-2">
+                  <Dialog open={isPreviewDialogOpen && selectedKb?.id === kb.id} onOpenChange={(isOpen) => {
+                    if (!isOpen) {
+                      setSelectedKb(null);
+                    }
+                    setIsPreviewDialogOpen(isOpen);
+                  }}>
+                    <DialogTrigger asChild>
+                      <Button variant="outline" onClick={() => setSelectedKb(kb)}><Eye className="h-4 w-4" /></Button>
+                    </DialogTrigger>
+                    <DialogContent className="sm:max-w-[80vw] max-h-[80vh] overflow-y-auto">
+                      <DialogHeader>
+                        <DialogTitle>Preview: {selectedKb?.name}</DialogTitle>
+                      </DialogHeader>
+                      {isLoadingPreview ? (
+                        <p>Loading content...</p>
+                      ) : (
+                        <SyntaxHighlighter language="javascript" style={solarizedlight} customStyle={{ maxHeight: '60vh', overflowY: 'auto' }}>
+                          {previewContent?.content || ""}
+                        </SyntaxHighlighter>
+                      )}
+                    </DialogContent>
+                  </Dialog>
                   <Dialog open={isGenerateQnADialogOpen && selectedKb?.id === kb.id} onOpenChange={(isOpen) => {
                     if (!isOpen) {
                       setSelectedKb(null);
@@ -252,12 +331,20 @@ const KnowledgeBaseManagementPage = () => {
   );
 };
 
-const KnowledgeBaseForm = ({ kb, onSubmit }: { kb?: KnowledgeBase, onSubmit: (values: any) => void }) => {
-  const [values, setValues] = useState(kb || { name: "", description: "", content: "" });
+const KnowledgeBaseForm = ({ kb, onSubmit }: { kb?: KnowledgeBase, onSubmit: (values: any, file?: File, vectorStoreType?: string) => void }) => {
+  const [values, setValues] = useState(kb || { name: "", description: "", type: "local", provider: "", connection_details: {} });
+  const [file, setFile] = useState<File | undefined>();
+  const [vectorStoreType, setVectorStoreType] = useState("chroma"); // Default to ChromaDB
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onSubmit(values);
+    onSubmit(values, file, vectorStoreType);
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files) {
+      setFile(e.target.files[0]);
+    }
   };
 
   return (
@@ -266,18 +353,83 @@ const KnowledgeBaseForm = ({ kb, onSubmit }: { kb?: KnowledgeBase, onSubmit: (va
         placeholder="Name"
         value={values.name}
         onChange={(e) => setValues({ ...values, name: e.target.value })}
+        required
       />
       <Textarea
         placeholder="Description"
         value={values.description}
         onChange={(e) => setValues({ ...values, description: e.target.value })}
       />
-      <Textarea
-        placeholder="Content"
-        value={values.content}
-        onChange={(e) => setValues({ ...values, content: e.target.value })}
-        rows={10}
-      />
+      <div>
+        <Label>Type</Label>
+        <select
+          value={values.type}
+          onChange={(e) => setValues({ ...values, type: e.target.value })}
+          className="w-full mt-1 p-2 border rounded-md"
+        >
+          <option value="local">Local (File Upload)</option>
+          <option value="remote">Remote</option>
+        </select>
+      </div>
+      {values.type === "remote" && (
+        <>
+          <div>
+            <Label>Provider</Label>
+            <select
+              value={values.provider}
+              onChange={(e) => setValues({ ...values, provider: e.target.value })}
+              className="w-full mt-1 p-2 border rounded-md"
+            >
+              <option value="">Select Provider</option>
+              <option value="chroma">Chroma</option>
+            </select>
+          </div>
+          {values.provider === "chroma" && (
+            <>
+              <Input
+                placeholder="Host"
+                value={values.connection_details?.host || ""}
+                onChange={(e) => setValues({ ...values, connection_details: { ...values.connection_details, host: e.target.value } })}
+              />
+              <Input
+                placeholder="Port"
+                value={values.connection_details?.port || ""}
+                onChange={(e) => setValues({ ...values, connection_details: { ...values.connection_details, port: e.target.value } })}
+              />
+              <Input
+                placeholder="Collection Name"
+                value={values.connection_details?.collection_name || ""}
+                onChange={(e) => setValues({ ...values, connection_details: { ...values.connection_details, collection_name: e.target.value } })}
+              />
+            </>
+          )}
+        </>
+      )}
+      {values.type === "local" && !kb && (
+        <>
+          <div>
+            <Label htmlFor="file">Document</Label>
+            <Input
+              id="file"
+              type="file"
+              onChange={handleFileChange}
+              className="mt-1"
+              required
+            />
+          </div>
+          <div>
+            <Label>Vector Store Type</Label>
+            <select
+              value={vectorStoreType}
+              onChange={(e) => setVectorStoreType(e.target.value)}
+              className="w-full mt-1 p-2 border rounded-md"
+            >
+              <option value="chroma">ChromaDB</option>
+              <option value="faiss">FAISS (Local File System)</option>
+            </select>
+          </div>
+        </>
+      )}
       <Button type="submit">{kb ? "Update" : "Create"}</Button>
     </form>
   );

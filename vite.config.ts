@@ -14,6 +14,17 @@ export default defineConfig(({ mode }) => ({
         changeOrigin: true,
         ws: true,
       },
+    },
+    headers: {
+    'Content-Security-Policy': 
+      "default-src 'self'; " +
+      "frame-src https:; " +
+      "script-src 'self' 'sha256-Z2/iFzh9VMlVkEOar1f/oSHWwQk3ve1qk/C2WdsC4Xk='; " +
+      "object-src 'none'; " +
+      "style-src 'self' 'unsafe-inline'; " +
+      "img-src 'self' http://localhost:8000 data: blob:; " +
+      "font-src 'self' data:; " +
+      "connect-src 'self' http://localhost:8000 https://*.livekit.cloud wss://*.livekit.cloud ws: wss: https://ultralytics.com;"
     }
   },
   plugins: [

@@ -1,663 +1,351 @@
+import React, { useState, useCallback, useMemo, useEffect, createContext } from 'react';
+import { useNavigate } from 'react-router-dom';
+import ReactFlow, {
+  ReactFlowProvider,
+  addEdge,
+  useNodesState,
+  useEdgesState,
+  Controls,
+  Background,
+} from 'reactflow';
+import 'reactflow/dist/style.css';
+import { toast } from "sonner";
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 
-import { useState, useEffect } from "react";
-import { ResourceSelector } from './ResourceSelector';
-import { useNavigate } from "react-router-dom";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Agent, Credential, Webhook } from "@/types";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
-import { 
-  Bot, 
-  MessageSquare, 
-  Zap, 
-  Plus, 
-  Trash2, 
-  GripVertical,
-  Settings,
-  Brain,
-  Globe,
-  Database,
-  Webhook as WebhookIcon
-} from "lucide-react";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useAuth } from "@/hooks/useAuth";
-
-const VOICE_ENGINE_URL = 'http://localhost:8001';
+import { Agent, Tool, KnowledgeBase } from '@/types';
+import { AgentComponentSidebar } from './AgentComponentSidebar';
+import { AgentPropertiesPanel } from './AgentPropertiesPanel';
+import { AgentNode, ToolsNode, KnowledgeNode, McpSubToolNode, ChatMessageNode } from './AgentCustomNodes';
+import { useAuth } from '@/hooks/useAuth';
 
 interface AgentBuilderProps {
   agent: Agent;
-  onSave: () => void;
-  onCancel: () => void;
 }
 
-export const AgentBuilder = ({ agent, onSave, onCancel }: AgentBuilderProps) => {
-  console.log("AgentBuilder - agent prop:", agent);
+const initialNodes = (agentName) => [
+  {
+    id: 'agent-node',
+    type: 'agent',
+    data: { label: agentName },
+    position: { x: 250, y: 80 },
+    deletable: false,
+  },
+  {
+    id: 'chat-message-node',
+    type: 'chat_message',
+    data: { label: 'Chat Message' },
+    position: { x: 250, y: 0 },
+    deletable: false,
+  },
+];
+
+export const AgentBuilderContext = createContext(null);
+
+export const AgentBuilder = ({ agent }: AgentBuilderProps) => {
+  const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes(agent.name));
+  const [edges, setEdges, onEdgesChange] = useEdgesState([]);
+  const [reactFlowInstance, setReactFlowInstance] = useState(null);
+  const [selectedNode, setSelectedNode] = useState(null);
+  const { authFetch } = useAuth();
   const queryClient = useQueryClient();
-  const navigate = useNavigate();
-  const companyId = 1; // Hardcoded company ID for now
-  const { authFetch } = useAuth(); 
-
-  const [agentConfig, setAgentConfig] = useState(() => {
-    if (!agent) {
-      return {
-        name: "",
-        welcome_message: "",
-        prompt: "",
-        personality: "helpful",
-        language: "en",
-        timezone: "UTC",
-        response_style: "",
-        instructions: "",
-        credential_id: undefined,
-        is_active: true,
-        knowledge_base_id: undefined,
-        tool_ids: [],
-        voice_id: 'default',
-      };
-    }
-    return {
-      name: agent.name,
-      welcome_message: agent.welcome_message,
-      prompt: agent.prompt,
-      personality: agent.personality || "helpful",
-      language: agent.language || "en",
-      timezone: agent.timezone || "UTC",
-      credential_id: agent.credential_id,
-      is_active: agent.is_active !== undefined ? agent.is_active : true,
-      knowledge_base_id: agent.knowledge_base_id,
-      tool_ids: agent.tool_ids || [],
-      voice_id: agent.voice_id || 'default',
-      tts_provider: agent.tts_provider || 'voice_engine',
-      stt_provider: agent.stt_provider || 'deepgram',
-    };
-  });
-
-  const { data: voices, isLoading: isLoadingVoices } = useQuery<string[]>({
-    queryKey: ['voices'],
-    queryFn: async () => {
-        const response = await fetch(`${VOICE_ENGINE_URL}/api/v1/voices`);
-        if (!response.ok) throw new Error('Failed to fetch voices');
-        return response.json();
-    },
-  });
-
-  const { data: credentials, isLoading: isLoadingCredentials } = useQuery<Credential[]>({ queryKey: ['credentials', companyId], queryFn: async () => {
-    const response = await authFetch(`/api/v1/credentials/`);
-    if (!response.ok) {
-      throw new Error("Failed to fetch credentials");
-    }
-    return response.json();
-  }});
-
-  const { data: webhooksData, isLoading: isLoadingWebhooks } = useQuery<Webhook[]>({ 
-    queryKey: ['webhooks', agent?.id, companyId], 
-    queryFn: async () => {
-      if (!agent?.id) return [];
-      const response = await authFetch(`/api/v1/webhooks/by_agent/${agent.id}`);
-      if (!response.ok) {
-        throw new Error("Failed to fetch webhooks");
-      }
-      return response.json();
-    },
-    enabled: !!agent?.id,
-  });
-
-  const { data: knowledgeBases, isLoading: isLoadingKnowledgeBases } = useQuery<KnowledgeBase[]>({ queryKey: ['knowledgeBases', companyId], queryFn: async () => {
-    const response = await authFetch(`/api/v1/knowledge-bases/`);
-    if (!response.ok) {
-      throw new Error("Failed to fetch knowledge bases");
-    }
-    return response.json();
-  }});
-
-  const { data: tools, isLoading: isLoadingTools } = useQuery<Tool[]>({ queryKey: ['tools', companyId], queryFn: async () => {
-    const response = await authFetch(`/api/v1/tools/`);
-    if (!response.ok) {
-      throw new Error("Failed to fetch tools");
-    }
-    return response.json();
-  }});
-
-  const [localWebhooks, setLocalWebhooks] = useState<Webhook[]>([]);
+  const [inspectedMcpTools, setInspectedMcpTools] = useState<number[]>([]);
 
   useEffect(() => {
-    if (webhooksData) {
-      setLocalWebhooks(webhooksData);
-    }
-  }, [webhooksData]);
+    const nodesToAdd = [];
+    const edgesToAdd = [
+      { id: 'chat-agent-edge', source: 'chat-message-node', target: 'agent-node', animated: true }
+    ];
 
-  const updateAgentMutation = useMutation({
-    mutationFn: async (updatedAgent: Agent) => {
-      const response = await authFetch(`/api/v1/agents/${updatedAgent.id}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
+    if (agent.knowledge_bases?.length > 0) {
+        agent.knowledge_bases.forEach((kb, index) => {
+            const kbNode = {
+                id: `knowledge-${kb.id}`,
+                type: 'knowledge',
+                data: { label: kb.name, id: kb.id },
+                position: { x: 450 + index * 200, y: 250 },
+            };
+            nodesToAdd.push(kbNode);
+            edgesToAdd.push({ id: `agent-kb-edge-${kb.id}`, source: 'agent-node', target: kbNode.id, animated: true });
+        });
+    }
+
+    if (agent.tools?.length > 0) {
+        agent.tools.forEach((tool, index) => {
+            const toolNode = {
+                id: `tools-${tool.id}`,
+                type: 'tools',
+                data: { label: tool.name, id: tool.id, tool_type: tool.tool_type, mcp_server_url: tool.mcp_server_url },
+                position: { x: 50 + index * 250, y: 200 },
+            };
+            nodesToAdd.push(toolNode);
+            edgesToAdd.push({ id: `agent-tool-edge-${tool.id}`, source: 'agent-node', target: toolNode.id, animated: true });
+        });
+    }
+    
+    const finalNodes = [...initialNodes(agent.name), ...nodesToAdd];
+    console.log("Setting nodes:", finalNodes);
+    setNodes(finalNodes);
+
+    console.log("Setting edges:", edgesToAdd);
+    setEdges(edgesToAdd);
+  }, [agent, setNodes, setEdges]);
+
+  const nodeTypes = useMemo(() => ({
+    agent: AgentNode,
+    tools: ToolsNode,
+    knowledge: KnowledgeNode,
+    mcp_sub_tool: McpSubToolNode,
+    chat_message: ChatMessageNode,
+  }), []);
+
+  const mutation = useMutation({
+    mutationFn: (updatedAgent: Partial<Agent>) => {
+      return authFetch(`/api/v1/agents/${agent.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(updatedAgent),
       });
-      if (!response.ok) {
-        throw new Error("Failed to update agent");
-      }
-      return response.json();
     },
-    onSuccess: () => {
-      onSave();
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['agent', agent.id.toString()] });
+      toast.success("Agent updated successfully!");
     },
     onError: (error) => {
-      console.error("Failed to update agent:", error);
-      // Optionally show a toast or other error feedback
+      toast.error("Failed to update agent.");
     },
   });
 
-  const createWebhookMutation = useMutation({
-    mutationFn: async (newWebhook: Omit<Webhook, "id">) => {
-      const response = await authFetch(`/api/v1/webhooks/`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(newWebhook),
-      });
-      if (!response.ok) {
-        throw new Error("Failed to create webhook");
-      }
-      return response.json();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['webhooks', agent.id] });
-    },
-    onError: (error) => {
-      console.error("Failed to create webhook:", error);
-    },
-  });
+  const onConnect = useCallback((params) => {
+    setEdges((eds) => addEdge(params, eds));
+  }, [setEdges]);
 
-  const updateWebhookMutation = useMutation({
-    mutationFn: async (updatedWebhook: Webhook) => {
-      const response = await authFetch(`/api/v1/webhooks/${updatedWebhook.id}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(updatedWebhook),
-      });
-      if (!response.ok) {
-        throw new Error("Failed to update webhook");
-      }
-      return response.json();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['webhooks', agent.id] });
-    },
-    onError: (error) => {
-      console.error("Failed to update webhook:", error);
-    },
-  });
+  const handleNodesChange = useCallback((changes) => {
+    onNodesChange(changes);
+    for (const change of changes) {
+        if (change.type === 'remove') {
+            const nodeToRemove = nodes.find(n => n.id === change.id);
+            if (nodeToRemove) {
+                if (nodeToRemove.type === 'knowledge') {
+                    const kbId = parseInt(nodeToRemove.id.split('-')[1]);
+                    const newKbIds = (agent.knowledge_base_ids || []).filter(id => id !== kbId);
+                    mutation.mutate({ knowledge_base_ids: newKbIds });
+                }
+                if (nodeToRemove.type === 'tools') {
+                    const toolId = parseInt(nodeToRemove.id.split('-')[1]);
+                    const newToolIds = (agent.tools?.map(t => t.id) || []).filter(id => id !== toolId);
+                    mutation.mutate({ tool_ids: newToolIds });
+                }
+            }
+        }
+    }
+  }, [onNodesChange, nodes, mutation, agent]);
 
-  const deleteWebhookMutation = useMutation({
-    mutationFn: async (webhookId: number) => {
-      const response = await authFetch(`/api/v1/webhooks/${webhookId}`, {
-        method: "DELETE",
-      });
-      if (!response.ok) {
-        throw new Error("Failed to delete webhook");
+  const handleEdgesChange = useCallback((changes) => {
+    onEdgesChange(changes);
+    for (const change of changes) {
+      if (change.type === 'remove') {
+        const edgeToRemove = edges.find(e => e.id === change.id);
+        if (edgeToRemove) {
+          const targetNode = nodes.find(n => n.id === edgeToRemove.target);
+          if (targetNode?.type === 'knowledge') {
+            const kbId = parseInt(targetNode.id.split('-')[1]);
+            const newKbIds = (agent.knowledge_base_ids || []).filter(id => id !== kbId);
+            mutation.mutate({ knowledge_base_ids: newKbIds });
+          }
+          if (targetNode?.type === 'tools') {
+            const toolId = parseInt(targetNode.id.split('-')[1]);
+            const newToolIds = (agent.tools?.map(t => t.id) || []).filter(id => id !== toolId);
+            mutation.mutate({ tool_ids: newToolIds });
+          }
+        }
       }
-      return response.json();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['webhooks', agent.id] });
-    },
-    onError: (error) => {
-      console.error("Failed to delete webhook:", error);
-    },
-  });
+    }
+  }, [onEdgesChange, nodes, edges, mutation, agent]);
 
-  const handleSave = () => {
-    updateAgentMutation.mutate({
-      id: agent.id,
-      ...agentConfig,
-      credential_id: agentConfig.credential_id === 0 ? undefined : agentConfig.credential_id,
-      knowledge_base_id: agentConfig.knowledge_base_id === 0 ? undefined : agentConfig.knowledge_base_id,
-      tool_ids: agentConfig.tool_ids,
-    } as Agent);
-  };
+  const onDrop = useCallback((event) => {
+    event.preventDefault();
+    if (!reactFlowInstance) return;
+
+    const dataString = event.dataTransfer.getData('application/reactflow');
+    if (typeof dataString === 'undefined' || !dataString) return;
+
+    const { nodeType, id, label, toolType, mcpServerUrl } = JSON.parse(dataString);
+
+    if (nodes.some(n => n.id === `${nodeType}-${id}`)) {
+      toast.warning(`This ${nodeType} has already been added.`);
+      return;
+    }
+
+    if (nodeType === 'knowledge') {
+      const existingKbIds = agent.knowledge_base_ids || [];
+      mutation.mutate({ knowledge_base_ids: [...new Set([...existingKbIds, id])] });
+    }
+    if (nodeType === 'tools') {
+      console.log("Agent object before update:", agent);
+      const existingToolIds = agent.tools?.map(t => t.id) || [];
+      console.log("Existing tool IDs:", existingToolIds);
+      const newToolIds = [...new Set([...existingToolIds, id])];
+      console.log("New tool IDs to be sent:", newToolIds);
+      mutation.mutate({ tool_ids: newToolIds });
+    }
+  }, [reactFlowInstance, nodes, agent, mutation]);
 
   useEffect(() => {
-    setAgentConfig(prevConfig => ({
-      ...prevConfig,
-      name: agent.name,
-      welcome_message: agent.welcome_message,
-      prompt: agent.prompt,
-      personality: agent.personality || "helpful",
-      language: agent.language || "en",
-      timezone: agent.timezone || "UTC",
-      response_style: agent.response_style || "",
-      instructions: agent.instructions || "",
-      credential_id: agent.credential_id,
-      is_active: agent.is_active !== undefined ? agent.is_active : true,
-      knowledge_base_id: agent.knowledge_base_id,
-      tool_ids: agent.tool_ids || [],
-      voice_id: agent.voice_id || 'default',
-      tts_provider: agent.tts_provider || 'voice_engine',
-      stt_provider: agent.stt_provider || 'deepgram',
-    }));
-  }, [agent]);
+    const mcpToolNodesToInspect = nodes.filter(
+      n => n.type === 'tools' && n.data.tool_type === 'mcp' && !inspectedMcpTools.includes(n.data.id)
+    );
 
-  const addWebhook = () => {
-    createWebhookMutation.mutate({
-      agent_id: agent.id,
-      name: "New Webhook",
-      url: "",
-      trigger_event: "new_message",
-      is_active: false,
+    if (mcpToolNodesToInspect.length === 0) return;
+
+    const inspectPromises = mcpToolNodesToInspect.map(async (mcpToolNode) => {
+      try {
+        const tool = agent.tools.find(t => t.id === mcpToolNode.data.id);
+        if (!tool || !tool.mcp_server_url) {
+          // Mark as inspected even if no URL to prevent retry
+          return { newNodes: [], newEdges: [], inspectedToolId: mcpToolNode.data.id };
+        }
+
+        const response = await authFetch(`/api/v1/mcp/inspect`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ url: tool.mcp_server_url }),
+        });
+
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error(`MCP server inspection failed for ${tool.name}:`, errorText);
+          toast.error(`Failed to inspect MCP server "${tool.name}": ${response.status} ${response.statusText}`);
+          // Mark as inspected even on failure to prevent infinite retries
+          return { newNodes: [], newEdges: [], inspectedToolId: mcpToolNode.data.id };
+        }
+
+        const mcpToolsData = await response.json();
+
+        const newNodes = mcpToolsData.tools.map((subTool, index) => ({
+          id: `mcp-sub-tool-${tool.id}-${subTool.name}`,
+          type: 'mcp_sub_tool',
+          data: { label: subTool.name },
+          position: { x: mcpToolNode.position.x + 300, y: mcpToolNode.position.y + index * 70 },
+        }));
+
+        const newEdges = mcpToolsData.tools.map(subTool => ({
+          id: `edge-mcp-sub-${tool.id}-${subTool.name}`,
+          source: `tools-${tool.id}`,
+          target: `mcp-sub-tool-${tool.id}-${subTool.name}`,
+          animated: true,
+        }));
+
+        return { newNodes, newEdges, inspectedToolId: mcpToolNode.data.id };
+      } catch (error) {
+        console.error(`Error inspecting MCP tool ${mcpToolNode.data.id}:`, error);
+        toast.error(`Error connecting to MCP server: ${error.message}`);
+        // Mark as inspected even on error to prevent infinite retries
+        return { newNodes: [], newEdges: [], inspectedToolId: mcpToolNode.data.id };
+      }
     });
-  };
 
-  const updateWebhook = (id: number, field: keyof Webhook, value: any) => {
-    const webhookToUpdate = webhooksData?.find((w) => w.id === id);
-    if (webhookToUpdate) {
-      // Map frontend field names to backend field names
-      const backendField = field === 'trigger' ? 'trigger_event' : field === 'active' ? 'is_active' : field;
-      updateWebhookMutation.mutate({ ...webhookToUpdate, [backendField]: value });
+    Promise.all(inspectPromises).then(results => {
+      const allNewNodes = [];
+      const allNewEdges = [];
+      const allInspectedToolIds = [];
+
+      results.forEach(result => {
+        if (result) {
+          allNewNodes.push(...result.newNodes);
+          allNewEdges.push(...result.newEdges);
+          allInspectedToolIds.push(result.inspectedToolId);
+        }
+      });
+
+      if (allNewNodes.length > 0) {
+        setNodes((nds) => {
+          const existingNodeIds = new Set(nds.map(n => n.id));
+          const filteredNewNodes = allNewNodes.filter(n => !existingNodeIds.has(n.id));
+          return [...nds, ...filteredNewNodes];
+        });
+      }
+      if (allNewEdges.length > 0) {
+        setEdges((eds) => {
+          const existingEdgeIds = new Set(eds.map(e => e.id));
+          const filteredNewEdges = allNewEdges.filter(e => !existingEdgeIds.has(e.id));
+          return [...eds, ...filteredNewEdges];
+        });
+      }
+      if (allInspectedToolIds.length > 0) {
+        setInspectedMcpTools(prev => [...prev, ...allInspectedToolIds]);
+      }
+    });
+
+  }, [nodes, agent.tools, authFetch, setNodes, setEdges, inspectedMcpTools]);
+
+  const onDragOver = useCallback((event) => {
+    event.preventDefault();
+    event.dataTransfer.dropEffect = 'move';
+  }, []);
+
+  const onNodeClick = useCallback((_, node) => {
+    setSelectedNode(node);
+  }, []);
+
+  const onPaneClick = useCallback(() => setSelectedNode(null), []);
+
+  const onNodeDelete = useCallback((nodeId) => {
+    const nodeToRemove = nodes.find(n => n.id === nodeId);
+    if (nodeToRemove) {
+        if (nodeToRemove.type === 'knowledge') {
+            const kbId = parseInt(nodeToRemove.id.split('-')[1]);
+            const newKbIds = (agent.knowledge_base_ids || []).filter(id => id !== kbId);
+            mutation.mutate({ knowledge_base_ids: newKbIds });
+        }
+        if (nodeToRemove.type === 'tools') {
+            const toolId = parseInt(nodeToRemove.id.split('-')[1]);
+            const newToolIds = (agent.tools?.map(t => t.id) || []).filter(id => id !== toolId);
+            mutation.mutate({ tool_ids: newToolIds });
+        }
     }
-  };
+    setSelectedNode(null);
+  }, [nodes, mutation, agent]);
 
-  const removeWebhook = (id: number) => {
-    deleteWebhookMutation.mutate(id);
-  };
-
-  
+  const contextValue = { handleInspect: () => {} }; // handleInspect is not used anymore
 
   return (
-    <div className="space-y-6">
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Bot className="h-6 w-6 text-blue-600" />
-            Agent Configuration
-          </CardTitle>
-          <CardDescription>
-            Configure your agent's personality, behavior, and integrations
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Tabs defaultValue="basic" className="w-full">
-            <TabsList className="grid w-full grid-cols-6">
-              <TabsTrigger value="basic">Basic Info</TabsTrigger>
-              <TabsTrigger value="webhooks">Webhooks</TabsTrigger>
-              <TabsTrigger value="integrations">Integrations</TabsTrigger>
-              <TabsTrigger value="credentials">Credentials</TabsTrigger>
-              <TabsTrigger value="knowledge-base">Knowledge Base</TabsTrigger>
-              <TabsTrigger value="tools">Tools</TabsTrigger>
-            </TabsList>
-
-            <TabsContent value="basic" className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-4">
-                  <div className="flex items-center space-x-4">
-                    <Avatar className="h-16 w-16">
-                      <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white text-lg">
-                        {agentConfig.name.substring(0, 2).toUpperCase()}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div className="flex-1">
-                      <Label htmlFor="agentName">Agent Name</Label>
-                      <Input
-                        id="agentName"
-                        value={agentConfig.name}
-                        onChange={(e) => setAgentConfig({...agentConfig, name: e.target.value})}
-                        className="mt-1"
-                      />
-                    </div>
-                  </div>
-
-                  
-                </div>
-
-                <div className="space-y-4">
-                  <div>
-                    <Label htmlFor="personality">Personality</Label>
-                    <select
-                      id="personality"
-                      value={agentConfig.personality}
-                      onChange={(e) => setAgentConfig({...agentConfig, personality: e.target.value})}
-                      className="w-full mt-1 p-2 border rounded-md"
-                    >
-                      <option value="helpful">Helpful & Professional</option>
-                      <option value="friendly">Friendly & Casual</option>
-                      <option value="formal">Formal & Business</option>
-                      <option value="enthusiastic">Enthusiastic & Energetic</option>
-                    </select>
-                  </div>
-
-                  <div>
-                    <Label htmlFor="language">Language</Label>
-                    <select
-                      id="language"
-                      value={agentConfig.language}
-                      onChange={(e) => setAgentConfig({...agentConfig, language: e.target.value})}
-                      className="w-full mt-1 p-2 border rounded-md"
-                    >
-                      <option value="en">English</option>
-                      <option value="es">Spanish</option>
-                      <option value="fr">French</option>
-                      <option value="de">German</option>
-                    </select>
-                  </div>
-
-                  <div>
-                    <Label htmlFor="timezone">Timezone</Label>
-                    <select
-                      id="timezone"
-                      value={agentConfig.timezone}
-                      onChange={(e) => setAgentConfig({...agentConfig, timezone: e.target.value})}
-                      className="w-full mt-1 p-2 border rounded-md"
-                    >
-                      <option value="UTC">UTC</option>
-                      <option value="America/New_York">Eastern Time</option>
-                      <option value="America/Chicago">Central Time</option>
-                      <option value="America/Los_Angeles">Pacific Time</option>
-                    </select>
-                  </div>
-
-                  <div>
-                    <Label htmlFor="ttsProvider">TTS Provider</Label>
-                    <select
-                      id="ttsProvider"
-                      value={agentConfig.tts_provider}
-                      onChange={(e) => setAgentConfig({...agentConfig, tts_provider: e.target.value})}
-                      className="w-full mt-1 p-2 border rounded-md"
-                    >
-                      <option value="voice_engine">Custom Voice Engine</option>
-                      <option value="localai">Local AI</option>
-                    </select>
-                  </div>
-
-                  <div>
-                    <Label htmlFor="sttProvider">STT Provider</Label>
-                    <select
-                      id="sttProvider"
-                      value={agentConfig.stt_provider}
-                      onChange={(e) => setAgentConfig({...agentConfig, stt_provider: e.target.value})}
-                      className="w-full mt-1 p-2 border rounded-md"
-                    >
-                      <option value="deepgram">Deepgram</option>
-                      <option value="groq">Groq</option>
-                    </select>
-                  </div>
-
-                  <div>
-                    <Label htmlFor="voice">Voice</Label>
-                    <select
-                      id="voice"
-                      value={agentConfig.voice_id || 'default'}
-                      onChange={(e) => setAgentConfig({...agentConfig, voice_id: e.target.value})}
-                      className="w-full mt-1 p-2 border rounded-md"
-                      disabled={isLoadingVoices || agentConfig.tts_provider !== 'voice_engine'}
-                    >
-                      {voices?.map(voice => (
-                        <option key={voice} value={voice}>{voice}</option>
-                      ))}
-                    </select>
-                  </div>
-
-                  <div>
-                    <Label htmlFor="isActive">Active</Label>
-                    <input
-                      type="checkbox"
-                      id="isActive"
-                      checked={agentConfig.is_active}
-                      onChange={(e) => setAgentConfig({...agentConfig, is_active: e.target.checked})}
-                      className="mt-1 ml-2"
-                    />
-                  </div>
-
-                  <div>
-                    <Label htmlFor="welcomeMessage">Welcome Message</Label>
-                    <Textarea
-                      id="welcomeMessage"
-                      value={agentConfig.welcome_message}
-                      onChange={(e) => setAgentConfig({...agentConfig, welcome_message: e.target.value})}
-                      className="mt-1"
-                      rows={3}
-                      placeholder="e.g., Hello! How can I help you today?"
-                    />
-                  </div>
-                </div>
-              </div>
-            </TabsContent>
-
-            <TabsContent value="prompt" className="space-y-4">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>System Prompt</CardTitle>
-                    <CardDescription>
-                      Define the agent's core identity, instructions, and constraints. This is the most important part of the agent's configuration.
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <Textarea
-                      id="prompt"
-                      value={agentConfig.prompt}
-                      onChange={(e) => setAgentConfig({...agentConfig, prompt: e.target.value})}
-                      className="mt-1 font-mono"
-                      rows={15}
-                      placeholder="e.g., You are a helpful AI assistant..."
-                    />
-                  </CardContent>
-                </Card>
-            </TabsContent>
-
-            <TabsContent value="webhooks" className="space-y-6">
-              <div className="flex items-center justify-between">
-                <h3 className="text-lg font-semibold">Webhook Integrations</h3>
-                <Button onClick={addWebhook} className="flex items-center gap-2">
-                  <Plus className="h-4 w-4" />
-                  Add Webhook
-                </Button>
-              </div>
-
-              <div className="space-y-4">
-                {isLoadingWebhooks ? (
-                  <div>Loading webhooks...</div>
-                ) : webhooksData && webhooksData.length > 0 ? (
-                  <>
-                    {webhooksData.map((webhook) => (
-                      <Card key={webhook.id} className="border-l-4 border-l-orange-500">
-                    <CardContent className="p-4">
-                      <div className="flex items-start justify-between">
-                        <div className="flex-1 space-y-3">
-                          <div className="flex items-center gap-3">
-                            <WebhookIcon className="h-5 w-5 text-orange-600" />
-                            <Input
-                              value={localWebhooks.find(w => w.id === webhook.id)?.name || ''}
-                              onChange={(e) => {
-                                const updatedWebhooks = localWebhooks.map(w =>
-                                  w.id === webhook.id ? { ...w, name: e.target.value } : w
-                                );
-                                setLocalWebhooks(updatedWebhooks);
-                              }}
-                              onBlur={(e) => updateWebhook(webhook.id, 'name', e.target.value)}
-                              className="font-medium"
-                              placeholder="Webhook name"
-                              />
-                                <Badge variant={webhook.is_active ? "default" : "secondary"}>
-                                  {webhook.is_active ? "Active" : "Inactive"}
-                                </Badge>
-                              </div>
-                              
-                              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                                <div>
-                                  <Label className="text-xs">Webhook URL</Label>
-                              <Input
-                                value={localWebhooks.find(w => w.id === webhook.id)?.url || ''}
-                                onChange={(e) => {
-                                  const updatedWebhooks = localWebhooks.map(w =>
-                                    w.id === webhook.id ? { ...w, url: e.target.value } : w
-                                  );
-                                  setLocalWebhooks(updatedWebhooks);
-                                }}
-                                onBlur={(e) => updateWebhook(webhook.id, 'url', e.target.value)}
-                                placeholder="https://api.example.com/webhook"
-                                className="text-sm"
-                              />
-                            </div>
-                            <div>
-                              <Label className="text-xs">Trigger Event</Label>
-                              <select
-                                value={localWebhooks.find(w => w.id === webhook.id)?.trigger_event || ''}
-                                onChange={(e) => {
-                                  const updatedWebhooks = localWebhooks.map(w =>
-                                    w.id === webhook.id ? { ...w, trigger_event: e.target.value } : w
-                                  );
-                                  setLocalWebhooks(updatedWebhooks);
-                                }}
-                                onBlur={(e) => updateWebhook(webhook.id, 'trigger_event', e.target.value)}
-                                    className="w-full p-2 border rounded-md text-sm"
-                                  >
-                                    <option value="new_message">New Message</option>
-                                    <option value="conversation_start">Conversation Start</option>
-                                    <option value="conversation_end">Conversation End</option>
-                                    <option value="agent_handoff">Agent Handoff</option>
-                                  </select>
-                                </div>
-                              </div>
-                            </div>
-                            
-                            <div className="flex items-center gap-2 ml-4">
-                              <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => {
-                              const updatedWebhooks = localWebhooks.map(w =>
-                                w.id === webhook.id ? { ...w, is_active: !w.is_active } : w
-                              );
-                              setLocalWebhooks(updatedWebhooks);
-                              updateWebhook(webhook.id, 'is_active', !webhook.is_active);
-                            }}
-                          >
-                            {webhook.is_active ? "Disable" : "Enable"}
-                              </Button>
-                              <Button
-                                size="sm"
-                                variant="destructive"
-                                onClick={() => removeWebhook(webhook.id)}
-                              >
-                                <Trash2 className="h-4 w-4" />
-                              </Button>
-                            </div>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    ))}
-                  </>
-                ) : (
-                  <div>No webhooks configured.</div>
-                )}
-              </div>
-            </TabsContent>
-
-            <TabsContent value="integrations" className="space-y-6">
-              <h3 className="text-lg font-semibold">Platform Integrations</h3>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {[
-                  { name: "Slack", icon: MessageSquare, color: "bg-purple-500", connected: true },
-                  { name: "Discord", icon: MessageSquare, color: "bg-indigo-500", connected: false },
-                  { name: "Zapier", icon: Zap, color: "bg-orange-500", connected: true },
-                  { name: "HubSpot", icon: Database, color: "bg-orange-600", connected: false },
-                  { name: "Salesforce", icon: Database, color: "bg-blue-600", connected: false },
-                  { name: "Custom API", icon: Globe, color: "bg-gray-500", connected: false }
-                ].map((integration) => {
-                  const IconComponent = integration.icon;
-                  return (
-                    <Card key={integration.name} className="hover:shadow-md transition-shadow cursor-pointer">
-                      <CardContent className="p-4">
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-3">
-                            <div className={`p-2 rounded-lg ${integration.color}`}>
-                              <IconComponent className="h-5 w-5 text-white" />
-                            </div>
-                            <div>
-                              <h4 className="font-medium">{integration.name}</h4>
-                              <p className="text-xs text-gray-500">
-                                {integration.connected ? "Connected" : "Not connected"}
-                              </p>
-                            </div>
-                          </div>
-                          <Badge variant={integration.connected ? "default" : "outline"}>
-                            {integration.connected ? "Active" : "Setup"}
-                          </Badge>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  );
-                })}
-              </div>
-            </TabsContent>
-            
-            <TabsContent value="tools" className="space-y-6">
-              <h3 className="text-lg font-semibold">Tool Selection</h3>
-              <ResourceSelector
-                resources={tools || []}
-                selectedIds={agentConfig.tool_ids || []}
-                onSelect={(ids) => setAgentConfig({ ...agentConfig, tool_ids: ids })}
-                title="Select Tools"
-                triggerButtonText="Browse Tools"
-                isLoading={isLoadingTools}
-                allowMultiple
+    <div className="flex h-[80vh] w-full border-2 border-dashed border-slate-300 dark:border-slate-700 rounded-xl overflow-hidden card-shadow-lg bg-white dark:bg-slate-800">
+      <AgentBuilderContext.Provider value={contextValue}>
+        <ReactFlowProvider>
+          <AgentComponentSidebar agent={agent} />
+          <div className="flex-grow workflow-canvas bg-slate-50 dark:bg-slate-900">
+            <ReactFlow
+              nodes={nodes}
+              edges={edges}
+              onNodesChange={handleNodesChange}
+              onEdgesChange={handleEdgesChange}
+              onConnect={onConnect}
+              onInit={setReactFlowInstance}
+              onDrop={onDrop}
+              onDragOver={onDragOver}
+              onNodeClick={onNodeClick}
+              onPaneClick={onPaneClick}
+              nodeTypes={nodeTypes}
+              fitView
+              defaultEdgeOptions={{
+                type: 'smoothstep',
+                animated: true,
+                style: { stroke: '#10b981', strokeWidth: 2 },
+              }}
+            >
+              <Background
+                variant="dots"
+                gap={20}
+                size={1}
+                color="#cbd5e1"
+                className="dark:opacity-30"
               />
-              <Button variant="outline" onClick={() => navigate("/dashboard/tools")}>
-                Manage Tools
-              </Button>
-            </TabsContent>
-
-            <TabsContent value="knowledge-base" className="space-y-6">
-              <h3 className="text-lg font-semibold">Knowledge Base</h3>
-              <ResourceSelector
-                resources={knowledgeBases || []}
-                selectedIds={agentConfig.knowledge_base_id ? [agentConfig.knowledge_base_id] : []}
-                onSelect={(ids) => setAgentConfig({ ...agentConfig, knowledge_base_id: ids[0] })}
-                title="Select Knowledge Base"
-                triggerButtonText="Browse Knowledge Bases"
-                isLoading={isLoadingKnowledgeBases}
-                allowMultiple={false}
-              />
-              <Button variant="outline" onClick={() => navigate("/dashboard/knowledge-base/manage")}>
-                Manage Knowledge Bases
-              </Button>
-            </TabsContent>
-
-            <TabsContent value="credentials" className="space-y-6">
-              <h3 className="text-lg font-semibold">Credential Management</h3>
-              <ResourceSelector
-                resources={(credentials || []).map(c => ({ ...c, name: `${c.name} (${c.service})` }))}
-                selectedIds={agentConfig.credential_id ? [agentConfig.credential_id] : []}
-                onSelect={(ids) => setAgentConfig({ ...agentConfig, credential_id: ids[0] })}
-                title="Select Credential"
-                triggerButtonText="Browse Credentials"
-                isLoading={isLoadingCredentials}
-                allowMultiple={false}
-              />
-              <Button variant="outline" onClick={() => navigate("/dashboard/vault")}>
-                Manage Credentials
-              </Button>
-            </TabsContent>
-          </Tabs>
-          <div className="flex justify-end gap-2 mt-6">
-            <Button type="button" variant="outline" onClick={onCancel}>
-              Cancel
-            </Button>
-            <Button type="button" onClick={handleSave} disabled={updateAgentMutation.isPending}>
-              {updateAgentMutation.isPending ? "Saving..." : "Save Changes"}
-            </Button>
+              <Controls className="bg-white dark:bg-slate-800 rounded-lg shadow-lg border dark:border-slate-700" />
+            </ReactFlow>
           </div>
-        </CardContent>
-      </Card>
+          <AgentPropertiesPanel agent={agent} selectedNode={selectedNode} onNodeDelete={onNodeDelete} />
+        </ReactFlowProvider>
+      </AgentBuilderContext.Provider>
     </div>
   );
 };

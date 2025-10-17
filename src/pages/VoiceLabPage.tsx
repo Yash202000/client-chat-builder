@@ -160,37 +160,41 @@ const VoiceLabPage: React.FC = () => {
 
     return (
         <>
-            <div className="p-4 md:p-8 space-y-8 bg-gray-50 min-h-full">
+            <div className="w-full max-w-7xl mx-auto p-4 md:p-8 space-y-8">
                 <header>
-                    <h1 className="text-3xl font-bold text-gray-800">Voice Lab</h1>
-                    <p className="text-gray-600 mt-1">Create, train, and manage custom voices for your AI agents.</p>
+                    <h1 className="text-4xl font-bold bg-gradient-to-r from-violet-600 to-fuchsia-600 bg-clip-text text-transparent mb-2">
+                        🎙️ Voice Lab
+                    </h1>
+                    <p className="text-gray-600 dark:text-gray-400 text-lg">Create, train, and manage custom voices for your AI agents.</p>
                 </header>
-                <Card className="shadow-lg border-t-4 border-t-blue-600">
-                    <CardHeader>
-                        <CardTitle>Create a New Voice</CardTitle>
-                        <CardDescription>Give your voice a name and provide an audio sample by uploading or recording.</CardDescription>
+                <Card className="card-shadow-lg border-slate-200 dark:border-slate-700 dark:bg-slate-800 border-t-4 border-t-violet-600 dark:border-t-violet-500">
+                    <CardHeader className="border-b border-slate-200 dark:border-slate-700 bg-gradient-to-r from-slate-50 to-slate-100 dark:from-slate-800 dark:to-slate-900">
+                        <CardTitle className="dark:text-white">Create a New Voice</CardTitle>
+                        <CardDescription className="dark:text-gray-400">Give your voice a name and provide an audio sample by uploading or recording.</CardDescription>
                     </CardHeader>
-                    <CardContent className="space-y-6">
+                    <CardContent className="space-y-6 pt-6">
                         <div className="space-y-2">
-                            <Label htmlFor="voiceName" className="font-semibold">Voice Name</Label>
+                            <Label htmlFor="voiceName" className="font-semibold dark:text-gray-300">Voice Name</Label>
                             <Input
                                 id="voiceName"
                                 value={voiceName}
                                 onChange={(e) => setVoiceName(e.target.value)}
                                 placeholder="e.g., 'Friendly Support Agent'"
-                                className="max-w-lg"
+                                className="max-w-lg dark:bg-slate-900 dark:border-slate-600 dark:text-white"
                             />
                         </div>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
                             <div className="space-y-2">
-                                <Label className="font-semibold">Option 1: Upload Audio</Label>
+                                <Label className="font-semibold dark:text-gray-300">Option 1: Upload Audio</Label>
                                 {file ? (
-                                    <div className="flex items-center justify-between p-3 border rounded-lg bg-gray-50">
+                                    <div className="flex items-center justify-between p-3 border border-slate-200 dark:border-slate-700 rounded-lg bg-slate-50 dark:bg-slate-900">
                                         <div className="flex items-center gap-3">
-                                            <FileAudio className="h-5 w-5 text-blue-600" />
-                                            <p className="text-sm font-medium truncate">{file.name}</p>
+                                            <FileAudio className="h-5 w-5 text-violet-600 dark:text-violet-400" />
+                                            <p className="text-sm font-medium truncate dark:text-white">{file.name}</p>
                                         </div>
-                                        <Button onClick={clearFile} size="icon" variant="ghost"><X className="h-4 w-4"/></Button>
+                                        <Button onClick={clearFile} size="icon" variant="ghost" className="dark:hover:bg-slate-700">
+                                            <X className="h-4 w-4 dark:text-gray-400"/>
+                                        </Button>
                                     </div>
                                 ) : (
                                     <Input
@@ -199,76 +203,84 @@ const VoiceLabPage: React.FC = () => {
                                         accept="audio/wav,audio/mpeg,audio/webm"
                                         onChange={handleFileChange}
                                         disabled={!!recordedAudio}
-                                        className="hover:bg-gray-50 cursor-pointer"
+                                        className="hover:bg-slate-50 dark:hover:bg-slate-700 cursor-pointer dark:bg-slate-900 dark:border-slate-600 dark:text-white"
                                     />
                                 )}
                             </div>
                             <div className="space-y-2">
-                                <Label className="font-semibold">Option 2: Record Sample</Label>
+                                <Label className="font-semibold dark:text-gray-300">Option 2: Record Sample</Label>
                                 <AudioRecorder onRecordingChange={handleRecordingChange} />
                             </div>
                         </div>
                         <div className="pt-4">
-                            <Button 
+                            <Button
                                 size="lg"
-                                onClick={() => cloneMutation.mutate()} 
+                                onClick={() => cloneMutation.mutate()}
                                 disabled={cloneMutation.isPending || !voiceName || (!file && !recordedAudio)}
+                                className="bg-gradient-to-r from-violet-600 to-fuchsia-600 hover:from-violet-700 hover:to-fuchsia-700 text-white shadow-lg hover:shadow-xl transition-all"
                             >
                                 {cloneMutation.isPending ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Starting Training...</> : <><UploadCloud className="mr-2 h-4 w-4" /> Create and Train Voice</>}
                             </Button>
                         </div>
                     </CardContent>
                 </Card>
-                <Card className="shadow-lg">
-                    <CardHeader>
-                        <CardTitle>Your Voice Library</CardTitle>
-                        <CardDescription>Manage and test your trained voices.</CardDescription>
+                <Card className="card-shadow-lg border-slate-200 dark:border-slate-700 dark:bg-slate-800">
+                    <CardHeader className="border-b border-slate-200 dark:border-slate-700 bg-gradient-to-r from-slate-50 to-slate-100 dark:from-slate-800 dark:to-slate-900">
+                        <CardTitle className="dark:text-white">Your Voice Library</CardTitle>
+                        <CardDescription className="dark:text-gray-400">Manage and test your trained voices.</CardDescription>
                     </CardHeader>
-                    <CardContent>
-                        {isLoadingVoices ? <p>Loading voices...</p> : (
+                    <CardContent className="pt-6">
+                        {isLoadingVoices ? (
+                            <div className="flex items-center justify-center py-8">
+                                <div className="flex items-center gap-2 text-muted-foreground dark:text-gray-400">
+                                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-violet-600 dark:border-violet-400"></div>
+                                    <span>Loading voices...</span>
+                                </div>
+                            </div>
+                        ) : allVoices.length > 0 ? (
                             <ul className="space-y-3">
                                 {allVoices.map(({ name, status }) => (
-                                    <li key={name} className="flex items-center justify-between p-4 border rounded-lg bg-background hover:bg-gray-50 transition-colors">
+                                    <li key={name} className="flex items-center justify-between p-4 border border-slate-200 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-900/50 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
                                         <div className="flex items-center gap-4">
-                                            <div className="p-3 bg-gray-100 rounded-full">
-                                                <Mic className="h-5 w-5 text-gray-600" />
+                                            <div className="p-3 bg-gradient-to-br from-violet-100 to-fuchsia-100 dark:from-violet-900/50 dark:to-fuchsia-900/50 rounded-full">
+                                                <Mic className="h-5 w-5 text-violet-600 dark:text-violet-400" />
                                             </div>
                                             <div>
-                                                <span className="font-semibold text-gray-800">{name}</span>
+                                                <span className="font-semibold text-gray-800 dark:text-white">{name}</span>
                                                 <div className="flex items-center gap-2 mt-1">
-                                                    {status === 'completed' && <Badge variant="default" className="bg-green-600 hover:bg-green-700">Ready</Badge>}
-                                                    {status === 'processing' && <Badge variant="secondary">Training</Badge>}
-                                                    {name === DEFAULT_VOICE_ID && <Badge variant="outline">Default</Badge>}
+                                                    {status === 'completed' && <Badge variant="default" className="bg-green-600 dark:bg-green-700 hover:bg-green-700 dark:hover:bg-green-800">Ready</Badge>}
+                                                    {status === 'processing' && <Badge variant="secondary" className="dark:bg-slate-700 dark:text-gray-300">Training</Badge>}
+                                                    {name === DEFAULT_VOICE_ID && <Badge variant="outline" className="dark:border-slate-600 dark:text-gray-300">Default</Badge>}
                                                 </div>
                                             </div>
                                         </div>
                                         {status === 'processing' && (
                                             <div className="flex items-center gap-3 w-1/3">
-                                                <Progress value={50} className="h-2" />
-                                                <Loader2 className="h-4 w-4 animate-spin text-gray-500"/>
+                                                <Progress value={50} className="h-2 dark:bg-slate-700" />
+                                                <Loader2 className="h-4 w-4 animate-spin text-gray-500 dark:text-gray-400"/>
                                             </div>
                                         )}
                                         {status === 'completed' && (
                                             <div className="flex items-center gap-2">
-                                                <Button variant="outline" size="sm" onClick={() => openTestDialog(name)}>
+                                                <Button variant="outline" size="sm" onClick={() => openTestDialog(name)} className="dark:border-slate-600 dark:text-white dark:hover:bg-slate-700">
                                                     <Play className="h-4 w-4 mr-2" />
                                                     Test Voice
                                                 </Button>
                                                 <AlertDialog>
                                                     <AlertDialogTrigger asChild>
-                                                        <Button variant="ghost" size="icon" disabled={name === DEFAULT_VOICE_ID}>
-                                                            <Trash2 className="h-4 w-4 text-gray-500 hover:text-red-600" />
+                                                        <Button variant="ghost" size="icon" disabled={name === DEFAULT_VOICE_ID} className="dark:hover:bg-slate-700">
+                                                            <Trash2 className="h-4 w-4 text-gray-500 dark:text-gray-400 hover:text-red-600 dark:hover:text-red-400" />
                                                         </Button>
                                                     </AlertDialogTrigger>
-                                                    <AlertDialogContent>
+                                                    <AlertDialogContent className="dark:bg-slate-800 dark:border-slate-700">
                                                         <AlertDialogHeader>
-                                                            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-                                                            <AlertDialogDescription>
-                                                                This action cannot be undone. This will permanently delete the voice "{name}".
+                                                            <AlertDialogTitle className="dark:text-white">Are you sure?</AlertDialogTitle>
+                                                            <AlertDialogDescription className="dark:text-gray-400">
+                                                                This action cannot be undone. This will permanently delete the voice <span className="font-bold text-white">"{name}"</span>.
                                                             </AlertDialogDescription>
                                                         </AlertDialogHeader>
                                                         <AlertDialogFooter>
-                                                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                                            <AlertDialogCancel className="dark:border-slate-600 dark:text-white dark:hover:bg-slate-700">Cancel</AlertDialogCancel>
                                                             <AlertDialogAction
                                                                 onClick={() => deleteMutation.mutate(name)}
                                                                 disabled={deleteMutation.isPending}
@@ -285,6 +297,14 @@ const VoiceLabPage: React.FC = () => {
                                     </li>
                                 ))}
                             </ul>
+                        ) : (
+                            <div className="text-center py-12 border-2 border-dashed border-slate-300 dark:border-slate-700 rounded-lg bg-slate-50 dark:bg-slate-900/50">
+                                <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-br from-violet-100 to-fuchsia-100 dark:from-violet-900/50 dark:to-fuchsia-900/50 mb-4">
+                                    <Mic className="w-8 h-8 text-violet-600 dark:text-violet-400" />
+                                </div>
+                                <h3 className="text-lg font-semibold text-gray-800 dark:text-white">No voices yet</h3>
+                                <p className="text-gray-500 dark:text-gray-400 mt-2">Create your first voice to get started</p>
+                            </div>
                         )}
                     </CardContent>
                 </Card>

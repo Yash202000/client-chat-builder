@@ -4,6 +4,9 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { MessageSquare, X, Mic, Send, Loader2, Bot, User } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { WidgetForm } from '@/components/WidgetForm';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
+import { VoiceAgentPreview } from './components/previews/VoiceAgentPreview';
 
 // Type definitions
 interface WidgetProps {
@@ -36,6 +39,7 @@ interface WidgetSettings {
   frontend_url: string;
   voice_id?: string;
   stt_provider?: string;
+  communication_mode: 'chat' | 'voice' | 'chat_and_voice';
 }
 
 interface Message {
@@ -55,7 +59,7 @@ const widgetSizes = {
   large: { width: 400, height: 650 },
 };
 
-const generateSessionId = () => `session_${Math.random().toString(36).substring(2, 15)}`;
+const generateSessionId = () => Date.now(); // milliseconds timestamp
 
 // Main Widget Component
 const Widget = ({ agentId, companyId, backendUrl }: WidgetProps) => {
@@ -66,8 +70,10 @@ const Widget = ({ agentId, companyId, backendUrl }: WidgetProps) => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputValue, setInputValue] = useState('');
   const [isTyping, setIsTyping] = useState(false);
+  const [isUsingTool, setIsUsingTool] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
   const [activeForm, setActiveForm] = useState<any[] | null>(null);
+  const [liveKitToken, setLiveKitToken] = useState<string | null>(null);
   
   const isProactiveSession = useRef(false);
   const ws = useRef<WebSocket | null>(null);
@@ -86,6 +92,9 @@ const Widget = ({ agentId, companyId, backendUrl }: WidgetProps) => {
         const response = await fetch(`${backendUrl}/api/v1/agents/${agentId}/widget-settings`);
         if (!response.ok) throw new Error('Failed to fetch settings');
         const data = await response.json();
+        console.log('AgentConnect Widget: Fetched settings:', data);
+        console.log('AgentConnect Widget: Avatar URL:', data.agent_avatar_url);
+        console.log('AgentConnect Widget: Header Title:', data.header_title);
         setSettings(data);
       } catch (error) {
         console.error('AgentConnect: Error fetching settings:', error);
@@ -118,6 +127,31 @@ const Widget = ({ agentId, companyId, backendUrl }: WidgetProps) => {
       const newSessionId = generateSessionId();
       setSessionId(newSessionId);
 
+      if (settings?.communication_mode === 'voice') {
+        const fetchToken = async () => {
+          try {
+            const response = await fetch(`${backendUrl}/api/v1/video-calls/token`, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                room_name: newSessionId,
+                participant_name: `User-${newSessionId}`,
+                agent_id: agentId,
+              }),
+            });
+            if (!response.ok) throw new Error('Failed to fetch LiveKit token');
+            const data = await response.json();
+            setLiveKitToken(data.access_token);
+          } catch (error) {
+            console.error('AgentConnect: Error fetching LiveKit token:', error);
+          }
+        };
+        fetchToken();
+        return;
+      }
+
       const wsUrl = `${backendUrl.replace('http', 'ws')}/api/v1/ws/public/${companyId}/${agentId}/${newSessionId}?user_type=user`;
       ws.current = new WebSocket(wsUrl);
 
@@ -136,8 +170,18 @@ const Widget = ({ agentId, companyId, backendUrl }: WidgetProps) => {
             setIsTyping(data.is_typing);
             return;
         }
+
+        if (data.message_type === 'tool_use') {
+            setIsUsingTool(true);
+            // Optionally, you can display which tool is being used
+            // const toolName = data.tool_call?.function?.name;
+            // console.log(`Agent is using tool: ${toolName}`);
+            return;
+        }
         
         setIsTyping(false);
+        setIsUsingTool(false); // A new message arrived, so the tool is no longer in use.
+
         const newMessage: Message = {
           id: data.id || `msg-${Date.now()}`,
           sender: data.sender,
@@ -148,35 +192,41 @@ const Widget = ({ agentId, companyId, backendUrl }: WidgetProps) => {
           fields: data.fields,
           videoCallUrl: data.message_type === 'video_call_invitation' ? `${settings?.frontend_url}/video-call?token=${data.token}&livekitUrl=${encodeURIComponent(settings?.livekit_url || '')}&sessionId=${newSessionId}` : undefined
         };
-        if (data.message_type === 'form') setActiveForm(data.fields);
         
         setMessages(prev => {
             if (prev.find(msg => msg.id === newMessage.id)) return prev;
             return [...prev, newMessage];
         });
-      };
 
-      const voiceUrl = `${backendUrl.replace('http', 'ws')}/api/v1/ws/public/voice/${companyId}/${agentId}/${newSessionId}?user_type=user&voice_id=${settings?.voice_id || 'default'}&stt_provider=${settings?.stt_provider || 'groq'}`;
-      voiceWs.current = new WebSocket(voiceUrl);
-
-      voiceWs.current.onmessage = async (event) => {
-        if (event.data instanceof Blob) {
-          incomingAudioChunks.current.push(event.data);
-          if (audioPlaybackTimer.current) clearTimeout(audioPlaybackTimer.current);
-          audioPlaybackTimer.current = setTimeout(() => {
-            if (incomingAudioChunks.current.length > 0) {
-              const fullAudioBlob = new Blob(incomingAudioChunks.current, { type: 'audio/webm' });
-              const audioUrl = URL.createObjectURL(fullAudioBlob);
-              new Audio(audioUrl).play();
-              incomingAudioChunks.current = [];
-            }
-          }, 300);
+        if (data.message_type === 'form') {
+          setActiveForm(data.fields);
         }
       };
+
+      if (settings?.communication_mode === 'chat_and_voice') {
+        const voiceUrl = `${backendUrl.replace('http', 'ws')}/api/v1/ws/public/voice/${companyId}/${agentId}/${newSessionId}?user_type=user&voice_id=${settings?.voice_id || 'default'}&stt_provider=${settings?.stt_provider || 'groq'}`;
+        voiceWs.current = new WebSocket(voiceUrl);
+
+        voiceWs.current.onmessage = async (event) => {
+          if (event.data instanceof Blob) {
+            incomingAudioChunks.current.push(event.data);
+            if (audioPlaybackTimer.current) clearTimeout(audioPlaybackTimer.current);
+            audioPlaybackTimer.current = setTimeout(() => {
+              if (incomingAudioChunks.current.length > 0) {
+                const fullAudioBlob = new Blob(incomingAudioChunks.current, { type: 'audio/webm' });
+                const audioUrl = URL.createObjectURL(fullAudioBlob);
+                new Audio(audioUrl).play();
+                incomingAudioChunks.current = [];
+              }
+            }, 300);
+          }
+        };
+      }
 
     } else {
       ws.current?.close();
       voiceWs.current?.close();
+      setLiveKitToken(null);
     }
 
     return () => {
@@ -236,61 +286,151 @@ const Widget = ({ agentId, companyId, backendUrl }: WidgetProps) => {
   const size = widgetSizes[widget_size] || widgetSizes.medium;
 
   return (
-    <div style={{ position: 'fixed', zIndex: 9999, [vertical]: '20px', [horizontal]: '20px' }}>
-      {!isOpen && (
-        <Button onClick={() => setIsOpen(true)} style={{ width: '60px', height: '60px', borderRadius: '50%', backgroundColor: primary_color, boxShadow: '0 4px 12px rgba(0,0,0,0.15)' }} className="flex items-center justify-center">
-          {agent_avatar_url ? <img src={`${backendUrl}/api/v1/proxy/image-proxy?url=${encodeURIComponent(agent_avatar_url)}`} alt="Avatar" className="w-full h-full rounded-full object-cover" /> : <MessageSquare size={32} color="white" />}
-        </Button>
-      )}
-      {isOpen && (
-        <div style={{ width: `${size.width}px`, height: `${size.height}px`, borderRadius: `${border_radius}px`, boxShadow: '0 10px 30px rgba(0,0,0,0.15)', position: 'absolute', [vertical === 'bottom' ? 'bottom' : 'top']: '80px', [horizontal === 'right' ? 'right' : 'left']: '0' }} className={cn('flex flex-col overflow-hidden', dark_mode ? 'bg-gray-900 text-gray-100' : 'bg-white text-gray-800')}>
-          {show_header && (
-            <div style={{ backgroundColor: primary_color, borderTopLeftRadius: `${border_radius}px`, borderTopRightRadius: `${border_radius}px` }} className="p-4 text-white flex justify-between items-center flex-shrink-0">
-              <div className="flex items-center gap-3">
-                {agent_avatar_url && <img src={`${backendUrl}/api/v1/proxy/image-proxy?url=${encodeURIComponent(agent_avatar_url)}`} alt="Header Avatar" className="w-10 h-10 rounded-full object-cover border-2 border-white/50" />}
-                <span className="font-bold text-lg">{header_title}</span>
-              </div>
-              <Button variant="ghost" size="icon" onClick={() => setIsOpen(false)} className="text-white hover:bg-white/20"><X className="h-6 w-6" /></Button>
+  <div style={{ position: 'fixed', zIndex: 9999, [vertical]: '20px', [horizontal]: '20px' }}>
+    {!isOpen && (
+      <Button
+        onClick={() => setIsOpen(true)}
+        style={{
+          width: '60px',
+          height: '60px',
+          borderRadius: '50%',
+          backgroundColor: primary_color,
+          boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+        }}
+        className="flex items-center justify-center"
+      >
+        {agent_avatar_url ? (
+          <img
+            src={`${backendUrl}/api/v1/proxy/image-proxy?url=${encodeURIComponent(agent_avatar_url)}`}
+            alt="Avatar"
+            className="w-full h-full rounded-full object-cover"
+          />
+        ) : (
+          <MessageSquare size={32} color="white" />
+        )}
+      </Button>
+    )}
+
+    {isOpen && settings?.communication_mode === 'voice' && liveKitToken && (
+      <VoiceAgentPreview
+        liveKitToken={liveKitToken}
+        shouldConnect={isOpen}
+        setShouldConnect={setIsOpen}
+        livekitUrl={settings.livekit_url}
+        customization={settings}
+        backendUrl={backendUrl}
+      />
+    )}
+
+
+    {isOpen && settings?.communication_mode !== 'voice' && (
+      <div
+        style={{
+          width: `${size.width}px`,
+          height: `${size.height}px`,
+          borderRadius: `${border_radius}px`,
+          boxShadow: '0 10px 30px rgba(0,0,0,0.15)',
+          position: 'absolute',
+          [vertical === 'bottom' ? 'bottom' : 'top']: '80px',
+          [horizontal === 'right' ? 'right' : 'left']: '0',
+        }}
+        className={cn(
+          'flex flex-col overflow-hidden',
+          dark_mode ? 'bg-gray-900 text-gray-100' : 'bg-white text-gray-800'
+        )}
+      >
+        {show_header && (
+          <div
+            style={{
+              backgroundColor: primary_color,
+              borderTopLeftRadius: `${border_radius}px`,
+              borderTopRightRadius: `${border_radius}px`,
+            }}
+            className="p-4 text-white flex justify-between items-center flex-shrink-0"
+          >
+            <div className="flex items-center gap-3">
+              {agent_avatar_url && (
+                <img
+                  src={`${backendUrl}/api/v1/proxy/image-proxy?url=${encodeURIComponent(agent_avatar_url)}`}
+                  alt="Header Avatar"
+                  className="w-10 h-10 rounded-full object-cover border-2 border-white/50"
+                />
+              )}
+              <span className="font-bold text-lg">{header_title}</span>
             </div>
-          )}
-          <div className="flex-grow p-4 overflow-y-auto space-y-4">
-            {messages.map((msg) => (
-              <div key={msg.id} className={cn('flex w-full', msg.sender === 'user' ? 'justify-end' : 'justify-start')}>
-                <div className={cn('max-w-[85%] p-3 flex flex-col')} style={{ backgroundColor: msg.sender === 'user' ? user_message_color : bot_message_color, color: msg.sender === 'user' ? user_message_text_color : bot_message_text_color, borderRadius: `${border_radius}px` }}>
-                  <div className="flex items-center justify-between gap-2 mb-2">
-                    <div className="flex items-center gap-2">
-                      <Avatar className="h-5 w-5">
-                        <AvatarFallback className="bg-transparent text-xs">
-                          {msg.sender === 'agent' ? <Bot size={14} /> : <User size={14} />}
-                        </AvatarFallback>
-                      </Avatar>
-                      <span className="text-xs font-semibold">{msg.sender === 'agent' ? 'Agent' : 'You'}</span>
-                    </div>
-                    <span className={cn('text-xs', dark_mode ? 'text-gray-400' : 'text-gray-500', msg.sender === 'user' && 'text-opacity-80')}>
-                      {new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                    </span>
-                  </div>
-                  <p className="text-sm break-words">{msg.text}</p>
-                  {msg.type === 'video_call_invitation' && (<Button onClick={() => window.open(msg.videoCallUrl, '_blank', 'width=800,height=600')} className="mt-2 w-full" style={{backgroundColor: primary_color, color: 'white'}}>Join Video Call</Button>)}
-                </div>
-              </div>
-            ))}
-            {isTyping && <div className="text-sm text-gray-500 italic px-2">Agent is typing...</div>}
-            <div ref={messagesEndRef} />
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setIsOpen(false)}
+              className="text-white hover:bg-white/20"
+            >
+              <X className="h-6 w-6" />
+            </Button>
           </div>
-          {activeForm ? (<WidgetForm fields={activeForm} onSubmit={handleFormSubmit} primaryColor={primary_color} darkMode={dark_mode} />) : (
-            <div className={cn('p-3 border-t', dark_mode ? 'border-gray-800' : 'border-gray-200')}>
-              <div className="flex items-center gap-2">
-                <input type="text" value={inputValue} onChange={e => setInputValue(e.target.value)} onKeyPress={e => e.key === 'Enter' && handleSendMessage(inputValue)} placeholder={input_placeholder} className={cn('flex-grow p-2 border rounded-md w-full text-sm', dark_mode ? 'bg-gray-800 border-gray-700 focus:ring-blue-500' : 'bg-white border-gray-300 focus:ring-blue-500')} />
-                <Button onClick={() => handleSendMessage(inputValue)} style={{ backgroundColor: primary_color }} className="text-white rounded-md h-9 w-9 p-0 flex-shrink-0"><Send size={18} /></Button>
-                <Button onClick={handleToggleRecording} variant="ghost" size="icon" className={cn('rounded-md h-9 w-9 flex-shrink-0', isRecording && 'text-red-500', dark_mode ? 'hover:bg-gray-700' : 'hover:bg-gray-100')}>{isRecording ? <Loader2 className="animate-spin" /> : <Mic size={18} />}</Button>
+        )}
+        <div className="flex-grow p-4 overflow-y-auto space-y-4">
+          {messages.map((msg) => (
+            <div key={msg.id} className={cn('flex w-full', msg.sender === 'user' ? 'justify-end' : 'justify-start')}>
+              <div className={cn('max-w-[85%] p-3 flex flex-col')} style={{ backgroundColor: msg.sender === 'user' ? user_message_color : bot_message_color, color: msg.sender === 'user' ? user_message_text_color : bot_message_text_color, borderRadius: `${border_radius}px` }}>
+                <div className="flex items-center justify-between gap-2 mb-2">
+                  <div className="flex items-center gap-2">
+                    <Avatar className="h-5 w-5">
+                      <AvatarFallback className="bg-transparent text-xs">
+                        {msg.sender === 'agent' ? <Bot size={14} /> : <User size={14} />}
+                      </AvatarFallback>
+                    </Avatar>
+                    <span className="text-xs font-semibold">{msg.sender === 'agent' ? 'Agent' : 'You'}</span>
+                  </div>
+                  <span className={cn('text-xs', dark_mode ? 'text-gray-400' : 'text-gray-500', msg.sender === 'user' && 'text-opacity-80')}>
+                    {new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                  </span>
+                </div>
+                <div className="prose prose-sm dark:prose-invert max-w-full">
+                  <ReactMarkdown
+                    remarkPlugins={[remarkGfm]}
+                    components={{
+                      a: ({node, ...props}) => <a {...props} target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline" />
+                    }}
+                  >
+                    {msg.text}
+                  </ReactMarkdown>
+                </div>
+                {msg.options && msg.options.length > 0 && (
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    {msg.options.map((option, index) => (
+                      <Button
+                        key={index}
+                        onClick={() => handleSendMessage(option)}
+                        variant="outline"
+                        size="sm"
+                        className={cn('rounded-full', dark_mode ? 'bg-gray-700 hover:bg-gray-600 border-gray-600' : 'bg-gray-100 hover:bg-gray-200 border-gray-300')}
+                      >
+                        {option}
+                      </Button>
+                    ))}
+                  </div>
+                )}
+                {msg.type === 'video_call_invitation' && (<Button onClick={() => window.open(msg.videoCallUrl, '_blank', 'width=800,height=600')} className="mt-2 w-full" style={{backgroundColor: primary_color, color: 'white'}}>Join Video Call</Button>)}
               </div>
             </div>
-          )}
+          ))}
+          {isTyping && <div className="text-sm text-gray-500 italic px-2">Agent is typing...</div>}
+          {isUsingTool && <div className="text-sm text-gray-500 italic px-2">Using a tool...</div>}
+          <div ref={messagesEndRef} />
         </div>
-      )}
-    </div>
-  );
+        {activeForm ? (<WidgetForm fields={activeForm} onSubmit={handleFormSubmit} primaryColor={primary_color} darkMode={dark_mode} />) : (
+          <div className={cn('p-3 border-t', dark_mode ? 'border-gray-800' : 'border-gray-200')}>
+            <div className="flex items-center gap-2">
+              <input type="text" value={inputValue} onChange={e => setInputValue(e.target.value)} onKeyPress={e => e.key === 'Enter' && handleSendMessage(inputValue)} placeholder={input_placeholder} className={cn('flex-grow p-2 border rounded-md w-full text-sm', dark_mode ? 'bg-gray-800 border-gray-700 focus:ring-blue-500' : 'bg-white border-gray-300 focus:ring-blue-500')} />
+              <Button onClick={() => handleSendMessage(inputValue)} style={{ backgroundColor: primary_color }} className="text-white rounded-md h-9 w-9 p-0 flex-shrink-0"><Send size={18} /></Button>
+                <Button onClick={handleToggleRecording} variant="ghost" size="icon" className={cn('rounded-md h-9 w-9 flex-shrink-0', isRecording && 'text-red-500', dark_mode ? 'hover:bg-gray-700' : 'hover:bg-gray-100')}>{isRecording ? <Loader2 className="animate-spin" /> : <Mic size={18} />}</Button>
+            </div>
+          </div>
+        )}
+      </div>
+    )}
+  </div>
+);
 };
 
 export default Widget;

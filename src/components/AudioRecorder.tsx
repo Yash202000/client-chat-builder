@@ -71,26 +71,26 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({ onRecordingChange }) => {
   };
 
   return (
-    <div className="flex items-center justify-between p-3 border rounded-lg bg-gray-50">
+    <div className="flex items-center justify-between p-3 border border-slate-200 dark:border-slate-700 rounded-lg bg-slate-50 dark:bg-slate-900">
       {!audioBlob ? (
         <>
           <div className="flex items-center gap-3">
-            <Mic className={`h-5 w-5 ${isRecording ? 'text-red-500' : 'text-gray-500'}`} />
+            <Mic className={`h-5 w-5 ${isRecording ? 'text-red-500 dark:text-red-400' : 'text-gray-500 dark:text-gray-400'}`} />
             <div>
-              <p className="font-medium text-sm">{isRecording ? 'Recording...' : 'Record a sample'}</p>
-              <p className="text-xs text-gray-500">Click the button to start recording</p>
+              <p className="font-medium text-sm dark:text-white">{isRecording ? 'Recording...' : 'Record a sample'}</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400">Click the button to start recording</p>
             </div>
           </div>
           {isRecording ? (
             <div className="flex items-center gap-2">
-              <Badge variant="destructive" className="animate-pulse">REC</Badge>
-              <p className="text-sm font-mono">{formatTime(duration)}</p>
-              <Button onClick={stopRecording} size="sm" variant="destructive">
+              <Badge variant="destructive" className="animate-pulse bg-red-600 dark:bg-red-700">REC</Badge>
+              <p className="text-sm font-mono dark:text-white">{formatTime(duration)}</p>
+              <Button onClick={stopRecording} size="sm" variant="destructive" className="bg-red-600 hover:bg-red-700">
                 <StopCircle className="h-4 w-4" />
               </Button>
             </div>
           ) : (
-            <Button onClick={startRecording} size="sm" variant="outline">
+            <Button onClick={startRecording} size="sm" variant="outline" className="dark:border-slate-600 dark:text-white dark:hover:bg-slate-700">
               Start
             </Button>
           )}
@@ -98,18 +98,18 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({ onRecordingChange }) => {
       ) : (
         <>
           <div className="flex items-center gap-3">
-            <Play className="h-5 w-5 text-green-600" />
+            <Play className="h-5 w-5 text-green-600 dark:text-green-400" />
             <div>
-              <p className="font-medium text-sm">Recording ready</p>
-              <p className="text-xs text-gray-500">Ready to be used for training</p>
+              <p className="font-medium text-sm dark:text-white">Recording ready</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400">Ready to be used for training</p>
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <Button onClick={playRecording} size="sm" variant="outline">
+            <Button onClick={playRecording} size="sm" variant="outline" className="dark:border-slate-600 dark:text-white dark:hover:bg-slate-700">
               Preview
             </Button>
-            <Button onClick={deleteRecording} size="sm" variant="ghost">
-              <Trash2 className="h-4 w-4" />
+            <Button onClick={deleteRecording} size="sm" variant="ghost" className="dark:hover:bg-slate-700">
+              <Trash2 className="h-4 w-4 dark:text-gray-400" />
             </Button>
           </div>
         </>

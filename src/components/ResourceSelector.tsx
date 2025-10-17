@@ -9,6 +9,7 @@ interface Resource {
   id: number;
   name: string;
   description?: string;
+  tool_type?: 'custom' | 'mcp';
 }
 
 interface ResourceSelectorProps<T extends Resource> {
@@ -80,7 +81,14 @@ export function ResourceSelector<T extends Resource>({
                 onClick={() => handleSelect(resource.id)}
               >
                 <CardContent className="p-4">
-                  <h3 className="font-semibold">{resource.name}</h3>
+                  <div className="flex justify-between items-center">
+                    <h3 className="font-semibold">{resource.name}</h3>
+                    {resource.tool_type && (
+                      <span className="text-xs font-normal bg-secondary text-secondary-foreground py-0.5 px-2 rounded-full">
+                        {resource.tool_type === 'mcp' ? 'MCP Connection' : 'Custom'}
+                      </span>
+                    )}
+                  </div>
                   {(resource.description || "") && <p className="text-sm text-gray-500 mt-1">{resource.description}</p>}
                 </CardContent>
               </Card>

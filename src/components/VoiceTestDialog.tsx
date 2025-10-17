@@ -51,26 +51,29 @@ const VoiceTestDialog: React.FC<VoiceTestDialogProps> = ({ open, onOpenChange, v
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-[425px] dark:bg-slate-800 dark:border-slate-700">
         <DialogHeader>
-          <DialogTitle>Test Voice: <span className="text-blue-600">{voiceId}</span></DialogTitle>
-          <DialogDescription>
+          <DialogTitle className="dark:text-white">
+            Test Voice: <span className="text-violet-600 dark:text-violet-400">{voiceId}</span>
+          </DialogTitle>
+          <DialogDescription className="dark:text-gray-400">
             Type some text below and click synthesize to hear your voice in action.
           </DialogDescription>
         </DialogHeader>
         <div className="grid gap-4 py-4">
           <div className="grid w-full gap-1.5">
-            <Label htmlFor="message">Your Text</Label>
+            <Label htmlFor="message" className="dark:text-gray-300">Your Text</Label>
             <Textarea
-              placeholder="Type your message here."
+              placeholder="Type your message here..."
               id="message"
               value={text}
               onChange={(e) => setText(e.target.value)}
               rows={4}
+              className="dark:bg-slate-900 dark:border-slate-600 dark:text-white"
             />
           </div>
           {audioUrl && (
-            <div className="mt-2">
+            <div className="mt-2 p-3 border border-slate-200 dark:border-slate-700 rounded-lg bg-slate-50 dark:bg-slate-900">
                 <audio controls src={audioUrl} className="w-full">
                     Your browser does not support the audio element.
                 </audio>
@@ -78,9 +81,10 @@ const VoiceTestDialog: React.FC<VoiceTestDialogProps> = ({ open, onOpenChange, v
           )}
         </div>
         <DialogFooter>
-          <Button 
-            onClick={() => synthesizeMutation.mutate()} 
+          <Button
+            onClick={() => synthesizeMutation.mutate()}
             disabled={synthesizeMutation.isPending}
+            className="bg-gradient-to-r from-violet-600 to-fuchsia-600 hover:from-violet-700 hover:to-fuchsia-700 text-white"
           >
             {synthesizeMutation.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Volume2 className="mr-2 h-4 w-4" />}
             Synthesize

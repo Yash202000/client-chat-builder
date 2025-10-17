@@ -52,15 +52,24 @@ export const TeamManagement = () => {
   const [isCreateTeamModalOpen, setCreateTeamModalOpen] = useState(false);
   const [isAddMemberModalOpen, setAddMemberModalOpen] = useState(false);
   const [isRoleModalOpen, setRoleModalOpen] = useState(false);
-  
+  const [isEditTeamModalOpen, setEditTeamModalOpen] = useState(false);
+  const [isEditUserModalOpen, setEditUserModalOpen] = useState(false);
+
   const [selectedTeamForMember, setSelectedTeamForMember] = useState<Team | null>(null);
   const [selectedRole, setSelectedRole] = useState<Role | null>(null);
+  const [selectedTeamForEdit, setSelectedTeamForEdit] = useState<Team | null>(null);
+  const [selectedUserForEdit, setSelectedUserForEdit] = useState<User | null>(null);
 
   // Form State
   const [newUserEmail, setNewUserEmail] = useState("");
   const [newUserPassword, setNewUserPassword] = useState("");
   const [newTeamName, setNewTeamName] = useState("");
-  const [selectedUserId, setSelectedUserId] = useState("");
+  const [editTeamName, setEditTeamName] = useState("");
+  const [editUserEmail, setEditUserEmail] = useState("");
+  const [editUserFirstName, setEditUserFirstName] = useState("");
+  const [editUserLastName, setEditUserLastName] = useState("");
+  const [editUserPassword, setEditUserPassword] = useState("");
+  const [selectedUserIds, setSelectedUserIds] = useState<number[]>([]);
   const [selectedMemberRole, setSelectedMemberRole] = useState("member");
   const [roleName, setRoleName] = useState("");
   const [roleDescription, setRoleDescription] = useState("");
@@ -145,9 +154,6 @@ export const TeamManagement = () => {
     }).then(res => { if (!res.ok) throw new Error('Failed to add member'); return res.json() }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['teams', companyId] });
-      toast({ title: 'Success', description: 'Member added successfully.' });
-      setAddMemberModalOpen(false);
-      setSelectedUserId("");
     },
     onError: (e: Error) => toast({ title: 'Error', description: e.message, variant: 'destructive' }),
   });
@@ -194,6 +200,56 @@ export const TeamManagement = () => {
     onError: (e: Error) => toast({ title: 'Error', description: e.message, variant: 'destructive' }),
   });
 
+  const updateTeamMutation = useMutation({
+    mutationFn: ({ teamId, name }: { teamId: number; name: string }) => authFetch(`/api/v1/teams/${teamId}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name }),
+    }).then(res => { if (!res.ok) throw new Error('Failed to update team'); return res.json() }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['teams', companyId] });
+      toast({ title: 'Success', description: 'Team updated successfully.' });
+      setEditTeamModalOpen(false);
+      setEditTeamName("");
+    },
+    onError: (e: Error) => toast({ title: 'Error', description: e.message, variant: 'destructive' }),
+  });
+
+  const deleteTeamMutation = useMutation({
+    mutationFn: (teamId: number) => authFetch(`/api/v1/teams/${teamId}`, {
+      method: 'DELETE',
+    }).then(res => { if (!res.ok) throw new Error('Failed to delete team'); return res.json() }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['teams', companyId] });
+      toast({ title: 'Success', description: 'Team deleted successfully.' });
+    },
+    onError: (e: Error) => toast({ title: 'Error', description: e.message, variant: 'destructive' }),
+  });
+
+  const deleteUserMutation = useMutation({
+    mutationFn: (userId: number) => authFetch(`/api/v1/users/${userId}`, {
+      method: 'DELETE',
+    }).then(res => { if (!res.ok) throw new Error('Failed to delete user'); return res.json() }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['users', companyId] });
+      toast({ title: 'Success', description: 'User deleted successfully.' });
+    },
+    onError: (e: Error) => toast({ title: 'Error', description: e.message, variant: 'destructive' }),
+  });
+
+  const toggleUserActiveMutation = useMutation({
+    mutationFn: ({ userId, isActive }: { userId: number; isActive: boolean }) => authFetch(`/api/v1/users/${userId}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ is_active: isActive }),
+    }).then(res => { if (!res.ok) throw new Error('Failed to update user status'); return res.json() }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['users', companyId] });
+      toast({ title: 'Success', description: 'User status updated successfully.' });
+    },
+    onError: (e: Error) => toast({ title: 'Error', description: e.message, variant: 'destructive' }),
+  });
+
   // --- EVENT HANDLERS ---
   const handleCreateUser = () => {
     if (newUserEmail && newUserPassword) createUserMutation.mutate({ email: newUserEmail, password: newUserPassword });
@@ -203,18 +259,40 @@ export const TeamManagement = () => {
     if (newTeamName) createTeamMutation.mutate({ name: newTeamName });
   };
 
-  const handleAddMember = () => {
-    if (selectedTeamForMember && selectedUserId) {
-      addMemberMutation.mutate({
-        teamId: selectedTeamForMember.id,
-        userId: parseInt(selectedUserId),
-        role: selectedMemberRole,
-      });
+  const handleAddMember = async () => {
+    if (selectedTeamForMember && selectedUserIds.length > 0) {
+      // Add members sequentially
+      for (const userId of selectedUserIds) {
+        try {
+          await addMemberMutation.mutateAsync({
+            teamId: selectedTeamForMember.id,
+            userId: userId,
+            role: selectedMemberRole,
+          });
+        } catch (error) {
+          console.error(`Failed to add user ${userId}:`, error);
+          // Continue with other users even if one fails
+        }
+      }
+      // Close modal and reset after all members are added
+      setAddMemberModalOpen(false);
+      setSelectedUserIds([]);
+      toast({ title: 'Success', description: `${selectedUserIds.length} member(s) added successfully.` });
     }
+  };
+
+  const handleUserSelectionToggle = (userId: number) => {
+    setSelectedUserIds(prev =>
+      prev.includes(userId)
+        ? prev.filter(id => id !== userId)
+        : [...prev, userId]
+    );
   };
 
   const openAddMemberModal = (team: Team) => {
     setSelectedTeamForMember(team);
+    setSelectedUserIds([]); // Reset selection
+    setSelectedMemberRole("member"); // Reset role
     setAddMemberModalOpen(true);
   };
 
@@ -278,183 +356,529 @@ export const TeamManagement = () => {
     updateUserMutation.mutate({ userId, updateData: { role_id: parseInt(roleId, 10) } });
   };
 
+  const openEditTeamModal = (team: Team) => {
+    setSelectedTeamForEdit(team);
+    setEditTeamName(team.name);
+    setEditTeamModalOpen(true);
+  };
+
+  const handleUpdateTeam = () => {
+    if (selectedTeamForEdit && editTeamName) {
+      updateTeamMutation.mutate({ teamId: selectedTeamForEdit.id, name: editTeamName });
+    }
+  };
+
+  const handleDeleteTeam = (teamId: number) => {
+    if (confirm('Are you sure you want to delete this team? This action cannot be undone.')) {
+      deleteTeamMutation.mutate(teamId);
+    }
+  };
+
+  const openEditUserModal = (user: User) => {
+    setSelectedUserForEdit(user);
+    setEditUserEmail(user.email);
+    setEditUserFirstName(user.first_name || "");
+    setEditUserLastName(user.last_name || "");
+    setEditUserPassword(""); // Reset password field
+    setEditUserModalOpen(true);
+  };
+
+  const handleUpdateUser = () => {
+    if (selectedUserForEdit) {
+      const updateData: any = {
+        email: editUserEmail,
+        first_name: editUserFirstName,
+        last_name: editUserLastName,
+      };
+
+      // Only include password if it's been changed
+      if (editUserPassword && editUserPassword.trim() !== "") {
+        updateData.password = editUserPassword;
+      }
+
+      updateUserMutation.mutate({
+        userId: selectedUserForEdit.id,
+        updateData,
+      });
+      setEditUserModalOpen(false);
+    }
+  };
+
+  const handleDeleteUser = (userId: number) => {
+    if (confirm('Are you sure you want to delete this user? This action cannot be undone.')) {
+      deleteUserMutation.mutate(userId);
+    }
+  };
+
+  const handleToggleUserActive = (userId: number, currentStatus: boolean) => {
+    toggleUserActiveMutation.mutate({ userId, isActive: !currentStatus });
+  };
+
   const filteredUsers = users.filter(user => user.email.toLowerCase().includes(searchQuery.toLowerCase()));
 
+  // Get available users (not already in the selected team)
+  const getAvailableUsers = () => {
+    if (!selectedTeamForMember) return users;
+
+    const existingMemberIds = selectedTeamForMember.members.map(member => member.user_id);
+    return users.filter(user => !existingMemberIds.includes(user.id));
+  };
+
+  const availableUsers = getAvailableUsers();
+
   return (
-    <div className="space-y-6 p-4 md:p-6">
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2"><Users className="h-6 w-6" />Team & User Management</CardTitle>
-          <CardDescription>Manage users, teams, and their roles.</CardDescription>
+    <div className="space-y-6 p-4 md:p-6 animate-fade-in">
+      <Card className="card-shadow-lg bg-white dark:bg-slate-800 overflow-visible">
+        <CardHeader className="border-b border-slate-200 dark:border-slate-700 bg-gradient-to-r from-slate-50 to-slate-100 dark:from-slate-800 dark:to-slate-900">
+          <CardTitle className="flex items-center gap-2 text-2xl dark:text-white">
+            <Users className="h-7 w-7 text-blue-600 dark:text-blue-400" />
+            Team & User Management
+          </CardTitle>
+          <CardDescription className="dark:text-gray-400 text-base">
+            Manage users, teams, and their roles and permissions.
+          </CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="pt-6">
           <Tabs defaultValue="users" className="w-full">
-            <TabsList className="grid w-full grid-cols-3">
-              <TabsTrigger value="users">Users</TabsTrigger>
-              <TabsTrigger value="teams">Teams</TabsTrigger>
-              <TabsTrigger value="permissions">Roles & Permissions</TabsTrigger>
+            <TabsList className="grid w-full grid-cols-3 bg-slate-100 dark:bg-slate-900 p-1">
+              <TabsTrigger value="users" className="data-[state=active]:bg-white dark:data-[state=active]:bg-slate-800 data-[state=active]:text-blue-600 dark:data-[state=active]:text-blue-400">👥 Users</TabsTrigger>
+              <TabsTrigger value="teams" className="data-[state=active]:bg-white dark:data-[state=active]:bg-slate-800 data-[state=active]:text-blue-600 dark:data-[state=active]:text-blue-400">🏢 Teams</TabsTrigger>
+              <TabsTrigger value="permissions" className="data-[state=active]:bg-white dark:data-[state=active]:bg-slate-800 data-[state=active]:text-blue-600 dark:data-[state=active]:text-blue-400">🔒 Roles & Permissions</TabsTrigger>
             </TabsList>
 
             {/* USERS TAB */}
-            <TabsContent value="users" className="space-y-4 pt-4">
-              <div className="flex items-center justify-between gap-4">
-                <div className="relative flex-1 max-w-md">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-                  <Input placeholder="Search users by email..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="pl-10" />
+            <TabsContent value="users" className="space-y-5 pt-5">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                <div className="relative flex-1 max-w-md w-full">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500 h-4 w-4" />
+                  <Input
+                    placeholder="Search users by email..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="pl-10 dark:bg-slate-900 dark:border-slate-600 dark:text-white dark:placeholder-gray-500"
+                  />
                 </div>
                 <Dialog open={isAddUserModalOpen} onOpenChange={setAddUserModalOpen}>
-                  <DialogTrigger asChild><Button className="flex items-center gap-2"><UserPlus className="h-4 w-4" />Add User</Button></DialogTrigger>
-                  <DialogContent>
-                    <DialogHeader><DialogTitle>Add New User</DialogTitle></DialogHeader>
+                  <DialogTrigger asChild>
+                    <Button className="flex items-center gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white btn-hover-lift">
+                      <UserPlus className="h-4 w-4" />
+                      Add User
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="dark:bg-slate-800 dark:border-slate-700">
+                    <DialogHeader>
+                      <DialogTitle className="dark:text-white">Add New User</DialogTitle>
+                    </DialogHeader>
                     <div className="space-y-4 py-4">
-                      <Input placeholder="Email" type="email" value={newUserEmail} onChange={(e) => setNewUserEmail(e.target.value)} />
-                      <Input placeholder="Password" type="password" value={newUserPassword} onChange={(e) => setNewUserPassword(e.target.value)} />
+                      <div>
+                        <Label htmlFor="new-user-email" className="text-sm dark:text-gray-300 mb-1.5 block">Email Address</Label>
+                        <Input
+                          id="new-user-email"
+                          placeholder="user@example.com"
+                          type="email"
+                          value={newUserEmail}
+                          onChange={(e) => setNewUserEmail(e.target.value)}
+                          className="dark:bg-slate-900 dark:border-slate-600 dark:text-white"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="new-user-password" className="text-sm dark:text-gray-300 mb-1.5 block">Password</Label>
+                        <Input
+                          id="new-user-password"
+                          placeholder="••••••••"
+                          type="password"
+                          value={newUserPassword}
+                          onChange={(e) => setNewUserPassword(e.target.value)}
+                          className="dark:bg-slate-900 dark:border-slate-600 dark:text-white"
+                        />
+                      </div>
                     </div>
                     <DialogFooter>
-                      <Button variant="outline" onClick={() => setAddUserModalOpen(false)}>Cancel</Button>
-                      <Button onClick={handleCreateUser} disabled={createUserMutation.isPending}>{createUserMutation.isPending ? "Adding..." : "Add User"}</Button>
+                      <Button variant="outline" onClick={() => setAddUserModalOpen(false)} className="dark:border-slate-600 dark:text-white dark:hover:bg-slate-700">
+                        Cancel
+                      </Button>
+                      <Button
+                        onClick={handleCreateUser}
+                        disabled={createUserMutation.isPending}
+                        className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white"
+                      >
+                        {createUserMutation.isPending ? "Adding..." : "Add User"}
+                      </Button>
                     </DialogFooter>
                   </DialogContent>
                 </Dialog>
               </div>
-              <Card>
+              <Card className="border border-slate-200 dark:border-slate-700 dark:bg-slate-900/50">
                 <CardContent className="p-0">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>User</TableHead>
-                        <TableHead>Role</TableHead>
-                        <TableHead>Status</TableHead>
-                        <TableHead className="text-right">Actions</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {isLoadingUsers ? (
-                        <TableRow><TableCell colSpan={4}>Loading users...</TableCell></TableRow>
-                      ) : (
-                        filteredUsers.map((user) => (
-                          <TableRow key={user.id}>
-                            <TableCell>
-                              <div className="flex items-center gap-3">
-                                <Avatar className="h-9 w-9"><AvatarImage src={user.profile_picture_url} /><AvatarFallback>{user.email.charAt(0).toUpperCase()}</AvatarFallback></Avatar>
-                                <div>
-                                  <div className="font-medium">{user.first_name} {user.last_name}</div>
-                                  <div className="text-sm text-muted-foreground">{user.email}</div>
-                                </div>
+                  <div className="overflow-x-auto">
+                    <Table>
+                      <TableHeader>
+                        <TableRow className="border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/80 hover:bg-slate-50 dark:hover:bg-slate-900/80">
+                          <TableHead className="dark:text-gray-300 font-semibold">User</TableHead>
+                          <TableHead className="dark:text-gray-300 font-semibold">Role</TableHead>
+                          <TableHead className="dark:text-gray-300 font-semibold">Status</TableHead>
+                          <TableHead className="text-right dark:text-gray-300 font-semibold">Actions</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {isLoadingUsers ? (
+                          <TableRow className="dark:border-slate-700">
+                            <TableCell colSpan={4} className="text-center py-8 dark:text-gray-400">
+                              <div className="flex items-center justify-center gap-2">
+                                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-600 dark:border-blue-400"></div>
+                                <span>Loading users...</span>
                               </div>
                             </TableCell>
-                            <TableCell>
-                              <Select
-                                value={user.role_id?.toString()}
-                                onValueChange={(value) => handleRoleChange(user.id, value)}
-                                disabled={updateUserMutation.isPending}
-                              >
-                                <SelectTrigger className="w-[180px]">
-                                  <SelectValue placeholder="Select role" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  {roles?.map((role) => (
-                                    <SelectItem key={role.id} value={role.id.toString()}>
-                                      {role.name}
-                                    </SelectItem>
-                                  ))}
-                                </SelectContent>
-                              </Select>
-                            </TableCell>
-                            <TableCell>
-                              <Badge variant={user.is_active ? "default" : "secondary"}>
-                                {user.is_active ? "Active" : "Inactive"}
-                              </Badge>
-                            </TableCell>
-                            <TableCell className="text-right">
-                              <DropdownMenu>
-                                <DropdownMenuTrigger asChild><Button variant="ghost" size="icon"><MoreHorizontal className="h-4 w-4" /></Button></DropdownMenuTrigger>
-                                <DropdownMenuContent align="end">
-                                  <DropdownMenuItem>Edit</DropdownMenuItem>
-                                  <DropdownMenuItem>
-                                    {user.is_active ? "Deactivate" : "Activate"}
-                                  </DropdownMenuItem>
-                                  <DropdownMenuItem className="text-red-500">Delete</DropdownMenuItem>
-                                </DropdownMenuContent>
-                              </DropdownMenu>
+                          </TableRow>
+                        ) : filteredUsers.length === 0 ? (
+                          <TableRow className="dark:border-slate-700">
+                            <TableCell colSpan={4} className="text-center py-8 dark:text-gray-400">
+                              No users found.
                             </TableCell>
                           </TableRow>
-                        ))
-                      )}
-                    </TableBody>
-                  </Table>
+                        ) : (
+                          filteredUsers.map((user) => (
+                            <TableRow key={user.id} className="border-b border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+                              <TableCell className="py-4">
+                                <div className="flex items-center gap-3">
+                                  <div className="relative">
+                                    <Avatar className="h-10 w-10 border-2 border-slate-200 dark:border-slate-600">
+                                      <AvatarImage src={user.profile_picture_url} />
+                                      <AvatarFallback className="bg-gradient-to-br from-blue-100 to-indigo-100 dark:from-blue-900/50 dark:to-indigo-900/50 text-blue-700 dark:text-blue-300 font-semibold">
+                                        {user.email.charAt(0).toUpperCase()}
+                                      </AvatarFallback>
+                                    </Avatar>
+                                    {user.presence_status && (
+                                      <span
+                                        className={`absolute bottom-0 right-0 h-3 w-3 rounded-full border-2 border-white dark:border-slate-800 ${
+                                          user.presence_status === 'online'
+                                            ? 'bg-green-500'
+                                            : user.presence_status === 'busy'
+                                            ? 'bg-yellow-500'
+                                            : 'bg-gray-400'
+                                        }`}
+                                        title={user.presence_status}
+                                      />
+                                    )}
+                                  </div>
+                                  <div>
+                                    <div className="font-medium dark:text-white">{user.first_name} {user.last_name}</div>
+                                    <div className="text-sm text-muted-foreground dark:text-gray-400">{user.email}</div>
+                                  </div>
+                                </div>
+                              </TableCell>
+                              <TableCell>
+                                <Select
+                                  value={user.role_id?.toString()}
+                                  onValueChange={(value) => handleRoleChange(user.id, value)}
+                                  disabled={updateUserMutation.isPending}
+                                >
+                                  <SelectTrigger className="w-[180px] dark:bg-slate-800 dark:border-slate-600 dark:text-white">
+                                    <SelectValue placeholder="Select role" />
+                                  </SelectTrigger>
+                                  <SelectContent className="dark:bg-slate-800 dark:border-slate-700">
+                                    {roles?.map((role) => (
+                                      <SelectItem key={role.id} value={role.id.toString()} className="dark:text-white dark:focus:bg-slate-700">
+                                        {role.name}
+                                      </SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
+                              </TableCell>
+                              <TableCell>
+                                <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${
+                                  user.is_active
+                                    ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 border border-green-200 dark:border-green-800'
+                                    : 'bg-gray-100 dark:bg-gray-900/30 text-gray-700 dark:text-gray-400 border border-gray-200 dark:border-gray-800'
+                                }`}>
+                                  {user.is_active ? "Active" : "Inactive"}
+                                </span>
+                              </TableCell>
+                              <TableCell className="text-right">
+                                <DropdownMenu>
+                                  <DropdownMenuTrigger asChild>
+                                    <Button variant="ghost" size="icon" className="hover:bg-slate-100 dark:hover:bg-slate-700">
+                                      <MoreHorizontal className="h-4 w-4 dark:text-gray-400" />
+                                    </Button>
+                                  </DropdownMenuTrigger>
+                                  <DropdownMenuContent align="end" className="dark:bg-slate-800 dark:border-slate-700">
+                                    <DropdownMenuItem
+                                      className="dark:text-white dark:focus:bg-slate-700"
+                                      onClick={() => openEditUserModal(user)}
+                                    >
+                                      <Edit className="h-4 w-4 mr-2" />
+                                      Edit
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem
+                                      className="dark:text-white dark:focus:bg-slate-700"
+                                      onClick={() => handleToggleUserActive(user.id, user.is_active)}
+                                    >
+                                      {user.is_active ? "Deactivate" : "Activate"}
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem
+                                      className="text-red-500 dark:text-red-400 dark:focus:bg-slate-700"
+                                      onClick={() => handleDeleteUser(user.id)}
+                                    >
+                                      <Trash2 className="h-4 w-4 mr-2" />
+                                      Delete
+                                    </DropdownMenuItem>
+                                  </DropdownMenuContent>
+                                </DropdownMenu>
+                              </TableCell>
+                            </TableRow>
+                          ))
+                        )}
+                      </TableBody>
+                    </Table>
+                  </div>
                 </CardContent>
               </Card>
             </TabsContent>
 
             {/* TEAMS TAB */}
-            <TabsContent value="teams" className="space-y-4 pt-4">
-              <div className="flex justify-between items-center">
-                <h3 className="text-lg font-semibold">Manage Teams</h3>
+            <TabsContent value="teams" className="space-y-5 pt-5">
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                <div>
+                  <h3 className="text-lg font-semibold dark:text-white">Manage Teams</h3>
+                  <p className="text-sm text-muted-foreground dark:text-gray-400">Create and organize teams within your organization</p>
+                </div>
                 <Dialog open={isCreateTeamModalOpen} onOpenChange={setCreateTeamModalOpen}>
-                  <DialogTrigger asChild><Button className="flex items-center gap-2"><Plus className="h-4 w-4" />Create Team</Button></DialogTrigger>
-                  <DialogContent>
-                    <DialogHeader><DialogTitle>Create New Team</DialogTitle></DialogHeader>
-                    <div className="py-4"><Input placeholder="Team Name" value={newTeamName} onChange={(e) => setNewTeamName(e.target.value)} /></div>
+                  <DialogTrigger asChild>
+                    <Button className="flex items-center gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white btn-hover-lift">
+                      <Plus className="h-4 w-4" />
+                      Create Team
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="dark:bg-slate-800 dark:border-slate-700">
+                    <DialogHeader>
+                      <DialogTitle className="dark:text-white">Create New Team</DialogTitle>
+                    </DialogHeader>
+                    <div className="py-4">
+                      <Label htmlFor="new-team-name" className="text-sm dark:text-gray-300 mb-1.5 block">Team Name</Label>
+                      <Input
+                        id="new-team-name"
+                        placeholder="e.g., Engineering, Marketing, Sales"
+                        value={newTeamName}
+                        onChange={(e) => setNewTeamName(e.target.value)}
+                        className="dark:bg-slate-900 dark:border-slate-600 dark:text-white"
+                      />
+                    </div>
                     <DialogFooter>
-                      <Button variant="outline" onClick={() => setCreateTeamModalOpen(false)}>Cancel</Button>
-                      <Button onClick={handleCreateTeam} disabled={createTeamMutation.isPending}>{createTeamMutation.isPending ? "Creating..." : "Create Team"}</Button>
+                      <Button variant="outline" onClick={() => setCreateTeamModalOpen(false)} className="dark:border-slate-600 dark:text-white dark:hover:bg-slate-700">
+                        Cancel
+                      </Button>
+                      <Button
+                        onClick={handleCreateTeam}
+                        disabled={createTeamMutation.isPending}
+                        className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white"
+                      >
+                        {createTeamMutation.isPending ? "Creating..." : "Create Team"}
+                      </Button>
                     </DialogFooter>
                   </DialogContent>
                 </Dialog>
               </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {isLoadingTeams ? <p>Loading teams...</p> : teams.map((team) => (
-                  <Card key={team.id} className="flex flex-col">
-                    <CardHeader><CardTitle>{team.name}</CardTitle></CardHeader>
-                    <CardContent className="flex-grow">
-                      <h4 className="font-semibold mb-2 text-sm">Members ({team.members.length})</h4>
-                      <div className="space-y-2">
-                        {team.members.length > 0 ? team.members.map((member) => (
-                          <div key={member.id} className="flex justify-between items-center text-sm">
-                            <span>{member.email}</span>
-                            <Button variant="ghost" size="sm" onClick={() => removeMemberMutation.mutate({ teamId: team.id, userId: member.id })}><Trash2 className="h-4 w-4 text-red-500"/></Button>
-                          </div>
-                        )) : <p className="text-sm text-gray-500">No members yet.</p>}
-                      </div>
-                    </CardContent>
-                    <CardContent><Button variant="outline" className="w-full" onClick={() => openAddMemberModal(team)}><UserPlus className="h-4 w-4 mr-2" />Add Member</Button></CardContent>
-                  </Card>
-                ))}
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                {isLoadingTeams ? (
+                  <div className="col-span-full flex items-center justify-center py-12">
+                    <div className="flex items-center gap-2 text-muted-foreground dark:text-gray-400">
+                      <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-600 dark:border-blue-400"></div>
+                      <span>Loading teams...</span>
+                    </div>
+                  </div>
+                ) : teams.length === 0 ? (
+                  <div className="col-span-full text-center py-12">
+                    <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-slate-100 dark:bg-slate-800 mb-4">
+                      <Users className="h-8 w-8 text-slate-400 dark:text-slate-600" />
+                    </div>
+                    <p className="text-muted-foreground dark:text-gray-400">No teams created yet. Create your first team to get started.</p>
+                  </div>
+                ) : (
+                  teams.map((team) => (
+                    <Card key={team.id} className="flex flex-col card-shadow-lg border-slate-200 dark:border-slate-700 dark:bg-slate-900/50 hover:shadow-xl transition-shadow">
+                      <CardHeader className="border-b border-slate-200 dark:border-slate-700 bg-gradient-to-r from-slate-50 to-slate-100 dark:from-slate-800/50 dark:to-slate-900/50">
+                        <div className="flex items-center justify-between">
+                          <CardTitle className="dark:text-white flex items-center gap-2">
+                            <div className="h-8 w-8 rounded-full bg-gradient-to-br from-blue-100 to-indigo-100 dark:from-blue-900/50 dark:to-indigo-900/50 flex items-center justify-center">
+                              <Users className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                            </div>
+                            {team.name}
+                          </CardTitle>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" size="icon" className="hover:bg-slate-100 dark:hover:bg-slate-700">
+                                <MoreHorizontal className="h-4 w-4 dark:text-gray-400" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end" className="dark:bg-slate-800 dark:border-slate-700">
+                              <DropdownMenuItem
+                                className="dark:text-white dark:focus:bg-slate-700"
+                                onClick={() => openEditTeamModal(team)}
+                              >
+                                <Edit className="h-4 w-4 mr-2" />
+                                Edit
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                className="text-red-500 dark:text-red-400 dark:focus:bg-slate-700"
+                                onClick={() => handleDeleteTeam(team.id)}
+                              >
+                                <Trash2 className="h-4 w-4 mr-2" />
+                                Delete
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </div>
+                      </CardHeader>
+                      <CardContent className="flex-grow pt-4">
+                        <div className="flex items-center justify-between mb-3">
+                          <h4 className="font-semibold text-sm dark:text-gray-300 uppercase tracking-wider">Members</h4>
+                          <span className="text-xs px-2 py-1 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 font-medium">
+                            {team.members.length}
+                          </span>
+                        </div>
+                        <div className="space-y-2 max-h-48 overflow-y-auto">
+                          {team.members.length > 0 ? (
+                            team.members.map((member) => (
+                              <div
+                                key={member.id}
+                                className="flex justify-between items-center text-sm p-2 rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700"
+                              >
+                                <div className="flex items-center gap-2 flex-1 min-w-0">
+                                  <Avatar className="h-6 w-6">
+                                    <AvatarImage src={member.user?.profile_picture_url} />
+                                    <AvatarFallback className="text-xs bg-gradient-to-br from-blue-100 to-indigo-100 dark:from-blue-900/50 dark:to-indigo-900/50 text-blue-700 dark:text-blue-300">
+                                      {member.user?.email?.charAt(0).toUpperCase() || 'U'}
+                                    </AvatarFallback>
+                                  </Avatar>
+                                  <span className="dark:text-white truncate">{member.user?.email || 'Unknown'}</span>
+                                </div>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => removeMemberMutation.mutate({ teamId: team.id, userId: member.user_id })}
+                                  className="hover:bg-red-50 dark:hover:bg-red-900/20"
+                                >
+                                  <Trash2 className="h-4 w-4 text-red-500 dark:text-red-400" />
+                                </Button>
+                              </div>
+                            ))
+                          ) : (
+                            <div className="text-center py-6">
+                              <p className="text-sm text-gray-500 dark:text-gray-400">No members yet.</p>
+                            </div>
+                          )}
+                        </div>
+                      </CardContent>
+                      <CardContent className="pt-0 pb-4">
+                        <Button
+                          variant="outline"
+                          className="w-full dark:border-slate-600 dark:text-white dark:hover:bg-slate-700 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors"
+                          onClick={() => openAddMemberModal(team)}
+                        >
+                          <UserPlus className="h-4 w-4 mr-2" />
+                          Add Member
+                        </Button>
+                      </CardContent>
+                    </Card>
+                  ))
+                )}
               </div>
             </TabsContent>
 
             {/* PERMISSIONS TAB */}
-            <TabsContent value="permissions" className="space-y-4 pt-4">
-              <div className="flex justify-between items-center">
-                <h3 className="text-lg font-semibold">Manage Roles</h3>
-                <Button className="flex items-center gap-2" onClick={() => openRoleModal(null)}><Plus className="h-4 w-4" />Create Role</Button>
+            <TabsContent value="permissions" className="space-y-5 pt-5">
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                <div>
+                  <h3 className="text-lg font-semibold dark:text-white">Manage Roles</h3>
+                  <p className="text-sm text-muted-foreground dark:text-gray-400">Define roles and assign permissions to control access</p>
+                </div>
+                <Button
+                  className="flex items-center gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white btn-hover-lift"
+                  onClick={() => openRoleModal(null)}
+                >
+                  <Plus className="h-4 w-4" />
+                  Create Role
+                </Button>
               </div>
-              <div className="space-y-4">
-                {isLoadingRoles ? <p>Loading roles...</p> : roles.map((role) => (
-                  <Card key={role.id}>
-                    <CardHeader className="flex flex-row items-center justify-between">
-                      <div>
-                        <CardTitle className="text-base">{role.name}</CardTitle>
-                        <CardDescription>{role.description}</CardDescription>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Button variant="outline" size="sm" onClick={() => openRoleModal(role)}><Edit className="h-4 w-4 mr-2" />Edit</Button>
-                        <Button variant="destructive" size="sm" onClick={() => deleteRoleMutation.mutate(role.id)}><Trash2 className="h-4 w-4 mr-2" />Delete</Button>
-                      </div>
-                    </CardHeader>
-                    <CardContent>
-                      <h4 className="font-semibold mb-2 text-sm">Permissions</h4>
-                      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
-                        {role.permissions.map(p => (
-                          <span key={p.id} className="flex items-center text-sm text-gray-700">
-                            <Check className="h-4 w-4 mr-1 text-green-500" /> {p.name}
+              <div className="space-y-4 max-h-[calc(100vh-20rem)] overflow-y-auto pr-1">
+                {isLoadingRoles ? (
+                  <div className="flex items-center justify-center py-12">
+                    <div className="flex items-center gap-2 text-muted-foreground dark:text-gray-400">
+                      <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-600 dark:border-blue-400"></div>
+                      <span>Loading roles...</span>
+                    </div>
+                  </div>
+                ) : roles.length === 0 ? (
+                  <div className="text-center py-12">
+                    <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-slate-100 dark:bg-slate-800 mb-4">
+                      <Shield className="h-8 w-8 text-slate-400 dark:text-slate-600" />
+                    </div>
+                    <p className="text-muted-foreground dark:text-gray-400">No roles created yet. Create your first role to get started.</p>
+                  </div>
+                ) : (
+                  roles.map((role) => (
+                    <Card key={role.id} className="card-shadow-lg border-slate-200 dark:border-slate-700 dark:bg-slate-900/50">
+                      <CardHeader className="flex flex-row items-start justify-between border-b border-slate-200 dark:border-slate-700 bg-gradient-to-r from-slate-50 to-slate-100 dark:from-slate-800/50 dark:to-slate-900/50">
+                        <div className="flex items-start gap-3 flex-1">
+                          <div className="h-10 w-10 rounded-full bg-gradient-to-br from-blue-100 to-indigo-100 dark:from-blue-900/50 dark:to-indigo-900/50 flex items-center justify-center flex-shrink-0">
+                            <Shield className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                          </div>
+                          <div className="flex-1">
+                            <CardTitle className="text-base dark:text-white">{role.name}</CardTitle>
+                            <CardDescription className="dark:text-gray-400 mt-1">
+                              {role.description || "No description provided"}
+                            </CardDescription>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => openRoleModal(role)}
+                            className="dark:border-slate-600 dark:text-white dark:hover:bg-slate-700"
+                          >
+                            <Edit className="h-4 w-4 mr-2" />
+                            Edit
+                          </Button>
+                          <Button
+                            variant="destructive"
+                            size="sm"
+                            onClick={() => deleteRoleMutation.mutate(role.id)}
+                            className="bg-red-600 hover:bg-red-700"
+                          >
+                            <Trash2 className="h-4 w-4 mr-2" />
+                            Delete
+                          </Button>
+                        </div>
+                      </CardHeader>
+                      <CardContent className="pt-4">
+                        <div className="flex items-center justify-between mb-3">
+                          <h4 className="font-semibold text-sm dark:text-gray-300 uppercase tracking-wider">Permissions</h4>
+                          <span className="text-xs px-2 py-1 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 font-medium">
+                            {role.permissions.length}
                           </span>
-                        ))}
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
+                        </div>
+                        {role.permissions.length > 0 ? (
+                          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
+                            {role.permissions.map((p) => (
+                              <div
+                                key={p.id}
+                                className="flex items-center text-sm p-2 rounded-lg bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800"
+                              >
+                                <Check className="h-4 w-4 mr-2 text-green-600 dark:text-green-400 flex-shrink-0" />
+                                <span className="dark:text-white truncate">{p.name}</span>
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          <div className="text-center py-6 bg-slate-50 dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700">
+                            <p className="text-sm text-gray-500 dark:text-gray-400">No permissions assigned to this role.</p>
+                          </div>
+                        )}
+                      </CardContent>
+                    </Card>
+                  ))
+                )}
               </div>
             </TabsContent>
           </Tabs>
@@ -463,40 +887,302 @@ export const TeamManagement = () => {
 
       {/* Add Member Modal */}
       <Dialog open={isAddMemberModalOpen} onOpenChange={setAddMemberModalOpen}>
-        <DialogContent>
-          <DialogHeader><DialogTitle>Add Member to {selectedTeamForMember?.name}</DialogTitle></DialogHeader>
+        <DialogContent className="dark:bg-slate-800 dark:border-slate-700">
+          <DialogHeader>
+            <DialogTitle className="dark:text-white flex items-center gap-2">
+              <UserPlus className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+              Add Member to {selectedTeamForMember?.name}
+            </DialogTitle>
+          </DialogHeader>
           <div className="space-y-4 py-4">
             <div>
-              <Label htmlFor="user-select">User</Label>
-              <Select onValueChange={setSelectedUserId} value={selectedUserId}><SelectTrigger id="user-select"><SelectValue placeholder="Select a user" /></SelectTrigger><SelectContent>{users.map(user => (<SelectItem key={user.id} value={user.id.toString()}>{user.email}</SelectItem>))}</SelectContent></Select>
+              <div className="flex items-center justify-between mb-2">
+                <Label className="text-sm dark:text-gray-300">
+                  Select Members
+                </Label>
+                <span className="text-xs px-2 py-1 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 font-medium">
+                  {selectedUserIds.length} selected
+                </span>
+              </div>
+              {availableUsers.length === 0 ? (
+                <div className="text-center py-8 border border-slate-200 dark:border-slate-700 rounded-lg bg-slate-50 dark:bg-slate-900">
+                  <p className="text-sm text-gray-500 dark:text-gray-400">All users are already members of this team.</p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 gap-2 max-h-80 overflow-y-auto p-3 border rounded-lg bg-slate-50 dark:bg-slate-900/50 border-slate-200 dark:border-slate-700">
+                  {availableUsers.map((user) => (
+                    <div
+                      key={user.id}
+                      className={`flex items-center space-x-3 p-3 rounded-lg border transition-all cursor-pointer hover:shadow-sm ${
+                        selectedUserIds.includes(user.id)
+                          ? 'bg-blue-50 dark:bg-blue-900/30 border-blue-300 dark:border-blue-700'
+                          : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-600'
+                      }`}
+                      onClick={() => handleUserSelectionToggle(user.id)}
+                    >
+                      <Checkbox
+                        id={`user-${user.id}`}
+                        checked={selectedUserIds.includes(user.id)}
+                        onCheckedChange={() => handleUserSelectionToggle(user.id)}
+                        className="dark:border-slate-500"
+                      />
+                      <div className="flex items-center gap-2 flex-1">
+                        <div className="relative">
+                          <Avatar className="h-8 w-8">
+                            <AvatarImage src={user.profile_picture_url} />
+                            <AvatarFallback className="text-xs bg-gradient-to-br from-blue-100 to-indigo-100 dark:from-blue-900/50 dark:to-indigo-900/50 text-blue-700 dark:text-blue-300">
+                              {user.email.charAt(0).toUpperCase()}
+                            </AvatarFallback>
+                          </Avatar>
+                          {user.presence_status && (
+                            <span
+                              className={`absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full border-2 border-white dark:border-slate-800 ${
+                                user.presence_status === 'online'
+                                  ? 'bg-green-500'
+                                  : user.presence_status === 'busy'
+                                  ? 'bg-yellow-500'
+                                  : 'bg-gray-400'
+                              }`}
+                            />
+                          )}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="text-sm font-medium dark:text-white truncate">
+                            {user.first_name} {user.last_name}
+                          </div>
+                          <div className="text-xs text-gray-500 dark:text-gray-400 truncate">{user.email}</div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
             <div>
-              <Label htmlFor="role-select">Role</Label>
-              <Select onValueChange={setSelectedMemberRole} defaultValue="member"><SelectTrigger id="role-select"><SelectValue placeholder="Select a role" /></SelectTrigger><SelectContent><SelectItem value="member">Member</SelectItem><SelectItem value="admin">Admin</SelectItem></SelectContent></Select>
+              <Label htmlFor="role-select" className="text-sm dark:text-gray-300 mb-1.5 block">
+                Team Role
+              </Label>
+              <Select onValueChange={setSelectedMemberRole} defaultValue="member">
+                <SelectTrigger id="role-select" className="dark:bg-slate-900 dark:border-slate-600 dark:text-white">
+                  <SelectValue placeholder="Select a role" />
+                </SelectTrigger>
+                <SelectContent className="dark:bg-slate-800 dark:border-slate-700">
+                  <SelectItem value="member" className="dark:text-white dark:focus:bg-slate-700">
+                    <div className="flex items-center gap-2">
+                      <Badge className="h-4 w-4" />
+                      Member
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="admin" className="dark:text-white dark:focus:bg-slate-700">
+                    <div className="flex items-center gap-2">
+                      <Shield className="h-4 w-4" />
+                      Admin
+                    </div>
+                  </SelectItem>
+                </SelectContent>
+              </Select>
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setAddMemberModalOpen(false)}>Cancel</Button>
-            <Button onClick={handleAddMember} disabled={addMemberMutation.isPending}>{addMemberMutation.isPending ? "Adding..." : "Add Member"}</Button>
+            <Button
+              variant="outline"
+              onClick={() => setAddMemberModalOpen(false)}
+              className="dark:border-slate-600 dark:text-white dark:hover:bg-slate-700"
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleAddMember}
+              disabled={addMemberMutation.isPending || selectedUserIds.length === 0}
+              className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white"
+            >
+              {addMemberMutation.isPending ? (
+                <>
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                  Adding...
+                </>
+              ) : (
+                <>
+                  <UserPlus className="h-4 w-4 mr-2" />
+                  Add {selectedUserIds.length > 0 ? `${selectedUserIds.length} ` : ''}Member{selectedUserIds.length !== 1 ? 's' : ''}
+                </>
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Team Modal */}
+      <Dialog open={isEditTeamModalOpen} onOpenChange={setEditTeamModalOpen}>
+        <DialogContent className="dark:bg-slate-800 dark:border-slate-700">
+          <DialogHeader>
+            <DialogTitle className="dark:text-white">Edit Team</DialogTitle>
+          </DialogHeader>
+          <div className="py-4">
+            <Label htmlFor="edit-team-name" className="text-sm dark:text-gray-300 mb-1.5 block">Team Name</Label>
+            <Input
+              id="edit-team-name"
+              placeholder="Enter team name"
+              value={editTeamName}
+              onChange={(e) => setEditTeamName(e.target.value)}
+              className="dark:bg-slate-900 dark:border-slate-600 dark:text-white"
+            />
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditTeamModalOpen(false)} className="dark:border-slate-600 dark:text-white dark:hover:bg-slate-700">
+              Cancel
+            </Button>
+            <Button
+              onClick={handleUpdateTeam}
+              disabled={updateTeamMutation.isPending}
+              className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white"
+            >
+              {updateTeamMutation.isPending ? "Updating..." : "Update Team"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit User Modal */}
+      <Dialog open={isEditUserModalOpen} onOpenChange={setEditUserModalOpen}>
+        <DialogContent className="dark:bg-slate-800 dark:border-slate-700">
+          <DialogHeader>
+            <DialogTitle className="dark:text-white">Edit User</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div>
+              <Label htmlFor="edit-user-email" className="text-sm dark:text-gray-300 mb-1.5 block">Email Address</Label>
+              <Input
+                id="edit-user-email"
+                placeholder="user@example.com"
+                type="email"
+                value={editUserEmail}
+                onChange={(e) => setEditUserEmail(e.target.value)}
+                className="dark:bg-slate-900 dark:border-slate-600 dark:text-white"
+              />
+            </div>
+            <div>
+              <Label htmlFor="edit-user-first-name" className="text-sm dark:text-gray-300 mb-1.5 block">First Name</Label>
+              <Input
+                id="edit-user-first-name"
+                placeholder="First Name"
+                value={editUserFirstName}
+                onChange={(e) => setEditUserFirstName(e.target.value)}
+                className="dark:bg-slate-900 dark:border-slate-600 dark:text-white"
+              />
+            </div>
+            <div>
+              <Label htmlFor="edit-user-last-name" className="text-sm dark:text-gray-300 mb-1.5 block">Last Name</Label>
+              <Input
+                id="edit-user-last-name"
+                placeholder="Last Name"
+                value={editUserLastName}
+                onChange={(e) => setEditUserLastName(e.target.value)}
+                className="dark:bg-slate-900 dark:border-slate-600 dark:text-white"
+              />
+            </div>
+            <div>
+              <Label htmlFor="edit-user-password" className="text-sm dark:text-gray-300 mb-1.5 block">New Password</Label>
+              <Input
+                id="edit-user-password"
+                placeholder="Leave blank to keep current password"
+                type="password"
+                value={editUserPassword}
+                onChange={(e) => setEditUserPassword(e.target.value)}
+                className="dark:bg-slate-900 dark:border-slate-600 dark:text-white"
+              />
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Only fill this field if you want to change the user's password</p>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditUserModalOpen(false)} className="dark:border-slate-600 dark:text-white dark:hover:bg-slate-700">
+              Cancel
+            </Button>
+            <Button
+              onClick={handleUpdateUser}
+              disabled={updateUserMutation.isPending}
+              className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white"
+            >
+              {updateUserMutation.isPending ? "Updating..." : "Update User"}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
       {/* Create/Edit Role Modal */}
       <Dialog open={isRoleModalOpen} onOpenChange={setRoleModalOpen}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader><DialogTitle>{selectedRole ? 'Edit Role' : 'Create New Role'}</DialogTitle></DialogHeader>
-          <div className="space-y-4 py-4">
-            <Input placeholder="Role Name" value={roleName} onChange={(e) => setRoleName(e.target.value)} />
-            <Input placeholder="Role Description" value={roleDescription} onChange={(e) => setRoleDescription(e.target.value)} />
+        <DialogContent className="max-w-2xl dark:bg-slate-800 dark:border-slate-700">
+          <DialogHeader>
+            <DialogTitle className="dark:text-white flex items-center gap-2">
+              <Shield className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+              {selectedRole ? 'Edit Role' : 'Create New Role'}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-5 py-4">
             <div>
-              <h4 className="font-semibold mb-2">Permissions</h4>
-              {isLoadingPermissions ? <p>Loading permissions...</p> : (
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-4 max-h-60 overflow-y-auto p-2 border rounded-md">
-                  {permissions.map(p => (
-                    <div key={p.id} className="flex items-center space-x-2">
-                      <Checkbox id={`perm-${p.id}`} checked={rolePermissions.includes(p.id)} onCheckedChange={() => handlePermissionToggle(p.id)} />
-                      <label htmlFor={`perm-${p.id}`} className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">{p.name}</label>
+              <Label htmlFor="role-name" className="text-sm dark:text-gray-300 mb-1.5 block">
+                Role Name
+              </Label>
+              <Input
+                id="role-name"
+                placeholder="e.g., Administrator, Editor, Viewer"
+                value={roleName}
+                onChange={(e) => setRoleName(e.target.value)}
+                className="dark:bg-slate-900 dark:border-slate-600 dark:text-white"
+              />
+            </div>
+            <div>
+              <Label htmlFor="role-description" className="text-sm dark:text-gray-300 mb-1.5 block">
+                Role Description
+              </Label>
+              <Input
+                id="role-description"
+                placeholder="Brief description of this role's purpose"
+                value={roleDescription}
+                onChange={(e) => setRoleDescription(e.target.value)}
+                className="dark:bg-slate-900 dark:border-slate-600 dark:text-white"
+              />
+            </div>
+            <div>
+              <div className="flex items-center justify-between mb-3">
+                <h4 className="font-semibold text-sm dark:text-gray-300 uppercase tracking-wider">
+                  Permissions
+                </h4>
+                <span className="text-xs px-2 py-1 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 font-medium">
+                  {rolePermissions.length} selected
+                </span>
+              </div>
+              {isLoadingPermissions ? (
+                <div className="flex items-center justify-center py-8">
+                  <div className="flex items-center gap-2 text-muted-foreground dark:text-gray-400">
+                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-600 dark:border-blue-400"></div>
+                    <span>Loading permissions...</span>
+                  </div>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 max-h-80 overflow-y-auto p-3 border rounded-lg bg-slate-50 dark:bg-slate-900/50 border-slate-200 dark:border-slate-700">
+                  {permissions.map((p) => (
+                    <div
+                      key={p.id}
+                      className={`flex items-center space-x-2 p-2.5 rounded-lg border transition-all cursor-pointer hover:shadow-sm ${
+                        rolePermissions.includes(p.id)
+                          ? 'bg-blue-50 dark:bg-blue-900/30 border-blue-300 dark:border-blue-700'
+                          : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-600'
+                      }`}
+                      onClick={() => handlePermissionToggle(p.id)}
+                    >
+                      <Checkbox
+                        id={`perm-${p.id}`}
+                        checked={rolePermissions.includes(p.id)}
+                        onCheckedChange={() => handlePermissionToggle(p.id)}
+                        className="dark:border-slate-500"
+                      />
+                      <label
+                        htmlFor={`perm-${p.id}`}
+                        className="text-sm font-medium leading-none cursor-pointer dark:text-white flex-1"
+                      >
+                        {p.name}
+                      </label>
                     </div>
                   ))}
                 </div>
@@ -504,8 +1190,30 @@ export const TeamManagement = () => {
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setRoleModalOpen(false)}>Cancel</Button>
-            <Button onClick={handleSaveRole} disabled={roleMutation.isPending}>{roleMutation.isPending ? "Saving..." : "Save Role"}</Button>
+            <Button
+              variant="outline"
+              onClick={() => setRoleModalOpen(false)}
+              className="dark:border-slate-600 dark:text-white dark:hover:bg-slate-700"
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleSaveRole}
+              disabled={roleMutation.isPending}
+              className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white"
+            >
+              {roleMutation.isPending ? (
+                <>
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                  Saving...
+                </>
+              ) : (
+                <>
+                  <Check className="h-4 w-4 mr-2" />
+                  Save Role
+                </>
+              )}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

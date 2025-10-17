@@ -12,7 +12,8 @@ import ReactFlow, {
 import 'reactflow/dist/style.css';
 import { toast } from "sonner";
 import { Button } from '@/components/ui/button';
-import { Edit, ArrowLeft } from 'lucide-react';
+import { Edit, ArrowLeft, Workflow as WorkflowIcon, Sparkles } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
 
 import Sidebar from './Sidebar';
 import PropertiesPanel from './PropertiesPanel';
@@ -94,10 +95,21 @@ const VisualWorkflowBuilder = () => {
   const onDrop = useCallback((event) => {
     event.preventDefault();
     if (!reactFlowInstance) return;
+    
     const type = event.dataTransfer.getData('application/reactflow');
+    const dataString = event.dataTransfer.getData('application/reactflow-data');
+    const data = dataString ? JSON.parse(dataString) : { label: `${type} node` };
+
     if (typeof type === 'undefined' || !type) return;
+    
     const position = reactFlowInstance.screenToFlowPosition({ x: event.clientX, y: event.clientY });
-    const newNode = { id: `${type}-${+new Date()}`, type, position, data: { label: `${type} node` } };
+    const newNode = { 
+      id: `${type}-${+new Date()}`, 
+      type, 
+      position, 
+      data
+    };
+    
     setNodes((nds) => nds.concat(newNode));
   }, [reactFlowInstance, setNodes]);
   const onNodeClick = useCallback((_, node) => setSelectedNode(node), []);
@@ -123,26 +135,54 @@ const VisualWorkflowBuilder = () => {
         workflow={workflow}
         onSave={saveWorkflow}
       />
-      <div className="dndflow" style={{ height: '100vh', display: 'flex', flexDirection: 'column' }}>
-        <div style={{ padding: '10px', borderBottom: '1px solid #eee', display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap', background: 'white' }}>
-            <Button onClick={() => navigate('/dashboard/workflows')} variant="outline" size="sm">
-                <ArrowLeft className="h-4 w-4 mr-2" />
-                Back to Workflows
+      <div className="dndflow h-screen flex flex-col bg-gradient-to-br from-slate-50 to-slate-100">
+        {/* Enhanced Toolbar */}
+        <div className="flex-shrink-0 px-6 py-4 border-b bg-white shadow-sm">
+          <div className="flex items-center gap-4 flex-wrap">
+            <Button onClick={() => navigate('/dashboard/workflows')} variant="outline" size="sm" className="btn-hover-lift">
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Back
             </Button>
-            <div className="flex-grow">
-                <h2 className="text-lg font-semibold">{workflow.name} - v{workflow.version}</h2>
-                <p className="text-sm text-gray-600">{workflow.description || "No description provided."}</p>
+            <div className="flex-grow min-w-0">
+              <div className="flex items-center gap-3">
+                <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center flex-shrink-0">
+                  <WorkflowIcon className="h-4 w-4 text-white" />
+                </div>
+                <div className="min-w-0">
+                  <h2 className="text-lg font-bold truncate">{workflow.name}</h2>
+                  <div className="flex items-center gap-2">
+                    <Badge variant="outline" className="text-xs">v{workflow.version}</Badge>
+                    {workflow.is_active && (
+                      <Badge className="bg-green-100 text-green-800 border-green-200 text-xs">
+                        <Sparkles className="h-3 w-3 mr-1" />
+                        Active
+                      </Badge>
+                    )}
+                  </div>
+                </div>
+              </div>
             </div>
-            <Button onClick={() => saveWorkflow()} variant="default">Save Current</Button>
-            <Button onClick={() => setDetailsDialogOpen(true)} variant="ghost" size="icon">
-              <Edit className="h-4 w-4" />
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button onClick={() => setDetailsDialogOpen(true)} variant="outline" size="sm" className="btn-hover-lift">
+                <Edit className="h-4 w-4 mr-2" />
+                Edit Details
+              </Button>
+              <Button
+                onClick={() => saveWorkflow()}
+                size="sm"
+                className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 btn-hover-lift"
+              >
+                Save Workflow
+              </Button>
+            </div>
+          </div>
         </div>
-        
-        <div style={{ display: 'flex', flexGrow: 1 }}>
+
+        {/* Main Workflow Canvas */}
+        <div className="flex-grow flex overflow-hidden">
           <ReactFlowProvider>
             <Sidebar />
-            <div className="reactflow-wrapper" style={{ flexGrow: 1, height: '100%' }} ref={reactFlowWrapper}>
+            <div className="flex-grow h-full workflow-canvas" ref={reactFlowWrapper}>
               <ReactFlow
                 nodes={nodes}
                 edges={edges}
@@ -157,13 +197,26 @@ const VisualWorkflowBuilder = () => {
                 fitView
                 nodeTypes={nodeTypes}
                 deleteKeyCode={['Backspace', 'Delete']}
+                defaultEdgeOptions={{
+                  type: 'smoothstep',
+                  animated: true,
+                  style: { stroke: '#6366f1', strokeWidth: 2 },
+                }}
               >
-                <Controls />
-                <MiniMap />
-                <Background variant="dots" gap={12} size={1} />
+                <Controls className="bg-white rounded-lg shadow-lg border" />
+                <MiniMap
+                  className="bg-white rounded-lg shadow-lg border"
+                  nodeColor={(node) => {
+                    if (node.type === 'start') return '#10b981';
+                    if (node.type === 'output') return '#ef4444';
+                    return '#3b82f6';
+                  }}
+                />
+                <Background variant="dots" gap={20} size={1} color="#cbd5e1" />
               </ReactFlow>
             </div>
-            <div style={{ width: '300px', borderLeft: '1px solid #eee', background: '#fcfcfc' }}>
+            {/* Enhanced Properties Panel */}
+            <div className="w-80 border-l bg-white shadow-lg overflow-y-auto">
               <PropertiesPanel selectedNode={selectedNode} nodes={nodes} setNodes={setNodes} deleteNode={deleteNode} />
               {workflow && workflow.id && (
                 <Comments workflowId={workflow.id} />

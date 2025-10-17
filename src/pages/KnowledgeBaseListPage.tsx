@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Plus, Edit, Trash2, BookOpen } from "lucide-react";
+import { Plus, Edit, Trash2, BookOpen, Eye } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -30,6 +30,8 @@ import {
 } from "@/components/ui/alert-dialog";
 import { toast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
+import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
+import { solarizedlight } from 'react-syntax-highlighter/dist/esm/styles/prism';
 
 const KnowledgeBasePage = () => {
   const queryClient = useQueryClient();
@@ -38,6 +40,7 @@ const KnowledgeBasePage = () => {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isImportDialogOpen, setIsImportDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isPreviewDialogOpen, setIsPreviewDialogOpen] = useState(false);
   const [currentKnowledgeBase, setCurrentKnowledgeBase] = useState<KnowledgeBase | null>(null);
 
   const [formData, setFormData] = useState({
@@ -65,6 +68,19 @@ const KnowledgeBasePage = () => {
       }
       return response.json();
     },
+  });
+
+  const { data: previewContent, isLoading: isLoadingPreview } = useQuery<{ content: string }>({ 
+    queryKey: ['knowledgeBaseContent', currentKnowledgeBase?.id],
+    queryFn: async () => {
+      if (!currentKnowledgeBase) return { content: "" };
+      const response = await authFetch(`/api/v1/knowledge-bases/${currentKnowledgeBase.id}/content`);
+      if (!response.ok) {
+        throw new Error("Failed to fetch knowledge base content");
+      }
+      return response.json();
+    },
+    enabled: isPreviewDialogOpen && !!currentKnowledgeBase,
   });
 
   const createKnowledgeBaseMutation = useMutation({
@@ -245,6 +261,11 @@ const KnowledgeBasePage = () => {
     setIsEditDialogOpen(true);
   };
 
+  const handlePreviewClick = (kb: KnowledgeBase) => {
+    setCurrentKnowledgeBase(kb);
+    setIsPreviewDialogOpen(true);
+  };
+
   const handleGenerateQnA = () => {
     if (currentKnowledgeBase) {
       generateQnAMutation.mutate({
@@ -264,115 +285,173 @@ const KnowledgeBasePage = () => {
     }
   };
 
-  if (isLoading) return <div>Loading knowledge bases...</div>;
-  if (isError) return <div>Error loading knowledge bases.</div>;
+  if (isLoading) return (
+    <div className="flex items-center justify-center py-12">
+      <div className="flex items-center gap-2 text-muted-foreground dark:text-gray-400">
+        <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-purple-600 dark:border-purple-400"></div>
+        <span>Loading knowledge bases...</span>
+      </div>
+    </div>
+  );
+  if (isError) return (
+    <div className="text-center py-12">
+      <div className="text-red-600 dark:text-red-400">Error loading knowledge bases.</div>
+    </div>
+  );
 
   return (
-    <div className="space-y-6 animate-fade-in">
-      <div className="flex justify-between items-center">
+    <div className="w-full max-w-7xl mx-auto p-4 md:p-8 space-y-8">
+      <header className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
-          <h2 className="text-3xl font-bold bg-gradient-to-r from-blue-900 to-cyan-900 bg-clip-text text-transparent">
-            Knowledge Bases
-          </h2>
-          <p className="text-gray-600 mt-1">Manage the knowledge your AI agents use</p>
+          <h1 className="text-4xl font-bold bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent mb-2">
+            📚 Knowledge Bases
+          </h1>
+          <p className="text-gray-600 dark:text-gray-400 text-lg">Manage the knowledge your AI agents use to provide accurate responses</p>
         </div>
-        <Button onClick={() => setIsCreateDialogOpen(true)}>
-          <Plus className="h-4 w-4 mr-2" />
-          Create New Knowledge Base
-        </Button>
-        <Button onClick={() => setIsImportDialogOpen(true)} variant="outline">
-          <BookOpen className="h-4 w-4 mr-2" />
-          Import from URL
-        </Button>
-      </div>
+        <div className="flex items-center gap-3">
+          <Button onClick={() => setIsImportDialogOpen(true)} variant="outline" className="dark:border-slate-600 dark:text-white dark:hover:bg-slate-700">
+            <BookOpen className="h-4 w-4 mr-2" />
+            Import from URL
+          </Button>
+          <Button onClick={() => setIsCreateDialogOpen(true)} className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white shadow-lg hover:shadow-xl transition-all">
+            <Plus className="h-4 w-4 mr-2" />
+            Create New
+          </Button>
+        </div>
+      </header>
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        {knowledgeBases?.map((kb) => (
-          <Card key={kb.id} className="hover:shadow-md transition-shadow">
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <CardTitle className="text-lg flex items-center gap-2">
-                  <BookOpen className="h-5 w-5 text-blue-600" />
-                  {kb.name}
-                </CardTitle>
-                <div className="flex items-center space-x-2">
-                  <Button variant="ghost" size="sm" onClick={() => handleEditClick(kb)}>
-                    <Edit className="h-4 w-4" />
+      {knowledgeBases && knowledgeBases.length > 0 ? (
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          {knowledgeBases.map((kb) => (
+            <Card key={kb.id} className="card-shadow-lg border-slate-200 dark:border-slate-700 dark:bg-slate-800 hover:shadow-xl transition-all duration-300">
+              <CardHeader className="border-b border-slate-200 dark:border-slate-700 bg-gradient-to-r from-slate-50 to-slate-100 dark:from-slate-800 dark:to-slate-900">
+                <div className="flex items-center gap-3 mb-2">
+                  <div className="w-12 h-12 bg-gradient-to-br from-purple-100 to-indigo-100 dark:from-purple-900/50 dark:to-indigo-900/50 rounded-lg flex items-center justify-center shadow-sm">
+                    <BookOpen className="h-6 w-6 text-purple-600 dark:text-purple-400" />
+                  </div>
+                  <CardTitle className="text-lg font-semibold dark:text-white flex-1 truncate">{kb.name}</CardTitle>
+                </div>
+              </CardHeader>
+              <CardContent className="pt-4">
+                <CardDescription className="line-clamp-3 text-gray-600 dark:text-gray-400 mb-4">
+                  {kb.description || "No description provided."}
+                </CardDescription>
+                <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-200 dark:border-slate-700">
+                  <Button variant="outline" size="sm" onClick={() => handlePreviewClick(kb)} className="dark:border-slate-600 dark:text-white dark:hover:bg-slate-700">
+                    <Eye className="h-4 w-4 mr-1" /> Preview
+                  </Button>
+                  <Button variant="outline" size="sm" onClick={() => handleEditClick(kb)} className="dark:border-slate-600 dark:text-white dark:hover:bg-slate-700">
+                    <Edit className="h-4 w-4 mr-1" /> Edit
                   </Button>
                   <AlertDialog>
                     <AlertDialogTrigger asChild>
-                      <Button variant="ghost" size="sm" className="text-red-600">
+                      <Button variant="destructive" size="sm" className="bg-red-600 hover:bg-red-700">
                         <Trash2 className="h-4 w-4" />
                       </Button>
                     </AlertDialogTrigger>
-                    <AlertDialogContent>
+                    <AlertDialogContent className="dark:bg-slate-800 dark:border-slate-700">
                       <AlertDialogHeader>
-                        <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-                        <AlertDialogDescription>
-                          This action cannot be undone. This will permanently delete the knowledge base.
+                        <AlertDialogTitle className="dark:text-white">Are you absolutely sure?</AlertDialogTitle>
+                        <AlertDialogDescription className="dark:text-gray-400">
+                          This will permanently delete the <span className="font-bold text-white">{kb.name}</span> knowledge base. This action cannot be undone.
                         </AlertDialogDescription>
                       </AlertDialogHeader>
                       <AlertDialogFooter>
-                        <AlertDialogCancel>Cancel</AlertDialogCancel>
-                        <AlertDialogAction onClick={() => deleteKnowledgeBaseMutation.mutate(kb.id)}>
-                          Continue
+                        <AlertDialogCancel className="dark:border-slate-600 dark:text-white dark:hover:bg-slate-700">Cancel</AlertDialogCancel>
+                        <AlertDialogAction onClick={() => deleteKnowledgeBaseMutation.mutate(kb.id)} className="bg-red-600 hover:bg-red-700">
+                          Delete
                         </AlertDialogAction>
                       </AlertDialogFooter>
                     </AlertDialogContent>
                   </AlertDialog>
                 </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      ) : (
+        <div className="text-center py-16 border-2 border-dashed border-slate-300 dark:border-slate-700 rounded-lg bg-slate-50 dark:bg-slate-900/50">
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-slate-100 dark:bg-slate-800 mb-4">
+            <BookOpen className="w-8 h-8 text-slate-400 dark:text-slate-500" />
+          </div>
+          <h3 className="text-xl font-semibold text-gray-800 dark:text-white">No knowledge bases found</h3>
+          <p className="text-gray-500 dark:text-gray-400 mt-2">Create your first knowledge base to get started</p>
+          <Button onClick={() => setIsCreateDialogOpen(true)} className="mt-6 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white">
+            <Plus className="mr-2 h-4 w-4" /> Create Knowledge Base
+          </Button>
+        </div>
+      )}
+
+      {/* Preview Knowledge Base Dialog */}
+      <Dialog open={isPreviewDialogOpen} onOpenChange={setIsPreviewDialogOpen}>
+        <DialogContent className="sm:max-w-[80vw] max-h-[80vh] overflow-y-auto dark:bg-slate-800 dark:border-slate-700">
+          <DialogHeader>
+            <DialogTitle className="dark:text-white">Preview: {currentKnowledgeBase?.name}</DialogTitle>
+          </DialogHeader>
+          {isLoadingPreview ? (
+            <div className="flex items-center justify-center py-8">
+              <div className="flex items-center gap-2 text-muted-foreground dark:text-gray-400">
+                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-purple-600 dark:border-purple-400"></div>
+                <span>Loading content...</span>
               </div>
-            </CardHeader>
-            <CardContent>
-              <CardDescription className="line-clamp-3">{kb.description || "No description provided."}</CardDescription>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+            </div>
+          ) : (
+            <div className="bg-slate-50 dark:bg-slate-900 rounded-lg p-4 max-h-[60vh] overflow-y-auto">
+              <pre className="text-sm dark:text-gray-300 whitespace-pre-wrap">{previewContent?.content || ""}</pre>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
 
       {/* Create Knowledge Base Dialog */}
       <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-        <DialogContent className="sm:max-w-[600px] max-h-[80vh] overflow-y-auto">
+        <DialogContent className="sm:max-w-[600px] max-h-[80vh] overflow-y-auto dark:bg-slate-800 dark:border-slate-700">
           <DialogHeader>
-            <DialogTitle>Create New Knowledge Base</DialogTitle>
-            <DialogDescription>
+            <DialogTitle className="dark:text-white">Create New Knowledge Base</DialogTitle>
+            <DialogDescription className="dark:text-gray-400">
               Add a new knowledge base for your AI agents to reference.
             </DialogDescription>
           </DialogHeader>
           <form onSubmit={handleCreateSubmit} className="space-y-4">
             <div>
-              <Label htmlFor="name">Name</Label>
+              <Label htmlFor="name" className="dark:text-gray-300">Name</Label>
               <Input
                 id="name"
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                 required
+                className="dark:bg-slate-900 dark:border-slate-600 dark:text-white"
+                placeholder="e.g., Product Documentation"
               />
             </div>
             <div>
-              <Label htmlFor="description">Description (Optional)</Label>
+              <Label htmlFor="description" className="dark:text-gray-300">Description (Optional)</Label>
               <Textarea
                 id="description"
                 value={formData.description}
                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                 rows={3}
+                className="dark:bg-slate-900 dark:border-slate-600 dark:text-white"
+                placeholder="Describe what this knowledge base contains..."
               />
             </div>
             <div>
-              <Label htmlFor="content">Content</Label>
+              <Label htmlFor="content" className="dark:text-gray-300">Content</Label>
               <Textarea
                 id="content"
                 value={formData.content}
                 onChange={(e) => setFormData({ ...formData, content: e.target.value })}
                 rows={10}
                 required
+                className="dark:bg-slate-900 dark:border-slate-600 dark:text-white font-mono text-sm"
+                placeholder="Enter your knowledge base content here..."
               />
             </div>
             <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
+              <Button type="button" variant="outline" onClick={() => setIsCreateDialogOpen(false)} className="dark:border-slate-600 dark:text-white dark:hover:bg-slate-700">
                 Cancel
               </Button>
-              <Button type="submit" disabled={createKnowledgeBaseMutation.isPending}>
+              <Button type="submit" disabled={createKnowledgeBaseMutation.isPending} className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white">
                 {createKnowledgeBaseMutation.isPending ? "Creating..." : "Create Knowledge Base"}
               </Button>
             </DialogFooter>
@@ -382,16 +461,16 @@ const KnowledgeBasePage = () => {
 
       {/* Import from URL Dialog */}
       <Dialog open={isImportDialogOpen} onOpenChange={setIsImportDialogOpen}>
-        <DialogContent className="sm:max-w-[600px] max-h-[80vh] overflow-y-auto">
+        <DialogContent className="sm:max-w-[600px] max-h-[80vh] overflow-y-auto dark:bg-slate-800 dark:border-slate-700">
           <DialogHeader>
-            <DialogTitle>Import Knowledge Base from URL</DialogTitle>
-            <DialogDescription>
+            <DialogTitle className="dark:text-white">Import Knowledge Base from URL</DialogTitle>
+            <DialogDescription className="dark:text-gray-400">
               Enter a URL to extract content and create a new knowledge base.
             </DialogDescription>
           </DialogHeader>
           <form onSubmit={handleImportSubmit} className="space-y-4">
             <div>
-              <Label htmlFor="import-url">URL</Label>
+              <Label htmlFor="import-url" className="dark:text-gray-300">URL</Label>
               <Input
                 id="import-url"
                 value={importFormData.url}
@@ -399,6 +478,7 @@ const KnowledgeBasePage = () => {
                 required
                 type="url"
                 placeholder="https://example.com/article"
+                className="dark:bg-slate-900 dark:border-slate-600 dark:text-white"
               />
             </div>
 
@@ -408,19 +488,19 @@ const KnowledgeBasePage = () => {
                 id="appendMode"
                 checked={isAppendMode}
                 onChange={(e) => setIsAppendMode(e.target.checked)}
-                className="h-4 w-4"
+                className="h-4 w-4 rounded border-slate-300 dark:border-slate-600"
               />
-              <Label htmlFor="appendMode">Append to existing Knowledge Base</Label>
+              <Label htmlFor="appendMode" className="dark:text-gray-300">Append to existing Knowledge Base</Label>
             </div>
 
             {isAppendMode ? (
               <div>
-                <Label htmlFor="select-kb">Select Knowledge Base</Label>
+                <Label htmlFor="select-kb" className="dark:text-gray-300">Select Knowledge Base</Label>
                 <select
                   id="select-kb"
                   value={selectedKbToAppendId || ""}
                   onChange={(e) => setSelectedKbToAppendId(parseInt(e.target.value))}
-                  className="w-full mt-1 p-2 border rounded-md"
+                  className="w-full mt-1 p-2 border rounded-md dark:bg-slate-900 dark:border-slate-600 dark:text-white"
                 >
                   <option value="">Select a Knowledge Base</option>
                   {knowledgeBases?.map((kb) => (
@@ -433,31 +513,35 @@ const KnowledgeBasePage = () => {
             ) : (
               <>
                 <div>
-                  <Label htmlFor="import-name">Name</Label>
+                  <Label htmlFor="import-name" className="dark:text-gray-300">Name</Label>
                   <Input
                     id="import-name"
                     value={importFormData.name}
                     onChange={(e) => setImportFormData({ ...importFormData, name: e.target.value })}
                     required
+                    className="dark:bg-slate-900 dark:border-slate-600 dark:text-white"
+                    placeholder="e.g., Imported Documentation"
                   />
                 </div>
                 <div>
-                  <Label htmlFor="import-description">Description (Optional)</Label>
+                  <Label htmlFor="import-description" className="dark:text-gray-300">Description (Optional)</Label>
                   <Textarea
                     id="import-description"
                     value={importFormData.description}
                     onChange={(e) => setImportFormData({ ...importFormData, description: e.target.value })}
                     rows={3}
+                    className="dark:bg-slate-900 dark:border-slate-600 dark:text-white"
+                    placeholder="Describe the imported content..."
                   />
                 </div>
               </>
             )}
 
             <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => setIsImportDialogOpen(false)}>
+              <Button type="button" variant="outline" onClick={() => setIsImportDialogOpen(false)} className="dark:border-slate-600 dark:text-white dark:hover:bg-slate-700">
                 Cancel
               </Button>
-              <Button type="submit" disabled={importKnowledgeBaseMutation.isPending}>
+              <Button type="submit" disabled={importKnowledgeBaseMutation.isPending} className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white">
                 {importKnowledgeBaseMutation.isPending ? "Importing..." : "Import Knowledge Base"}
               </Button>
             </DialogFooter>
@@ -467,40 +551,43 @@ const KnowledgeBasePage = () => {
 
       {/* Edit Knowledge Base Dialog */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent className="sm:max-w-[600px] max-h-[80vh] overflow-y-auto">
+        <DialogContent className="sm:max-w-[600px] max-h-[80vh] overflow-y-auto dark:bg-slate-800 dark:border-slate-700">
           <DialogHeader>
-            <DialogTitle>Edit Knowledge Base</DialogTitle>
-            <DialogDescription>
+            <DialogTitle className="dark:text-white">Edit Knowledge Base</DialogTitle>
+            <DialogDescription className="dark:text-gray-400">
               Modify the details and content of your knowledge base.
             </DialogDescription>
           </DialogHeader>
           <form onSubmit={handleEditSubmit} className="space-y-4">
             <div>
-              <Label htmlFor="edit-name">Name</Label>
+              <Label htmlFor="edit-name" className="dark:text-gray-300">Name</Label>
               <Input
                 id="edit-name"
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                 required
+                className="dark:bg-slate-900 dark:border-slate-600 dark:text-white"
               />
             </div>
             <div>
-              <Label htmlFor="edit-description">Description (Optional)</Label>
+              <Label htmlFor="edit-description" className="dark:text-gray-300">Description (Optional)</Label>
               <Textarea
                 id="edit-description"
                 value={formData.description}
                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                 rows={3}
+                className="dark:bg-slate-900 dark:border-slate-600 dark:text-white"
               />
             </div>
             <div>
-              <Label htmlFor="edit-content">Content</Label>
+              <Label htmlFor="edit-content" className="dark:text-gray-300">Content</Label>
               <Textarea
                 id="edit-content"
                 value={formData.content}
                 onChange={(e) => setFormData({ ...formData, content: e.target.value })}
                 rows={10}
                 required
+                className="dark:bg-slate-900 dark:border-slate-600 dark:text-white font-mono text-sm"
               />
             </div>
             <Button
@@ -508,14 +595,15 @@ const KnowledgeBasePage = () => {
               variant="outline"
               onClick={handleGenerateQnA}
               disabled={generateQnAMutation.isPending || !formData.content}
+              className="w-full dark:border-slate-600 dark:text-white dark:hover:bg-slate-700"
             >
-              {generateQnAMutation.isPending ? "Generating..." : "Create Questions and Answers"}
+              {generateQnAMutation.isPending ? "Generating..." : "✨ Create Questions and Answers"}
             </Button>
             <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => setIsEditDialogOpen(false)}>
+              <Button type="button" variant="outline" onClick={() => setIsEditDialogOpen(false)} className="dark:border-slate-600 dark:text-white dark:hover:bg-slate-700">
                 Cancel
               </Button>
-              <Button type="submit" disabled={updateKnowledgeBaseMutation.isPending}>
+              <Button type="submit" disabled={updateKnowledgeBaseMutation.isPending} className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white">
                 {updateKnowledgeBaseMutation.isPending ? "Saving..." : "Save Changes"}
               </Button>
             </DialogFooter>
