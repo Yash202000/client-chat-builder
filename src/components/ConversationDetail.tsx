@@ -16,6 +16,7 @@ import { ConversationSidebar } from './ConversationSidebar';
 import { useAuth } from "@/hooks/useAuth";
 import { Label } from './ui/label';
 import { useVoiceConnection } from '@/hooks/use-voice-connection';
+import { getWebSocketUrl } from '@/config/api';
 
 interface ConversationDetailProps {
   sessionId: string;
@@ -82,7 +83,7 @@ export const ConversationDetail: React.FC<ConversationDetailProps> = ({ sessionI
 
   useEffect(() => {
     if (sessionId && agentId && token) {
-      ws.current = new WebSocket(`ws://${window.location.host}/api/v1/ws/${agentId}/${sessionId}?user_type=agent&token=${token}`);
+      ws.current = new WebSocket(`${getWebSocketUrl()}/api/v1/ws/${agentId}/${sessionId}?user_type=agent&token=${token}`);
       ws.current.onmessage = (event) => {
         const newMessage = JSON.parse(event.data);
         queryClient.setQueryData<ChatMessage[]>(['messages', agentId, sessionId, companyId], (oldMessages = []) => {

@@ -1,6 +1,7 @@
 
 import { useState, useRef, useCallback } from 'react';
 import { useAuth } from './useAuth';
+import { getWebSocketUrl } from '@/config/api';
 
 export const useVoiceConnection = (agentId: number, sessionId: string, voiceId: string = "21m00Tcm4TlvDq8ikWAM") => {
     const { token } = useAuth();
@@ -36,7 +37,7 @@ export const useVoiceConnection = (agentId: number, sessionId: string, voiceId: 
     const initVoiceWebSocket = useCallback(() => {
         if (voiceWsRef.current && voiceWsRef.current.readyState === WebSocket.OPEN) return;
         
-        const wsUrl = `ws://${window.location.host}/api/v1/ws/internal/voice/${agentId}/${sessionId}?user_type=agent&voice_id=${voiceId}&token=${token}`;
+        const wsUrl = `${getWebSocketUrl()}/api/v1/ws/internal/voice/${agentId}/${sessionId}?user_type=agent&voice_id=${voiceId}&token=${token}`;
         voiceWsRef.current = new WebSocket(wsUrl);
 
         voiceWsRef.current.onopen = () => {

@@ -12,6 +12,7 @@ import { toast } from '@/hooks/use-toast';
 import { Session, User } from '@/types';
 import { useAuth } from "@/hooks/useAuth";
 import { MessageSquare, Phone, Globe, Instagram, Mail, Send, Search, Filter, Archive, ChevronLeft, ChevronRight } from 'lucide-react'; // Icons for channels
+import { getWebSocketUrl } from '@/config/api';
 
 const ConversationsPage: React.FC = () => {
   const queryClient = useQueryClient();
@@ -101,7 +102,7 @@ const ConversationsPage: React.FC = () => {
     enabled: !!companyId,
   });
 
-  const wsUrl = companyId ? `ws://${window.location.host}/api/v1/ws/updates/ws/${companyId}?token=${token}` : null;
+  const wsUrl = companyId ? `${getWebSocketUrl()}/api/v1/ws/updates/ws/${companyId}?token=${token}` : null;
 
   // Connect to the company-wide WebSocket for real-time updates
   useWebSocket(
