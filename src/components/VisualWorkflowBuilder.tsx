@@ -12,13 +12,20 @@ import ReactFlow, {
 import 'reactflow/dist/style.css';
 import { toast } from "sonner";
 import { Button } from '@/components/ui/button';
-import { Edit, ArrowLeft, Workflow as WorkflowIcon, Sparkles } from 'lucide-react';
+import { Edit, ArrowLeft, Workflow as WorkflowIcon, Sparkles, Settings } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 
 import Sidebar from './Sidebar';
 import PropertiesPanel from './PropertiesPanel';
 import { WorkflowDetailsDialog } from './WorkflowDetailsDialog';
-import { LlmNode, ToolNode, ConditionNode, OutputNode, StartNode, ListenNode, PromptNode, KnowledgeNode, CodeNode, DataManipulationNode, HttpRequestNode, FormNode } from './CustomNodes';
+import { WorkflowSettings } from './WorkflowSettings';
+import {
+  LlmNode, ToolNode, ConditionNode, OutputNode, StartNode, ListenNode, PromptNode,
+  KnowledgeNode, CodeNode, DataManipulationNode, HttpRequestNode, FormNode,
+  IntentRouterNode, EntityCollectorNode, CheckEntityNode, UpdateContextNode,
+  TagConversationNode, AssignToAgentNode, SetStatusNode,
+  TriggerWebSocketNode, TriggerWhatsAppNode, TriggerTelegramNode, TriggerInstagramNode
+} from './CustomNodes';
 import { useAuth } from "@/hooks/useAuth";
 import { Comments } from './Comments';
 
@@ -33,16 +40,24 @@ const VisualWorkflowBuilder = () => {
   const [selectedNode, setSelectedNode] = useState(null);
   const [workflow, setWorkflow] = useState(null);
   const [isDetailsDialogOpen, setDetailsDialogOpen] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
 
   const { workflowId } = useParams();
   const navigate = useNavigate();
   const reactFlowWrapper = useRef(null);
   const { authFetch } = useAuth();
 
-  const nodeTypes = useMemo(() => ({ 
-    llm: LlmNode, tool: ToolNode, condition: ConditionNode, output: OutputNode, 
-    start: StartNode, listen: ListenNode, prompt: PromptNode, knowledge: KnowledgeNode, 
-    code: CodeNode, data_manipulation: DataManipulationNode, http_request: HttpRequestNode, form: FormNode
+  const nodeTypes = useMemo(() => ({
+    llm: LlmNode, tool: ToolNode, condition: ConditionNode, output: OutputNode,
+    start: StartNode, listen: ListenNode, prompt: PromptNode, knowledge: KnowledgeNode,
+    code: CodeNode, data_manipulation: DataManipulationNode, http_request: HttpRequestNode, form: FormNode,
+    // Chat-specific nodes
+    intent_router: IntentRouterNode, entity_collector: EntityCollectorNode, check_entity: CheckEntityNode,
+    update_context: UpdateContextNode, tag_conversation: TagConversationNode,
+    assign_to_agent: AssignToAgentNode, set_status: SetStatusNode,
+    // Trigger nodes
+    trigger_websocket: TriggerWebSocketNode, trigger_whatsapp: TriggerWhatsAppNode,
+    trigger_telegram: TriggerTelegramNode, trigger_instagram: TriggerInstagramNode
   }), []);
 
   useEffect(() => {
@@ -65,8 +80,105 @@ const VisualWorkflowBuilder = () => {
     fetchWorkflow();
   }, [workflowId, authFetch, navigate, setNodes, setEdges]);
 
+  const validateWorkflow = () => {
+    const errors = [];
+
+    // Trigger node types that can start a workflow
+    const triggerTypes = ['trigger_websocket', 'trigger_whatsapp', 'trigger_telegram', 'trigger_instagram'];
+
+    // Check for start node OR trigger node
+    const hasStartNode = nodes.some(node => node.type === 'start');
+    const hasTriggerNode = nodes.some(node => triggerTypes.includes(node.type));
+
+    if (!hasStartNode && !hasTriggerNode) {
+      errors.push("Missing Start node or Trigger node (WebSocket, WhatsApp, Telegram, Instagram)");
+    }
+
+    // Check for output node
+    const hasOutputNode = nodes.some(node => node.type === 'output');
+    if (!hasOutputNode) {
+      errors.push("Missing Output node");
+    }
+
+    // Check each node for required connections
+    nodes.forEach(node => {
+      const outgoingEdges = edges.filter(edge => edge.source === node.id);
+
+      // Skip validation for output nodes (they don't need outgoing edges)
+      if (node.type === 'output') return;
+
+      // Check condition nodes for both true and false edges
+      if (node.type === 'condition') {
+        const hasTrueEdge = outgoingEdges.some(edge => edge.sourceHandle === 'true');
+        const hasFalseEdge = outgoingEdges.some(edge => edge.sourceHandle === 'false');
+
+        if (!hasTrueEdge) {
+          errors.push(`Condition node "${node.data.label || node.id}" is missing TRUE edge`);
+        }
+        if (!hasFalseEdge) {
+          errors.push(`Condition node "${node.data.label || node.id}" is missing FALSE edge`);
+        }
+      }
+      // Check all other nodes (except start, triggers, and output) have at least one outgoing edge
+      else if (node.type !== 'start' && !triggerTypes.includes(node.type) && outgoingEdges.length === 0) {
+        errors.push(`Node "${node.data.label || node.id}" has no outgoing connection`);
+      }
+    });
+
+    // Check for orphaned nodes (nodes not connected to the workflow)
+    const connectedNodeIds = new Set();
+
+    // Find all entry points (start node or trigger nodes)
+    const entryNodes = nodes.filter(n => n.type === 'start' || triggerTypes.includes(n.type));
+
+    if (entryNodes.length > 0) {
+      const visited = new Set();
+      const queue = entryNodes.map(n => n.id);
+
+      while (queue.length > 0) {
+        const currentId = queue.shift();
+        if (visited.has(currentId)) continue;
+        visited.add(currentId);
+        connectedNodeIds.add(currentId);
+
+        edges.forEach(edge => {
+          if (edge.source === currentId && !visited.has(edge.target)) {
+            queue.push(edge.target);
+          }
+        });
+      }
+
+      // Check for orphaned nodes (excluding entry points)
+      nodes.forEach(node => {
+        const isEntryPoint = node.type === 'start' || triggerTypes.includes(node.type);
+        if (!connectedNodeIds.has(node.id) && !isEntryPoint) {
+          errors.push(`Node "${node.data.label || node.id}" is not connected to the workflow`);
+        }
+      });
+    }
+
+    return errors;
+  };
+
   const saveWorkflow = async (details) => {
     if (!workflow) return toast.error("No workflow selected.");
+
+    // Validate workflow before saving
+    const validationErrors = validateWorkflow();
+    if (validationErrors.length > 0) {
+      toast.error(
+        <div className="space-y-2">
+          <div className="font-semibold">Cannot save workflow. Please fix the following issues:</div>
+          <ul className="list-disc list-inside space-y-1">
+            {validationErrors.map((error, index) => (
+              <li key={index} className="text-sm">{error}</li>
+            ))}
+          </ul>
+        </div>,
+        { duration: 8000 }
+      );
+      return;
+    }
 
     const flowVisualData = { nodes, edges };
     const updatedWorkflow = {
@@ -135,6 +247,11 @@ const VisualWorkflowBuilder = () => {
         workflow={workflow}
         onSave={saveWorkflow}
       />
+      <WorkflowSettings
+        open={showSettings}
+        onOpenChange={setShowSettings}
+        workflowId={workflow?.id}
+      />
       <div className="dndflow h-screen flex flex-col bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-950">
         {/* Enhanced Toolbar */}
         <div className="flex-shrink-0 px-6 py-4 border-b border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-sm">
@@ -166,6 +283,10 @@ const VisualWorkflowBuilder = () => {
               <Button onClick={() => setDetailsDialogOpen(true)} variant="outline" size="sm" className="btn-hover-lift">
                 <Edit className="h-4 w-4 mr-2" />
                 Edit Details
+              </Button>
+              <Button onClick={() => setShowSettings(true)} variant="outline" size="sm" className="btn-hover-lift">
+                <Settings className="h-4 w-4 mr-2" />
+                Settings
               </Button>
               <Button
                 onClick={() => saveWorkflow()}

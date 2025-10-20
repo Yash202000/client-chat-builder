@@ -1,7 +1,11 @@
 
 import React from 'react';
 import { Handle, Position } from 'reactflow';
-import { Bot, Cog, GitBranch, MessageSquare, Ear, HelpCircle, BookOpen, Code, SquareStack, Globe, ClipboardList } from 'lucide-react';
+import {
+  Bot, Cog, GitBranch, MessageSquare, Ear, HelpCircle, BookOpen, Code,
+  SquareStack, Globe, ClipboardList, Target, Notebook, CheckCircle,
+  Database, Tag, UserPlus, Activity, Zap, Phone, Send, Instagram, Wifi
+} from 'lucide-react';
 
 export const LlmNode = ({ data }) => (
   <div className="px-4 py-3 border-2 border-blue-200 dark:border-blue-700 rounded-xl bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-950/50 dark:to-indigo-950/50 shadow-lg hover:shadow-xl transition-shadow backdrop-blur-sm">
@@ -49,10 +53,10 @@ export const ConditionNode = ({ data }) => (
 );
 
 export const OutputNode = ({ data }) => (
-  <div className="px-4 py-3 border-2 border-red-200 dark:border-red-700 rounded-xl bg-gradient-to-br from-red-50 to-rose-50 dark:from-red-950/50 dark:to-rose-950/50 shadow-lg hover:shadow-xl transition-shadow backdrop-blur-sm">
-    <Handle type="target" position={Position.Top} className="w-3 h-3 !bg-red-500 dark:!bg-red-400 border-2 border-white dark:border-slate-800" />
+  <div className="px-4 py-3 border-2 border-indigo-200 dark:border-indigo-700 rounded-xl bg-gradient-to-br from-indigo-50 to-blue-50 dark:from-indigo-950 dark:to-blue-950 shadow-lg hover:shadow-xl transition-shadow">
+    <Handle type="target" position={Position.Top} className="w-3 h-3 !bg-indigo-500 dark:!bg-indigo-400 border-2 border-white dark:border-slate-800" />
     <div className="flex items-center gap-2 mb-2">
-      <div className="p-1.5 rounded-lg bg-red-500 dark:bg-red-600">
+      <div className="p-1.5 rounded-lg bg-indigo-500 dark:bg-indigo-600">
         <MessageSquare size={16} className="text-white" />
       </div>
       <strong className="text-sm font-semibold text-slate-900 dark:text-white">{data.label}</strong>
@@ -171,5 +175,202 @@ export const FormNode = ({ data }) => (
     </div>
     <div className="text-xs text-slate-600 dark:text-slate-400 font-medium">Pauses for form input</div>
     <Handle type="source" position={Position.Bottom} id="output" className="w-3 h-3 !bg-slate-600 dark:!bg-slate-400 border-2 border-white dark:border-slate-800" />
+  </div>
+);
+
+// ============================================================
+// NEW CHAT-SPECIFIC NODES
+// ============================================================
+
+export const IntentRouterNode = ({ data }) => (
+  <div className="px-4 py-3 border-2 border-violet-200 dark:border-violet-700 rounded-xl bg-gradient-to-br from-violet-50 to-purple-50 dark:from-violet-950/50 dark:to-purple-950/50 shadow-lg hover:shadow-xl transition-shadow backdrop-blur-sm">
+    <Handle type="target" position={Position.Top} className="w-3 h-3 !bg-violet-500 dark:!bg-violet-400 border-2 border-white dark:border-slate-800" />
+    <div className="flex items-center gap-2 mb-2">
+      <div className="p-1.5 rounded-lg bg-violet-500 dark:bg-violet-600">
+        <Target size={16} className="text-white" />
+      </div>
+      <strong className="text-sm font-semibold text-slate-900 dark:text-white">{data.label || 'Intent Router'}</strong>
+    </div>
+    <div className="text-xs text-slate-600 dark:text-slate-400 font-medium">Routes by detected intent</div>
+    {/* Multiple output handles for different intent routes */}
+    <Handle type="source" position={Position.Bottom} id="default" className="w-3 h-3 !bg-slate-600 dark:!bg-slate-400 border-2 border-white dark:border-slate-800" />
+    <Handle type="source" position={Position.Right} id="route1" style={{ top: '40%' }} className="w-3 h-3 !bg-violet-500 dark:!bg-violet-400 border-2 border-white dark:border-slate-800" />
+    <Handle type="source" position={Position.Right} id="route2" style={{ top: '60%' }} className="w-3 h-3 !bg-purple-500 dark:!bg-purple-400 border-2 border-white dark:border-slate-800" />
+  </div>
+);
+
+export const EntityCollectorNode = ({ data }) => (
+  <div className="px-4 py-3 border-2 border-rose-200 dark:border-rose-700 rounded-xl bg-gradient-to-br from-rose-50 to-pink-50 dark:from-rose-950/50 dark:to-pink-950/50 shadow-lg hover:shadow-xl transition-shadow backdrop-blur-sm">
+    <Handle type="target" position={Position.Top} className="w-3 h-3 !bg-rose-500 dark:!bg-rose-400 border-2 border-white dark:border-slate-800" />
+    <div className="flex items-center gap-2 mb-2">
+      <div className="p-1.5 rounded-lg bg-rose-500 dark:bg-rose-600">
+        <Notebook size={16} className="text-white" />
+      </div>
+      <strong className="text-sm font-semibold text-slate-900 dark:text-white">{data.label || 'Collect Entities'}</strong>
+    </div>
+    <div className="text-xs text-slate-600 dark:text-slate-400 font-medium">Gathers required information</div>
+    <Handle type="source" position={Position.Bottom} id="complete" className="w-3 h-3 !bg-green-500 dark:!bg-green-400 border-2 border-white dark:border-slate-800" />
+    <Handle type="source" position={Position.Right} id="partial" className="w-3 h-3 !bg-amber-500 dark:!bg-amber-400 border-2 border-white dark:border-slate-800" />
+  </div>
+);
+
+export const CheckEntityNode = ({ data }) => (
+  <div className="px-4 py-3 border-2 border-emerald-200 dark:border-emerald-700 rounded-xl bg-gradient-to-br from-emerald-50 to-teal-50 dark:from-emerald-950/50 dark:to-teal-950/50 shadow-lg hover:shadow-xl transition-shadow backdrop-blur-sm">
+    <Handle type="target" position={Position.Top} className="w-3 h-3 !bg-emerald-500 dark:!bg-emerald-400 border-2 border-white dark:border-slate-800" />
+    <div className="flex items-center gap-2 mb-2">
+      <div className="p-1.5 rounded-lg bg-emerald-500 dark:bg-emerald-600">
+        <CheckCircle size={16} className="text-white" />
+      </div>
+      <strong className="text-sm font-semibold text-slate-900 dark:text-white">{data.label || 'Check Entity'}</strong>
+    </div>
+    <div className="text-xs text-slate-600 dark:text-slate-400 font-medium">Validates entity exists</div>
+    <Handle type="source" position={Position.Bottom} id="true" style={{ left: '30%' }} className="w-3 h-3 !bg-green-500 dark:!bg-green-400 border-2 border-white dark:border-slate-800" />
+    <Handle type="source" position={Position.Bottom} id="false" style={{ left: '70%' }} className="w-3 h-3 !bg-red-500 dark:!bg-red-400 border-2 border-white dark:border-slate-800" />
+  </div>
+);
+
+export const UpdateContextNode = ({ data }) => (
+  <div className="px-4 py-3 border-2 border-blue-200 dark:border-blue-700 rounded-xl bg-gradient-to-br from-blue-50 to-cyan-50 dark:from-blue-950/50 dark:to-cyan-950/50 shadow-lg hover:shadow-xl transition-shadow backdrop-blur-sm">
+    <Handle type="target" position={Position.Top} className="w-3 h-3 !bg-blue-500 dark:!bg-blue-400 border-2 border-white dark:border-slate-800" />
+    <div className="flex items-center gap-2 mb-2">
+      <div className="p-1.5 rounded-lg bg-blue-500 dark:bg-blue-600">
+        <Database size={16} className="text-white" />
+      </div>
+      <strong className="text-sm font-semibold text-slate-900 dark:text-white">{data.label || 'Update Context'}</strong>
+    </div>
+    <div className="text-xs text-slate-600 dark:text-slate-400 font-medium">Sets context variables</div>
+    <Handle type="source" position={Position.Bottom} id="output" className="w-3 h-3 !bg-slate-600 dark:!bg-slate-400 border-2 border-white dark:border-slate-800" />
+  </div>
+);
+
+export const TagConversationNode = ({ data }) => (
+  <div className="px-4 py-3 border-2 border-fuchsia-200 dark:border-fuchsia-700 rounded-xl bg-gradient-to-br from-fuchsia-50 to-pink-50 dark:from-fuchsia-950/50 dark:to-pink-950/50 shadow-lg hover:shadow-xl transition-shadow backdrop-blur-sm">
+    <Handle type="target" position={Position.Top} className="w-3 h-3 !bg-fuchsia-500 dark:!bg-fuchsia-400 border-2 border-white dark:border-slate-800" />
+    <div className="flex items-center gap-2 mb-2">
+      <div className="p-1.5 rounded-lg bg-fuchsia-500 dark:bg-fuchsia-600">
+        <Tag size={16} className="text-white" />
+      </div>
+      <strong className="text-sm font-semibold text-slate-900 dark:text-white">{data.label || 'Tag Conversation'}</strong>
+    </div>
+    <div className="text-xs text-slate-600 dark:text-slate-400 font-medium">Adds organizational tags</div>
+    <Handle type="source" position={Position.Bottom} id="output" className="w-3 h-3 !bg-slate-600 dark:!bg-slate-400 border-2 border-white dark:border-slate-800" />
+  </div>
+);
+
+export const AssignToAgentNode = ({ data }) => (
+  <div className="px-4 py-3 border-2 border-orange-200 dark:border-orange-700 rounded-xl bg-gradient-to-br from-orange-50 to-amber-50 dark:from-orange-950/50 dark:to-amber-950/50 shadow-lg hover:shadow-xl transition-shadow backdrop-blur-sm">
+    <Handle type="target" position={Position.Top} className="w-3 h-3 !bg-orange-500 dark:!bg-orange-400 border-2 border-white dark:border-slate-800" />
+    <div className="flex items-center gap-2 mb-2">
+      <div className="p-1.5 rounded-lg bg-orange-500 dark:bg-orange-600">
+        <UserPlus size={16} className="text-white" />
+      </div>
+      <strong className="text-sm font-semibold text-slate-900 dark:text-white">{data.label || 'Assign to Agent'}</strong>
+    </div>
+    <div className="text-xs text-slate-600 dark:text-slate-400 font-medium">Transfers to human agent</div>
+    <Handle type="source" position={Position.Bottom} id="output" className="w-3 h-3 !bg-slate-600 dark:!bg-slate-400 border-2 border-white dark:border-slate-800" />
+  </div>
+);
+
+export const SetStatusNode = ({ data }) => (
+  <div className="px-4 py-3 border-2 border-lime-200 dark:border-lime-700 rounded-xl bg-gradient-to-br from-lime-50 to-green-50 dark:from-lime-950/50 dark:to-green-950/50 shadow-lg hover:shadow-xl transition-shadow backdrop-blur-sm">
+    <Handle type="target" position={Position.Top} className="w-3 h-3 !bg-lime-500 dark:!bg-lime-400 border-2 border-white dark:border-slate-800" />
+    <div className="flex items-center gap-2 mb-2">
+      <div className="p-1.5 rounded-lg bg-lime-500 dark:bg-lime-600">
+        <Activity size={16} className="text-white" />
+      </div>
+      <strong className="text-sm font-semibold text-slate-900 dark:text-white">{data.label || 'Set Status'}</strong>
+    </div>
+    <div className="text-xs text-slate-600 dark:text-slate-400 font-medium">Changes conversation status</div>
+    <Handle type="source" position={Position.Bottom} id="output" className="w-3 h-3 !bg-slate-600 dark:!bg-slate-400 border-2 border-white dark:border-slate-800" />
+  </div>
+);
+
+// ========== TRIGGER NODES ==========
+
+export const TriggerWebSocketNode = ({ data }) => (
+  <div className="px-5 py-4 border-3 border-cyan-300 dark:border-cyan-600 rounded-xl bg-gradient-to-br from-cyan-100 to-blue-100 dark:from-cyan-900/60 dark:to-blue-900/60 shadow-xl hover:shadow-2xl transition-shadow backdrop-blur-sm ring-2 ring-cyan-200 dark:ring-cyan-700">
+    <div className="flex items-center gap-2 mb-2">
+      <div className="p-2 rounded-lg bg-gradient-to-br from-cyan-500 to-blue-500 shadow-md">
+        <Wifi size={18} className="text-white" />
+      </div>
+      <div>
+        <strong className="text-sm font-bold text-slate-900 dark:text-white">{data.label || 'WebSocket Trigger'}</strong>
+        <div className="flex items-center gap-1 mt-0.5">
+          <Zap size={10} className="text-cyan-600 dark:text-cyan-400" />
+          <span className="text-[10px] font-semibold text-cyan-700 dark:text-cyan-300">TRIGGER</span>
+        </div>
+      </div>
+    </div>
+    <div className="text-xs text-slate-600 dark:text-slate-400 font-medium mb-1">Real-time conversations</div>
+    {data.agent_id && (
+      <div className="text-[10px] text-cyan-700 dark:text-cyan-300 font-medium">Agent: {data.agent_name || `#${data.agent_id}`}</div>
+    )}
+    <Handle type="source" position={Position.Bottom} id="message" className="w-4 h-4 !bg-cyan-500 dark:!bg-cyan-400 border-2 border-white dark:border-slate-800" />
+  </div>
+);
+
+export const TriggerWhatsAppNode = ({ data }) => (
+  <div className="px-5 py-4 border-3 border-green-300 dark:border-green-600 rounded-xl bg-gradient-to-br from-green-100 to-emerald-100 dark:from-green-900/60 dark:to-emerald-900/60 shadow-xl hover:shadow-2xl transition-shadow backdrop-blur-sm ring-2 ring-green-200 dark:ring-green-700">
+    <div className="flex items-center gap-2 mb-2">
+      <div className="p-2 rounded-lg bg-gradient-to-br from-green-500 to-emerald-500 shadow-md">
+        <Phone size={18} className="text-white" />
+      </div>
+      <div>
+        <strong className="text-sm font-bold text-slate-900 dark:text-white">{data.label || 'WhatsApp Trigger'}</strong>
+        <div className="flex items-center gap-1 mt-0.5">
+          <Zap size={10} className="text-green-600 dark:text-green-400" />
+          <span className="text-[10px] font-semibold text-green-700 dark:text-green-300">TRIGGER</span>
+        </div>
+      </div>
+    </div>
+    <div className="text-xs text-slate-600 dark:text-slate-400 font-medium mb-1">WhatsApp messages</div>
+    {data.agent_id && (
+      <div className="text-[10px] text-green-700 dark:text-green-300 font-medium">Agent: {data.agent_name || `#${data.agent_id}`}</div>
+    )}
+    <Handle type="source" position={Position.Bottom} id="message" className="w-4 h-4 !bg-green-500 dark:!bg-green-400 border-2 border-white dark:border-slate-800" />
+  </div>
+);
+
+export const TriggerTelegramNode = ({ data }) => (
+  <div className="px-5 py-4 border-3 border-sky-300 dark:border-sky-600 rounded-xl bg-gradient-to-br from-sky-100 to-blue-100 dark:from-sky-900/60 dark:to-blue-900/60 shadow-xl hover:shadow-2xl transition-shadow backdrop-blur-sm ring-2 ring-sky-200 dark:ring-sky-700">
+    <div className="flex items-center gap-2 mb-2">
+      <div className="p-2 rounded-lg bg-gradient-to-br from-sky-500 to-blue-500 shadow-md">
+        <Send size={18} className="text-white" />
+      </div>
+      <div>
+        <strong className="text-sm font-bold text-slate-900 dark:text-white">{data.label || 'Telegram Trigger'}</strong>
+        <div className="flex items-center gap-1 mt-0.5">
+          <Zap size={10} className="text-sky-600 dark:text-sky-400" />
+          <span className="text-[10px] font-semibold text-sky-700 dark:text-sky-300">TRIGGER</span>
+        </div>
+      </div>
+    </div>
+    <div className="text-xs text-slate-600 dark:text-slate-400 font-medium mb-1">Telegram messages</div>
+    {data.agent_id && (
+      <div className="text-[10px] text-sky-700 dark:text-sky-300 font-medium">Agent: {data.agent_name || `#${data.agent_id}`}</div>
+    )}
+    <Handle type="source" position={Position.Bottom} id="message" className="w-4 h-4 !bg-sky-500 dark:!bg-sky-400 border-2 border-white dark:border-slate-800" />
+  </div>
+);
+
+export const TriggerInstagramNode = ({ data }) => (
+  <div className="px-5 py-4 border-3 border-pink-300 dark:border-pink-600 rounded-xl bg-gradient-to-br from-pink-100 to-fuchsia-100 dark:from-pink-900/60 dark:to-fuchsia-900/60 shadow-xl hover:shadow-2xl transition-shadow backdrop-blur-sm ring-2 ring-pink-200 dark:ring-pink-700">
+    <div className="flex items-center gap-2 mb-2">
+      <div className="p-2 rounded-lg bg-gradient-to-br from-pink-500 to-fuchsia-500 shadow-md">
+        <Instagram size={18} className="text-white" />
+      </div>
+      <div>
+        <strong className="text-sm font-bold text-slate-900 dark:text-white">{data.label || 'Instagram Trigger'}</strong>
+        <div className="flex items-center gap-1 mt-0.5">
+          <Zap size={10} className="text-pink-600 dark:text-pink-400" />
+          <span className="text-[10px] font-semibold text-pink-700 dark:text-pink-300">TRIGGER</span>
+        </div>
+      </div>
+    </div>
+    <div className="text-xs text-slate-600 dark:text-slate-400 font-medium mb-1">Instagram DMs</div>
+    {data.agent_id && (
+      <div className="text-[10px] text-pink-700 dark:text-pink-300 font-medium">Agent: {data.agent_name || `#${data.agent_id}`}</div>
+    )}
+    <Handle type="source" position={Position.Bottom} id="message" className="w-4 h-4 !bg-pink-500 dark:!bg-pink-400 border-2 border-white dark:border-slate-800" />
   </div>
 );

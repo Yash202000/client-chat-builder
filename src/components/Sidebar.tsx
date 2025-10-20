@@ -1,5 +1,10 @@
 import React, { useState } from 'react';
-import { Bot, Cog, GitBranch, MessageSquare, Ear, HelpCircle, BookOpen, Code, SquareStack, Globe, ClipboardList, Wrench, ChevronDown, ChevronRight } from 'lucide-react';
+import {
+  Bot, Cog, GitBranch, MessageSquare, Ear, HelpCircle, BookOpen, Code,
+  SquareStack, Globe, ClipboardList, Wrench, ChevronDown, ChevronRight,
+  Target, Notebook, CheckCircle, Database, Tag, UserPlus, Activity,
+  Zap, Wifi, Phone, Send, Instagram
+} from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
 import { useEffect } from 'react';
@@ -70,7 +75,14 @@ const Sidebar = () => {
     <aside
       className="w-64 border-r border-slate-200 dark:border-slate-700 p-4 bg-slate-50 dark:bg-slate-900 overflow-y-auto"
     >
-      <AccordionSection title="Node Library">
+      <AccordionSection title="Triggers">
+        <DraggableNode type="trigger_websocket" label="WebSocket" icon={<Wifi size={20} />} nodeData={{}} />
+        <DraggableNode type="trigger_whatsapp" label="WhatsApp" icon={<Phone size={20} />} nodeData={{}} />
+        <DraggableNode type="trigger_telegram" label="Telegram" icon={<Send size={20} />} nodeData={{}} />
+        <DraggableNode type="trigger_instagram" label="Instagram" icon={<Instagram size={20} />} nodeData={{}} />
+      </AccordionSection>
+
+      <AccordionSection title="Core Nodes">
         <DraggableNode type="llm" label="LLM Prompt" icon={<Bot size={20} />} nodeData={{}} />
         <DraggableNode type="listen" label="Listen for Input" icon={<Ear size={20} />} nodeData={{}} />
         <DraggableNode type="prompt" label="Prompt for Input" icon={<HelpCircle size={20} />} nodeData={{}} />
@@ -81,6 +93,16 @@ const Sidebar = () => {
         <DraggableNode type="data_manipulation" label="Data Manipulation" icon={<SquareStack size={20} />} nodeData={{}} />
         <DraggableNode type="http_request" label="HTTP Request" icon={<Globe size={20} />} nodeData={{}} />
         <DraggableNode type="output" label="Output" icon={<MessageSquare size={20} />} nodeData={{}} />
+      </AccordionSection>
+
+      <AccordionSection title="Chat & Conversation">
+        <DraggableNode type="intent_router" label="Intent Router" icon={<Target size={20} />} nodeData={{}} />
+        <DraggableNode type="entity_collector" label="Collect Entities" icon={<Notebook size={20} />} nodeData={{}} />
+        <DraggableNode type="check_entity" label="Check Entity" icon={<CheckCircle size={20} />} nodeData={{}} />
+        <DraggableNode type="update_context" label="Update Context" icon={<Database size={20} />} nodeData={{}} />
+        <DraggableNode type="tag_conversation" label="Tag Conversation" icon={<Tag size={20} />} nodeData={{}} />
+        <DraggableNode type="assign_to_agent" label="Assign to Agent" icon={<UserPlus size={20} />} nodeData={{}} />
+        <DraggableNode type="set_status" label="Set Status" icon={<Activity size={20} />} nodeData={{}} />
       </AccordionSection>
 
       {prebuiltTools.length > 0 && (
