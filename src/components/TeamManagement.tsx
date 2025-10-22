@@ -123,7 +123,7 @@ export const TeamManagement = () => {
     }).then(res => { if (!res.ok) throw new Error('Failed to create user'); return res.json() }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['users', companyId] });
-      toast({ title: 'Success', description: 'User created successfully.' });
+      toast({ title: 'Success', variant: 'success', description: 'User created successfully.' });
       setAddUserModalOpen(false);
       setNewUserEmail("");
       setNewUserPassword("");
@@ -139,7 +139,7 @@ export const TeamManagement = () => {
     }).then(res => { if (!res.ok) throw new Error('Failed to create team'); return res.json() }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['teams', companyId] });
-      toast({ title: 'Success', description: 'Team created successfully.' });
+      toast({ title: 'Success', variant: 'success', description: 'Team created successfully.' });
       setCreateTeamModalOpen(false);
       setNewTeamName("");
     },
@@ -164,7 +164,7 @@ export const TeamManagement = () => {
     }).then(res => { if (!res.ok) throw new Error('Failed to remove member'); return res.json() }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['teams', companyId] });
-      toast({ title: 'Success', description: 'Member removed successfully.' });
+      toast({ title: 'Success', variant: 'success', description: 'Member removed successfully.' });
     },
     onError: (e: Error) => toast({ title: 'Error', description: e.message, variant: 'destructive' }),
   });
@@ -183,7 +183,7 @@ export const TeamManagement = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['roles', companyId] });
-      toast({ title: 'Success', description: 'Role saved successfully.' });
+      toast({ title: 'Success', variant: 'success', description: 'Role saved successfully.' });
       setRoleModalOpen(false);
     },
     onError: (e: Error) => toast({ title: 'Error', description: e.message, variant: 'destructive' }),
@@ -195,7 +195,7 @@ export const TeamManagement = () => {
     }).then(res => { if (!res.ok) throw new Error('Failed to delete role'); return res.json() }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['roles', companyId] });
-      toast({ title: 'Success', description: 'Role deleted successfully.' });
+      toast({ title: 'Success', variant: 'success', description: 'Role deleted successfully.' });
     },
     onError: (e: Error) => toast({ title: 'Error', description: e.message, variant: 'destructive' }),
   });
@@ -208,7 +208,7 @@ export const TeamManagement = () => {
     }).then(res => { if (!res.ok) throw new Error('Failed to update team'); return res.json() }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['teams', companyId] });
-      toast({ title: 'Success', description: 'Team updated successfully.' });
+      toast({ title: 'Success', variant: 'success', description: 'Team updated successfully.' });
       setEditTeamModalOpen(false);
       setEditTeamName("");
     },
@@ -221,7 +221,7 @@ export const TeamManagement = () => {
     }).then(res => { if (!res.ok) throw new Error('Failed to delete team'); return res.json() }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['teams', companyId] });
-      toast({ title: 'Success', description: 'Team deleted successfully.' });
+      toast({ title: 'Success', variant: 'success', description: 'Team deleted successfully.' });
     },
     onError: (e: Error) => toast({ title: 'Error', description: e.message, variant: 'destructive' }),
   });
@@ -232,7 +232,7 @@ export const TeamManagement = () => {
     }).then(res => { if (!res.ok) throw new Error('Failed to delete user'); return res.json() }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['users', companyId] });
-      toast({ title: 'Success', description: 'User deleted successfully.' });
+      toast({ title: 'Success', variant: 'success', description: 'User deleted successfully.' });
     },
     onError: (e: Error) => toast({ title: 'Error', description: e.message, variant: 'destructive' }),
   });
@@ -245,7 +245,7 @@ export const TeamManagement = () => {
     }).then(res => { if (!res.ok) throw new Error('Failed to update user status'); return res.json() }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['users', companyId] });
-      toast({ title: 'Success', description: 'User status updated successfully.' });
+      toast({ title: 'Success', variant: 'success', description: 'User status updated successfully.' });
     },
     onError: (e: Error) => toast({ title: 'Error', description: e.message, variant: 'destructive' }),
   });
@@ -277,7 +277,7 @@ export const TeamManagement = () => {
       // Close modal and reset after all members are added
       setAddMemberModalOpen(false);
       setSelectedUserIds([]);
-      toast({ title: 'Success', description: `${selectedUserIds.length} member(s) added successfully.` });
+      toast({ title: 'Success', variant: 'success', description: `${selectedUserIds.length} member(s) added successfully.` });
     }
   };
 
@@ -427,15 +427,66 @@ export const TeamManagement = () => {
   const availableUsers = getAvailableUsers();
 
   return (
-    <div className="space-y-6 p-4 md:p-6 animate-fade-in">
+    <div className="space-y-6">
+      {/* Stats Overview Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <Card className="bg-gradient-to-br from-blue-50 to-cyan-50 dark:from-blue-950/30 dark:to-cyan-950/30 border-blue-200 dark:border-blue-800 card-shadow">
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-muted-foreground dark:text-gray-400">Total Users</p>
+                <h3 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-cyan-600 bg-clip-text text-transparent">
+                  {users?.length || 0}
+                </h3>
+              </div>
+              <div className="h-12 w-12 rounded-full bg-gradient-to-br from-blue-600 to-cyan-600 flex items-center justify-center">
+                <span className="text-2xl">👥</span>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-950/30 dark:to-pink-950/30 border-purple-200 dark:border-purple-800 card-shadow">
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-muted-foreground dark:text-gray-400">Teams</p>
+                <h3 className="text-3xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
+                  {teams?.length || 0}
+                </h3>
+              </div>
+              <div className="h-12 w-12 rounded-full bg-gradient-to-br from-purple-600 to-pink-600 flex items-center justify-center">
+                <span className="text-2xl">🏢</span>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-gradient-to-br from-orange-50 to-amber-50 dark:from-orange-950/30 dark:to-amber-950/30 border-orange-200 dark:border-orange-800 card-shadow">
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-muted-foreground dark:text-gray-400">Roles</p>
+                <h3 className="text-3xl font-bold bg-gradient-to-r from-orange-600 to-amber-600 bg-clip-text text-transparent">
+                  {roles?.length || 0}
+                </h3>
+              </div>
+              <div className="h-12 w-12 rounded-full bg-gradient-to-br from-orange-600 to-amber-600 flex items-center justify-center">
+                <span className="text-2xl">🔒</span>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
       <Card className="card-shadow-lg bg-white dark:bg-slate-800 overflow-visible">
         <CardHeader className="border-b border-slate-200 dark:border-slate-700 bg-gradient-to-r from-slate-50 to-slate-100 dark:from-slate-800 dark:to-slate-900">
           <CardTitle className="flex items-center gap-2 text-2xl dark:text-white">
             <Users className="h-7 w-7 text-blue-600 dark:text-blue-400" />
-            Team & User Management
+            Team & User Details
           </CardTitle>
           <CardDescription className="dark:text-gray-400 text-base">
-            Manage users, teams, and their roles and permissions.
+            Manage users, teams, and their roles and permissions
           </CardDescription>
         </CardHeader>
         <CardContent className="pt-6">

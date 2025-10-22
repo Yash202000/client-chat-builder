@@ -12,13 +12,20 @@ import ReactFlow, {
 import 'reactflow/dist/style.css';
 import { toast } from "sonner";
 import { Button } from '@/components/ui/button';
-import { Edit, ArrowLeft, Workflow as WorkflowIcon, Sparkles } from 'lucide-react';
+import { Edit, ArrowLeft, Workflow as WorkflowIcon, Sparkles, Settings } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 
 import Sidebar from './Sidebar';
 import PropertiesPanel from './PropertiesPanel';
 import { WorkflowDetailsDialog } from './WorkflowDetailsDialog';
-import { LlmNode, ToolNode, ConditionNode, OutputNode, StartNode, ListenNode, PromptNode, KnowledgeNode, CodeNode, DataManipulationNode, HttpRequestNode, FormNode } from './CustomNodes';
+import { WorkflowSettings } from './WorkflowSettings';
+import {
+  LlmNode, ToolNode, ConditionNode, OutputNode, StartNode, ListenNode, PromptNode,
+  KnowledgeNode, CodeNode, DataManipulationNode, HttpRequestNode, FormNode,
+  IntentRouterNode, EntityCollectorNode, CheckEntityNode, UpdateContextNode,
+  TagConversationNode, AssignToAgentNode, SetStatusNode,
+  TriggerWebSocketNode, TriggerWhatsAppNode, TriggerTelegramNode, TriggerInstagramNode
+} from './CustomNodes';
 import { useAuth } from "@/hooks/useAuth";
 import { Comments } from './Comments';
 
@@ -33,16 +40,24 @@ const VisualWorkflowBuilder = () => {
   const [selectedNode, setSelectedNode] = useState(null);
   const [workflow, setWorkflow] = useState(null);
   const [isDetailsDialogOpen, setDetailsDialogOpen] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
 
   const { workflowId } = useParams();
   const navigate = useNavigate();
   const reactFlowWrapper = useRef(null);
   const { authFetch } = useAuth();
 
-  const nodeTypes = useMemo(() => ({ 
-    llm: LlmNode, tool: ToolNode, condition: ConditionNode, output: OutputNode, 
-    start: StartNode, listen: ListenNode, prompt: PromptNode, knowledge: KnowledgeNode, 
-    code: CodeNode, data_manipulation: DataManipulationNode, http_request: HttpRequestNode, form: FormNode
+  const nodeTypes = useMemo(() => ({
+    llm: LlmNode, tool: ToolNode, condition: ConditionNode, output: OutputNode,
+    start: StartNode, listen: ListenNode, prompt: PromptNode, knowledge: KnowledgeNode,
+    code: CodeNode, data_manipulation: DataManipulationNode, http_request: HttpRequestNode, form: FormNode,
+    // Chat-specific nodes
+    intent_router: IntentRouterNode, entity_collector: EntityCollectorNode, check_entity: CheckEntityNode,
+    update_context: UpdateContextNode, tag_conversation: TagConversationNode,
+    assign_to_agent: AssignToAgentNode, set_status: SetStatusNode,
+    // Trigger nodes
+    trigger_websocket: TriggerWebSocketNode, trigger_whatsapp: TriggerWhatsAppNode,
+    trigger_telegram: TriggerTelegramNode, trigger_instagram: TriggerInstagramNode
   }), []);
 
   useEffect(() => {
@@ -65,8 +80,105 @@ const VisualWorkflowBuilder = () => {
     fetchWorkflow();
   }, [workflowId, authFetch, navigate, setNodes, setEdges]);
 
+  const validateWorkflow = () => {
+    const errors = [];
+
+    // Trigger node types that can start a workflow
+    const triggerTypes = ['trigger_websocket', 'trigger_whatsapp', 'trigger_telegram', 'trigger_instagram'];
+
+    // Check for start node OR trigger node
+    const hasStartNode = nodes.some(node => node.type === 'start');
+    const hasTriggerNode = nodes.some(node => triggerTypes.includes(node.type));
+
+    if (!hasStartNode && !hasTriggerNode) {
+      errors.push("Missing Start node or Trigger node (WebSocket, WhatsApp, Telegram, Instagram)");
+    }
+
+    // Check for output node
+    const hasOutputNode = nodes.some(node => node.type === 'output');
+    if (!hasOutputNode) {
+      errors.push("Missing Output node");
+    }
+
+    // Check each node for required connections
+    nodes.forEach(node => {
+      const outgoingEdges = edges.filter(edge => edge.source === node.id);
+
+      // Skip validation for output nodes (they don't need outgoing edges)
+      if (node.type === 'output') return;
+
+      // Check condition nodes for both true and false edges
+      if (node.type === 'condition') {
+        const hasTrueEdge = outgoingEdges.some(edge => edge.sourceHandle === 'true');
+        const hasFalseEdge = outgoingEdges.some(edge => edge.sourceHandle === 'false');
+
+        if (!hasTrueEdge) {
+          errors.push(`Condition node "${node.data.label || node.id}" is missing TRUE edge`);
+        }
+        if (!hasFalseEdge) {
+          errors.push(`Condition node "${node.data.label || node.id}" is missing FALSE edge`);
+        }
+      }
+      // Check all other nodes (except start, triggers, and output) have at least one outgoing edge
+      else if (node.type !== 'start' && !triggerTypes.includes(node.type) && outgoingEdges.length === 0) {
+        errors.push(`Node "${node.data.label || node.id}" has no outgoing connection`);
+      }
+    });
+
+    // Check for orphaned nodes (nodes not connected to the workflow)
+    const connectedNodeIds = new Set();
+
+    // Find all entry points (start node or trigger nodes)
+    const entryNodes = nodes.filter(n => n.type === 'start' || triggerTypes.includes(n.type));
+
+    if (entryNodes.length > 0) {
+      const visited = new Set();
+      const queue = entryNodes.map(n => n.id);
+
+      while (queue.length > 0) {
+        const currentId = queue.shift();
+        if (visited.has(currentId)) continue;
+        visited.add(currentId);
+        connectedNodeIds.add(currentId);
+
+        edges.forEach(edge => {
+          if (edge.source === currentId && !visited.has(edge.target)) {
+            queue.push(edge.target);
+          }
+        });
+      }
+
+      // Check for orphaned nodes (excluding entry points)
+      nodes.forEach(node => {
+        const isEntryPoint = node.type === 'start' || triggerTypes.includes(node.type);
+        if (!connectedNodeIds.has(node.id) && !isEntryPoint) {
+          errors.push(`Node "${node.data.label || node.id}" is not connected to the workflow`);
+        }
+      });
+    }
+
+    return errors;
+  };
+
   const saveWorkflow = async (details) => {
     if (!workflow) return toast.error("No workflow selected.");
+
+    // Validate workflow before saving
+    const validationErrors = validateWorkflow();
+    if (validationErrors.length > 0) {
+      toast.error(
+        <div className="space-y-2">
+          <div className="font-semibold">Cannot save workflow. Please fix the following issues:</div>
+          <ul className="list-disc list-inside space-y-1">
+            {validationErrors.map((error, index) => (
+              <li key={index} className="text-sm">{error}</li>
+            ))}
+          </ul>
+        </div>,
+        { duration: 8000 }
+      );
+      return;
+    }
 
     const flowVisualData = { nodes, edges };
     const updatedWorkflow = {
@@ -135,9 +247,14 @@ const VisualWorkflowBuilder = () => {
         workflow={workflow}
         onSave={saveWorkflow}
       />
-      <div className="dndflow h-screen flex flex-col bg-gradient-to-br from-slate-50 to-slate-100">
+      <WorkflowSettings
+        open={showSettings}
+        onOpenChange={setShowSettings}
+        workflowId={workflow?.id}
+      />
+      <div className="dndflow h-screen flex flex-col bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-950">
         {/* Enhanced Toolbar */}
-        <div className="flex-shrink-0 px-6 py-4 border-b bg-white shadow-sm">
+        <div className="flex-shrink-0 px-6 py-4 border-b border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-sm">
           <div className="flex items-center gap-4 flex-wrap">
             <Button onClick={() => navigate('/dashboard/workflows')} variant="outline" size="sm" className="btn-hover-lift">
               <ArrowLeft className="h-4 w-4 mr-2" />
@@ -149,11 +266,11 @@ const VisualWorkflowBuilder = () => {
                   <WorkflowIcon className="h-4 w-4 text-white" />
                 </div>
                 <div className="min-w-0">
-                  <h2 className="text-lg font-bold truncate">{workflow.name}</h2>
+                  <h2 className="text-lg font-bold truncate dark:text-white">{workflow.name}</h2>
                   <div className="flex items-center gap-2">
-                    <Badge variant="outline" className="text-xs">v{workflow.version}</Badge>
+                    <Badge variant="outline" className="text-xs dark:border-slate-600 dark:text-slate-300">v{workflow.version}</Badge>
                     {workflow.is_active && (
-                      <Badge className="bg-green-100 text-green-800 border-green-200 text-xs">
+                      <Badge className="bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-400 border-green-200 dark:border-green-800 text-xs">
                         <Sparkles className="h-3 w-3 mr-1" />
                         Active
                       </Badge>
@@ -166,6 +283,10 @@ const VisualWorkflowBuilder = () => {
               <Button onClick={() => setDetailsDialogOpen(true)} variant="outline" size="sm" className="btn-hover-lift">
                 <Edit className="h-4 w-4 mr-2" />
                 Edit Details
+              </Button>
+              <Button onClick={() => setShowSettings(true)} variant="outline" size="sm" className="btn-hover-lift">
+                <Settings className="h-4 w-4 mr-2" />
+                Settings
               </Button>
               <Button
                 onClick={() => saveWorkflow()}
@@ -200,23 +321,28 @@ const VisualWorkflowBuilder = () => {
                 defaultEdgeOptions={{
                   type: 'smoothstep',
                   animated: true,
-                  style: { stroke: '#6366f1', strokeWidth: 2 },
+                  style: { stroke: '#8b5cf6', strokeWidth: 2.5 },
                 }}
+                className="dark:bg-slate-900"
               >
-                <Controls className="bg-white rounded-lg shadow-lg border" />
+                <Controls className="bg-white dark:bg-slate-800 rounded-lg shadow-lg border border-slate-200 dark:border-slate-700 [&_button]:dark:text-white [&_button]:dark:hover:bg-slate-700" />
                 <MiniMap
-                  className="bg-white rounded-lg shadow-lg border"
+                  className="bg-white dark:bg-slate-800 rounded-lg shadow-lg border border-slate-200 dark:border-slate-700"
                   nodeColor={(node) => {
                     if (node.type === 'start') return '#10b981';
                     if (node.type === 'output') return '#ef4444';
-                    return '#3b82f6';
+                    if (node.type === 'llm') return '#6366f1';
+                    if (node.type === 'tool') return '#10b981';
+                    if (node.type === 'condition') return '#f59e0b';
+                    return '#8b5cf6';
                   }}
+                  maskColor="rgb(15, 23, 42, 0.7)"
                 />
-                <Background variant="dots" gap={20} size={1} color="#cbd5e1" />
+                <Background variant="dots" gap={20} size={1} color="#94a3b8" className="dark:opacity-30" />
               </ReactFlow>
             </div>
             {/* Enhanced Properties Panel */}
-            <div className="w-80 border-l bg-white shadow-lg overflow-y-auto">
+            <div className="w-80 border-l border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-lg overflow-y-auto">
               <PropertiesPanel selectedNode={selectedNode} nodes={nodes} setNodes={setNodes} deleteNode={deleteNode} />
               {workflow && workflow.id && (
                 <Comments workflowId={workflow.id} />

@@ -1,11 +1,11 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Save, Code, Send } from 'lucide-react';
+import { Save, Code, Send, RotateCcw, Palette } from 'lucide-react';
 
 interface WebChatCustomizerProps {
   customization: any;
@@ -38,6 +38,42 @@ export const WebChatCustomizer: React.FC<WebChatCustomizerPropsExtended> = ({
   previewType,
   onPreviewTypeChange
 }) => {
+  const [showGradientEditor, setShowGradientEditor] = useState(false);
+  const [gradientAngle, setGradientAngle] = useState(135);
+  const [gradientColor1, setGradientColor1] = useState("#3B82F6");
+  const [gradientColor2, setGradientColor2] = useState("#8B5CF6");
+  const [gradientColor3, setGradientColor3] = useState("#EC4899");
+  const [activeGradientField, setActiveGradientField] = useState<'primary' | 'user_message' | null>(null);
+
+  const defaultGradientColors = {
+    primary_color: "linear-gradient(135deg, #3B82F6 0%, #8B5CF6 50%, #EC4899 100%)",
+    user_message_color: "linear-gradient(135deg, #3B82F6 0%, #8B5CF6 100%)",
+    user_message_text_color: "#FFFFFF",
+    bot_message_color: "#EEF2FF",
+    bot_message_text_color: "#1E293B",
+  };
+
+  const handleResetColors = () => {
+    Object.entries(defaultGradientColors).forEach(([key, value]) => {
+      updateCustomization(key, value);
+    });
+    toast({ title: "Colors reset to default gradient!" });
+  };
+
+  const applyGradient = () => {
+    if (!activeGradientField) return;
+
+    const gradient = `linear-gradient(${gradientAngle}deg, ${gradientColor1} 0%, ${gradientColor2} 50%, ${gradientColor3} 100%)`;
+    updateCustomization(activeGradientField === 'primary' ? 'primary_color' : 'user_message_color', gradient);
+    setShowGradientEditor(false);
+    setActiveGradientField(null);
+    toast({ title: "Gradient applied!" });
+  };
+
+  const openGradientEditor = (field: 'primary' | 'user_message') => {
+    setActiveGradientField(field);
+    setShowGradientEditor(true);
+  };
   return (
     <Card className="card-shadow-lg bg-white dark:bg-slate-800 h-fit flex flex-col">
       <CardHeader className="border-b border-slate-200 dark:border-slate-700 bg-gradient-to-r from-slate-50 to-slate-100 dark:from-slate-800 dark:to-slate-900 flex-shrink-0">
@@ -103,20 +139,63 @@ export const WebChatCustomizer: React.FC<WebChatCustomizerPropsExtended> = ({
           <TabsContent value="appearance" className="space-y-5 pt-4">
             {/* Colors Section - Compact Grid */}
             <div className="bg-slate-50 dark:bg-slate-900/50 rounded-lg p-4 border border-slate-200 dark:border-slate-700">
-              <h4 className="font-semibold dark:text-white text-sm uppercase tracking-wider text-gray-700 dark:text-gray-300 mb-3">🎨 Colors</h4>
+              <div className="flex items-center justify-between mb-3">
+                <h4 className="font-semibold dark:text-white text-sm uppercase tracking-wider text-gray-700 dark:text-gray-300">🎨 Colors</h4>
+                <Button
+                  onClick={handleResetColors}
+                  variant="outline"
+                  size="sm"
+                  className="h-8 text-xs"
+                >
+                  <RotateCcw className="h-3 w-3 mr-1" />
+                  Reset
+                </Button>
+              </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <Label htmlFor="primary_color" className="text-xs dark:text-gray-300 mb-1.5 block">Primary</Label>
                   <div className="flex items-center gap-2">
-                    <input type="color" id="primary_color" value={customization.primary_color} onChange={(e) => updateCustomization("primary_color", e.target.value)} className="w-12 h-9 rounded border dark:border-slate-600 cursor-pointer" />
+                    <div
+                      className="w-12 h-9 rounded border dark:border-slate-600 cursor-pointer"
+                      style={{ background: customization.primary_color }}
+                      onClick={() => {
+                        if (customization.primary_color.includes('gradient')) {
+                          openGradientEditor('primary');
+                        }
+                      }}
+                    />
                     <Input value={customization.primary_color} onChange={(e) => updateCustomization("primary_color", e.target.value)} className="text-xs dark:bg-slate-800 dark:border-slate-600 dark:text-white h-9" />
+                    <Button
+                      onClick={() => openGradientEditor('primary')}
+                      variant="ghost"
+                      size="sm"
+                      className="h-9 w-9 p-0"
+                    >
+                      <Palette className="h-4 w-4" />
+                    </Button>
                   </div>
                 </div>
                 <div>
                   <Label htmlFor="user_message_color" className="text-xs dark:text-gray-300 mb-1.5 block">User Message</Label>
                   <div className="flex items-center gap-2">
-                    <input type="color" id="user_message_color" value={customization.user_message_color} onChange={(e) => updateCustomization("user_message_color", e.target.value)} className="w-12 h-9 rounded border dark:border-slate-600 cursor-pointer" />
+                    <div
+                      className="w-12 h-9 rounded border dark:border-slate-600 cursor-pointer"
+                      style={{ background: customization.user_message_color }}
+                      onClick={() => {
+                        if (customization.user_message_color.includes('gradient')) {
+                          openGradientEditor('user_message');
+                        }
+                      }}
+                    />
                     <Input value={customization.user_message_color} onChange={(e) => updateCustomization("user_message_color", e.target.value)} className="text-xs dark:bg-slate-800 dark:border-slate-600 dark:text-white h-9" />
+                    <Button
+                      onClick={() => openGradientEditor('user_message')}
+                      variant="ghost"
+                      size="sm"
+                      className="h-9 w-9 p-0"
+                    >
+                      <Palette className="h-4 w-4" />
+                    </Button>
                   </div>
                 </div>
                 <div>
@@ -134,6 +213,82 @@ export const WebChatCustomizer: React.FC<WebChatCustomizerPropsExtended> = ({
                   </div>
                 </div>
               </div>
+
+              {/* Gradient Editor */}
+              {showGradientEditor && (
+                <div className="mt-4 p-4 bg-white dark:bg-slate-800 rounded-lg border-2 border-pink-500 dark:border-pink-600">
+                  <div className="flex items-center justify-between mb-3">
+                    <h5 className="font-semibold text-sm dark:text-white">Gradient Editor</h5>
+                    <Button
+                      onClick={() => {
+                        setShowGradientEditor(false);
+                        setActiveGradientField(null);
+                      }}
+                      variant="ghost"
+                      size="sm"
+                      className="h-6 w-6 p-0"
+                    >
+                      ×
+                    </Button>
+                  </div>
+
+                  <div className="space-y-3">
+                    <div>
+                      <Label className="text-xs dark:text-gray-300 mb-1.5 block">Angle: {gradientAngle}°</Label>
+                      <Input
+                        type="range"
+                        min="0"
+                        max="360"
+                        value={gradientAngle}
+                        onChange={(e) => setGradientAngle(parseInt(e.target.value))}
+                        className="w-full"
+                      />
+                    </div>
+
+                    <div className="grid grid-cols-3 gap-2">
+                      <div>
+                        <Label className="text-xs dark:text-gray-300 mb-1.5 block">Color 1</Label>
+                        <input
+                          type="color"
+                          value={gradientColor1}
+                          onChange={(e) => setGradientColor1(e.target.value)}
+                          className="w-full h-10 rounded border dark:border-slate-600 cursor-pointer"
+                        />
+                      </div>
+                      <div>
+                        <Label className="text-xs dark:text-gray-300 mb-1.5 block">Color 2</Label>
+                        <input
+                          type="color"
+                          value={gradientColor2}
+                          onChange={(e) => setGradientColor2(e.target.value)}
+                          className="w-full h-10 rounded border dark:border-slate-600 cursor-pointer"
+                        />
+                      </div>
+                      <div>
+                        <Label className="text-xs dark:text-gray-300 mb-1.5 block">Color 3</Label>
+                        <input
+                          type="color"
+                          value={gradientColor3}
+                          onChange={(e) => setGradientColor3(e.target.value)}
+                          className="w-full h-10 rounded border dark:border-slate-600 cursor-pointer"
+                        />
+                      </div>
+                    </div>
+
+                    <div
+                      className="w-full h-12 rounded border dark:border-slate-600"
+                      style={{ background: `linear-gradient(${gradientAngle}deg, ${gradientColor1} 0%, ${gradientColor2} 50%, ${gradientColor3} 100%)` }}
+                    />
+
+                    <Button
+                      onClick={applyGradient}
+                      className="w-full bg-gradient-to-r from-pink-600 to-red-600 hover:from-pink-700 hover:to-red-700 text-white"
+                    >
+                      Apply Gradient
+                    </Button>
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Style & Settings Section */}

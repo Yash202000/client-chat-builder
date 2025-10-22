@@ -11,7 +11,7 @@ import { useWebSocket } from '@/hooks/use-websocket';
 import { toast } from '@/hooks/use-toast';
 import { Session, User } from '@/types';
 import { useAuth } from "@/hooks/useAuth";
-import { MessageSquare, Phone, Globe, Instagram, Mail, Send, Search, Filter, Archive, ChevronLeft, ChevronRight } from 'lucide-react'; // Icons for channels
+import { MessageSquare, Phone, Globe, Instagram, Mail, Send, Search, Filter, Archive, PanelLeftClose, PanelRightOpen } from 'lucide-react'; // Icons for channels
 import { getWebSocketUrl } from '@/config/api';
 
 const ConversationsPage: React.FC = () => {
@@ -19,7 +19,7 @@ const ConversationsPage: React.FC = () => {
   const { user, token, authFetch, isLoading: isAuthLoading } = useAuth();
   const [selectedSessionId, setSelectedSessionId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
-  const [activeTab, setActiveTab] = useState<'mine' | 'open' | 'resolved' | 'all'>('mine');
+  const [activeTab, setActiveTab] = useState<'mine' | 'open' | 'resolved' | 'all'>('open');
   const [unreadAssignments, setUnreadAssignments] = useState(0);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
@@ -115,7 +115,8 @@ const ConversationsPage: React.FC = () => {
         if (eventData.type === 'new_message') {
           toast({
             title: "New Message",
-            description: `New message in session: ${eventData.session.conversation_id}`,
+            description: `New message received in conversation`,
+            variant: "info",
           });
           // Invalidate queries to refetch session list and counts
           queryClient.invalidateQueries({ queryKey: ['sessions', companyId] });
@@ -233,7 +234,7 @@ const ConversationsPage: React.FC = () => {
   );
 
   const getAssigneeEmail = (assigneeId?: number) => {
-    if (!assigneeId || !users) return 'N/A';
+    if (!assigneeId || !users || !Array.isArray(users)) return 'N/A';
     const user = users.find(u => u.id === assigneeId);
     return user ? user.email : 'Unknown';
   };
@@ -349,9 +350,9 @@ const ConversationsPage: React.FC = () => {
           </div>
           <div className="flex-grow min-w-0">
             <div className="flex items-center justify-between mb-1">
-              <div className="flex items-center gap-1 flex-1 min-w-0">
+              <div className="flex items-center gap-1.5 flex-1 min-w-0">
                 {assignedToMe && (
-                  <span className="text-amber-600 dark:text-amber-400 flex-shrink-0">👤</span>
+                  <span className="text-amber-500 dark:text-amber-400 flex-shrink-0 text-base">⭐</span>
                 )}
                 <h4 className={`font-medium text-sm truncate ${
                   session.status === 'resolved'
@@ -382,18 +383,18 @@ const ConversationsPage: React.FC = () => {
               {new Date(Number(session.conversation_id)).toLocaleString()}
             </p>
             {session.status === 'assigned' && !assignedToMe && (
-              <p className="text-xs text-purple-600 dark:text-purple-400 mt-1 truncate">
-                👤 Assigned to {getAssigneeEmail(session.assignee_id)}
+              <p className="text-xs text-purple-600 dark:text-purple-400 mt-1 truncate flex items-center gap-1">
+                <span className="text-sm">💼</span> Assigned to {getAssigneeEmail(session.assignee_id)}
               </p>
             )}
             {assignedToMe && session.is_client_connected && (
               <p className="text-xs text-amber-700 dark:text-amber-300 mt-1 truncate flex items-center gap-1 font-semibold">
-                ⚡ Assigned to you - Client online
+                <span className="text-sm">🟢</span> Assigned to you - Client online
               </p>
             )}
             {assignedToMe && !session.is_client_connected && (
               <p className="text-xs text-red-600 dark:text-red-400 mt-1 truncate flex items-center gap-1 font-semibold">
-                🔴 Client disconnected
+                <span className="text-sm">🔴</span> Client disconnected
               </p>
             )}
             {session.status === 'resolved' && (
@@ -416,10 +417,14 @@ const ConversationsPage: React.FC = () => {
             {/* Collapse/Expand Button */}
             <button
               onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
-              className="absolute -right-3 top-1/2 -translate-y-1/2 z-10 bg-blue-600 hover:bg-blue-700 text-white rounded-full p-1.5 shadow-lg transition-all"
+              className="absolute -right-3 top-1/2 -translate-y-1/2 z-10 bg-gradient-to-br from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white rounded-full p-2 shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-110 group"
               title={isSidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
             >
-              {isSidebarCollapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
+              {isSidebarCollapsed ? (
+                <PanelRightOpen className="h-4 w-4 transition-transform duration-200 group-hover:translate-x-0.5" />
+              ) : (
+                <PanelLeftClose className="h-4 w-4 transition-transform duration-200 group-hover:-translate-x-0.5" />
+              )}
             </button>
 
             <CardHeader className={`border-b border-slate-200 dark:border-slate-700 bg-gradient-to-r from-slate-50 to-slate-100 dark:from-slate-800 dark:to-slate-900 flex-shrink-0 py-3 ${isSidebarCollapsed ? 'px-2' : 'space-y-3'}`}>
@@ -446,27 +451,48 @@ const ConversationsPage: React.FC = () => {
 
                   {/* Tabs */}
                   <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'mine' | 'open' | 'resolved' | 'all')} className="w-full">
-                    <TabsList className="w-full grid grid-cols-4 bg-white dark:bg-slate-900">
-                  <TabsTrigger value="mine" className="text-xs font-semibold relative">
-                    <span className="flex items-center gap-1">
-                      <span className="text-amber-600 dark:text-amber-400">👤</span>
-                      Mine ({sessionCounts?.mine || 0})
+                    <TabsList className="w-full grid grid-cols-4 bg-gradient-to-r from-slate-100 to-slate-50 dark:from-slate-800 dark:to-slate-900 p-1 rounded-lg shadow-inner">
+                  <TabsTrigger
+                    value="open"
+                    className="text-xs font-medium data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-600 data-[state=active]:to-blue-500 data-[state=active]:text-white data-[state=active]:shadow-md transition-all duration-200"
+                  >
+                    <span className="flex items-center gap-1.5">
+                      <span>Open</span>
+                      <span className="font-semibold">({sessionCounts?.open || 0})</span>
+                    </span>
+                  </TabsTrigger>
+                  <TabsTrigger
+                    value="mine"
+                    className="text-xs font-medium data-[state=active]:bg-gradient-to-r data-[state=active]:from-amber-600 data-[state=active]:to-orange-500 data-[state=active]:text-white data-[state=active]:shadow-md transition-all duration-200 relative"
+                  >
+                    <span className="flex items-center gap-1.5">
+                      <span>Mine</span>
+                      <span className="font-semibold">({sessionCounts?.mine || 0})</span>
                       {unreadAssignments > 0 && (
-                        <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] font-bold rounded-full h-4 w-4 flex items-center justify-center animate-pulse">
+                        <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] font-bold rounded-full h-5 w-5 flex items-center justify-center animate-pulse shadow-lg border-2 border-white dark:border-slate-800">
                           {unreadAssignments}
                         </span>
                       )}
                     </span>
                   </TabsTrigger>
-                  <TabsTrigger value="open" className="text-xs">
-                    Open ({sessionCounts?.open || 0})
+                  <TabsTrigger
+                    value="resolved"
+                    className="text-xs font-medium data-[state=active]:bg-gradient-to-r data-[state=active]:from-green-600 data-[state=active]:to-emerald-500 data-[state=active]:text-white data-[state=active]:shadow-md transition-all duration-200"
+                  >
+                    <span className="flex items-center gap-1.5">
+                      <span>Resolved</span>
+                      <span className="font-semibold">({sessionCounts?.resolved || 0})</span>
+                    </span>
                   </TabsTrigger>
-                  <TabsTrigger value="resolved" className="text-xs">
-                    Resolved ({sessionCounts?.resolved || 0})
+                  <TabsTrigger
+                    value="all"
+                    className="text-xs font-medium data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-violet-500 data-[state=active]:text-white data-[state=active]:shadow-md transition-all duration-200"
+                  >
+                    <span className="flex items-center gap-1.5">
+                      <span>All</span>
+                      <span className="font-semibold">({sessionCounts?.all || 0})</span>
+                    </span>
                   </TabsTrigger>
-                      <TabsTrigger value="all" className="text-xs">
-                        All ({sessionCounts?.all || 0})
-                      </TabsTrigger>
                     </TabsList>
                   </Tabs>
                 </>

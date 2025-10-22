@@ -8,20 +8,12 @@ WORKDIR /app
 COPY package*.json ./
 
 # Install dependencies
-RUN npm ci
+RUN npm i
 
 # Copy source code
 COPY . .
 
-# Build arguments for environment variables
-ARG VITE_BACKEND_URL=http://localhost:8000
-ARG VITE_LIVEKIT_URL=ws://localhost:7880
-
-# Set environment variables for build
-ENV VITE_BACKEND_URL=${VITE_BACKEND_URL}
-ENV VITE_LIVEKIT_URL=${VITE_LIVEKIT_URL}
-
-# Build the main application
+# Build the main application (without build-time env vars)
 RUN npm run build
 
 # Build the widget
@@ -39,12 +31,20 @@ COPY --from=builder /app/nginx.conf /etc/nginx/conf.d/default.conf
 # Copy built assets from builder
 COPY --from=builder /app/dist /usr/share/nginx/html
 
+# Copy runtime environment configuration script
+COPY env-config.sh /docker-entrypoint.d/env-config.sh
+RUN chmod +x /docker-entrypoint.d/env-config.sh
+
 # Expose port
 EXPOSE 80
+
+# Environment variables with defaults
+ENV VITE_BACKEND_URL=http://localhost:8000
+ENV VITE_LIVEKIT_URL=ws://localhost:7880
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
     CMD curl -f http://localhost/ || exit 1
 
-# Start nginx
+# Start nginx (env-config.sh runs automatically via docker-entrypoint.d)
 CMD ["nginx", "-g", "daemon off;"]

@@ -12,6 +12,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { UserPlus, Mail, Lock, Loader2, Sparkles } from "lucide-react";
+import { apiFetch } from "@/lib/api";
 
 export const SignupPage = () => {
   const [email, setEmail] = useState("");
@@ -24,7 +25,7 @@ export const SignupPage = () => {
     e.preventDefault();
     setIsLoading(true);
     try {
-      const response = await fetch("/api/v1/auth/signup", {
+      const response = await apiFetch("/api/v1/auth/signup", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),

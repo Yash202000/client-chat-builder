@@ -204,159 +204,152 @@ export const Settings = () => {
           <TabsTrigger value="developer" className="data-[state=active]:bg-white dark:data-[state=active]:bg-slate-800 data-[state=active]:text-cyan-600 dark:data-[state=active]:text-cyan-400">💻 Developer</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="general" className="space-y-6">
-          {user?.is_super_admin && companies && (
-            <Card className="card-shadow-lg border-slate-200 dark:border-slate-700 dark:bg-slate-800">
-              <CardHeader className="border-b border-slate-200 dark:border-slate-700 bg-gradient-to-r from-slate-50 to-slate-100 dark:from-slate-800 dark:to-slate-900">
-                <CardTitle className="dark:text-white flex items-center gap-2">
-                  <Building className="h-5 w-5 text-cyan-600 dark:text-cyan-400" />
-                  Company Context
+        <TabsContent value="general" className="space-y-4">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            {user?.is_super_admin && companies && (
+              <Card className="card-shadow-lg border-slate-200 dark:border-slate-700 dark:bg-slate-800">
+                <CardHeader className="pb-3">
+                  <CardTitle className="dark:text-white flex items-center gap-2 text-base">
+                    <Building className="h-4 w-4 text-cyan-600 dark:text-cyan-400" />
+                    Company Context
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="pt-0">
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="outline" className="w-full flex items-center justify-between gap-2 dark:bg-slate-900 dark:border-slate-600 dark:text-white dark:hover:bg-slate-700">
+                        <div className="flex items-center gap-2">
+                          <Building className="h-4 w-4" />
+                          <span>{currentCompany?.name || "Select Company"}</span>
+                        </div>
+                        <ChevronsUpDown className="h-4 w-4 opacity-50" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent className="w-full dark:bg-slate-800 dark:border-slate-700">
+                      <DropdownMenuLabel className="dark:text-white">Switch Company</DropdownMenuLabel>
+                      {companies.map(c => (
+                        <DropdownMenuItem key={c.id} onSelect={() => setCompanyIdGlobaly(c.id)} className="dark:text-white dark:focus:bg-slate-700">
+                          {c.name}
+                        </DropdownMenuItem>
+                      ))}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </CardContent>
+              </Card>
+            )}
+
+            <Card className="card-shadow-lg border-slate-200 dark:border-slate-700 dark:bg-slate-800 lg:col-span-2">
+              <CardHeader className="pb-3">
+                <CardTitle className="flex items-center gap-2 dark:text-white text-base">
+                  <Globe className="h-4 w-4 text-cyan-600 dark:text-cyan-400" />
+                  Company Information & Business Hours
                 </CardTitle>
-                <CardDescription className="dark:text-gray-400">Switch between companies to manage their settings and data</CardDescription>
               </CardHeader>
-              <CardContent className="pt-6">
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="outline" className="w-full md:w-1/2 flex items-center justify-between gap-2 dark:bg-slate-900 dark:border-slate-600 dark:text-white dark:hover:bg-slate-700">
-                      <div className="flex items-center gap-2">
-                        <Building className="h-4 w-4" />
-                        <span>{currentCompany?.name || "Select Company"}</span>
+              <CardContent className="pt-0">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
+                  <div className="lg:col-span-2">
+                    <Label htmlFor="companyName" className="dark:text-gray-300 text-sm">Company Name</Label>
+                    <Input
+                      id="companyName"
+                      value={settings.companyName}
+                      onChange={(e) => handleSettingChange("companyName", e.target.value)}
+                      className="dark:bg-slate-900 dark:border-slate-600 dark:text-white mt-1 h-9"
+                    />
+                  </div>
+
+                  <div className="lg:col-span-2">
+                    <Label htmlFor="supportEmail" className="dark:text-gray-300 text-sm">Support Email</Label>
+                    <Input
+                      id="supportEmail"
+                      type="email"
+                      value={settings.supportEmail}
+                      onChange={(e) => handleSettingChange("supportEmail", e.target.value)}
+                      className="dark:bg-slate-900 dark:border-slate-600 dark:text-white mt-1 h-9"
+                    />
+                  </div>
+
+                  <div>
+                    <Label htmlFor="timezone" className="dark:text-gray-300 text-sm">Timezone</Label>
+                    <select
+                      id="timezone"
+                      value={settings.timezone}
+                      onChange={(e) => handleSettingChange("timezone", e.target.value)}
+                      className="w-full h-9 px-3 border rounded-md dark:bg-slate-900 dark:border-slate-600 dark:text-white mt-1 text-sm"
+                    >
+                      <option value="UTC">UTC</option>
+                      <option value="America/New_York">Eastern Time</option>
+                      <option value="America/Chicago">Central Time</option>
+                      <option value="America/Los_Angeles">Pacific Time</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <Label htmlFor="language" className="dark:text-gray-300 text-sm">Language</Label>
+                    <select
+                      id="language"
+                      value={settings.language}
+                      onChange={(e) => handleSettingChange("language", e.target.value)}
+                      className="w-full h-9 px-3 border rounded-md dark:bg-slate-900 dark:border-slate-600 dark:text-white mt-1 text-sm"
+                    >
+                      <option value="en">English</option>
+                      <option value="es">Spanish</option>
+                      <option value="fr">French</option>
+                      <option value="de">German</option>
+                    </select>
+                  </div>
+
+                  <div className="lg:col-span-4 pt-2 border-t border-slate-200 dark:border-slate-700 mt-2">
+                    <div className="flex items-center justify-between mb-3">
+                      <Label htmlFor="businessHours" className="dark:text-white text-sm font-semibold">Business Hours</Label>
+                      <Switch
+                        id="businessHours"
+                        checked={settings.businessHours}
+                        onCheckedChange={(checked) => handleSettingChange("businessHours", checked)}
+                      />
+                    </div>
+
+                    {settings.businessHours && (
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                        <div>
+                          <Label htmlFor="businessHoursStartTime" className="dark:text-gray-300 text-sm">Start Time</Label>
+                          <Input
+                            id="businessHoursStartTime"
+                            type="time"
+                            value={settings.businessHoursStartTime}
+                            onChange={(e) => handleSettingChange("businessHoursStartTime", e.target.value)}
+                            className="dark:bg-slate-900 dark:border-slate-600 dark:text-white mt-1 h-9"
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor="businessHoursEndTime" className="dark:text-gray-300 text-sm">End Time</Label>
+                          <Input
+                            id="businessHoursEndTime"
+                            type="time"
+                            value={settings.businessHoursEndTime}
+                            onChange={(e) => handleSettingChange("businessHoursEndTime", e.target.value)}
+                            className="dark:bg-slate-900 dark:border-slate-600 dark:text-white mt-1 h-9"
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor="businessHoursDays" className="dark:text-gray-300 text-sm">Days</Label>
+                          <select
+                            id="businessHoursDays"
+                            value={settings.businessHoursDays}
+                            onChange={(e) => handleSettingChange("businessHoursDays", e.target.value)}
+                            className="w-full h-9 px-3 border rounded-md dark:bg-slate-900 dark:border-slate-600 dark:text-white mt-1 text-sm"
+                          >
+                            <option>Monday - Friday</option>
+                            <option>Monday - Saturday</option>
+                            <option>Every Day</option>
+                          </select>
+                        </div>
                       </div>
-                      <ChevronsUpDown className="h-4 w-4 opacity-50" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent className="w-full md:w-1/2 dark:bg-slate-800 dark:border-slate-700">
-                    <DropdownMenuLabel className="dark:text-white">Switch Company</DropdownMenuLabel>
-                    {companies.map(c => (
-                      <DropdownMenuItem key={c.id} onSelect={() => setCompanyIdGlobaly(c.id)} className="dark:text-white dark:focus:bg-slate-700">
-                        {c.name}
-                      </DropdownMenuItem>
-                    ))}
-                  </DropdownMenuContent>
-                </DropdownMenu>
+                    )}
+                  </div>
+                </div>
               </CardContent>
             </Card>
-          )}
-          <Card className="card-shadow-lg border-slate-200 dark:border-slate-700 dark:bg-slate-800">
-            <CardHeader className="border-b border-slate-200 dark:border-slate-700 bg-gradient-to-r from-slate-50 to-slate-100 dark:from-slate-800 dark:to-slate-900">
-              <CardTitle className="flex items-center gap-2 dark:text-white">
-                <Globe className="h-5 w-5 text-cyan-600 dark:text-cyan-400" />
-                Company Information
-              </CardTitle>
-              <CardDescription className="dark:text-gray-400">Basic company details and branding</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4 pt-6">
-              <div>
-                <Label htmlFor="companyName" className="dark:text-gray-300">Company Name</Label>
-                <Input
-                  id="companyName"
-                  value={settings.companyName}
-                  onChange={(e) => handleSettingChange("companyName", e.target.value)}
-                  className="dark:bg-slate-900 dark:border-slate-600 dark:text-white mt-1.5"
-                />
-              </div>
-
-              <div>
-                <Label htmlFor="supportEmail" className="dark:text-gray-300">Support Email</Label>
-                <Input
-                  id="supportEmail"
-                  type="email"
-                  value={settings.supportEmail}
-                  onChange={(e) => handleSettingChange("supportEmail", e.target.value)}
-                  className="dark:bg-slate-900 dark:border-slate-600 dark:text-white mt-1.5"
-                />
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="timezone" className="dark:text-gray-300">Timezone</Label>
-                  <select
-                    id="timezone"
-                    value={settings.timezone}
-                    onChange={(e) => handleSettingChange("timezone", e.target.value)}
-                    className="w-full p-2 border rounded-md dark:bg-slate-900 dark:border-slate-600 dark:text-white mt-1.5"
-                  >
-                    <option value="UTC">UTC</option>
-                    <option value="America/New_York">Eastern Time</option>
-                    <option value="America/Chicago">Central Time</option>
-                    <option value="America/Los_Angeles">Pacific Time</option>
-                  </select>
-                </div>
-
-                <div>
-                  <Label htmlFor="language" className="dark:text-gray-300">Language</Label>
-                  <select
-                    id="language"
-                    value={settings.language}
-                    onChange={(e) => handleSettingChange("language", e.target.value)}
-                    className="w-full p-2 border rounded-md dark:bg-slate-900 dark:border-slate-600 dark:text-white mt-1.5"
-                  >
-                    <option value="en">English</option>
-                    <option value="es">Spanish</option>
-                    <option value="fr">French</option>
-                    <option value="de">German</option>
-                  </select>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="card-shadow-lg border-slate-200 dark:border-slate-700 dark:bg-slate-800">
-            <CardHeader className="border-b border-slate-200 dark:border-slate-700 bg-gradient-to-r from-slate-50 to-slate-100 dark:from-slate-800 dark:to-slate-900">
-              <CardTitle className="dark:text-white">Business Hours</CardTitle>
-              <CardDescription className="dark:text-gray-400">Configure when your support team is available</CardDescription>
-            </CardHeader>
-            <CardContent className="pt-6">
-              <div className="space-y-4">
-                <div className="flex items-center justify-between p-3 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/50">
-                  <Label htmlFor="businessHours" className="dark:text-white">Enable Business Hours</Label>
-                  <Switch
-                    id="businessHours"
-                    checked={settings.businessHours}
-                    onCheckedChange={(checked) => handleSettingChange("businessHours", checked)}
-                  />
-                </div>
-
-                {settings.businessHours && (
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
-                    <div>
-                      <Label htmlFor="businessHoursStartTime" className="dark:text-gray-300">Start Time</Label>
-                      <Input
-                        id="businessHoursStartTime"
-                        type="time"
-                        value={settings.businessHoursStartTime}
-                        onChange={(e) => handleSettingChange("businessHoursStartTime", e.target.value)}
-                        className="dark:bg-slate-900 dark:border-slate-600 dark:text-white mt-1.5"
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="businessHoursEndTime" className="dark:text-gray-300">End Time</Label>
-                      <Input
-                        id="businessHoursEndTime"
-                        type="time"
-                        value={settings.businessHoursEndTime}
-                        onChange={(e) => handleSettingChange("businessHoursEndTime", e.target.value)}
-                        className="dark:bg-slate-900 dark:border-slate-600 dark:text-white mt-1.5"
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="businessHoursDays" className="dark:text-gray-300">Days</Label>
-                      <select
-                        id="businessHoursDays"
-                        value={settings.businessHoursDays}
-                        onChange={(e) => handleSettingChange("businessHoursDays", e.target.value)}
-                        className="w-full p-2 border rounded-md dark:bg-slate-900 dark:border-slate-600 dark:text-white mt-1.5"
-                      >
-                        <option>Monday - Friday</option>
-                        <option>Monday - Saturday</option>
-                        <option>Every Day</option>
-                      </select>
-                    </div>
-                  </div>
-                )}
-              </div>
-            </CardContent>
-          </Card>
+          </div>
         </TabsContent>
 
         <TabsContent value="notifications" className="space-y-6">

@@ -4,6 +4,8 @@ import { Button } from '@/components/ui/button';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { MessageSquare, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { BACKEND_URL } from '@/config/env';
+import { apiFetch } from '@/lib/api';
 
 // Re-defining necessary types and structures locally for this standalone page
 interface PublishedWidgetSettings {
@@ -31,12 +33,11 @@ const PublishedPreviewPage = () => {
   const [settings, setSettings] = useState<PublishedWidgetSettings | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isWidgetOpen, setIsWidgetOpen] = useState(true);
-  const backendUrl = import.meta.env.VITE_BACKEND_URL || "http://localhost:8000";
 
   useEffect(() => {
     const fetchPublishedSettings = async () => {
       try {
-        const response = await fetch(`/api/v1/published/${publishId}`);
+        const response = await apiFetch(`/api/v1/published/${publishId}`);
         if (response.ok) {
           const data = await response.json();
           // The settings are nested inside a 'settings' property
@@ -52,7 +53,7 @@ const PublishedPreviewPage = () => {
     if (publishId) {
       fetchPublishedSettings();
     }
-  }, [publishId, backendUrl]);
+  }, [publishId]);
 
   if (error) {
     return <div className="flex items-center justify-center h-screen bg-gray-100 text-red-500 font-semibold">{error}</div>;
@@ -84,14 +85,14 @@ const PublishedPreviewPage = () => {
               width: '60px',
               height: '60px',
               borderRadius: '50%',
-              backgroundColor: primary_color,
+              background: primary_color,
               boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
             }}
             className="flex items-center justify-center"
           >
             {agent_avatar_url ? (
               <img
-                src={`${backendUrl}/api/v1/proxy/image-proxy?url=${encodeURIComponent(agent_avatar_url)}`}
+                src={`${BACKEND_URL}/api/v1/proxy/image-proxy?url=${encodeURIComponent(agent_avatar_url)}`}
                 alt="Avatar"
                 className="w-full h-full rounded-full object-cover"
               />
@@ -115,7 +116,7 @@ const PublishedPreviewPage = () => {
             {show_header && (
               <div
                 style={{
-                  backgroundColor: primary_color,
+                  background: primary_color,
                   borderTopLeftRadius: `${border_radius}px`,
                   borderTopRightRadius: `${border_radius}px`,
                 }}
@@ -124,7 +125,7 @@ const PublishedPreviewPage = () => {
                 <div className="flex items-center gap-3">
                   {agent_avatar_url && (
                      <Avatar className="h-10 w-10 border-2 border-white/50">
-                        <AvatarImage src={`${backendUrl}/api/v1/proxy/image-proxy?url=${encodeURIComponent(agent_avatar_url)}`} alt="Header Avatar" />
+                        <AvatarImage src={`${BACKEND_URL}/api/v1/proxy/image-proxy?url=${encodeURIComponent(agent_avatar_url)}`} alt="Header Avatar" />
                         <AvatarFallback>{header_title.charAt(0)}</AvatarFallback>
                     </Avatar>
                   )}

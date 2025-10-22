@@ -13,6 +13,7 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { LogIn, Mail, Lock, Loader2, Sparkles } from "lucide-react";
+import { apiFetch } from "@/lib/api";
 
 export const LoginPage = () => {
   const [email, setEmail] = useState("");
@@ -26,7 +27,7 @@ export const LoginPage = () => {
     e.preventDefault();
     setIsLoading(true);
     try {
-      const response = await fetch("/api/v1/auth/login", {
+      const response = await apiFetch("/api/v1/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/x-www-form-urlencoded" },
         body: new URLSearchParams({

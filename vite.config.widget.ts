@@ -14,9 +14,8 @@ export default defineConfig({
     },
   },
   build: {
-    // The output directory is still 'dist', but it will only contain the widget file.
-    // We will need to run two separate build commands.
-    outDir: 'dist',
+    // Output widget directly to backend's static directory
+    outDir: '../backend/app/static/widget',
     rollupOptions: {
       // The single entry point for the widget.
       input: resolve(__dirname, 'src/widget.tsx'),
@@ -30,11 +29,10 @@ export default defineConfig({
         // The output file name.
         entryFileNames: 'widget.js',
         // We don't want hashes in the asset names for the widget bundle.
-        assetFileNames: 'widget-assets/[name][extname]',
+        assetFileNames: '[name][extname]',
       },
     },
-    // We don't want to clear the dist directory on this build,
-    // as the main app build will handle that.
-    emptyOutDir: false,
+    // Clear the widget output directory on each build
+    emptyOutDir: true,
   },
 });

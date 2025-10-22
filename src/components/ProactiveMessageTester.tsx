@@ -8,6 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/components/ui/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { MessageSquare } from "lucide-react";
+import { apiFetch } from "@/lib/api";
 
 export const ProactiveMessageTester = () => {
   const { toast } = useToast();
@@ -24,7 +25,7 @@ export const ProactiveMessageTester = () => {
         text: message,
       };
 
-      const response = await fetch("/api/v1/proactive/message", {
+      const response = await apiFetch("/api/v1/proactive/message", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

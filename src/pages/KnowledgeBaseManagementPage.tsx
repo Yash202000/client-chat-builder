@@ -220,28 +220,38 @@ const KnowledgeBaseManagementPage = () => {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-bold">Knowledge Base Management</h1>
+    <div className="space-y-6 p-6 animate-fade-in">
+      {/* Enhanced Header */}
+      <div className="flex justify-between items-start">
+        <div>
+          <h2 className="text-4xl font-bold bg-gradient-to-r from-indigo-600 to-blue-600 bg-clip-text text-transparent mb-2">
+            Knowledge Bases
+          </h2>
+          <p className="text-gray-600 dark:text-gray-400 text-lg">Upload documents and manage your knowledge repositories</p>
+        </div>
         <div className="flex gap-2">
           <Dialog open={isImportUrlDialogOpen} onOpenChange={setIsImportUrlDialogOpen}>
             <DialogTrigger asChild>
-              <Button variant="outline"> <LinkIcon className="mr-2 h-4 w-4" /> Import from URL</Button>
+              <Button variant="outline" className="btn-hover-lift">
+                <LinkIcon className="mr-2 h-4 w-4" /> Import from URL
+              </Button>
             </DialogTrigger>
-            <DialogContent>
+            <DialogContent className="bg-white dark:bg-slate-800">
               <DialogHeader>
-                <DialogTitle>Import Knowledge Base from URL</DialogTitle>
+                <DialogTitle className="dark:text-white">Import Knowledge Base from URL</DialogTitle>
               </DialogHeader>
               <ImportUrlForm onSubmit={handleImportUrl} knowledgeBases={knowledgeBases || []} />
             </DialogContent>
           </Dialog>
           <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
             <DialogTrigger asChild>
-              <Button> <Plus className="mr-2 h-4 w-4" /> Create Knowledge Base</Button>
+              <Button className="bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700 text-white btn-hover-lift">
+                <Plus className="mr-2 h-4 w-4" /> Create Knowledge Base
+              </Button>
             </DialogTrigger>
-            <DialogContent>
+            <DialogContent className="bg-white dark:bg-slate-800">
               <DialogHeader>
-                <DialogTitle>Create New Knowledge Base</DialogTitle>
+                <DialogTitle className="dark:text-white">Create New Knowledge Base</DialogTitle>
               </DialogHeader>
               <KnowledgeBaseForm onSubmit={handleCreate} />
             </DialogContent>
@@ -249,81 +259,171 @@ const KnowledgeBaseManagementPage = () => {
         </div>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Existing Knowledge Bases</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          {isLoading ? (
-            <p>Loading knowledge bases...</p>
-          ) : (
-            knowledgeBases?.map((kb) => (
-              <div key={kb.id} className="flex items-center justify-between p-4 border rounded-lg">
-                <div>
-                  <h4 className="font-semibold">{kb.name}</h4>
-                  <p className="text-sm text-gray-500">{kb.description}</p>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Dialog open={isPreviewDialogOpen && selectedKb?.id === kb.id} onOpenChange={(isOpen) => {
-                    if (!isOpen) {
-                      setSelectedKb(null);
-                    }
-                    setIsPreviewDialogOpen(isOpen);
-                  }}>
-                    <DialogTrigger asChild>
-                      <Button variant="outline" onClick={() => setSelectedKb(kb)}><Eye className="h-4 w-4" /></Button>
-                    </DialogTrigger>
-                    <DialogContent className="sm:max-w-[80vw] max-h-[80vh] overflow-y-auto">
-                      <DialogHeader>
-                        <DialogTitle>Preview: {selectedKb?.name}</DialogTitle>
-                      </DialogHeader>
-                      {isLoadingPreview ? (
-                        <p>Loading content...</p>
-                      ) : (
-                        <SyntaxHighlighter language="javascript" style={solarizedlight} customStyle={{ maxHeight: '60vh', overflowY: 'auto' }}>
-                          {previewContent?.content || ""}
-                        </SyntaxHighlighter>
-                      )}
-                    </DialogContent>
-                  </Dialog>
-                  <Dialog open={isGenerateQnADialogOpen && selectedKb?.id === kb.id} onOpenChange={(isOpen) => {
-                    if (!isOpen) {
-                      setSelectedKb(null);
-                    }
-                    setIsGenerateQnADialogOpen(isOpen);
-                  }}>
-                    <DialogTrigger asChild>
-                      <Button variant="outline" onClick={() => setSelectedKb(kb)}><Brain className="h-4 w-4" /></Button>
-                    </DialogTrigger>
-                    <DialogContent>
-                      <DialogHeader>
-                        <DialogTitle>Generate Q&A for {selectedKb?.name}</DialogTitle>
-                      </DialogHeader>
-                      <GenerateQnAForm kb={selectedKb} onSubmit={handleGenerateQnA} />
-                    </DialogContent>
-                  </Dialog>
-                  <Dialog open={isEditDialogOpen && selectedKb?.id === kb.id} onOpenChange={(isOpen) => {
-                    if (!isOpen) {
-                      setSelectedKb(null);
-                    }
-                    setIsEditDialogOpen(isOpen);
-                  }}>
-                    <DialogTrigger asChild>
-                      <Button variant="outline" onClick={() => setSelectedKb(kb)}><Edit className="h-4 w-4" /></Button>
-                    </DialogTrigger>
-                    <DialogContent>
-                      <DialogHeader>
-                        <DialogTitle>Edit Knowledge Base</DialogTitle>
-                      </DialogHeader>
-                      <KnowledgeBaseForm kb={selectedKb} onSubmit={(values) => handleUpdate({ ...kb, ...values })} />
-                    </DialogContent>
-                  </Dialog>
-                  <Button variant="destructive" onClick={() => deleteKnowledgeBaseMutation.mutate(kb.id)}>
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </div>
+      {/* Stats Overview Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <Card className="bg-gradient-to-br from-indigo-50 to-blue-50 dark:from-indigo-950/30 dark:to-blue-950/30 border-indigo-200 dark:border-indigo-800 card-shadow">
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-muted-foreground dark:text-gray-400">Total Knowledge Bases</p>
+                <h3 className="text-3xl font-bold bg-gradient-to-r from-indigo-600 to-blue-600 bg-clip-text text-transparent">
+                  {knowledgeBases?.length || 0}
+                </h3>
               </div>
-            ))
+              <div className="h-12 w-12 rounded-full bg-gradient-to-br from-indigo-600 to-blue-600 flex items-center justify-center">
+                <span className="text-2xl">📚</span>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-950/30 dark:to-emerald-950/30 border-green-200 dark:border-green-800 card-shadow">
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-muted-foreground dark:text-gray-400">Local</p>
+                <h3 className="text-3xl font-bold bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent">
+                  {knowledgeBases?.filter(kb => kb.type === 'local').length || 0}
+                </h3>
+              </div>
+              <div className="h-12 w-12 rounded-full bg-gradient-to-br from-green-600 to-emerald-600 flex items-center justify-center">
+                <span className="text-2xl">💾</span>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-950/30 dark:to-pink-950/30 border-purple-200 dark:border-purple-800 card-shadow">
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-muted-foreground dark:text-gray-400">Remote</p>
+                <h3 className="text-3xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
+                  {knowledgeBases?.filter(kb => kb.type === 'remote').length || 0}
+                </h3>
+              </div>
+              <div className="h-12 w-12 rounded-full bg-gradient-to-br from-purple-600 to-pink-600 flex items-center justify-center">
+                <span className="text-2xl">☁️</span>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Knowledge Bases Grid */}
+      <Card className="card-shadow bg-white dark:bg-slate-800">
+        <CardHeader className="border-b border-slate-200 dark:border-slate-700">
+          <CardTitle className="text-2xl dark:text-white">Your Knowledge Bases</CardTitle>
+        </CardHeader>
+        <CardContent className="p-6">
+          {isLoading ? (
+            <div className="flex items-center justify-center py-12">
+              <div className="text-center">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto mb-4"></div>
+                <p className="text-muted-foreground">Loading knowledge bases...</p>
+              </div>
+            </div>
+          ) : knowledgeBases && knowledgeBases.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {knowledgeBases.map((kb) => (
+                <Card key={kb.id} className="card-shadow hover:shadow-lg transition-all duration-200 bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700">
+                  <CardContent className="p-5">
+                    <div className="flex items-start gap-3 mb-4">
+                      <div className="h-12 w-12 rounded-lg bg-gradient-to-br from-indigo-500 to-blue-500 flex items-center justify-center text-white font-bold text-lg shadow-md flex-shrink-0">
+                        {kb.name.substring(0, 2).toUpperCase()}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <h4 className="font-semibold text-lg dark:text-white truncate">{kb.name}</h4>
+                        <p className="text-sm text-gray-500 dark:text-gray-400 line-clamp-2">{kb.description}</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2 mb-4">
+                      <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${
+                        kb.type === 'local'
+                          ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400 border border-green-200 dark:border-green-800'
+                          : 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400 border border-purple-200 dark:border-purple-800'
+                      }`}>
+                        {kb.type === 'local' ? '💾 Local' : '☁️ Remote'}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <Dialog open={isPreviewDialogOpen && selectedKb?.id === kb.id} onOpenChange={(isOpen) => {
+                        if (!isOpen) setSelectedKb(null);
+                        setIsPreviewDialogOpen(isOpen);
+                      }}>
+                        <DialogTrigger asChild>
+                          <Button variant="outline" size="sm" onClick={() => setSelectedKb(kb)} className="flex-1" title="Preview">
+                            <Eye className="h-4 w-4" />
+                          </Button>
+                        </DialogTrigger>
+                        <DialogContent className="sm:max-w-[80vw] max-h-[80vh] overflow-y-auto bg-white dark:bg-slate-800">
+                          <DialogHeader>
+                            <DialogTitle className="dark:text-white">Preview: {selectedKb?.name}</DialogTitle>
+                          </DialogHeader>
+                          {isLoadingPreview ? (
+                            <div className="flex items-center justify-center py-8">
+                              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
+                            </div>
+                          ) : (
+                            <SyntaxHighlighter language="javascript" style={solarizedlight} customStyle={{ maxHeight: '60vh', overflowY: 'auto' }}>
+                              {previewContent?.content || ""}
+                            </SyntaxHighlighter>
+                          )}
+                        </DialogContent>
+                      </Dialog>
+                      <Dialog open={isGenerateQnADialogOpen && selectedKb?.id === kb.id} onOpenChange={(isOpen) => {
+                        if (!isOpen) setSelectedKb(null);
+                        setIsGenerateQnADialogOpen(isOpen);
+                      }}>
+                        <DialogTrigger asChild>
+                          <Button variant="outline" size="sm" onClick={() => setSelectedKb(kb)} className="flex-1" title="Generate Q&A">
+                            <Brain className="h-4 w-4" />
+                          </Button>
+                        </DialogTrigger>
+                        <DialogContent className="bg-white dark:bg-slate-800">
+                          <DialogHeader>
+                            <DialogTitle className="dark:text-white">Generate Q&A for {selectedKb?.name}</DialogTitle>
+                          </DialogHeader>
+                          <GenerateQnAForm kb={selectedKb} onSubmit={handleGenerateQnA} />
+                        </DialogContent>
+                      </Dialog>
+                      <Dialog open={isEditDialogOpen && selectedKb?.id === kb.id} onOpenChange={(isOpen) => {
+                        if (!isOpen) setSelectedKb(null);
+                        setIsEditDialogOpen(isOpen);
+                      }}>
+                        <DialogTrigger asChild>
+                          <Button variant="outline" size="sm" onClick={() => setSelectedKb(kb)} className="flex-1" title="Edit">
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                        </DialogTrigger>
+                        <DialogContent className="bg-white dark:bg-slate-800">
+                          <DialogHeader>
+                            <DialogTitle className="dark:text-white">Edit Knowledge Base</DialogTitle>
+                          </DialogHeader>
+                          <KnowledgeBaseForm kb={selectedKb} onSubmit={(values) => handleUpdate({ ...kb, ...values })} />
+                        </DialogContent>
+                      </Dialog>
+                      <Button variant="destructive" size="sm" onClick={() => deleteKnowledgeBaseMutation.mutate(kb.id)} className="flex-1" title="Delete">
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          ) : (
+            <div className="flex flex-col items-center justify-center py-12">
+              <div className="text-center">
+                <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-gradient-to-br from-indigo-100 to-blue-100 dark:from-indigo-900/30 dark:to-blue-900/30 mb-6">
+                  <span className="text-4xl">📚</span>
+                </div>
+                <h3 className="text-xl font-semibold mb-2 dark:text-white">No Knowledge Bases Yet</h3>
+                <p className="text-muted-foreground mb-6">Get started by creating your first knowledge base</p>
+                <Button onClick={() => setIsCreateDialogOpen(true)} className="bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700 text-white">
+                  <Plus className="mr-2 h-4 w-4" /> Create Knowledge Base
+                </Button>
+              </div>
+            </div>
           )}
         </CardContent>
       </Card>

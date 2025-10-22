@@ -48,7 +48,7 @@ export const ContactProfile: React.FC<ContactProfileProps> = ({ sessionId }) => 
     }).then(res => { if (!res.ok) throw new Error('Failed to update contact'); return res.json() }),
     onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: ['contact', sessionId] });
-        toast({ title: 'Success', description: 'Contact updated successfully.' });
+        toast({ title: 'Success', variant: 'success', description: 'Contact updated successfully.' });
         setIsEditing(false);
     },
     onError: (e: Error) => toast({ title: 'Error', description: e.message, variant: 'destructive' }),
@@ -89,11 +89,16 @@ export const ContactProfile: React.FC<ContactProfileProps> = ({ sessionId }) => 
   return (
     <Card className="h-full flex flex-col card-shadow-lg overflow-hidden bg-white dark:bg-slate-800">
       {/* Header */}
-      <CardHeader className="border-b border-slate-200 dark:border-slate-700 bg-gradient-to-r from-slate-50 to-slate-100 dark:from-slate-800 dark:to-slate-900 flex-shrink-0 pb-4">
+      <CardHeader className="border-b border-slate-200 dark:border-slate-700 bg-gradient-to-r from-white to-slate-50 dark:from-slate-800 dark:to-slate-900 flex-shrink-0 pb-4 shadow-sm">
         <div className="flex items-center justify-between">
-          <div>
-            <CardTitle className="text-lg dark:text-white">Contact Profile</CardTitle>
-            <CardDescription className="text-xs dark:text-gray-400">Customer information</CardDescription>
+          <div className="flex items-center gap-3">
+            <div className="h-10 w-10 rounded-lg bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center shadow-md">
+              <User className="h-5 w-5 text-white" />
+            </div>
+            <div>
+              <CardTitle className="text-xl font-bold dark:text-white">Contact Profile</CardTitle>
+              <CardDescription className="text-xs dark:text-gray-400">Customer information</CardDescription>
+            </div>
           </div>
           <Button
             variant={isEditing ? "default" : "outline"}

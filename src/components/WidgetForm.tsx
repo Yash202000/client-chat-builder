@@ -42,7 +42,7 @@ export const WidgetForm = ({ fields, onSubmit, primaryColor, darkMode }: WidgetF
           {errors[field.name] && <p className="text-red-500 text-xs mt-1">This field is required.</p>}
         </div>
       ))}
-      <Button type="submit" style={{ backgroundColor: primaryColor }} className="w-full text-white">
+      <Button type="submit" style={{ background: primaryColor }} className="w-full text-white">
         Submit
       </Button>
     </form>

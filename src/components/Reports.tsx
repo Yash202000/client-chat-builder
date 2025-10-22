@@ -27,6 +27,13 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
 
 function DatePicker({ date, setDate, placeholder }) {
+  const handleDateSelect = (selectedDate) => {
+    // Prevent date from being deselected (set to undefined)
+    if (selectedDate) {
+      setDate(selectedDate);
+    }
+  };
+
   return (
     <Popover>
       <PopoverTrigger asChild>
@@ -45,7 +52,7 @@ function DatePicker({ date, setDate, placeholder }) {
         <Calendar
           mode="single"
           selected={date}
-          onSelect={setDate}
+          onSelect={handleDateSelect}
           initialFocus
           className="dark:bg-slate-800"
         />
@@ -187,6 +194,57 @@ export const Reports = () => {
     enabled: !!companyId,
   });
 
+  const { data: conversationStatusData, isLoading: isLoadingConversationStatus, isError: isErrorConversationStatus } = useQuery({
+    queryKey: ['conversationStatus', companyId, dateRange],
+    queryFn: async () => {
+      if (!companyId) return null;
+      const response = await authFetch(buildUrl(`/api/v1/reports/conversation-status`), {
+        headers: {
+          "X-Company-ID": companyId.toString(),
+        },
+      });
+      if (!response.ok) {
+        throw new Error("Failed to fetch conversation status");
+      }
+      return response.json();
+    },
+    enabled: !!companyId,
+  });
+
+  const { data: conversationTrendsData, isLoading: isLoadingConversationTrends, isError: isErrorConversationTrends } = useQuery({
+    queryKey: ['conversationTrends', companyId, dateRange],
+    queryFn: async () => {
+      if (!companyId) return null;
+      const response = await authFetch(buildUrl(`/api/v1/reports/conversation-trends`), {
+        headers: {
+          "X-Company-ID": companyId.toString(),
+        },
+      });
+      if (!response.ok) {
+        throw new Error("Failed to fetch conversation trends");
+      }
+      return response.json();
+    },
+    enabled: !!companyId,
+  });
+
+  const { data: channelDistributionData, isLoading: isLoadingChannelDistribution, isError: isErrorChannelDistribution } = useQuery({
+    queryKey: ['channelDistribution', companyId, dateRange],
+    queryFn: async () => {
+      if (!companyId) return null;
+      const response = await authFetch(buildUrl(`/api/v1/reports/channel-distribution`), {
+        headers: {
+          "X-Company-ID": companyId.toString(),
+        },
+      });
+      if (!response.ok) {
+        throw new Error("Failed to fetch channel distribution");
+      }
+      return response.json();
+    },
+    enabled: !!companyId,
+  });
+
   const metrics = [
     {
       title: "Total Sessions",
@@ -234,6 +292,35 @@ export const Reports = () => {
   const customerSatisfaction = customerSatisfactionData || [];
   const topIssues = topIssuesData || [];
   const alerts = alertsData || [];
+  const conversationStatus = conversationStatusData || [];
+  const conversationTrends = conversationTrendsData || [];
+  const channelDistribution = channelDistributionData || [];
+
+  // Helper function to get status color
+  const getStatusColor = (status) => {
+    const colors = {
+      'active': 'bg-green-500 dark:bg-green-600',
+      'inactive': 'bg-gray-500 dark:bg-gray-600',
+      'assigned': 'bg-blue-500 dark:bg-blue-600',
+      'pending': 'bg-yellow-500 dark:bg-yellow-600',
+      'resolved': 'bg-purple-500 dark:bg-purple-600',
+      'archived': 'bg-slate-500 dark:bg-slate-600',
+    };
+    return colors[status] || 'bg-orange-500 dark:bg-orange-600';
+  };
+
+  // Helper function to get channel icon
+  const getChannelEmoji = (channel) => {
+    const emojis = {
+      'web': '💻',
+      'whatsapp': '📱',
+      'messenger': '💙',
+      'instagram': '📷',
+      'telegram': '✈️',
+      'gmail': '📧',
+    };
+    return emojis[channel] || '💬';
+  };
 
   const { data: optimizationSuggestionsData, isLoading: isLoadingOptimizationSuggestions, isError: isErrorOptimizationSuggestions } = useQuery({
     queryKey: ['optimizationSuggestions', companyId],
@@ -278,8 +365,8 @@ export const Reports = () => {
 
   const optimizationSuggestions = optimizationSuggestionsData || [];
 
-  if (isLoadingMetrics || isLoadingAgentPerformance || isLoadingCustomerSatisfaction || isLoadingTopIssues || isLoadingErrorRates || isLoadingLatency || isLoadingAlerts || isLoadingOptimizationSuggestions) return <div>Loading reports...</div>;
-  if (isErrorMetrics || isErrorAgentPerformance || isErrorCustomerSatisfaction || isErrorTopIssues || isErrorErrorRates || isErrorLatency || isErrorAlerts || isErrorOptimizationSuggestions) return <div>Error loading reports.</div>;
+  if (isLoadingMetrics || isLoadingAgentPerformance || isLoadingCustomerSatisfaction || isLoadingTopIssues || isLoadingErrorRates || isLoadingLatency || isLoadingAlerts || isLoadingOptimizationSuggestions || isLoadingConversationStatus || isLoadingConversationTrends || isLoadingChannelDistribution) return <div>Loading reports...</div>;
+  if (isErrorMetrics || isErrorAgentPerformance || isErrorCustomerSatisfaction || isErrorTopIssues || isErrorErrorRates || isErrorLatency || isErrorAlerts || isErrorOptimizationSuggestions || isErrorConversationStatus || isErrorConversationTrends || isErrorChannelDistribution) return <div>Error loading reports.</div>;
 
   return (
     <div className="space-y-6 p-6 animate-fade-in">
@@ -364,49 +451,106 @@ export const Reports = () => {
 
         <TabsContent value="overview" className="space-y-6">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Conversation Status Distribution */}
             <Card className="card-shadow-lg border-slate-200 dark:border-slate-700 dark:bg-slate-800">
               <CardHeader className="border-b border-slate-200 dark:border-slate-700 bg-gradient-to-r from-slate-50 to-slate-100 dark:from-slate-800 dark:to-slate-900">
-                <CardTitle className="dark:text-white">Conversation Volume</CardTitle>
-                <CardDescription className="dark:text-gray-400">Daily conversation trends</CardDescription>
+                <CardTitle className="dark:text-white">Conversation Status</CardTitle>
+                <CardDescription className="dark:text-gray-400">Distribution by conversation status</CardDescription>
               </CardHeader>
               <CardContent className="pt-6">
-                <div className="h-64 flex items-center justify-center bg-slate-50 dark:bg-slate-900/50 rounded-lg border border-slate-200 dark:border-slate-700">
-                  <div className="text-center">
-                    <BarChart3 className="h-16 w-16 text-orange-400 dark:text-orange-500 mx-auto mb-3" />
-                    <span className="text-sm text-gray-500 dark:text-gray-400">Chart visualization would go here</span>
-                  </div>
+                <div className="space-y-4">
+                  {conversationStatus.length === 0 ? (
+                    <p className="text-center py-8 text-slate-500 dark:text-slate-400">No data available</p>
+                  ) : (
+                    conversationStatus.map((item) => (
+                      <div key={item.status} className="flex items-center gap-3">
+                        <span className="w-24 text-sm dark:text-white font-medium capitalize">{item.status}</span>
+                        <div className="flex-1 bg-slate-200 dark:bg-slate-700 rounded-full h-3">
+                          <div
+                            className={`h-3 rounded-full ${getStatusColor(item.status)} transition-all`}
+                            style={{ width: `${item.percentage}%` }}
+                          />
+                        </div>
+                        <span className="text-sm font-semibold dark:text-white w-16 text-right">{item.count} ({item.percentage}%)</span>
+                      </div>
+                    ))
+                  )}
                 </div>
               </CardContent>
             </Card>
 
+            {/* Channel Distribution */}
             <Card className="card-shadow-lg border-slate-200 dark:border-slate-700 dark:bg-slate-800">
               <CardHeader className="border-b border-slate-200 dark:border-slate-700 bg-gradient-to-r from-slate-50 to-slate-100 dark:from-slate-800 dark:to-slate-900">
-                <CardTitle className="dark:text-white">Response Time Distribution</CardTitle>
-                <CardDescription className="dark:text-gray-400">How quickly agents respond</CardDescription>
+                <CardTitle className="dark:text-white">Channel Distribution</CardTitle>
+                <CardDescription className="dark:text-gray-400">Conversations by channel type</CardDescription>
               </CardHeader>
               <CardContent className="pt-6">
                 <div className="space-y-4">
-                  {[
-                    { range: "< 1 min", percentage: 45, color: "bg-green-500 dark:bg-green-600" },
-                    { range: "1-3 min", percentage: 35, color: "bg-yellow-500 dark:bg-yellow-600" },
-                    { range: "3-5 min", percentage: 15, color: "bg-orange-500 dark:bg-orange-600" },
-                    { range: "> 5 min", percentage: 5, color: "bg-red-500 dark:bg-red-600" }
-                  ].map((item) => (
-                    <div key={item.range} className="flex items-center gap-3">
-                      <span className="w-20 text-sm dark:text-white font-medium">{item.range}</span>
-                      <div className="flex-1 bg-slate-200 dark:bg-slate-700 rounded-full h-2.5">
-                        <div
-                          className={`h-2.5 rounded-full ${item.color} transition-all`}
-                          style={{ width: `${item.percentage}%` }}
-                        />
+                  {channelDistribution.length === 0 ? (
+                    <p className="text-center py-8 text-slate-500 dark:text-slate-400">No data available</p>
+                  ) : (
+                    channelDistribution.map((item) => (
+                      <div key={item.channel} className="flex items-center gap-3">
+                        <span className="w-24 text-sm dark:text-white font-medium flex items-center gap-2">
+                          <span>{getChannelEmoji(item.channel)}</span>
+                          <span className="capitalize">{item.channel}</span>
+                        </span>
+                        <div className="flex-1 bg-slate-200 dark:bg-slate-700 rounded-full h-3">
+                          <div
+                            className="h-3 rounded-full bg-gradient-to-r from-orange-500 to-red-500 dark:from-orange-600 dark:to-red-600 transition-all"
+                            style={{ width: `${item.percentage}%` }}
+                          />
+                        </div>
+                        <span className="text-sm font-semibold dark:text-white w-16 text-right">{item.count} ({item.percentage}%)</span>
                       </div>
-                      <span className="text-sm font-semibold dark:text-white w-12 text-right">{item.percentage}%</span>
-                    </div>
-                  ))}
+                    ))
+                  )}
                 </div>
               </CardContent>
             </Card>
           </div>
+
+          {/* Conversation Trends */}
+          <Card className="card-shadow-lg border-slate-200 dark:border-slate-700 dark:bg-slate-800">
+            <CardHeader className="border-b border-slate-200 dark:border-slate-700 bg-gradient-to-r from-slate-50 to-slate-100 dark:from-slate-800 dark:to-slate-900">
+              <CardTitle className="dark:text-white">Conversation Volume Trends</CardTitle>
+              <CardDescription className="dark:text-gray-400">Daily conversation activity over selected date range</CardDescription>
+            </CardHeader>
+            <CardContent className="pt-6">
+              {conversationTrends.length === 0 ? (
+                <div className="h-64 flex items-center justify-center bg-slate-50 dark:bg-slate-900/50 rounded-lg border border-slate-200 dark:border-slate-700">
+                  <div className="text-center">
+                    <BarChart3 className="h-16 w-16 text-orange-400 dark:text-orange-500 mx-auto mb-3" />
+                    <span className="text-sm text-gray-500 dark:text-gray-400">No conversation data available for selected date range</span>
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {conversationTrends.map((item, index) => {
+                    const maxCount = Math.max(...conversationTrends.map(t => t.count));
+                    const barWidth = maxCount > 0 ? (item.count / maxCount) * 100 : 0;
+                    return (
+                      <div key={index} className="flex items-center gap-3">
+                        <span className="w-24 text-xs dark:text-white font-medium">{new Date(item.date).toLocaleDateString()}</span>
+                        <div className="flex-1 bg-slate-200 dark:bg-slate-700 rounded-full h-6 relative">
+                          <div
+                            className="h-6 rounded-full bg-gradient-to-r from-blue-500 to-purple-500 dark:from-blue-600 dark:to-purple-600 transition-all flex items-center justify-end pr-2"
+                            style={{ width: `${barWidth}%` }}
+                          >
+                            {barWidth > 15 && <span className="text-xs text-white font-semibold">{item.count}</span>}
+                          </div>
+                          {barWidth <= 15 && (
+                            <span className="absolute right-2 top-1/2 -translate-y-1/2 text-xs dark:text-white font-semibold">{item.count}</span>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </CardContent>
+          </Card>
         </TabsContent>
 
         <TabsContent value="agents" className="space-y-6">

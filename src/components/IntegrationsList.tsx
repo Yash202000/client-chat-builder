@@ -22,7 +22,7 @@ export const IntegrationsList: React.FC = () => {
       }
       if (event.data === 'linkedin-success' || event.data === 'google-success') {
         queryClient.invalidateQueries({ queryKey: ['integrations'] });
-        toast({ title: 'Success', description: 'Integration connected successfully.' });
+        toast({ title: 'Success', variant: 'success', description: 'Integration connected successfully.' });
       }
     };
 
@@ -49,7 +49,7 @@ export const IntegrationsList: React.FC = () => {
       if (!response.ok) throw new Error('Failed to delete integration');
     },
     onSuccess: () => {
-      toast({ title: 'Success', description: 'Integration deleted successfully.' });
+      toast({ title: 'Success', variant: 'success', description: 'Integration deleted successfully.' });
       queryClient.invalidateQueries({ queryKey: ['integrations'] });
     },
     onError: () => {

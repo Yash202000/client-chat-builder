@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import { LiveKitRoom, VideoConference } from '@livekit/components-react';
 import '@livekit/components-styles';
 import { useAuth } from "@/hooks/useAuth";
+import { LIVEKIT_URL } from "@/config/env";
 
 interface VideoCallModalProps {
   sessionId: string;
@@ -33,28 +34,32 @@ export const VideoCallModal: React.FC<VideoCallModalProps> = ({ sessionId, userI
   }
 
   return (
-    <div style={{ 
-        position: 'fixed', 
-        top: 0, 
-        left: 0, 
-        width: '100vw', 
-        height: '100vh', 
-        backgroundColor: 'rgba(0,0,0,0.5)', 
-        display: 'flex', 
-        justifyContent: 'center', 
-        alignItems: 'center' 
+    <div style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        width: '100vw',
+        height: '100vh',
+        backgroundColor: 'rgba(0,0,0,0.8)',
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        zIndex: 9999
     }}>
-        <div style={{ 
-            width: '80%', 
-            height: '80%', 
-            backgroundColor: 'white', 
-            borderRadius: '8px' 
+        <div style={{
+            width: '90%',
+            height: '90%',
+            backgroundColor: 'white',
+            borderRadius: '12px',
+            boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
+            overflow: 'hidden',
+            position: 'relative'
         }}>
             <LiveKitRoom
                 video={true}
                 audio={true}
                 token={token}
-                serverUrl={import.meta.env.VITE_LIVEKIT_URL}
+                serverUrl={LIVEKIT_URL}
                 data-lk-theme="default"
                 style={{ height: '100%' }}
                 onDisconnected={onClose}

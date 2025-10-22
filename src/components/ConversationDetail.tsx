@@ -66,7 +66,11 @@ export const ConversationDetail: React.FC<ConversationDetailProps> = ({ sessionI
     onSuccess: (data) => {
       setIsAiEnabled(data.is_ai_enabled);
       queryClient.invalidateQueries({ queryKey: ['sessionDetails', sessionId] });
-      toast({ title: 'Success', description: `AI has been ${data.is_ai_enabled ? 'enabled' : 'disabled'}.` });
+      toast({
+        title: 'Success',
+        description: `AI has been ${data.is_ai_enabled ? 'enabled' : 'disabled'}.`,
+        variant: 'success'
+      });
     },
     onError: (e: Error) => toast({ title: 'Error', description: e.message, variant: 'destructive' }),
   });
@@ -133,7 +137,11 @@ export const ConversationDetail: React.FC<ConversationDetailProps> = ({ sessionI
       queryClient.invalidateQueries({ queryKey: ['sessions', agentId] });
       queryClient.invalidateQueries({ queryKey: ['sessions', companyId] });
       queryClient.invalidateQueries({ queryKey: ['sessionDetails', sessionId] });
-      toast({ title: 'Success', description: 'Conversation status updated.' });
+      toast({
+        title: 'Status Updated',
+        description: 'Conversation status has been updated successfully.',
+        variant: 'success'
+      });
     },
     onError: (e: Error) => toast({ title: 'Error', description: e.message, variant: 'destructive' }),
   });
@@ -172,7 +180,11 @@ export const ConversationDetail: React.FC<ConversationDetailProps> = ({ sessionI
       queryClient.invalidateQueries({ queryKey: ['sessions', agentId] });
       queryClient.invalidateQueries({ queryKey: ['sessions', companyId] });
       queryClient.invalidateQueries({ queryKey: ['sessionDetails', sessionId] });
-      toast({ title: 'Success', description: 'Conversation assigned.' });
+      toast({
+        title: 'Assignment Updated',
+        description: 'Conversation has been assigned successfully.',
+        variant: 'success'
+      });
     },
     onError: (e: Error) => toast({ title: 'Error', description: e.message, variant: 'destructive' }),
   });
@@ -191,16 +203,16 @@ export const ConversationDetail: React.FC<ConversationDetailProps> = ({ sessionI
   return (
     <div className="flex h-full bg-white dark:bg-slate-800 card-shadow-lg rounded-lg overflow-hidden">
       <div className="flex flex-col flex-grow">
-        <header className="flex-shrink-0 border-b border-slate-200 dark:border-slate-700 bg-gradient-to-r from-slate-50 to-slate-100 dark:from-slate-800 dark:to-slate-900">
+        <header className="flex-shrink-0 border-b border-slate-200 dark:border-slate-700 bg-gradient-to-r from-white to-slate-50 dark:from-slate-800 dark:to-slate-900 shadow-sm">
           {/* Top Row - Title and Quick Actions */}
-          <div className="flex items-center justify-between px-6 py-3 border-b">
+          <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200 dark:border-slate-700">
             <div className="flex items-center gap-3">
-              <div className="h-10 w-10 rounded-lg bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
-                <MessageSquare className="h-5 w-5 text-white" />
+              <div className="h-12 w-12 rounded-lg bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center shadow-md">
+                <MessageSquare className="h-6 w-6 text-white" />
               </div>
               <div>
-                <h2 className="text-lg font-bold dark:text-white">Conversation</h2>
-                <p className="text-xs text-muted-foreground">ID: {sessionId.slice(0, 12)}...</p>
+                <h2 className="text-xl font-bold dark:text-white">Conversation</h2>
+                <p className="text-xs text-muted-foreground">Session ID: {sessionId.slice(0, 12)}...</p>
               </div>
             </div>
 
@@ -255,7 +267,7 @@ export const ConversationDetail: React.FC<ConversationDetailProps> = ({ sessionI
                   <SelectValue placeholder="Assign to..." />
                 </SelectTrigger>
                 <SelectContent>
-                  {users?.map(user => (
+                  {Array.isArray(users) && users.map(user => (
                     <SelectItem key={user.id} value={user.id.toString()}>
                       <div className="flex items-center gap-2">
                         <div className="h-6 w-6 rounded-full bg-blue-100 flex items-center justify-center">
@@ -320,9 +332,9 @@ export const ConversationDetail: React.FC<ConversationDetailProps> = ({ sessionI
                     <div className={`flex items-end gap-3 ${msg.sender === 'user' ? 'justify-start' : 'justify-end'}`}>
                       {msg.sender === 'user' && (
                         <Avatar className="h-10 w-10 flex-shrink-0 ring-2 ring-slate-200">
-                          <AvatarImage src={`https://avatar.vercel.sh/${contact?.email}.png`} alt={contact?.name} />
-                          <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white font-semibold">
-                            {contact?.name?.charAt(0).toUpperCase() || 'U'}
+                          <AvatarImage src={`https://avatar.vercel.sh/${contact?.email}.png`} alt={contact?.name || 'User'} />
+                          <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white font-semibold text-sm">
+                            {contact?.name?.charAt(0)?.toUpperCase() || contact?.email?.charAt(0)?.toUpperCase() || 'U'}
                           </AvatarFallback>
                         </Avatar>
                       )}

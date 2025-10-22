@@ -68,7 +68,7 @@ export const IntegrationDialog: React.FC<IntegrationDialogProps> = ({ isOpen, on
         const errorData = await response.json();
         throw new Error(errorData.detail || 'Failed to save integration');
       }
-      toast({ title: 'Success', description: `Integration ${integration ? 'updated' : 'created'} successfully.` });
+      toast({ title: 'Success', variant: 'success', description: `Integration ${integration ? 'updated' : 'created'} successfully.` });
       queryClient.invalidateQueries({ queryKey: ['integrations'] });
       onClose();
     },

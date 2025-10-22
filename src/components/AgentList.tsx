@@ -73,7 +73,15 @@ export const AgentList = () => {
   });
 
   const handleCopyEmbedCode = (agentId: number) => {
-    const embedCode = `<script id="agent-connect-widget-script" data-agent-id="${agentId}" data-company-id="${companyId}" src="${import.meta.env.VITE_BACKEND_URL}/widget.js"></script>`;
+    const backendUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+    const embedCode = `<script
+    src="${backendUrl}/widget/widget.js"
+    id="agent-connect-widget-script"
+    data-agent-id="${agentId}"
+    data-company-id="${companyId}"
+    data-backend-url="${backendUrl}">
+</script>
+<div id="agentconnect-widget"></div>`;
     navigator.clipboard.writeText(embedCode);
     toast({ title: "Embed code copied!" });
   };
@@ -121,102 +129,179 @@ export const AgentList = () => {
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <div className="flex justify-between items-center">
-          <div>
-            <CardTitle>Your Agents</CardTitle>
-            <CardDescription>Manage and view your AI agents.</CardDescription>
+    <>
+      {/* Stats Overview Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+        <Card className="bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-950/30 dark:to-pink-950/30 border-purple-200 dark:border-purple-800 card-shadow">
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-muted-foreground dark:text-gray-400">Total Agents</p>
+                <h3 className="text-3xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
+                  {agents?.length || 0}
+                </h3>
+              </div>
+              <div className="h-12 w-12 rounded-full bg-gradient-to-br from-purple-600 to-pink-600 flex items-center justify-center">
+                <span className="text-2xl">🤖</span>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-950/30 dark:to-emerald-950/30 border-green-200 dark:border-green-800 card-shadow">
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-muted-foreground dark:text-gray-400">Active</p>
+                <h3 className="text-3xl font-bold bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent">
+                  {agents?.filter(a => a.status === 'active').length || 0}
+                </h3>
+              </div>
+              <div className="h-12 w-12 rounded-full bg-gradient-to-br from-green-600 to-emerald-600 flex items-center justify-center">
+                <span className="text-2xl">✅</span>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-gradient-to-br from-blue-50 to-cyan-50 dark:from-blue-950/30 dark:to-cyan-950/30 border-blue-200 dark:border-blue-800 card-shadow">
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-muted-foreground dark:text-gray-400">Inactive</p>
+                <h3 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-cyan-600 bg-clip-text text-transparent">
+                  {agents?.filter(a => a.status !== 'active').length || 0}
+                </h3>
+              </div>
+              <div className="h-12 w-12 rounded-full bg-gradient-to-br from-blue-600 to-cyan-600 flex items-center justify-center">
+                <span className="text-2xl">💤</span>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Agents Table Card */}
+      <Card className="card-shadow bg-white dark:bg-slate-800">
+        <CardHeader className="border-b border-slate-200 dark:border-slate-700">
+          <div className="flex justify-between items-center">
+            <div>
+              <CardTitle className="text-2xl dark:text-white">Your Agents</CardTitle>
+              <CardDescription className="text-base">Manage and view your AI agents</CardDescription>
+            </div>
+            <Button
+              onClick={() => navigate('/dashboard/builder')}
+              className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white btn-hover-lift"
+            >
+              <PlusCircle className="h-4 w-4 mr-2" />
+              Create Agent
+            </Button>
           </div>
-          <Button onClick={() => navigate('/dashboard/builder')}>
-            <PlusCircle className="h-4 w-4 mr-2" />
-            Create Agent
-          </Button>
-        </div>
-      </CardHeader>
-      <CardContent>
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Agent Name</TableHead>
-              <TableHead>LLM Provider</TableHead>
-              <TableHead>Model</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead className="text-right">Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {agents?.map((agent) => (
-              <TableRow key={agent.id}>
-                <TableCell>
-                  <div className="flex items-center gap-3">
-                    <Avatar>
-                      <AvatarFallback>{agent.name.substring(0, 2).toUpperCase()}</AvatarFallback>
-                    </Avatar>
-                    <div>
-                      <p className="font-medium">{agent.name}</p>
-                      <p className="text-sm text-gray-500 truncate max-w-xs">{agent.prompt}</p>
-                    </div>
-                  </div>
-                </TableCell>
-                <TableCell>{agent.llm_provider}</TableCell>
-                <TableCell>{agent.model_name}</TableCell>
-                <TableCell>
-                  <Badge variant={agent.status === 'active' ? 'default' : 'secondary'}>
-                    {agent.status}
-                  </Badge>
-                </TableCell>
-                <TableCell className="text-right">
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="icon">
-                        <MoreHorizontal className="h-4 w-4" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuItem onClick={() => setSelectedAgent(agent)}>
-                        <Eye className="h-4 w-4 mr-2" />
-                        View Conversations
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => navigate(`/dashboard/builder/${agent.id}`)}>
-                        <Edit className="h-4 w-4 mr-2" />
-                        Edit Agent
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => handleCopyEmbedCode(agent.id)}>
-                        <Code className="h-4 w-4 mr-2" />
-                        Copy Embed Code
-                      </DropdownMenuItem>
-                      <DropdownMenuSeparator />
-                      <AlertDialog>
-                        <AlertDialogTrigger asChild>
-                          <DropdownMenuItem onSelect={(e) => e.preventDefault()} className="text-red-500 focus:text-red-500">
-                            <Trash2 className="h-4 w-4 mr-2" />
-                            Delete
+        </CardHeader>
+        <CardContent className="p-0">
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader className="bg-slate-50 dark:bg-slate-900">
+                <TableRow>
+                  <TableHead className="font-semibold dark:text-gray-300">Agent Name</TableHead>
+                  <TableHead className="font-semibold dark:text-gray-300">LLM Provider</TableHead>
+                  <TableHead className="font-semibold dark:text-gray-300">Model</TableHead>
+                  <TableHead className="font-semibold dark:text-gray-300">Status</TableHead>
+                  <TableHead className="text-right font-semibold dark:text-gray-300">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {agents?.map((agent) => (
+                  <TableRow key={agent.id} className="hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
+                    <TableCell>
+                      <div className="flex items-center gap-3">
+                        <Avatar className="h-10 w-10 bg-gradient-to-br from-purple-600 to-pink-600 text-white border-2 border-white dark:border-slate-700 shadow-md">
+                          <AvatarFallback className="bg-gradient-to-br from-purple-600 to-pink-600 text-white font-semibold">
+                            {agent.name.substring(0, 2).toUpperCase()}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div>
+                          <p className="font-semibold dark:text-white">{agent.name}</p>
+                          <p className="text-sm text-gray-500 dark:text-gray-400 truncate max-w-xs">{agent.prompt}</p>
+                        </div>
+                      </div>
+                    </TableCell>
+                    <TableCell className="dark:text-gray-300">
+                      <span className="inline-flex items-center px-2.5 py-1 rounded-md bg-slate-100 dark:bg-slate-700 text-sm font-medium">
+                        {agent.llm_provider}
+                      </span>
+                    </TableCell>
+                    <TableCell className="dark:text-gray-300">
+                      <span className="text-sm font-medium">{agent.model_name}</span>
+                    </TableCell>
+                    <TableCell>
+                      {agent.status === 'active' ? (
+                        <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400 border border-green-200 dark:border-green-800">
+                          <span className="w-2 h-2 bg-green-600 dark:bg-green-400 rounded-full mr-2 animate-pulse"></span>
+                          Active
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
+                          Inactive
+                        </span>
+                      )}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="icon" className="hover:bg-slate-100 dark:hover:bg-slate-700">
+                            <MoreHorizontal className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="w-56">
+                          <DropdownMenuItem onClick={() => setSelectedAgent(agent)} className="cursor-pointer">
+                            <Eye className="h-4 w-4 mr-2" />
+                            View Conversations
                           </DropdownMenuItem>
-                        </AlertDialogTrigger>
-                        <AlertDialogContent>
-                          <AlertDialogHeader>
-                            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-                            <AlertDialogDescription>
-                              This will permanently delete the agent and all its data.
-                            </AlertDialogDescription>
-                          </AlertDialogHeader>
-                          <AlertDialogFooter>
-                            <AlertDialogCancel>Cancel</AlertDialogCancel>
-                            <AlertDialogAction onClick={() => deleteAgentMutation.mutate(agent.id)} className="bg-red-500 hover:bg-red-600">
-                              Delete
-                            </AlertDialogAction>
-                          </AlertDialogFooter>
-                        </AlertDialogContent>
-                      </AlertDialog>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </CardContent>
-    </Card>
+                          <DropdownMenuItem onClick={() => navigate(`/dashboard/builder/${agent.id}`)} className="cursor-pointer">
+                            <Edit className="h-4 w-4 mr-2" />
+                            Edit Agent
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => handleCopyEmbedCode(agent.id)} className="cursor-pointer">
+                            <Code className="h-4 w-4 mr-2" />
+                            Copy Embed Code
+                          </DropdownMenuItem>
+                          <DropdownMenuSeparator />
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <DropdownMenuItem onSelect={(e) => e.preventDefault()} className="text-red-600 dark:text-red-400 focus:text-red-600 dark:focus:text-red-400 cursor-pointer">
+                                <Trash2 className="h-4 w-4 mr-2" />
+                                Delete
+                              </DropdownMenuItem>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent className="bg-white dark:bg-slate-800">
+                              <AlertDialogHeader>
+                                <AlertDialogTitle className="dark:text-white">Are you sure?</AlertDialogTitle>
+                                <AlertDialogDescription className="dark:text-gray-400">
+                                  This will permanently delete the agent "{agent.name}" and all its data. This action cannot be undone.
+                                </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel className="dark:bg-slate-700 dark:text-gray-300">Cancel</AlertDialogCancel>
+                                <AlertDialogAction
+                                  onClick={() => deleteAgentMutation.mutate(agent.id)}
+                                  className="bg-red-600 hover:bg-red-700 text-white"
+                                >
+                                  Delete
+                                </AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+        </CardContent>
+      </Card>
+    </>
   );
 };

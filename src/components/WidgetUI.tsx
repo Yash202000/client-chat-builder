@@ -104,7 +104,7 @@ export const WidgetUI = ({
             width: '60px',
             height: '60px',
             borderRadius: '50%',
-            backgroundColor: primary_color,
+            background: primary_color,
             boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
           }}
           className="flex items-center justify-center"
@@ -151,7 +151,7 @@ export const WidgetUI = ({
           {show_header && (
             <div
               style={{
-                backgroundColor: primary_color,
+                background: primary_color,
                 borderTopLeftRadius: `${border_radius}px`,
                 borderTopRightRadius: `${border_radius}px`,
               }}
@@ -180,7 +180,7 @@ export const WidgetUI = ({
           <div className="flex-grow p-4 overflow-y-auto space-y-4">
             {messages.map((msg) => (
               <div key={msg.id} className={cn('flex w-full', msg.sender === 'user' ? 'justify-end' : 'justify-start')}>
-                <div className={cn('max-w-[85%] p-3 flex flex-col')} style={{ backgroundColor: msg.sender === 'user' ? user_message_color : bot_message_color, color: msg.sender === 'user' ? user_message_text_color : bot_message_text_color, borderRadius: `${border_radius}px` }}>
+                <div className={cn('max-w-[85%] p-3 flex flex-col')} style={{ background: msg.sender === 'user' ? user_message_color : bot_message_color, color: msg.sender === 'user' ? user_message_text_color : bot_message_text_color, borderRadius: `${border_radius}px` }}>
                   <div className="flex items-center justify-between gap-2 mb-2">
                     <div className="flex items-center gap-2">
                       <Avatar className="h-5 w-5">
@@ -219,7 +219,7 @@ export const WidgetUI = ({
                       ))}
                     </div>
                   )}
-                  {msg.type === 'video_call_invitation' && (<Button onClick={() => window.open(msg.videoCallUrl, '_blank', 'width=800,height=600')} className="mt-2 w-full" style={{backgroundColor: primary_color, color: 'white'}}>Join Video Call</Button>)}
+                  {msg.type === 'video_call_invitation' && (<Button onClick={() => window.open(msg.videoCallUrl, '_blank', 'width=800,height=600')} className="mt-2 w-full" style={{background: primary_color, color: 'white'}}>Join Video Call</Button>)}
                 </div>
               </div>
             ))}
@@ -231,7 +231,7 @@ export const WidgetUI = ({
             <div className={cn('p-3 border-t', dark_mode ? 'border-gray-800' : 'border-gray-200')}>
               <div className="flex items-center gap-2">
                 <input type="text" value={inputValue} onChange={e => onInputChange(e.target.value)} onKeyPress={e => e.key === 'Enter' && onSendMessage(inputValue)} placeholder={input_placeholder} className={cn('flex-grow p-2 border rounded-md w-full text-sm', dark_mode ? 'bg-gray-800 border-gray-700 focus:ring-blue-500' : 'bg-white border-gray-300 focus:ring-blue-500')} />
-                <Button onClick={() => onSendMessage(inputValue)} style={{ backgroundColor: primary_color }} className="text-white rounded-md h-9 w-9 p-0 flex-shrink-0"><Send size={18} /></Button>
+                <Button onClick={() => onSendMessage(inputValue)} style={{ background: primary_color }} className="text-white rounded-md h-9 w-9 p-0 flex-shrink-0"><Send size={18} /></Button>
                   <Button onClick={onToggleRecording} variant="ghost" size="icon" className={cn('rounded-md h-9 w-9 flex-shrink-0', isRecording && 'text-red-500', dark_mode ? 'hover:bg-gray-700' : 'hover:bg-gray-100')}>{isRecording ? <Loader2 className="animate-spin" /> : <Mic size={18} />}</Button>
               </div>
             </div>

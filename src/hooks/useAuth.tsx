@@ -1,6 +1,7 @@
 import { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { User } from '@/types';
+import { getApiUrl } from '@/lib/api';
 
 interface AuthContextType {
   isAuthenticated: boolean;
@@ -38,7 +39,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       headers['Content-Type'] = 'application/json';
     }
 
-    const response = await fetch(url, { ...options, headers });
+    const response = await fetch(getApiUrl(url), { ...options, headers });
 
     if (response.status === 401) {
       setToken(null);
