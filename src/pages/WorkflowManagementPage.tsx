@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { toast } from "sonner";
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Permission } from "@/components/Permission";
 import {
   Accordion,
   AccordionContent,
@@ -104,14 +105,16 @@ const WorkflowManagementPage = () => {
                 Build and manage automated workflows for your AI agents
               </p>
             </div>
-            <Button
-              onClick={() => setCreateDialogOpen(true)}
-              size="lg"
-              className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white shadow-lg hover:shadow-xl transition-all"
-            >
-              <PlusCircle className="h-5 w-5 mr-2" />
-              Create Workflow
-            </Button>
+            <Permission permission="workflow:create">
+              <Button
+                onClick={() => setCreateDialogOpen(true)}
+                size="lg"
+                className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white shadow-lg hover:shadow-xl transition-all"
+              >
+                <PlusCircle className="h-5 w-5 mr-2" />
+                Create Workflow
+              </Button>
+            </Permission>
           </div>
 
           {/* Stats Cards */}
@@ -207,17 +210,19 @@ const WorkflowManagementPage = () => {
                           <Badge variant="outline" className="mr-2 dark:border-slate-600 dark:text-gray-300">
                             {workflow.versions.length} {workflow.versions.length === 1 ? 'version' : 'versions'}
                           </Badge>
-                          <div
-                            role="button"
-                            aria-label="Delete workflow"
-                            className="p-2 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/30 transition-colors"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              deleteWorkflow(workflow.id);
-                            }}
-                          >
-                            <Trash2 className="h-4 w-4 text-red-500 dark:text-red-400" />
-                          </div>
+                          <Permission permission="workflow:delete">
+                            <div
+                              role="button"
+                              aria-label="Delete workflow"
+                              className="p-2 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/30 transition-colors"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                deleteWorkflow(workflow.id);
+                              }}
+                            >
+                              <Trash2 className="h-4 w-4 text-red-500 dark:text-red-400" />
+                            </div>
+                          </Permission>
                         </div>
                       </div>
                     </AccordionTrigger>
@@ -225,15 +230,17 @@ const WorkflowManagementPage = () => {
                       <div className="space-y-3">
                         <div className="flex justify-between items-center mb-4">
                           <h4 className="font-semibold text-sm text-gray-600 dark:text-gray-400">VERSIONS</h4>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => createWorkflowVersion(workflow.id)}
-                            className="dark:border-slate-600 dark:text-white dark:hover:bg-slate-700"
-                          >
-                            <Copy className="h-3 w-3 mr-2" />
-                            Create New Version
-                          </Button>
+                          <Permission permission="workflow:update">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => createWorkflowVersion(workflow.id)}
+                              className="dark:border-slate-600 dark:text-white dark:hover:bg-slate-700"
+                            >
+                              <Copy className="h-3 w-3 mr-2" />
+                              Create New Version
+                            </Button>
+                          </Permission>
                         </div>
                         <div className="space-y-2">
                           {workflow.versions.sort((a, b) => b.version - a.version).map((version) => (
@@ -267,23 +274,27 @@ const WorkflowManagementPage = () => {
                                 ) : (
                                   <Badge variant="secondary" className="dark:bg-slate-700 dark:text-gray-300">Inactive</Badge>
                                 )}
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  onClick={() => navigate(`/dashboard/workflows/${version.id}`)}
-                                  className="dark:border-slate-600 dark:text-white dark:hover:bg-slate-700"
-                                >
-                                  <Edit className="h-4 w-4 mr-2" />
-                                  Edit
-                                </Button>
-                                {!version.is_active && (
+                                <Permission permission="workflow:update">
                                   <Button
                                     size="sm"
-                                    onClick={() => activateWorkflowVersion(version.id)}
-                                    className="bg-blue-600 hover:bg-blue-700 text-white"
+                                    variant="outline"
+                                    onClick={() => navigate(`/dashboard/workflows/${version.id}`)}
+                                    className="dark:border-slate-600 dark:text-white dark:hover:bg-slate-700"
                                   >
-                                    Activate
+                                    <Edit className="h-4 w-4 mr-2" />
+                                    Edit
                                   </Button>
+                                </Permission>
+                                {!version.is_active && (
+                                  <Permission permission="workflow:update">
+                                    <Button
+                                      size="sm"
+                                      onClick={() => activateWorkflowVersion(version.id)}
+                                      className="bg-blue-600 hover:bg-blue-700 text-white"
+                                    >
+                                      Activate
+                                    </Button>
+                                  </Permission>
                                 )}
                               </div>
                             </div>

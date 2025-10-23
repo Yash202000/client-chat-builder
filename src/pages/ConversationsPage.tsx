@@ -112,7 +112,17 @@ const ConversationsPage: React.FC = () => {
         const eventData = JSON.parse(event.data);
         console.log('[WebSocket] Received event:', eventData.type, eventData);
 
-        if (eventData.type === 'new_message') {
+        if (eventData.type === 'new_session') {
+          console.log('[WebSocket] 🆕 New session created:', eventData.session);
+          toast({
+            title: "New Conversation",
+            description: `A new conversation has started`,
+            variant: "info",
+          });
+          // Invalidate queries to refetch session list and counts
+          queryClient.invalidateQueries({ queryKey: ['sessions', companyId] });
+          queryClient.invalidateQueries({ queryKey: ['sessionCounts', companyId] });
+        } else if (eventData.type === 'new_message') {
           toast({
             title: "New Message",
             description: `New message received in conversation`,

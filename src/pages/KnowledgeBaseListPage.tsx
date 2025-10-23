@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Plus, Edit, Trash2, BookOpen, Eye } from "lucide-react";
+import { Permission } from "@/components/Permission";
 import {
   Dialog,
   DialogContent,
@@ -309,14 +310,18 @@ const KnowledgeBasePage = () => {
           <p className="text-gray-600 dark:text-gray-400 text-lg">Manage the knowledge your AI agents use to provide accurate responses</p>
         </div>
         <div className="flex items-center gap-3">
-          <Button onClick={() => setIsImportDialogOpen(true)} variant="outline" className="dark:border-slate-600 dark:text-white dark:hover:bg-slate-700">
-            <BookOpen className="h-4 w-4 mr-2" />
-            Import from URL
-          </Button>
-          <Button onClick={() => setIsCreateDialogOpen(true)} className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white shadow-lg hover:shadow-xl transition-all">
-            <Plus className="h-4 w-4 mr-2" />
-            Create New
-          </Button>
+          <Permission permission="knowledgebase:create">
+            <Button onClick={() => setIsImportDialogOpen(true)} variant="outline" className="dark:border-slate-600 dark:text-white dark:hover:bg-slate-700">
+              <BookOpen className="h-4 w-4 mr-2" />
+              Import from URL
+            </Button>
+          </Permission>
+          <Permission permission="knowledgebase:create">
+            <Button onClick={() => setIsCreateDialogOpen(true)} className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white shadow-lg hover:shadow-xl transition-all">
+              <Plus className="h-4 w-4 mr-2" />
+              Create New
+            </Button>
+          </Permission>
         </div>
       </header>
 
@@ -340,30 +345,34 @@ const KnowledgeBasePage = () => {
                   <Button variant="outline" size="sm" onClick={() => handlePreviewClick(kb)} className="dark:border-slate-600 dark:text-white dark:hover:bg-slate-700">
                     <Eye className="h-4 w-4 mr-1" /> Preview
                   </Button>
-                  <Button variant="outline" size="sm" onClick={() => handleEditClick(kb)} className="dark:border-slate-600 dark:text-white dark:hover:bg-slate-700">
-                    <Edit className="h-4 w-4 mr-1" /> Edit
-                  </Button>
-                  <AlertDialog>
-                    <AlertDialogTrigger asChild>
-                      <Button variant="destructive" size="sm" className="bg-red-600 hover:bg-red-700">
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </AlertDialogTrigger>
-                    <AlertDialogContent className="dark:bg-slate-800 dark:border-slate-700">
-                      <AlertDialogHeader>
-                        <AlertDialogTitle className="dark:text-white">Are you absolutely sure?</AlertDialogTitle>
-                        <AlertDialogDescription className="dark:text-gray-400">
-                          This will permanently delete the <span className="font-bold text-white">{kb.name}</span> knowledge base. This action cannot be undone.
-                        </AlertDialogDescription>
-                      </AlertDialogHeader>
-                      <AlertDialogFooter>
-                        <AlertDialogCancel className="dark:border-slate-600 dark:text-white dark:hover:bg-slate-700">Cancel</AlertDialogCancel>
-                        <AlertDialogAction onClick={() => deleteKnowledgeBaseMutation.mutate(kb.id)} className="bg-red-600 hover:bg-red-700">
-                          Delete
-                        </AlertDialogAction>
-                      </AlertDialogFooter>
-                    </AlertDialogContent>
-                  </AlertDialog>
+                  <Permission permission="knowledgebase:update">
+                    <Button variant="outline" size="sm" onClick={() => handleEditClick(kb)} className="dark:border-slate-600 dark:text-white dark:hover:bg-slate-700">
+                      <Edit className="h-4 w-4 mr-1" /> Edit
+                    </Button>
+                  </Permission>
+                  <Permission permission="knowledgebase:delete">
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button variant="destructive" size="sm" className="bg-red-600 hover:bg-red-700">
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent className="dark:bg-slate-800 dark:border-slate-700">
+                        <AlertDialogHeader>
+                          <AlertDialogTitle className="dark:text-white">Are you absolutely sure?</AlertDialogTitle>
+                          <AlertDialogDescription className="dark:text-gray-400">
+                            This will permanently delete the <span className="font-bold text-white">{kb.name}</span> knowledge base. This action cannot be undone.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel className="dark:border-slate-600 dark:text-white dark:hover:bg-slate-700">Cancel</AlertDialogCancel>
+                          <AlertDialogAction onClick={() => deleteKnowledgeBaseMutation.mutate(kb.id)} className="bg-red-600 hover:bg-red-700">
+                            Delete
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                  </Permission>
                 </div>
               </CardContent>
             </Card>

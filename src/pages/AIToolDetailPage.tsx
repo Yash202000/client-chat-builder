@@ -8,6 +8,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useAuth } from '@/hooks/useAuth';
 import ReactMarkdown from 'react-markdown';
+import { Permission } from '@/components/Permission';
 
 const AIToolDetailPage = () => {
   const { id } = useParams();
@@ -61,12 +62,12 @@ const AIToolDetailPage = () => {
         <div className="flex justify-between items-center mb-4">
           <h1 className="text-2xl font-bold">{tool.name}</h1>
           <div className="flex gap-2">
-            {user?.is_super_admin && (
-              <>
-                <Button onClick={() => navigate(`/dashboard/ai-tools/${id}/edit`)}>Edit</Button>
-                <Button onClick={handleDelete} variant="destructive">Delete</Button>
-              </>
-            )}
+            <Permission permission="ai-tool:update">
+              <Button onClick={() => navigate(`/dashboard/ai-tools/${id}/edit`)}>Edit</Button>
+            </Permission>
+            <Permission permission="ai-tool:delete">
+              <Button onClick={handleDelete} variant="destructive">Delete</Button>
+            </Permission>
             <Button onClick={handleFavorite}>
               {tool.is_favorited ? 'Unfavorite' : 'Favorite'}
             </Button>

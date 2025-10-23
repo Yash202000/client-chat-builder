@@ -3,6 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Permission } from "@/components/Permission";
 import { 
   Users, 
   UserPlus, 
@@ -32,7 +33,7 @@ import {
 } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Team, User, Role, Permission } from "@/types";
+import { Team, User, Role, Permission as PermissionType } from "@/types";
 import { toast } from "@/hooks/use-toast";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -509,13 +510,14 @@ export const TeamManagement = () => {
                     className="pl-10 dark:bg-slate-900 dark:border-slate-600 dark:text-white dark:placeholder-gray-500"
                   />
                 </div>
-                <Dialog open={isAddUserModalOpen} onOpenChange={setAddUserModalOpen}>
-                  <DialogTrigger asChild>
-                    <Button className="flex items-center gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white btn-hover-lift">
-                      <UserPlus className="h-4 w-4" />
-                      Add User
-                    </Button>
-                  </DialogTrigger>
+                <Permission permission="user:create">
+                  <Dialog open={isAddUserModalOpen} onOpenChange={setAddUserModalOpen}>
+                    <DialogTrigger asChild>
+                      <Button className="flex items-center gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white btn-hover-lift">
+                        <UserPlus className="h-4 w-4" />
+                        Add User
+                      </Button>
+                    </DialogTrigger>
                   <DialogContent className="dark:bg-slate-800 dark:border-slate-700">
                     <DialogHeader>
                       <DialogTitle className="dark:text-white">Add New User</DialogTitle>
@@ -558,6 +560,7 @@ export const TeamManagement = () => {
                     </DialogFooter>
                   </DialogContent>
                 </Dialog>
+              </Permission>
               </div>
               <Card className="border border-slate-200 dark:border-slate-700 dark:bg-slate-900/50">
                 <CardContent className="p-0">
@@ -653,26 +656,32 @@ export const TeamManagement = () => {
                                     </Button>
                                   </DropdownMenuTrigger>
                                   <DropdownMenuContent align="end" className="dark:bg-slate-800 dark:border-slate-700">
-                                    <DropdownMenuItem
-                                      className="dark:text-white dark:focus:bg-slate-700"
-                                      onClick={() => openEditUserModal(user)}
-                                    >
-                                      <Edit className="h-4 w-4 mr-2" />
-                                      Edit
-                                    </DropdownMenuItem>
-                                    <DropdownMenuItem
-                                      className="dark:text-white dark:focus:bg-slate-700"
-                                      onClick={() => handleToggleUserActive(user.id, user.is_active)}
-                                    >
-                                      {user.is_active ? "Deactivate" : "Activate"}
-                                    </DropdownMenuItem>
-                                    <DropdownMenuItem
-                                      className="text-red-500 dark:text-red-400 dark:focus:bg-slate-700"
-                                      onClick={() => handleDeleteUser(user.id)}
-                                    >
-                                      <Trash2 className="h-4 w-4 mr-2" />
-                                      Delete
-                                    </DropdownMenuItem>
+                                    <Permission permission="user:update">
+                                      <DropdownMenuItem
+                                        className="dark:text-white dark:focus:bg-slate-700"
+                                        onClick={() => openEditUserModal(user)}
+                                      >
+                                        <Edit className="h-4 w-4 mr-2" />
+                                        Edit
+                                      </DropdownMenuItem>
+                                    </Permission>
+                                    <Permission permission="user:update">
+                                      <DropdownMenuItem
+                                        className="dark:text-white dark:focus:bg-slate-700"
+                                        onClick={() => handleToggleUserActive(user.id, user.is_active)}
+                                      >
+                                        {user.is_active ? "Deactivate" : "Activate"}
+                                      </DropdownMenuItem>
+                                    </Permission>
+                                    <Permission permission="user:delete">
+                                      <DropdownMenuItem
+                                        className="text-red-500 dark:text-red-400 dark:focus:bg-slate-700"
+                                        onClick={() => handleDeleteUser(user.id)}
+                                      >
+                                        <Trash2 className="h-4 w-4 mr-2" />
+                                        Delete
+                                      </DropdownMenuItem>
+                                    </Permission>
                                   </DropdownMenuContent>
                                 </DropdownMenu>
                               </TableCell>
@@ -693,13 +702,14 @@ export const TeamManagement = () => {
                   <h3 className="text-lg font-semibold dark:text-white">Manage Teams</h3>
                   <p className="text-sm text-muted-foreground dark:text-gray-400">Create and organize teams within your organization</p>
                 </div>
-                <Dialog open={isCreateTeamModalOpen} onOpenChange={setCreateTeamModalOpen}>
-                  <DialogTrigger asChild>
-                    <Button className="flex items-center gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white btn-hover-lift">
-                      <Plus className="h-4 w-4" />
-                      Create Team
-                    </Button>
-                  </DialogTrigger>
+                <Permission permission="team:create">
+                  <Dialog open={isCreateTeamModalOpen} onOpenChange={setCreateTeamModalOpen}>
+                    <DialogTrigger asChild>
+                      <Button className="flex items-center gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white btn-hover-lift">
+                        <Plus className="h-4 w-4" />
+                        Create Team
+                      </Button>
+                    </DialogTrigger>
                   <DialogContent className="dark:bg-slate-800 dark:border-slate-700">
                     <DialogHeader>
                       <DialogTitle className="dark:text-white">Create New Team</DialogTitle>
@@ -728,6 +738,7 @@ export const TeamManagement = () => {
                     </DialogFooter>
                   </DialogContent>
                 </Dialog>
+              </Permission>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
                 {isLoadingTeams ? (
@@ -762,20 +773,24 @@ export const TeamManagement = () => {
                               </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end" className="dark:bg-slate-800 dark:border-slate-700">
-                              <DropdownMenuItem
-                                className="dark:text-white dark:focus:bg-slate-700"
-                                onClick={() => openEditTeamModal(team)}
-                              >
-                                <Edit className="h-4 w-4 mr-2" />
-                                Edit
-                              </DropdownMenuItem>
-                              <DropdownMenuItem
-                                className="text-red-500 dark:text-red-400 dark:focus:bg-slate-700"
-                                onClick={() => handleDeleteTeam(team.id)}
-                              >
-                                <Trash2 className="h-4 w-4 mr-2" />
-                                Delete
-                              </DropdownMenuItem>
+                              <Permission permission="team:update">
+                                <DropdownMenuItem
+                                  className="dark:text-white dark:focus:bg-slate-700"
+                                  onClick={() => openEditTeamModal(team)}
+                                >
+                                  <Edit className="h-4 w-4 mr-2" />
+                                  Edit
+                                </DropdownMenuItem>
+                              </Permission>
+                              <Permission permission="team:delete">
+                                <DropdownMenuItem
+                                  className="text-red-500 dark:text-red-400 dark:focus:bg-slate-700"
+                                  onClick={() => handleDeleteTeam(team.id)}
+                                >
+                                  <Trash2 className="h-4 w-4 mr-2" />
+                                  Delete
+                                </DropdownMenuItem>
+                              </Permission>
                             </DropdownMenuContent>
                           </DropdownMenu>
                         </div>
@@ -803,14 +818,16 @@ export const TeamManagement = () => {
                                   </Avatar>
                                   <span className="dark:text-white truncate">{member.user?.email || 'Unknown'}</span>
                                 </div>
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() => removeMemberMutation.mutate({ teamId: team.id, userId: member.user_id })}
-                                  className="hover:bg-red-50 dark:hover:bg-red-900/20"
-                                >
-                                  <Trash2 className="h-4 w-4 text-red-500 dark:text-red-400" />
-                                </Button>
+                                <Permission permission="team:update">
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => removeMemberMutation.mutate({ teamId: team.id, userId: member.user_id })}
+                                    className="hover:bg-red-50 dark:hover:bg-red-900/20"
+                                  >
+                                    <Trash2 className="h-4 w-4 text-red-500 dark:text-red-400" />
+                                  </Button>
+                                </Permission>
                               </div>
                             ))
                           ) : (
@@ -821,14 +838,16 @@ export const TeamManagement = () => {
                         </div>
                       </CardContent>
                       <CardContent className="pt-0 pb-4">
-                        <Button
-                          variant="outline"
-                          className="w-full dark:border-slate-600 dark:text-white dark:hover:bg-slate-700 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors"
-                          onClick={() => openAddMemberModal(team)}
-                        >
-                          <UserPlus className="h-4 w-4 mr-2" />
-                          Add Member
-                        </Button>
+                        <Permission permission="team:update">
+                          <Button
+                            variant="outline"
+                            className="w-full dark:border-slate-600 dark:text-white dark:hover:bg-slate-700 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors"
+                            onClick={() => openAddMemberModal(team)}
+                          >
+                            <UserPlus className="h-4 w-4 mr-2" />
+                            Add Member
+                          </Button>
+                        </Permission>
                       </CardContent>
                     </Card>
                   ))
@@ -843,13 +862,15 @@ export const TeamManagement = () => {
                   <h3 className="text-lg font-semibold dark:text-white">Manage Roles</h3>
                   <p className="text-sm text-muted-foreground dark:text-gray-400">Define roles and assign permissions to control access</p>
                 </div>
-                <Button
-                  className="flex items-center gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white btn-hover-lift"
-                  onClick={() => openRoleModal(null)}
-                >
-                  <Plus className="h-4 w-4" />
-                  Create Role
-                </Button>
+                <Permission permission="role:create">
+                  <Button
+                    className="flex items-center gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white btn-hover-lift"
+                    onClick={() => openRoleModal(null)}
+                  >
+                    <Plus className="h-4 w-4" />
+                    Create Role
+                  </Button>
+                </Permission>
               </div>
               <div className="space-y-4 max-h-[calc(100vh-20rem)] overflow-y-auto pr-1">
                 {isLoadingRoles ? (
@@ -882,24 +903,28 @@ export const TeamManagement = () => {
                           </div>
                         </div>
                         <div className="flex items-center gap-2">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => openRoleModal(role)}
-                            className="dark:border-slate-600 dark:text-white dark:hover:bg-slate-700"
-                          >
-                            <Edit className="h-4 w-4 mr-2" />
-                            Edit
-                          </Button>
-                          <Button
-                            variant="destructive"
-                            size="sm"
-                            onClick={() => deleteRoleMutation.mutate(role.id)}
-                            className="bg-red-600 hover:bg-red-700"
-                          >
-                            <Trash2 className="h-4 w-4 mr-2" />
-                            Delete
-                          </Button>
+                          <Permission permission="role:update">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => openRoleModal(role)}
+                              className="dark:border-slate-600 dark:text-white dark:hover:bg-slate-700"
+                            >
+                              <Edit className="h-4 w-4 mr-2" />
+                              Edit
+                            </Button>
+                          </Permission>
+                          <Permission permission="role:delete">
+                            <Button
+                              variant="destructive"
+                              size="sm"
+                              onClick={() => deleteRoleMutation.mutate(role.id)}
+                              className="bg-red-600 hover:bg-red-700"
+                            >
+                              <Trash2 className="h-4 w-4 mr-2" />
+                              Delete
+                            </Button>
+                          </Permission>
                         </div>
                       </CardHeader>
                       <CardContent className="pt-4">
