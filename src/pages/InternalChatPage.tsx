@@ -82,7 +82,6 @@ const InternalChatPage: React.FC = () => {
   const [isCreateChannelModalOpen, setCreateChannelModalOpen] = useState(false);
   const [isManageMembersModalOpen, setManageMembersModalOpen] = useState(false);
   const [userPresences, setUserPresences] = useState<UserPresence>({});
-  const [activeVideoCallInfo, setActiveVideoCallInfo] = useState<ActiveVideoCall | null>(null);
   const { toast } = useToast();
 
   const wsUrl = selectedChannel?.id
@@ -143,43 +142,29 @@ const InternalChatPage: React.FC = () => {
     enabled: !!selectedChannel?.id,
   });
 
-  // Check for active video call when channel is selected
-  const { data: activeCallData } = useQuery<ActiveVideoCall | null, Error>({
+  // Check for active video call when channel is selected (no polling, only on mount/channel change)
+  const { data: activeCallExists } = useQuery<boolean, Error>({
     queryKey: ['activeVideoCall', selectedChannel?.id],
     queryFn: async () => {
       try {
         const token = localStorage.getItem('accessToken');
-        const response = await axios.get(
+        await axios.get(
           `${API_BASE_URL}/api/v1/video-calls/channels/${selectedChannel!.id}/active`,
           { headers: { Authorization: `Bearer ${token}` } }
         );
-        // Generate token for current user to join
-        const joinResponse = await axios.post(
-          `${API_BASE_URL}/api/v1/video-calls/channels/${selectedChannel!.id}/join`,
-          {},
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
-        return joinResponse.data;
+        // If no error, active call exists
+        return true;
       } catch (error: any) {
         if (error.response?.status === 404) {
           // No active call
-          return null;
+          return false;
         }
         throw error;
       }
     },
     enabled: !!selectedChannel?.id,
-    refetchInterval: 10000, // Check every 10 seconds
+    // No refetchInterval - rely on WebSocket events to invalidate this query
   });
-
-  // Update activeVideoCallInfo when activeCallData changes
-  useEffect(() => {
-    if (activeCallData) {
-      setActiveVideoCallInfo(activeCallData);
-    } else {
-      setActiveVideoCallInfo(null);
-    }
-  }, [activeCallData]);
 
   // Fetch messages for selected channel
   const {
@@ -243,7 +228,7 @@ const InternalChatPage: React.FC = () => {
     },
   });
 
-  // Initiate video call mutation
+  // Initiate video call mutation (creates new call)
   const initiateVideoCallMutation = useMutation({
     mutationFn: async (channelId: number) => {
       const token = localStorage.getItem('accessToken');
@@ -269,7 +254,45 @@ const InternalChatPage: React.FC = () => {
     },
     onError: (err) => {
       console.error('Failed to initiate video call:', err);
-      alert('Failed to initiate video call. Please try again.');
+      toast({
+        title: 'Error',
+        description: 'Failed to initiate video call. Please try again.',
+        variant: 'destructive',
+      });
+    },
+  });
+
+  // Join existing video call mutation
+  const joinVideoCallMutation = useMutation({
+    mutationFn: async (channelId: number) => {
+      const token = localStorage.getItem('accessToken');
+      const endpoint = `${API_BASE_URL}/api/v1/video-calls/channels/${channelId}/join`;
+
+      const response = await axios.post(
+        endpoint,
+        {},
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+      return response.data;
+    },
+    onSuccess: (data) => {
+      const { room_name, livekit_token, livekit_url } = data;
+      navigate(
+        `/internal-video-call?roomName=${encodeURIComponent(room_name)}&livekitToken=${encodeURIComponent(livekit_token)}&livekitUrl=${encodeURIComponent(livekit_url)}&channelId=${selectedChannel?.id}`
+      );
+    },
+    onError: (err) => {
+      console.error('Failed to join video call:', err);
+      toast({
+        title: 'Error',
+        description: 'Failed to join video call. Please try again.',
+        variant: 'destructive',
+      });
     },
   });
 
@@ -285,11 +308,13 @@ const InternalChatPage: React.FC = () => {
   };
 
   const handleVideoCallAction = () => {
-    if (activeVideoCallInfo) {
-      navigate(
-        `/internal-video-call?roomName=${encodeURIComponent(activeVideoCallInfo.room_name)}&livekitToken=${encodeURIComponent(activeVideoCallInfo.livekit_token)}&livekitUrl=${encodeURIComponent(activeVideoCallInfo.livekit_url)}&channelId=${selectedChannel?.id}`
-      );
-    } else if (selectedChannel?.id) {
+    if (!selectedChannel?.id) return;
+
+    if (activeCallExists) {
+      // Join existing call
+      joinVideoCallMutation.mutate(selectedChannel.id);
+    } else {
+      // Initiate new call
       initiateVideoCallMutation.mutate(selectedChannel.id);
     }
   };
@@ -448,10 +473,10 @@ const InternalChatPage: React.FC = () => {
                       <Button
                         size="icon"
                         onClick={handleVideoCallAction}
-                        disabled={initiateVideoCallMutation.isLoading}
+                        disabled={initiateVideoCallMutation.isLoading || joinVideoCallMutation.isLoading}
                         className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white rounded-full w-11 h-11 shadow-md hover:shadow-lg transition-all"
                       >
-                        {initiateVideoCallMutation.isLoading ? (
+                        {(initiateVideoCallMutation.isLoading || joinVideoCallMutation.isLoading) ? (
                           <Loader2 className="h-5 w-5 animate-spin" />
                         ) : (
                           <Video className="h-5 w-5" />
@@ -459,7 +484,7 @@ const InternalChatPage: React.FC = () => {
                       </Button>
                     </TooltipTrigger>
                     <TooltipContent>
-                      <p>{activeVideoCallInfo ? "Join Call" : "Start Call"}</p>
+                      <p>{activeCallExists ? "Join Call" : "Start Call"}</p>
                     </TooltipContent>
                   </Tooltip>
                 </div>
