@@ -26,6 +26,7 @@ import { Agent, Session } from "@/types";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { useAuth } from "@/hooks/useAuth";
 import { ConversationDetail } from "./ConversationDetail";
+import { API_BASE_URL } from "@/config/api";
 
 export const AgentList = () => {
   const queryClient = useQueryClient();
@@ -73,7 +74,7 @@ export const AgentList = () => {
   });
 
   const handleCopyEmbedCode = (agentId: number) => {
-    const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:8000';
+    const backendUrl = API_BASE_URL;
     const embedCode = `<script
     src="${backendUrl}/widget/widget.js"
     id="agent-connect-widget-script"

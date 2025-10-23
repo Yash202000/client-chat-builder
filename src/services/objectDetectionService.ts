@@ -1,7 +1,8 @@
 
 import axios from 'axios';
+import { API_BASE_URL } from '@/config/api';
 
-const BASE_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:8000';
+const BASE_URL = API_BASE_URL;
 const API_URL = `${BASE_URL}/api/v1`;
 
 export const detectObjects = async (file: File) => {

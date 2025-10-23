@@ -30,6 +30,7 @@ import ManageChannelMembersModal from '@/components/ManageChannelMembersModal';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useWebSocket } from '@/hooks/use-websocket';
 import { BACKEND_URL } from '@/config/env';
+import { API_BASE_URL } from '@/config/api';
 
 // Define types for chat data
 interface ChatChannel {
@@ -194,9 +195,8 @@ const InternalChatPage: React.FC = () => {
   // Initiate video call mutation
   const initiateVideoCallMutation = useMutation({
     mutationFn: async (channelId: number) => {
-      const API_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:8000';
       const token = localStorage.getItem('accessToken');
-      const endpoint = `${API_URL}/api/v1/video-calls/channels/${channelId}/initiate`;
+      const endpoint = `${API_BASE_URL}/api/v1/video-calls/channels/${channelId}/initiate`;
 
       const response = await axios.post(
         endpoint,
