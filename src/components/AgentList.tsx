@@ -73,7 +73,7 @@ export const AgentList = () => {
   });
 
   const handleCopyEmbedCode = (agentId: number) => {
-    const backendUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+    const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:8000';
     const embedCode = `<script
     src="${backendUrl}/widget/widget.js"
     id="agent-connect-widget-script"

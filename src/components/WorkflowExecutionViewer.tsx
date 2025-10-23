@@ -16,6 +16,7 @@ import { ArrowLeft, Play } from 'lucide-react';
 import { LlmNode, ToolNode, ConditionNode, OutputNode, StartNode, ListenNode, PromptNode, KnowledgeNode, CodeNode, DataManipulationNode, HttpRequestNode, FormNode } from './CustomNodes';
 import { useAuth } from "@/hooks/useAuth";
 import { useWebSocket } from '@/hooks/use-websocket';
+import { BACKEND_URL } from '@/config/env';
 
 const initialNodes = [
   { id: 'start-node', type: 'start', data: { label: 'Start' }, position: { x: 250, y: 5 } },
@@ -60,7 +61,7 @@ const WorkflowExecutionViewer = () => {
   }, [workflowId, authFetch, navigate, setNodes, setEdges]);
 
   // WebSocket connection for real-time updates
-  const wsUrl = sessionId ? `ws://localhost:8000/ws/workflow-execution/${sessionId}` : null;
+  const wsUrl = sessionId ? `${BACKEND_URL.replace('http', 'ws')}/ws/workflow-execution/${sessionId}` : null;
   useWebSocket(wsUrl, {
     onMessage: (event) => {
       const data = JSON.parse(event.data);

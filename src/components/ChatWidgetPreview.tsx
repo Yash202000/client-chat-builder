@@ -7,6 +7,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { MessageSquare, Send, Minimize2, X, User } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
+import { BACKEND_URL } from "@/config/env";
 
 interface ChatMessage {
   id: number;
@@ -32,7 +33,7 @@ export const ChatWidgetPreview = () => {
   useEffect(() => {
     if (isExpanded) {
       // Establish WebSocket connection
-      ws.current = new WebSocket(`ws://localhost:8000/ws/public/${companyId}/${agentId}/${sessionId}?user_type=user`);
+      ws.current = new WebSocket(`${BACKEND_URL.replace('http', 'ws')}/ws/public/${companyId}/${agentId}/${sessionId}?user_type=user`);
 
       ws.current.onopen = () => {
         console.log("WebSocket connected");
@@ -305,15 +306,6 @@ export const ChatWidgetPreview = () => {
                       </Button>
                     </div>
                   )}
-                </div>t.value)}
-                      placeholder="Type a message..."
-                      className="flex-1 text-sm"
-                      onKeyPress={(e) => e.key === "Enter" && handleSendMessage()}
-                    />
-                    <Button size="sm" onClick={handleSendMessage}>
-                      <Send className="h-4 w-4" />
-                    </Button>
-                  </div>
                 </div>
               </div>
             ) : (

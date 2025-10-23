@@ -29,6 +29,7 @@ import CreateChannelModal from '@/components/CreateChannelModal';
 import ManageChannelMembersModal from '@/components/ManageChannelMembersModal';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useWebSocket } from '@/hooks/use-websocket';
+import { BACKEND_URL } from '@/config/env';
 
 // Define types for chat data
 interface ChatChannel {
@@ -83,7 +84,7 @@ const InternalChatPage: React.FC = () => {
   const { toast } = useToast();
 
   const wsUrl = selectedChannel?.id
-    ? `${(import.meta.env.VITE_API_URL || 'http://localhost:8000').replace('http', 'ws')}/api/v1/ws/wschat/${selectedChannel.id}?token=${localStorage.getItem('accessToken')}`
+    ? `${BACKEND_URL.replace('http', 'ws')}/api/v1/ws/wschat/${selectedChannel.id}?token=${localStorage.getItem('accessToken')}`
     : null;
 
   useWebSocket(wsUrl, {
@@ -193,7 +194,7 @@ const InternalChatPage: React.FC = () => {
   // Initiate video call mutation
   const initiateVideoCallMutation = useMutation({
     mutationFn: async (channelId: number) => {
-      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+      const API_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:8000';
       const token = localStorage.getItem('accessToken');
       const endpoint = `${API_URL}/api/v1/video-calls/channels/${channelId}/initiate`;
 

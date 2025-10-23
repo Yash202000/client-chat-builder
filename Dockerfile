@@ -38,9 +38,13 @@ RUN chmod +x /docker-entrypoint.d/env-config.sh
 # Expose port
 EXPOSE 80
 
-# Environment variables with defaults
-ENV VITE_BACKEND_URL=http://localhost:8000
-ENV VITE_LIVEKIT_URL=ws://localhost:7880
+# Environment variables (set these at runtime via docker run -e or docker-compose.yml)
+# Required: VITE_BACKEND_URL - Your backend API URL (e.g., https://api.yourcompany.com)
+# Required: VITE_LIVEKIT_URL - Your LiveKit server URL (e.g., wss://livekit.yourcompany.com)
+# Optional: VITE_VOICE_ENGINE_URL - Your voice engine URL (defaults to VITE_BACKEND_URL if not set)
+ENV VITE_BACKEND_URL=""
+ENV VITE_LIVEKIT_URL=""
+ENV VITE_VOICE_ENGINE_URL=""
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \

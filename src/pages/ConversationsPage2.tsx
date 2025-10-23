@@ -8,6 +8,8 @@ import { useWebSocket } from '@/hooks/use-websocket';
 import { toast } from '@/hooks/use-toast';
 import { Agent, Session, User } from '@/types';
 import { useAuth } from "@/hooks/useAuth";
+import { getWebSocketUrl } from '@/config/api';
+import { BACKEND_URL } from '@/config/env';
 
 const ConversationsPage: React.FC = () => {
   const queryClient = useQueryClient();
@@ -50,7 +52,7 @@ const ConversationsPage: React.FC = () => {
     enabled: !!selectedAgentId,
   });
 
-  useWebSocket(`ws://localhost:8000/ws/conversations/${companyId}/null/null`, {
+  useWebSocket(`${BACKEND_URL.replace('http', 'ws')}/ws/conversations/${companyId}/null/null`, {
     onMessage: (event) => {
       const eventData = JSON.parse(event.data);
       toast({

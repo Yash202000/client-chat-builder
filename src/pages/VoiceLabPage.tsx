@@ -22,8 +22,8 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { VOICE_ENGINE_URL } from '@/config/env';
 
-const VOICE_ENGINE_URL = 'http://localhost:8001';
 const DEFAULT_VOICE_ID = 'default';
 
 interface VoiceTask {
