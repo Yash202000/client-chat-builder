@@ -18,12 +18,6 @@ const AIToolCreatePage = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (!user?.is_super_admin) {
-      navigate('/dashboard/ai-tools');
-    }
-  }, [user, navigate]);
-
-  useEffect(() => {
     const fetchCategories = async () => {
       const data = await getAIToolCategories();
       setCategories(data);

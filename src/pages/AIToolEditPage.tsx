@@ -19,12 +19,6 @@ const AIToolEditPage = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
 
-  useEffect(() => {
-    if (!user?.is_super_admin) {
-      navigate('/dashboard/ai-tools');
-    }
-  }, [user, navigate]);
-
   const fetchTool = async () => {
     const data = await getAITool(id);
     setTool(data);

@@ -9,6 +9,7 @@ import { useNavigate, NavLink } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Heart, Eye, PlusCircle, Upload, Download, Wrench, Search, Star } from 'lucide-react';
+import { Permission } from '@/components/Permission';
 
 const AIToolsPage = () => {
   const [categories, setCategories] = useState([]);
@@ -104,7 +105,7 @@ const AIToolsPage = () => {
           <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">Browse by category</p>
         </div>
 
-        {user?.is_super_admin && (
+        <Permission permission="ai-tool-category:create">
           <div className="p-4 border-b border-slate-200 dark:border-slate-700 bg-teal-50 dark:bg-teal-900/20">
             <p className="text-xs font-semibold text-teal-900 dark:text-teal-100 mb-3">CREATE CATEGORY</p>
             <div className="flex flex-col gap-2">
@@ -126,7 +127,7 @@ const AIToolsPage = () => {
               </Button>
             </div>
           </div>
-        )}
+        </Permission>
 
         <ScrollArea className="flex-1 p-4">
           <ul className="space-y-1">
@@ -164,29 +165,33 @@ const AIToolsPage = () => {
               </h1>
               <p className="text-gray-600 dark:text-gray-400">Discover and manage AI-powered tools</p>
             </div>
-            {user?.is_super_admin && (
-              <div className="flex gap-2">
+            <div className="flex gap-2">
+              <Permission permission="ai-tool:import">
                 <Button onClick={handleImport} variant="outline" size="sm" className="dark:border-slate-600 dark:text-white dark:hover:bg-slate-700">
                   <Upload className="h-4 w-4 mr-1" />
                   Import
                 </Button>
+              </Permission>
+              <Permission permission="ai-tool:export">
                 <Button onClick={handleExport} variant="outline" size="sm" className="dark:border-slate-600 dark:text-white dark:hover:bg-slate-700">
                   <Download className="h-4 w-4 mr-1" />
                   Export
                 </Button>
+              </Permission>
+              <Permission permission="ai-tool:create">
                 <Button onClick={handleCreateTool} className="bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-700 hover:to-emerald-700 text-white" size="sm">
                   <PlusCircle className="h-4 w-4 mr-1" />
                   Create Tool
                 </Button>
-                <input
-                  type="file"
-                  ref={fileInputRef}
-                  style={{ display: 'none' }}
-                  onChange={handleFileChange}
-                  accept=".json"
-                />
-              </div>
-            )}
+              </Permission>
+              <input
+                type="file"
+                ref={fileInputRef}
+                style={{ display: 'none' }}
+                onChange={handleFileChange}
+                accept=".json"
+              />
+            </div>
           </div>
 
           <div className="flex flex-col md:flex-row gap-4">

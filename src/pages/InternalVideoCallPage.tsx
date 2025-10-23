@@ -39,11 +39,32 @@ const InternalVideoCallPage: React.FC = () => {
   const roomName = queryParams.get('roomName');
   const channelId = queryParams.get('channelId');
 
+  // Debug: Log the parameters
+  console.log('Video Call Page Parameters:', {
+    livekitToken,
+    livekitUrl,
+    roomName,
+    channelId,
+    fullSearch: location.search
+  });
+
   const [isChatOpen, setChatOpen] = useState(true);
   const [inputValue, setInputValue] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { user } = useAuth();
   const queryClient = useQueryClient();
+  const [isRoomReady, setIsRoomReady] = useState(false);
+
+  // Ensure parameters are stable before rendering LiveKitRoom
+  useEffect(() => {
+    if (livekitToken && livekitUrl && roomName) {
+      // Small delay to ensure navigation is complete
+      const timer = setTimeout(() => {
+        setIsRoomReady(true);
+      }, 100);
+      return () => clearTimeout(timer);
+    }
+  }, [livekitToken, livekitUrl, roomName]);
 
   const wsUrl = channelId
     ? `${BACKEND_URL.replace('http', 'ws')}/api/v1/ws/wschat/${channelId}?token=${localStorage.getItem('accessToken')}`
@@ -86,7 +107,8 @@ const InternalVideoCallPage: React.FC = () => {
   };
 
   const handleLeave = () => {
-    navigate('/internal-chat');
+    // Navigate back to the internal chat page with the same channel selected
+    navigate(`/dashboard/internal-chat${channelId ? `?channelId=${channelId}` : ''}`);
   };
 
   const scrollToBottom = () => {
@@ -98,8 +120,20 @@ const InternalVideoCallPage: React.FC = () => {
   }, [messages]);
 
   if (!livekitToken || !livekitUrl || !roomName) {
+    console.error('Missing required parameters for video call:', { livekitToken: !!livekitToken, livekitUrl: !!livekitUrl, roomName: !!roomName });
     return <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>Loading internal video call...</div>;
   }
+
+  if (!isRoomReady) {
+    console.log('Waiting for room to be ready...');
+    return <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>Connecting to video call...</div>;
+  }
+
+  console.log('Rendering LiveKitRoom with:', {
+    token: livekitToken.substring(0, 20) + '...',
+    serverUrl: livekitUrl,
+    roomName
+  });
 
   return (
     <div className="flex h-screen bg-black text-white">
@@ -112,6 +146,12 @@ const InternalVideoCallPage: React.FC = () => {
           data-lk-theme="default"
           connectOptions={{ autoSubscribe: true }}
           onDisconnected={handleLeave}
+          onError={(error) => {
+            console.error('LiveKitRoom error:', error);
+          }}
+          onConnected={() => {
+            console.log('LiveKitRoom connected successfully!');
+          }}
         >
           <VideoConference />
           <Button 
@@ -138,7 +178,9 @@ const InternalVideoCallPage: React.FC = () => {
                     <div className="text-xs font-semibold">
                       {msg.sender.first_name || msg.sender.email}
                     </div>
-                    <ReactMarkdown className="text-sm">{msg.content}</ReactMarkdown>
+                    <div className="text-sm">
+                      <ReactMarkdown>{msg.content}</ReactMarkdown>
+                    </div>
                   </div>
                 </div>
               ))

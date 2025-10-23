@@ -71,7 +71,8 @@ const ConversationsPage: React.FC = () => {
       return { ...counts, mine: mineCount };
     },
     enabled: !!companyId && !!user?.id,
-    refetchInterval: 30000, // Refresh counts every 30 seconds
+    refetchOnWindowFocus: false, // Rely on WebSocket for real-time updates
+    // Removed refetchInterval - WebSocket events will trigger updates via invalidateQueries
   });
 
   // Fetch sessions based on active tab (server-side filtering)
@@ -100,6 +101,7 @@ const ConversationsPage: React.FC = () => {
       return response.json();
     },
     enabled: !!companyId,
+    refetchOnWindowFocus: false, // Rely on WebSocket for real-time updates
   });
 
   const wsUrl = companyId ? `${getWebSocketUrl()}/api/v1/ws/updates/ws/${companyId}?token=${token}` : null;
@@ -112,7 +114,17 @@ const ConversationsPage: React.FC = () => {
         const eventData = JSON.parse(event.data);
         console.log('[WebSocket] Received event:', eventData.type, eventData);
 
-        if (eventData.type === 'new_message') {
+        if (eventData.type === 'new_session') {
+          console.log('[WebSocket] 🆕 New session created:', eventData.session);
+          toast({
+            title: "New Conversation",
+            description: `A new conversation has started`,
+            variant: "info",
+          });
+          // Invalidate queries to refetch session list and counts
+          queryClient.invalidateQueries({ queryKey: ['sessions', companyId] });
+          queryClient.invalidateQueries({ queryKey: ['sessionCounts', companyId] });
+        } else if (eventData.type === 'new_message') {
           toast({
             title: "New Message",
             description: `New message received in conversation`,

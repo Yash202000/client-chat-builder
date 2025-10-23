@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { MoreHorizontal, Edit, Trash2, Code, PlusCircle, Eye } from "lucide-react";
+import { Permission } from "@/components/Permission";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -26,6 +27,7 @@ import { Agent, Session } from "@/types";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { useAuth } from "@/hooks/useAuth";
 import { ConversationDetail } from "./ConversationDetail";
+import { API_BASE_URL } from "@/config/api";
 
 export const AgentList = () => {
   const queryClient = useQueryClient();
@@ -73,7 +75,7 @@ export const AgentList = () => {
   });
 
   const handleCopyEmbedCode = (agentId: number) => {
-    const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:8000';
+    const backendUrl = API_BASE_URL;
     const embedCode = `<script
     src="${backendUrl}/widget/widget.js"
     id="agent-connect-widget-script"
@@ -189,13 +191,15 @@ export const AgentList = () => {
               <CardTitle className="text-2xl dark:text-white">Your Agents</CardTitle>
               <CardDescription className="text-base">Manage and view your AI agents</CardDescription>
             </div>
-            <Button
-              onClick={() => navigate('/dashboard/builder')}
-              className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white btn-hover-lift"
-            >
-              <PlusCircle className="h-4 w-4 mr-2" />
-              Create Agent
-            </Button>
+            <Permission permission="agent:create">
+              <Button
+                onClick={() => navigate('/dashboard/builder')}
+                className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white btn-hover-lift"
+              >
+                <PlusCircle className="h-4 w-4 mr-2" />
+                Create Agent
+              </Button>
+            </Permission>
           </div>
         </CardHeader>
         <CardContent className="p-0">
@@ -258,40 +262,44 @@ export const AgentList = () => {
                             <Eye className="h-4 w-4 mr-2" />
                             View Conversations
                           </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => navigate(`/dashboard/builder/${agent.id}`)} className="cursor-pointer">
-                            <Edit className="h-4 w-4 mr-2" />
-                            Edit Agent
-                          </DropdownMenuItem>
+                          <Permission permission="agent:update">
+                            <DropdownMenuItem onClick={() => navigate(`/dashboard/builder/${agent.id}`)} className="cursor-pointer">
+                              <Edit className="h-4 w-4 mr-2" />
+                              Edit Agent
+                            </DropdownMenuItem>
+                          </Permission>
                           <DropdownMenuItem onClick={() => handleCopyEmbedCode(agent.id)} className="cursor-pointer">
                             <Code className="h-4 w-4 mr-2" />
                             Copy Embed Code
                           </DropdownMenuItem>
                           <DropdownMenuSeparator />
-                          <AlertDialog>
-                            <AlertDialogTrigger asChild>
-                              <DropdownMenuItem onSelect={(e) => e.preventDefault()} className="text-red-600 dark:text-red-400 focus:text-red-600 dark:focus:text-red-400 cursor-pointer">
-                                <Trash2 className="h-4 w-4 mr-2" />
-                                Delete
-                              </DropdownMenuItem>
-                            </AlertDialogTrigger>
-                            <AlertDialogContent className="bg-white dark:bg-slate-800">
-                              <AlertDialogHeader>
-                                <AlertDialogTitle className="dark:text-white">Are you sure?</AlertDialogTitle>
-                                <AlertDialogDescription className="dark:text-gray-400">
-                                  This will permanently delete the agent "{agent.name}" and all its data. This action cannot be undone.
-                                </AlertDialogDescription>
-                              </AlertDialogHeader>
-                              <AlertDialogFooter>
-                                <AlertDialogCancel className="dark:bg-slate-700 dark:text-gray-300">Cancel</AlertDialogCancel>
-                                <AlertDialogAction
-                                  onClick={() => deleteAgentMutation.mutate(agent.id)}
-                                  className="bg-red-600 hover:bg-red-700 text-white"
-                                >
+                          <Permission permission="agent:delete">
+                            <AlertDialog>
+                              <AlertDialogTrigger asChild>
+                                <DropdownMenuItem onSelect={(e) => e.preventDefault()} className="text-red-600 dark:text-red-400 focus:text-red-600 dark:focus:text-red-400 cursor-pointer">
+                                  <Trash2 className="h-4 w-4 mr-2" />
                                   Delete
-                                </AlertDialogAction>
-                              </AlertDialogFooter>
-                            </AlertDialogContent>
-                          </AlertDialog>
+                                </DropdownMenuItem>
+                              </AlertDialogTrigger>
+                              <AlertDialogContent className="bg-white dark:bg-slate-800">
+                                <AlertDialogHeader>
+                                  <AlertDialogTitle className="dark:text-white">Are you sure?</AlertDialogTitle>
+                                  <AlertDialogDescription className="dark:text-gray-400">
+                                    This will permanently delete the agent "{agent.name}" and all its data. This action cannot be undone.
+                                  </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                  <AlertDialogCancel className="dark:bg-slate-700 dark:text-gray-300">Cancel</AlertDialogCancel>
+                                  <AlertDialogAction
+                                    onClick={() => deleteAgentMutation.mutate(agent.id)}
+                                    className="bg-red-600 hover:bg-red-700 text-white"
+                                  >
+                                    Delete
+                                  </AlertDialogAction>
+                                </AlertDialogFooter>
+                              </AlertDialogContent>
+                            </AlertDialog>
+                          </Permission>
                         </DropdownMenuContent>
                       </DropdownMenu>
                     </TableCell>

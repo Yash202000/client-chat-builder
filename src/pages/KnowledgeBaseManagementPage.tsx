@@ -12,6 +12,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { solarizedlight } from 'react-syntax-highlighter/dist/esm/styles/prism';
+import { Permission } from "@/components/Permission";
 
 const KnowledgeBaseManagementPage = () => {
   const queryClient = useQueryClient();
@@ -230,12 +231,13 @@ const KnowledgeBaseManagementPage = () => {
           <p className="text-gray-600 dark:text-gray-400 text-lg">Upload documents and manage your knowledge repositories</p>
         </div>
         <div className="flex gap-2">
-          <Dialog open={isImportUrlDialogOpen} onOpenChange={setIsImportUrlDialogOpen}>
-            <DialogTrigger asChild>
-              <Button variant="outline" className="btn-hover-lift">
-                <LinkIcon className="mr-2 h-4 w-4" /> Import from URL
-              </Button>
-            </DialogTrigger>
+          <Permission permission="knowledgebase:create">
+            <Dialog open={isImportUrlDialogOpen} onOpenChange={setIsImportUrlDialogOpen}>
+              <DialogTrigger asChild>
+                <Button variant="outline" className="btn-hover-lift">
+                  <LinkIcon className="mr-2 h-4 w-4" /> Import from URL
+                </Button>
+              </DialogTrigger>
             <DialogContent className="bg-white dark:bg-slate-800">
               <DialogHeader>
                 <DialogTitle className="dark:text-white">Import Knowledge Base from URL</DialogTitle>
@@ -243,7 +245,9 @@ const KnowledgeBaseManagementPage = () => {
               <ImportUrlForm onSubmit={handleImportUrl} knowledgeBases={knowledgeBases || []} />
             </DialogContent>
           </Dialog>
-          <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+          </Permission>
+          <Permission permission="knowledgebase:create">
+            <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
             <DialogTrigger asChild>
               <Button className="bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700 text-white btn-hover-lift">
                 <Plus className="mr-2 h-4 w-4" /> Create Knowledge Base
@@ -256,6 +260,7 @@ const KnowledgeBaseManagementPage = () => {
               <KnowledgeBaseForm onSubmit={handleCreate} />
             </DialogContent>
           </Dialog>
+          </Permission>
         </div>
       </div>
 
@@ -371,41 +376,47 @@ const KnowledgeBaseManagementPage = () => {
                           )}
                         </DialogContent>
                       </Dialog>
-                      <Dialog open={isGenerateQnADialogOpen && selectedKb?.id === kb.id} onOpenChange={(isOpen) => {
-                        if (!isOpen) setSelectedKb(null);
-                        setIsGenerateQnADialogOpen(isOpen);
-                      }}>
-                        <DialogTrigger asChild>
-                          <Button variant="outline" size="sm" onClick={() => setSelectedKb(kb)} className="flex-1" title="Generate Q&A">
-                            <Brain className="h-4 w-4" />
-                          </Button>
-                        </DialogTrigger>
-                        <DialogContent className="bg-white dark:bg-slate-800">
-                          <DialogHeader>
-                            <DialogTitle className="dark:text-white">Generate Q&A for {selectedKb?.name}</DialogTitle>
-                          </DialogHeader>
-                          <GenerateQnAForm kb={selectedKb} onSubmit={handleGenerateQnA} />
-                        </DialogContent>
-                      </Dialog>
-                      <Dialog open={isEditDialogOpen && selectedKb?.id === kb.id} onOpenChange={(isOpen) => {
-                        if (!isOpen) setSelectedKb(null);
-                        setIsEditDialogOpen(isOpen);
-                      }}>
-                        <DialogTrigger asChild>
-                          <Button variant="outline" size="sm" onClick={() => setSelectedKb(kb)} className="flex-1" title="Edit">
-                            <Edit className="h-4 w-4" />
-                          </Button>
-                        </DialogTrigger>
-                        <DialogContent className="bg-white dark:bg-slate-800">
-                          <DialogHeader>
-                            <DialogTitle className="dark:text-white">Edit Knowledge Base</DialogTitle>
-                          </DialogHeader>
-                          <KnowledgeBaseForm kb={selectedKb} onSubmit={(values) => handleUpdate({ ...kb, ...values })} />
-                        </DialogContent>
-                      </Dialog>
-                      <Button variant="destructive" size="sm" onClick={() => deleteKnowledgeBaseMutation.mutate(kb.id)} className="flex-1" title="Delete">
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
+                      <Permission permission="knowledgebase:update">
+                        <Dialog open={isGenerateQnADialogOpen && selectedKb?.id === kb.id} onOpenChange={(isOpen) => {
+                          if (!isOpen) setSelectedKb(null);
+                          setIsGenerateQnADialogOpen(isOpen);
+                        }}>
+                          <DialogTrigger asChild>
+                            <Button variant="outline" size="sm" onClick={() => setSelectedKb(kb)} className="flex-1" title="Generate Q&A">
+                              <Brain className="h-4 w-4" />
+                            </Button>
+                          </DialogTrigger>
+                          <DialogContent className="bg-white dark:bg-slate-800">
+                            <DialogHeader>
+                              <DialogTitle className="dark:text-white">Generate Q&A for {selectedKb?.name}</DialogTitle>
+                            </DialogHeader>
+                            <GenerateQnAForm kb={selectedKb} onSubmit={handleGenerateQnA} />
+                          </DialogContent>
+                        </Dialog>
+                      </Permission>
+                      <Permission permission="knowledgebase:update">
+                        <Dialog open={isEditDialogOpen && selectedKb?.id === kb.id} onOpenChange={(isOpen) => {
+                          if (!isOpen) setSelectedKb(null);
+                          setIsEditDialogOpen(isOpen);
+                        }}>
+                          <DialogTrigger asChild>
+                            <Button variant="outline" size="sm" onClick={() => setSelectedKb(kb)} className="flex-1" title="Edit">
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                          </DialogTrigger>
+                          <DialogContent className="bg-white dark:bg-slate-800">
+                            <DialogHeader>
+                              <DialogTitle className="dark:text-white">Edit Knowledge Base</DialogTitle>
+                            </DialogHeader>
+                            <KnowledgeBaseForm kb={selectedKb} onSubmit={(values) => handleUpdate({ ...kb, ...values })} />
+                          </DialogContent>
+                        </Dialog>
+                      </Permission>
+                      <Permission permission="knowledgebase:delete">
+                        <Button variant="destructive" size="sm" onClick={() => deleteKnowledgeBaseMutation.mutate(kb.id)} className="flex-1" title="Delete">
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </Permission>
                     </div>
                   </CardContent>
                 </Card>

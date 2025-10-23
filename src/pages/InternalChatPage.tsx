@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import {
   getChannels,
   createChannel,
@@ -30,6 +30,7 @@ import ManageChannelMembersModal from '@/components/ManageChannelMembersModal';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useWebSocket } from '@/hooks/use-websocket';
 import { BACKEND_URL } from '@/config/env';
+import { API_BASE_URL } from '@/config/api';
 
 // Define types for chat data
 interface ChatChannel {
@@ -73,6 +74,7 @@ const InternalChatPage: React.FC = () => {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
 
   const [selectedChannel, setSelectedChannel] = useState<ChatChannel | null>(null);
   const [inputValue, setInputValue] = useState('');
@@ -80,7 +82,6 @@ const InternalChatPage: React.FC = () => {
   const [isCreateChannelModalOpen, setCreateChannelModalOpen] = useState(false);
   const [isManageMembersModalOpen, setManageMembersModalOpen] = useState(false);
   const [userPresences, setUserPresences] = useState<UserPresence>({});
-  const [activeVideoCallInfo, setActiveVideoCallInfo] = useState<ActiveVideoCall | null>(null);
   const { toast } = useToast();
 
   const wsUrl = selectedChannel?.id
@@ -104,6 +105,18 @@ const InternalChatPage: React.FC = () => {
           ...prevPresences,
           [user_id]: status,
         }));
+      } else if (wsMessage.type === 'video_call_initiated') {
+        // When a video call is initiated, update the active call info for all users in the channel
+        const { room_name, livekit_token, livekit_url } = wsMessage;
+        console.log('Video call initiated via WebSocket:', { room_name, livekit_url });
+
+        // Invalidate the active video call query to fetch fresh data with user's own token
+        queryClient.invalidateQueries({ queryKey: ['activeVideoCall', selectedChannel?.id] });
+
+        toast({
+          title: 'Video Call Started',
+          description: 'A video call has been started in this channel. Click the video icon to join!',
+        });
       }
     },
     onError: (error) => {
@@ -127,6 +140,30 @@ const InternalChatPage: React.FC = () => {
     queryKey: ['channelMembers', selectedChannel?.id],
     queryFn: () => getChannelMembers(selectedChannel!.id),
     enabled: !!selectedChannel?.id,
+  });
+
+  // Check for active video call when channel is selected (no polling, only on mount/channel change)
+  const { data: activeCallExists } = useQuery<boolean, Error>({
+    queryKey: ['activeVideoCall', selectedChannel?.id],
+    queryFn: async () => {
+      try {
+        const token = localStorage.getItem('accessToken');
+        await axios.get(
+          `${API_BASE_URL}/api/v1/video-calls/channels/${selectedChannel!.id}/active`,
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        // If no error, active call exists
+        return true;
+      } catch (error: any) {
+        if (error.response?.status === 404) {
+          // No active call
+          return false;
+        }
+        throw error;
+      }
+    },
+    enabled: !!selectedChannel?.id,
+    // No refetchInterval - rely on WebSocket events to invalidate this query
   });
 
   // Fetch messages for selected channel
@@ -191,12 +228,11 @@ const InternalChatPage: React.FC = () => {
     },
   });
 
-  // Initiate video call mutation
+  // Initiate video call mutation (creates new call)
   const initiateVideoCallMutation = useMutation({
     mutationFn: async (channelId: number) => {
-      const API_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:8000';
       const token = localStorage.getItem('accessToken');
-      const endpoint = `${API_URL}/api/v1/video-calls/channels/${channelId}/initiate`;
+      const endpoint = `${API_BASE_URL}/api/v1/video-calls/channels/${channelId}/initiate`;
 
       const response = await axios.post(
         endpoint,
@@ -213,12 +249,50 @@ const InternalChatPage: React.FC = () => {
     onSuccess: (data) => {
       const { room_name, livekit_token, livekit_url } = data;
       navigate(
-        `/internal-video-call?roomName=${room_name}&livekitToken=${livekit_token}&livekitUrl=${livekit_url}&channelId=${selectedChannel?.id}`
+        `/internal-video-call?roomName=${encodeURIComponent(room_name)}&livekitToken=${encodeURIComponent(livekit_token)}&livekitUrl=${encodeURIComponent(livekit_url)}&channelId=${selectedChannel?.id}`
       );
     },
     onError: (err) => {
       console.error('Failed to initiate video call:', err);
-      alert('Failed to initiate video call. Please try again.');
+      toast({
+        title: 'Error',
+        description: 'Failed to initiate video call. Please try again.',
+        variant: 'destructive',
+      });
+    },
+  });
+
+  // Join existing video call mutation
+  const joinVideoCallMutation = useMutation({
+    mutationFn: async (channelId: number) => {
+      const token = localStorage.getItem('accessToken');
+      const endpoint = `${API_BASE_URL}/api/v1/video-calls/channels/${channelId}/join`;
+
+      const response = await axios.post(
+        endpoint,
+        {},
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+      return response.data;
+    },
+    onSuccess: (data) => {
+      const { room_name, livekit_token, livekit_url } = data;
+      navigate(
+        `/internal-video-call?roomName=${encodeURIComponent(room_name)}&livekitToken=${encodeURIComponent(livekit_token)}&livekitUrl=${encodeURIComponent(livekit_url)}&channelId=${selectedChannel?.id}`
+      );
+    },
+    onError: (err) => {
+      console.error('Failed to join video call:', err);
+      toast({
+        title: 'Error',
+        description: 'Failed to join video call. Please try again.',
+        variant: 'destructive',
+      });
     },
   });
 
@@ -234,11 +308,13 @@ const InternalChatPage: React.FC = () => {
   };
 
   const handleVideoCallAction = () => {
-    if (activeVideoCallInfo) {
-      navigate(
-        `/internal-video-call?roomName=${activeVideoCallInfo.room_name}&livekitToken=${activeVideoCallInfo.livekit_token}&livekitUrl=${activeVideoCallInfo.livekit_url}&channelId=${selectedChannel?.id}`
-      );
-    } else if (selectedChannel?.id) {
+    if (!selectedChannel?.id) return;
+
+    if (activeCallExists) {
+      // Join existing call
+      joinVideoCallMutation.mutate(selectedChannel.id);
+    } else {
+      // Initiate new call
       initiateVideoCallMutation.mutate(selectedChannel.id);
     }
   };
@@ -252,6 +328,17 @@ const InternalChatPage: React.FC = () => {
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
+
+  // Auto-select channel from URL params (e.g., when returning from video call)
+  useEffect(() => {
+    const channelIdParam = searchParams.get('channelId');
+    if (channelIdParam && channels) {
+      const channelToSelect = channels.find(ch => ch.id === Number(channelIdParam));
+      if (channelToSelect && (!selectedChannel || selectedChannel.id !== channelToSelect.id)) {
+        setSelectedChannel(channelToSelect);
+      }
+    }
+  }, [searchParams, channels, selectedChannel]);
 
   if (isLoadingChannels)
     return (
@@ -349,8 +436,8 @@ const InternalChatPage: React.FC = () => {
                       <CardTitle className="text-xl font-bold dark:text-white">{selectedChannel.name || 'Direct Message'}</CardTitle>
                       <div className="flex items-center mt-1 gap-2">
                         <div className="flex -space-x-2 overflow-hidden">
-                          {channelMembers?.slice(0, 5).map((member: any) => (
-                            <Avatar key={member.user?.id} className="inline-block h-6 w-6 rounded-full ring-2 ring-white dark:ring-slate-800">
+                          {channelMembers?.slice(0, 5).map((member: any, index: number) => (
+                            <Avatar key={member.user?.id || `member-${index}`} className="inline-block h-6 w-6 rounded-full ring-2 ring-white dark:ring-slate-800">
                               <AvatarImage src={member.user?.profile_picture_url} />
                               <AvatarFallback className="text-xs bg-gradient-to-br from-blue-400 to-purple-500 text-white">
                                 {member.user?.first_name?.[0] || 'U'}
@@ -386,10 +473,10 @@ const InternalChatPage: React.FC = () => {
                       <Button
                         size="icon"
                         onClick={handleVideoCallAction}
-                        disabled={initiateVideoCallMutation.isLoading}
+                        disabled={initiateVideoCallMutation.isLoading || joinVideoCallMutation.isLoading}
                         className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white rounded-full w-11 h-11 shadow-md hover:shadow-lg transition-all"
                       >
-                        {initiateVideoCallMutation.isLoading ? (
+                        {(initiateVideoCallMutation.isLoading || joinVideoCallMutation.isLoading) ? (
                           <Loader2 className="h-5 w-5 animate-spin" />
                         ) : (
                           <Video className="h-5 w-5" />
@@ -397,7 +484,7 @@ const InternalChatPage: React.FC = () => {
                       </Button>
                     </TooltipTrigger>
                     <TooltipContent>
-                      <p>{activeVideoCallInfo ? "Join Call" : "Start Call"}</p>
+                      <p>{activeCallExists ? "Join Call" : "Start Call"}</p>
                     </TooltipContent>
                   </Tooltip>
                 </div>
