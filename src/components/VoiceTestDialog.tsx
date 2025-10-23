@@ -13,8 +13,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Loader2, Play, Volume2 } from 'lucide-react';
 import { toast } from './ui/use-toast';
-
-const VOICE_ENGINE_URL = 'http://localhost:8001';
+import { VOICE_ENGINE_URL } from '@/config/env';
 
 interface VoiceTestDialogProps {
   open: boolean;

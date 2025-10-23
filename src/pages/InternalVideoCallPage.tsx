@@ -14,6 +14,8 @@ import { cn } from '@/lib/utils';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { useWebSocket } from '@/hooks/use-websocket';
+import { getWebSocketUrl } from '@/config/api';
+import { BACKEND_URL } from '@/config/env';
 
 interface ChatMessage {
   id: number;
@@ -44,7 +46,7 @@ const InternalVideoCallPage: React.FC = () => {
   const queryClient = useQueryClient();
 
   const wsUrl = channelId
-    ? `${(import.meta.env.VITE_API_URL || 'http://localhost:8000').replace('http', 'ws')}/api/v1/ws/wschat/${channelId}?token=${localStorage.getItem('accessToken')}`
+    ? `${BACKEND_URL.replace('http', 'ws')}/api/v1/ws/wschat/${channelId}?token=${localStorage.getItem('accessToken')}`
     : null;
 
   useWebSocket(wsUrl, {

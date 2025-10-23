@@ -1,5 +1,13 @@
 // API Configuration
-export const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+// Prioritize runtime config (window._env_) for Docker deployments, fallback to build-time env for local dev
+const getBackendUrl = (): string => {
+  if (typeof window !== 'undefined' && window._env_?.VITE_BACKEND_URL) {
+    return window._env_.VITE_BACKEND_URL;
+  }
+  return import.meta.env.VITE_BACKEND_URL || 'http://localhost:8000';
+};
+
+export const API_BASE_URL = getBackendUrl();
 
 // Get WebSocket URL based on API base URL
 export const getWebSocketUrl = (): string => {

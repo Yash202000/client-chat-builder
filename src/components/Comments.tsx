@@ -4,6 +4,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { BACKEND_URL } from '@/config/env';
 
 export const Comments = ({ workflowId }) => {
   const [comments, setComments] = useState([]);
@@ -22,7 +23,7 @@ export const Comments = ({ workflowId }) => {
 
     fetchComments();
 
-    const ws = new WebSocket(`ws://localhost:8000/ws/comments/${workflowId}`);
+    const ws = new WebSocket(`${BACKEND_URL.replace('http', 'ws')}/ws/comments/${workflowId}`);
     setSocket(ws);
 
     ws.onmessage = (event) => {
