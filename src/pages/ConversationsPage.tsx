@@ -13,6 +13,7 @@ import { Session, User } from '@/types';
 import { useAuth } from "@/hooks/useAuth";
 import { MessageSquare, Phone, Globe, Instagram, Mail, Send, Search, Filter, Archive, PanelLeftClose, PanelRightOpen } from 'lucide-react'; // Icons for channels
 import { getWebSocketUrl } from '@/config/api';
+import { formatDistanceToNow } from 'date-fns';
 
 const ConversationsPage: React.FC = () => {
   const queryClient = useQueryClient();
@@ -22,6 +23,7 @@ const ConversationsPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'mine' | 'open' | 'resolved' | 'all'>('open');
   const [unreadAssignments, setUnreadAssignments] = useState(0);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  const [reopenedSessions, setReopenedSessions] = useState<Set<string>>(new Set());
 
   const companyId = useMemo(() => user?.company_id, [user]);
 
@@ -191,6 +193,110 @@ const ConversationsPage: React.FC = () => {
               setActiveTab('mine');
             }
           }
+        } else if (eventData.type === 'session_reopened') {
+          // Handle conversation reopening from resolved status
+          console.log('[WebSocket] 🔄 Session reopened:', eventData.session_id);
+
+          // Mark session as reopened for animation
+          setReopenedSessions(prev => new Set(prev).add(eventData.session_id));
+          // Remove animation after 2 seconds
+          setTimeout(() => {
+            setReopenedSessions(prev => {
+              const newSet = new Set(prev);
+              newSet.delete(eventData.session_id);
+              return newSet;
+            });
+          }, 2000);
+
+          // Calculate time since resolution
+          const timeSinceResolution = eventData.time_since_resolution
+            ? `${Math.round(eventData.time_since_resolution / 3600)} hours ago`
+            : 'recently';
+
+          // Handler for "Assign to Me" button
+          const handleAssignToMe = async () => {
+            try {
+              const response = await authFetch(`/api/v1/conversations/${eventData.session_id}/assignee`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ user_id: user?.id })
+              });
+              if (response.ok) {
+                toast({
+                  title: "Assigned Successfully",
+                  description: "Conversation has been assigned to you",
+                  variant: "default",
+                });
+                queryClient.invalidateQueries({ queryKey: ['sessions', companyId] });
+              }
+            } catch (error) {
+              console.error('Failed to assign conversation:', error);
+            }
+          };
+
+          // Determine if this is assigned to current user
+          const isAssignedToCurrentUser = eventData.status === 'assigned' && eventData.assignee_id === user?.id;
+
+          // Show enhanced toast notification with quick actions
+          toast({
+            title: (
+              <div className="flex items-center gap-2">
+                <span className="text-2xl">🔄</span>
+                <span className="font-bold">
+                  {isAssignedToCurrentUser ? 'Your Conversation Reopened!' : 'Conversation Reopened!'}
+                </span>
+              </div>
+            ) as any,
+            description: (
+              <div className="space-y-2">
+                <p className="font-semibold">
+                  {isAssignedToCurrentUser
+                    ? 'A customer assigned to you has returned to a resolved conversation'
+                    : 'Customer has returned to a resolved conversation'}
+                </p>
+                <div className="text-xs text-muted-foreground space-y-1">
+                  <p>• Reopened: {timeSinceResolution}</p>
+                  <p>• Reopen count: {eventData.reopen_count || 1} time(s)</p>
+                  {eventData.contact_name && (
+                    <p>• Contact: {eventData.contact_name}</p>
+                  )}
+                  {isAssignedToCurrentUser && (
+                    <p className="text-amber-600 dark:text-amber-400 font-semibold">⭐ Assigned to you</p>
+                  )}
+                </div>
+                <div className="flex gap-2 mt-3">
+                  <button
+                    onClick={() => {
+                      setSelectedSessionId(eventData.session_id);
+                      // If status is 'assigned' and assigned to me, go to 'mine', otherwise 'open'
+                      if (eventData.status === 'assigned' && eventData.assignee_id === user?.id) {
+                        setActiveTab('mine');
+                      } else {
+                        setActiveTab('open');
+                      }
+                    }}
+                    className="text-xs bg-blue-500 text-white px-3 py-1.5 rounded hover:bg-blue-600 font-medium transition-colors"
+                  >
+                    📋 View Now
+                  </button>
+                  {(!eventData.assignee_id || eventData.assignee_id !== user?.id) && (
+                    <button
+                      onClick={handleAssignToMe}
+                      className="text-xs bg-purple-500 text-white px-3 py-1.5 rounded hover:bg-purple-600 font-medium transition-colors"
+                    >
+                      ✋ Assign to Me
+                    </button>
+                  )}
+                </div>
+              </div>
+            ) as any,
+            duration: 10000,
+          });
+
+          // Invalidate queries to refetch session list and counts
+          // This ensures the conversation moves from resolved to open tab
+          queryClient.invalidateQueries({ queryKey: ['sessions', companyId] });
+          queryClient.invalidateQueries({ queryKey: ['sessionCounts', companyId] });
         } else if (eventData.type === 'session_status_update') {
           // Handle real-time status updates (active/inactive/resolved) and connection status
           console.log(`Session ${eventData.session_id} status changed to: ${eventData.status}, connected: ${eventData.is_client_connected}, assignee: ${eventData.assignee_id}`);
@@ -331,6 +437,8 @@ const ConversationsPage: React.FC = () => {
   const ConversationCard = ({ session }: { session: Session }) => {
     const assignedToMe = isAssignedToMe(session);
     const isDisconnected = assignedToMe && !session.is_client_connected;
+    const isRecentlyReopened = reopenedSessions.has(session.conversation_id);
+    const hasBeenReopened = (session.reopen_count ?? 0) > 0;
 
     return (
       <button
@@ -346,6 +454,7 @@ const ConversationsPage: React.FC = () => {
           ${session.status === 'resolved' ? 'hover:opacity-100' : ''}
           ${assignedToMe ? 'font-semibold' : ''}
           ${isDisconnected ? 'opacity-75' : ''}
+          ${isRecentlyReopened ? 'conversation-reopened' : ''}
         `}
       >
         <div className="flex items-start gap-3">
@@ -396,6 +505,11 @@ const ConversationsPage: React.FC = () => {
               >
                 {assignedToMe ? 'Mine' : session.status}
               </Badge>
+              {hasBeenReopened && (
+                <Badge className="ml-1 flex-shrink-0 text-xs reopened-badge border-0">
+                  🔄 {session.reopen_count}
+                </Badge>
+              )}
             </div>
             <p className="text-xs text-muted-foreground truncate">
               {new Date(Number(session.conversation_id)).toLocaleString()}
@@ -418,6 +532,11 @@ const ConversationsPage: React.FC = () => {
             {session.status === 'resolved' && (
               <p className="text-xs text-blue-600 dark:text-blue-400 mt-1 truncate flex items-center gap-1">
                 ✓ Resolved conversation
+              </p>
+            )}
+            {hasBeenReopened && session.last_reopened_at && (
+              <p className="text-xs text-orange-600 dark:text-orange-400 mt-1 truncate flex items-center gap-1">
+                🔄 Reopened {formatDistanceToNow(new Date(session.last_reopened_at), { addSuffix: true })}
               </p>
             )}
           </div>

@@ -25,6 +25,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
+import { ReopenAnalytics } from "@/components/ReopenAnalytics";
 
 function DatePicker({ date, setDate, placeholder }) {
   const handleDateSelect = (selectedDate) => {
@@ -440,11 +441,12 @@ export const Reports = () => {
       </div>
 
       <Tabs defaultValue="overview" className="space-y-6">
-        <TabsList className="bg-slate-100 dark:bg-slate-900 p-1 grid grid-cols-3 lg:grid-cols-6">
+        <TabsList className="bg-slate-100 dark:bg-slate-900 p-1 grid grid-cols-3 lg:grid-cols-7">
           <TabsTrigger value="overview" className="data-[state=active]:bg-white dark:data-[state=active]:bg-slate-800 data-[state=active]:text-orange-600 dark:data-[state=active]:text-orange-400">📊 Overview</TabsTrigger>
           <TabsTrigger value="agents" className="data-[state=active]:bg-white dark:data-[state=active]:bg-slate-800 data-[state=active]:text-orange-600 dark:data-[state=active]:text-orange-400">🤖 Agents</TabsTrigger>
           <TabsTrigger value="customers" className="data-[state=active]:bg-white dark:data-[state=active]:bg-slate-800 data-[state=active]:text-orange-600 dark:data-[state=active]:text-orange-400">👥 Customers</TabsTrigger>
           <TabsTrigger value="trends" className="data-[state=active]:bg-white dark:data-[state=active]:bg-slate-800 data-[state=active]:text-orange-600 dark:data-[state=active]:text-orange-400">📈 Trends</TabsTrigger>
+          <TabsTrigger value="reopens" className="data-[state=active]:bg-white dark:data-[state=active]:bg-slate-800 data-[state=active]:text-orange-600 dark:data-[state=active]:text-orange-400">🔄 Reopens</TabsTrigger>
           <TabsTrigger value="alerts" className="data-[state=active]:bg-white dark:data-[state=active]:bg-slate-800 data-[state=active]:text-orange-600 dark:data-[state=active]:text-orange-400">🔔 Alerts</TabsTrigger>
           <TabsTrigger value="optimization" className="data-[state=active]:bg-white dark:data-[state=active]:bg-slate-800 data-[state=active]:text-orange-600 dark:data-[state=active]:text-orange-400">⚡ Optimization</TabsTrigger>
         </TabsList>
@@ -677,6 +679,10 @@ export const Reports = () => {
               </div>
             </CardContent>
           </Card>
+        </TabsContent>
+
+        <TabsContent value="reopens" className="space-y-6">
+          <ReopenAnalytics />
         </TabsContent>
 
         <TabsContent value="alerts" className="space-y-6">

@@ -7,6 +7,12 @@ export interface Session {
   contact_name?: string;
   contact_phone?: string;
   is_client_connected?: boolean;
+  reopen_count?: number;
+  last_reopened_at?: string;
+  resolved_at?: string;
+  session_id?: string;
+  first_message_content?: string;
+  contact_identifier?: string;
 }
 
 export interface Agent {

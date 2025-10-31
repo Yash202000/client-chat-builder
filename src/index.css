@@ -234,3 +234,40 @@ All colors MUST be HSL.
     @apply bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400;
   }
 }
+
+@layer utilities {
+  /* Conversation Reopen Animations */
+  @keyframes reopenGlow {
+    0% {
+      box-shadow: 0 0 0 0 rgba(251, 146, 60, 0.7);
+      transform: scale(1);
+    }
+    50% {
+      box-shadow: 0 0 20px 10px rgba(251, 146, 60, 0.4);
+      transform: scale(1.02);
+    }
+    100% {
+      box-shadow: 0 0 0 0 rgba(251, 146, 60, 0);
+      transform: scale(1);
+    }
+  }
+
+  @keyframes reopenPulse {
+    0%, 100% {
+      background-color: transparent;
+    }
+    50% {
+      background-color: rgba(251, 146, 60, 0.1);
+    }
+  }
+
+  .conversation-reopened {
+    animation: reopenGlow 1.5s ease-out, reopenPulse 1.5s ease-out;
+    border-left: 3px solid #fb923c !important;
+  }
+
+  .reopened-badge {
+    background: linear-gradient(135deg, #fb923c 0%, #f97316 100%);
+    animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+}

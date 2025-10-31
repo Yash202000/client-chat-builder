@@ -66,6 +66,41 @@ const widgetSizes = {
 
 const generateSessionId = () => Date.now(); // milliseconds timestamp
 
+// Helper functions for session persistence
+const getStorageKey = (agentId: string, companyId: string) =>
+  `agentconnect_session_${companyId}_${agentId}`;
+
+const getStoredSession = (agentId: string, companyId: string): { sessionId: string; timestamp: number } | null => {
+  try {
+    const key = getStorageKey(agentId, companyId);
+    const stored = localStorage.getItem(key);
+    if (stored) {
+      return JSON.parse(stored);
+    }
+  } catch (error) {
+    console.error('Error reading stored session:', error);
+  }
+  return null;
+};
+
+const storeSession = (agentId: string, companyId: string, sessionId: string | number) => {
+  try {
+    const key = getStorageKey(agentId, companyId);
+    const data = {
+      sessionId: String(sessionId),
+      timestamp: Date.now(),
+    };
+    localStorage.setItem(key, JSON.stringify(data));
+  } catch (error) {
+    console.error('Error storing session:', error);
+  }
+};
+
+const isSessionExpired = (timestamp: number, expirationDays: number = 30): boolean => {
+  const expirationTime = expirationDays * 24 * 60 * 60 * 1000; // days to milliseconds
+  return Date.now() - timestamp > expirationTime;
+};
+
 // Main Widget Component
 const Widget = ({ agentId, companyId, backendUrl }: WidgetProps) => {
   const [settings, setSettings] = useState<WidgetSettings | null>(null);
@@ -283,7 +318,21 @@ const Widget = ({ agentId, companyId, backendUrl }: WidgetProps) => {
   // WebSocket connection management
   useEffect(() => {
     if (isOpen) {
-      const newSessionId = generateSessionId();
+      // Try to retrieve existing session from localStorage
+      const storedSession = getStoredSession(agentId, companyId);
+      let newSessionId: string | number;
+
+      if (storedSession && !isSessionExpired(storedSession.timestamp)) {
+        // Reuse existing session if not expired
+        newSessionId = storedSession.sessionId;
+        console.log('Resuming existing session:', newSessionId);
+      } else {
+        // Generate new session and store it
+        newSessionId = generateSessionId();
+        storeSession(agentId, companyId, newSessionId);
+        console.log('Created new session:', newSessionId);
+      }
+
       setSessionId(newSessionId);
       currentSessionId.current = newSessionId;
       shouldReconnect.current = true;
@@ -392,32 +441,78 @@ const Widget = ({ agentId, companyId, backendUrl }: WidgetProps) => {
   return (
   <div style={{ position: 'fixed', zIndex: settings.meta?.z_index || 9999, [vertical]: '20px', [horizontal]: '20px' }}>
     {!isOpen && (
-      <Button
-        onClick={() => setIsOpen(true)}
-        style={{
-          width: '60px',
-          height: '60px',
-          borderRadius: '50%',
-          background: primary_color,
-          boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
-        }}
-        className="flex items-center justify-center p-0 overflow-hidden"
-      >
-        {agent_avatar_url ? (
-          <img
-            src={`${backendUrl}/api/v1/proxy/image-proxy?url=${encodeURIComponent(agent_avatar_url)}`}
-            alt="Avatar"
-            className="w-full h-full object-cover"
-            onError={(e) => {
-              // Fallback to icon if image fails to load
-              e.currentTarget.style.display = 'none';
-              e.currentTarget.parentElement!.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>';
-            }}
-          />
-        ) : (
-          <MessageSquare size={32} color="white" />
-        )}
-      </Button>
+      <div className="relative group">
+        {/* Pulsing ring animation */}
+        <div
+          className="absolute inset-0 rounded-full animate-ping opacity-75"
+          style={{
+            background: primary_color,
+            width: '60px',
+            height: '60px',
+            animationDuration: '2s',
+          }}
+        />
+
+        {/* Main button */}
+        <Button
+          onClick={() => setIsOpen(true)}
+          style={{
+            width: '60px',
+            height: '60px',
+            borderRadius: '50%',
+            background: primary_color,
+            boxShadow: '0 8px 24px rgba(0,0,0,0.25), 0 4px 12px rgba(0,0,0,0.15), 0 2px 6px rgba(0,0,0,0.1)',
+            transition: 'all 0.3s ease',
+          }}
+          className="flex items-center justify-center p-0 overflow-hidden relative hover:scale-110 hover:shadow-2xl active:scale-95"
+          onMouseEnter={(e) => {
+            e.currentTarget.style.boxShadow = `0 12px 36px rgba(0,0,0,0.3), 0 8px 20px rgba(0,0,0,0.2), 0 0 24px ${primary_color}80`;
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.boxShadow = '0 8px 24px rgba(0,0,0,0.25), 0 4px 12px rgba(0,0,0,0.15), 0 2px 6px rgba(0,0,0,0.1)';
+          }}
+        >
+          {agent_avatar_url ? (
+            <img
+              src={`${backendUrl}/api/v1/proxy/image-proxy?url=${encodeURIComponent(agent_avatar_url)}`}
+              alt="Avatar"
+              className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
+              onError={(e) => {
+                // Fallback to icon if image fails to load
+                e.currentTarget.style.display = 'none';
+                e.currentTarget.parentElement!.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>';
+              }}
+            />
+          ) : (
+            <MessageSquare size={32} color="white" className="transition-transform duration-300 group-hover:scale-110" />
+          )}
+
+          {/* Notification indicator (shows when connected) */}
+          {isConnected && (
+            <span
+              className="absolute top-0 right-0 w-4 h-4 bg-green-500 border-2 border-white rounded-full animate-pulse"
+              style={{ boxShadow: '0 0 10px rgba(34, 197, 94, 0.5)' }}
+            />
+          )}
+        </Button>
+
+        {/* Tooltip on hover */}
+        <div
+          className="absolute opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none whitespace-nowrap"
+          style={{
+            [horizontal === 'right' ? 'right' : 'left']: '70px',
+            [vertical === 'bottom' ? 'bottom' : 'top']: '50%',
+            transform: 'translateY(-50%)',
+          }}
+        >
+          <div
+            className="px-3 py-2 rounded-lg text-white text-sm font-medium shadow-lg"
+            style={{ background: primary_color }}
+          >
+            {header_title || 'Chat with us'}
+          </div>
+        </div>
+      </div>
     )}
 
     {isOpen && settings?.communication_mode === 'voice' && liveKitToken && (
