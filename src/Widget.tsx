@@ -59,6 +59,7 @@ interface Message {
   options?: string[];
   fields?: any[];
   videoCallUrl?: string;
+  assignee_name?: string;  // Name of the agent who sent this message
 }
 
 const widgetSizes = {
@@ -293,7 +294,8 @@ const Widget = ({ agentId, companyId, backendUrl, rtlOverride, languageOverride,
         timestamp: data.timestamp || new Date().toISOString(),
         options: data.options,
         fields: data.fields,
-        videoCallUrl: data.message_type === 'video_call_invitation' ? `${settings?.frontend_url}/video-call?token=${data.token}&livekitUrl=${encodeURIComponent(settings?.livekit_url || '')}&sessionId=${currentSessionId.current}` : undefined
+        videoCallUrl: data.message_type === 'video_call_invitation' ? `${settings?.frontend_url}/video-call?token=${data.token}&livekitUrl=${encodeURIComponent(settings?.livekit_url || '')}&sessionId=${currentSessionId.current}` : undefined,
+        assignee_name: data.assignee_name  // Include agent name from backend
       };
 
       setMessages(prev => {
@@ -658,7 +660,9 @@ const Widget = ({ agentId, companyId, backendUrl, rtlOverride, languageOverride,
                         {msg.sender === 'agent' ? <Bot size={14} /> : <User size={14} />}
                       </AvatarFallback>
                     </Avatar>
-                    <span className="text-xs font-semibold">{msg.sender === 'agent' ? 'Agent' : 'You'}</span>
+                    <span className="text-xs font-semibold">
+                      {msg.sender === 'agent' ? (msg.assignee_name || 'Agent') : 'You'}
+                    </span>
                   </div>
                   <span className="text-xs" style={{ color: time_color || (dark_mode ? '#9CA3AF' : '#6B7280') }}>
                     {new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
