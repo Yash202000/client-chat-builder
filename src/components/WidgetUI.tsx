@@ -97,8 +97,11 @@ export const WidgetUI = ({
   if (!settings) return null;
 
   const { position, primary_color, agent_avatar_url, widget_size, border_radius, dark_mode, header_title, show_header, input_placeholder, user_message_color, user_message_text_color, bot_message_color, bot_message_text_color, time_color } = settings;
-  const [vertical, horizontal] = position.split('-');
+  // Read position from meta field, fallback to direct position for backward compatibility
+  const widgetPosition = settings.meta?.position || position || 'bottom-right';
+  const [vertical, horizontal] = widgetPosition.split('-');
   const size = widgetSizes[widget_size] || widgetSizes.medium;
+  const isRTL = settings.meta?.rtl_enabled || false;
 
   return (
     <div style={{ position: 'fixed', zIndex: settings.meta?.z_index || 9999, [vertical]: '20px', [horizontal]: '20px' }}>
@@ -139,6 +142,7 @@ export const WidgetUI = ({
 
       {isOpen && settings?.communication_mode !== 'voice' && (
         <div
+          dir={isRTL ? 'rtl' : 'ltr'}
           style={{
             width: `${size.width}px`,
             height: `${size.height}px`,

@@ -13,6 +13,9 @@ interface WidgetProps {
   agentId: string;
   companyId: string;
   backendUrl: string;
+  rtlOverride?: boolean | null;
+  languageOverride?: string | null;
+  positionOverride?: string | null;
 }
 
 interface WidgetSettings {
@@ -66,6 +69,39 @@ const widgetSizes = {
 
 const generateSessionId = () => Date.now(); // milliseconds timestamp
 
+// RTL languages list
+const RTL_LANGUAGES = ['ar', 'he', 'fa', 'ur'];
+
+// Helper function to detect browser language
+const detectBrowserLanguage = (): string => {
+  const browserLang = navigator.language || (navigator as any).userLanguage;
+  // Extract language code (e.g., 'en-US' -> 'en')
+  return browserLang.split('-')[0];
+};
+
+// Helper function to get language texts from settings
+const getLanguageTexts = (settings: WidgetSettings, lang: string) => {
+  const languages = settings.meta?.languages;
+  if (!languages) {
+    // Fallback to old direct fields
+    return {
+      welcome_message: settings.welcome_message,
+      header_title: settings.header_title,
+      input_placeholder: settings.input_placeholder,
+      proactive_message: settings.proactive_message,
+    };
+  }
+
+  // Try to get the requested language, fallback to default, then to 'en', then to first available
+  const defaultLang = settings.meta?.default_language || 'en';
+  return languages[lang] || languages[defaultLang] || languages['en'] || languages[Object.keys(languages)[0]] || {
+    welcome_message: settings.welcome_message || "Hi! How can I help you today?",
+    header_title: settings.header_title || "Customer Support",
+    input_placeholder: settings.input_placeholder || "Type a message...",
+    proactive_message: settings.proactive_message || "Hello! Do you have any questions?",
+  };
+};
+
 // Helper functions for session persistence
 const getStorageKey = (agentId: string, companyId: string) =>
   `agentconnect_session_${companyId}_${agentId}`;
@@ -102,7 +138,7 @@ const isSessionExpired = (timestamp: number, expirationDays: number = 30): boole
 };
 
 // Main Widget Component
-const Widget = ({ agentId, companyId, backendUrl }: WidgetProps) => {
+const Widget = ({ agentId, companyId, backendUrl, rtlOverride, languageOverride, positionOverride }: WidgetProps) => {
   const [settings, setSettings] = useState<WidgetSettings | null>(null);
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -132,6 +168,10 @@ const Widget = ({ agentId, companyId, backendUrl }: WidgetProps) => {
   const shouldReconnect = useRef(true);
   const currentSessionId = useRef<string | null>(null);
   const [isConnected, setIsConnected] = useState(false);
+
+  // Calculate localized texts based on current language
+  const currentLanguage = languageOverride || detectBrowserLanguage() || settings?.meta?.default_language || 'en';
+  const localizedTexts = settings ? getLanguageTexts(settings, currentLanguage) : null;
 
   // Fetch settings
   useEffect(() => {
@@ -208,7 +248,9 @@ const Widget = ({ agentId, companyId, backendUrl }: WidgetProps) => {
 
       // Show welcome message only on first connection (not reconnection)
       if (messages.length === 0) {
-        const initialMessageText = isProactiveSession.current ? settings?.proactive_message : settings?.welcome_message;
+        const initialMessageText = isProactiveSession.current
+          ? (localizedTexts?.proactive_message || settings?.proactive_message)
+          : (localizedTexts?.welcome_message || settings?.welcome_message);
         if (initialMessageText) {
           setMessages([{ id: 'welcome', sender: 'agent', text: initialMessageText, type: 'message', timestamp: new Date().toISOString() }]);
         }
@@ -221,6 +263,14 @@ const Widget = ({ agentId, companyId, backendUrl }: WidgetProps) => {
 
       // Handle pong response
       if (data.type === 'pong') return;
+
+      // Handle ping from backend - respond with pong
+      if (data.type === 'ping') {
+        if (ws.current?.readyState === WebSocket.OPEN) {
+          ws.current.send(JSON.stringify({ type: 'pong' }));
+        }
+        return;
+      }
 
       if (data.message_type === 'typing') {
         setIsTyping(data.is_typing);
@@ -433,10 +483,20 @@ const Widget = ({ agentId, companyId, backendUrl }: WidgetProps) => {
     }
   };
 
-  if (isLoading || !settings) return null;
-  const { position, primary_color, agent_avatar_url, widget_size, border_radius, dark_mode, header_title, show_header, input_placeholder, user_message_color, user_message_text_color, bot_message_color, bot_message_text_color, time_color } = settings;
-  const [vertical, horizontal] = position.split('-');
+  if (isLoading || !settings || !localizedTexts) return null;
+  const { position, primary_color, agent_avatar_url, widget_size, border_radius, dark_mode, show_header, user_message_color, user_message_text_color, bot_message_color, bot_message_text_color, time_color } = settings;
+
+  // Extract localized texts
+  const { welcome_message, header_title, input_placeholder, proactive_message } = localizedTexts;
+
+  // Position priority: data-position attribute > meta.position > direct position field > default
+  const widgetPosition = positionOverride || settings.meta?.position || position || 'bottom-right';
+  const [vertical, horizontal] = widgetPosition.split('-');
   const size = widgetSizes[widget_size] || widgetSizes.medium;
+
+  // RTL can be overridden by embed code data attribute, otherwise check if language is RTL, otherwise use setting from meta
+  // Use != null to check for both null and undefined
+  const isRTL = rtlOverride != null ? rtlOverride : (RTL_LANGUAGES.includes(currentLanguage) || settings.meta?.rtl_enabled || false);
 
   return (
   <div style={{ position: 'fixed', zIndex: settings.meta?.z_index || 9999, [vertical]: '20px', [horizontal]: '20px' }}>
@@ -529,6 +589,7 @@ const Widget = ({ agentId, companyId, backendUrl }: WidgetProps) => {
 
     {isOpen && settings?.communication_mode !== 'voice' && (
       <div
+        dir={isRTL ? 'rtl' : 'ltr'}
         style={{
           width: `${size.width}px`,
           height: `${size.height}px`,

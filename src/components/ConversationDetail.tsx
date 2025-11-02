@@ -98,6 +98,12 @@ export const ConversationDetail: React.FC<ConversationDetailProps> = ({ sessionI
       ws.current = new WebSocket(`${getWebSocketUrl()}/api/v1/ws/${agentId}/${sessionId}?user_type=agent&token=${token}`);
       ws.current.onmessage = (event) => {
         const newMessage = JSON.parse(event.data);
+
+        // Filter out ping/pong messages
+        if (newMessage.type === 'ping' || newMessage.type === 'pong') {
+          return;
+        }
+
         queryClient.setQueryData<ChatMessage[]>(['messages', agentId, sessionId, companyId], (oldMessages = []) => {
           if (oldMessages.some(msg => msg.id === newMessage.id)) {
             return oldMessages;

@@ -8,6 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Save, Code, Send, RotateCcw, Palette } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useI18n } from '@/hooks/useI18n';
+import { LanguageManager } from './LanguageManager';
 
 interface WebChatCustomizerProps {
   customization: any;
@@ -451,29 +452,28 @@ export const WebChatCustomizer: React.FC<WebChatCustomizerPropsExtended> = ({
                     onCheckedChange={(checked) => updateCustomization("dark_mode", checked)}
                   />
                 </div>
+                <div className={`col-span-2 flex items-center justify-between p-3 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                  <div className={isRTL ? 'text-right' : 'text-left'}>
+                    <Label className="text-xs dark:text-white font-medium">{t('designer.rtlMode')}</Label>
+                    <p className="text-xs text-muted-foreground dark:text-gray-400">{t('designer.enableRtlSupport')}</p>
+                  </div>
+                  <Switch
+                    checked={customization.meta?.rtl_enabled || false}
+                    onCheckedChange={(checked) => updateCustomization("meta", { ...customization.meta, rtl_enabled: checked })}
+                  />
+                </div>
               </div>
             </div>
           </TabsContent>
 
           <TabsContent value="behavior" className="space-y-5 pt-4">
-            {/* Widget Texts Section */}
-            <div className="bg-slate-50 dark:bg-slate-900/50 rounded-lg p-4 border border-slate-200 dark:border-slate-700">
-              <h4 className={`font-semibold dark:text-white text-sm uppercase tracking-wider text-gray-700 dark:text-gray-300 mb-3 text-left`}>{t('designer.widgetTexts')}</h4>
-              <div className="space-y-3">
-                <div>
-                  <Label htmlFor="header_title" className="text-xs dark:text-gray-300 mb-1.5 block text-left">{t('designer.headerTitle')}</Label>
-                  <Input id="header_title" value={customization.header_title} onChange={(e) => updateCustomization("header_title", e.target.value)} className={`text-sm dark:bg-slate-800 dark:border-slate-600 dark:text-white text-left`} />
-                </div>
-                <div>
-                  <Label htmlFor="welcome_message" className="text-xs dark:text-gray-300 mb-1.5 block text-left">{t('designer.welcomeMessage')}</Label>
-                  <Input id="welcome_message" value={customization.welcome_message} onChange={(e) => updateCustomization("welcome_message", e.target.value)} className={`text-sm dark:bg-slate-800 dark:border-slate-600 dark:text-white text-left`} />
-                </div>
-                <div>
-                  <Label htmlFor="input_placeholder" className="text-xs dark:text-gray-300 mb-1.5 block text-left">{t('designer.inputPlaceholder')}</Label>
-                  <Input id="input_placeholder" value={customization.input_placeholder} onChange={(e) => updateCustomization("input_placeholder", e.target.value)} className={`text-sm dark:bg-slate-800 dark:border-slate-600 dark:text-white text-left`} />
-                </div>
-              </div>
-            </div>
+            {/* Multi-Language Support */}
+            <LanguageManager
+              languages={customization.meta?.languages || { en: { welcome_message: customization.welcome_message, header_title: customization.header_title, input_placeholder: customization.input_placeholder, proactive_message: customization.proactive_message } }}
+              defaultLanguage={customization.meta?.default_language || 'en'}
+              onLanguagesChange={(languages) => updateCustomization("meta", { ...customization.meta, languages })}
+              onDefaultLanguageChange={(lang) => updateCustomization("meta", { ...customization.meta, default_language: lang })}
+            />
 
             {/* URLs Section */}
             <div className="bg-slate-50 dark:bg-slate-900/50 rounded-lg p-4 border border-slate-200 dark:border-slate-700">
