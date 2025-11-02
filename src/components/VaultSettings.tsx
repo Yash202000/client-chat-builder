@@ -9,6 +9,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Trash2, Edit, PlusCircle, Copy } from "lucide-react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { useI18n } from '@/hooks/useI18n';
 
 // Updated type to match the new backend schema
 interface Credential {
@@ -26,6 +27,7 @@ interface CredentialFormData {
 }
 
 export const VaultSettings = () => {
+  const { t, isRTL } = useI18n();
   const queryClient = useQueryClient();
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
@@ -61,11 +63,11 @@ export const VaultSettings = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['credentials'] });
-      toast.success("Credential created successfully!");
+      toast.success(t('vault.createdSuccess'));
       setIsCreateDialogOpen(false);
     },
     onError: (error: Error) => {
-      toast.error("Failed to create credential", { description: error.message });
+      toast.error(t('vault.createdError'), { description: error.message });
     },
   });
 
@@ -84,11 +86,11 @@ export const VaultSettings = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['credentials'] });
-      toast.success("Credential updated successfully!");
+      toast.success(t('vault.updatedSuccess'));
       setIsEditDialogOpen(false);
     },
     onError: (error: Error) => {
-      toast.error("Failed to update credential", { description: error.message });
+      toast.error(t('vault.updatedError'), { description: error.message });
     },
   });
 
@@ -105,10 +107,10 @@ export const VaultSettings = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['credentials'] });
-      toast.success("Credential deleted successfully!");
+      toast.success(t('vault.deletedSuccess'));
     },
     onError: (error: Error) => {
-      toast.error("Failed to delete credential", { description: error.message });
+      toast.error(t('vault.deletedError'), { description: error.message });
     },
   });
 
@@ -140,52 +142,52 @@ export const VaultSettings = () => {
 
   const handleCopy = (text: string) => {
     navigator.clipboard.writeText(text);
-    toast.success("Copied to clipboard!");
+    toast.success(t('vault.copiedToClipboard'));
   };
 
   if (isLoading) return (
     <div className="flex items-center justify-center py-12">
       <div className="flex items-center gap-2 text-muted-foreground dark:text-gray-400">
         <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-cyan-600 dark:border-cyan-400"></div>
-        <span>Loading credentials...</span>
+        <span>{t('vault.loading')}</span>
       </div>
     </div>
   );
   if (isError) return (
     <div className="text-center py-12">
-      <div className="text-red-600 dark:text-red-400">Error loading credentials.</div>
+      <div className="text-red-600 dark:text-red-400">{t('vault.errorLoading')}</div>
     </div>
   );
 
   const renderDialogContent = () => (
-    <form onSubmit={handleSubmit} className="space-y-5 p-2">
+    <form onSubmit={handleSubmit} className="space-y-5 p-2" dir={isRTL ? 'rtl' : 'ltr'}>
       <div className="space-y-2">
-        <Label htmlFor="name" className="dark:text-gray-300">Name</Label>
+        <Label htmlFor="name" className="dark:text-gray-300">{t('vault.nameLabel')}</Label>
         <Input
           id="name"
           value={formData.name}
           onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-          placeholder="e.g., My OpenAI Key"
+          placeholder={t('vault.namePlaceholder')}
           required
           className="dark:bg-slate-900 dark:border-slate-600 dark:text-white"
         />
-        <p className="text-xs text-gray-500 dark:text-gray-400">A descriptive name for your credential.</p>
+        <p className="text-xs text-gray-500 dark:text-gray-400">{t('vault.nameDesc')}</p>
       </div>
       <div className="space-y-2">
-        <Label htmlFor="service" className="dark:text-gray-300">Service</Label>
+        <Label htmlFor="service" className="dark:text-gray-300">{t('vault.serviceLabel')}</Label>
         <Input
           id="service"
           value={formData.service}
           onChange={(e) => setFormData({ ...formData, service: e.target.value })}
-          placeholder="e.g., openai"
+          placeholder={t('vault.servicePlaceholder')}
           required
           className="dark:bg-slate-900 dark:border-slate-600 dark:text-white"
         />
-        <p className="text-xs text-gray-500 dark:text-gray-400">The name of the service (e.g., openai, google, etc.).</p>
+        <p className="text-xs text-gray-500 dark:text-gray-400">{t('vault.serviceDesc')}</p>
       </div>
       <div className="space-y-2">
         <Label htmlFor="credentials" className="dark:text-gray-300">
-          {currentCredential ? "New API Key (Leave blank to keep current)" : "API Key"}
+          {currentCredential ? t('vault.newApiKeyLabel') : t('vault.apiKeyLabel')}
         </Label>
         <Input
           id="credentials"
@@ -194,32 +196,32 @@ export const VaultSettings = () => {
           onChange={(e) => setFormData({ ...formData, credentials: e.target.value })}
           required={!currentCredential}
           className="dark:bg-slate-900 dark:border-slate-600 dark:text-white font-mono"
-          placeholder="sk-..."
+          placeholder={t('vault.apiKeyPlaceholder')}
         />
-        <p className="text-xs text-gray-500 dark:text-gray-400">Your secret API key.</p>
+        <p className="text-xs text-gray-500 dark:text-gray-400">{t('vault.apiKeyDesc')}</p>
       </div>
-      <DialogFooter className="pt-4">
+      <DialogFooter className={`pt-4 ${isRTL ? 'flex-row-reverse' : ''}`}>
         <Button type="button" variant="outline" onClick={() => currentCredential ? setIsEditDialogOpen(false) : setIsCreateDialogOpen(false)} className="dark:border-slate-600 dark:text-white dark:hover:bg-slate-700">
-          Cancel
+          {t('common.cancel')}
         </Button>
         <Button type="submit" disabled={createCredentialMutation.isPending || updateCredentialMutation.isPending} className="bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-700 hover:to-blue-700 text-white">
-          {currentCredential ? (updateCredentialMutation.isPending ? "Saving..." : "Save Changes") : (createCredentialMutation.isPending ? "Adding..." : "Add Key")}
+          {currentCredential ? (updateCredentialMutation.isPending ? t('vault.saving') : t('vault.saveChanges')) : (createCredentialMutation.isPending ? t('vault.adding') : t('vault.addKey'))}
         </Button>
       </DialogFooter>
     </form>
   );
 
   return (
-    <div className="w-full max-w-7xl mx-auto">
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-8 gap-4">
+    <div className="w-full max-w-7xl mx-auto" dir={isRTL ? 'rtl' : 'ltr'}>
+      <div className={`flex flex-col sm:flex-row items-start sm:items-center justify-between mb-8 gap-4`}>
         <div>
           <h2 className="text-4xl font-bold bg-gradient-to-r from-cyan-600 to-blue-600 bg-clip-text text-transparent mb-2">
-            🔐 API Key Vault
+            🔐 {t('vault.title')}
           </h2>
-          <p className="text-gray-600 dark:text-gray-400">Securely manage your API credentials for various AI platforms and services</p>
+          <p className="text-gray-600 dark:text-gray-400">{t('vault.subtitle')}</p>
         </div>
         <Button onClick={handleOpenCreate} className="bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-700 hover:to-blue-700 text-white shadow-lg hover:shadow-xl transition-all">
-          <PlusCircle className="mr-2 h-4 w-4" /> Add New Key
+          <PlusCircle className={`${isRTL ? 'ml-2' : 'mr-2'} h-4 w-4`} /> {t('vault.addNewKey')}
         </Button>
       </div>
 
@@ -243,35 +245,35 @@ export const VaultSettings = () => {
                 </div>
               </CardHeader>
               <CardContent className="pt-4">
-                <Button variant="ghost" size="sm" onClick={() => handleCopy(credential.id.toString())} className="w-full justify-start dark:hover:bg-slate-700 dark:text-white">
-                  <Copy className="mr-2 h-4 w-4" />
-                  Copy Key ID
+                <Button variant="ghost" size="sm" onClick={() => handleCopy(credential.id.toString())} className={`w-full ${isRTL ? 'justify-end' : 'justify-start'} dark:hover:bg-slate-700 dark:text-white`}>
+                  <Copy className={`${isRTL ? 'ml-2' : 'mr-2'} h-4 w-4`} />
+                  {t('vault.copyKeyId')}
                 </Button>
                 <div className="mt-3 text-xs text-gray-500 dark:text-gray-400">
-                  <p>Created: {new Date(credential.created_at).toLocaleDateString()}</p>
+                  <p>{t('vault.created')}: {new Date(credential.created_at).toLocaleDateString()}</p>
                 </div>
               </CardContent>
-              <CardFooter className="flex justify-end gap-2 border-t border-slate-200 dark:border-slate-700 pt-4">
+              <CardFooter className={`flex ${isRTL ? 'flex-row-reverse justify-start' : 'justify-end'} gap-2 border-t border-slate-200 dark:border-slate-700 pt-4`}>
                 <Button variant="outline" size="sm" onClick={() => handleOpenEdit(credential)} className="dark:border-slate-600 dark:text-white dark:hover:bg-slate-700">
-                  <Edit className="h-4 w-4 mr-1" /> Edit
+                  <Edit className={`h-4 w-4 ${isRTL ? 'ml-1' : 'mr-1'}`} /> {t('vault.edit')}
                 </Button>
                 <AlertDialog>
                   <AlertDialogTrigger asChild>
                     <Button variant="destructive" size="sm" className="bg-red-600 hover:bg-red-700">
-                      <Trash2 className="h-4 w-4 mr-1" /> Delete
+                      <Trash2 className={`h-4 w-4 ${isRTL ? 'ml-1' : 'mr-1'}`} /> {t('vault.delete')}
                     </Button>
                   </AlertDialogTrigger>
-                  <AlertDialogContent className="dark:bg-slate-800 dark:border-slate-700">
+                  <AlertDialogContent className="dark:bg-slate-800 dark:border-slate-700" dir={isRTL ? 'rtl' : 'ltr'}>
                     <AlertDialogHeader>
-                      <AlertDialogTitle className="dark:text-white">Are you absolutely sure?</AlertDialogTitle>
+                      <AlertDialogTitle className="dark:text-white">{t('vault.deleteConfirmTitle')}</AlertDialogTitle>
                       <AlertDialogDescription className="dark:text-gray-400">
-                        This will permanently delete the <span className="font-bold text-white">{credential.name}</span> credential. This action cannot be undone.
+                        {t('vault.deleteConfirmDesc1')} <span className="font-bold text-white">{credential.name}</span> {t('vault.deleteConfirmDesc2')}
                       </AlertDialogDescription>
                     </AlertDialogHeader>
-                    <AlertDialogFooter>
-                      <AlertDialogCancel className="dark:border-slate-600 dark:text-white dark:hover:bg-slate-700">Cancel</AlertDialogCancel>
+                    <AlertDialogFooter className={isRTL ? 'flex-row-reverse' : ''}>
+                      <AlertDialogCancel className="dark:border-slate-600 dark:text-white dark:hover:bg-slate-700">{t('common.cancel')}</AlertDialogCancel>
                       <AlertDialogAction onClick={() => deleteCredentialMutation.mutate(credential.id)} className="bg-red-600 hover:bg-red-700">
-                        Delete
+                        {t('vault.delete')}
                       </AlertDialogAction>
                     </AlertDialogFooter>
                   </AlertDialogContent>
@@ -287,27 +289,27 @@ export const VaultSettings = () => {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
             </svg>
           </div>
-          <h3 className="text-xl font-semibold text-gray-800 dark:text-white">No API keys found</h3>
-          <p className="text-gray-500 dark:text-gray-400 mt-2">Securely store your API keys to use them in your agents</p>
+          <h3 className="text-xl font-semibold text-gray-800 dark:text-white">{t('vault.noKeysFound')}</h3>
+          <p className="text-gray-500 dark:text-gray-400 mt-2">{t('vault.noKeysDesc')}</p>
           <Button onClick={handleOpenCreate} className="mt-6 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-700 hover:to-blue-700 text-white btn-hover-lift">
-            <PlusCircle className="mr-2 h-4 w-4" /> Add Your First Key
+            <PlusCircle className={`${isRTL ? 'ml-2' : 'mr-2'} h-4 w-4`} /> {t('vault.addFirstKey')}
           </Button>
         </div>
       )}
 
       <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-        <DialogContent className="dark:bg-slate-800 dark:border-slate-700">
+        <DialogContent className="dark:bg-slate-800 dark:border-slate-700" dir={isRTL ? 'rtl' : 'ltr'}>
           <DialogHeader>
-            <DialogTitle className="dark:text-white">Add New API Key</DialogTitle>
+            <DialogTitle className="dark:text-white">{t('vault.addNewApiKey')}</DialogTitle>
           </DialogHeader>
           {renderDialogContent()}
         </DialogContent>
       </Dialog>
 
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent className="dark:bg-slate-800 dark:border-slate-700">
+        <DialogContent className="dark:bg-slate-800 dark:border-slate-700" dir={isRTL ? 'rtl' : 'ltr'}>
           <DialogHeader>
-            <DialogTitle className="dark:text-white">Edit API Key</DialogTitle>
+            <DialogTitle className="dark:text-white">{t('vault.editApiKey')}</DialogTitle>
           </DialogHeader>
           {renderDialogContent()}
         </DialogContent>

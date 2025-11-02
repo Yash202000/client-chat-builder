@@ -4,6 +4,8 @@ import { Zap, BrainCircuit, Cloud, Code } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { useAuth } from '@/hooks/useAuth';
 import { Tool, KnowledgeBase, Agent } from '@/types';
+import { useTranslation } from 'react-i18next';
+import { useI18n } from '@/hooks/useI18n';
 import {
   Accordion,
   AccordionContent,
@@ -40,6 +42,8 @@ const DraggableNode = ({ type, label, icon, resourceId, toolType, mcpServerUrl, 
 
 export const AgentComponentSidebar = ({ agent }: { agent: Agent }) => {
   const { authFetch } = useAuth();
+  const { t } = useTranslation();
+  const { isRTL } = useI18n();
 
   const { data: tools, isLoading: isLoadingTools } = useQuery<Tool[]>({ 
     queryKey: ['tools'], 
@@ -74,11 +78,11 @@ export const AgentComponentSidebar = ({ agent }: { agent: Agent }) => {
   const attachedKbIds = new Set(agent.knowledge_bases?.map(kb => kb.id) || []);
 
   return (
-    <aside className="w-64 p-4 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-700 overflow-y-auto">
-      <h3 className="text-lg font-bold mb-4 bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent dark:from-green-400 dark:to-emerald-400">Components</h3>
+    <aside className={`w-64 p-4 bg-white dark:bg-slate-900 ${isRTL ? 'border-l' : 'border-r'} border-slate-200 dark:border-slate-700 overflow-y-auto`}>
+      <h3 className="text-lg font-bold mb-4 bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent dark:from-green-400 dark:to-emerald-400">{t('builder.components')}</h3>
       <Accordion type="multiple" defaultValue={['item-1', 'item-2']}>
         <AccordionItem value="item-1" className="border-slate-200 dark:border-slate-700">
-          <AccordionTrigger className="hover:no-underline dark:text-white">Tools</AccordionTrigger>
+          <AccordionTrigger className="hover:no-underline dark:text-white">{t('builder.tools')}</AccordionTrigger>
           <AccordionContent>
             {isLoadingTools ? (
               <div className="flex items-center justify-center py-4">
@@ -101,7 +105,7 @@ export const AgentComponentSidebar = ({ agent }: { agent: Agent }) => {
           </AccordionContent>
         </AccordionItem>
         <AccordionItem value="item-2" className="border-slate-200 dark:border-slate-700">
-          <AccordionTrigger className="hover:no-underline dark:text-white">Knowledge Bases</AccordionTrigger>
+          <AccordionTrigger className="hover:no-underline dark:text-white">{t('builder.knowledgeBases')}</AccordionTrigger>
           <AccordionContent>
             {isLoadingKnowledgeBases ? (
               <div className="flex items-center justify-center py-4">

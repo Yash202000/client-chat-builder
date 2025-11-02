@@ -9,8 +9,10 @@ import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { useToast } from '@/components/ui/use-toast';
 import { Sparkles, Loader2, Download, Image as ImageIcon } from 'lucide-react';
+import { useI18n } from '@/hooks/useI18n';
 
 const AIImageGeneratorPage: React.FC = () => {
+  const { t, isRTL } = useI18n();
   const [prompt, setPrompt] = useState('');
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -19,10 +21,10 @@ const AIImageGeneratorPage: React.FC = () => {
     mutationFn: () => generateImage(prompt, {}),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['ai-images'] });
-      toast({ title: 'Image generated successfully!' });
+      toast({ title: t('aiImageGenerator.toasts.imageGeneratedSuccess') });
     },
     onError: () => {
-      toast({ title: 'Error generating image', variant: 'destructive' });
+      toast({ title: t('aiImageGenerator.toasts.imageGeneratedError'), variant: 'destructive' });
     },
   });
 
@@ -43,12 +45,12 @@ const AIImageGeneratorPage: React.FC = () => {
   };
 
   return (
-    <div className="w-full max-w-7xl mx-auto p-4 md:p-8 space-y-8">
+    <div className="w-full max-w-7xl mx-auto p-4 md:p-8 space-y-8" dir={isRTL ? 'rtl' : 'ltr'}>
       <header>
         <h1 className="text-4xl font-bold bg-gradient-to-r from-pink-600 to-rose-600 bg-clip-text text-transparent mb-2">
-          🎨 AI Image Generator
+          🎨 {t('aiImageGenerator.title')}
         </h1>
-        <p className="text-gray-600 dark:text-gray-400 text-lg">Create stunning images from text descriptions using AI</p>
+        <p className="text-gray-600 dark:text-gray-400 text-lg">{t('aiImageGenerator.subtitle')}</p>
       </header>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
@@ -57,26 +59,26 @@ const AIImageGeneratorPage: React.FC = () => {
           <CardHeader className="border-b border-slate-200 dark:border-slate-700 bg-gradient-to-r from-slate-50 to-slate-100 dark:from-slate-800 dark:to-slate-900">
             <CardTitle className="dark:text-white flex items-center gap-2">
               <Sparkles className="h-5 w-5 text-pink-600 dark:text-pink-400" />
-              Generate Image
+              {t('aiImageGenerator.generateImage')}
             </CardTitle>
             <CardDescription className="dark:text-gray-400">
-              Describe what you want to create
+              {t('aiImageGenerator.describeWhatYouWant')}
             </CardDescription>
           </CardHeader>
           <CardContent className="pt-6">
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
-                <Label htmlFor="prompt" className="dark:text-gray-300">Your Prompt</Label>
+                <Label htmlFor="prompt" className="dark:text-gray-300">{t('aiImageGenerator.yourPrompt')}</Label>
                 <Textarea
                   id="prompt"
                   value={prompt}
                   onChange={(e) => setPrompt(e.target.value)}
-                  placeholder="e.g., A futuristic city at sunset with flying cars, highly detailed, cyberpunk style"
+                  placeholder={t('aiImageGenerator.promptPlaceholder')}
                   rows={6}
                   className="dark:bg-slate-900 dark:border-slate-600 dark:text-white mt-2"
                 />
                 <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
-                  Be specific and descriptive for better results
+                  {t('aiImageGenerator.beSpecific')}
                 </p>
               </div>
               <Button
@@ -88,12 +90,12 @@ const AIImageGeneratorPage: React.FC = () => {
                 {mutation.isPending ? (
                   <>
                     <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                    Generating...
+                    {t('aiImageGenerator.generating')}
                   </>
                 ) : (
                   <>
                     <Sparkles className="mr-2 h-5 w-5" />
-                    Generate Image
+                    {t('aiImageGenerator.generateImage')}
                   </>
                 )}
               </Button>
@@ -106,7 +108,7 @@ const AIImageGeneratorPage: React.FC = () => {
           <CardHeader className="border-b border-slate-200 dark:border-slate-700 bg-gradient-to-r from-slate-50 to-slate-100 dark:from-slate-800 dark:to-slate-900">
             <CardTitle className="dark:text-white flex items-center gap-2">
               <ImageIcon className="h-5 w-5 text-pink-600 dark:text-pink-400" />
-              Generated Result
+              {t('aiImageGenerator.generatedResult')}
             </CardTitle>
           </CardHeader>
           <CardContent className="pt-6">
@@ -116,7 +118,7 @@ const AIImageGeneratorPage: React.FC = () => {
                   <div className="w-20 h-20 border-4 border-pink-200 dark:border-pink-900/50 rounded-full"></div>
                   <div className="absolute top-0 left-0 w-20 h-20 border-4 border-pink-600 dark:border-pink-400 border-t-transparent rounded-full animate-spin"></div>
                 </div>
-                <p className="text-gray-600 dark:text-gray-400 text-center">Creating your masterpiece...</p>
+                <p className="text-gray-600 dark:text-gray-400 text-center">{t('aiImageGenerator.creatingMasterpiece')}</p>
               </div>
             )}
 
@@ -136,13 +138,13 @@ const AIImageGeneratorPage: React.FC = () => {
                       className="bg-white/90 hover:bg-white"
                     >
                       <Download className="h-4 w-4 mr-2" />
-                      Download
+                      {t('common.download')}
                     </Button>
                   </div>
                 </div>
                 <div className="p-3 bg-slate-50 dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-700">
                   <p className="text-sm text-gray-600 dark:text-gray-400">
-                    <span className="font-semibold dark:text-white">Prompt:</span> {mutation.data.prompt}
+                    <span className="font-semibold dark:text-white">{t('aiImageGenerator.prompt')}:</span> {mutation.data.prompt}
                   </p>
                 </div>
               </div>
@@ -153,8 +155,8 @@ const AIImageGeneratorPage: React.FC = () => {
                 <div className="w-20 h-20 bg-gradient-to-br from-pink-100 to-rose-100 dark:from-pink-900/50 dark:to-rose-900/50 rounded-full flex items-center justify-center mb-4">
                   <ImageIcon className="h-10 w-10 text-pink-600 dark:text-pink-400" />
                 </div>
-                <h3 className="text-lg font-semibold text-gray-800 dark:text-white mb-2">No image yet</h3>
-                <p className="text-gray-500 dark:text-gray-400">Enter a prompt and click generate to create an image</p>
+                <h3 className="text-lg font-semibold text-gray-800 dark:text-white mb-2">{t('aiImageGenerator.noImageYet')}</h3>
+                <p className="text-gray-500 dark:text-gray-400">{t('aiImageGenerator.enterPromptToGenerate')}</p>
               </div>
             )}
           </CardContent>

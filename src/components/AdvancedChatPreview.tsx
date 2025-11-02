@@ -17,6 +17,8 @@ import { cn } from "@/lib/utils";
 import { Agent } from "@/types";
 import { useToast } from "@/hooks/use-toast";
 import { BACKEND_URL } from "@/config/env";
+import { useTranslation } from 'react-i18next';
+import { useI18n } from '@/hooks/useI18n';
 
 const initialCustomizationState = {
   primary_color: "linear-gradient(135deg, #3B82F6 0%, #8B5CF6 50%, #EC4899 100%)", // AgentConnect gradient
@@ -67,6 +69,8 @@ interface ChatMessage {
 const generateSessionId = () => `preview_session_${Math.random().toString(36).substring(2, 15)}`;
 
 export const AdvancedChatPreview = () => {
+  const { t } = useTranslation();
+  const { isRTL } = useI18n();
   const { toast } = useToast();
   const [selectedAgentId, setSelectedAgentId] = useState<number | null>(null);
   const [isTyping, setIsTyping] = useState(false);
@@ -113,16 +117,16 @@ export const AdvancedChatPreview = () => {
             setLiveKitToken(data.access_token);
           } else {
             toast({
-              title: "Error",
-              description: "Failed to get voice call token.",
+              title: t('designer.error'),
+              description: t('designer.failedGetToken'),
               variant: "destructive",
             });
           }
         } catch (error) {
           console.error("Failed to fetch voice call token:", error);
           toast({
-            title: "Error",
-            description: "An unexpected error occurred while getting the voice call token.",
+            title: t('designer.error'),
+            description: t('designer.errorGetToken'),
             variant: "destructive",
           });
         }
@@ -315,22 +319,22 @@ export const AdvancedChatPreview = () => {
       });
       if (response.ok) {
         toast({
-          title: "Success",
-          description: "Widget settings saved successfully.",
+          title: t('designer.success'),
+          description: t('designer.widgetSettingsSaved'),
         });
       } else {
         const errorData = await response.json();
         toast({
-          title: "Error",
-          description: `Failed to save widget settings: ${errorData.detail || 'Unknown error'}`,
+          title: t('designer.error'),
+          description: `${t('designer.failedSaveSettings')}: ${errorData.detail || 'Unknown error'}`,
           variant: "destructive",
         });
       }
     } catch (error) {
       console.error("Failed to save widget settings:", error);
       toast({
-        title: "Error",
-        description: "An unexpected error occurred.",
+        title: t('designer.error'),
+        description: t('designer.unexpectedError'),
         variant: "destructive",
       });
     }
@@ -351,16 +355,16 @@ export const AdvancedChatPreview = () => {
       } else {
         const errorData = await response.json();
         toast({
-          title: "Error",
-          description: `Failed to publish: ${errorData.detail || 'Unknown error'}`,
+          title: t('designer.error'),
+          description: `${t('designer.failedPublish')}: ${errorData.detail || 'Unknown error'}`,
           variant: "destructive",
         });
       }
     } catch (error) {
       console.error("Failed to publish:", error);
       toast({
-        title: "Error",
-        description: "An unexpected error occurred while publishing.",
+        title: t('designer.error'),
+        description: t('designer.errorPublishing'),
         variant: "destructive",
       });
     }
@@ -412,11 +416,11 @@ export const AdvancedChatPreview = () => {
         <div className="xl:col-span-1">
           <div className="sticky top-6">
             <div className="bg-white dark:bg-slate-800 rounded-lg p-6 border border-slate-200 dark:border-slate-700 card-shadow-lg">
-              <h3 className="text-xl font-bold dark:text-white mb-2 flex items-center gap-2">
+              <h3 className={`text-xl font-bold dark:text-white mb-2 flex items-center gap-2`}>
                 <span className="text-2xl">👁️</span>
-                Live Preview
+                {t('designer.livePreview')}
               </h3>
-              <p className="text-sm text-muted-foreground dark:text-gray-400 mb-6">Changes reflect in real-time</p>
+              <p className="text-sm text-muted-foreground dark:text-gray-400 mb-6">{t('designer.livePreviewDesc')}</p>
 
               <div className="flex justify-center">
                 <div className="bg-gradient-to-br from-gray-50 to-gray-200 dark:from-slate-900 dark:to-slate-800 p-4 rounded-xl relative overflow-hidden border-2 border-slate-300 dark:border-slate-600 shadow-xl" style={{ fontFamily: customization.font_family, width: width + 40, height: height + 80 }}>
@@ -516,9 +520,9 @@ export const AdvancedChatPreview = () => {
       <Dialog open={isPublishDialogOpen} onOpenChange={setIsPublishDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Published Successfully!</DialogTitle>
+            <DialogTitle>{t('designer.publishedSuccess')}</DialogTitle>
             <DialogDescription>
-              Your widget has been published. Share the URL below with your client for a live demo.
+              {t('designer.publishedDesc')}
             </DialogDescription>
           </DialogHeader>
           <div className="mt-4">
@@ -531,10 +535,10 @@ export const AdvancedChatPreview = () => {
               className="mt-2 w-full"
               onClick={() => {
                 navigator.clipboard.writeText(publishedUrl || "");
-                toast({ title: "Copied to clipboard!" });
+                toast({ title: t('designer.copiedClipboard') });
               }}
             >
-              Copy URL
+              {t('designer.copyUrl')}
             </Button>
           </div>
         </DialogContent>

@@ -12,8 +12,10 @@ import { Switch } from "@/components/ui/switch";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { SubscriptionPlan } from "@/types";
 import { PlusCircle, Edit, Trash2 } from "lucide-react";
+import { useI18n } from '@/hooks/useI18n';
 
 export const SubscriptionManagementPage = () => {
+  const { t, isRTL } = useI18n();
   const { authFetch } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -55,12 +57,12 @@ export const SubscriptionManagementPage = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['subscriptionPlans'] });
-      toast({ title: "Subscription plan created successfully!" });
+      toast({ title: t('subscriptionPlans.planCreatedSuccess') });
       setIsCreatePlanDialogOpen(false);
       setFormData({ name: "", price: 0, currency: "USD", features: "", is_active: true });
     },
     onError: (error) => {
-      toast({ title: "Failed to create plan", description: error.message, variant: "destructive" });
+      toast({ title: t('subscriptionPlans.planCreatedError'), description: error.message, variant: "destructive" });
     },
   });
 
@@ -79,12 +81,12 @@ export const SubscriptionManagementPage = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['subscriptionPlans'] });
-      toast({ title: "Subscription plan updated successfully!" });
+      toast({ title: t('subscriptionPlans.planUpdatedSuccess') });
       setIsEditPlanDialogOpen(false);
       setCurrentPlan(null);
     },
     onError: (error) => {
-      toast({ title: "Failed to update plan", description: error.message, variant: "destructive" });
+      toast({ title: t('subscriptionPlans.planUpdatedError'), description: error.message, variant: "destructive" });
     },
   });
 
@@ -101,10 +103,10 @@ export const SubscriptionManagementPage = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['subscriptionPlans'] });
-      toast({ title: "Subscription plan deleted successfully!" });
+      toast({ title: t('subscriptionPlans.planDeletedSuccess') });
     },
     onError: (error) => {
-      toast({ title: "Failed to delete plan", description: error.message, variant: "destructive" });
+      toast({ title: t('subscriptionPlans.planDeletedError'), description: error.message, variant: "destructive" });
     },
   });
 
@@ -139,30 +141,30 @@ export const SubscriptionManagementPage = () => {
     <div className="flex items-center justify-center py-12">
       <div className="flex items-center gap-2 text-muted-foreground dark:text-gray-400">
         <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-amber-600 dark:border-amber-400"></div>
-        <span>Loading subscription plans...</span>
+        <span>{t('subscriptionPlans.loading')}</span>
       </div>
     </div>
   );
   if (isError) return (
     <div className="text-center py-12">
-      <div className="text-red-600 dark:text-red-400">Error loading subscription plans.</div>
+      <div className="text-red-600 dark:text-red-400">{t('subscriptionPlans.errorLoading')}</div>
     </div>
   );
 
   return (
-    <div className="w-full max-w-7xl mx-auto space-y-8">
+    <div className="w-full max-w-7xl mx-auto space-y-8" dir={isRTL ? 'rtl' : 'ltr'}>
       <header>
         <h1 className="text-4xl font-bold bg-gradient-to-r from-amber-600 to-orange-600 bg-clip-text text-transparent mb-2">
-          💳 Subscription Plans
+          💳 {t('subscriptionPlans.title')}
         </h1>
-        <p className="text-gray-600 dark:text-gray-400 text-lg">Manage pricing plans and subscription tiers for your platform</p>
+        <p className="text-gray-600 dark:text-gray-400 text-lg">{t('subscriptionPlans.subtitle')}</p>
       </header>
 
       <Card className="card-shadow-lg border-slate-200 dark:border-slate-700 dark:bg-slate-800">
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4 border-b border-slate-200 dark:border-slate-700 bg-gradient-to-r from-slate-50 to-slate-100 dark:from-slate-800 dark:to-slate-900">
-          <CardTitle className="text-2xl font-bold dark:text-white">All Plans</CardTitle>
+        <CardHeader className={`flex flex-row items-center ${isRTL ? 'flex-row-reverse' : ''} justify-between space-y-0 pb-4 border-b border-slate-200 dark:border-slate-700 bg-gradient-to-r from-slate-50 to-slate-100 dark:from-slate-800 dark:to-slate-900`}>
+          <CardTitle className="text-2xl font-bold dark:text-white">{t('subscriptionPlans.allPlans')}</CardTitle>
           <Button onClick={() => setIsCreatePlanDialogOpen(true)} className="bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700 text-white shadow-lg hover:shadow-xl transition-all">
-            <PlusCircle className="mr-2 h-4 w-4" /> Create New Plan
+            <PlusCircle className={`${isRTL ? 'ml-2' : 'mr-2'} h-4 w-4`} /> {t('subscriptionPlans.createNewPlan')}
           </Button>
         </CardHeader>
         <CardContent className="pt-6">
@@ -170,11 +172,11 @@ export const SubscriptionManagementPage = () => {
           <Table>
             <TableHeader>
               <TableRow className="border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700/50">
-                <TableHead className="dark:text-gray-300">Name</TableHead>
-                <TableHead className="dark:text-gray-300">Price</TableHead>
-                <TableHead className="dark:text-gray-300">Features</TableHead>
-                <TableHead className="dark:text-gray-300">Active</TableHead>
-                <TableHead className="text-right dark:text-gray-300">Actions</TableHead>
+                <TableHead className="dark:text-gray-300">{t('subscriptionPlans.name')}</TableHead>
+                <TableHead className="dark:text-gray-300">{t('subscriptionPlans.price')}</TableHead>
+                <TableHead className="dark:text-gray-300">{t('subscriptionPlans.features')}</TableHead>
+                <TableHead className="dark:text-gray-300">{t('subscriptionPlans.active')}</TableHead>
+                <TableHead className={`${isRTL ? 'text-left' : 'text-right'} dark:text-gray-300`}>{t('subscriptionPlans.actions')}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -191,11 +193,11 @@ export const SubscriptionManagementPage = () => {
                         ? 'bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-400'
                         : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400'
                     }`}>
-                      {plan.is_active ? "Active" : "Inactive"}
+                      {plan.is_active ? t('subscriptionPlans.activeStatus') : t('subscriptionPlans.inactiveStatus')}
                     </span>
                   </TableCell>
-                  <TableCell className="text-right">
-                    <Button variant="outline" size="sm" className="mr-2 dark:border-slate-600 dark:text-white dark:hover:bg-slate-700" onClick={() => handleEditClick(plan)}>
+                  <TableCell className={isRTL ? 'text-left' : 'text-right'}>
+                    <Button variant="outline" size="sm" className={`${isRTL ? 'ml-2' : 'mr-2'} dark:border-slate-600 dark:text-white dark:hover:bg-slate-700`} onClick={() => handleEditClick(plan)}>
                       <Edit className="h-4 w-4" />
                     </Button>
                     <Button variant="destructive" size="sm" className="bg-red-600 hover:bg-red-700" onClick={() => deletePlanMutation.mutate(plan.id)}>
@@ -211,8 +213,8 @@ export const SubscriptionManagementPage = () => {
             <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-br from-amber-100 to-orange-100 dark:from-amber-900/50 dark:to-orange-900/50 mb-4">
               <PlusCircle className="w-8 h-8 text-amber-600 dark:text-amber-400" />
             </div>
-            <h3 className="text-lg font-semibold text-gray-800 dark:text-white">No subscription plans found</h3>
-            <p className="text-gray-500 dark:text-gray-400 mt-2">Create your first plan to get started!</p>
+            <h3 className="text-lg font-semibold text-gray-800 dark:text-white">{t('subscriptionPlans.noPlansFound')}</h3>
+            <p className="text-gray-500 dark:text-gray-400 mt-2">{t('subscriptionPlans.createFirstPlan')}</p>
           </div>
         )}
       </CardContent>
@@ -220,25 +222,25 @@ export const SubscriptionManagementPage = () => {
 
       {/* Create Plan Dialog */}
       <Dialog open={isCreatePlanDialogOpen} onOpenChange={setIsCreatePlanDialogOpen}>
-        <DialogContent className="dark:bg-slate-800 dark:border-slate-700">
+        <DialogContent className="dark:bg-slate-800 dark:border-slate-700" dir={isRTL ? 'rtl' : 'ltr'}>
           <DialogHeader>
-            <DialogTitle className="dark:text-white">Create New Subscription Plan</DialogTitle>
+            <DialogTitle className="dark:text-white">{t('subscriptionPlans.createDialogTitle')}</DialogTitle>
           </DialogHeader>
           <form onSubmit={handleCreateSubmit} className="space-y-4">
             <div>
-              <Label htmlFor="name" className="dark:text-gray-300">Plan Name</Label>
+              <Label htmlFor="name" className="dark:text-gray-300">{t('subscriptionPlans.planName')}</Label>
               <Input
                 id="name"
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                 required
                 className="dark:bg-slate-900 dark:border-slate-600 dark:text-white"
-                placeholder="e.g., Premium Plan"
+                placeholder={t('subscriptionPlans.planNamePlaceholder')}
               />
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="price" className="dark:text-gray-300">Price</Label>
+                <Label htmlFor="price" className="dark:text-gray-300">{t('subscriptionPlans.priceLabel')}</Label>
                 <Input
                   id="price"
                   type="number"
@@ -247,46 +249,46 @@ export const SubscriptionManagementPage = () => {
                   onChange={(e) => setFormData({ ...formData, price: parseFloat(e.target.value) })}
                   required
                   className="dark:bg-slate-900 dark:border-slate-600 dark:text-white"
-                  placeholder="29.99"
+                  placeholder={t('subscriptionPlans.pricePlaceholder')}
                 />
               </div>
               <div>
-                <Label htmlFor="currency" className="dark:text-gray-300">Currency</Label>
+                <Label htmlFor="currency" className="dark:text-gray-300">{t('subscriptionPlans.currency')}</Label>
                 <Input
                   id="currency"
                   value={formData.currency}
                   onChange={(e) => setFormData({ ...formData, currency: e.target.value })}
                   className="dark:bg-slate-900 dark:border-slate-600 dark:text-white"
-                  placeholder="USD"
+                  placeholder={t('subscriptionPlans.currencyPlaceholder')}
                 />
               </div>
             </div>
             <div>
-              <Label htmlFor="features" className="dark:text-gray-300">Features (comma-separated)</Label>
+              <Label htmlFor="features" className="dark:text-gray-300">{t('subscriptionPlans.featuresLabel')}</Label>
               <Textarea
                 id="features"
                 value={formData.features}
                 onChange={(e) => setFormData({ ...formData, features: e.target.value })}
                 className="dark:bg-slate-900 dark:border-slate-600 dark:text-white"
-                placeholder="Unlimited agents, Priority support, Custom integrations"
+                placeholder={t('subscriptionPlans.featuresPlaceholder')}
                 rows={3}
               />
             </div>
-            <div className="flex items-center space-x-2">
+            <div className={`flex items-center ${isRTL ? 'space-x-reverse' : ''} space-x-2`}>
               <Switch
                 id="is_active"
                 checked={formData.is_active}
                 onCheckedChange={(checked) => setFormData({ ...formData, is_active: checked })}
                 className="dark:bg-slate-700"
               />
-              <Label htmlFor="is_active" className="dark:text-gray-300">Active</Label>
+              <Label htmlFor="is_active" className="dark:text-gray-300">{t('subscriptionPlans.activeLabel')}</Label>
             </div>
-            <DialogFooter>
+            <DialogFooter className={isRTL ? 'flex-row-reverse' : ''}>
               <Button type="button" variant="outline" onClick={() => setIsCreatePlanDialogOpen(false)} className="dark:border-slate-600 dark:text-white dark:hover:bg-slate-700">
-                Cancel
+                {t('common.cancel')}
               </Button>
               <Button type="submit" disabled={createPlanMutation.isPending} className="bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700 text-white">
-                {createPlanMutation.isPending ? "Creating..." : "Create Plan"}
+                {createPlanMutation.isPending ? t('subscriptionPlans.creating') : t('subscriptionPlans.createPlan')}
               </Button>
             </DialogFooter>
           </form>
@@ -295,13 +297,13 @@ export const SubscriptionManagementPage = () => {
 
       {/* Edit Plan Dialog */}
       <Dialog open={isEditPlanDialogOpen} onOpenChange={setIsEditPlanDialogOpen}>
-        <DialogContent className="dark:bg-slate-800 dark:border-slate-700">
+        <DialogContent className="dark:bg-slate-800 dark:border-slate-700" dir={isRTL ? 'rtl' : 'ltr'}>
           <DialogHeader>
-            <DialogTitle className="dark:text-white">Edit Subscription Plan</DialogTitle>
+            <DialogTitle className="dark:text-white">{t('subscriptionPlans.editDialogTitle')}</DialogTitle>
           </DialogHeader>
           <form onSubmit={handleEditSubmit} className="space-y-4">
             <div>
-              <Label htmlFor="edit-name" className="dark:text-gray-300">Plan Name</Label>
+              <Label htmlFor="edit-name" className="dark:text-gray-300">{t('subscriptionPlans.planName')}</Label>
               <Input
                 id="edit-name"
                 value={formData.name}
@@ -312,7 +314,7 @@ export const SubscriptionManagementPage = () => {
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="edit-price" className="dark:text-gray-300">Price</Label>
+                <Label htmlFor="edit-price" className="dark:text-gray-300">{t('subscriptionPlans.priceLabel')}</Label>
                 <Input
                   id="edit-price"
                   type="number"
@@ -324,7 +326,7 @@ export const SubscriptionManagementPage = () => {
                 />
               </div>
               <div>
-                <Label htmlFor="edit-currency" className="dark:text-gray-300">Currency</Label>
+                <Label htmlFor="edit-currency" className="dark:text-gray-300">{t('subscriptionPlans.currency')}</Label>
                 <Input
                   id="edit-currency"
                   value={formData.currency}
@@ -334,7 +336,7 @@ export const SubscriptionManagementPage = () => {
               </div>
             </div>
             <div>
-              <Label htmlFor="edit-features" className="dark:text-gray-300">Features (comma-separated)</Label>
+              <Label htmlFor="edit-features" className="dark:text-gray-300">{t('subscriptionPlans.featuresLabel')}</Label>
               <Textarea
                 id="edit-features"
                 value={formData.features}
@@ -343,21 +345,21 @@ export const SubscriptionManagementPage = () => {
                 rows={3}
               />
             </div>
-            <div className="flex items-center space-x-2">
+            <div className={`flex items-center ${isRTL ? 'space-x-reverse' : ''} space-x-2`}>
               <Switch
                 id="edit-is_active"
                 checked={formData.is_active}
                 onCheckedChange={(checked) => setFormData({ ...formData, is_active: checked })}
                 className="dark:bg-slate-700"
               />
-              <Label htmlFor="edit-is_active" className="dark:text-gray-300">Active</Label>
+              <Label htmlFor="edit-is_active" className="dark:text-gray-300">{t('subscriptionPlans.activeLabel')}</Label>
             </div>
-            <DialogFooter>
+            <DialogFooter className={isRTL ? 'flex-row-reverse' : ''}>
               <Button type="button" variant="outline" onClick={() => setIsEditPlanDialogOpen(false)} className="dark:border-slate-600 dark:text-white dark:hover:bg-slate-700">
-                Cancel
+                {t('common.cancel')}
               </Button>
               <Button type="submit" disabled={updatePlanMutation.isPending} className="bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700 text-white">
-                {updatePlanMutation.isPending ? "Saving..." : "Save Changes"}
+                {updatePlanMutation.isPending ? t('subscriptionPlans.saving') : t('subscriptionPlans.saveChanges')}
               </Button>
             </DialogFooter>
           </form>

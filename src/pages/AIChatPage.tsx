@@ -12,6 +12,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Send, Bot, MessageCircle, Loader2, Sparkles } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useI18n } from '@/hooks/useI18n';
 
 interface ChatMessage {
   id: number;
@@ -21,6 +22,7 @@ interface ChatMessage {
 }
 
 const AIChatPage: React.FC = () => {
+  const { t, isRTL } = useI18n();
   const [selectedAgent, setSelectedAgent] = useState<Agent | null>(null);
   const [conversationId, setConversationId] = useState<string | undefined>(undefined);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -59,26 +61,26 @@ const AIChatPage: React.FC = () => {
   }, [messages]);
 
   return (
-    <div className="h-[calc(100vh-4rem)] flex bg-slate-50 dark:bg-slate-900 overflow-hidden">
+    <div className="h-[calc(100vh-4rem)] flex bg-slate-50 dark:bg-slate-900 overflow-hidden" dir={isRTL ? 'rtl' : 'ltr'}>
       {/* Sidebar - Agents & Conversations */}
       <div className="w-80 flex-shrink-0 border-r border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 flex flex-col">
         <div className="p-4 border-b border-slate-200 dark:border-slate-700 bg-gradient-to-r from-slate-50 to-slate-100 dark:from-slate-800 dark:to-slate-900">
           <h2 className="text-xl font-bold dark:text-white flex items-center gap-2">
             <MessageCircle className="h-5 w-5 text-cyan-600 dark:text-cyan-400" />
-            AI Chat
+            {t('aiChat.title')}
           </h2>
-          <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">Chat with your AI agents</p>
+          <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">{t('aiChat.subtitle')}</p>
         </div>
 
         <div className="p-4 border-b border-slate-200 dark:border-slate-700">
-          <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">Select Agent</label>
+          <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">{t('aiChat.selectAgent')}</label>
           <Select onValueChange={(value) => setSelectedAgent(agents?.find(a => a.id === parseInt(value)) || null)}>
             <SelectTrigger className="dark:bg-slate-900 dark:border-slate-600 dark:text-white">
-              <SelectValue placeholder="Choose an agent..." />
+              <SelectValue placeholder={t('aiChat.chooseAgent')} />
             </SelectTrigger>
             <SelectContent className="dark:bg-slate-800 dark:border-slate-700">
               {isLoadingAgents ? (
-                <SelectItem value="loading" disabled className="dark:text-gray-400">Loading agents...</SelectItem>
+                <SelectItem value="loading" disabled className="dark:text-gray-400">{t('common.loading')}</SelectItem>
               ) : (
                 agents?.map(agent => (
                   <SelectItem key={agent.id} value={String(agent.id)} className="dark:text-white dark:focus:bg-slate-700">
@@ -96,7 +98,7 @@ const AIChatPage: React.FC = () => {
                 </div>
                 <div>
                   <p className="text-sm font-semibold text-cyan-900 dark:text-cyan-100">{selectedAgent.name}</p>
-                  <p className="text-xs text-cyan-700 dark:text-cyan-300">Active</p>
+                  <p className="text-xs text-cyan-700 dark:text-cyan-300">{t('common.active')}</p>
                 </div>
               </div>
             </div>
@@ -104,11 +106,11 @@ const AIChatPage: React.FC = () => {
         </div>
 
         <div className="flex-1 overflow-y-auto p-4">
-          <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Conversation History</h3>
+          <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">{t('aiChat.conversationHistory')}</h3>
           <div className="space-y-2">
             <div className="p-3 rounded-lg bg-slate-100 dark:bg-slate-700 cursor-pointer border-l-4 border-cyan-500">
-              <p className="text-sm font-medium dark:text-white">Current Chat</p>
-              <p className="text-xs text-gray-500 dark:text-gray-400">{messages.length} messages</p>
+              <p className="text-sm font-medium dark:text-white">{t('aiChat.currentChat')}</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400">{messages.length} {t('aiChat.messages')}</p>
             </div>
           </div>
         </div>
@@ -124,9 +126,9 @@ const AIChatPage: React.FC = () => {
             </div>
             <div>
               <h3 className="font-semibold dark:text-white">
-                {selectedAgent ? selectedAgent.name : 'AI Assistant'}
+                {selectedAgent ? selectedAgent.name : t('aiChat.aiAssistant')}
               </h3>
-              <p className="text-xs text-gray-500 dark:text-gray-400">Always here to help</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400">{t('aiChat.alwaysHereToHelp')}</p>
             </div>
           </div>
         </div>
@@ -138,9 +140,9 @@ const AIChatPage: React.FC = () => {
               <div className="w-20 h-20 bg-gradient-to-br from-cyan-100 to-blue-100 dark:from-cyan-900/50 dark:to-blue-900/50 rounded-full flex items-center justify-center mb-4">
                 <Sparkles className="h-10 w-10 text-cyan-600 dark:text-cyan-400" />
               </div>
-              <h3 className="text-xl font-semibold text-gray-800 dark:text-white mb-2">Start a conversation</h3>
+              <h3 className="text-xl font-semibold text-gray-800 dark:text-white mb-2">{t('aiChat.startConversation')}</h3>
               <p className="text-gray-500 dark:text-gray-400 max-w-md">
-                {selectedAgent ? `Chat with ${selectedAgent.name} to get started` : 'Select an agent and send a message to begin'}
+                {selectedAgent ? t('aiChat.chatWithAgent', { agentName: selectedAgent.name }) : t('aiChat.selectAgentToBegin')}
               </p>
             </div>
           ) : (
@@ -168,7 +170,7 @@ const AIChatPage: React.FC = () => {
                   {msg.sender === 'user' && (
                     <Avatar className="w-8 h-8 border-2 border-blue-500 dark:border-blue-400">
                       <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white text-xs">
-                        You
+                        {t('aiChat.you')}
                       </AvatarFallback>
                     </Avatar>
                   )}
@@ -184,7 +186,7 @@ const AIChatPage: React.FC = () => {
                   <div className="p-4 rounded-2xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-bl-sm">
                     <div className="flex items-center gap-2">
                       <Loader2 className="h-4 w-4 animate-spin text-cyan-600 dark:text-cyan-400" />
-                      <span className="text-sm text-gray-500 dark:text-gray-400">Thinking...</span>
+                      <span className="text-sm text-gray-500 dark:text-gray-400">{t('aiChat.thinking')}</span>
                     </div>
                   </div>
                 </div>
@@ -198,7 +200,7 @@ const AIChatPage: React.FC = () => {
         <div className="p-4 border-t border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 flex-shrink-0">
           <form onSubmit={handleSendMessage} className="flex items-end gap-3 max-w-4xl mx-auto">
             <Input
-              placeholder="Type your message..."
+              placeholder={t('aiChat.typeYourMessage')}
               value={inputValue}
               onChange={(e) => setInputValue(e.target.value)}
               className="flex-1 rounded-2xl border-slate-300 dark:border-slate-600 dark:bg-slate-900 dark:text-white focus:ring-2 focus:ring-cyan-500 dark:focus:ring-cyan-400 py-3 px-4"
@@ -214,7 +216,7 @@ const AIChatPage: React.FC = () => {
               ) : (
                 <>
                   <Send className="h-5 w-5 mr-2" />
-                  Send
+                  {t('aiChat.send')}
                 </>
               )}
             </Button>

@@ -9,11 +9,13 @@ import { Plus, Trash2, Edit, Search, Play } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { useAuth } from "@/hooks/useAuth";
+import { useI18n } from "@/hooks/useI18n";
 
 const ToolManagementPage = () => {
   const queryClient = useQueryClient();
   const companyId = 1; // Hardcoded for now
   const { authFetch } = useAuth();
+  const { t, isRTL } = useI18n();
 
   const { data: tools, isLoading: isLoadingTools } = useQuery<Tool[]>({ queryKey: ['tools', companyId], queryFn: async () => {
     const response = await authFetch(`/api/v1/tools/`);
@@ -111,15 +113,15 @@ const ToolManagementPage = () => {
   }
 
   return (
-    <div className="w-full max-w-7xl mx-auto space-y-8">
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+    <div className={`space-y-6 p-6 animate-fade-in text-left`}>
+      <div className={`flex justify-between items-start`}>
         <div>
-          <h1 className="text-4xl font-bold bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent mb-2">
-            🛠️ Custom Tools
-          </h1>
-          <p className="text-gray-600 dark:text-gray-400">Create and manage custom tools for your AI agents</p>
+          <h2 className="text-4xl font-bold bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent mb-2">
+            {t("tools.title")}
+          </h2>
+          <p className="text-gray-600 dark:text-gray-400 text-lg">{t("tools.subtitle")}</p>
         </div>
-        <div className="flex gap-2">
+        <div className={`flex gap-2`}>
           <Dialog open={isCreateDialogOpen} onOpenChange={(isOpen) => {
             setIsCreateDialogOpen(isOpen);
             if (!isOpen) {
@@ -127,15 +129,15 @@ const ToolManagementPage = () => {
             }
           }}>
             <DialogTrigger asChild>
-              <Button className="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white shadow-lg hover:shadow-xl transition-all">
-                <Plus className="mr-2 h-4 w-4" /> Create Tool
+              <Button className={`bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white shadow-lg hover:shadow-xl transition-all flex items-center ${isRTL ? 'flex-row-reverse' : ''}`}>
+                <Plus className={`h-4 w-4 ${isRTL ? 'ml-2' : 'mr-2'}`} /> {t("tools.createTool")}
               </Button>
             </DialogTrigger>
             <DialogContent className="sm:max-w-lg dark:bg-slate-800 dark:border-slate-700">
               <DialogHeader>
-                <DialogTitle className="dark:text-white">Create a New Tool</DialogTitle>
-                <DialogDescription className="dark:text-gray-400">
-                  Select the type of tool you want to create. Each type serves a different purpose.
+                <DialogTitle className={`dark:text-white text-left`}>{t("tools.createDialog.title")}</DialogTitle>
+                <DialogDescription className={`dark:text-gray-400 text-left`}>
+                  {t("tools.createDialog.description")}
                 </DialogDescription>
               </DialogHeader>
               {creationStep === 'initial' && (
@@ -144,13 +146,13 @@ const ToolManagementPage = () => {
                     className="group relative p-6 border border-slate-200 dark:border-slate-700 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-all cursor-pointer"
                     onClick={() => setCreationStep('custom')}
                   >
-                    <div className="flex flex-col items-start gap-3">
+                    <div className={`flex flex-col gap-3 ${isRTL ? 'items-end' : 'items-start'}`}>
                       <div className="bg-gradient-to-br from-emerald-100 to-teal-100 dark:from-emerald-900/50 dark:to-teal-900/50 p-3 rounded-lg">
                         <Edit className="h-6 w-6 text-emerald-600 dark:text-emerald-400" />
                       </div>
-                      <h3 className="text-lg font-semibold dark:text-white">Custom Tool</h3>
+                      <h3 className="text-lg font-semibold dark:text-white">{t("tools.createDialog.customTool")}</h3>
                       <p className="text-sm text-gray-600 dark:text-gray-400">
-                        Write your own Python code to perform any action. Best for unique, internal logic.
+                        {t("tools.createDialog.customToolDescription")}
                       </p>
                     </div>
                   </div>
@@ -158,13 +160,13 @@ const ToolManagementPage = () => {
                     className="group relative p-6 border border-slate-200 dark:border-slate-700 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-all cursor-pointer"
                     onClick={() => setCreationStep('mcp')}
                   >
-                    <div className="flex flex-col items-start gap-3">
+                    <div className={`flex flex-col gap-3 ${isRTL ? 'items-end' : 'items-start'}`}>
                       <div className="bg-gradient-to-br from-teal-100 to-cyan-100 dark:from-teal-900/50 dark:to-cyan-900/50 p-3 rounded-lg">
                         <Search className="h-6 w-6 text-teal-600 dark:text-teal-400" />
                       </div>
-                      <h3 className="text-lg font-semibold dark:text-white">MCP Connection</h3>
+                      <h3 className="text-lg font-semibold dark:text-white">{t("tools.createDialog.mcpConnection")}</h3>
                       <p className="text-sm text-gray-600 dark:text-gray-400">
-                        Connect to an external MCP server to use its library of pre-built tools.
+                        {t("tools.createDialog.mcpConnectionDescription")}
                       </p>
                     </div>
                   </div>
@@ -183,23 +185,23 @@ const ToolManagementPage = () => {
 
       <Card className="card-shadow-lg border-slate-200 dark:border-slate-700 dark:bg-slate-800">
         <CardHeader className="border-b border-slate-200 dark:border-slate-700 bg-gradient-to-r from-slate-50 to-slate-100 dark:from-slate-800 dark:to-slate-900">
-          <CardTitle className="flex items-center gap-2 dark:text-white">
+          <CardTitle className={`flex items-center gap-2 dark:text-white`}>
             <Search className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
-            Existing Tools
+            {t("tools.existingTools")}
           </CardTitle>
         </CardHeader>
         <CardContent className="pt-6 space-y-4">
           <Input
-            placeholder="Search existing tools..."
+            placeholder={t("tools.searchPlaceholder")}
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="dark:bg-slate-900 dark:border-slate-600 dark:text-white"
+            className={`dark:bg-slate-900 dark:border-slate-600 dark:text-white text-left`}
           />
           {isLoadingTools ? (
             <div className="flex items-center justify-center py-8">
-              <div className="flex items-center gap-2 text-muted-foreground dark:text-gray-400">
+              <div className={`flex items-center gap-2 text-muted-foreground dark:text-gray-400 ${isRTL ? 'flex-row-reverse' : ''}`}>
                 <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-emerald-600 dark:border-emerald-400"></div>
-                <span>Loading tools...</span>
+                <span>{t("tools.loading")}</span>
               </div>
             </div>
           ) : filteredTools && filteredTools.length > 0 ? (
@@ -209,7 +211,7 @@ const ToolManagementPage = () => {
                   <h4 className="font-semibold flex items-center gap-2 dark:text-white">
                     {tool.name}
                     <span className="text-xs font-normal bg-gradient-to-r from-emerald-100 to-teal-100 dark:from-emerald-900/50 dark:to-teal-900/50 text-emerald-700 dark:text-emerald-400 py-0.5 px-2 rounded-full border border-emerald-200 dark:border-emerald-800">
-                      {tool.tool_type === 'mcp' ? 'MCP Connection' : 'Custom'}
+                      {tool.tool_type === 'mcp' ? t("tools.toolTypes.mcpConnection") : t("tools.toolTypes.custom")}
                     </span>
                   </h4>
                   <p className="text-sm text-gray-600 dark:text-gray-400">{tool.description}</p>
@@ -223,8 +225,8 @@ const ToolManagementPage = () => {
                         setIsEditDialogOpen(isOpen);
                       }}>
                         <DialogTrigger asChild>
-                          <Button variant="outline" size="sm" onClick={() => setSelectedTool(tool)} className="dark:border-slate-600 dark:text-white dark:hover:bg-slate-700">
-                            <Edit className="h-4 w-4 mr-1" /> Edit
+                          <Button variant="outline" size="sm" onClick={() => setSelectedTool(tool)} className={`dark:border-slate-600 dark:text-white dark:hover:bg-slate-700 flex items-center ${isRTL ? 'flex-row-reverse' : ''}`}>
+                            <Edit className={`h-4 w-4 ${isRTL ? 'ml-1' : 'mr-1'}`} /> {t("tools.edit")}
                           </Button>
                         </DialogTrigger>
                         <DialogContent className="dark:bg-slate-800 dark:border-slate-700">
@@ -244,8 +246,8 @@ const ToolManagementPage = () => {
                         setIsTestDialogOpen(isOpen);
                       }}>
                         <DialogTrigger asChild>
-                          <Button variant="outline" size="sm" onClick={() => setSelectedTool(tool)} className="dark:border-slate-600 dark:text-white dark:hover:bg-slate-700">
-                            <Play className="h-4 w-4 mr-1" /> Test
+                          <Button variant="outline" size="sm" onClick={() => setSelectedTool(tool)} className={`dark:border-slate-600 dark:text-white dark:hover:bg-slate-700 flex items-center ${isRTL ? 'flex-row-reverse' : ''}`}>
+                            <Play className={`h-4 w-4 ${isRTL ? 'ml-1' : 'mr-1'}`} /> {t("tools.test")}
                           </Button>
                         </DialogTrigger>
                         <DialogContent className="dark:bg-slate-800 dark:border-slate-700">
@@ -267,8 +269,8 @@ const ToolManagementPage = () => {
               <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-slate-100 dark:bg-slate-800 mb-4">
                 <Search className="w-8 h-8 text-slate-400 dark:text-slate-500" />
               </div>
-              <h3 className="text-lg font-semibold text-gray-800 dark:text-white">No tools found</h3>
-              <p className="text-gray-500 dark:text-gray-400 mt-2">Create your first tool to get started</p>
+              <h3 className="text-lg font-semibold text-gray-800 dark:text-white">{t("tools.noToolsFound")}</h3>
+              <p className="text-gray-500 dark:text-gray-400 mt-2">{t("tools.createFirstTool")}</p>
             </div>
           )}
         </CardContent>
@@ -278,6 +280,7 @@ const ToolManagementPage = () => {
 };
 
 const ToolForm = ({ tool, onSubmit, onBack }: { tool?: Tool, onSubmit: (values: any) => void, onBack: () => void }) => {
+  const { t, isRTL } = useI18n();
   const [values, setValues] = useState(tool || { name: "", description: "", code: "", parameters: { type: "object", properties: {}, required: [] }, tool_type: "custom" });
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -286,44 +289,44 @@ const ToolForm = ({ tool, onSubmit, onBack }: { tool?: Tool, onSubmit: (values: 
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4 pt-4">
+    <form onSubmit={handleSubmit} className={`space-y-4 pt-4 text-left}`}>
       <div>
-        <Label htmlFor="tool-name" className="dark:text-gray-300">Tool Name</Label>
+        <Label htmlFor="tool-name" className="dark:text-gray-300">{t("tools.forms.toolName")}</Label>
         <Input
           id="tool-name"
-          placeholder="e.g., Calculate Tax"
+          placeholder={t("tools.forms.toolNamePlaceholder")}
           value={values.name}
           onChange={(e) => setValues({ ...values, name: e.target.value })}
           required
-          className="dark:bg-slate-900 dark:border-slate-600 dark:text-white"
+          className={`dark:bg-slate-900 dark:border-slate-600 dark:text-white text-left}`}
         />
       </div>
       <div>
-        <Label htmlFor="tool-description" className="dark:text-gray-300">Description</Label>
+        <Label htmlFor="tool-description" className="dark:text-gray-300">{t("tools.forms.description")}</Label>
         <Textarea
           id="tool-description"
-          placeholder="Describe what this tool does..."
+          placeholder={t("tools.forms.descriptionPlaceholder")}
           value={values.description}
           onChange={(e) => setValues({ ...values, description: e.target.value })}
-          className="dark:bg-slate-900 dark:border-slate-600 dark:text-white"
+          className={`dark:bg-slate-900 dark:border-slate-600 dark:text-white text-left}`}
           rows={2}
         />
       </div>
       <div>
-        <Label htmlFor="tool-code" className="dark:text-gray-300">Python Code</Label>
+        <Label htmlFor="tool-code" className="dark:text-gray-300">{t("tools.forms.pythonCode")}</Label>
         <Textarea
           id="tool-code"
-          placeholder="def execute():\n    # Your code here\n    return result"
+          placeholder={t("tools.forms.pythonCodePlaceholder")}
           value={values.code}
           onChange={(e) => setValues({ ...values, code: e.target.value })}
           rows={10}
-          className="font-mono text-sm dark:bg-slate-900 dark:border-slate-600 dark:text-white"
+          className={`font-mono text-sm dark:bg-slate-900 dark:border-slate-600 dark:text-white ${isRTL ? 'text-right' : 'text-left'}`}
         />
       </div>
-      <div className="flex justify-between pt-2">
-        <Button type="button" variant="ghost" onClick={onBack} className="dark:text-white dark:hover:bg-slate-700">Back</Button>
+      <div className={`flex justify-between pt-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
+        <Button type="button" variant="ghost" onClick={onBack} className="dark:text-white dark:hover:bg-slate-700">{t("tools.forms.back")}</Button>
         <Button type="submit" className="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white">
-          {tool ? "Update Tool" : "Create Tool"}
+          {tool ? t("tools.forms.updateTool") : t("tools.forms.createTool")}
         </Button>
       </div>
     </form>
@@ -331,6 +334,7 @@ const ToolForm = ({ tool, onSubmit, onBack }: { tool?: Tool, onSubmit: (values: 
 };
 
 const McpToolForm = ({ tool, onSubmit, onBack }: { tool?: Tool, onSubmit: (values: any) => void, onBack: () => void }) => {
+  const { t, isRTL } = useI18n();
   const [name, setName] = useState(tool?.name || "");
   const [description, setDescription] = useState(tool?.description || "");
   const [url, setUrl] = useState(tool?.mcp_server_url || "");
@@ -389,35 +393,35 @@ const McpToolForm = ({ tool, onSubmit, onBack }: { tool?: Tool, onSubmit: (value
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4 pt-4">
+    <form onSubmit={handleSubmit} className={`space-y-4 pt-4 text-left}`}>
       <div>
-        <Label htmlFor="mcp-name" className="dark:text-gray-300">Connection Name</Label>
+        <Label htmlFor="mcp-name" className="dark:text-gray-300">{t("tools.forms.connectionName")}</Label>
         <Input
           id="mcp-name"
-          placeholder="e.g., My Internal Tools"
+          placeholder={t("tools.forms.connectionNamePlaceholder")}
           value={name}
           onChange={(e) => setName(e.target.value)}
           required
-          className="dark:bg-slate-900 dark:border-slate-600 dark:text-white"
+          className={`dark:bg-slate-900 dark:border-slate-600 dark:text-white text-left}`}
         />
       </div>
       <div>
-        <Label htmlFor="mcp-description" className="dark:text-gray-300">Description</Label>
+        <Label htmlFor="mcp-description" className="dark:text-gray-300">{t("tools.forms.description")}</Label>
         <Textarea
           id="mcp-description"
-          placeholder="Description of this MCP connection"
+          placeholder={t("tools.forms.mcpDescriptionPlaceholder")}
           value={description}
           onChange={(e) => setDescription(e.target.value)}
-          className="dark:bg-slate-900 dark:border-slate-600 dark:text-white"
+          className={`dark:bg-slate-900 dark:border-slate-600 dark:text-white text-left}`}
           rows={2}
         />
       </div>
       <div>
-        <Label htmlFor="mcp-url" className="dark:text-gray-300">MCP Server URL</Label>
-        <div className="flex items-start gap-2">
+        <Label htmlFor="mcp-url" className="dark:text-gray-300">{t("tools.forms.mcpServerUrl")}</Label>
+        <div className={`flex items-start gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
           <Input
             id="mcp-url"
-            placeholder="https://mcp-server.example.com"
+            placeholder={t("tools.forms.mcpUrlPlaceholder")}
             value={url}
             onChange={(e) => {
               setUrl(e.target.value);
@@ -427,42 +431,42 @@ const McpToolForm = ({ tool, onSubmit, onBack }: { tool?: Tool, onSubmit: (value
             }}
             required
             type="url"
-            className="dark:bg-slate-900 dark:border-slate-600 dark:text-white"
+            className={`dark:bg-slate-900 dark:border-slate-600 dark:text-white text-left}`}
           />
           <Button type="button" onClick={() => inspect(url)} disabled={isInspecting || !url} variant="outline" className="dark:border-slate-600 dark:text-white dark:hover:bg-slate-700 whitespace-nowrap">
-            {isInspecting ? "Inspecting..." : "Test & Inspect"}
+            {isInspecting ? t("tools.forms.inspecting") : t("tools.forms.testInspect")}
           </Button>
         </div>
       </div>
 
       {authRequired && (
-        <div className="p-4 border bg-yellow-50 dark:bg-yellow-900/20 border-yellow-200 dark:border-yellow-800 rounded-lg text-center">
-          <h4 className="font-semibold text-yellow-800 dark:text-yellow-300">Authentication Required</h4>
-          <p className="text-sm text-yellow-700 dark:text-yellow-400 mb-4">This MCP server requires you to authenticate with your Google account.</p>
+        <div className={`p-4 border bg-yellow-50 dark:bg-yellow-900/20 border-yellow-200 dark:border-yellow-800 rounded-lg text-center text-left}`}>
+          <h4 className="font-semibold text-yellow-800 dark:text-yellow-300">{t("tools.forms.authRequired")}</h4>
+          <p className="text-sm text-yellow-700 dark:text-yellow-400 mb-4">{t("tools.forms.authRequiredMessage")}</p>
           <Button type="button" onClick={handleAuthenticate} className="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white">
-            Connect to Google
+            {t("tools.forms.connectToGoogle")}
           </Button>
         </div>
       )}
 
       {inspectData && inspected && !authRequired && (
-        <div className="p-4 border bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800 rounded-lg">
-          <h4 className="font-semibold text-green-800 dark:text-green-300">Inspection Successful!</h4>
-          <p className="text-sm text-green-700 dark:text-green-400">Found {inspectData.tools.length} tools on this server.</p>
+        <div className={`p-4 border bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800 rounded-lg text-left}`}>
+          <h4 className="font-semibold text-green-800 dark:text-green-300">{t("tools.forms.inspectionSuccess")}</h4>
+          <p className="text-sm text-green-700 dark:text-green-400">{t("tools.forms.foundTools", { count: inspectData.tools.length })}</p>
         </div>
       )}
 
       {inspectError && (
-         <div className="p-4 border bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800 rounded-lg">
-          <h4 className="font-semibold text-red-800 dark:text-red-300">Inspection Failed</h4>
+         <div className={`p-4 border bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800 rounded-lg text-left}`}>
+          <h4 className="font-semibold text-red-800 dark:text-red-300">{t("tools.forms.inspectionFailed")}</h4>
           <p className="text-sm text-red-700 dark:text-red-400">{inspectError.message}</p>
         </div>
       )}
 
-      <div className="flex justify-between pt-2">
-        <Button type="button" variant="ghost" onClick={onBack} className="dark:text-white dark:hover:bg-slate-700">Back</Button>
+      <div className={`flex justify-between pt-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
+        <Button type="button" variant="ghost" onClick={onBack} className="dark:text-white dark:hover:bg-slate-700">{t("tools.forms.back")}</Button>
         <Button type="submit" disabled={!inspected && !tool} className="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white">
-          {tool ? "Update Connection" : "Create Connection"}
+          {tool ? t("tools.forms.updateConnection") : t("tools.forms.createConnection")}
         </Button>
       </div>
     </form>

@@ -20,19 +20,27 @@ interface ResourceSelectorProps<T extends Resource> {
   triggerButtonText: string;
   isLoading: boolean;
   allowMultiple?: boolean;
+  isOpen?: boolean;
+  onClose?: () => void;
 }
 
-export function ResourceSelector<T extends Resource>({ 
-  resources, 
-  selectedIds, 
-  onSelect, 
-  title, 
+export function ResourceSelector<T extends Resource>({
+  resources,
+  selectedIds,
+  onSelect,
+  title,
   triggerButtonText,
   isLoading,
-  allowMultiple = true
+  allowMultiple = true,
+  isOpen: externalIsOpen,
+  onClose: externalOnClose
 }: ResourceSelectorProps<T>) {
-  const [isOpen, setIsOpen] = useState(false);
+  const [internalIsOpen, setInternalIsOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
+
+  // Use external state if provided, otherwise use internal state
+  const isOpen = externalIsOpen !== undefined ? externalIsOpen : internalIsOpen;
+  const setIsOpen = externalOnClose ? externalOnClose : setInternalIsOpen;
 
   const filteredResources = resources.filter(resource => 
     (resource.name || '').toLowerCase().includes(searchTerm.toLowerCase())
@@ -46,12 +54,25 @@ export function ResourceSelector<T extends Resource>({
       onSelect(newSelectedIds);
     } else {
       onSelect([id]);
-      setIsOpen(false); // Close dialog on single selection
+      // Close dialog on single selection
+      if (externalOnClose) {
+        externalOnClose();
+      } else {
+        setInternalIsOpen(false);
+      }
+    }
+  };
+
+  const handleOpenChange = (open: boolean) => {
+    if (externalOnClose && !open) {
+      externalOnClose();
+    } else {
+      setInternalIsOpen(open);
     }
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+    <Dialog open={isOpen} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
         <Button variant="outline">{triggerButtonText}</Button>
       </DialogTrigger>

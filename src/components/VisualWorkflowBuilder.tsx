@@ -28,12 +28,14 @@ import {
 } from './CustomNodes';
 import { useAuth } from "@/hooks/useAuth";
 import { Comments } from './Comments';
+import { useI18n } from '@/hooks/useI18n';
 
 const initialNodes = [
   { id: 'start-node', type: 'start', data: { label: 'Start' }, position: { x: 250, y: 5 } },
 ];
 
 const VisualWorkflowBuilder = () => {
+  const { t, isRTL } = useI18n();
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
   const [reactFlowInstance, setReactFlowInstance] = useState(null);
@@ -73,7 +75,7 @@ const VisualWorkflowBuilder = () => {
           setEdges(data.visual_steps.edges || []);
         }
       } catch (error) {
-        toast.error("Failed to load workflow.");
+        toast.error(t("workflows.editor.toasts.loadFailed"));
         navigate('/dashboard/workflows');
       }
     };
@@ -91,13 +93,13 @@ const VisualWorkflowBuilder = () => {
     const hasTriggerNode = nodes.some(node => triggerTypes.includes(node.type));
 
     if (!hasStartNode && !hasTriggerNode) {
-      errors.push("Missing Start node or Trigger node (WebSocket, WhatsApp, Telegram, Instagram)");
+      errors.push(t("workflows.editor.validation.missingStartNode"));
     }
 
     // Check for output node
     const hasOutputNode = nodes.some(node => node.type === 'output');
     if (!hasOutputNode) {
-      errors.push("Missing Output node");
+      errors.push(t("workflows.editor.validation.missingOutputNode"));
     }
 
     // Check each node for required connections
@@ -113,15 +115,15 @@ const VisualWorkflowBuilder = () => {
         const hasFalseEdge = outgoingEdges.some(edge => edge.sourceHandle === 'false');
 
         if (!hasTrueEdge) {
-          errors.push(`Condition node "${node.data.label || node.id}" is missing TRUE edge`);
+          errors.push(t("workflows.editor.validation.missingTrueEdge", { label: node.data.label || node.id }));
         }
         if (!hasFalseEdge) {
-          errors.push(`Condition node "${node.data.label || node.id}" is missing FALSE edge`);
+          errors.push(t("workflows.editor.validation.missingFalseEdge", { label: node.data.label || node.id }));
         }
       }
       // Check all other nodes (except start, triggers, and output) have at least one outgoing edge
       else if (node.type !== 'start' && !triggerTypes.includes(node.type) && outgoingEdges.length === 0) {
-        errors.push(`Node "${node.data.label || node.id}" has no outgoing connection`);
+        errors.push(t("workflows.editor.validation.noOutgoingConnection", { label: node.data.label || node.id }));
       }
     });
 
@@ -152,7 +154,7 @@ const VisualWorkflowBuilder = () => {
       nodes.forEach(node => {
         const isEntryPoint = node.type === 'start' || triggerTypes.includes(node.type);
         if (!connectedNodeIds.has(node.id) && !isEntryPoint) {
-          errors.push(`Node "${node.data.label || node.id}" is not connected to the workflow`);
+          errors.push(t("workflows.editor.validation.notConnected", { label: node.data.label || node.id }));
         }
       });
     }
@@ -161,15 +163,15 @@ const VisualWorkflowBuilder = () => {
   };
 
   const saveWorkflow = async (details) => {
-    if (!workflow) return toast.error("No workflow selected.");
+    if (!workflow) return toast.error(t("workflows.editor.toasts.loadFailed"));
 
     // Validate workflow before saving
     const validationErrors = validateWorkflow();
     if (validationErrors.length > 0) {
       toast.error(
-        <div className="space-y-2">
-          <div className="font-semibold">Cannot save workflow. Please fix the following issues:</div>
-          <ul className="list-disc list-inside space-y-1">
+        <div className="space-y-2" dir={isRTL ? 'rtl' : 'ltr'}>
+          <div className="font-semibold">{t("workflows.editor.validation.cannotSave")}</div>
+          <ul className={`list-disc ${isRTL ? 'list-inside pr-4' : 'list-inside pl-4'} space-y-1`}>
             {validationErrors.map((error, index) => (
               <li key={index} className="text-sm">{error}</li>
             ))}
@@ -196,9 +198,9 @@ const VisualWorkflowBuilder = () => {
       if (!response.ok) throw new Error('Save failed');
       const savedWorkflow = await response.json();
       setWorkflow(savedWorkflow);
-      toast.success("Workflow saved successfully.");
+      toast.success(t("workflows.editor.toasts.saveSuccess"));
     } catch (error) {
-      toast.error(`Save failed: ${error.message}`);
+      toast.error(t("workflows.editor.toasts.saveFailed", { message: error.message }));
     }
   };
   
@@ -231,12 +233,12 @@ const VisualWorkflowBuilder = () => {
       setNodes((nds) => nds.filter((node) => node.id !== selectedNode.id));
       setEdges((eds) => eds.filter((edge) => edge.source !== selectedNode.id && edge.target !== selectedNode.id));
       setSelectedNode(null);
-      toast.success("Node deleted.");
+      toast.success(t("workflows.editor.toasts.nodeDeleted"));
     }
-  }, [selectedNode, setNodes, setEdges]);
+  }, [selectedNode, setNodes, setEdges, t]);
 
   if (!workflow) {
-    return <div>Loading...</div>;
+    return <div className="text-center p-8 dark:text-white">{t("workflows.editor.loading")}</div>;
   }
 
   return (
@@ -254,46 +256,46 @@ const VisualWorkflowBuilder = () => {
       />
       <div className="dndflow h-screen flex flex-col bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-950">
         {/* Enhanced Toolbar */}
-        <div className="flex-shrink-0 px-6 py-4 border-b border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-sm">
-          <div className="flex items-center gap-4 flex-wrap">
+        <div className="flex-shrink-0 px-6 py-4 border-b border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-sm" dir={isRTL ? 'rtl' : 'ltr'}>
+          <div className={`flex items-center gap-4 flex-wrap `}>
             <Button onClick={() => navigate('/dashboard/workflows')} variant="outline" size="sm" className="btn-hover-lift">
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Back
+              <ArrowLeft className={`h-4 w-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
+              {t("workflows.editor.backButton")}
             </Button>
             <div className="flex-grow min-w-0">
-              <div className="flex items-center gap-3">
+              <div className={`flex items-center gap-3 `}>
                 <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center flex-shrink-0">
                   <WorkflowIcon className="h-4 w-4 text-white" />
                 </div>
                 <div className="min-w-0">
                   <h2 className="text-lg font-bold truncate dark:text-white">{workflow.name}</h2>
-                  <div className="flex items-center gap-2">
-                    <Badge variant="outline" className="text-xs dark:border-slate-600 dark:text-slate-300">v{workflow.version}</Badge>
+                  <div className={`flex items-center gap-2 `}>
+                    <Badge variant="outline" className="text-xs dark:border-slate-600 dark:text-slate-300">{t("workflows.editor.versionBadge", { version: workflow.version })}</Badge>
                     {workflow.is_active && (
                       <Badge className="bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-400 border-green-200 dark:border-green-800 text-xs">
-                        <Sparkles className="h-3 w-3 mr-1" />
-                        Active
+                        <Sparkles className={`h-3 w-3 ${isRTL ? 'ml-1' : 'mr-1'}`} />
+                        {t("workflows.editor.activebadge")}
                       </Badge>
                     )}
                   </div>
                 </div>
               </div>
             </div>
-            <div className="flex items-center gap-2">
+            <div className={`flex items-center gap-2 `}>
               <Button onClick={() => setDetailsDialogOpen(true)} variant="outline" size="sm" className="btn-hover-lift">
-                <Edit className="h-4 w-4 mr-2" />
-                Edit Details
+                <Edit className={`h-4 w-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
+                {t("workflows.editor.editDetailsButton")}
               </Button>
               <Button onClick={() => setShowSettings(true)} variant="outline" size="sm" className="btn-hover-lift">
-                <Settings className="h-4 w-4 mr-2" />
-                Settings
+                <Settings className={`h-4 w-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
+                {t("workflows.editor.settingsButton")}
               </Button>
               <Button
                 onClick={() => saveWorkflow()}
                 size="sm"
                 className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 btn-hover-lift"
               >
-                Save Workflow
+                {t("workflows.editor.saveButton")}
               </Button>
             </div>
           </div>

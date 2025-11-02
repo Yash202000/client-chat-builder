@@ -13,6 +13,7 @@ import {
   DialogTitle,
   DialogFooter,
 } from '@/components/ui/dialog';
+import { useI18n } from '@/hooks/useI18n';
 
 interface Intent {
   id: string;
@@ -35,6 +36,7 @@ export const IntentDialog: React.FC<IntentDialogProps> = ({
   intent,
   onSave,
 }) => {
+  const { t, isRTL } = useI18n();
   const [formData, setFormData] = useState<Intent>({
     id: '',
     name: '',
@@ -104,13 +106,13 @@ export const IntentDialog: React.FC<IntentDialogProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto" dir={isRTL ? 'rtl' : 'ltr'}>
         <DialogHeader>
           <DialogTitle>
-            {intent ? 'Edit Intent' : 'Add New Intent'}
+            {intent ? t('workflows.intentDialog.editTitle') : t('workflows.intentDialog.createTitle')}
           </DialogTitle>
           <DialogDescription>
-            Configure how users can trigger this workflow with natural language
+            {t('workflows.intentDialog.description')}
           </DialogDescription>
         </DialogHeader>
 
@@ -118,39 +120,38 @@ export const IntentDialog: React.FC<IntentDialogProps> = ({
           {/* Intent Name */}
           <div className="space-y-2">
             <Label htmlFor="intent-name">
-              Intent Name <span className="text-red-500">*</span>
+              {t('workflows.intentDialog.nameLabel')} <span className="text-red-500">*</span>
             </Label>
             <Input
               id="intent-name"
               value={formData.name}
               onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-              placeholder="e.g., request_refund, book_appointment"
+              placeholder={t('workflows.intentDialog.namePlaceholder')}
               className="font-mono"
+              dir={isRTL ? 'rtl' : 'ltr'}
             />
-            <p className="text-xs text-slate-600 dark:text-slate-400">
-              Use snake_case format for consistency
-            </p>
           </div>
 
           {/* Keywords */}
           <div className="space-y-2">
-            <Label>Keywords</Label>
+            <Label>{t('workflows.intentDialog.keywordsLabel')}</Label>
             <p className="text-xs text-slate-600 dark:text-slate-400 mb-2">
-              Single words that indicate this intent (fast matching)
+              {t('workflows.intentDialog.keywordsHint')}
             </p>
-            <div className="flex gap-2">
+            <div className={`flex gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
               <Input
                 value={keywordInput}
                 onChange={(e) => setKeywordInput(e.target.value)}
                 onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddKeyword())}
-                placeholder="e.g., refund, return, money"
+                placeholder={t('workflows.intentDialog.keywordsPlaceholder')}
+                dir={isRTL ? 'rtl' : 'ltr'}
               />
               <Button onClick={handleAddKeyword} type="button">
                 <Plus className="h-4 w-4" />
               </Button>
             </div>
             {formData.keywords.length > 0 && (
-              <div className="flex flex-wrap gap-2 mt-3 p-3 bg-slate-50 dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700">
+              <div className={`flex flex-wrap gap-2 mt-3 p-3 bg-slate-50 dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 ${isRTL ? 'flex-row-reverse' : ''}`}>
                 {formData.keywords.map((keyword, idx) => (
                   <Badge
                     key={idx}
@@ -172,16 +173,17 @@ export const IntentDialog: React.FC<IntentDialogProps> = ({
 
           {/* Training Phrases */}
           <div className="space-y-2">
-            <Label>Training Phrases</Label>
+            <Label>{t('workflows.intentDialog.trainingPhrasesLabel')}</Label>
             <p className="text-xs text-slate-600 dark:text-slate-400 mb-2">
-              Example sentences users might say (for similarity matching)
+              {t('workflows.intentDialog.trainingPhrasesHint')}
             </p>
-            <div className="flex gap-2">
+            <div className={`flex gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
               <Input
                 value={phraseInput}
                 onChange={(e) => setPhraseInput(e.target.value)}
                 onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddPhrase())}
-                placeholder="e.g., I want a refund for my order"
+                placeholder={t('workflows.intentDialog.trainingPhrasesPlaceholder')}
+                dir={isRTL ? 'rtl' : 'ltr'}
               />
               <Button onClick={handleAddPhrase} type="button">
                 <Plus className="h-4 w-4" />
@@ -192,7 +194,7 @@ export const IntentDialog: React.FC<IntentDialogProps> = ({
                 {formData.training_phrases.map((phrase, idx) => (
                   <div
                     key={idx}
-                    className="flex items-center justify-between p-2 bg-slate-50 dark:bg-slate-800 rounded border border-slate-200 dark:border-slate-700"
+                    className={`flex items-center justify-between p-2 bg-slate-50 dark:bg-slate-800 rounded border border-slate-200 dark:border-slate-700 ${isRTL ? 'flex-row-reverse' : ''}`}
                   >
                     <span className="text-sm text-slate-900 dark:text-white">
                       "{phrase}"
@@ -214,7 +216,7 @@ export const IntentDialog: React.FC<IntentDialogProps> = ({
           {/* Confidence Threshold */}
           <div className="space-y-2">
             <Label htmlFor="confidence">
-              Confidence Threshold ({Math.round(formData.confidence_threshold * 100)}%)
+              {t('workflows.intentDialog.confidenceLabel')} ({Math.round(formData.confidence_threshold * 100)}%)
             </Label>
             <input
               id="confidence"
@@ -232,21 +234,21 @@ export const IntentDialog: React.FC<IntentDialogProps> = ({
               className="w-full h-2 bg-slate-200 dark:bg-slate-700 rounded-lg appearance-none cursor-pointer accent-violet-500"
             />
             <p className="text-xs text-slate-600 dark:text-slate-400">
-              Minimum confidence required to match this intent
+              {t('workflows.intentDialog.confidenceHint')}
             </p>
           </div>
         </div>
 
-        <DialogFooter>
+        <DialogFooter className={isRTL ? 'flex-row-reverse' : ''}>
           <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Cancel
+            {t('workflows.intentDialog.cancelButton')}
           </Button>
           <Button
             onClick={handleSave}
             disabled={!formData.name.trim()}
             className="bg-gradient-to-r from-violet-500 to-purple-500 hover:from-violet-600 hover:to-purple-600"
           >
-            Save Intent
+            {t('workflows.intentDialog.saveButton')}
           </Button>
         </DialogFooter>
       </DialogContent>

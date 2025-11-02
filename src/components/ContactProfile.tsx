@@ -9,12 +9,16 @@ import { Mail, Phone, User, Edit, Save, MapPin, Calendar, Tag, Activity } from '
 import { useState, useEffect } from 'react';
 import { toast } from '@/hooks/use-toast';
 import { useAuth } from "@/hooks/useAuth";
+import { useTranslation } from 'react-i18next';
+import { useI18n } from '@/hooks/useI18n';
 
 interface ContactProfileProps {
   sessionId: string;
 }
 
 export const ContactProfile: React.FC<ContactProfileProps> = ({ sessionId }) => {
+  const { t } = useTranslation();
+  const { isRTL } = useI18n();
   const queryClient = useQueryClient();
   const companyId = 1; // Hardcoded company ID
   const [isEditing, setIsEditing] = useState(false);
@@ -48,10 +52,10 @@ export const ContactProfile: React.FC<ContactProfileProps> = ({ sessionId }) => 
     }).then(res => { if (!res.ok) throw new Error('Failed to update contact'); return res.json() }),
     onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: ['contact', sessionId] });
-        toast({ title: 'Success', variant: 'success', description: 'Contact updated successfully.' });
+        toast({ title: t('conversations.contact.toasts.success'), variant: 'success', description: t('conversations.contact.toasts.contactUpdated') });
         setIsEditing(false);
     },
-    onError: (e: Error) => toast({ title: 'Error', description: e.message, variant: 'destructive' }),
+    onError: (e: Error) => toast({ title: t('conversations.contact.toasts.error'), description: e.message, variant: 'destructive' }),
   });
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -63,7 +67,7 @@ export const ContactProfile: React.FC<ContactProfileProps> = ({ sessionId }) => 
     if (contact?.id) {
         updateContactMutation.mutate(formData);
     } else {
-        toast({ title: 'Error', description: 'Cannot save, contact ID is missing.', variant: 'destructive' });
+        toast({ title: t('conversations.contact.toasts.error'), description: t('conversations.contact.toasts.missingContactId'), variant: 'destructive' });
     }
   };
 
@@ -79,7 +83,7 @@ export const ContactProfile: React.FC<ContactProfileProps> = ({ sessionId }) => 
         <CardContent className="flex items-center justify-center h-full">
           <div className="text-center">
             <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600 mx-auto mb-3"></div>
-            <p className="text-sm text-muted-foreground">Loading contact...</p>
+            <p className="text-sm text-muted-foreground">{t('conversations.loadingContact')}</p>
           </div>
         </CardContent>
       </Card>
@@ -96,8 +100,8 @@ export const ContactProfile: React.FC<ContactProfileProps> = ({ sessionId }) => 
               <User className="h-5 w-5 text-white" />
             </div>
             <div>
-              <CardTitle className="text-xl font-bold dark:text-white">Contact Profile</CardTitle>
-              <CardDescription className="text-xs dark:text-gray-400">Customer information</CardDescription>
+              <CardTitle className="text-xl font-bold dark:text-white">{t('conversations.contact.title')}</CardTitle>
+              <CardDescription className="text-xs dark:text-gray-400">{t('conversations.contact.subtitle')}</CardDescription>
             </div>
           </div>
           <Button
@@ -110,12 +114,12 @@ export const ContactProfile: React.FC<ContactProfileProps> = ({ sessionId }) => 
             {isEditing ? (
               <>
                 <Save className="h-4 w-4 mr-2" />
-                {updateContactMutation.isPending ? 'Saving...' : 'Save'}
+                {updateContactMutation.isPending ? t('conversations.contact.saving') : t('conversations.contact.save')}
               </>
             ) : (
               <>
                 <Edit className="h-4 w-4 mr-2" />
-                Edit
+                {t('conversations.contact.edit')}
               </>
             )}
           </Button>
@@ -132,12 +136,12 @@ export const ContactProfile: React.FC<ContactProfileProps> = ({ sessionId }) => 
             </AvatarFallback>
           </Avatar>
           <h3 className="mt-3 text-lg font-semibold text-center dark:text-white">
-            {formData.name || 'Unknown Contact'}
+            {formData.name || t('conversations.contact.unknownContact')}
           </h3>
           {contact?.created_at && (
-            <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1">
+            <p className={`text-xs text-muted-foreground mt-1 flex items-center gap-1 ${isRTL ? 'flex-row-reverse' : ''}`}>
               <Calendar className="h-3 w-3" />
-              Joined {new Date(contact.created_at).toLocaleDateString()}
+              {t('conversations.contact.joined', { date: new Date(contact.created_at).toLocaleDateString() })}
             </p>
           )}
         </div>
@@ -145,14 +149,14 @@ export const ContactProfile: React.FC<ContactProfileProps> = ({ sessionId }) => 
         {/* Contact Information */}
         <div className="space-y-3">
           <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">
-            Contact Details
+            {t('conversations.contact.details')}
           </h4>
 
           {/* Name Field */}
           <div className="bg-white dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-700 p-3 card-shadow">
-            <Label htmlFor="name" className="text-xs font-medium text-gray-600 dark:text-gray-400 mb-2 flex items-center gap-2">
+            <Label htmlFor="name" className={`text-xs font-medium text-gray-600 dark:text-gray-400 mb-2 flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
               <User className="h-3 w-3" />
-              Full Name
+              {t('conversations.contact.fullName')}
             </Label>
             {isEditing ? (
               <Input
@@ -161,18 +165,18 @@ export const ContactProfile: React.FC<ContactProfileProps> = ({ sessionId }) => 
                 value={formData.name || ''}
                 onChange={handleInputChange}
                 className="mt-1"
-                placeholder="Enter name"
+                placeholder={t('conversations.contact.namePlaceholder')}
               />
             ) : (
-              <p className="text-sm font-medium mt-1 dark:text-white">{formData.name || 'Not provided'}</p>
+              <p className="text-sm font-medium mt-1 dark:text-white">{formData.name || t('conversations.contact.notProvided')}</p>
             )}
           </div>
 
           {/* Email Field */}
           <div className="bg-white dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-700 p-3 card-shadow">
-            <Label htmlFor="email" className="text-xs font-medium text-gray-600 dark:text-gray-400 mb-2 flex items-center gap-2">
+            <Label htmlFor="email" className={`text-xs font-medium text-gray-600 dark:text-gray-400 mb-2 flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
               <Mail className="h-3 w-3" />
-              Email Address
+              {t('conversations.contact.emailAddress')}
             </Label>
             {isEditing ? (
               <Input
@@ -182,18 +186,18 @@ export const ContactProfile: React.FC<ContactProfileProps> = ({ sessionId }) => 
                 value={formData.email || ''}
                 onChange={handleInputChange}
                 className="mt-1"
-                placeholder="email@example.com"
+                placeholder={t('conversations.contact.emailPlaceholder')}
               />
             ) : (
-              <p className="text-sm font-medium mt-1 break-words dark:text-white">{formData.email || 'Not provided'}</p>
+              <p className="text-sm font-medium mt-1 break-words dark:text-white">{formData.email || t('conversations.contact.notProvided')}</p>
             )}
           </div>
 
           {/* Phone Field */}
           <div className="bg-white dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-700 p-3 card-shadow">
-            <Label htmlFor="phone_number" className="text-xs font-medium text-gray-600 dark:text-gray-400 mb-2 flex items-center gap-2">
+            <Label htmlFor="phone_number" className={`text-xs font-medium text-gray-600 dark:text-gray-400 mb-2 flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
               <Phone className="h-3 w-3" />
-              Phone Number
+              {t('conversations.contact.phoneNumber')}
             </Label>
             {isEditing ? (
               <Input
@@ -202,30 +206,30 @@ export const ContactProfile: React.FC<ContactProfileProps> = ({ sessionId }) => 
                 value={formData.phone_number || ''}
                 onChange={handleInputChange}
                 className="mt-1"
-                placeholder="+1 (555) 000-0000"
+                placeholder={t('conversations.contact.phonePlaceholder')}
               />
             ) : (
-              <p className="text-sm font-medium mt-1 dark:text-white">{formData.phone_number || 'Not provided'}</p>
+              <p className="text-sm font-medium mt-1 dark:text-white">{formData.phone_number || t('conversations.contact.notProvided')}</p>
             )}
           </div>
         </div>
 
         {/* Activity Section */}
         <div className="bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-950/30 dark:to-purple-950/30 rounded-lg p-4 border border-blue-200 dark:border-blue-900">
-          <h4 className="text-xs font-semibold text-blue-900 dark:text-blue-400 uppercase tracking-wider mb-3 flex items-center gap-2">
+          <h4 className={`text-xs font-semibold text-blue-900 dark:text-blue-400 uppercase tracking-wider mb-3 flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
             <Activity className="h-3 w-3" />
-            Activity
+            {t('conversations.contact.activity')}
           </h4>
           <div className="space-y-2">
             <div className="flex items-center justify-between text-sm">
-              <span className="text-gray-600 dark:text-gray-400">Session ID:</span>
+              <span className="text-gray-600 dark:text-gray-400">{t('conversations.contact.sessionIdLabel')}</span>
               <span className="font-mono text-xs bg-white dark:bg-slate-800 px-2 py-1 rounded border border-slate-300 dark:border-slate-600 dark:text-white">
                 {sessionId.slice(0, 8)}...
               </span>
             </div>
             {contact?.id && (
               <div className="flex items-center justify-between text-sm">
-                <span className="text-gray-600 dark:text-gray-400">Contact ID:</span>
+                <span className="text-gray-600 dark:text-gray-400">{t('conversations.contact.contactIdLabel')}</span>
                 <span className="font-mono text-xs bg-white dark:bg-slate-800 px-2 py-1 rounded border border-slate-300 dark:border-slate-600 dark:text-white">
                   #{contact.id}
                 </span>
@@ -244,7 +248,7 @@ export const ContactProfile: React.FC<ContactProfileProps> = ({ sessionId }) => 
               setFormData(contact || {});
             }}
           >
-            Cancel
+            {t('conversations.contact.cancel')}
           </Button>
         )}
       </CardContent>

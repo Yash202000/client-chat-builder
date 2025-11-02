@@ -26,8 +26,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
 import { ReopenAnalytics } from "@/components/ReopenAnalytics";
+import { useI18n } from "@/hooks/useI18n";
 
-function DatePicker({ date, setDate, placeholder }) {
+function DatePicker({ date, setDate, placeholder, isRTL }) {
   const handleDateSelect = (selectedDate) => {
     // Prevent date from being deselected (set to undefined)
     if (selectedDate) {
@@ -41,11 +42,11 @@ function DatePicker({ date, setDate, placeholder }) {
         <Button
           variant={"outline"}
           className={cn(
-            "w-[200px] justify-start text-left font-normal dark:bg-slate-800 dark:border-slate-600 dark:text-white dark:hover:bg-slate-700",
+            `w-[200px] font-normal dark:bg-slate-800 dark:border-slate-600 dark:text-white dark:hover:bg-slate-700 flex items-center ${isRTL ? 'flex-row-reverse justify-end text-right' : 'justify-start text-left'}`,
             !date && "text-muted-foreground dark:text-muted-foreground"
           )}
         >
-          <CalendarIcon className="mr-2 h-4 w-4" />
+          <CalendarIcon className={`h-4 w-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
           {date ? format(date, "PPP") : <span>{placeholder}</span>}
         </Button>
       </PopoverTrigger>
@@ -64,6 +65,7 @@ function DatePicker({ date, setDate, placeholder }) {
 
 export const Reports = () => {
   const { authFetch, companyId } = useAuth();
+  const { t, isRTL } = useI18n();
   const [dateRange, setDateRange] = useState({
     from: new Date(),
     to: new Date(),
@@ -248,7 +250,7 @@ export const Reports = () => {
 
   const metrics = [
     {
-      title: "Total Sessions",
+      title: t("reports.metrics.totalSessions"),
       value: metricsData?.total_sessions ?? "N/A",
       change: "+12%", // Placeholder, needs backend calculation
       trend: "up",
@@ -256,7 +258,7 @@ export const Reports = () => {
       color: "text-blue-600"
     },
     {
-      title: "Avg Response Time",
+      title: t("reports.metrics.avgResponseTime"),
       value: latencyData?.avg_response_time ?? "N/A",
       change: "-15%", // Placeholder
       trend: "down",
@@ -264,7 +266,7 @@ export const Reports = () => {
       color: "text-green-600"
     },
     {
-      title: "Customer Satisfaction",
+      title: t("reports.metrics.customerSatisfaction"),
       value: metricsData?.customer_satisfaction ?? "N/A",
       change: "+0.2", // Placeholder
       trend: "up",
@@ -272,7 +274,7 @@ export const Reports = () => {
       color: "text-yellow-600"
     },
     {
-      title: "Active Agents",
+      title: t("reports.metrics.activeAgents"),
       value: metricsData?.active_agents ?? "N/A",
       change: "+3%", // Placeholder
       trend: "up",
@@ -280,7 +282,7 @@ export const Reports = () => {
       color: "text-purple-600"
     },
     {
-      title: "Overall Error Rate",
+      title: t("reports.metrics.overallErrorRate"),
       value: errorRatesData?.overall_error_rate ?? "N/A",
       change: "",
       trend: "up",
@@ -366,33 +368,35 @@ export const Reports = () => {
 
   const optimizationSuggestions = optimizationSuggestionsData || [];
 
-  if (isLoadingMetrics || isLoadingAgentPerformance || isLoadingCustomerSatisfaction || isLoadingTopIssues || isLoadingErrorRates || isLoadingLatency || isLoadingAlerts || isLoadingOptimizationSuggestions || isLoadingConversationStatus || isLoadingConversationTrends || isLoadingChannelDistribution) return <div>Loading reports...</div>;
-  if (isErrorMetrics || isErrorAgentPerformance || isErrorCustomerSatisfaction || isErrorTopIssues || isErrorErrorRates || isErrorLatency || isErrorAlerts || isErrorOptimizationSuggestions || isErrorConversationStatus || isErrorConversationTrends || isErrorChannelDistribution) return <div>Error loading reports.</div>;
+  if (isLoadingMetrics || isLoadingAgentPerformance || isLoadingCustomerSatisfaction || isLoadingTopIssues || isLoadingErrorRates || isLoadingLatency || isLoadingAlerts || isLoadingOptimizationSuggestions || isLoadingConversationStatus || isLoadingConversationTrends || isLoadingChannelDistribution) return <div>{t("reports.loading")}</div>;
+  if (isErrorMetrics || isErrorAgentPerformance || isErrorCustomerSatisfaction || isErrorTopIssues || isErrorErrorRates || isErrorLatency || isErrorAlerts || isErrorOptimizationSuggestions || isErrorConversationStatus || isErrorConversationTrends || isErrorChannelDistribution) return <div>{t("reports.error")}</div>;
 
   return (
     <div className="space-y-6 p-6 animate-fade-in">
       {/* Header */}
-      <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
+      <div className={`flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4`}>
         <div>
           <h2 className="text-4xl font-bold bg-gradient-to-r from-orange-600 to-red-600 bg-clip-text text-transparent mb-2">
-            Analytics & Reports
+            {t("reports.title")}
           </h2>
-          <p className="text-gray-600 dark:text-gray-400 text-lg">Track performance and insights across all your agents</p>
+          <p className="text-gray-600 dark:text-gray-400 text-lg">{t("reports.subtitle")}</p>
         </div>
-        <div className="flex flex-wrap gap-2">
+        <div className={`flex flex-wrap gap-2`}>
           <DatePicker
             date={dateRange.from}
             setDate={(date) => setDateRange({ ...dateRange, from: date })}
-            placeholder="Start date"
+            placeholder={t("reports.startDate")}
+            isRTL={isRTL}
           />
           <DatePicker
             date={dateRange.to}
             setDate={(date) => setDateRange({ ...dateRange, to: date })}
-            placeholder="End date"
+            placeholder={t("reports.endDate")}
+            isRTL={isRTL}
           />
-          <Button className="bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-700 hover:to-red-700 text-white btn-hover-lift">
-            <Download className="h-4 w-4 mr-2" />
-            Export
+          <Button className={`bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-700 hover:to-red-700 text-white btn-hover-lift flex items-center ${isRTL ? 'flex-row-reverse' : ''}`}>
+            <Download className={`h-4 w-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
+            {t("reports.export")}
           </Button>
         </div>
       </div>
@@ -419,18 +423,18 @@ export const Reports = () => {
                   <p className="text-xs font-medium text-gray-600 dark:text-gray-400 uppercase tracking-wider mb-1.5">{metric.title}</p>
                   <p className="text-2xl font-bold dark:text-white mb-2">{metric.value}</p>
                   {metric.change && (
-                    <div className="flex items-center">
+                    <div className={`flex items-center`}>
                       {metric.trend === "up" ? (
-                        <TrendingUp className="h-3.5 w-3.5 text-green-500 dark:text-green-400 mr-1" />
+                        <TrendingUp className={`h-3.5 w-3.5 text-green-500 dark:text-green-400 ${isRTL ? 'ml-1' : 'mr-1'}`} />
                       ) : (
-                        <TrendingDown className="h-3.5 w-3.5 text-red-500 dark:text-red-400 mr-1" />
+                        <TrendingDown className={`h-3.5 w-3.5 text-red-500 dark:text-red-400 ${isRTL ? 'ml-1' : 'mr-1'}`} />
                       )}
                       <span className={`text-xs font-medium ${
                         metric.trend === "up" ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"
                       }`}>
                         {metric.change}
                       </span>
-                      <span className="text-xs text-gray-500 dark:text-gray-400 ml-1">vs last month</span>
+                      <span className={`text-xs text-gray-500 dark:text-gray-400 ${isRTL ? 'mr-1' : 'ml-1'}`}>{t("reports.vsLastMonth")}</span>
                     </div>
                   )}
                 </div>
@@ -440,15 +444,15 @@ export const Reports = () => {
         })}
       </div>
 
-      <Tabs defaultValue="overview" className="space-y-6">
+      <Tabs defaultValue="overview" className="space-y-6" dir={isRTL ? 'rtl' : 'ltr'}>
         <TabsList className="bg-slate-100 dark:bg-slate-900 p-1 grid grid-cols-3 lg:grid-cols-7">
-          <TabsTrigger value="overview" className="data-[state=active]:bg-white dark:data-[state=active]:bg-slate-800 data-[state=active]:text-orange-600 dark:data-[state=active]:text-orange-400">📊 Overview</TabsTrigger>
-          <TabsTrigger value="agents" className="data-[state=active]:bg-white dark:data-[state=active]:bg-slate-800 data-[state=active]:text-orange-600 dark:data-[state=active]:text-orange-400">🤖 Agents</TabsTrigger>
-          <TabsTrigger value="customers" className="data-[state=active]:bg-white dark:data-[state=active]:bg-slate-800 data-[state=active]:text-orange-600 dark:data-[state=active]:text-orange-400">👥 Customers</TabsTrigger>
-          <TabsTrigger value="trends" className="data-[state=active]:bg-white dark:data-[state=active]:bg-slate-800 data-[state=active]:text-orange-600 dark:data-[state=active]:text-orange-400">📈 Trends</TabsTrigger>
-          <TabsTrigger value="reopens" className="data-[state=active]:bg-white dark:data-[state=active]:bg-slate-800 data-[state=active]:text-orange-600 dark:data-[state=active]:text-orange-400">🔄 Reopens</TabsTrigger>
-          <TabsTrigger value="alerts" className="data-[state=active]:bg-white dark:data-[state=active]:bg-slate-800 data-[state=active]:text-orange-600 dark:data-[state=active]:text-orange-400">🔔 Alerts</TabsTrigger>
-          <TabsTrigger value="optimization" className="data-[state=active]:bg-white dark:data-[state=active]:bg-slate-800 data-[state=active]:text-orange-600 dark:data-[state=active]:text-orange-400">⚡ Optimization</TabsTrigger>
+          <TabsTrigger value="overview" className="data-[state=active]:bg-white dark:data-[state=active]:bg-slate-800 data-[state=active]:text-orange-600 dark:data-[state=active]:text-orange-400">{t("reports.tabs.overview")}</TabsTrigger>
+          <TabsTrigger value="agents" className="data-[state=active]:bg-white dark:data-[state=active]:bg-slate-800 data-[state=active]:text-orange-600 dark:data-[state=active]:text-orange-400">{t("reports.tabs.agents")}</TabsTrigger>
+          <TabsTrigger value="customers" className="data-[state=active]:bg-white dark:data-[state=active]:bg-slate-800 data-[state=active]:text-orange-600 dark:data-[state=active]:text-orange-400">{t("reports.tabs.customers")}</TabsTrigger>
+          <TabsTrigger value="trends" className="data-[state=active]:bg-white dark:data-[state=active]:bg-slate-800 data-[state=active]:text-orange-600 dark:data-[state=active]:text-orange-400">{t("reports.tabs.trends")}</TabsTrigger>
+          <TabsTrigger value="reopens" className="data-[state=active]:bg-white dark:data-[state=active]:bg-slate-800 data-[state=active]:text-orange-600 dark:data-[state=active]:text-orange-400">{t("reports.tabs.reopens")}</TabsTrigger>
+          <TabsTrigger value="alerts" className="data-[state=active]:bg-white dark:data-[state=active]:bg-slate-800 data-[state=active]:text-orange-600 dark:data-[state=active]:text-orange-400">{t("reports.tabs.alerts")}</TabsTrigger>
+          <TabsTrigger value="optimization" className="data-[state=active]:bg-white dark:data-[state=active]:bg-slate-800 data-[state=active]:text-orange-600 dark:data-[state=active]:text-orange-400">{t("reports.tabs.optimization")}</TabsTrigger>
         </TabsList>
 
         <TabsContent value="overview" className="space-y-6">
@@ -456,24 +460,24 @@ export const Reports = () => {
             {/* Conversation Status Distribution */}
             <Card className="card-shadow-lg border-slate-200 dark:border-slate-700 dark:bg-slate-800">
               <CardHeader className="border-b border-slate-200 dark:border-slate-700 bg-gradient-to-r from-slate-50 to-slate-100 dark:from-slate-800 dark:to-slate-900">
-                <CardTitle className="dark:text-white">Conversation Status</CardTitle>
-                <CardDescription className="dark:text-gray-400">Distribution by conversation status</CardDescription>
+                <CardTitle className="dark:text-white text-left">{t("reports.overview.conversationStatus")}</CardTitle>
+                <CardDescription className="dark:text-gray-400 text-left">{t("reports.overview.conversationStatusDesc")}</CardDescription>
               </CardHeader>
               <CardContent className="pt-6">
                 <div className="space-y-4">
                   {conversationStatus.length === 0 ? (
-                    <p className="text-center py-8 text-slate-500 dark:text-slate-400">No data available</p>
+                    <p className="text-center py-8 text-slate-500 dark:text-slate-400">{t("reports.noDataAvailable")}</p>
                   ) : (
                     conversationStatus.map((item) => (
-                      <div key={item.status} className="flex items-center gap-3">
-                        <span className="w-24 text-sm dark:text-white font-medium capitalize">{item.status}</span>
-                        <div className="flex-1 bg-slate-200 dark:bg-slate-700 rounded-full h-3">
+                      <div key={item.status} className={`flex items-center gap-3 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                        <span className={`w-24 text-sm dark:text-white font-medium capitalize text-left`}>{item.status}</span>
+                        <div className={`flex-1 bg-slate-200 dark:bg-slate-700 rounded-full h-3 ${isRTL ? 'rotate-180' : ''}`}>
                           <div
                             className={`h-3 rounded-full ${getStatusColor(item.status)} transition-all`}
                             style={{ width: `${item.percentage}%` }}
                           />
                         </div>
-                        <span className="text-sm font-semibold dark:text-white w-16 text-right">{item.count} ({item.percentage}%)</span>
+                        <span className={`text-sm font-semibold dark:text-white w-16 ${isRTL ? 'text-left' : 'text-right'}`}>{item.count} ({item.percentage}%)</span>
                       </div>
                     ))
                   )}
@@ -484,27 +488,27 @@ export const Reports = () => {
             {/* Channel Distribution */}
             <Card className="card-shadow-lg border-slate-200 dark:border-slate-700 dark:bg-slate-800">
               <CardHeader className="border-b border-slate-200 dark:border-slate-700 bg-gradient-to-r from-slate-50 to-slate-100 dark:from-slate-800 dark:to-slate-900">
-                <CardTitle className="dark:text-white">Channel Distribution</CardTitle>
-                <CardDescription className="dark:text-gray-400">Conversations by channel type</CardDescription>
+                <CardTitle className="dark:text-white text-left">{t("reports.overview.channelDistribution")}</CardTitle>
+                <CardDescription className="dark:text-gray-400 text-left">{t("reports.overview.channelDistributionDesc")}</CardDescription>
               </CardHeader>
               <CardContent className="pt-6">
                 <div className="space-y-4">
                   {channelDistribution.length === 0 ? (
-                    <p className="text-center py-8 text-slate-500 dark:text-slate-400">No data available</p>
+                    <p className="text-center py-8 text-slate-500 dark:text-slate-400">{t("reports.noDataAvailable")}</p>
                   ) : (
                     channelDistribution.map((item) => (
-                      <div key={item.channel} className="flex items-center gap-3">
-                        <span className="w-24 text-sm dark:text-white font-medium flex items-center gap-2">
+                      <div key={item.channel} className={`flex items-center gap-3 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                        <span className={`w-24 text-sm dark:text-white font-medium flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
                           <span>{getChannelEmoji(item.channel)}</span>
                           <span className="capitalize">{item.channel}</span>
                         </span>
-                        <div className="flex-1 bg-slate-200 dark:bg-slate-700 rounded-full h-3">
+                        <div className={`flex-1 bg-slate-200 dark:bg-slate-700 rounded-full h-3 ${isRTL ? 'rotate-180' : ''}`}>
                           <div
                             className="h-3 rounded-full bg-gradient-to-r from-orange-500 to-red-500 dark:from-orange-600 dark:to-red-600 transition-all"
                             style={{ width: `${item.percentage}%` }}
                           />
                         </div>
-                        <span className="text-sm font-semibold dark:text-white w-16 text-right">{item.count} ({item.percentage}%)</span>
+                        <span className={`text-sm font-semibold dark:text-white w-16 ${isRTL ? 'text-left' : 'text-right'}`}>{item.count} ({item.percentage}%)</span>
                       </div>
                     ))
                   )}
@@ -516,15 +520,15 @@ export const Reports = () => {
           {/* Conversation Trends */}
           <Card className="card-shadow-lg border-slate-200 dark:border-slate-700 dark:bg-slate-800">
             <CardHeader className="border-b border-slate-200 dark:border-slate-700 bg-gradient-to-r from-slate-50 to-slate-100 dark:from-slate-800 dark:to-slate-900">
-              <CardTitle className="dark:text-white">Conversation Volume Trends</CardTitle>
-              <CardDescription className="dark:text-gray-400">Daily conversation activity over selected date range</CardDescription>
+              <CardTitle className="dark:text-white text-left">{t("reports.overview.conversationTrends")}</CardTitle>
+              <CardDescription className="dark:text-gray-400 text-left">{t("reports.overview.conversationTrendsDesc")}</CardDescription>
             </CardHeader>
             <CardContent className="pt-6">
               {conversationTrends.length === 0 ? (
                 <div className="h-64 flex items-center justify-center bg-slate-50 dark:bg-slate-900/50 rounded-lg border border-slate-200 dark:border-slate-700">
                   <div className="text-center">
                     <BarChart3 className="h-16 w-16 text-orange-400 dark:text-orange-500 mx-auto mb-3" />
-                    <span className="text-sm text-gray-500 dark:text-gray-400">No conversation data available for selected date range</span>
+                    <span className="text-sm text-gray-500 dark:text-gray-400">{t("reports.overview.noConversationData")}</span>
                   </div>
                 </div>
               ) : (
@@ -533,17 +537,17 @@ export const Reports = () => {
                     const maxCount = Math.max(...conversationTrends.map(t => t.count));
                     const barWidth = maxCount > 0 ? (item.count / maxCount) * 100 : 0;
                     return (
-                      <div key={index} className="flex items-center gap-3">
-                        <span className="w-24 text-xs dark:text-white font-medium">{new Date(item.date).toLocaleDateString()}</span>
-                        <div className="flex-1 bg-slate-200 dark:bg-slate-700 rounded-full h-6 relative">
+                      <div key={index} className={`flex items-center gap-3 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                        <span className={`w-24 text-xs dark:text-white font-medium text-left`}>{new Date(item.date).toLocaleDateString()}</span>
+                        <div className={`flex-1 bg-slate-200 dark:bg-slate-700 rounded-full h-6 relative ${isRTL ? 'rotate-180' : ''}`}>
                           <div
-                            className="h-6 rounded-full bg-gradient-to-r from-blue-500 to-purple-500 dark:from-blue-600 dark:to-purple-600 transition-all flex items-center justify-end pr-2"
+                            className={`h-6 rounded-full bg-gradient-to-r from-blue-500 to-purple-500 dark:from-blue-600 dark:to-purple-600 transition-all flex items-center pr-2 ${isRTL ? 'justify-start pl-2' : 'justify-end'}`}
                             style={{ width: `${barWidth}%` }}
                           >
-                            {barWidth > 15 && <span className="text-xs text-white font-semibold">{item.count}</span>}
+                            {barWidth > 15 && <span className={`text-xs text-white font-semibold ${isRTL ? 'rotate-180' : ''}`}>{item.count}</span>}
                           </div>
                           {barWidth <= 15 && (
-                            <span className="absolute right-2 top-1/2 -translate-y-1/2 text-xs dark:text-white font-semibold">{item.count}</span>
+                            <span className={`absolute top-1/2 -translate-y-1/2 text-xs dark:text-white font-semibold ${isRTL ? 'left-2 rotate-180' : 'right-2'}`}>{item.count}</span>
                           )}
                         </div>
                       </div>
@@ -558,8 +562,8 @@ export const Reports = () => {
         <TabsContent value="agents" className="space-y-6">
           <Card className="card-shadow-lg border-slate-200 dark:border-slate-700 dark:bg-slate-800">
             <CardHeader className="border-b border-slate-200 dark:border-slate-700 bg-gradient-to-r from-slate-50 to-slate-100 dark:from-slate-800 dark:to-slate-900">
-              <CardTitle className="dark:text-white">Agent Performance</CardTitle>
-              <CardDescription className="dark:text-gray-400">Individual agent metrics and statistics</CardDescription>
+              <CardTitle className="dark:text-white text-left">{t("reports.agents.agentPerformance")}</CardTitle>
+              <CardDescription className="dark:text-gray-400 text-left">{t("reports.agents.agentPerformanceDesc")}</CardDescription>
             </CardHeader>
             <CardContent className="pt-6">
               <div className="space-y-4">
@@ -568,36 +572,36 @@ export const Reports = () => {
                     <div className="h-16 w-16 rounded-full bg-slate-100 dark:bg-slate-700 flex items-center justify-center mx-auto mb-4">
                       <Users className="h-8 w-8 text-slate-400 dark:text-slate-500" />
                     </div>
-                    <p className="text-slate-500 dark:text-slate-400">No agent performance data available</p>
+                    <p className="text-slate-500 dark:text-slate-400">{t("reports.agents.noPerformanceData")}</p>
                   </div>
                 ) : (
                   agentPerformance.map((agent) => (
-                    <div key={agent.agent_id} className="flex items-center justify-between p-4 border border-slate-200 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-900/50 hover:shadow-md transition-shadow">
-                      <div className="flex items-center gap-4">
+                    <div key={agent.agent_id} className={`flex items-center justify-between p-4 border border-slate-200 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-900/50 hover:shadow-md transition-shadow `}>
+                      <div className={`flex items-center gap-4 `}>
                         <div className="w-12 h-12 rounded-full bg-gradient-to-br from-orange-100 to-red-100 dark:from-orange-900/50 dark:to-red-900/50 flex items-center justify-center shadow-sm">
                           <span className="text-orange-600 dark:text-orange-400 font-bold text-sm">
                             {agent.agent_name.split(' ').map(n => n[0]).join('')}
                           </span>
                         </div>
-                        <div>
+                        <div className="text-left">
                           <h4 className="font-semibold dark:text-white">{agent.agent_name}</h4>
-                          <p className="text-sm text-gray-600 dark:text-gray-400">{agent.conversations} conversations this week</p>
+                          <p className="text-sm text-gray-600 dark:text-gray-400">{agent.conversations} {t("reports.agents.conversationsThisWeek")}</p>
                         </div>
                       </div>
 
-                      <div className="flex items-center gap-6 text-sm">
+                      <div className={`flex items-center gap-6 text-sm `}>
                         <div className="text-center">
                           <p className="font-semibold dark:text-white">{agent.avg_response || "N/A"}</p>
-                          <p className="text-gray-600 dark:text-gray-400 text-xs">Avg Response</p>
+                          <p className="text-gray-600 dark:text-gray-400 text-xs">{t("reports.agents.avgResponse")}</p>
                         </div>
                         <div className="text-center">
-                          <div className="flex items-center gap-1 justify-center">
+                          <div className={`flex items-center gap-1 justify-center `}>
                             <Star className="h-4 w-4 text-yellow-500 fill-yellow-500" />
                             <span className="font-semibold dark:text-white">{agent.satisfaction || "N/A"}</span>
                           </div>
-                          <p className="text-gray-600 dark:text-gray-400 text-xs">Rating</p>
+                          <p className="text-gray-600 dark:text-gray-400 text-xs">{t("reports.agents.rating")}</p>
                         </div>
-                        <Badge className="bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-400 border border-green-200 dark:border-green-800">Active</Badge>
+                        <Badge className="bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-400 border border-green-200 dark:border-green-800">{t("reports.agents.active")}</Badge>
                       </div>
                     </div>
                   ))
@@ -611,27 +615,27 @@ export const Reports = () => {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <Card className="card-shadow-lg border-slate-200 dark:border-slate-700 dark:bg-slate-800">
               <CardHeader className="border-b border-slate-200 dark:border-slate-700 bg-gradient-to-r from-slate-50 to-slate-100 dark:from-slate-800 dark:to-slate-900">
-                <CardTitle className="dark:text-white">Customer Satisfaction</CardTitle>
-                <CardDescription className="dark:text-gray-400">Satisfaction ratings over time</CardDescription>
+                <CardTitle className="dark:text-white text-left">{t("reports.customers.customerSatisfaction")}</CardTitle>
+                <CardDescription className="dark:text-gray-400 text-left">{t("reports.customers.satisfactionDesc")}</CardDescription>
               </CardHeader>
               <CardContent className="pt-6">
                 <div className="space-y-4">
                   {customerSatisfaction.length === 0 ? (
-                    <p className="text-center py-8 text-slate-500 dark:text-slate-400">No data available</p>
+                    <p className="text-center py-8 text-slate-500 dark:text-slate-400">{t("reports.noDataAvailable")}</p>
                   ) : (
                     customerSatisfaction.map((item) => (
-                      <div key={item.rating} className="flex items-center gap-3">
-                        <div className="flex items-center gap-1.5">
+                      <div key={item.rating} className={`flex items-center gap-3 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                        <div className={`flex items-center gap-1.5 ${isRTL ? 'flex-row-reverse' : ''}`}>
                           <Star className="h-4 w-4 text-yellow-500 fill-yellow-500" />
                           <span className="w-4 dark:text-white font-medium">{item.rating}</span>
                         </div>
-                        <div className="flex-1 bg-slate-200 dark:bg-slate-700 rounded-full h-2.5">
+                        <div className={`flex-1 bg-slate-200 dark:bg-slate-700 rounded-full h-2.5 ${isRTL ? 'rotate-180' : ''}`}>
                           <div
                             className="h-2.5 bg-yellow-500 dark:bg-yellow-600 rounded-full transition-all"
                             style={{ width: `${item.percentage}%` }}
                           />
                         </div>
-                        <span className="text-sm font-semibold dark:text-white w-12 text-right">
+                        <span className={`text-sm font-semibold dark:text-white w-12 ${isRTL ? 'text-left' : 'text-right'}`}>
                           {item.percentage}%
                         </span>
                       </div>
@@ -643,17 +647,17 @@ export const Reports = () => {
 
             <Card className="card-shadow-lg border-slate-200 dark:border-slate-700 dark:bg-slate-800">
               <CardHeader className="border-b border-slate-200 dark:border-slate-700 bg-gradient-to-r from-slate-50 to-slate-100 dark:from-slate-800 dark:to-slate-900">
-                <CardTitle className="dark:text-white">Top Issues</CardTitle>
-                <CardDescription className="dark:text-gray-400">Most common customer inquiries</CardDescription>
+                <CardTitle className="dark:text-white text-left">{t("reports.customers.topIssues")}</CardTitle>
+                <CardDescription className="dark:text-gray-400 text-left">{t("reports.customers.topIssuesDesc")}</CardDescription>
               </CardHeader>
               <CardContent className="pt-6">
                 <div className="space-y-3">
                   {topIssues.length === 0 ? (
-                    <p className="text-center py-8 text-slate-500 dark:text-slate-400">No data available</p>
+                    <p className="text-center py-8 text-slate-500 dark:text-slate-400">{t("reports.noDataAvailable")}</p>
                   ) : (
                     topIssues.map((item) => (
-                      <div key={item.issue} className="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-900/50 rounded-lg border border-slate-200 dark:border-slate-700">
-                        <span className="text-sm dark:text-white">{item.issue}</span>
+                      <div key={item.issue} className={`flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-900/50 rounded-lg border border-slate-200 dark:border-slate-700 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                        <span className={`text-sm dark:text-white ${isRTL ? 'text-right' : 'text-left'}`}>{item.issue}</span>
                         <Badge variant="outline" className="dark:border-orange-500 dark:text-orange-400">{item.count}</Badge>
                       </div>
                     ))
@@ -667,14 +671,14 @@ export const Reports = () => {
         <TabsContent value="trends" className="space-y-6">
           <Card className="card-shadow-lg border-slate-200 dark:border-slate-700 dark:bg-slate-800">
             <CardHeader className="border-b border-slate-200 dark:border-slate-700 bg-gradient-to-r from-slate-50 to-slate-100 dark:from-slate-800 dark:to-slate-900">
-              <CardTitle className="dark:text-white">Conversation Trends</CardTitle>
-              <CardDescription className="dark:text-gray-400">Weekly and monthly conversation patterns</CardDescription>
+              <CardTitle className="dark:text-white text-left">{t("reports.trends.conversationTrends")}</CardTitle>
+              <CardDescription className="dark:text-gray-400 text-left">{t("reports.trends.conversationTrendsDesc")}</CardDescription>
             </CardHeader>
             <CardContent className="pt-6">
               <div className="h-96 flex items-center justify-center bg-slate-50 dark:bg-slate-900/50 rounded-lg border border-slate-200 dark:border-slate-700">
                 <div className="text-center">
                   <BarChart3 className="h-16 w-16 text-orange-400 dark:text-orange-500 mx-auto mb-4" />
-                  <p className="text-gray-500 dark:text-gray-400">Advanced trend analysis charts would be displayed here</p>
+                  <p className="text-gray-500 dark:text-gray-400">{t("reports.trends.advancedCharts")}</p>
                 </div>
               </div>
             </CardContent>
@@ -688,14 +692,14 @@ export const Reports = () => {
         <TabsContent value="alerts" className="space-y-6">
           <Card className="card-shadow-lg border-slate-200 dark:border-slate-700 dark:bg-slate-800">
             <CardHeader className="border-b border-slate-200 dark:border-slate-700 bg-gradient-to-r from-slate-50 to-slate-100 dark:from-slate-800 dark:to-slate-900">
-              <CardTitle className="dark:text-white">Alerts</CardTitle>
-              <CardDescription className="dark:text-gray-400">Critical notifications and warnings</CardDescription>
+              <CardTitle className="dark:text-white text-left">{t("reports.alerts.alerts")}</CardTitle>
+              <CardDescription className="dark:text-gray-400 text-left">{t("reports.alerts.alertsDesc")}</CardDescription>
             </CardHeader>
             <CardContent className="pt-6">
               {alerts.length > 0 ? (
                 <div className="space-y-4">
                   {alerts.map((alert) => (
-                    <div key={alert.id} className={`p-4 rounded-lg border ${
+                    <div key={alert.id} className={`p-4 rounded-lg border text-left ${
                       alert.type === "critical"
                         ? "bg-red-50 dark:bg-red-900/20 text-red-800 dark:text-red-400 border-red-200 dark:border-red-800"
                         : "bg-yellow-50 dark:bg-yellow-900/20 text-yellow-800 dark:text-yellow-400 border-yellow-200 dark:border-yellow-800"
@@ -710,7 +714,7 @@ export const Reports = () => {
                   <div className="h-16 w-16 rounded-full bg-slate-100 dark:bg-slate-700 flex items-center justify-center mx-auto mb-4">
                     <BarChart3 className="h-8 w-8 text-slate-400 dark:text-slate-500" />
                   </div>
-                  <p className="text-slate-500 dark:text-slate-400">No active alerts</p>
+                  <p className="text-slate-500 dark:text-slate-400">{t("reports.alerts.noActiveAlerts")}</p>
                 </div>
               )}
             </CardContent>
@@ -720,31 +724,31 @@ export const Reports = () => {
         <TabsContent value="optimization" className="space-y-6">
           <Card className="card-shadow-lg border-slate-200 dark:border-slate-700 dark:bg-slate-800">
             <CardHeader className="border-b border-slate-200 dark:border-slate-700 bg-gradient-to-r from-slate-50 to-slate-100 dark:from-slate-800 dark:to-slate-900">
-              <CardTitle className="dark:text-white">Optimization Suggestions</CardTitle>
-              <CardDescription className="dark:text-gray-400">AI-powered recommendations for improving agent performance</CardDescription>
+              <CardTitle className="dark:text-white text-left">{t("reports.optimization.optimizationSuggestions")}</CardTitle>
+              <CardDescription className="dark:text-gray-400 text-left">{t("reports.optimization.optimizationDesc")}</CardDescription>
             </CardHeader>
             <CardContent className="pt-6">
               {optimizationSuggestions.length > 0 ? (
                 <div className="space-y-4">
                   {optimizationSuggestions.map((suggestion) => (
-                    <div key={suggestion.id} className="p-4 border border-slate-200 dark:border-slate-700 rounded-lg bg-blue-50 dark:bg-blue-900/20">
+                    <div key={suggestion.id} className={`p-4 border border-slate-200 dark:border-slate-700 rounded-lg bg-blue-50 dark:bg-blue-900/20 text-left`}>
                       <p className="font-semibold dark:text-white mb-2">{suggestion.description}</p>
                       <div className="space-y-1">
                         <p className="text-sm text-gray-600 dark:text-gray-400">
-                          <span className="font-medium">Type:</span> {suggestion.suggestion_type}
+                          <span className="font-medium">{t("reports.optimization.type")}</span> {suggestion.suggestion_type}
                         </p>
                         {suggestion.agent_id && (
                           <p className="text-sm text-gray-600 dark:text-gray-400">
-                            <span className="font-medium">Agent ID:</span> {suggestion.agent_id}
+                            <span className="font-medium">{t("reports.optimization.agentId")}</span> {suggestion.agent_id}
                           </p>
                         )}
                         {suggestion.details && (
                           <p className="text-sm text-gray-600 dark:text-gray-400">
-                            <span className="font-medium">Details:</span> {JSON.stringify(suggestion.details)}
+                            <span className="font-medium">{t("reports.optimization.details")}</span> {JSON.stringify(suggestion.details)}
                           </p>
                         )}
                         <p className="text-sm text-gray-600 dark:text-gray-400">
-                          <span className="font-medium">Generated:</span> {new Date(suggestion.created_at).toLocaleString()}
+                          <span className="font-medium">{t("reports.optimization.generated")}</span> {new Date(suggestion.created_at).toLocaleString()}
                         </p>
                       </div>
                     </div>
@@ -755,7 +759,7 @@ export const Reports = () => {
                   <div className="h-16 w-16 rounded-full bg-slate-100 dark:bg-slate-700 flex items-center justify-center mx-auto mb-4">
                     <TrendingUp className="h-8 w-8 text-slate-400 dark:text-slate-500" />
                   </div>
-                  <p className="text-slate-500 dark:text-slate-400 mb-4">No optimization suggestions available</p>
+                  <p className="text-slate-500 dark:text-slate-400 mb-4">{t("reports.optimization.noSuggestions")}</p>
                 </div>
               )}
               <Button
@@ -763,7 +767,7 @@ export const Reports = () => {
                 className="mt-4 bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-700 hover:to-red-700 text-white"
                 disabled={generateSuggestionsMutation.isPending}
               >
-                {generateSuggestionsMutation.isPending ? "Generating..." : "Generate New Suggestions"}
+                {generateSuggestionsMutation.isPending ? t("reports.optimization.generating") : t("reports.optimization.generateNew")}
               </Button>
             </CardContent>
           </Card>

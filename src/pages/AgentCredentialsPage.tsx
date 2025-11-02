@@ -5,6 +5,7 @@ import { Agent, Credential } from "@/types";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
+import { useI18n } from "@/hooks/useI18n";
 import { toast } from "sonner";
 import { ArrowLeft, Plus } from "lucide-react";
 import { ResourceSelector } from "@/components/ResourceSelector";
@@ -21,6 +22,7 @@ export const AgentCredentialsPage = () => {
   const navigate = useNavigate();
   const { authFetch } = useAuth();
   const queryClient = useQueryClient();
+  const { t, isRTL } = useI18n();
 
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isSelectExistingOpen, setIsSelectExistingOpen] = useState(false);
@@ -61,10 +63,10 @@ export const AgentCredentialsPage = () => {
     },
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ['agent', agentId] });
-      toast.success("Agent credential updated successfully!");
+      toast.success(t("agents.credentialsPage.toasts.updateSuccess"));
     },
     onError: () => {
-      toast.error("Failed to update agent credential.");
+      toast.error(t("agents.credentialsPage.toasts.updateError"));
     },
   });
 
@@ -77,57 +79,79 @@ export const AgentCredentialsPage = () => {
     mutation.mutate(newCredentialId);
   };
 
-  if (isLoadingAgent) return <div>Loading...</div>;
+  const handleRemoveCredential = () => {
+    setSelectedCredentialId(null);
+    mutation.mutate(null);
+  };
+
+  const handleSelectCredential = (ids: number[]) => {
+    const newCredentialId = ids[0] || null;
+    setSelectedCredentialId(newCredentialId);
+    setIsSelectExistingOpen(false);
+    mutation.mutate(newCredentialId);
+  };
+
+  if (isLoadingAgent) return <div>{t("agents.credentialsPage.loading")}</div>;
 
   return (
     <div className="p-6 space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold text-gray-900">Agent Credentials</h1>
+        <h1 className="text-3xl font-bold text-gray-900">{t("agents.credentialsPage.title")}</h1>
         <Button variant="outline" onClick={() => navigate(`/dashboard/builder/${agentId}`)}>
-          <ArrowLeft className="h-4 w-4 mr-2" />
-          Back to Agent Hub
+          <ArrowLeft className={`h-4 w-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
+          {t("agents.credentialsPage.backToAgentHub")}
         </Button>
       </div>
 
       <Card>
         <CardHeader>
-          <CardTitle>Assigned Credential</CardTitle>
-          <CardDescription>The API key used by this agent for its LLM provider.</CardDescription>
+          <CardTitle>{t("agents.credentialsPage.assignedCredential")}</CardTitle>
+          <CardDescription>{t("agents.credentialsPage.assignedCredentialDescription")}</CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
           {selectedCredentialId ? (
-            <div className="flex items-center justify-between p-4 border rounded-md bg-blue-50">
+            <div className="flex items-center justify-between p-4 border rounded-md bg-blue-50 dark:bg-blue-950">
               <div>
-                <h4 className="font-semibold text-blue-800">{credentials?.find(c => c.id === selectedCredentialId)?.name}</h4>
-                <p className="text-sm text-blue-700">Service: {credentials?.find(c => c.id === selectedCredentialId)?.service}</p>
+                <h4 className="font-semibold text-blue-800 dark:text-blue-200">{credentials?.find(c => c.id === selectedCredentialId)?.name}</h4>
+                <p className="text-sm text-blue-700 dark:text-blue-300">{t("agents.credentialsPage.service", { service: credentials?.find(c => c.id === selectedCredentialId)?.service })}</p>
               </div>
-              <Button variant="outline" onClick={() => setSelectedCredentialId(null)}>Remove</Button>
+              <Button
+                variant="outline"
+                onClick={handleRemoveCredential}
+                disabled={mutation.isPending}
+              >
+                {t("agents.credentialsPage.remove")}
+              </Button>
             </div>
           ) : (
-            <div className="p-4 border rounded-md text-center text-gray-500">
-              No credential assigned.
+            <div className="p-4 border rounded-md text-center text-gray-500 dark:text-gray-400">
+              {t("agents.credentialsPage.noCredentialAssigned")}
             </div>
           )}
 
-          <div className="flex justify-between items-center">
+          <div className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button>
-                  <Plus className="mr-2 h-4 w-4" /> Add/Change Credential
+                <Button disabled={mutation.isPending}>
+                  <Plus className={`h-4 w-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
+                  {t("agents.credentialsPage.addChangeCredential")}
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent>
                 <DropdownMenuItem onClick={() => setIsSelectExistingOpen(true)}>
-                  Select Existing Credential
+                  {t("agents.credentialsPage.selectExisting")}
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => setIsCreateDialogOpen(true)}>
-                  Create New Credential
+                  {t("agents.credentialsPage.createNew")}
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
-            <Button onClick={handleSave} disabled={mutation.isPending}>
-              {mutation.isPending ? "Saving..." : "Save Changes"}
-            </Button>
+            {mutation.isPending && (
+              <span className="text-sm text-muted-foreground flex items-center gap-2">
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-green-600"></div>
+                {t("agents.credentialsPage.saving")}
+              </span>
+            )}
           </div>
         </CardContent>
       </Card>
@@ -135,12 +159,9 @@ export const AgentCredentialsPage = () => {
       <ResourceSelector
         resources={credentials || []}
         selectedIds={selectedCredentialId ? [selectedCredentialId] : []}
-        onSelect={(ids) => {
-          setSelectedCredentialId(ids[0] || null);
-          setIsSelectExistingOpen(false);
-        }}
-        title="Select Credential"
-        triggerButtonText="Browse Credentials"
+        onSelect={handleSelectCredential}
+        title={t("agents.credentialsPage.selectCredential")}
+        triggerButtonText={t("agents.credentialsPage.browseCredentials")}
         isLoading={isLoadingCredentials}
         allowMultiple={false}
         isOpen={isSelectExistingOpen}

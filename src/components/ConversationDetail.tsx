@@ -17,6 +17,8 @@ import { useAuth } from "@/hooks/useAuth";
 import { Label } from './ui/label';
 import { useVoiceConnection } from '@/hooks/use-voice-connection';
 import { getWebSocketUrl } from '@/config/api';
+import { useTranslation } from 'react-i18next';
+import { useI18n } from '@/hooks/useI18n';
 
 interface ConversationDetailProps {
   sessionId: string;
@@ -24,6 +26,8 @@ interface ConversationDetailProps {
 }
 
 export const ConversationDetail: React.FC<ConversationDetailProps> = ({ sessionId, agentId }) => {
+  const { t } = useTranslation();
+  const { isRTL } = useI18n();
   const queryClient = useQueryClient();
   const companyId = 1; // Hardcoded company ID
   const [message, setMessage] = useState('');
@@ -71,12 +75,12 @@ export const ConversationDetail: React.FC<ConversationDetailProps> = ({ sessionI
       setIsAiEnabled(data.is_ai_enabled);
       queryClient.invalidateQueries({ queryKey: ['sessionDetails', sessionId] });
       toast({
-        title: 'Success',
-        description: `AI has been ${data.is_ai_enabled ? 'enabled' : 'disabled'}.`,
+        title: t('conversations.detail.toasts.success'),
+        description: data.is_ai_enabled ? t('conversations.detail.toasts.aiEnabled') : t('conversations.detail.toasts.aiDisabled'),
         variant: 'success'
       });
     },
-    onError: (e: Error) => toast({ title: 'Error', description: e.message, variant: 'destructive' }),
+    onError: (e: Error) => toast({ title: t('conversations.detail.toasts.error'), description: e.message, variant: 'destructive' }),
   });
 
   const { data: messages, isLoading } = useQuery<ChatMessage[]>({
@@ -128,7 +132,7 @@ export const ConversationDetail: React.FC<ConversationDetailProps> = ({ sessionI
         setMessage('');
         setNote('');
     },
-    onError: (e: Error) => toast({ title: 'Error', description: e.message, variant: 'destructive' }),
+    onError: (e: Error) => toast({ title: t('conversations.detail.toasts.error'), description: e.message, variant: 'destructive' }),
   });
 
   const statusMutation = useMutation({
@@ -142,12 +146,12 @@ export const ConversationDetail: React.FC<ConversationDetailProps> = ({ sessionI
       queryClient.invalidateQueries({ queryKey: ['sessions', companyId] });
       queryClient.invalidateQueries({ queryKey: ['sessionDetails', sessionId] });
       toast({
-        title: 'Status Updated',
-        description: 'Conversation status has been updated successfully.',
+        title: t('conversations.detail.toasts.statusUpdated'),
+        description: t('conversations.detail.toasts.statusUpdatedDesc'),
         variant: 'success'
       });
     },
-    onError: (e: Error) => toast({ title: 'Error', description: e.message, variant: 'destructive' }),
+    onError: (e: Error) => toast({ title: t('conversations.detail.toasts.error'), description: e.message, variant: 'destructive' }),
   });
 
   const startCallMutation = useMutation({
@@ -165,13 +169,13 @@ export const ConversationDetail: React.FC<ConversationDetailProps> = ({ sessionI
     onSuccess: (userToken) => {
       setCallModalOpen(true);
       sendMessageMutation.mutate({
-        message: 'I am starting a video call. Please join.',
+        message: t('conversations.detail.videoCallMessage'),
         message_type: 'video_call_invitation',
         sender: 'agent',
         token: userToken,
       });
     },
-    onError: (e: Error) => toast({ title: 'Error', description: e.message, variant: 'destructive' }),
+    onError: (e: Error) => toast({ title: t('conversations.detail.toasts.error'), description: e.message, variant: 'destructive' }),
   });
 
   const assigneeMutation = useMutation({
@@ -185,12 +189,12 @@ export const ConversationDetail: React.FC<ConversationDetailProps> = ({ sessionI
       queryClient.invalidateQueries({ queryKey: ['sessions', companyId] });
       queryClient.invalidateQueries({ queryKey: ['sessionDetails', sessionId] });
       toast({
-        title: 'Assignment Updated',
-        description: 'Conversation has been assigned successfully.',
+        title: t('conversations.detail.toasts.assignmentUpdated'),
+        description: t('conversations.detail.toasts.assignmentUpdatedDesc'),
         variant: 'success'
       });
     },
-    onError: (e: Error) => toast({ title: 'Error', description: e.message, variant: 'destructive' }),
+    onError: (e: Error) => toast({ title: t('conversations.detail.toasts.error'), description: e.message, variant: 'destructive' }),
   });
 
   const handlePostNote = () => {
@@ -215,8 +219,8 @@ export const ConversationDetail: React.FC<ConversationDetailProps> = ({ sessionI
                 <MessageSquare className="h-6 w-6 text-white" />
               </div>
               <div>
-                <h2 className="text-xl font-bold dark:text-white">Conversation</h2>
-                <p className="text-xs text-muted-foreground">Session ID: {sessionId.slice(0, 12)}...</p>
+                <h2 className="text-xl font-bold dark:text-white">{t('conversations.detail.conversation')}</h2>
+                <p className="text-xs text-muted-foreground">{t('conversations.detail.sessionId', { id: sessionId.slice(0, 12) + '...' })}</p>
               </div>
             </div>
 
@@ -228,8 +232,8 @@ export const ConversationDetail: React.FC<ConversationDetailProps> = ({ sessionI
                 disabled={startCallMutation.isPending}
                 className="btn-hover-lift"
               >
-                <Video className="h-4 w-4 mr-2" />
-                Video Call
+                <Video className={`h-4 w-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
+                {t('conversations.detail.videoCall')}
               </Button>
               <Button
                 size="sm"
@@ -238,8 +242,8 @@ export const ConversationDetail: React.FC<ConversationDetailProps> = ({ sessionI
                 disabled={statusMutation.isPending || conversationStatus === 'resolved'}
                 className={conversationStatus === 'resolved' ? 'bg-green-100 text-green-800 hover:bg-green-200' : 'bg-blue-600 hover:bg-blue-700 text-white btn-hover-lift'}
               >
-                <CheckCircle className="h-4 w-4 mr-2" />
-                {conversationStatus === 'resolved' ? 'Resolved' : 'Resolve'}
+                <CheckCircle className={`h-4 w-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
+                {conversationStatus === 'resolved' ? t('conversations.detail.resolved') : t('conversations.detail.resolve')}
               </Button>
             </div>
           </div>
@@ -250,7 +254,7 @@ export const ConversationDetail: React.FC<ConversationDetailProps> = ({ sessionI
             <div className="flex items-center gap-2 bg-white dark:bg-slate-900 rounded-lg px-3 py-2 border border-slate-200 dark:border-slate-700 card-shadow">
               <Bot className={`h-4 w-4 ${isAiEnabled ? 'text-blue-600' : 'text-gray-400'}`} />
               <Label htmlFor="ai-toggle" className="text-sm font-medium cursor-pointer">
-                AI Replies
+                {t('conversations.detail.aiReplies')}
               </Label>
               <Switch
                 key={`ai-toggle-${sessionId}`}
@@ -270,7 +274,7 @@ export const ConversationDetail: React.FC<ConversationDetailProps> = ({ sessionI
                 onValueChange={(value) => assigneeMutation.mutate(parseInt(value))}
               >
                 <SelectTrigger className="border-0 h-auto p-0 focus:ring-0 w-[180px]">
-                  <SelectValue placeholder="Assign to..." />
+                  <SelectValue placeholder={t('conversations.detail.assignTo')} />
                 </SelectTrigger>
                 <SelectContent>
                   {Array.isArray(users) && users.map(user => (
@@ -290,7 +294,7 @@ export const ConversationDetail: React.FC<ConversationDetailProps> = ({ sessionI
             </div>
 
             {/* Status Badge */}
-            <div className="ml-auto">
+            <div className={isRTL ? 'mr-auto' : 'ml-auto'}>
               <div className={`px-3 py-1.5 rounded-full text-xs font-medium ${
                 conversationStatus === 'resolved' ? 'bg-green-100 text-green-800' :
                 conversationStatus === 'active' ? 'bg-blue-100 text-blue-800' :
@@ -308,7 +312,7 @@ export const ConversationDetail: React.FC<ConversationDetailProps> = ({ sessionI
             <div className="flex items-center justify-center h-full">
               <div className="text-center">
                 <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600 mx-auto mb-3"></div>
-                <p className="text-sm text-muted-foreground">Loading messages...</p>
+                <p className="text-sm text-muted-foreground">{t('conversations.detail.loadingMessages')}</p>
               </div>
             </div>
           ) : messages && messages.length > 0 ? (
@@ -324,7 +328,7 @@ export const ConversationDetail: React.FC<ConversationDetailProps> = ({ sessionI
                             <Book className="h-4 w-4 text-yellow-900 dark:text-yellow-100" />
                           </div>
                           <div className="flex-grow">
-                            <p className="text-sm font-semibold text-yellow-900 dark:text-yellow-400 mb-1">Private Note</p>
+                            <p className="text-sm font-semibold text-yellow-900 dark:text-yellow-400 mb-1">{t('conversations.detail.privateNote')}</p>
                             <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">{msg.message}</p>
                             <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
                               {new Date(msg.timestamp).toLocaleString()}
@@ -348,8 +352,8 @@ export const ConversationDetail: React.FC<ConversationDetailProps> = ({ sessionI
                         <div
                           className={`px-4 py-3 rounded-2xl card-shadow ${
                             msg.sender === 'user'
-                              ? 'bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-bl-sm dark:text-white'
-                              : 'bg-gradient-to-br from-blue-600 to-purple-600 text-white rounded-br-sm'
+                              ? `bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 ${isRTL ? 'rounded-br-sm' : 'rounded-bl-sm'} dark:text-white`
+                              : `bg-gradient-to-br from-blue-600 to-purple-600 text-white ${isRTL ? 'rounded-bl-sm' : 'rounded-br-sm'}`
                           }`}
                         >
                           <p className="text-sm leading-relaxed whitespace-pre-wrap break-words">
@@ -379,8 +383,8 @@ export const ConversationDetail: React.FC<ConversationDetailProps> = ({ sessionI
                 <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-br from-blue-100 to-purple-100 mb-4">
                   <MessageSquare className="h-8 w-8 text-blue-600" />
                 </div>
-                <h3 className="text-lg font-semibold mb-2">No messages yet</h3>
-                <p className="text-muted-foreground text-sm">Start the conversation below</p>
+                <h3 className="text-lg font-semibold mb-2">{t('conversations.detail.noMessages')}</h3>
+                <p className="text-muted-foreground text-sm">{t('conversations.detail.noMessagesDesc')}</p>
               </div>
             </div>
           )}
@@ -391,11 +395,11 @@ export const ConversationDetail: React.FC<ConversationDetailProps> = ({ sessionI
             <TabsList className="bg-white dark:bg-slate-900 rounded-lg p-1 shadow-sm border dark:border-slate-700">
               <TabsTrigger value="reply" className="data-[state=active]:bg-blue-600 data-[state=active]:text-white rounded-md">
                 <CornerDownRight className="h-4 w-4 mr-2"/>
-                Reply
+                {t('conversations.detail.replyTab')}
               </TabsTrigger>
               <TabsTrigger value="note" className="data-[state=active]:bg-yellow-500 data-[state=active]:text-white rounded-md">
                 <Book className="h-4 w-4 mr-2"/>
-                Private Note
+                {t('conversations.detail.privateNoteTab')}
               </TabsTrigger>
             </TabsList>
 
@@ -404,7 +408,7 @@ export const ConversationDetail: React.FC<ConversationDetailProps> = ({ sessionI
                 <Textarea
                   value={message}
                   onChange={(e) => setMessage(e.target.value)}
-                  placeholder="Type your message..."
+                  placeholder={t('conversations.detail.messageInput')}
                   className="border-0 focus-visible:ring-0 resize-none min-h-[80px]"
                   rows={3}
                   onKeyDown={(e) => {
@@ -414,7 +418,7 @@ export const ConversationDetail: React.FC<ConversationDetailProps> = ({ sessionI
                     }
                   }}
                 />
-                <div className="flex items-center justify-between px-3 pb-2 pt-1">
+                <div className={`flex items-center justify-between px-3 pb-2 pt-1 ${isRTL ? 'flex-row-reverse' : ''}`}>
                   <div className="flex items-center gap-1">
                     <Button variant="ghost" size="icon" className="h-8 w-8">
                       <Paperclip className="h-4 w-4 text-gray-500" />
@@ -434,8 +438,8 @@ export const ConversationDetail: React.FC<ConversationDetailProps> = ({ sessionI
                     size="sm"
                     className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white btn-hover-lift"
                   >
-                    <Send className="h-4 w-4 mr-2" />
-                    Send
+                    <Send className={`h-4 w-4 ${isRTL ? 'ml-2 rotate-180' : 'mr-2'}`} />
+                    {t('conversations.detail.send')}
                   </Button>
                 </div>
               </div>
@@ -444,7 +448,7 @@ export const ConversationDetail: React.FC<ConversationDetailProps> = ({ sessionI
                 <div className="mt-3 bg-white dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-700 p-3 card-shadow">
                   <p className="text-xs font-semibold text-gray-700 mb-2 flex items-center gap-2">
                     <Sparkles className="h-3 w-3 text-purple-600" />
-                    AI Suggested Replies
+                    {t('conversations.detail.aiSuggestions')}
                   </p>
                   <div className="flex flex-wrap gap-2">
                     {suggestedReplies.map((reply, index) => (
@@ -468,14 +472,14 @@ export const ConversationDetail: React.FC<ConversationDetailProps> = ({ sessionI
                 <Textarea
                   value={note}
                   onChange={(e) => setNote(e.target.value)}
-                  placeholder="Type an internal note (visible only to your team)..."
+                  placeholder={t('conversations.detail.noteInput')}
                   className="border-0 bg-transparent focus-visible:ring-0 resize-none min-h-[80px]"
                   rows={3}
                 />
-                <div className="flex items-center justify-between px-3 pb-2 pt-1">
+                <div className={`flex items-center justify-between px-3 pb-2 pt-1 ${isRTL ? 'flex-row-reverse' : ''}`}>
                   <div className="flex items-center gap-2 text-xs text-yellow-800">
                     <Book className="h-3 w-3" />
-                    <span className="font-medium">Private - Team Only</span>
+                    <span className="font-medium">{t('conversations.detail.privateTeamOnly')}</span>
                   </div>
                   <Button
                     onClick={handlePostNote}
@@ -483,8 +487,8 @@ export const ConversationDetail: React.FC<ConversationDetailProps> = ({ sessionI
                     size="sm"
                     className="bg-yellow-500 hover:bg-yellow-600 text-white btn-hover-lift"
                   >
-                    <Book className="h-4 w-4 mr-2" />
-                    Save Note
+                    <Book className={`h-4 w-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
+                    {t('conversations.detail.saveNote')}
                   </Button>
                 </div>
               </div>

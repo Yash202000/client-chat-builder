@@ -9,8 +9,10 @@ import { useToast } from "@/components/ui/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { MessageSquare } from "lucide-react";
 import { apiFetch } from "@/lib/api";
+import { useI18n } from '@/hooks/useI18n';
 
 export const ProactiveMessageTester = () => {
+  const { t, isRTL } = useI18n();
   const { toast } = useToast();
   const { authFetch } = useAuth();
   const [target, setTarget] = useState("session_id");
@@ -36,52 +38,53 @@ export const ProactiveMessageTester = () => {
 
       if (response.ok) {
         toast({
-          title: "Success",
-          description: "Proactive message sent successfully.",
+          title: t('proactiveMessageTester.success'),
+          description: t('proactiveMessageTester.sentSuccess'),
         });
         setTargetValue("");
         setMessage("");
       } else {
         const errorData = await response.json();
         toast({
-          title: "Error",
-          description: errorData.detail || "Failed to send proactive message.",
+          title: t('proactiveMessageTester.error'),
+          description: errorData.detail || t('proactiveMessageTester.sentError'),
           variant: "destructive",
         });
       }
     } catch (error) {
       console.error("Failed to send proactive message", error);
       toast({
-        title: "Error",
-        description: "An unexpected error occurred.",
+        title: t('proactiveMessageTester.error'),
+        description: t('proactiveMessageTester.unexpectedError'),
         variant: "destructive",
       });
     }
   };
 
   return (
-    <Card>
+    <Card dir={isRTL ? 'rtl' : 'ltr'} className="dark:bg-slate-800 dark:border-slate-700">
       <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <MessageSquare className="h-5 w-5" />
-          Proactive Message Tester
+        <CardTitle className="flex items-center gap-2 dark:text-white">
+          <MessageSquare className="h-5 w-5 text-cyan-600 dark:text-cyan-400" />
+          {t('proactiveMessageTester.title')}
         </CardTitle>
-        <CardDescription>
-          Send a proactive message to a user via the API.
+        <CardDescription className="dark:text-gray-400">
+          {t('proactiveMessageTester.subtitle')}
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         <div>
-          <Label htmlFor="apiKey">API Key</Label>
+          <Label htmlFor="apiKey" className="dark:text-gray-300">{t('proactiveMessageTester.apiKey')}</Label>
           <Input
             id="apiKey"
-            placeholder="Your API Key"
+            placeholder={t('proactiveMessageTester.apiKeyPlaceholder')}
             value={apiKey}
             onChange={(e) => setApiKey(e.target.value)}
+            className="dark:bg-slate-900 dark:border-slate-600 dark:text-white mt-1.5"
           />
         </div>
         <div className="flex items-center gap-4">
-          <Label>Target:</Label>
+          <Label className="dark:text-gray-300">{t('proactiveMessageTester.target')}:</Label>
           <div className="flex items-center gap-2">
             <input
               type="radio"
@@ -90,8 +93,9 @@ export const ProactiveMessageTester = () => {
               value="session_id"
               checked={target === "session_id"}
               onChange={() => setTarget("session_id")}
+              className="dark:accent-cyan-500"
             />
-            <Label htmlFor="session_id">Session ID</Label>
+            <Label htmlFor="session_id" className="dark:text-gray-300">{t('proactiveMessageTester.sessionId')}</Label>
           </div>
           <div className="flex items-center gap-2">
             <input
@@ -101,29 +105,34 @@ export const ProactiveMessageTester = () => {
               value="contact_id"
               checked={target === "contact_id"}
               onChange={() => setTarget("contact_id")}
+              className="dark:accent-cyan-500"
             />
-            <Label htmlFor="contact_id">Contact ID</Label>
+            <Label htmlFor="contact_id" className="dark:text-gray-300">{t('proactiveMessageTester.contactId')}</Label>
           </div>
         </div>
         <div>
-          <Label htmlFor="targetValue">Target Value</Label>
+          <Label htmlFor="targetValue" className="dark:text-gray-300">{t('proactiveMessageTester.targetValue')}</Label>
           <Input
             id="targetValue"
-            placeholder={`Enter ${target === "session_id" ? "Session ID" : "Contact ID"}`}
+            placeholder={target === "session_id" ? t('proactiveMessageTester.enterSessionId') : t('proactiveMessageTester.enterContactId')}
             value={targetValue}
             onChange={(e) => setTargetValue(e.target.value)}
+            className="dark:bg-slate-900 dark:border-slate-600 dark:text-white mt-1.5"
           />
         </div>
         <div>
-          <Label htmlFor="message">Message</Label>
+          <Label htmlFor="message" className="dark:text-gray-300">{t('proactiveMessageTester.message')}</Label>
           <Textarea
             id="message"
-            placeholder="Enter your message"
+            placeholder={t('proactiveMessageTester.messagePlaceholder')}
             value={message}
             onChange={(e) => setMessage(e.target.value)}
+            className="dark:bg-slate-900 dark:border-slate-600 dark:text-white mt-1.5"
           />
         </div>
-        <Button onClick={handleSendMessage}>Send Message</Button>
+        <Button onClick={handleSendMessage} className="bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-700 hover:to-blue-700">
+          {t('proactiveMessageTester.sendMessage')}
+        </Button>
       </CardContent>
     </Card>
   );

@@ -6,12 +6,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
-import { 
-  Settings as SettingsIcon, 
-  Globe, 
-  Bell, 
-  Shield, 
-  Palette, 
+import {
+  Settings as SettingsIcon,
+  Globe,
+  Bell,
+  Shield,
+  Palette,
   Zap,
   Mail,
   Lock,
@@ -30,9 +30,13 @@ import { ApiDocs } from "./ApiDocs";
 import { useQuery } from "@tanstack/react-query";
 import { Company } from "@/types";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { useTranslation } from 'react-i18next';
+import { useI18n } from '@/hooks/useI18n';
 
 
 export const Settings = () => {
+  const { t } = useTranslation();
+  const { isRTL } = useI18n();
   const { toast } = useToast();
   const { user, companyId, setCompanyIdGlobaly, authFetch } = useAuth();
 
@@ -101,16 +105,16 @@ export const Settings = () => {
           }));
         } else {
           toast({
-            title: "Error",
-            description: "Failed to fetch settings.",
+            title: t('settings.error'),
+            description: t('settings.failedFetchSettings'),
             variant: "destructive",
           });
         }
       } catch (error) {
         console.error("Failed to fetch settings", error);
         toast({
-          title: "Error",
-          description: "An unexpected error occurred.",
+          title: t('settings.error'),
+          description: t('settings.unexpectedError'),
           variant: "destructive",
         });
       }
@@ -165,68 +169,68 @@ export const Settings = () => {
 
       if (userResponse.ok && companyResponse.ok && notificationResponse.ok) {
         toast({
-          title: "Success",
-          description: "Settings saved successfully.",
+          title: t('settings.success'),
+          description: t('settings.settingsSaved'),
         });
       } else {
         toast({
-          title: "Error",
-          description: "Failed to save settings.",
+          title: t('settings.error'),
+          description: t('settings.failedSaveSettings'),
           variant: "destructive",
         });
       }
     } catch (error) {
       console.error("Failed to save settings", error);
       toast({
-        title: "Error",
-        description: "An unexpected error occurred.",
+        title: t('settings.error'),
+        description: t('settings.unexpectedError'),
         variant: "destructive",
       });
     }
   };
 
   return (
-    <div className="space-y-6 p-6 animate-fade-in">
+    <div className="space-y-6 p-6 animate-fade-in" dir={isRTL ? 'rtl' : 'ltr'}>
       <div>
         <h2 className="text-4xl font-bold bg-gradient-to-r from-cyan-600 to-blue-600 bg-clip-text text-transparent mb-2">
-          Settings
+          {t('settings.title')}
         </h2>
-        <p className="text-gray-600 dark:text-gray-400 text-lg">Manage your platform configuration and preferences</p>
+        <p className="text-gray-600 dark:text-gray-400 text-lg">{t('settings.subtitle')}</p>
       </div>
 
-      <Tabs defaultValue="general" className="space-y-6">
+      <Tabs defaultValue="general" className="space-y-6" dir={isRTL ? 'rtl' : 'ltr'}>
         <TabsList className="grid w-full grid-cols-3 lg:grid-cols-6 bg-slate-100 dark:bg-slate-900 p-1">
-          <TabsTrigger value="general" className="data-[state=active]:bg-white dark:data-[state=active]:bg-slate-800 data-[state=active]:text-cyan-600 dark:data-[state=active]:text-cyan-400">⚙️ General</TabsTrigger>
-          <TabsTrigger value="notifications" className="data-[state=active]:bg-white dark:data-[state=active]:bg-slate-800 data-[state=active]:text-cyan-600 dark:data-[state=active]:text-cyan-400">🔔 Notifications</TabsTrigger>
-          <TabsTrigger value="security" className="data-[state=active]:bg-white dark:data-[state=active]:bg-slate-800 data-[state=active]:text-cyan-600 dark:data-[state=active]:text-cyan-400">🔒 Security</TabsTrigger>
-          <TabsTrigger value="integrations" className="data-[state=active]:bg-white dark:data-[state=active]:bg-slate-800 data-[state=active]:text-cyan-600 dark:data-[state=active]:text-cyan-400">🔌 Integrations</TabsTrigger>
-          <TabsTrigger value="appearance" className="data-[state=active]:bg-white dark:data-[state=active]:bg-slate-800 data-[state=active]:text-cyan-600 dark:data-[state=active]:text-cyan-400">🎨 Appearance</TabsTrigger>
-          <TabsTrigger value="developer" className="data-[state=active]:bg-white dark:data-[state=active]:bg-slate-800 data-[state=active]:text-cyan-600 dark:data-[state=active]:text-cyan-400">💻 Developer</TabsTrigger>
+          <TabsTrigger value="general" className="data-[state=active]:bg-white dark:data-[state=active]:bg-slate-800 data-[state=active]:text-cyan-600 dark:data-[state=active]:text-cyan-400">{t('settings.general')}</TabsTrigger>
+          <TabsTrigger value="notifications" className="data-[state=active]:bg-white dark:data-[state=active]:bg-slate-800 data-[state=active]:text-cyan-600 dark:data-[state=active]:text-cyan-400">{t('settings.notifications')}</TabsTrigger>
+          <TabsTrigger value="security" className="data-[state=active]:bg-white dark:data-[state=active]:bg-slate-800 data-[state=active]:text-cyan-600 dark:data-[state=active]:text-cyan-400">{t('settings.security')}</TabsTrigger>
+          <TabsTrigger value="integrations" className="data-[state=active]:bg-white dark:data-[state=active]:bg-slate-800 data-[state=active]:text-cyan-600 dark:data-[state=active]:text-cyan-400">{t('settings.integrations')}</TabsTrigger>
+          <TabsTrigger value="appearance" className="data-[state=active]:bg-white dark:data-[state=active]:bg-slate-800 data-[state=active]:text-cyan-600 dark:data-[state=active]:text-cyan-400">{t('settings.appearance')}</TabsTrigger>
+          <TabsTrigger value="developer" className="data-[state=active]:bg-white dark:data-[state=active]:bg-slate-800 data-[state=active]:text-cyan-600 dark:data-[state=active]:text-cyan-400">{t('settings.developer')}</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="general" className="space-y-4">
+        <TabsContent value="general" className="space-y-4" dir={isRTL ? 'rtl' : 'ltr'}>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
             {user?.is_super_admin && companies && (
               <Card className="card-shadow-lg border-slate-200 dark:border-slate-700 dark:bg-slate-800">
                 <CardHeader className="pb-3">
-                  <CardTitle className="dark:text-white flex items-center gap-2 text-base">
+                  <CardTitle className={`dark:text-white flex items-center gap-2 text-base text-left`}>
                     <Building className="h-4 w-4 text-cyan-600 dark:text-cyan-400" />
-                    Company Context
+                    {t('settings.companyContext')}
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="pt-0">
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                      <Button variant="outline" className="w-full flex items-center justify-between gap-2 dark:bg-slate-900 dark:border-slate-600 dark:text-white dark:hover:bg-slate-700">
-                        <div className="flex items-center gap-2">
+                      <Button variant="outline" className={`w-full flex items-center justify-between gap-2 dark:bg-slate-900 dark:border-slate-600 dark:text-white dark:hover:bg-slate-700`}>
+                        <div className={`flex items-center gap-2`}>
                           <Building className="h-4 w-4" />
-                          <span>{currentCompany?.name || "Select Company"}</span>
+                          <span>{currentCompany?.name || t('settings.selectCompany')}</span>
                         </div>
                         <ChevronsUpDown className="h-4 w-4 opacity-50" />
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent className="w-full dark:bg-slate-800 dark:border-slate-700">
-                      <DropdownMenuLabel className="dark:text-white">Switch Company</DropdownMenuLabel>
+                      <DropdownMenuLabel className="dark:text-white">{t('settings.switchCompany')}</DropdownMenuLabel>
                       {companies.map(c => (
                         <DropdownMenuItem key={c.id} onSelect={() => setCompanyIdGlobaly(c.id)} className="dark:text-white dark:focus:bg-slate-700">
                           {c.name}
@@ -240,15 +244,15 @@ export const Settings = () => {
 
             <Card className="card-shadow-lg border-slate-200 dark:border-slate-700 dark:bg-slate-800 lg:col-span-2">
               <CardHeader className="pb-3">
-                <CardTitle className="flex items-center gap-2 dark:text-white text-base">
+                <CardTitle className={`flex items-center gap-2 dark:text-white text-base`}>
                   <Globe className="h-4 w-4 text-cyan-600 dark:text-cyan-400" />
-                  Company Information & Business Hours
+                  {t('settings.companyInfo')}
                 </CardTitle>
               </CardHeader>
               <CardContent className="pt-0">
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
                   <div className="lg:col-span-2">
-                    <Label htmlFor="companyName" className="dark:text-gray-300 text-sm">Company Name</Label>
+                    <Label htmlFor="companyName" className="dark:text-gray-300 text-sm">{t('settings.companyName')}</Label>
                     <Input
                       id="companyName"
                       value={settings.companyName}
@@ -258,7 +262,7 @@ export const Settings = () => {
                   </div>
 
                   <div className="lg:col-span-2">
-                    <Label htmlFor="supportEmail" className="dark:text-gray-300 text-sm">Support Email</Label>
+                    <Label htmlFor="supportEmail" className="dark:text-gray-300 text-sm">{t('settings.supportEmail')}</Label>
                     <Input
                       id="supportEmail"
                       type="email"
@@ -269,38 +273,38 @@ export const Settings = () => {
                   </div>
 
                   <div>
-                    <Label htmlFor="timezone" className="dark:text-gray-300 text-sm">Timezone</Label>
+                    <Label htmlFor="timezone" className="dark:text-gray-300 text-sm">{t('settings.timezone')}</Label>
                     <select
                       id="timezone"
                       value={settings.timezone}
                       onChange={(e) => handleSettingChange("timezone", e.target.value)}
                       className="w-full h-9 px-3 border rounded-md dark:bg-slate-900 dark:border-slate-600 dark:text-white mt-1 text-sm"
                     >
-                      <option value="UTC">UTC</option>
-                      <option value="America/New_York">Eastern Time</option>
-                      <option value="America/Chicago">Central Time</option>
-                      <option value="America/Los_Angeles">Pacific Time</option>
+                      <option value="UTC">{t('settings.utc')}</option>
+                      <option value="America/New_York">{t('settings.easternTime')}</option>
+                      <option value="America/Chicago">{t('settings.centralTime')}</option>
+                      <option value="America/Los_Angeles">{t('settings.pacificTime')}</option>
                     </select>
                   </div>
 
                   <div>
-                    <Label htmlFor="language" className="dark:text-gray-300 text-sm">Language</Label>
+                    <Label htmlFor="language" className="dark:text-gray-300 text-sm">{t('settings.language')}</Label>
                     <select
                       id="language"
                       value={settings.language}
                       onChange={(e) => handleSettingChange("language", e.target.value)}
                       className="w-full h-9 px-3 border rounded-md dark:bg-slate-900 dark:border-slate-600 dark:text-white mt-1 text-sm"
                     >
-                      <option value="en">English</option>
-                      <option value="es">Spanish</option>
-                      <option value="fr">French</option>
-                      <option value="de">German</option>
+                      <option value="en">{t('settings.english')}</option>
+                      <option value="es">{t('settings.spanish')}</option>
+                      <option value="fr">{t('settings.french')}</option>
+                      <option value="de">{t('settings.german')}</option>
                     </select>
                   </div>
 
                   <div className="lg:col-span-4 pt-2 border-t border-slate-200 dark:border-slate-700 mt-2">
-                    <div className="flex items-center justify-between mb-3">
-                      <Label htmlFor="businessHours" className="dark:text-white text-sm font-semibold">Business Hours</Label>
+                    <div className={`flex items-center justify-between mb-3`}>
+                      <Label htmlFor="businessHours" className="dark:text-white text-sm font-semibold">{t('settings.businessHours')}</Label>
                       <Switch
                         id="businessHours"
                         checked={settings.businessHours}
@@ -311,7 +315,7 @@ export const Settings = () => {
                     {settings.businessHours && (
                       <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                         <div>
-                          <Label htmlFor="businessHoursStartTime" className="dark:text-gray-300 text-sm">Start Time</Label>
+                          <Label htmlFor="businessHoursStartTime" className="dark:text-gray-300 text-sm">{t('settings.startTime')}</Label>
                           <Input
                             id="businessHoursStartTime"
                             type="time"
@@ -321,7 +325,7 @@ export const Settings = () => {
                           />
                         </div>
                         <div>
-                          <Label htmlFor="businessHoursEndTime" className="dark:text-gray-300 text-sm">End Time</Label>
+                          <Label htmlFor="businessHoursEndTime" className="dark:text-gray-300 text-sm">{t('settings.endTime')}</Label>
                           <Input
                             id="businessHoursEndTime"
                             type="time"
@@ -331,16 +335,16 @@ export const Settings = () => {
                           />
                         </div>
                         <div>
-                          <Label htmlFor="businessHoursDays" className="dark:text-gray-300 text-sm">Days</Label>
+                          <Label htmlFor="businessHoursDays" className="dark:text-gray-300 text-sm">{t('settings.days')}</Label>
                           <select
                             id="businessHoursDays"
                             value={settings.businessHoursDays}
                             onChange={(e) => handleSettingChange("businessHoursDays", e.target.value)}
                             className="w-full h-9 px-3 border rounded-md dark:bg-slate-900 dark:border-slate-600 dark:text-white mt-1 text-sm"
                           >
-                            <option>Monday - Friday</option>
-                            <option>Monday - Saturday</option>
-                            <option>Every Day</option>
+                            <option>{t('settings.mondayFriday')}</option>
+                            <option>{t('settings.mondaySaturday')}</option>
+                            <option>{t('settings.everyDay')}</option>
                           </select>
                         </div>
                       </div>
@@ -352,21 +356,21 @@ export const Settings = () => {
           </div>
         </TabsContent>
 
-        <TabsContent value="notifications" className="space-y-6">
+        <TabsContent value="notifications" className="space-y-6" dir={isRTL ? 'rtl' : 'ltr'}>
           <Card className="card-shadow-lg border-slate-200 dark:border-slate-700 dark:bg-slate-800">
             <CardHeader className="border-b border-slate-200 dark:border-slate-700 bg-gradient-to-r from-slate-50 to-slate-100 dark:from-slate-800 dark:to-slate-900">
               <CardTitle className="flex items-center gap-2 dark:text-white">
                 <Bell className="h-5 w-5 text-cyan-600 dark:text-cyan-400" />
-                Notification Preferences
+                {t('settings.notificationPreferences')}
               </CardTitle>
-              <CardDescription className="dark:text-gray-400">Configure how you receive notifications</CardDescription>
+              <CardDescription className="dark:text-gray-400">{t('settings.configureNotifications')}</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4 pt-6">
               <div className="space-y-3">
                 <div className="flex items-center justify-between p-3 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/50">
                   <div>
-                    <Label className="dark:text-white">Email Notifications</Label>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">Receive notifications via email</p>
+                    <Label className="dark:text-white">{t('settings.emailNotifications')}</Label>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">{t('settings.emailNotificationsDesc')}</p>
                   </div>
                   <Switch
                     checked={settings.emailNotifications}
@@ -376,8 +380,8 @@ export const Settings = () => {
 
                 <div className="flex items-center justify-between p-3 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/50">
                   <div>
-                    <Label className="dark:text-white">Slack Notifications</Label>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">Send alerts to Slack channels</p>
+                    <Label className="dark:text-white">{t('settings.slackNotifications')}</Label>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">{t('settings.slackNotificationsDesc')}</p>
                   </div>
                   <Switch
                     checked={settings.slackNotifications}
@@ -387,8 +391,8 @@ export const Settings = () => {
 
                 <div className="flex items-center justify-between p-3 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/50">
                   <div>
-                    <Label className="dark:text-white">Auto Assignment</Label>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">Automatically assign conversations to agents</p>
+                    <Label className="dark:text-white">{t('settings.autoAssignment')}</Label>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">{t('settings.autoAssignmentDesc')}</p>
                   </div>
                   <Switch
                     checked={settings.autoAssignment}
@@ -400,35 +404,35 @@ export const Settings = () => {
           </Card>
         </TabsContent>
 
-        <TabsContent value="security" className="space-y-6">
+        <TabsContent value="security" className="space-y-6" dir={isRTL ? 'rtl' : 'ltr'}>
           <Card className="card-shadow-lg border-slate-200 dark:border-slate-700 dark:bg-slate-800">
             <CardHeader className="border-b border-slate-200 dark:border-slate-700 bg-gradient-to-r from-slate-50 to-slate-100 dark:from-slate-800 dark:to-slate-900">
               <CardTitle className="flex items-center gap-2 dark:text-white">
                 <Shield className="h-5 w-5 text-cyan-600 dark:text-cyan-400" />
-                Security Settings
+                {t('settings.securitySettings')}
               </CardTitle>
-              <CardDescription className="dark:text-gray-400">Configure security and access controls</CardDescription>
+              <CardDescription className="dark:text-gray-400">{t('settings.securitySettingsDesc')}</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4 pt-6">
               <div className="space-y-3">
                 <div className="flex items-center justify-between p-3 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/50">
                   <div>
-                    <Label className="dark:text-white">Require Authentication</Label>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">Require users to authenticate before chatting</p>
+                    <Label className="dark:text-white">{t('settings.requireAuth')}</Label>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">{t('settings.requireAuthDesc')}</p>
                   </div>
                   <Switch checked={true} />
                 </div>
 
                 <div className="flex items-center justify-between p-3 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/50">
                   <div>
-                    <Label className="dark:text-white">Allow File Uploads</Label>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">Allow customers to upload files in chat</p>
+                    <Label className="dark:text-white">{t('settings.allowFileUploads')}</Label>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">{t('settings.allowFileUploadsDesc')}</p>
                   </div>
                   <Switch checked={true} />
                 </div>
 
                 <div>
-                  <Label htmlFor="maxFileSize" className="dark:text-gray-300">Max File Size (MB)</Label>
+                  <Label htmlFor="maxFileSize" className="dark:text-gray-300">{t('settings.maxFileSize')}</Label>
                   <Input
                     id="maxFileSize"
                     type="number"
@@ -438,7 +442,7 @@ export const Settings = () => {
                 </div>
 
                 <div>
-                  <Label htmlFor="sessionTimeout" className="dark:text-gray-300">Session Timeout (minutes)</Label>
+                  <Label htmlFor="sessionTimeout" className="dark:text-gray-300">{t('settings.sessionTimeout')}</Label>
                   <Input
                     id="sessionTimeout"
                     type="number"
@@ -451,22 +455,22 @@ export const Settings = () => {
           </Card>
         </TabsContent>
 
-        <TabsContent value="integrations" className="space-y-6">
+        <TabsContent value="integrations" className="space-y-6" dir={isRTL ? 'rtl' : 'ltr'}>
           <IntegrationsList />
         </TabsContent>
 
-        <TabsContent value="appearance" className="space-y-6">
+        <TabsContent value="appearance" className="space-y-6" dir={isRTL ? 'rtl' : 'ltr'}>
           <Card className="card-shadow-lg border-slate-200 dark:border-slate-700 dark:bg-slate-800">
             <CardHeader className="border-b border-slate-200 dark:border-slate-700 bg-gradient-to-r from-slate-50 to-slate-100 dark:from-slate-800 dark:to-slate-900">
               <CardTitle className="flex items-center gap-2 dark:text-white">
                 <Palette className="h-5 w-5 text-cyan-600 dark:text-cyan-400" />
-                Platform Appearance
+                {t('settings.platformAppearance')}
               </CardTitle>
-              <CardDescription className="dark:text-gray-400">Customize the look and feel</CardDescription>
+              <CardDescription className="dark:text-gray-400">{t('settings.platformAppearanceDesc')}</CardDescription>
             </CardHeader>
             <CardContent className="space-y-5 pt-6">
               <div>
-                <Label className="dark:text-gray-300 mb-3 block">Theme</Label>
+                <Label className="dark:text-gray-300 mb-3 block">{t('settings.theme')}</Label>
                 <div className="grid grid-cols-2 gap-4 mt-2">
                   <div
                     onClick={() => handleSettingChange("darkMode", false)}
@@ -478,7 +482,7 @@ export const Settings = () => {
                   >
                     <div className="text-center">
                       <div className="w-full h-16 rounded-lg mb-3 bg-white border-2 border-slate-200 shadow-sm"></div>
-                      <span className={`text-sm font-medium ${!settings.darkMode ? 'text-cyan-600' : 'dark:text-white'}`}>☀️ Light Mode</span>
+                      <span className={`text-sm font-medium ${!settings.darkMode ? 'text-cyan-600' : 'dark:text-white'}`}>{t('settings.lightMode')}</span>
                     </div>
                   </div>
                   <div
@@ -491,24 +495,24 @@ export const Settings = () => {
                   >
                     <div className="text-center">
                       <div className="w-full h-16 rounded-lg mb-3 bg-slate-900 border-2 border-slate-700 shadow-sm"></div>
-                      <span className={`text-sm font-medium ${settings.darkMode ? 'text-cyan-400' : 'dark:text-white'}`}>🌙 Dark Mode</span>
+                      <span className={`text-sm font-medium ${settings.darkMode ? 'text-cyan-400' : 'dark:text-white'}`}>{t('settings.darkMode')}</span>
                     </div>
                   </div>
                 </div>
               </div>
               <div>
-                <Label htmlFor="logoUrl" className="dark:text-gray-300">Logo URL</Label>
+                <Label htmlFor="logoUrl" className="dark:text-gray-300">{t('settings.logoUrl')}</Label>
                 <Input
                   id="logoUrl"
                   value={settings.logoUrl}
                   onChange={(e) => handleSettingChange("logoUrl", e.target.value)}
                   className="dark:bg-slate-900 dark:border-slate-600 dark:text-white mt-1.5"
-                  placeholder="https://example.com/logo.png"
+                  placeholder={t('settings.logoUrlPlaceholder')}
                 />
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor="primaryColor" className="dark:text-gray-300">Primary Color</Label>
+                  <Label htmlFor="primaryColor" className="dark:text-gray-300">{t('settings.primaryColor')}</Label>
                   <div className="flex items-center gap-2 mt-1.5">
                     <Input
                       id="primaryColor"
@@ -525,7 +529,7 @@ export const Settings = () => {
                   </div>
                 </div>
                 <div>
-                  <Label htmlFor="secondaryColor" className="dark:text-gray-300">Secondary Color</Label>
+                  <Label htmlFor="secondaryColor" className="dark:text-gray-300">{t('settings.secondaryColor')}</Label>
                   <div className="flex items-center gap-2 mt-1.5">
                     <Input
                       id="secondaryColor"
@@ -543,25 +547,25 @@ export const Settings = () => {
                 </div>
               </div>
               <div>
-                <Label htmlFor="customDomain" className="dark:text-gray-300">Custom Domain</Label>
+                <Label htmlFor="customDomain" className="dark:text-gray-300">{t('settings.customDomain')}</Label>
                 <Input
                   id="customDomain"
                   value={settings.customDomain}
                   onChange={(e) => handleSettingChange("customDomain", e.target.value)}
                   className="dark:bg-slate-900 dark:border-slate-600 dark:text-white mt-1.5"
-                  placeholder="chat.yourdomain.com"
+                  placeholder={t('settings.customDomainPlaceholder')}
                 />
               </div>
             </CardContent>
           </Card>
         </TabsContent>
 
-        <TabsContent value="developer" className="space-y-6">
-          <Tabs defaultValue="api-keys" className="space-y-6">
+        <TabsContent value="developer" className="space-y-6" dir={isRTL ? 'rtl' : 'ltr'}>
+          <Tabs defaultValue="api-keys" className="space-y-6" dir={isRTL ? 'rtl' : 'ltr'}>
             <TabsList>
-              <TabsTrigger value="api-keys">API Keys</TabsTrigger>
-              <TabsTrigger value="tester">Tester</TabsTrigger>
-              <TabsTrigger value="documentation">Documentation</TabsTrigger>
+              <TabsTrigger value="api-keys">{t('settings.apiKeys')}</TabsTrigger>
+              <TabsTrigger value="tester">{t('settings.tester')}</TabsTrigger>
+              <TabsTrigger value="documentation">{t('settings.documentation')}</TabsTrigger>
             </TabsList>
             <TabsContent value="api-keys">
               <ApiKeys />
@@ -576,9 +580,9 @@ export const Settings = () => {
         </TabsContent>
       </Tabs>
 
-      <div className="flex justify-end">
+      <div className={`flex ${isRTL ? 'justify-start' : 'justify-end'}`}>
         <Button onClick={handleSaveChanges} className="bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-700 hover:to-blue-700 text-white btn-hover-lift px-6">
-          Save Changes
+          {t('settings.saveChanges')}
         </Button>
       </div>
     </div>

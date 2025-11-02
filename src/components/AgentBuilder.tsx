@@ -11,6 +11,7 @@ import ReactFlow, {
 import 'reactflow/dist/style.css';
 import { toast } from "sonner";
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 
 import { Agent, Tool, KnowledgeBase } from '@/types';
 import { AgentComponentSidebar } from './AgentComponentSidebar';
@@ -42,6 +43,7 @@ const initialNodes = (agentName) => [
 export const AgentBuilderContext = createContext(null);
 
 export const AgentBuilder = ({ agent }: AgentBuilderProps) => {
+  const { t } = useTranslation();
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes(agent.name));
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
   const [reactFlowInstance, setReactFlowInstance] = useState(null);
@@ -108,10 +110,10 @@ export const AgentBuilder = ({ agent }: AgentBuilderProps) => {
     },
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ['agent', agent.id.toString()] });
-      toast.success("Agent updated successfully!");
+      toast.success(t('builder.agentUpdated'));
     },
     onError: (error) => {
-      toast.error("Failed to update agent.");
+      toast.error(t('builder.failedUpdateAgent'));
     },
   });
 
@@ -172,7 +174,7 @@ export const AgentBuilder = ({ agent }: AgentBuilderProps) => {
     const { nodeType, id, label, toolType, mcpServerUrl } = JSON.parse(dataString);
 
     if (nodes.some(n => n.id === `${nodeType}-${id}`)) {
-      toast.warning(`This ${nodeType} has already been added.`);
+      toast.warning(t('builder.alreadyAdded', { type: nodeType }));
       return;
     }
 

@@ -13,8 +13,12 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Comments } from "@/components/Comments";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useTranslation } from 'react-i18next';
+import { useI18n } from '@/hooks/useI18n';
 
 const BuilderPage = () => {
+  const { t } = useTranslation();
+  const { isRTL } = useI18n();
   const { agentId } = useParams<{ agentId: string }>();
   const navigate = useNavigate();
   const [isCreateAgentDialogOpen, setIsCreateAgentDialogOpen] = useState(false);
@@ -75,10 +79,10 @@ const BuilderPage = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['agentHistory'] });
-      toast({ title: "New agent version created!" });
+      toast({ title: t('builder.newVersionCreated') });
     },
     onError: (error) => {
-      toast({ title: "Failed to create new version", description: error.message, variant: "destructive" });
+      toast({ title: t('builder.failedCreateVersion'), description: error.message, variant: "destructive" });
     },
   });
 
@@ -96,11 +100,11 @@ const BuilderPage = () => {
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['agentHistory'] });
       queryClient.invalidateQueries({ queryKey: ['agent', data.id.toString()] });
-      toast({ title: `Agent version ${data.version_number} activated!` });
+      toast({ title: t('builder.versionActivated', { version: data.version_number }) });
       setIsHistoryDialogOpen(false);
     },
     onError: (error) => {
-      toast({ title: "Failed to activate version", description: error.message, variant: "destructive" });
+      toast({ title: t('builder.failedActivateVersion'), description: error.message, variant: "destructive" });
     },
   });
 
@@ -109,7 +113,7 @@ const BuilderPage = () => {
       <div className="flex items-center justify-center h-[80vh]">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-muted-foreground">Loading agent...</p>
+          <p className="text-muted-foreground">{t('builder.loadingAgent')}</p>
         </div>
       </div>
     );
@@ -122,8 +126,8 @@ const BuilderPage = () => {
           <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-red-100 dark:bg-red-900/20 mb-4">
             <span className="text-3xl">⚠️</span>
           </div>
-          <h3 className="text-lg font-semibold mb-2 dark:text-white">Error Loading Agent</h3>
-          <p className="text-muted-foreground">Please try again or select a different agent</p>
+          <h3 className="text-lg font-semibold mb-2 dark:text-white">{t('builder.errorLoadingAgent')}</h3>
+          <p className="text-muted-foreground">{t('builder.errorLoadingAgentDesc')}</p>
         </div>
       </div>
     );
@@ -132,14 +136,14 @@ const BuilderPage = () => {
   return (
     <div className="space-y-6 p-6 animate-fade-in">
       {/* Enhanced Header */}
-      <div className="flex justify-between items-start">
+      <div className={`flex justify-between items-start `}>
         <div>
           <h2 className="text-4xl font-bold bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent mb-2">
-            Agent Builder
+            {t('builder.title')}
           </h2>
-          <p className="text-muted-foreground text-lg">Design conversation flows with drag-and-drop interface</p>
+          <p className="text-muted-foreground text-lg">{t('builder.subtitle')}</p>
         </div>
-        <div className="flex gap-2">
+        <div className={`flex gap-2`}>
           {agentId && agent && (
             <Button
               variant="outline"
@@ -147,8 +151,8 @@ const BuilderPage = () => {
               disabled={createNewVersionMutation.isPending}
               className="btn-hover-lift"
             >
-              <PlusCircle className="mr-2 h-4 w-4" />
-              {createNewVersionMutation.isPending ? "Creating..." : "New Version"}
+              <PlusCircle className={`h-4 w-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
+              {createNewVersionMutation.isPending ? t('builder.creating') : t('builder.newVersion')}
             </Button>
           )}
           {agentId && (
@@ -157,8 +161,8 @@ const BuilderPage = () => {
               onClick={() => setIsHistoryDialogOpen(true)}
               className="btn-hover-lift"
             >
-              <History className="mr-2 h-4 w-4" />
-              History
+              <History className={`h-4 w-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
+              {t('builder.history')}
             </Button>
           )}
           {!agentId && (
@@ -166,8 +170,8 @@ const BuilderPage = () => {
               onClick={() => setIsCreateAgentDialogOpen(true)}
               className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white btn-hover-lift"
             >
-              <PlusCircle className="mr-2 h-4 w-4" />
-              Create New Agent
+              <PlusCircle className={`h-4 w-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
+              {t('builder.createNewAgent')}
             </Button>
           )}
         </div>
@@ -187,17 +191,17 @@ const BuilderPage = () => {
             <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-gradient-to-br from-green-100 to-emerald-100 dark:from-green-900/30 dark:to-emerald-900/30 mb-6">
               <span className="text-4xl">🤖</span>
             </div>
-            <h3 className="text-2xl font-bold mb-2 dark:text-white">Select an Agent</h3>
-            <p className="mb-6 text-lg text-muted-foreground">Choose an agent to start building</p>
+            <h3 className="text-2xl font-bold mb-2 dark:text-white">{t('builder.selectAgent')}</h3>
+            <p className="mb-6 text-lg text-muted-foreground">{t('builder.selectAgentDesc')}</p>
             {isLoadingAgents ? (
-              <div className="flex items-center justify-center">
+              <div className={`flex items-center justify-center ${isRTL ? 'flex-row-reverse' : ''}`}>
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600"></div>
-                <p className="ml-3 text-muted-foreground">Loading agents...</p>
+                <p className={`text-muted-foreground ${isRTL ? 'mr-3' : 'ml-3'}`}>{t('builder.loadingAgents')}</p>
               </div>
             ) : (
               <Select onValueChange={(value) => navigate(`/dashboard/builder/${value}`)}>
                 <SelectTrigger className="w-[320px] h-12">
-                  <SelectValue placeholder="Select an agent" />
+                  <SelectValue placeholder={t('builder.selectAnAgent')} />
                 </SelectTrigger>
                 <SelectContent>
                   {agents?.map((agent) => (
@@ -222,17 +226,17 @@ const BuilderPage = () => {
         <DialogContent className="max-w-3xl bg-white dark:bg-slate-800">
           <DialogHeader>
             <DialogTitle className="text-2xl font-bold dark:text-white">
-              Version History
+              {t('builder.versionHistory')}
             </DialogTitle>
             <p className="text-muted-foreground">
-              Manage versions for <span className="font-semibold text-green-600 dark:text-green-400">{agent?.name}</span>
+              {t('builder.manageVersionsFor', { name: agent?.name })}
             </p>
           </DialogHeader>
           {isLoadingHistory ? (
             <div className="flex items-center justify-center py-12">
               <div className="text-center">
                 <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-green-600 mx-auto mb-3"></div>
-                <p className="text-muted-foreground">Loading history...</p>
+                <p className="text-muted-foreground">{t('builder.loadingHistory')}</p>
               </div>
             </div>
           ) : (
@@ -240,36 +244,36 @@ const BuilderPage = () => {
               <Table>
                 <TableHeader className="bg-slate-50 dark:bg-slate-900">
                   <TableRow>
-                    <TableHead className="font-semibold dark:text-gray-300">Version</TableHead>
-                    <TableHead className="font-semibold dark:text-gray-300">Status</TableHead>
-                    <TableHead className="font-semibold dark:text-gray-300">Created At</TableHead>
-                    <TableHead className="font-semibold dark:text-gray-300">Actions</TableHead>
+                    <TableHead className="font-semibold dark:text-gray-300">{t('builder.version')}</TableHead>
+                    <TableHead className="font-semibold dark:text-gray-300">{t('builder.status')}</TableHead>
+                    <TableHead className="font-semibold dark:text-gray-300">{t('builder.createdAt')}</TableHead>
+                    <TableHead className="font-semibold dark:text-gray-300">{t('builder.actions')}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {agentHistory?.map((version) => (
                     <TableRow key={version.id} className="hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
                       <TableCell className="font-medium dark:text-white">
-                        <div className="flex items-center gap-2">
+                        <div className={`flex items-center gap-2 `}>
                           <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center text-white font-bold text-sm">
                             v{version.version_number}
                           </div>
-                          Version {version.version_number}
+                          {t('builder.version')} {version.version_number}
                         </div>
                       </TableCell>
                       <TableCell>
                         {version.status === "active" ? (
-                          <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400 border border-green-200 dark:border-green-800">
-                            <span className="w-2 h-2 bg-green-600 dark:bg-green-400 rounded-full mr-2"></span>
-                            Active
+                          <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400 border border-green-200 dark:border-green-800 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                            <span className={`w-2 h-2 bg-green-600 dark:bg-green-400 rounded-full ${isRTL ? 'ml-2' : 'mr-2'}`}></span>
+                            {t('builder.active')}
                           </span>
                         ) : (
                           <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
-                            Inactive
+                            {t('builder.inactive')}
                           </span>
                         )}
                       </TableCell>
-                      <TableCell className="text-sm text-muted-foreground">
+                      <TableCell className={`text-sm text-muted-foreground`}>
                         {new Date(version.created_at).toLocaleString()}
                       </TableCell>
                       <TableCell>
@@ -281,7 +285,7 @@ const BuilderPage = () => {
                             disabled={activateVersionMutation.isPending}
                             className="btn-hover-lift bg-green-50 dark:bg-green-900/20 hover:bg-green-100 dark:hover:bg-green-900/40 border-green-200 dark:border-green-800 text-green-700 dark:text-green-400"
                           >
-                            {activateVersionMutation.isPending ? "Activating..." : "Activate"}
+                            {activateVersionMutation.isPending ? t('builder.activating') : t('builder.activate')}
                           </Button>
                         )}
                       </TableCell>
