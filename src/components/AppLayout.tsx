@@ -32,6 +32,7 @@ import { Permission } from "./Permission";
 import { PresenceSelector } from "@/components/PresenceSelector";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { useTranslation } from "react-i18next";
+import { useI18n } from "@/hooks/useI18n";
 
 const AppLayout = () => {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
@@ -40,6 +41,7 @@ const AppLayout = () => {
   const { user, logout } = useAuth();
   const { theme, toggleTheme } = useTheme();
   const { t } = useTranslation();
+  const { isRTL } = useI18n();
   console.log("Logged in user:", user);
 
   const sidebarItems = [
@@ -194,20 +196,28 @@ const AppLayout = () => {
       <div className="flex flex-1 overflow-hidden">
         {/* Enhanced Sidebar with Dark Mode */}
         <aside
-          className={`flex-shrink-0 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-700 transition-all duration-300 relative ${
+          className={`flex-shrink-0 bg-white dark:bg-slate-900 ${isRTL ? 'border-l' : 'border-r'} border-slate-200 dark:border-slate-700 transition-all duration-300 relative ${
             sidebarOpen ? '' : '-ml-64 lg:ml-0'
           } ${sidebarCollapsed ? 'w-16' : 'w-64'}`}
         >
           {/* Collapse/Expand Button for Desktop */}
           <button
             onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-            className="hidden lg:flex absolute -right-3 top-8 z-20 bg-gradient-to-br from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white rounded-full p-2 shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-110 group"
-            title={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+            className={`hidden lg:flex absolute ${isRTL ? '-left-3' : '-right-3'} top-8 z-20 bg-gradient-to-br from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white rounded-full p-2 shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-110 group`}
+            title={sidebarCollapsed ? t("navigation.expandSidebar") : t("navigation.collapseSidebar")}
           >
             {sidebarCollapsed ? (
-              <PanelLeftOpen className="h-4 w-4 transition-transform duration-200 group-hover:translate-x-0.5" />
+              isRTL ? (
+                <PanelLeftClose className="h-4 w-4 transition-transform duration-200 group-hover:-translate-x-0.5 scale-x-[-1]" />
+              ) : (
+                <PanelLeftOpen className="h-4 w-4 transition-transform duration-200 group-hover:translate-x-0.5" />
+              )
             ) : (
-              <PanelLeftClose className="h-4 w-4 transition-transform duration-200 group-hover:-translate-x-0.5" />
+              isRTL ? (
+                <PanelLeftOpen className="h-4 w-4 transition-transform duration-200 group-hover:translate-x-0.5 scale-x-[-1]" />
+              ) : (
+                <PanelLeftClose className="h-4 w-4 transition-transform duration-200 group-hover:-translate-x-0.5" />
+              )
             )}
           </button>
 

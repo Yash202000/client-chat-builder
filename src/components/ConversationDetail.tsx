@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient, useInfiniteQuery } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -25,6 +25,52 @@ interface ConversationDetailProps {
   agentId: number;
 }
 
+// Utility function to format date for separator
+const formatDateSeparator = (date: Date, locale?: string): string => {
+  const today = new Date();
+  const yesterday = new Date(today);
+  yesterday.setDate(yesterday.getDate() - 1);
+
+  const messageDate = new Date(date);
+
+  // Reset time to compare only dates
+  today.setHours(0, 0, 0, 0);
+  yesterday.setHours(0, 0, 0, 0);
+  messageDate.setHours(0, 0, 0, 0);
+
+  if (messageDate.getTime() === today.getTime()) {
+    return 'Today';
+  } else if (messageDate.getTime() === yesterday.getTime()) {
+    return 'Yesterday';
+  } else {
+    // Check if message is from this week (last 7 days)
+    const weekAgo = new Date(today);
+    weekAgo.setDate(weekAgo.getDate() - 7);
+
+    if (messageDate >= weekAgo) {
+      // Show day of week for messages within last week
+      return messageDate.toLocaleDateString(locale, { weekday: 'long' });
+    } else {
+      // Format as "December 25, 2024" or localized format
+      return messageDate.toLocaleDateString(locale, {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      });
+    }
+  }
+};
+
+// Check if two messages are from different days
+const isDifferentDay = (date1: string | Date, date2: string | Date): boolean => {
+  const d1 = new Date(date1);
+  const d2 = new Date(date2);
+
+  return d1.getDate() !== d2.getDate() ||
+         d1.getMonth() !== d2.getMonth() ||
+         d1.getFullYear() !== d2.getFullYear();
+};
+
 export const ConversationDetail: React.FC<ConversationDetailProps> = ({ sessionId, agentId }) => {
   const { t } = useTranslation();
   const { isRTL } = useI18n();
@@ -35,8 +81,13 @@ export const ConversationDetail: React.FC<ConversationDetailProps> = ({ sessionI
   const [isCallModalOpen, setCallModalOpen] = useState(false);
   const [isAiEnabled, setIsAiEnabled] = useState(true);
   const [suggestedReplies, setSuggestedReplies] = useState<string[]>([]);
+  const [isAgentTyping, setIsAgentTyping] = useState(false);
+  const [hasInitiallyLoaded, setHasInitiallyLoaded] = useState(false);
+  const typingTimeoutRef = useRef<NodeJS.Timeout>();
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const messagesContainerRef = useRef<HTMLDivElement>(null);
   const ws = useRef<WebSocket | null>(null);
+  const previousScrollHeight = useRef<number>(0);
   const { authFetch, token } = useAuth();
   const { isRecording, startRecording, stopRecording } = useVoiceConnection(agentId, sessionId);
 
@@ -83,15 +134,38 @@ export const ConversationDetail: React.FC<ConversationDetailProps> = ({ sessionI
     onError: (e: Error) => toast({ title: t('conversations.detail.toasts.error'), description: e.message, variant: 'destructive' }),
   });
 
-  const { data: messages, isLoading } = useQuery<ChatMessage[]>({
+  const {
+    data: messagesData,
+    isLoading,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage
+  } = useInfiniteQuery<ChatMessage[]>({
     queryKey: ['messages', agentId, sessionId, companyId],
-    queryFn: async () => {
-      const response = await authFetch(`/api/v1/conversations/${agentId}/${sessionId}`);
+    queryFn: async ({ pageParam }) => {
+      const url = pageParam
+        ? `/api/v1/conversations/${agentId}/${sessionId}?limit=20&before_id=${pageParam}`
+        : `/api/v1/conversations/${agentId}/${sessionId}?limit=20`;
+      const response = await authFetch(url);
       if (!response.ok) throw new Error('Failed to fetch messages');
       return response.json();
     },
+    getNextPageParam: (lastPage) => {
+      // Return the ID of the oldest message for cursor-based pagination
+      // If we got fewer messages than requested, we've reached the end
+      if (lastPage && lastPage.length === 20) {
+        return lastPage[0].id; // First message is the oldest
+      }
+      return undefined; // No more pages
+    },
+    initialPageParam: undefined,
     enabled: !!sessionId && !!agentId,
   });
+
+  // Flatten all pages into a single messages array
+  // Pages are ordered: [latest messages, older messages, even older messages...]
+  // We need to reverse the pages array so oldest messages appear first (top) and newest last (bottom)
+  const messages = messagesData?.pages ? [...messagesData.pages].reverse().flat() : [];
 
   useEffect(() => {
     if (sessionId && agentId && token) {
@@ -104,14 +178,36 @@ export const ConversationDetail: React.FC<ConversationDetailProps> = ({ sessionI
           return;
         }
 
-        queryClient.setQueryData<ChatMessage[]>(['messages', agentId, sessionId, companyId], (oldMessages = []) => {
-          if (oldMessages.some(msg => msg.id === newMessage.id)) {
-            return oldMessages;
+        // Filter out typing indicator messages - they should not appear as messages
+        if (newMessage.message_type === 'typing') {
+          return;
+        }
+
+        queryClient.setQueryData(['messages', agentId, sessionId, companyId], (oldData: any) => {
+          if (!oldData) return { pages: [[newMessage]], pageParams: [undefined] };
+
+          const lastPage = oldData.pages[oldData.pages.length - 1];
+          if (lastPage?.some((msg: ChatMessage) => msg.id === newMessage.id)) {
+            return oldData;
           }
-          return [...oldMessages, newMessage];
+
+          // Add the new message to the last page
+          const newPages = [...oldData.pages];
+          newPages[newPages.length - 1] = [...lastPage, newMessage];
+
+          return {
+            ...oldData,
+            pages: newPages
+          };
         });
       };
-      return () => ws.current?.close();
+      return () => {
+        // Clear typing timeout on unmount
+        if (typingTimeoutRef.current) {
+          clearTimeout(typingTimeoutRef.current);
+        }
+        ws.current?.close();
+      };
     }
   }, [sessionId, agentId, companyId, queryClient, token]);
 
@@ -120,11 +216,78 @@ export const ConversationDetail: React.FC<ConversationDetailProps> = ({ sessionI
     queryFn: () => authFetch(`/api/v1/users/`).then(res => res.json()),
   });
 
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  const scrollToBottom = (smooth = true) => {
+    if (smooth) {
+      messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    } else {
+      messagesEndRef.current?.scrollIntoView({ behavior: "auto" });
+    }
   };
 
-  useEffect(scrollToBottom, [messages]);
+  // Reset initial load flag when session changes
+  useEffect(() => {
+    setHasInitiallyLoaded(false);
+  }, [sessionId]);
+
+  // Scroll to bottom on initial load
+  useEffect(() => {
+    if (!isLoading && messages.length > 0 && !hasInitiallyLoaded) {
+      // Use setTimeout to ensure DOM is fully rendered
+      setTimeout(() => {
+        scrollToBottom(false); // Instant scroll on initial load
+        setHasInitiallyLoaded(true);
+      }, 100);
+    }
+  }, [isLoading, messages.length, hasInitiallyLoaded]);
+
+  // Scroll to bottom when new messages arrive (only if user is near bottom)
+  useEffect(() => {
+    if (!hasInitiallyLoaded) return; // Skip on initial load
+
+    const container = messagesContainerRef.current;
+    if (!container) return;
+
+    const isNearBottom = container.scrollHeight - container.scrollTop - container.clientHeight < 100;
+
+    // Only auto-scroll if user is already near the bottom
+    if (isNearBottom) {
+      scrollToBottom(true); // Smooth scroll for new messages
+    }
+  }, [messages, hasInitiallyLoaded]);
+
+  // Handle scroll to load more messages (only after initial load)
+  useEffect(() => {
+    const container = messagesContainerRef.current;
+    if (!container || !hasInitiallyLoaded) return;
+
+    const handleScroll = () => {
+      // Check if user has scrolled to top (within 100px from top)
+      if (container.scrollTop < 100 && hasNextPage && !isFetchingNextPage) {
+        console.log('[Scroll] Loading more messages...', { scrollTop: container.scrollTop, hasNextPage, isFetchingNextPage });
+        const scrollHeightBefore = container.scrollHeight;
+        const scrollTopBefore = container.scrollTop;
+
+        fetchNextPage().then(() => {
+          // Maintain scroll position after loading older messages
+          requestAnimationFrame(() => {
+            if (container) {
+              const scrollHeightAfter = container.scrollHeight;
+              const newScrollTop = scrollTopBefore + (scrollHeightAfter - scrollHeightBefore);
+              container.scrollTop = newScrollTop;
+              console.log('[Scroll] Loaded older messages, adjusted scroll position');
+            }
+          });
+        });
+      }
+    };
+
+    container.addEventListener('scroll', handleScroll);
+    console.log('[Scroll] Scroll listener attached', { hasInitiallyLoaded, hasNextPage });
+    return () => {
+      container.removeEventListener('scroll', handleScroll);
+      console.log('[Scroll] Scroll listener removed');
+    };
+  }, [hasNextPage, isFetchingNextPage, fetchNextPage, hasInitiallyLoaded]);
 
   const sendMessageMutation = useMutation({
     mutationFn: (newMessage: { message: string, message_type: string, sender: string, token?: string }) => {
@@ -207,8 +370,57 @@ export const ConversationDetail: React.FC<ConversationDetailProps> = ({ sessionI
     if (note.trim()) sendMessageMutation.mutate({ message: note.trim(), message_type: 'note', sender: 'agent' });
   };
 
+  const handleMessageChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const value = e.target.value;
+    setMessage(value);
+
+    // Send typing start event
+    if (!isAgentTyping && value.length > 0) {
+      setIsAgentTyping(true);
+      if (ws.current?.readyState === WebSocket.OPEN) {
+        ws.current.send(JSON.stringify({
+          type: 'agent_typing',
+          is_typing: true,
+          session_id: sessionId
+        }));
+      }
+    }
+
+    // Clear any existing timeout
+    if (typingTimeoutRef.current) {
+      clearTimeout(typingTimeoutRef.current);
+    }
+
+    // Set new timeout to send typing stop after 2 seconds of inactivity
+    typingTimeoutRef.current = setTimeout(() => {
+      setIsAgentTyping(false);
+      if (ws.current?.readyState === WebSocket.OPEN) {
+        ws.current.send(JSON.stringify({
+          type: 'agent_typing',
+          is_typing: false,
+          session_id: sessionId
+        }));
+      }
+    }, 2000);
+  };
+
   const handleSendMessage = () => {
-    if (message.trim()) sendMessageMutation.mutate({ message: message.trim(), message_type: 'message', sender: 'agent' });
+    if (message.trim()) {
+      // Clear typing timeout and send typing stop
+      if (typingTimeoutRef.current) {
+        clearTimeout(typingTimeoutRef.current);
+      }
+      setIsAgentTyping(false);
+      if (ws.current?.readyState === WebSocket.OPEN) {
+        ws.current.send(JSON.stringify({
+          type: 'agent_typing',
+          is_typing: false,
+          session_id: sessionId
+        }));
+      }
+
+      sendMessageMutation.mutate({ message: message.trim(), message_type: 'message', sender: 'agent' });
+    }
   };
 
   const contact: Contact | undefined = sessionDetails?.contact;
@@ -313,7 +525,7 @@ export const ConversationDetail: React.FC<ConversationDetailProps> = ({ sessionI
           </div>
         </header>
 
-        <main className="flex-grow overflow-y-auto p-6 bg-gradient-to-b from-slate-50 to-white dark:from-slate-900 dark:to-slate-800">
+        <main ref={messagesContainerRef} className="flex-grow overflow-y-auto p-6 bg-gradient-to-b from-slate-50 to-white dark:from-slate-900 dark:to-slate-800">
           {isLoading ? (
             <div className="flex items-center justify-center h-full">
               <div className="text-center">
@@ -323,9 +535,41 @@ export const ConversationDetail: React.FC<ConversationDetailProps> = ({ sessionI
             </div>
           ) : messages && messages.length > 0 ? (
             <div className="space-y-4">
-              {messages.map((msg, index) => (
-                <div key={`${msg.id}-${index}`}>
-                  {msg.message_type === 'note' ? (
+              {/* Loading indicator for fetching older messages */}
+              {isFetchingNextPage && (
+                <div className="flex justify-center py-4">
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+                    <span>{t('conversations.detail.loadingOlderMessages', { defaultValue: 'Loading older messages...' })}</span>
+                  </div>
+                </div>
+              )}
+              {/* Show message if no more messages to load and we have loaded multiple pages */}
+              {!hasNextPage && messagesData && messagesData.pages.length > 1 && (
+                <div className="flex justify-center py-2">
+                  <p className="text-xs text-muted-foreground">{t('conversations.detail.noMoreMessages', { defaultValue: 'Beginning of conversation' })}</p>
+                </div>
+              )}
+              {messages.map((msg, index) => {
+                // Check if we need to show a date separator
+                const showDateSeparator = index === 0 || isDifferentDay(messages[index - 1].timestamp, msg.timestamp);
+
+                return (
+                  <div key={`${msg.id}-${index}`}>
+                    {/* Date Separator */}
+                    {showDateSeparator && (
+                      <div className="flex items-center justify-center my-6">
+                        <div className="relative">
+                          <div className="bg-white dark:bg-slate-800 px-4 py-1.5 rounded-md shadow-md border border-slate-200 dark:border-slate-700">
+                            <p className="text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wide">
+                              {formatDateSeparator(new Date(msg.timestamp))}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {msg.message_type === 'note' ? (
                     /* Private Note */
                     <div className="flex justify-center my-6">
                       <div className="max-w-2xl w-full bg-gradient-to-r from-yellow-50 to-amber-50 dark:from-yellow-900/20 dark:to-amber-900/20 border-l-4 border-yellow-400 dark:border-yellow-600 rounded-lg p-4 card-shadow">
@@ -379,8 +623,9 @@ export const ConversationDetail: React.FC<ConversationDetailProps> = ({ sessionI
                       )}
                     </div>
                   )}
-                </div>
-              ))}
+                  </div>
+                );
+              })}
               <div ref={messagesEndRef} />
             </div>
           ) : (
@@ -413,7 +658,7 @@ export const ConversationDetail: React.FC<ConversationDetailProps> = ({ sessionI
               <div className="bg-white dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-700 card-shadow p-1">
                 <Textarea
                   value={message}
-                  onChange={(e) => setMessage(e.target.value)}
+                  onChange={handleMessageChange}
                   placeholder={t('conversations.detail.messageInput')}
                   className="border-0 focus-visible:ring-0 resize-none min-h-[80px]"
                   rows={3}
@@ -474,16 +719,16 @@ export const ConversationDetail: React.FC<ConversationDetailProps> = ({ sessionI
             </TabsContent>
 
             <TabsContent value="note" className="mt-4">
-              <div className="bg-gradient-to-r from-yellow-50 to-amber-50 rounded-lg border-2 border-yellow-300 card-shadow p-1">
+              <div className="bg-gradient-to-r from-yellow-50 to-amber-50 dark:from-yellow-900/20 dark:to-amber-900/20 rounded-lg border-2 border-yellow-300 dark:border-yellow-600 card-shadow p-1">
                 <Textarea
                   value={note}
                   onChange={(e) => setNote(e.target.value)}
                   placeholder={t('conversations.detail.noteInput')}
-                  className="border-0 bg-transparent focus-visible:ring-0 resize-none min-h-[80px]"
+                  className="border-0 bg-transparent focus-visible:ring-0 resize-none min-h-[80px] text-gray-900 dark:text-gray-100 placeholder:text-yellow-700 dark:placeholder:text-yellow-300"
                   rows={3}
                 />
                 <div className={`flex items-center justify-between px-3 pb-2 pt-1 ${isRTL ? 'flex-row-reverse' : ''}`}>
-                  <div className="flex items-center gap-2 text-xs text-yellow-800">
+                  <div className="flex items-center gap-2 text-xs text-yellow-800 dark:text-yellow-300">
                     <Book className="h-3 w-3" />
                     <span className="font-medium">{t('conversations.detail.privateTeamOnly')}</span>
                   </div>

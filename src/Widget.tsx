@@ -1,12 +1,13 @@
 import { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { MessageSquare, X, Mic, Send, Loader2, Bot, User } from 'lucide-react';
+import { MessageSquare, X, Mic, Send, Loader2, Bot, User, Minus } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { WidgetForm } from '@/components/WidgetForm';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { VoiceAgentPreview } from './components/previews/VoiceAgentPreview';
+import { TypingIndicator } from '@/components/TypingIndicator';
 
 // Type definitions
 interface WidgetProps {
@@ -142,6 +143,7 @@ const isSessionExpired = (timestamp: number, expirationDays: number = 30): boole
 const Widget = ({ agentId, companyId, backendUrl, rtlOverride, languageOverride, positionOverride }: WidgetProps) => {
   const [settings, setSettings] = useState<WidgetSettings | null>(null);
   const [isOpen, setIsOpen] = useState(false);
+  const [isMinimized, setIsMinimized] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
@@ -151,6 +153,7 @@ const Widget = ({ agentId, companyId, backendUrl, rtlOverride, languageOverride,
   const [isRecording, setIsRecording] = useState(false);
   const [activeForm, setActiveForm] = useState<any[] | null>(null);
   const [liveKitToken, setLiveKitToken] = useState<string | null>(null);
+  const [unreadCount, setUnreadCount] = useState(0);
   
   const isProactiveSession = useRef(false);
   const ws = useRef<WebSocket | null>(null);
@@ -274,7 +277,10 @@ const Widget = ({ agentId, companyId, backendUrl, rtlOverride, languageOverride,
       }
 
       if (data.message_type === 'typing') {
-        setIsTyping(data.is_typing);
+        // Only process typing indicator if feature is enabled
+        if (settings?.typing_indicator_enabled) {
+          setIsTyping(data.is_typing);
+        }
         return;
       }
 
@@ -298,8 +304,34 @@ const Widget = ({ agentId, companyId, backendUrl, rtlOverride, languageOverride,
         assignee_name: data.assignee_name  // Include agent name from backend
       };
 
+      // Increment unread count if minimized and message is from agent/system
+      if (isMinimized && (data.sender === 'agent' || data.sender === 'system')) {
+        setUnreadCount(prev => prev + 1);
+      }
+
       setMessages(prev => {
+        // For user messages from backend, check if we have an optimistic version to replace
+        if (data.sender === 'user' && data.id) {
+          // Find the most recent temp message with matching content
+          const tempMessageIndex = prev.findIndex(msg =>
+            msg.id.toString().startsWith('temp_') &&  // Is a temp message
+            msg.sender === 'user' &&                   // From user
+            msg.text === data.message                  // Same content
+          );
+
+          if (tempMessageIndex !== -1) {
+            // Replace temp message with real one from backend
+            const updated = [...prev];
+            updated[tempMessageIndex] = newMessage;
+            console.log(`✅ Replaced temp message with real ID: ${data.id}`);
+            return updated;
+          }
+        }
+
+        // Check for duplicates by real ID
         if (prev.find(msg => msg.id === newMessage.id)) return prev;
+
+        // Add new message (agent messages, or user message if no temp found)
         return [...prev, newMessage];
       });
 
@@ -443,6 +475,18 @@ const Widget = ({ agentId, companyId, backendUrl, rtlOverride, languageOverride,
   const handleSendMessage = (text: string, payload?: any) => {
     const messageText = text.trim();
     if (!messageText && !payload) return;
+
+    // OPTIMISTIC UPDATE: Show user message immediately
+    const optimisticMessage: Message = {
+      id: `temp_${Date.now()}`,
+      sender: 'user',
+      text: messageText,
+      type: 'message',
+      timestamp: new Date().toISOString(),
+    };
+    setMessages(prev => [...prev, optimisticMessage]);
+
+    // Send to backend
     const messageToSend = { message: payload || messageText, message_type: 'message', sender: 'user' };
     if (ws.current?.readyState === WebSocket.OPEN) {
       ws.current.send(JSON.stringify(messageToSend));
@@ -589,7 +633,66 @@ const Widget = ({ agentId, companyId, backendUrl, rtlOverride, languageOverride,
     )}
 
 
-    {isOpen && settings?.communication_mode !== 'voice' && (
+    {/* Minimized Widget View */}
+    {isOpen && isMinimized && settings?.communication_mode !== 'voice' && (
+      <div
+        dir={isRTL ? 'rtl' : 'ltr'}
+        style={{
+          width: '280px',
+          borderRadius: `${border_radius}px`,
+          boxShadow: '0 10px 30px rgba(0,0,0,0.15)',
+          position: 'absolute',
+          [vertical === 'bottom' ? 'bottom' : 'top']: '80px',
+          [horizontal === 'right' ? 'right' : 'left']: '0',
+          background: primary_color,
+        }}
+        className="flex items-center justify-between p-4 text-white cursor-pointer hover:opacity-90 transition-opacity"
+        onClick={() => {
+          setIsMinimized(false);
+          setUnreadCount(0);
+        }}
+      >
+        <div className="flex items-center gap-3">
+          {agent_avatar_url ? (
+            <div className="relative w-10 h-10 rounded-full overflow-hidden border-2 border-white/50 bg-white/10 flex items-center justify-center">
+              <span className="text-white font-bold text-sm absolute inset-0 flex items-center justify-center z-0">
+                {header_title.charAt(0).toUpperCase()}
+              </span>
+              <img
+                src={`${backendUrl}/api/v1/proxy/image-proxy?url=${encodeURIComponent(agent_avatar_url)}`}
+                alt="Avatar"
+                className="w-full h-full object-cover absolute inset-0 z-10"
+                onError={(e) => {
+                  e.currentTarget.style.display = 'none';
+                }}
+              />
+            </div>
+          ) : (
+            <div className="relative w-10 h-10 rounded-full overflow-hidden border-2 border-white/50 bg-white/10 flex items-center justify-center">
+              <span className="text-white font-bold text-sm">
+                {header_title.charAt(0).toUpperCase()}
+              </span>
+            </div>
+          )}
+          <div>
+            <div className="font-bold">{header_title}</div>
+            {unreadCount > 0 && (
+              <div className="text-xs">
+                {unreadCount} new message{unreadCount > 1 ? 's' : ''}
+              </div>
+            )}
+          </div>
+        </div>
+        {unreadCount > 0 && (
+          <div className="bg-white text-gray-900 rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold">
+            {unreadCount > 9 ? '9+' : unreadCount}
+          </div>
+        )}
+      </div>
+    )}
+
+    {/* Full Widget View */}
+    {isOpen && !isMinimized && settings?.communication_mode !== 'voice' && (
       <div
         dir={isRTL ? 'rtl' : 'ltr'}
         style={{
@@ -639,14 +742,29 @@ const Widget = ({ agentId, companyId, backendUrl, rtlOverride, languageOverride,
               )}
               <span className="font-bold text-lg">{header_title}</span>
             </div>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => setIsOpen(false)}
-              className="text-white hover:bg-white/20"
-            >
-              <X className="h-6 w-6" />
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => {
+                  setIsMinimized(true);
+                  setUnreadCount(0);
+                }}
+                className="text-white hover:bg-white/20"
+                title="Minimize"
+              >
+                <Minus className="h-5 w-5" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setIsOpen(false)}
+                className="text-white hover:bg-white/20"
+                title="Close"
+              >
+                <X className="h-6 w-6" />
+              </Button>
+            </div>
           </div>
         )}
         <div className="flex-grow p-4 overflow-y-auto space-y-4">
@@ -697,7 +815,21 @@ const Widget = ({ agentId, companyId, backendUrl, rtlOverride, languageOverride,
               </div>
             </div>
           ))}
-          {isTyping && <div className="text-sm text-gray-500 italic px-2">Agent is typing...</div>}
+          {isTyping && settings?.typing_indicator_enabled && (
+            <div className="flex w-full justify-start">
+              <div className="flex items-end gap-2">
+                <Avatar className="h-5 w-5">
+                  <AvatarFallback className="bg-transparent text-xs" style={{ color: bot_message_text_color }}>
+                    <Bot size={14} />
+                  </AvatarFallback>
+                </Avatar>
+                <TypingIndicator
+                  backgroundColor={bot_message_color}
+                  dotColor={bot_message_text_color}
+                />
+              </div>
+            </div>
+          )}
           {isUsingTool && <div className="text-sm text-gray-500 italic px-2">Using a tool...</div>}
           <div ref={messagesEndRef} />
         </div>
