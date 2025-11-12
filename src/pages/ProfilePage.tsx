@@ -22,20 +22,23 @@ export const ProfilePage = () => {
     const fetchUser = async () => {
       try {
         const response = await authFetch("/api/v1/profile/me");
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
         const data = await response.json();
         setUser(data);
-        setEmail(data.email);
+        setEmail(data.email || "");
         setFirstName(data.first_name || "");
         setLastName(data.last_name || "");
         setPhoneNumber(data.phone_number || "");
         setJobTitle(data.job_title || "");
         setProfilePictureUrl(data.profile_picture_url || "");
       } catch (error) {
-        toast({ title: "Failed to fetch user data", variant: "destructive" });
+       toast({ title: "Failed to fetch user data", variant: "destructive" });
       }
     };
     fetchUser();
-  }, [authFetch, toast]);
+  }, []);
 
   const handleUpdate = async (e) => {
     e.preventDefault();

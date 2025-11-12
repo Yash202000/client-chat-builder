@@ -14,6 +14,7 @@ import { Label } from '@/components/ui/label';
 import { Loader2, Play, Volume2 } from 'lucide-react';
 import { toast } from './ui/use-toast';
 import { VOICE_ENGINE_URL } from '@/config/env';
+import { useI18n } from '@/hooks/useI18n';
 
 interface VoiceTestDialogProps {
   open: boolean;
@@ -22,6 +23,7 @@ interface VoiceTestDialogProps {
 }
 
 const VoiceTestDialog: React.FC<VoiceTestDialogProps> = ({ open, onOpenChange, voiceId }) => {
+  const { t, isRTL } = useI18n();
   const [text, setText] = useState('Hello, this is a test of my new custom voice. I can say anything you type here.');
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
 
@@ -45,25 +47,25 @@ const VoiceTestDialog: React.FC<VoiceTestDialogProps> = ({ open, onOpenChange, v
       const audio = new Audio(url);
       audio.play();
     },
-    onError: (e: Error) => toast({ title: 'Synthesis Error', description: e.message, variant: 'destructive' }),
+    onError: (e: Error) => toast({ title: t('voiceTest.synthesisError'), description: e.message, variant: 'destructive' }),
   });
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[425px] dark:bg-slate-800 dark:border-slate-700">
+      <DialogContent className="sm:max-w-[425px] dark:bg-slate-800 dark:border-slate-700" dir={isRTL ? 'rtl' : 'ltr'}>
         <DialogHeader>
           <DialogTitle className="dark:text-white">
-            Test Voice: <span className="text-violet-600 dark:text-violet-400">{voiceId}</span>
+            {t('voiceTest.testVoice')}: <span className="text-violet-600 dark:text-violet-400">{voiceId}</span>
           </DialogTitle>
           <DialogDescription className="dark:text-gray-400">
-            Type some text below and click synthesize to hear your voice in action.
+            {t('voiceTest.description')}
           </DialogDescription>
         </DialogHeader>
         <div className="grid gap-4 py-4">
           <div className="grid w-full gap-1.5">
-            <Label htmlFor="message" className="dark:text-gray-300">Your Text</Label>
+            <Label htmlFor="message" className="dark:text-gray-300">{t('voiceTest.yourText')}</Label>
             <Textarea
-              placeholder="Type your message here..."
+              placeholder={t('voiceTest.placeholder')}
               id="message"
               value={text}
               onChange={(e) => setText(e.target.value)}
@@ -74,7 +76,7 @@ const VoiceTestDialog: React.FC<VoiceTestDialogProps> = ({ open, onOpenChange, v
           {audioUrl && (
             <div className="mt-2 p-3 border border-slate-200 dark:border-slate-700 rounded-lg bg-slate-50 dark:bg-slate-900">
                 <audio controls src={audioUrl} className="w-full">
-                    Your browser does not support the audio element.
+                    {t('voiceTest.browserNotSupported')}
                 </audio>
             </div>
           )}
@@ -85,8 +87,8 @@ const VoiceTestDialog: React.FC<VoiceTestDialogProps> = ({ open, onOpenChange, v
             disabled={synthesizeMutation.isPending}
             className="bg-gradient-to-r from-violet-600 to-fuchsia-600 hover:from-violet-700 hover:to-fuchsia-700 text-white"
           >
-            {synthesizeMutation.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Volume2 className="mr-2 h-4 w-4" />}
-            Synthesize
+            {synthesizeMutation.isPending ? <Loader2 className={`h-4 w-4 animate-spin ${isRTL ? 'ml-2' : 'mr-2'}`} /> : <Volume2 className={`h-4 w-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />}
+            {t('voiceTest.synthesize')}
           </Button>
         </DialogFooter>
       </DialogContent>

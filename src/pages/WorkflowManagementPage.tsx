@@ -13,9 +13,11 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Edit, Copy, PlusCircle, Trash2, WorkflowIcon, Sparkles } from 'lucide-react';
 import { useAuth } from "@/hooks/useAuth";
+import { useI18n } from "@/hooks/useI18n";
 import CreateWorkflowDialog from '@/components/CreateWorkflowDialog'; // Assuming this component exists
 
 const WorkflowManagementPage = () => {
+  const { t, isRTL } = useI18n();
   const [workflows, setWorkflows] = useState([]);
   const [isCreateDialogOpen, setCreateDialogOpen] = useState(false);
   const { authFetch } = useAuth();
@@ -28,9 +30,9 @@ const WorkflowManagementPage = () => {
       const data = await response.json();
       setWorkflows(data);
     } catch (error) {
-      toast.error("Failed to load workflows.");
+      toast.error(t("workflows.toasts.loadFailed"));
     }
-  }, [authFetch]);
+  }, [authFetch, t]);
 
   useEffect(() => {
     fetchWorkflows();
@@ -45,10 +47,10 @@ const WorkflowManagementPage = () => {
         body: JSON.stringify(newWorkflowPayload),
       });
       if (!response.ok) throw new Error('Creation failed');
-      toast.success(`Workflow "${name}" created.`);
+      toast.success(t("workflows.toasts.workflowCreated", { name }));
       fetchWorkflows(); // Refresh the list
     } catch (error) {
-      toast.error(`Creation failed: ${error.message}`);
+      toast.error(t("workflows.toasts.creationFailed", { message: error.message }));
     }
   };
 
@@ -56,10 +58,10 @@ const WorkflowManagementPage = () => {
     try {
       const response = await authFetch(`/api/v1/workflows/${workflowId}/versions`, { method: 'POST' });
       if (!response.ok) throw new Error('Failed to create new version');
-      toast.success("New workflow version created.");
+      toast.success(t("workflows.toasts.versionCreated"));
       fetchWorkflows();
     } catch (error) {
-      toast.error(`Failed to create version: ${error.message}`);
+      toast.error(t("workflows.toasts.versionCreateFailed", { message: error.message }));
     }
   };
 
@@ -67,21 +69,21 @@ const WorkflowManagementPage = () => {
     try {
       const response = await authFetch(`/api/v1/workflows/versions/${versionId}/activate`, { method: 'PUT' });
       if (!response.ok) throw new Error('Failed to activate version');
-      toast.success("Workflow version activated.");
+      toast.success(t("workflows.toasts.versionActivated"));
       fetchWorkflows();
     } catch (error) {
-      toast.error(`Failed to activate version: ${error.message}`);
+      toast.error(t("workflows.toasts.versionActivateFailed", { message: error.message }));
     }
   };
 
   const deleteWorkflow = async (workflowId) => {
-    if (window.confirm('Are you sure you want to delete this workflow and all its versions?')) {
+    if (window.confirm(t("workflows.deleteConfirm"))) {
         try {
             await authFetch(`/api/v1/workflows/${workflowId}`, { method: 'DELETE' });
-            toast.success("Workflow and its versions deleted.");
+            toast.success(t("workflows.toasts.workflowDeleted"));
             fetchWorkflows();
         } catch (error) {
-            toast.error("Deletion failed.");
+            toast.error(t("workflows.toasts.deletionFailed"));
         }
     }
   };
@@ -93,37 +95,37 @@ const WorkflowManagementPage = () => {
         onClose={() => setCreateDialogOpen(false)}
         onSubmit={handleCreateWorkflow}
       />
-      <div className="container mx-auto p-6 max-w-7xl">
+      <div className={`container mx-auto p-6 max-w-7xl text-left`}>
         {/* Enhanced Header */}
         <div className="mb-8">
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-4">
+          <div className={`flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-4`}>
             <div>
               <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-2">
-                ⚡ Workflow Management
+                {t("workflows.title")}
               </h1>
               <p className="text-gray-600 dark:text-gray-400 text-lg">
-                Build and manage automated workflows for your AI agents
+                {t("workflows.subtitle")}
               </p>
             </div>
             <Permission permission="workflow:create">
               <Button
                 onClick={() => setCreateDialogOpen(true)}
                 size="lg"
-                className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white shadow-lg hover:shadow-xl transition-all"
+                className={`bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white shadow-lg hover:shadow-xl transition-all flex items-center ${isRTL ? 'flex-row-reverse' : ''}`}
               >
-                <PlusCircle className="h-5 w-5 mr-2" />
-                Create Workflow
+                <PlusCircle className={`h-5 w-5 ${isRTL ? 'ml-2' : 'mr-2'}`} />
+                {t("workflows.createWorkflow")}
               </Button>
             </Permission>
           </div>
 
           {/* Stats Cards */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
-            <Card className="card-shadow-lg border-l-4 border-l-blue-500 dark:border-l-blue-400 dark:bg-slate-800 dark:border-slate-700">
+            <Card className={`card-shadow-lg border-l-4 border-l-blue-500 dark:border-l-blue-400 dark:bg-slate-800 dark:border-slate-700`}>
               <CardContent className="p-4">
-                <div className="flex items-center justify-between">
+                <div className={`flex items-center justify-between ${isRTL ? 'flex-row-reverse' : ''}`}>
                   <div>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">Total Workflows</p>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">{t("workflows.totalWorkflows")}</p>
                     <p className="text-2xl font-bold dark:text-white">{workflows.length}</p>
                   </div>
                   <div className="h-12 w-12 bg-gradient-to-br from-blue-100 to-blue-200 dark:from-blue-900/50 dark:to-blue-800/50 rounded-lg flex items-center justify-center">
@@ -133,11 +135,11 @@ const WorkflowManagementPage = () => {
               </CardContent>
             </Card>
 
-            <Card className="card-shadow-lg border-l-4 border-l-green-500 dark:border-l-green-400 dark:bg-slate-800 dark:border-slate-700">
+            <Card className={`card-shadow-lg border-l-4 border-l-green-500 dark:border-l-green-400 dark:bg-slate-800 dark:border-slate-700`}>
               <CardContent className="p-4">
-                <div className="flex items-center justify-between">
+                <div className={`flex items-center justify-between ${isRTL ? 'flex-row-reverse' : ''}`}>
                   <div>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">Active Versions</p>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">{t("workflows.activeVersions")}</p>
                     <p className="text-2xl font-bold dark:text-white">
                       {workflows.reduce((acc, w) => acc + w.versions.filter(v => v.is_active).length, 0)}
                     </p>
@@ -149,11 +151,11 @@ const WorkflowManagementPage = () => {
               </CardContent>
             </Card>
 
-            <Card className="card-shadow-lg border-l-4 border-l-purple-500 dark:border-l-purple-400 dark:bg-slate-800 dark:border-slate-700">
+            <Card className={`card-shadow-lg border-l-4 border-l-purple-500 dark:border-l-purple-400 dark:bg-slate-800 dark:border-slate-700`}>
               <CardContent className="p-4">
-                <div className="flex items-center justify-between">
+                <div className={`flex items-center justify-between ${isRTL ? 'flex-row-reverse' : ''}`}>
                   <div>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">Total Versions</p>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">{t("workflows.totalVersions")}</p>
                     <p className="text-2xl font-bold dark:text-white">
                       {workflows.reduce((acc, w) => acc + w.versions.length, 0)}
                     </p>
@@ -169,7 +171,7 @@ const WorkflowManagementPage = () => {
 
         <Card className="card-shadow-lg border-slate-200 dark:border-slate-700 dark:bg-slate-800">
           <CardHeader className="border-b border-slate-200 dark:border-slate-700 bg-gradient-to-r from-slate-50 to-slate-100 dark:from-slate-800 dark:to-slate-900">
-            <CardTitle className="text-xl dark:text-white">All Workflows</CardTitle>
+            <CardTitle className="text-xl dark:text-white">{t("workflows.allWorkflows")}</CardTitle>
           </CardHeader>
           <CardContent className="p-6">
             {workflows.length === 0 ? (
@@ -177,14 +179,14 @@ const WorkflowManagementPage = () => {
                 <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-br from-blue-100 to-purple-100 dark:from-blue-900/50 dark:to-purple-900/50 mb-4">
                   <WorkflowIcon className="h-8 w-8 text-blue-600 dark:text-blue-400" />
                 </div>
-                <h3 className="text-lg font-semibold mb-2 dark:text-white">No workflows yet</h3>
-                <p className="text-gray-600 dark:text-gray-400 mb-6">Get started by creating your first workflow</p>
+                <h3 className="text-lg font-semibold mb-2 dark:text-white">{t("workflows.noWorkflowsYet")}</h3>
+                <p className="text-gray-600 dark:text-gray-400 mb-6">{t("workflows.getStartedMessage")}</p>
                 <Button
                   onClick={() => setCreateDialogOpen(true)}
-                  className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white"
+                  className={`bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white`}
                 >
-                  <PlusCircle className="h-4 w-4 mr-2" />
-                  Create Your First Workflow
+                  <PlusCircle className={`h-4 w-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
+                  {t("workflows.createFirstWorkflow")}
                 </Button>
               </div>
             ) : (
@@ -196,19 +198,19 @@ const WorkflowManagementPage = () => {
                     className="border border-slate-200 dark:border-slate-700 rounded-xl card-shadow hover:shadow-xl transition-shadow bg-white dark:bg-slate-800 overflow-hidden"
                   >
                     <AccordionTrigger className="p-5 hover:no-underline hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
-                      <div className="flex justify-between items-center w-full">
-                        <div className="flex items-center gap-4">
+                      <div className={`flex justify-between items-center w-full`}>
+                        <div className={`flex items-center gap-4`}>
                           <div className="h-10 w-10 rounded-lg bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center shadow-sm">
                             <WorkflowIcon className="h-5 w-5 text-white" />
                           </div>
-                          <div className="text-left">
+                          <div className='text-left'>
                             <span className="font-semibold text-lg dark:text-white">{workflow.name}</span>
-                            <p className="text-sm text-gray-600 dark:text-gray-400">{workflow.description || "No description"}</p>
+                            <p className="text-sm text-gray-600 dark:text-gray-400">{workflow.description || t("workflows.noDescription")}</p>
                           </div>
                         </div>
-                        <div className="flex items-center gap-2">
-                          <Badge variant="outline" className="mr-2 dark:border-slate-600 dark:text-gray-300">
-                            {workflow.versions.length} {workflow.versions.length === 1 ? 'version' : 'versions'}
+                        <div className={`flex items-center gap-2`}>
+                          <Badge variant="outline" className={`${isRTL ? 'ml-2' : 'mr-2'} dark:border-slate-600 dark:text-gray-300`}>
+                            {workflow.versions.length} {workflow.versions.length === 1 ? t("workflows.version") : t("workflows.versionsPlural")}
                           </Badge>
                           <Permission permission="workflow:delete">
                             <div
@@ -228,17 +230,17 @@ const WorkflowManagementPage = () => {
                     </AccordionTrigger>
                     <AccordionContent className="p-5 border-t border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/30">
                       <div className="space-y-3">
-                        <div className="flex justify-between items-center mb-4">
-                          <h4 className="font-semibold text-sm text-gray-600 dark:text-gray-400">VERSIONS</h4>
+                        <div className={`flex justify-between items-center mb-4`}>
+                          <h4 className="font-semibold text-sm text-gray-600 dark:text-gray-400">{t("workflows.versions")}</h4>
                           <Permission permission="workflow:update">
                             <Button
                               variant="outline"
                               size="sm"
                               onClick={() => createWorkflowVersion(workflow.id)}
-                              className="dark:border-slate-600 dark:text-white dark:hover:bg-slate-700"
+                              className={`dark:border-slate-600 dark:text-white dark:hover:bg-slate-700 flex items-center `}
                             >
-                              <Copy className="h-3 w-3 mr-2" />
-                              Create New Version
+                              <Copy className={`h-3 w-3 ${isRTL ? 'ml-2' : 'mr-2'}`} />
+                              {t("workflows.createNewVersion")}
                             </Button>
                           </Permission>
                         </div>
@@ -246,9 +248,9 @@ const WorkflowManagementPage = () => {
                           {workflow.versions.sort((a, b) => b.version - a.version).map((version) => (
                             <div
                               key={version.id}
-                              className="flex items-center justify-between p-4 bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 hover:border-blue-300 dark:hover:border-blue-600 transition-colors card-shadow"
+                              className={`flex items-center justify-between p-4 bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 hover:border-blue-300 dark:hover:border-blue-600 transition-colors card-shadow `}
                             >
-                              <div className="flex items-center gap-3">
+                              <div className={`flex items-center gap-3 `}>
                                 <div
                                   className={`h-8 w-8 rounded-lg flex items-center justify-center font-semibold ${
                                     version.is_active
@@ -258,31 +260,31 @@ const WorkflowManagementPage = () => {
                                 >
                                   v{version.version}
                                 </div>
-                                <div>
-                                  <span className="font-medium dark:text-white">Version {version.version}</span>
+                                <div className='text-left'>
+                                  <span className="font-medium dark:text-white">{t("workflows.versionLabel", { number: version.version })}</span>
                                   <p className="text-sm text-gray-600 dark:text-gray-400">
-                                    {version.description || 'No description'}
+                                    {version.description || t("workflows.noDescription")}
                                   </p>
                                 </div>
                               </div>
-                              <div className="flex items-center gap-2">
+                              <div className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
                                 {version.is_active ? (
-                                  <Badge className="bg-green-100 dark:bg-green-900/50 text-green-800 dark:text-green-300 border-green-200 dark:border-green-800">
-                                    <Sparkles className="h-3 w-3 mr-1" />
-                                    Active
+                                  <Badge className={`bg-green-100 dark:bg-green-900/50 text-green-800 dark:text-green-300 border-green-200 dark:border-green-800 flex items-center ${isRTL ? 'flex-row-reverse' : ''}`}>
+                                    <Sparkles className={`h-3 w-3 ${isRTL ? 'ml-1' : 'mr-1'}`} />
+                                    {t("workflows.active")}
                                   </Badge>
                                 ) : (
-                                  <Badge variant="secondary" className="dark:bg-slate-700 dark:text-gray-300">Inactive</Badge>
+                                  <Badge variant="secondary" className="dark:bg-slate-700 dark:text-gray-300">{t("workflows.inactive")}</Badge>
                                 )}
                                 <Permission permission="workflow:update">
                                   <Button
                                     size="sm"
                                     variant="outline"
                                     onClick={() => navigate(`/dashboard/workflows/${version.id}`)}
-                                    className="dark:border-slate-600 dark:text-white dark:hover:bg-slate-700"
+                                    className={`dark:border-slate-600 dark:text-white dark:hover:bg-slate-700 flex items-center`}
                                   >
-                                    <Edit className="h-4 w-4 mr-2" />
-                                    Edit
+                                    <Edit className={`h-4 w-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
+                                    {t("workflows.edit")}
                                   </Button>
                                 </Permission>
                                 {!version.is_active && (
@@ -292,7 +294,7 @@ const WorkflowManagementPage = () => {
                                       onClick={() => activateWorkflowVersion(version.id)}
                                       className="bg-blue-600 hover:bg-blue-700 text-white"
                                     >
-                                      Activate
+                                      {t("workflows.activate")}
                                     </Button>
                                   </Permission>
                                 )}

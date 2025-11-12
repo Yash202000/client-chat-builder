@@ -9,6 +9,7 @@ import { useToast } from '@/components/ui/use-toast';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Upload, Image as ImageIcon, Video, List, PlayCircle, X, Eye, Loader2, Scan } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useI18n } from '@/hooks/useI18n';
 
 interface Detection {
   label: string;
@@ -29,6 +30,7 @@ interface Track extends Detection {
 }
 
 const ObjectDetectionPage: React.FC = () => {
+  const { t, isRTL } = useI18n();
   const [file, setFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [detections, setDetections] = useState<Detection[]>([]);
@@ -43,11 +45,11 @@ const ObjectDetectionPage: React.FC = () => {
     mutationFn: (imageFile: File) => detectObjects(imageFile),
     onSuccess: (data) => {
       setDetections(data.detections);
-      toast({ title: 'Object detection successful!' });
+      toast({ title: t('visionAI.toasts.detectionSuccess') });
       drawDetections(data.detections);
     },
     onError: () => {
-      toast({ title: 'Error detecting objects', variant: 'destructive' });
+      toast({ title: t('visionAI.toasts.detectionError'), variant: 'destructive' });
     },
   });
 
@@ -55,11 +57,11 @@ const ObjectDetectionPage: React.FC = () => {
     mutationFn: (imageFile: File) => segmentImage(imageFile),
     onSuccess: (data) => {
       setSegmentations(data.segmentations);
-      toast({ title: 'Image segmentation successful!' });
+      toast({ title: t('visionAI.toasts.segmentationSuccess') });
       drawSegmentations(data.segmentations);
     },
     onError: () => {
-      toast({ title: 'Error segmenting image', variant: 'destructive' });
+      toast({ title: t('visionAI.toasts.segmentationError'), variant: 'destructive' });
     },
   });
 
@@ -67,11 +69,11 @@ const ObjectDetectionPage: React.FC = () => {
     mutationFn: (imageFile: File) => estimatePose(imageFile),
     onSuccess: (data) => {
       setPoses(data.poses);
-      toast({ title: 'Pose estimation successful!' });
+      toast({ title: t('visionAI.toasts.poseSuccess') });
       drawPoses(data.poses);
     },
     onError: () => {
-      toast({ title: 'Error estimating pose', variant: 'destructive' });
+      toast({ title: t('visionAI.toasts.poseError'), variant: 'destructive' });
     },
   });
 
@@ -79,10 +81,10 @@ const ObjectDetectionPage: React.FC = () => {
     mutationFn: (videoFile: File) => trackObjects(videoFile),
     onSuccess: (data) => {
       setTracks(data.tracks);
-      toast({ title: 'Object tracking successful!' });
+      toast({ title: t('visionAI.toasts.trackingSuccess') });
     },
     onError: () => {
-      toast({ title: 'Error tracking objects', variant: 'destructive' });
+      toast({ title: t('visionAI.toasts.trackingError'), variant: 'destructive' });
     },
   });
 
@@ -231,7 +233,7 @@ const ObjectDetectionPage: React.FC = () => {
     return (
       <form onSubmit={handleSubmit} className="space-y-6">
         <div className="space-y-2">
-          <label htmlFor="file" className="text-sm font-medium dark:text-gray-300">Upload {accept === 'image/*' ? 'Image' : 'Video'}</label>
+          <label htmlFor="file" className="text-sm font-medium dark:text-gray-300">{accept === 'image/*' ? t('visionAI.uploadImage') : t('visionAI.uploadVideo')}</label>
           {file ? (
             <div className="flex items-center justify-between w-full h-32 border-2 border-dashed rounded-lg bg-slate-50 dark:bg-slate-900 border-slate-300 dark:border-slate-600 px-6">
               <div className="flex items-center space-x-4">
@@ -250,8 +252,8 @@ const ObjectDetectionPage: React.FC = () => {
                 <label htmlFor="file" className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-lg cursor-pointer bg-slate-50 dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 border-slate-300 dark:border-slate-600 transition-colors">
                     <div className="flex flex-col items-center justify-center pt-5 pb-6">
                         <Upload className="w-10 h-10 mb-3 text-violet-500 dark:text-violet-400" />
-                        <p className="mb-2 text-sm text-gray-600 dark:text-gray-400"><span className="font-semibold">Click to upload</span> or drag and drop</p>
-                        <p className="text-xs text-gray-500 dark:text-gray-500">{accept === 'image/*' ? 'PNG, JPG, GIF up to 10MB' : 'MP4, AVI, MOV up to 50MB'}</p>
+                        <p className="mb-2 text-sm text-gray-600 dark:text-gray-400"><span className="font-semibold">{t('visionAI.clickToUpload')}</span> {t('visionAI.orDragDrop')}</p>
+                        <p className="text-xs text-gray-500 dark:text-gray-500">{accept === 'image/*' ? t('visionAI.imageFormats') : t('visionAI.videoFormats')}</p>
                     </div>
                     <Input id="file" type="file" className="hidden" onChange={handleFileChange} accept={accept} />
                 </label>
@@ -267,17 +269,17 @@ const ObjectDetectionPage: React.FC = () => {
             {isLoading ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Processing...
+                {t('visionAI.processing')}
               </>
             ) : (
               <>
                 <Scan className="mr-2 h-4 w-4" />
-                Process {accept === 'image/*' ? 'Image' : 'Video'}
+                {accept === 'image/*' ? t('visionAI.processImage') : t('visionAI.processVideo')}
               </>
             )}
           </Button>
           <Button type="button" variant="outline" className="flex-1 dark:border-slate-600 dark:text-white dark:hover:bg-slate-700" onClick={handleDemo}>
-            <PlayCircle className="mr-2 h-4 w-4" /> Try Demo
+            <PlayCircle className="mr-2 h-4 w-4" /> {t('visionAI.tryDemo')}
           </Button>
         </div>
       </form>
@@ -292,7 +294,7 @@ const ObjectDetectionPage: React.FC = () => {
             <CardHeader className="border-b border-slate-200 dark:border-slate-700 bg-gradient-to-r from-slate-50 to-slate-100 dark:from-slate-800 dark:to-slate-900">
               <CardTitle className="flex items-center dark:text-white">
                 <List className="mr-2 text-violet-600 dark:text-violet-400"/>
-                Tracking Result
+                {t('visionAI.trackingResult')}
               </CardTitle>
             </CardHeader>
             <CardContent className="pt-6">
@@ -304,7 +306,7 @@ const ObjectDetectionPage: React.FC = () => {
                     </div>
                     <div className="flex-1">
                       <p className="text-sm font-medium dark:text-white">{track.label}</p>
-                      <p className="text-xs text-gray-500 dark:text-gray-400">Confidence: {(track.confidence * 100).toFixed(1)}%</p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400">{t('visionAI.confidence')}: {(track.confidence * 100).toFixed(1)}%</p>
                     </div>
                   </li>
                 ))}
@@ -322,7 +324,7 @@ const ObjectDetectionPage: React.FC = () => {
               {activeTab === 'object-detection' && <Scan className="mr-2 text-violet-600 dark:text-violet-400"/>}
               {activeTab === 'image-segmentation' && <ImageIcon className="mr-2 text-violet-600 dark:text-violet-400"/>}
               {activeTab === 'pose-estimation' && <Eye className="mr-2 text-violet-600 dark:text-violet-400"/>}
-              Result
+              {t('visionAI.result')}
             </CardTitle>
           </CardHeader>
           <CardContent className="pt-6">
@@ -336,12 +338,12 @@ const ObjectDetectionPage: React.FC = () => {
   }
 
   return (
-    <div className="w-full max-w-7xl mx-auto p-4 md:p-8 space-y-8">
+    <div className="w-full max-w-7xl mx-auto p-4 md:p-8 space-y-8" dir={isRTL ? 'rtl' : 'ltr'}>
       <header>
         <h1 className="text-4xl font-bold bg-gradient-to-r from-violet-600 to-purple-600 bg-clip-text text-transparent mb-2">
-          👁️ Vision AI
+          👁️ {t('visionAI.title')}
         </h1>
-        <p className="text-gray-600 dark:text-gray-400 text-lg">Explore the power of YOLO for object detection, segmentation, pose estimation, and tracking</p>
+        <p className="text-gray-600 dark:text-gray-400 text-lg">{t('visionAI.subtitle')}</p>
       </header>
 
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
@@ -350,9 +352,9 @@ const ObjectDetectionPage: React.FC = () => {
             <CardHeader className="border-b border-slate-200 dark:border-slate-700 bg-gradient-to-r from-slate-50 to-slate-100 dark:from-slate-800 dark:to-slate-900">
               <CardTitle className="dark:text-white flex items-center gap-2">
                 <Eye className="h-5 w-5 text-violet-600 dark:text-violet-400" />
-                Controls
+                {t('visionAI.controls')}
               </CardTitle>
-              <CardDescription className="dark:text-gray-400">Select a feature and upload your media</CardDescription>
+              <CardDescription className="dark:text-gray-400">{t('visionAI.selectFeature')}</CardDescription>
             </CardHeader>
             <CardContent className="pt-6">
               <Tabs defaultValue="object-detection" onValueChange={setActiveTab} className="w-full">
@@ -361,25 +363,25 @@ const ObjectDetectionPage: React.FC = () => {
                     value="object-detection"
                     className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-violet-600 data-[state=active]:to-purple-600 data-[state=active]:text-white dark:text-gray-400"
                   >
-                    Detection
+                    {t('visionAI.detection')}
                   </TabsTrigger>
                   <TabsTrigger
                     value="image-segmentation"
                     className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-violet-600 data-[state=active]:to-purple-600 data-[state=active]:text-white dark:text-gray-400"
                   >
-                    Segmentation
+                    {t('visionAI.segmentation')}
                   </TabsTrigger>
                   <TabsTrigger
                     value="pose-estimation"
                     className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-violet-600 data-[state=active]:to-purple-600 data-[state=active]:text-white dark:text-gray-400"
                   >
-                    Pose
+                    {t('visionAI.pose')}
                   </TabsTrigger>
                   <TabsTrigger
                     value="object-tracking"
                     className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-violet-600 data-[state=active]:to-purple-600 data-[state=active]:text-white dark:text-gray-400"
                   >
-                    Tracking
+                    {t('visionAI.tracking')}
                   </TabsTrigger>
                 </TabsList>
                 <TabsContent value="object-detection">{renderForm('image/*')}</TabsContent>
@@ -398,9 +400,9 @@ const ObjectDetectionPage: React.FC = () => {
                   <div className="w-20 h-20 bg-gradient-to-br from-violet-100 to-purple-100 dark:from-violet-900/50 dark:to-purple-900/50 rounded-full flex items-center justify-center mx-auto mb-4">
                     <Eye className="h-10 w-10 text-violet-600 dark:text-violet-400" />
                   </div>
-                  <h3 className="text-xl font-semibold text-gray-800 dark:text-white mb-2">No Results Yet</h3>
+                  <h3 className="text-xl font-semibold text-gray-800 dark:text-white mb-2">{t('visionAI.noResultsYet')}</h3>
                   <p className="text-gray-500 dark:text-gray-400 max-w-md">
-                    Upload an image or video and process it to see AI-powered vision analysis
+                    {t('visionAI.uploadToAnalyze')}
                   </p>
                 </div>
               </div>

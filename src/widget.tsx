@@ -25,6 +25,13 @@ import tailwindStyles from './index.css?inline';
   const companyId = scriptTag.getAttribute('data-company-id');
   const backendUrl = scriptTag.getAttribute('data-backend-url') || 'http://localhost:8000';
 
+  // Only set rtlEnabled if data-rtl attribute is explicitly provided
+  const rtlAttr = scriptTag.getAttribute('data-rtl');
+  const rtlEnabled = rtlAttr === null ? null : rtlAttr === 'true';
+
+  const language = scriptTag.getAttribute('data-language') || null;
+  const position = scriptTag.getAttribute('data-position') || null; // e.g., 'bottom-right', 'top-left', etc.
+
   if (!agentId || !companyId) {
     console.error('AgentConnect Widget: data-agent-id and data-company-id attributes are required on the script tag.');
     return;
@@ -50,6 +57,9 @@ import tailwindStyles from './index.css?inline';
         agentId={agentId}
         companyId={companyId}
         backendUrl={backendUrl}
+        rtlOverride={rtlEnabled}
+        languageOverride={language}
+        positionOverride={position}
       />
     </React.StrictMode>
   );

@@ -13,8 +13,10 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { X } from 'lucide-react';
+import { useI18n } from '@/hooks/useI18n';
 
 export const WorkflowDetailsDialog = ({ isOpen, onClose, workflow, onSave }) => {
+  const { t, isRTL } = useI18n();
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [triggerPhrases, setTriggerPhrases] = useState([]);
@@ -51,28 +53,29 @@ export const WorkflowDetailsDialog = ({ isOpen, onClose, workflow, onSave }) => 
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-[425px]" dir={isRTL ? 'rtl' : 'ltr'}>
         <DialogHeader>
-          <DialogTitle>Edit Workflow Details</DialogTitle>
+          <DialogTitle>{t('workflows.detailsDialog.title')}</DialogTitle>
           <DialogDescription>
-            Update the details for your workflow. Click save when you're done.
+            {t('workflows.detailsDialog.description')}
           </DialogDescription>
         </DialogHeader>
         <div className="grid gap-4 py-4">
           <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="name" className="text-right">
-              Name
+            <Label htmlFor="name" className={isRTL ? 'text-left' : 'text-right'}>
+              {t('workflows.detailsDialog.nameLabel')}
             </Label>
             <Input
               id="name"
               value={name}
               onChange={(e) => setName(e.target.value)}
               className="col-span-3"
+              dir={isRTL ? 'rtl' : 'ltr'}
             />
           </div>
           <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="description" className="text-right">
-              Description
+            <Label htmlFor="description" className={isRTL ? 'text-left' : 'text-right'}>
+              {t('workflows.detailsDialog.descriptionLabel')}
             </Label>
             <Textarea
               id="description"
@@ -80,41 +83,43 @@ export const WorkflowDetailsDialog = ({ isOpen, onClose, workflow, onSave }) => 
               onChange={(e) => setDescription(e.target.value)}
               className="col-span-3"
               rows={3}
+              dir={isRTL ? 'rtl' : 'ltr'}
             />
           </div>
           <div className="grid grid-cols-4 items-start gap-4">
-            <Label htmlFor="trigger-phrases" className="text-right pt-2">
-              Trigger Phrases
+            <Label htmlFor="trigger-phrases" className={`${isRTL ? 'text-left' : 'text-right'} pt-2`}>
+              {t('workflows.detailsDialog.triggerPhrasesLabel')}
             </Label>
             <div className="col-span-3">
               <Input
                 id="trigger-phrases"
-                placeholder="Type a phrase and press Enter"
+                placeholder={t('workflows.detailsDialog.triggerPhrasesPlaceholder')}
                 value={currentPhrase}
                 onChange={(e) => setCurrentPhrase(e.target.value)}
                 onKeyDown={handleAddPhrase}
                 className="mb-2"
+                dir={isRTL ? 'rtl' : 'ltr'}
               />
-              <div className="flex flex-wrap gap-1">
+              <div className={`flex flex-wrap gap-1 ${isRTL ? 'flex-row-reverse' : ''}`}>
                 {triggerPhrases.map((phrase, index) => (
                   <Badge key={index} variant="secondary" className="flex items-center gap-1">
                     {phrase}
-                    <X 
-                      className="h-3 w-3 cursor-pointer" 
+                    <X
+                      className="h-3 w-3 cursor-pointer"
                       onClick={() => handleRemovePhrase(phrase)}
                     />
                   </Badge>
                 ))}
               </div>
               <p className="text-xs text-gray-500 mt-2">
-                Add phrases that will directly trigger this workflow.
+                {t('workflows.detailsDialog.triggerPhrasesHint')}
               </p>
             </div>
           </div>
         </div>
-        <DialogFooter>
-          <Button variant="outline" onClick={onClose}>Cancel</Button>
-          <Button onClick={handleSave}>Save Changes</Button>
+        <DialogFooter className={isRTL ? 'flex-row-reverse' : ''}>
+          <Button variant="outline" onClick={onClose}>{t('workflows.detailsDialog.cancelButton')}</Button>
+          <Button onClick={handleSave}>{t('workflows.detailsDialog.saveButton')}</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

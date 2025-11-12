@@ -17,6 +17,8 @@ import { cn } from "@/lib/utils";
 import { Agent } from "@/types";
 import { useToast } from "@/hooks/use-toast";
 import { BACKEND_URL } from "@/config/env";
+import { useTranslation } from 'react-i18next';
+import { useI18n } from '@/hooks/useI18n';
 
 const initialCustomizationState = {
   primary_color: "linear-gradient(135deg, #3B82F6 0%, #8B5CF6 50%, #EC4899 100%)", // AgentConnect gradient
@@ -31,6 +33,7 @@ const initialCustomizationState = {
   user_message_text_color: "#FFFFFF",
   bot_message_color: "#EEF2FF", // Lighter blue background for bot messages
   bot_message_text_color: "#1E293B", // Darker text for better contrast
+  time_color: "#9CA3AF", // Time/timestamp color
   widget_size: "medium",
   show_header: true,
   proactive_message_enabled: false,
@@ -43,6 +46,19 @@ const initialCustomizationState = {
   livekit_url: '',
   isPreConnectBufferEnabled: false,
   client_website_url: "",
+  meta: {
+    z_index: 9999,
+    position: 'bottom-right',
+    default_language: 'en',
+    languages: {
+      en: {
+        welcome_message: "Hi! How can I help you today?",
+        header_title: "Customer Support",
+        input_placeholder: "Type a message...",
+        proactive_message: "Hello! Do you have any questions?",
+      }
+    }
+  }, // Flexible meta field for additional customizations
 };
 
 const widgetSizes = {
@@ -65,6 +81,8 @@ interface ChatMessage {
 const generateSessionId = () => `preview_session_${Math.random().toString(36).substring(2, 15)}`;
 
 export const AdvancedChatPreview = () => {
+  const { t } = useTranslation();
+  const { isRTL: isUserRTL } = useI18n();
   const { toast } = useToast();
   const [selectedAgentId, setSelectedAgentId] = useState<number | null>(null);
   const [isTyping, setIsTyping] = useState(false);
@@ -78,6 +96,9 @@ export const AdvancedChatPreview = () => {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const { authFetch, user } = useAuth();
   const companyId = user?.company_id;
+  const isRTL = isUserRTL; // For UI chrome (interface elements)
+  const isWidgetRTL = customization.meta?.rtl_enabled || false; // For widget preview
+  const widgetPosition = customization.meta?.position || customization.position || 'bottom-right'; // Widget position from meta
   const ws = useRef<WebSocket | null>(null);
   const [sessionId, setSessionId] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
@@ -111,16 +132,16 @@ export const AdvancedChatPreview = () => {
             setLiveKitToken(data.access_token);
           } else {
             toast({
-              title: "Error",
-              description: "Failed to get voice call token.",
+              title: t('designer.error'),
+              description: t('designer.failedGetToken'),
               variant: "destructive",
             });
           }
         } catch (error) {
           console.error("Failed to fetch voice call token:", error);
           toast({
-            title: "Error",
-            description: "An unexpected error occurred while getting the voice call token.",
+            title: t('designer.error'),
+            description: t('designer.errorGetToken'),
             variant: "destructive",
           });
         }
@@ -129,77 +150,149 @@ export const AdvancedChatPreview = () => {
     }
   }, [previewType, selectedAgentId, authFetch, toast, user]);
 
+  // Create session ID once when component mounts or agent changes
   useEffect(() => {
-    if (selectedAgentId && companyId && isExpanded) {
+    if (selectedAgentId && companyId) {
       const newSessionId = generateSessionId();
       setSessionId(newSessionId);
-      setMessages([]);
+      console.log(`Created preview session: ${newSessionId}`);
+    }
+  }, [selectedAgentId, companyId]);
 
-      const wsUrl = `${BACKEND_URL.replace('http', 'ws')}/api/v1/ws/public/${companyId}/${selectedAgentId}/${newSessionId}?user_type=user`;
-      ws.current = new WebSocket(wsUrl);
+  // Manage WebSocket connections based on isExpanded state
+  useEffect(() => {
+    if (selectedAgentId && companyId && sessionId && isExpanded) {
+      // Only create connections if they don't already exist
+      if (!ws.current) {
+        console.log(`Opening chat WebSocket for session: ${sessionId}`);
+        setMessages([]);
 
-      ws.current.onopen = () => {
-        if (customization.welcome_message) {
-          setMessages([{ id: 'welcome', sender: 'agent', text: customization.welcome_message, timestamp: new Date().toISOString() }]);
-        }
-      };
+        const wsUrl = `${BACKEND_URL.replace('http', 'ws')}/api/v1/ws/public/${companyId}/${selectedAgentId}/${sessionId}?user_type=user`;
+        ws.current = new WebSocket(wsUrl);
 
-      ws.current.onmessage = (event) => {
-        const data = JSON.parse(event.data);
-        
-        if (data.sender === 'user') {
-          return;
-        }
-
-        const newMessage: ChatMessage = {
-          id: data.id || `msg-${Date.now()}`,
-          sender: data.sender,
-          text: data.message,
-          timestamp: data.timestamp || new Date().toISOString(),
-          type: data.message_type,
-          options: data.options,
-          fields: data.fields,
+        ws.current.onopen = () => {
+          console.log(`Chat WebSocket opened for session: ${sessionId}`);
+          if (customization.welcome_message) {
+            setMessages([{ id: 'welcome', sender: 'agent', text: customization.welcome_message, timestamp: new Date().toISOString() }]);
+          }
         };
-        
-        setMessages(prev => {
-            if (prev.find(msg => msg.id === newMessage.id)) {
-                return prev;
+
+        ws.current.onmessage = (event) => {
+          const data = JSON.parse(event.data);
+
+          if (data.sender === 'user') {
+            return;
+          }
+
+          // Handle pong response
+          if (data.type === 'pong') return;
+
+          // Handle ping from backend - respond with pong
+          if (data.type === 'ping') {
+            if (ws.current?.readyState === WebSocket.OPEN) {
+              ws.current.send(JSON.stringify({ type: 'pong' }));
             }
-            return [...prev, newMessage];
-        });
-      };
+            return;
+          }
 
-      ws.current.onclose = () => {};
-      ws.current.onerror = (error) => console.error("Chat preview WebSocket error:", error);
-      
-      const voiceUrl = `${BACKEND_URL.replace('http', 'ws')}/api/v1/ws/public/voice/${companyId}/${selectedAgentId}/${newSessionId}?user_type=user&voice_id=${(customization as any).voice_id || 'default'}&stt_provider=${(customization as any).stt_provider || 'groq'}`;
-      voiceWs.current = new WebSocket(voiceUrl);
+          const newMessage: ChatMessage = {
+            id: data.id || `msg-${Date.now()}`,
+            sender: data.sender,
+            text: data.message,
+            timestamp: data.timestamp || new Date().toISOString(),
+            type: data.message_type,
+            options: data.options,
+            fields: data.fields,
+          };
 
-      voiceWs.current.onmessage = async (event) => {
-        if (event.data instanceof Blob) {
-          incomingAudioChunks.current.push(event.data);
-          if (audioPlaybackTimer.current) clearTimeout(audioPlaybackTimer.current);
-          audioPlaybackTimer.current = setTimeout(() => {
-            if (incomingAudioChunks.current.length > 0) {
-              const fullAudioBlob = new Blob(incomingAudioChunks.current, { type: 'audio/webm' });
-              const audioUrl = URL.createObjectURL(fullAudioBlob);
-              new Audio(audioUrl).play();
-              incomingAudioChunks.current = [];
-            }
-          }, 300);
-        }
-      };
+          setMessages(prev => {
+              if (prev.find(msg => msg.id === newMessage.id)) {
+                  return prev;
+              }
+              return [...prev, newMessage];
+          });
+        };
 
-    } else {
-      ws.current?.close();
-      voiceWs.current?.close();
+        ws.current.onclose = () => {
+          console.log(`Chat WebSocket closed for session: ${sessionId}`);
+        };
+        ws.current.onerror = (error) => console.error("Chat preview WebSocket error:", error);
+      }
+
+      if (!voiceWs.current) {
+        console.log(`Opening voice WebSocket for session: ${sessionId}`);
+        const voiceUrl = `${BACKEND_URL.replace('http', 'ws')}/api/v1/ws/public/voice/${companyId}/${selectedAgentId}/${sessionId}?user_type=user&voice_id=${(customization as any).voice_id || 'default'}&stt_provider=${(customization as any).stt_provider || 'groq'}`;
+        voiceWs.current = new WebSocket(voiceUrl);
+
+        voiceWs.current.onmessage = async (event) => {
+          if (event.data instanceof Blob) {
+            incomingAudioChunks.current.push(event.data);
+            if (audioPlaybackTimer.current) clearTimeout(audioPlaybackTimer.current);
+            audioPlaybackTimer.current = setTimeout(() => {
+              if (incomingAudioChunks.current.length > 0) {
+                const fullAudioBlob = new Blob(incomingAudioChunks.current, { type: 'audio/webm' });
+                const audioUrl = URL.createObjectURL(fullAudioBlob);
+                new Audio(audioUrl).play();
+                incomingAudioChunks.current = [];
+              }
+            }, 300);
+          }
+        };
+
+        voiceWs.current.onclose = () => {
+          console.log(`Voice WebSocket closed for session: ${sessionId}`);
+        };
+      }
+    } else if (!isExpanded) {
+      // Close connections when preview is collapsed
+      if (ws.current) {
+        console.log(`Closing chat WebSocket for session: ${sessionId}`);
+        ws.current.close();
+        ws.current = null;
+      }
+      if (voiceWs.current) {
+        console.log(`Closing voice WebSocket for session: ${sessionId}`);
+        voiceWs.current.close();
+        voiceWs.current = null;
+      }
     }
 
     return () => {
-      ws.current?.close();
-      voiceWs.current?.close();
+      // Cleanup on unmount
+      if (ws.current) {
+        console.log(`Cleanup: Closing chat WebSocket for session: ${sessionId}`);
+        ws.current.close();
+        ws.current = null;
+      }
+      if (voiceWs.current) {
+        console.log(`Cleanup: Closing voice WebSocket for session: ${sessionId}`);
+        voiceWs.current.close();
+        voiceWs.current = null;
+      }
     };
-  }, [selectedAgentId, companyId, isExpanded, customization.welcome_message]);
+  }, [selectedAgentId, companyId, sessionId, isExpanded]);
+
+  // Force close WebSocket connections when page/tab is closed abruptly
+  useEffect(() => {
+    const handleBeforeUnload = () => {
+      console.log('Page unloading - force closing preview WebSocket connections');
+      // Synchronously close connections before page unloads
+      if (ws.current) {
+        ws.current.close();
+        ws.current = null;
+      }
+      if (voiceWs.current) {
+        voiceWs.current.close();
+        voiceWs.current = null;
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+    };
+  }, []);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -313,22 +406,22 @@ export const AdvancedChatPreview = () => {
       });
       if (response.ok) {
         toast({
-          title: "Success",
-          description: "Widget settings saved successfully.",
+          title: t('designer.success'),
+          description: t('designer.widgetSettingsSaved'),
         });
       } else {
         const errorData = await response.json();
         toast({
-          title: "Error",
-          description: `Failed to save widget settings: ${errorData.detail || 'Unknown error'}`,
+          title: t('designer.error'),
+          description: `${t('designer.failedSaveSettings')}: ${errorData.detail || 'Unknown error'}`,
           variant: "destructive",
         });
       }
     } catch (error) {
       console.error("Failed to save widget settings:", error);
       toast({
-        title: "Error",
-        description: "An unexpected error occurred.",
+        title: t('designer.error'),
+        description: t('designer.unexpectedError'),
         variant: "destructive",
       });
     }
@@ -349,16 +442,16 @@ export const AdvancedChatPreview = () => {
       } else {
         const errorData = await response.json();
         toast({
-          title: "Error",
-          description: `Failed to publish: ${errorData.detail || 'Unknown error'}`,
+          title: t('designer.error'),
+          description: `${t('designer.failedPublish')}: ${errorData.detail || 'Unknown error'}`,
           variant: "destructive",
         });
       }
     } catch (error) {
       console.error("Failed to publish:", error);
       toast({
-        title: "Error",
-        description: "An unexpected error occurred while publishing.",
+        title: t('designer.error'),
+        description: t('designer.errorPublishing'),
         variant: "destructive",
       });
     }
@@ -367,19 +460,51 @@ export const AdvancedChatPreview = () => {
   const generateEmbedCode = () => {
     if (!selectedAgentId || !companyId) return "";
     const scriptSrc = `${BACKEND_URL}/widget/widget.js`;
+    const defaultLang = customization.meta?.default_language || 'en';
+    const defaultPosition = customization.meta?.position || customization.position || 'bottom-right';
+    const rtlAttribute = customization.meta?.rtl_enabled ? `\n  data-rtl="true"` : '';
+    const languageAttribute = defaultLang !== 'en' ? `\n  data-language="${defaultLang}"` : '';
+    const positionAttribute = defaultPosition !== 'bottom-right' ? `\n  data-position="${defaultPosition}"` : '';
+    const availableLanguages = Object.keys(customization.meta?.languages || {}).join(', ');
 
     return `<!-- AgentConnect Widget Container -->
 <div id="agentconnect-widget"></div>
-    
+
 <!-- AgentConnect Widget Script -->
 <script
   id="agent-connect-widget-script"
   src="${scriptSrc}"
   data-agent-id="${selectedAgentId}"
   data-company-id="${companyId}"
-  data-backend-url="${BACKEND_URL}"
+  data-backend-url="${BACKEND_URL}"${languageAttribute}${rtlAttribute}${positionAttribute}
   defer>
-</script>`;
+</script>
+
+<!--
+  ===== CUSTOMIZATION OPTIONS =====
+
+  🌍 LANGUAGE:
+  - Add data-language="ar" to force specific language (e.g., ar, en, es, fr)
+  - If not provided: Auto-detects from browser language
+  - Available languages: ${availableLanguages}
+
+  ↔️ RTL (Right-to-Left):
+  - Add data-rtl="true" to force RTL mode
+  - Add data-rtl="false" to force LTR mode
+  - If not provided: Uses widget settings${customization.meta?.rtl_enabled ? ' (RTL enabled)' : ' (LTR mode)'}
+  - Auto-enables RTL for: Arabic, Hebrew, Persian, Urdu
+
+  📍 POSITION:
+  - Add data-position="bottom-right" to force position
+  - Options: top-left, top-right, bottom-left, bottom-right
+  - If not provided: Uses widget settings (${defaultPosition})
+
+  Example - Arabic with RTL in top-left:
+  <script ... data-language="ar" data-rtl="true" data-position="top-left" defer></script>
+
+  Example - English in bottom-left:
+  <script ... data-language="en" data-position="bottom-left" defer></script>
+-->`;
   };
 
   const { width, height } = widgetSizes[customization.widget_size as keyof typeof widgetSizes];
@@ -410,11 +535,50 @@ export const AdvancedChatPreview = () => {
         <div className="xl:col-span-1">
           <div className="sticky top-6">
             <div className="bg-white dark:bg-slate-800 rounded-lg p-6 border border-slate-200 dark:border-slate-700 card-shadow-lg">
-              <h3 className="text-xl font-bold dark:text-white mb-2 flex items-center gap-2">
+              <h3 className={`text-xl font-bold dark:text-white mb-2 flex items-center gap-2`}>
                 <span className="text-2xl">👁️</span>
-                Live Preview
+                {t('designer.livePreview')}
               </h3>
-              <p className="text-sm text-muted-foreground dark:text-gray-400 mb-6">Changes reflect in real-time</p>
+              <p className="text-sm text-muted-foreground dark:text-gray-400 mb-4">{t('designer.livePreviewDesc')}</p>
+
+              {/* Position Selector */}
+              <div className="mb-4">
+                <Label className="text-xs dark:text-gray-300 mb-2 block text-left">{t('designer.widgetPosition')}</Label>
+                <div className="grid grid-cols-2 gap-2">
+                  <Button
+                    variant={(customization.meta?.position || customization.position) === 'top-left' ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => updateCustomization('meta', { ...customization.meta, position: 'top-left' })}
+                    className="flex items-center justify-start gap-2 text-xs"
+                  >
+                    <span>⬉</span> {t('designer.topLeft')}
+                  </Button>
+                  <Button
+                    variant={(customization.meta?.position || customization.position) === 'top-right' ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => updateCustomization('meta', { ...customization.meta, position: 'top-right' })}
+                    className="flex items-center justify-end gap-2 text-xs"
+                  >
+                    {t('designer.topRight')} <span>⬈</span>
+                  </Button>
+                  <Button
+                    variant={(customization.meta?.position || customization.position) === 'bottom-left' ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => updateCustomization('meta', { ...customization.meta, position: 'bottom-left' })}
+                    className="flex items-center justify-start gap-2 text-xs"
+                  >
+                    <span>⬋</span> {t('designer.bottomLeft')}
+                  </Button>
+                  <Button
+                    variant={(customization.meta?.position || customization.position) === 'bottom-right' ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => updateCustomization('meta', { ...customization.meta, position: 'bottom-right' })}
+                    className="flex items-center justify-end gap-2 text-xs"
+                  >
+                    {t('designer.bottomRight')} <span>⬊</span>
+                  </Button>
+                </div>
+              </div>
 
               <div className="flex justify-center">
                 <div className="bg-gradient-to-br from-gray-50 to-gray-200 dark:from-slate-900 dark:to-slate-800 p-4 rounded-xl relative overflow-hidden border-2 border-slate-300 dark:border-slate-600 shadow-xl" style={{ fontFamily: customization.font_family, width: width + 40, height: height + 80 }}>
@@ -426,9 +590,9 @@ export const AdvancedChatPreview = () => {
               />
             )}
               {previewType === 'web' && (
-                <div className={`absolute`} style={{ [customization.position.split('-')[0]]: '20px', [customization.position.split('-')[1]]: '20px' }}>
+                <div className={`absolute`} style={{ [widgetPosition.split('-')[0]]: '20px', [widgetPosition.split('-')[1]]: '20px' }}>
                   {isExpanded ? (
-                    <div className="bg-white rounded-lg shadow-2xl flex flex-col animate-scale-in" style={{ width, height, borderRadius: `${customization.border_radius}px`, backgroundColor: customization.dark_mode ? '#1a1a1a' : '#fff' }}>
+                    <div dir={isWidgetRTL ? 'rtl' : 'ltr'} className="bg-white rounded-lg shadow-2xl flex flex-col animate-scale-in" style={{ width, height, borderRadius: `${customization.border_radius}px`, backgroundColor: customization.dark_mode ? '#1a1a1a' : '#fff' }}>
                       {customization.show_header && (
                         <div className="text-white p-3 flex items-center justify-between" style={{ background: customization.primary_color, borderTopLeftRadius: `${customization.border_radius}px`, borderTopRightRadius: `${customization.border_radius}px` }}>
                           <div className="flex items-center space-x-3">
@@ -459,7 +623,7 @@ export const AdvancedChatPreview = () => {
                                   </Avatar>
                                   <span className="text-xs font-semibold">{msg.sender === 'agent' ? 'Agent' : 'You'}</span>
                                 </div>
-                                <span className={cn('text-xs', customization.dark_mode ? 'text-gray-400' : 'text-gray-500', msg.sender === 'user' && 'text-opacity-80')}>
+                                <span className="text-xs" style={{ color: customization.time_color || (customization.dark_mode ? '#9CA3AF' : '#6B7280') }}>
                                   {new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                                 </span>
                               </div>
@@ -490,11 +654,17 @@ export const AdvancedChatPreview = () => {
                     </div>
                   ) : (
                     <Button
-                      className="rounded-full h-16 w-16 shadow-xl hover:scale-110 transition-transform duration-200 flex items-center justify-center"
-                      style={{ background: customization.primary_color }}
+                      className="flex items-center justify-center"
+                      style={{
+                        width: '60px',
+                        height: '60px',
+                        borderRadius: '50%',
+                        background: customization.primary_color,
+                        boxShadow: '0 4px 12px rgba(0,0,0,0.15)'
+                      }}
                       onClick={() => setIsExpanded(true)}
                     >
-                      {customization.agent_avatar_url ? <img src={`${BACKEND_URL}/api/v1/proxy/image-proxy?url=${encodeURIComponent(customization.agent_avatar_url)}`} className="h-full w-full rounded-full object-contain"  /> : <MessageSquare className="h-8 w-8 text-white" />}
+                      {customization.agent_avatar_url ? <img src={`${BACKEND_URL}/api/v1/proxy/image-proxy?url=${encodeURIComponent(customization.agent_avatar_url)}`} className="h-full w-full rounded-full object-cover"  /> : <MessageSquare className="h-8 w-8 text-white" />}
                     </Button>
                   )}
                 </div>
@@ -514,9 +684,9 @@ export const AdvancedChatPreview = () => {
       <Dialog open={isPublishDialogOpen} onOpenChange={setIsPublishDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Published Successfully!</DialogTitle>
+            <DialogTitle>{t('designer.publishedSuccess')}</DialogTitle>
             <DialogDescription>
-              Your widget has been published. Share the URL below with your client for a live demo.
+              {t('designer.publishedDesc')}
             </DialogDescription>
           </DialogHeader>
           <div className="mt-4">
@@ -529,10 +699,10 @@ export const AdvancedChatPreview = () => {
               className="mt-2 w-full"
               onClick={() => {
                 navigator.clipboard.writeText(publishedUrl || "");
-                toast({ title: "Copied to clipboard!" });
+                toast({ title: t('designer.copiedClipboard') });
               }}
             >
-              Copy URL
+              {t('designer.copyUrl')}
             </Button>
           </div>
         </DialogContent>

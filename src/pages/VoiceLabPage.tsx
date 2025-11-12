@@ -23,6 +23,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { VOICE_ENGINE_URL } from '@/config/env';
+import { useI18n } from '@/hooks/useI18n';
 
 const DEFAULT_VOICE_ID = 'default';
 
@@ -33,6 +34,7 @@ interface VoiceTask {
 }
 
 const VoiceLabPage: React.FC = () => {
+    const { t, isRTL } = useI18n();
     const queryClient = useQueryClient();
     const [voiceName, setVoiceName] = useState('');
     const [file, setFile] = useState<File | null>(null);
@@ -96,7 +98,7 @@ const VoiceLabPage: React.FC = () => {
             return response.json();
         },
         onSuccess: (data) => {
-            toast({ title: 'Training Started', description: `Your new voice "${voiceName}" is being created.` });
+            toast({ title: t('voiceLab.toasts.trainingStarted'), description: t('voiceLab.toasts.voiceBeingCreated', { name: voiceName }) });
             setProcessingTasks(prev => new Map(prev).set(data.task_id, {
                 task_id: data.task_id,
                 voice_name: voiceName,
@@ -106,7 +108,7 @@ const VoiceLabPage: React.FC = () => {
             setFile(null);
             setRecordedAudio(null);
         },
-        onError: (e: Error) => toast({ title: 'Error', description: e.message, variant: 'destructive' }),
+        onError: (e: Error) => toast({ title: t('common.error'), description: e.message, variant: 'destructive' }),
     });
 
     const deleteMutation = useMutation({
@@ -120,10 +122,10 @@ const VoiceLabPage: React.FC = () => {
             }
         },
         onSuccess: (_, voiceId) => {
-            toast({ title: 'Success', description: `Voice "${voiceId}" has been deleted.` });
+            toast({ title: t('common.success'), description: t('voiceLab.toasts.voiceDeleted', { name: voiceId }) });
             queryClient.invalidateQueries({ queryKey: ['voices'] });
         },
-        onError: (e: Error) => toast({ title: 'Error', description: e.message, variant: 'destructive' }),
+        onError: (e: Error) => toast({ title: t('common.error'), description: e.message, variant: 'destructive' }),
     });
 
     const allVoices = useMemo(() => {
@@ -160,35 +162,35 @@ const VoiceLabPage: React.FC = () => {
 
     return (
         <>
-            <div className="w-full max-w-7xl mx-auto p-4 md:p-8 space-y-8">
+            <div className="w-full max-w-7xl mx-auto p-4 md:p-8 space-y-8" dir={isRTL ? 'rtl' : 'ltr'}>
                 <header>
                     <h1 className="text-4xl font-bold bg-gradient-to-r from-violet-600 to-fuchsia-600 bg-clip-text text-transparent mb-2">
-                        🎙️ Voice Lab
+                        🎙️ {t('voiceLab.title')}
                     </h1>
-                    <p className="text-gray-600 dark:text-gray-400 text-lg">Create, train, and manage custom voices for your AI agents.</p>
+                    <p className="text-gray-600 dark:text-gray-400 text-lg">{t('voiceLab.subtitle')}</p>
                 </header>
                 <Card className="card-shadow-lg border-slate-200 dark:border-slate-700 dark:bg-slate-800 border-t-4 border-t-violet-600 dark:border-t-violet-500">
                     <CardHeader className="border-b border-slate-200 dark:border-slate-700 bg-gradient-to-r from-slate-50 to-slate-100 dark:from-slate-800 dark:to-slate-900">
-                        <CardTitle className="dark:text-white">Create a New Voice</CardTitle>
-                        <CardDescription className="dark:text-gray-400">Give your voice a name and provide an audio sample by uploading or recording.</CardDescription>
+                        <CardTitle className="dark:text-white">{t('voiceLab.createNewVoice')}</CardTitle>
+                        <CardDescription className="dark:text-gray-400">{t('voiceLab.createNewVoiceDescription')}</CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-6 pt-6">
                         <div className="space-y-2">
-                            <Label htmlFor="voiceName" className="font-semibold dark:text-gray-300">Voice Name</Label>
+                            <Label htmlFor="voiceName" className="font-semibold dark:text-gray-300">{t('voiceLab.voiceName')}</Label>
                             <Input
                                 id="voiceName"
                                 value={voiceName}
                                 onChange={(e) => setVoiceName(e.target.value)}
-                                placeholder="e.g., 'Friendly Support Agent'"
+                                placeholder={t('voiceLab.voiceNamePlaceholder')}
                                 className="max-w-lg dark:bg-slate-900 dark:border-slate-600 dark:text-white"
                             />
                         </div>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
                             <div className="space-y-2">
-                                <Label className="font-semibold dark:text-gray-300">Option 1: Upload Audio</Label>
+                                <Label className="font-semibold dark:text-gray-300">{t('voiceLab.option1UploadAudio')}</Label>
                                 {file ? (
-                                    <div className="flex items-center justify-between p-3 border border-slate-200 dark:border-slate-700 rounded-lg bg-slate-50 dark:bg-slate-900">
-                                        <div className="flex items-center gap-3">
+                                    <div className={`flex items-center justify-between p-3 border border-slate-200 dark:border-slate-700 rounded-lg bg-slate-50 dark:bg-slate-900 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                                        <div className={`flex items-center gap-3 ${isRTL ? 'flex-row-reverse' : ''}`}>
                                             <FileAudio className="h-5 w-5 text-violet-600 dark:text-violet-400" />
                                             <p className="text-sm font-medium truncate dark:text-white">{file.name}</p>
                                         </div>
@@ -208,7 +210,7 @@ const VoiceLabPage: React.FC = () => {
                                 )}
                             </div>
                             <div className="space-y-2">
-                                <Label className="font-semibold dark:text-gray-300">Option 2: Record Sample</Label>
+                                <Label className="font-semibold dark:text-gray-300">{t('voiceLab.option2RecordSample')}</Label>
                                 <AudioRecorder onRecordingChange={handleRecordingChange} />
                             </div>
                         </div>
@@ -219,52 +221,52 @@ const VoiceLabPage: React.FC = () => {
                                 disabled={cloneMutation.isPending || !voiceName || (!file && !recordedAudio)}
                                 className="bg-gradient-to-r from-violet-600 to-fuchsia-600 hover:from-violet-700 hover:to-fuchsia-700 text-white shadow-lg hover:shadow-xl transition-all"
                             >
-                                {cloneMutation.isPending ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Starting Training...</> : <><UploadCloud className="mr-2 h-4 w-4" /> Create and Train Voice</>}
+                                {cloneMutation.isPending ? <><Loader2 className={`h-4 w-4 animate-spin ${isRTL ? 'ml-2' : 'mr-2'}`} />{t('voiceLab.startingTraining')}</> : <><UploadCloud className={`h-4 w-4 ${isRTL ? 'ml-2' : 'mr-2'}`} /> {t('voiceLab.createAndTrainVoice')}</>}
                             </Button>
                         </div>
                     </CardContent>
                 </Card>
                 <Card className="card-shadow-lg border-slate-200 dark:border-slate-700 dark:bg-slate-800">
                     <CardHeader className="border-b border-slate-200 dark:border-slate-700 bg-gradient-to-r from-slate-50 to-slate-100 dark:from-slate-800 dark:to-slate-900">
-                        <CardTitle className="dark:text-white">Your Voice Library</CardTitle>
-                        <CardDescription className="dark:text-gray-400">Manage and test your trained voices.</CardDescription>
+                        <CardTitle className="dark:text-white">{t('voiceLab.yourVoiceLibrary')}</CardTitle>
+                        <CardDescription className="dark:text-gray-400">{t('voiceLab.yourVoiceLibraryDescription')}</CardDescription>
                     </CardHeader>
                     <CardContent className="pt-6">
                         {isLoadingVoices ? (
                             <div className="flex items-center justify-center py-8">
-                                <div className="flex items-center gap-2 text-muted-foreground dark:text-gray-400">
+                                <div className={`flex items-center gap-2 text-muted-foreground dark:text-gray-400 ${isRTL ? 'flex-row-reverse' : ''}`}>
                                     <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-violet-600 dark:border-violet-400"></div>
-                                    <span>Loading voices...</span>
+                                    <span>{t('voiceLab.loadingVoices')}</span>
                                 </div>
                             </div>
                         ) : allVoices.length > 0 ? (
                             <ul className="space-y-3">
                                 {allVoices.map(({ name, status }) => (
-                                    <li key={name} className="flex items-center justify-between p-4 border border-slate-200 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-900/50 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
-                                        <div className="flex items-center gap-4">
+                                    <li key={name} className={`flex items-center justify-between p-4 border border-slate-200 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-900/50 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors ${isRTL ? 'flex-row-reverse' : ''}`}>
+                                        <div className={`flex items-center gap-4 ${isRTL ? 'flex-row-reverse' : ''}`}>
                                             <div className="p-3 bg-gradient-to-br from-violet-100 to-fuchsia-100 dark:from-violet-900/50 dark:to-fuchsia-900/50 rounded-full">
                                                 <Mic className="h-5 w-5 text-violet-600 dark:text-violet-400" />
                                             </div>
                                             <div>
                                                 <span className="font-semibold text-gray-800 dark:text-white">{name}</span>
-                                                <div className="flex items-center gap-2 mt-1">
-                                                    {status === 'completed' && <Badge variant="default" className="bg-green-600 dark:bg-green-700 hover:bg-green-700 dark:hover:bg-green-800">Ready</Badge>}
-                                                    {status === 'processing' && <Badge variant="secondary" className="dark:bg-slate-700 dark:text-gray-300">Training</Badge>}
-                                                    {name === DEFAULT_VOICE_ID && <Badge variant="outline" className="dark:border-slate-600 dark:text-gray-300">Default</Badge>}
+                                                <div className={`flex items-center gap-2 mt-1 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                                                    {status === 'completed' && <Badge variant="default" className="bg-green-600 dark:bg-green-700 hover:bg-green-700 dark:hover:bg-green-800">{t('voiceLab.ready')}</Badge>}
+                                                    {status === 'processing' && <Badge variant="secondary" className="dark:bg-slate-700 dark:text-gray-300">{t('voiceLab.training')}</Badge>}
+                                                    {name === DEFAULT_VOICE_ID && <Badge variant="outline" className="dark:border-slate-600 dark:text-gray-300">{t('voiceLab.default')}</Badge>}
                                                 </div>
                                             </div>
                                         </div>
                                         {status === 'processing' && (
-                                            <div className="flex items-center gap-3 w-1/3">
+                                            <div className={`flex items-center gap-3 w-1/3 ${isRTL ? 'flex-row-reverse' : ''}`}>
                                                 <Progress value={50} className="h-2 dark:bg-slate-700" />
                                                 <Loader2 className="h-4 w-4 animate-spin text-gray-500 dark:text-gray-400"/>
                                             </div>
                                         )}
                                         {status === 'completed' && (
-                                            <div className="flex items-center gap-2">
+                                            <div className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
                                                 <Button variant="outline" size="sm" onClick={() => openTestDialog(name)} className="dark:border-slate-600 dark:text-white dark:hover:bg-slate-700">
-                                                    <Play className="h-4 w-4 mr-2" />
-                                                    Test Voice
+                                                    <Play className={`h-4 w-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
+                                                    {t('voiceLab.testVoice')}
                                                 </Button>
                                                 <AlertDialog>
                                                     <AlertDialogTrigger asChild>
@@ -272,22 +274,22 @@ const VoiceLabPage: React.FC = () => {
                                                             <Trash2 className="h-4 w-4 text-gray-500 dark:text-gray-400 hover:text-red-600 dark:hover:text-red-400" />
                                                         </Button>
                                                     </AlertDialogTrigger>
-                                                    <AlertDialogContent className="dark:bg-slate-800 dark:border-slate-700">
+                                                    <AlertDialogContent className="dark:bg-slate-800 dark:border-slate-700" dir={isRTL ? 'rtl' : 'ltr'}>
                                                         <AlertDialogHeader>
-                                                            <AlertDialogTitle className="dark:text-white">Are you sure?</AlertDialogTitle>
+                                                            <AlertDialogTitle className="dark:text-white">{t('voiceLab.deleteConfirm')}</AlertDialogTitle>
                                                             <AlertDialogDescription className="dark:text-gray-400">
-                                                                This action cannot be undone. This will permanently delete the voice <span className="font-bold text-white">"{name}"</span>.
+                                                                {t('voiceLab.deleteConfirmDescription', { name })}
                                                             </AlertDialogDescription>
                                                         </AlertDialogHeader>
                                                         <AlertDialogFooter>
-                                                            <AlertDialogCancel className="dark:border-slate-600 dark:text-white dark:hover:bg-slate-700">Cancel</AlertDialogCancel>
+                                                            <AlertDialogCancel className="dark:border-slate-600 dark:text-white dark:hover:bg-slate-700">{t('common.cancel')}</AlertDialogCancel>
                                                             <AlertDialogAction
                                                                 onClick={() => deleteMutation.mutate(name)}
                                                                 disabled={deleteMutation.isPending}
                                                                 className="bg-red-600 hover:bg-red-700"
                                                             >
-                                                                {deleteMutation.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-                                                                Delete
+                                                                {deleteMutation.isPending ? <Loader2 className={`h-4 w-4 animate-spin ${isRTL ? 'ml-2' : 'mr-2'}`} /> : null}
+                                                                {t('common.delete')}
                                                             </AlertDialogAction>
                                                         </AlertDialogFooter>
                                                     </AlertDialogContent>
@@ -302,8 +304,8 @@ const VoiceLabPage: React.FC = () => {
                                 <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-br from-violet-100 to-fuchsia-100 dark:from-violet-900/50 dark:to-fuchsia-900/50 mb-4">
                                     <Mic className="w-8 h-8 text-violet-600 dark:text-violet-400" />
                                 </div>
-                                <h3 className="text-lg font-semibold text-gray-800 dark:text-white">No voices yet</h3>
-                                <p className="text-gray-500 dark:text-gray-400 mt-2">Create your first voice to get started</p>
+                                <h3 className="text-lg font-semibold text-gray-800 dark:text-white">{t('voiceLab.noVoicesYet')}</h3>
+                                <p className="text-gray-500 dark:text-gray-400 mt-2">{t('voiceLab.createFirstVoice')}</p>
                             </div>
                         )}
                     </CardContent>

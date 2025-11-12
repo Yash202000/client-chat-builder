@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useToast } from '@/components/ui/use-toast';
 import { Trash2, Download, Maximize2, Image as ImageIcon } from 'lucide-react';
+import { useI18n } from '@/hooks/useI18n';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -20,6 +21,7 @@ import {
 } from "@/components/ui/alert-dialog";
 
 const AIImageGalleryPage: React.FC = () => {
+  const { t, isRTL } = useI18n();
   const queryClient = useQueryClient();
   const { toast } = useToast();
   const [selectedImage, setSelectedImage] = useState<any>(null);
@@ -31,10 +33,10 @@ const AIImageGalleryPage: React.FC = () => {
     mutationFn: deleteImage,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['ai-images'] });
-      toast({ title: 'Image deleted successfully!' });
+      toast({ title: t('aiImageGallery.toasts.imageDeletedSuccess') });
     },
     onError: () => {
-      toast({ title: 'Error deleting image', variant: 'destructive' });
+      toast({ title: t('aiImageGallery.toasts.imageDeletedError'), variant: 'destructive' });
     },
   });
 
@@ -59,29 +61,29 @@ const AIImageGalleryPage: React.FC = () => {
       <div className="flex items-center justify-center py-12">
         <div className="flex items-center gap-2 text-muted-foreground dark:text-gray-400">
           <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-pink-600 dark:border-pink-400"></div>
-          <span>Loading gallery...</span>
+          <span>{t('aiImageGallery.loadingGallery')}</span>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="w-full max-w-7xl mx-auto p-4 md:p-8 space-y-8">
+    <div className="w-full max-w-7xl mx-auto p-4 md:p-8 space-y-8" dir={isRTL ? 'rtl' : 'ltr'}>
       <header>
         <h1 className="text-4xl font-bold bg-gradient-to-r from-pink-600 to-rose-600 bg-clip-text text-transparent mb-2">
-          🖼️ AI Image Gallery
+          🖼️ {t('aiImageGallery.title')}
         </h1>
-        <p className="text-gray-600 dark:text-gray-400 text-lg">Browse and manage your AI-generated images</p>
+        <p className="text-gray-600 dark:text-gray-400 text-lg">{t('aiImageGallery.subtitle')}</p>
       </header>
 
       <Card className="card-shadow-lg border-slate-200 dark:border-slate-700 dark:bg-slate-800">
         <CardHeader className="border-b border-slate-200 dark:border-slate-700 bg-gradient-to-r from-slate-50 to-slate-100 dark:from-slate-800 dark:to-slate-900">
           <CardTitle className="dark:text-white flex items-center gap-2">
             <ImageIcon className="h-5 w-5 text-pink-600 dark:text-pink-400" />
-            Your Collection
+            {t('aiImageGallery.yourCollection')}
           </CardTitle>
           <CardDescription className="dark:text-gray-400">
-            {images?.length || 0} images in your gallery
+            {t('aiImageGallery.imagesCount', { count: images?.length || 0 })}
           </CardDescription>
         </CardHeader>
         <CardContent className="pt-6">
@@ -125,7 +127,7 @@ const AIImageGalleryPage: React.FC = () => {
                       className="dark:border-slate-600 dark:text-white dark:hover:bg-slate-700"
                     >
                       <Download className="h-3 w-3 mr-1" />
-                      Download
+                      {t('common.download')}
                     </Button>
                     <AlertDialog>
                       <AlertDialogTrigger asChild>
@@ -135,18 +137,18 @@ const AIImageGalleryPage: React.FC = () => {
                       </AlertDialogTrigger>
                       <AlertDialogContent className="dark:bg-slate-800 dark:border-slate-700">
                         <AlertDialogHeader>
-                          <AlertDialogTitle className="dark:text-white">Delete this image?</AlertDialogTitle>
+                          <AlertDialogTitle className="dark:text-white">{t('aiImageGallery.deleteDialogTitle')}</AlertDialogTitle>
                           <AlertDialogDescription className="dark:text-gray-400">
-                            This action cannot be undone. This will permanently delete the image from your gallery.
+                            {t('aiImageGallery.deleteDialogDescription')}
                           </AlertDialogDescription>
                         </AlertDialogHeader>
                         <AlertDialogFooter>
-                          <AlertDialogCancel className="dark:border-slate-600 dark:text-white dark:hover:bg-slate-700">Cancel</AlertDialogCancel>
+                          <AlertDialogCancel className="dark:border-slate-600 dark:text-white dark:hover:bg-slate-700">{t('common.cancel')}</AlertDialogCancel>
                           <AlertDialogAction
                             onClick={() => handleDelete(image.id)}
                             className="bg-red-600 hover:bg-red-700"
                           >
-                            Delete
+                            {t('common.delete')}
                           </AlertDialogAction>
                         </AlertDialogFooter>
                       </AlertDialogContent>
@@ -160,8 +162,8 @@ const AIImageGalleryPage: React.FC = () => {
               <div className="w-20 h-20 bg-gradient-to-br from-pink-100 to-rose-100 dark:from-pink-900/50 dark:to-rose-900/50 rounded-full flex items-center justify-center mb-4">
                 <ImageIcon className="h-10 w-10 text-pink-600 dark:text-pink-400" />
               </div>
-              <h3 className="text-lg font-semibold text-gray-800 dark:text-white mb-2">No images yet</h3>
-              <p className="text-gray-500 dark:text-gray-400">Generate some images to see them here</p>
+              <h3 className="text-lg font-semibold text-gray-800 dark:text-white mb-2">{t('aiImageGallery.noImagesYet')}</h3>
+              <p className="text-gray-500 dark:text-gray-400">{t('aiImageGallery.generateToSee')}</p>
             </div>
           )}
         </CardContent>
@@ -171,7 +173,7 @@ const AIImageGalleryPage: React.FC = () => {
       <Dialog open={isPreviewOpen} onOpenChange={setIsPreviewOpen}>
         <DialogContent className="max-w-4xl dark:bg-slate-800 dark:border-slate-700">
           <DialogHeader>
-            <DialogTitle className="dark:text-white">Image Preview</DialogTitle>
+            <DialogTitle className="dark:text-white">{t('aiImageGallery.imagePreview')}</DialogTitle>
           </DialogHeader>
           {selectedImage && (
             <div className="space-y-4">
@@ -184,7 +186,7 @@ const AIImageGalleryPage: React.FC = () => {
               </div>
               <div className="p-3 bg-slate-50 dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-700">
                 <p className="text-sm text-gray-600 dark:text-gray-400">
-                  <span className="font-semibold dark:text-white">Prompt:</span> {selectedImage.prompt}
+                  <span className="font-semibold dark:text-white">{t('aiImageGallery.prompt')}:</span> {selectedImage.prompt}
                 </p>
               </div>
               <div className="flex gap-2">
@@ -193,7 +195,7 @@ const AIImageGalleryPage: React.FC = () => {
                   className="flex-1 bg-gradient-to-r from-pink-600 to-rose-600 hover:from-pink-700 hover:to-rose-700 text-white"
                 >
                   <Download className="h-4 w-4 mr-2" />
-                  Download Image
+                  {t('aiImageGallery.downloadImage')}
                 </Button>
               </div>
             </div>

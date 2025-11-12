@@ -22,6 +22,7 @@ export interface WidgetSettings {
   user_message_text_color: string;
   bot_message_color: string;
   bot_message_text_color: string;
+  time_color?: string;
   widget_size: 'small' | 'medium' | 'large';
   show_header: boolean;
   dark_mode: boolean;
@@ -33,6 +34,10 @@ export interface WidgetSettings {
   voice_id?: string;
   stt_provider?: string;
   communication_mode: 'chat' | 'voice' | 'chat_and_voice';
+  meta?: {
+    z_index?: number;
+    [key: string]: any; // Allow any additional customizations
+  };
 }
 
 export interface Message {
@@ -91,12 +96,15 @@ export const WidgetUI = ({
 }: WidgetUIProps) => {
   if (!settings) return null;
 
-  const { position, primary_color, agent_avatar_url, widget_size, border_radius, dark_mode, header_title, show_header, input_placeholder, user_message_color, user_message_text_color, bot_message_color, bot_message_text_color } = settings;
-  const [vertical, horizontal] = position.split('-');
+  const { position, primary_color, agent_avatar_url, widget_size, border_radius, dark_mode, header_title, show_header, input_placeholder, user_message_color, user_message_text_color, bot_message_color, bot_message_text_color, time_color } = settings;
+  // Read position from meta field, fallback to direct position for backward compatibility
+  const widgetPosition = settings.meta?.position || position || 'bottom-right';
+  const [vertical, horizontal] = widgetPosition.split('-');
   const size = widgetSizes[widget_size] || widgetSizes.medium;
+  const isRTL = settings.meta?.rtl_enabled || false;
 
   return (
-    <div style={{ position: 'fixed', zIndex: 9999, [vertical]: '20px', [horizontal]: '20px' }}>
+    <div style={{ position: 'fixed', zIndex: settings.meta?.z_index || 9999, [vertical]: '20px', [horizontal]: '20px' }}>
       {!isOpen && (
         <Button
           onClick={() => onToggleOpen(true)}
@@ -134,6 +142,7 @@ export const WidgetUI = ({
 
       {isOpen && settings?.communication_mode !== 'voice' && (
         <div
+          dir={isRTL ? 'rtl' : 'ltr'}
           style={{
             width: `${size.width}px`,
             height: `${size.height}px`,
@@ -190,7 +199,7 @@ export const WidgetUI = ({
                       </Avatar>
                       <span className="text-xs font-semibold">{msg.sender === 'agent' ? 'Agent' : 'You'}</span>
                     </div>
-                    <span className={cn('text-xs', dark_mode ? 'text-gray-400' : 'text-gray-500', msg.sender === 'user' && 'text-opacity-80')}>
+                    <span className="text-xs" style={{ color: time_color || (dark_mode ? '#9CA3AF' : '#6B7280') }}>
                       {new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                     </span>
                   </div>

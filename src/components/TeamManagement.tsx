@@ -40,8 +40,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Checkbox } from "@/components/ui/checkbox";
 import { useAuth } from "@/hooks/useAuth";
 import { TableHeader, TableRow, TableHead, TableBody, TableCell, Table } from "@/components/ui/table";
+import { useI18n } from '@/hooks/useI18n';
 
 export const TeamManagement = () => {
+  const { t, isRTL } = useI18n();
   const queryClient = useQueryClient();
   const companyId = 1; // Hardcoded company ID
   const { authFetch } = useAuth();
@@ -124,12 +126,12 @@ export const TeamManagement = () => {
     }).then(res => { if (!res.ok) throw new Error('Failed to create user'); return res.json() }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['users', companyId] });
-      toast({ title: 'Success', variant: 'success', description: 'User created successfully.' });
+      toast({ title: t('common.success'), variant: 'success', description: t('teamManagement.toasts.userCreated') });
       setAddUserModalOpen(false);
       setNewUserEmail("");
       setNewUserPassword("");
     },
-    onError: (e: Error) => toast({ title: 'Error', description: e.message, variant: 'destructive' }),
+    onError: (e: Error) => toast({ title: t('common.error'), description: e.message, variant: 'destructive' }),
   });
 
   const createTeamMutation = useMutation({
@@ -140,11 +142,11 @@ export const TeamManagement = () => {
     }).then(res => { if (!res.ok) throw new Error('Failed to create team'); return res.json() }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['teams', companyId] });
-      toast({ title: 'Success', variant: 'success', description: 'Team created successfully.' });
+      toast({ title: t('common.success'), variant: 'success', description: t('teamManagement.toasts.teamCreated') });
       setCreateTeamModalOpen(false);
       setNewTeamName("");
     },
-    onError: (e: Error) => toast({ title: 'Error', description: e.message, variant: 'destructive' }),
+    onError: (e: Error) => toast({ title: t('common.error'), description: e.message, variant: 'destructive' }),
   });
 
   const addMemberMutation = useMutation({
@@ -156,7 +158,7 @@ export const TeamManagement = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['teams', companyId] });
     },
-    onError: (e: Error) => toast({ title: 'Error', description: e.message, variant: 'destructive' }),
+    onError: (e: Error) => toast({ title: t('common.error'), description: e.message, variant: 'destructive' }),
   });
 
   const removeMemberMutation = useMutation({
@@ -165,9 +167,9 @@ export const TeamManagement = () => {
     }).then(res => { if (!res.ok) throw new Error('Failed to remove member'); return res.json() }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['teams', companyId] });
-      toast({ title: 'Success', variant: 'success', description: 'Member removed successfully.' });
+      toast({ title: t('common.success'), variant: 'success', description: t('teamManagement.toasts.memberRemoved') });
     },
-    onError: (e: Error) => toast({ title: 'Error', description: e.message, variant: 'destructive' }),
+    onError: (e: Error) => toast({ title: t('common.error'), description: e.message, variant: 'destructive' }),
   });
 
   const roleMutation = useMutation({
@@ -184,10 +186,10 @@ export const TeamManagement = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['roles', companyId] });
-      toast({ title: 'Success', variant: 'success', description: 'Role saved successfully.' });
+      toast({ title: t('common.success'), variant: 'success', description: t('teamManagement.toasts.roleSaved') });
       setRoleModalOpen(false);
     },
-    onError: (e: Error) => toast({ title: 'Error', description: e.message, variant: 'destructive' }),
+    onError: (e: Error) => toast({ title: t('common.error'), description: e.message, variant: 'destructive' }),
   });
 
   const deleteRoleMutation = useMutation({
@@ -196,9 +198,9 @@ export const TeamManagement = () => {
     }).then(res => { if (!res.ok) throw new Error('Failed to delete role'); return res.json() }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['roles', companyId] });
-      toast({ title: 'Success', variant: 'success', description: 'Role deleted successfully.' });
+      toast({ title: t('common.success'), variant: 'success', description: t('teamManagement.toasts.roleDeleted') });
     },
-    onError: (e: Error) => toast({ title: 'Error', description: e.message, variant: 'destructive' }),
+    onError: (e: Error) => toast({ title: t('common.error'), description: e.message, variant: 'destructive' }),
   });
 
   const updateTeamMutation = useMutation({
@@ -209,11 +211,11 @@ export const TeamManagement = () => {
     }).then(res => { if (!res.ok) throw new Error('Failed to update team'); return res.json() }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['teams', companyId] });
-      toast({ title: 'Success', variant: 'success', description: 'Team updated successfully.' });
+      toast({ title: t('common.success'), variant: 'success', description: t('teamManagement.toasts.teamUpdated') });
       setEditTeamModalOpen(false);
       setEditTeamName("");
     },
-    onError: (e: Error) => toast({ title: 'Error', description: e.message, variant: 'destructive' }),
+    onError: (e: Error) => toast({ title: t('common.error'), description: e.message, variant: 'destructive' }),
   });
 
   const deleteTeamMutation = useMutation({
@@ -222,9 +224,9 @@ export const TeamManagement = () => {
     }).then(res => { if (!res.ok) throw new Error('Failed to delete team'); return res.json() }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['teams', companyId] });
-      toast({ title: 'Success', variant: 'success', description: 'Team deleted successfully.' });
+      toast({ title: t('common.success'), variant: 'success', description: t('teamManagement.toasts.teamDeleted') });
     },
-    onError: (e: Error) => toast({ title: 'Error', description: e.message, variant: 'destructive' }),
+    onError: (e: Error) => toast({ title: t('common.error'), description: e.message, variant: 'destructive' }),
   });
 
   const deleteUserMutation = useMutation({
@@ -233,9 +235,9 @@ export const TeamManagement = () => {
     }).then(res => { if (!res.ok) throw new Error('Failed to delete user'); return res.json() }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['users', companyId] });
-      toast({ title: 'Success', variant: 'success', description: 'User deleted successfully.' });
+      toast({ title: t('common.success'), variant: 'success', description: t('teamManagement.toasts.userDeleted') });
     },
-    onError: (e: Error) => toast({ title: 'Error', description: e.message, variant: 'destructive' }),
+    onError: (e: Error) => toast({ title: t('common.error'), description: e.message, variant: 'destructive' }),
   });
 
   const toggleUserActiveMutation = useMutation({
@@ -246,9 +248,9 @@ export const TeamManagement = () => {
     }).then(res => { if (!res.ok) throw new Error('Failed to update user status'); return res.json() }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['users', companyId] });
-      toast({ title: 'Success', variant: 'success', description: 'User status updated successfully.' });
+      toast({ title: t('common.success'), variant: 'success', description: t('teamManagement.toasts.userStatusUpdated') });
     },
-    onError: (e: Error) => toast({ title: 'Error', description: e.message, variant: 'destructive' }),
+    onError: (e: Error) => toast({ title: t('common.error'), description: e.message, variant: 'destructive' }),
   });
 
   // --- EVENT HANDLERS ---
@@ -278,7 +280,7 @@ export const TeamManagement = () => {
       // Close modal and reset after all members are added
       setAddMemberModalOpen(false);
       setSelectedUserIds([]);
-      toast({ title: 'Success', variant: 'success', description: `${selectedUserIds.length} member(s) added successfully.` });
+      toast({ title: t('common.success'), variant: 'success', description: t('teamManagement.toasts.membersAdded', { count: selectedUserIds.length }) });
     }
   };
 
@@ -344,11 +346,11 @@ export const TeamManagement = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['users'] });
-      toast({ title: "User updated successfully!" });
+      toast({ title: t('teamManagement.toasts.userUpdated') });
       console.log("User update successful, users query invalidated.");
     },
     onError: (error) => {
-      toast({ title: "Failed to update user", description: error.message, variant: "destructive" });
+      toast({ title: t('common.error'), description: error.message, variant: "destructive" });
     },
   });
 
@@ -370,7 +372,7 @@ export const TeamManagement = () => {
   };
 
   const handleDeleteTeam = (teamId: number) => {
-    if (confirm('Are you sure you want to delete this team? This action cannot be undone.')) {
+    if (confirm(t('teamManagement.confirmDeleteTeam'))) {
       deleteTeamMutation.mutate(teamId);
     }
   };
@@ -406,7 +408,7 @@ export const TeamManagement = () => {
   };
 
   const handleDeleteUser = (userId: number) => {
-    if (confirm('Are you sure you want to delete this user? This action cannot be undone.')) {
+    if (confirm(t('teamManagement.confirmDeleteUser'))) {
       deleteUserMutation.mutate(userId);
     }
   };
@@ -428,14 +430,14 @@ export const TeamManagement = () => {
   const availableUsers = getAvailableUsers();
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6" dir={isRTL ? 'rtl' : 'ltr'}>
       {/* Stats Overview Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Card className="bg-gradient-to-br from-blue-50 to-cyan-50 dark:from-blue-950/30 dark:to-cyan-950/30 border-blue-200 dark:border-blue-800 card-shadow">
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-muted-foreground dark:text-gray-400">Total Users</p>
+                <p className="text-sm font-medium text-muted-foreground dark:text-gray-400">{t('teamManagement.stats.totalUsers')}</p>
                 <h3 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-cyan-600 bg-clip-text text-transparent">
                   {users?.length || 0}
                 </h3>
@@ -451,7 +453,7 @@ export const TeamManagement = () => {
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-muted-foreground dark:text-gray-400">Teams</p>
+                <p className="text-sm font-medium text-muted-foreground dark:text-gray-400">{t('teamManagement.stats.teams')}</p>
                 <h3 className="text-3xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
                   {teams?.length || 0}
                 </h3>
@@ -467,7 +469,7 @@ export const TeamManagement = () => {
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-muted-foreground dark:text-gray-400">Roles</p>
+                <p className="text-sm font-medium text-muted-foreground dark:text-gray-400">{t('teamManagement.stats.roles')}</p>
                 <h3 className="text-3xl font-bold bg-gradient-to-r from-orange-600 to-amber-600 bg-clip-text text-transparent">
                   {roles?.length || 0}
                 </h3>
@@ -482,52 +484,52 @@ export const TeamManagement = () => {
 
       <Card className="card-shadow-lg bg-white dark:bg-slate-800 overflow-visible">
         <CardHeader className="border-b border-slate-200 dark:border-slate-700 bg-gradient-to-r from-slate-50 to-slate-100 dark:from-slate-800 dark:to-slate-900">
-          <CardTitle className="flex items-center gap-2 text-2xl dark:text-white">
+          <CardTitle className={`flex items-center gap-2 text-2xl dark:text-white`}>
             <Users className="h-7 w-7 text-blue-600 dark:text-blue-400" />
-            Team & User Details
+            {t('teamManagement.title')}
           </CardTitle>
           <CardDescription className="dark:text-gray-400 text-base">
-            Manage users, teams, and their roles and permissions
+            {t('teamManagement.subtitle')}
           </CardDescription>
         </CardHeader>
         <CardContent className="pt-6">
-          <Tabs defaultValue="users" className="w-full">
+          <Tabs defaultValue="users" className="w-full" dir={isRTL ? 'rtl' : 'ltr'}>
             <TabsList className="grid w-full grid-cols-3 bg-slate-100 dark:bg-slate-900 p-1">
-              <TabsTrigger value="users" className="data-[state=active]:bg-white dark:data-[state=active]:bg-slate-800 data-[state=active]:text-blue-600 dark:data-[state=active]:text-blue-400">👥 Users</TabsTrigger>
-              <TabsTrigger value="teams" className="data-[state=active]:bg-white dark:data-[state=active]:bg-slate-800 data-[state=active]:text-blue-600 dark:data-[state=active]:text-blue-400">🏢 Teams</TabsTrigger>
-              <TabsTrigger value="permissions" className="data-[state=active]:bg-white dark:data-[state=active]:bg-slate-800 data-[state=active]:text-blue-600 dark:data-[state=active]:text-blue-400">🔒 Roles & Permissions</TabsTrigger>
+              <TabsTrigger value="users" className="data-[state=active]:bg-white dark:data-[state=active]:bg-slate-800 data-[state=active]:text-blue-600 dark:data-[state=active]:text-blue-400">👥 {t('teamManagement.tabs.users')}</TabsTrigger>
+              <TabsTrigger value="teams" className="data-[state=active]:bg-white dark:data-[state=active]:bg-slate-800 data-[state=active]:text-blue-600 dark:data-[state=active]:text-blue-400">🏢 {t('teamManagement.tabs.teams')}</TabsTrigger>
+              <TabsTrigger value="permissions" className="data-[state=active]:bg-white dark:data-[state=active]:bg-slate-800 data-[state=active]:text-blue-600 dark:data-[state=active]:text-blue-400">🔒 {t('teamManagement.tabs.rolesPermissions')}</TabsTrigger>
             </TabsList>
 
             {/* USERS TAB */}
             <TabsContent value="users" className="space-y-5 pt-5">
-              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+              <div className={`flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4`}>
                 <div className="relative flex-1 max-w-md w-full">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500 h-4 w-4" />
+                  <Search className={`absolute ${isRTL ? 'right-3' : 'left-3'} top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500 h-4 w-4`} />
                   <Input
-                    placeholder="Search users by email..."
+                    placeholder={t('teamManagement.searchPlaceholder')}
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="pl-10 dark:bg-slate-900 dark:border-slate-600 dark:text-white dark:placeholder-gray-500"
+                    className={`${isRTL ? 'pr-10' : 'pl-10'} dark:bg-slate-900 dark:border-slate-600 dark:text-white dark:placeholder-gray-500`}
                   />
                 </div>
                 <Permission permission="user:create">
                   <Dialog open={isAddUserModalOpen} onOpenChange={setAddUserModalOpen}>
                     <DialogTrigger asChild>
-                      <Button className="flex items-center gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white btn-hover-lift">
+                      <Button className={`flex items-center gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white btn-hover-lift`}>
                         <UserPlus className="h-4 w-4" />
-                        Add User
+                        {t('teamManagement.addUser')}
                       </Button>
                     </DialogTrigger>
-                  <DialogContent className="dark:bg-slate-800 dark:border-slate-700">
+                  <DialogContent className="dark:bg-slate-800 dark:border-slate-700" dir={isRTL ? 'rtl' : 'ltr'}>
                     <DialogHeader>
-                      <DialogTitle className="dark:text-white">Add New User</DialogTitle>
+                      <DialogTitle className="dark:text-white">{t('teamManagement.dialogs.addUser.title')}</DialogTitle>
                     </DialogHeader>
                     <div className="space-y-4 py-4">
                       <div>
-                        <Label htmlFor="new-user-email" className="text-sm dark:text-gray-300 mb-1.5 block">Email Address</Label>
+                        <Label htmlFor="new-user-email" className="text-sm dark:text-gray-300 mb-1.5 block">{t('teamManagement.dialogs.addUser.emailLabel')}</Label>
                         <Input
                           id="new-user-email"
-                          placeholder="user@example.com"
+                          placeholder={t('teamManagement.dialogs.addUser.emailPlaceholder')}
                           type="email"
                           value={newUserEmail}
                           onChange={(e) => setNewUserEmail(e.target.value)}
@@ -535,7 +537,7 @@ export const TeamManagement = () => {
                         />
                       </div>
                       <div>
-                        <Label htmlFor="new-user-password" className="text-sm dark:text-gray-300 mb-1.5 block">Password</Label>
+                        <Label htmlFor="new-user-password" className="text-sm dark:text-gray-300 mb-1.5 block">{t('teamManagement.dialogs.addUser.passwordLabel')}</Label>
                         <Input
                           id="new-user-password"
                           placeholder="••••••••"
@@ -548,14 +550,14 @@ export const TeamManagement = () => {
                     </div>
                     <DialogFooter>
                       <Button variant="outline" onClick={() => setAddUserModalOpen(false)} className="dark:border-slate-600 dark:text-white dark:hover:bg-slate-700">
-                        Cancel
+                        {t('common.cancel')}
                       </Button>
                       <Button
                         onClick={handleCreateUser}
                         disabled={createUserMutation.isPending}
                         className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white"
                       >
-                        {createUserMutation.isPending ? "Adding..." : "Add User"}
+                        {createUserMutation.isPending ? t('teamManagement.dialogs.addUser.adding') : t('teamManagement.dialogs.addUser.button')}
                       </Button>
                     </DialogFooter>
                   </DialogContent>
@@ -568,10 +570,10 @@ export const TeamManagement = () => {
                     <Table>
                       <TableHeader>
                         <TableRow className="border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/80 hover:bg-slate-50 dark:hover:bg-slate-900/80">
-                          <TableHead className="dark:text-gray-300 font-semibold">User</TableHead>
-                          <TableHead className="dark:text-gray-300 font-semibold">Role</TableHead>
-                          <TableHead className="dark:text-gray-300 font-semibold">Status</TableHead>
-                          <TableHead className="text-right dark:text-gray-300 font-semibold">Actions</TableHead>
+                          <TableHead className="dark:text-gray-300 font-semibold">{t('teamManagement.table.user')}</TableHead>
+                          <TableHead className="dark:text-gray-300 font-semibold">{t('teamManagement.table.role')}</TableHead>
+                          <TableHead className="dark:text-gray-300 font-semibold">{t('teamManagement.table.status')}</TableHead>
+                          <TableHead className={`${isRTL ? 'text-left' : 'text-right'} dark:text-gray-300 font-semibold`}>{t('teamManagement.table.actions')}</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
@@ -580,14 +582,14 @@ export const TeamManagement = () => {
                             <TableCell colSpan={4} className="text-center py-8 dark:text-gray-400">
                               <div className="flex items-center justify-center gap-2">
                                 <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-600 dark:border-blue-400"></div>
-                                <span>Loading users...</span>
+                                <span>{t('teamManagement.loading.users')}</span>
                               </div>
                             </TableCell>
                           </TableRow>
                         ) : filteredUsers.length === 0 ? (
                           <TableRow className="dark:border-slate-700">
                             <TableCell colSpan={4} className="text-center py-8 dark:text-gray-400">
-                              No users found.
+                              {t('teamManagement.noUsersFound')}
                             </TableCell>
                           </TableRow>
                         ) : (
@@ -628,7 +630,7 @@ export const TeamManagement = () => {
                                   disabled={updateUserMutation.isPending}
                                 >
                                   <SelectTrigger className="w-[180px] dark:bg-slate-800 dark:border-slate-600 dark:text-white">
-                                    <SelectValue placeholder="Select role" />
+                                    <SelectValue placeholder={t('teamManagement.selectRole')} />
                                   </SelectTrigger>
                                   <SelectContent className="dark:bg-slate-800 dark:border-slate-700">
                                     {roles?.map((role) => (
@@ -645,10 +647,10 @@ export const TeamManagement = () => {
                                     ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 border border-green-200 dark:border-green-800'
                                     : 'bg-gray-100 dark:bg-gray-900/30 text-gray-700 dark:text-gray-400 border border-gray-200 dark:border-gray-800'
                                 }`}>
-                                  {user.is_active ? "Active" : "Inactive"}
+                                  {user.is_active ? t('teamManagement.status.active') : t('teamManagement.status.inactive')}
                                 </span>
                               </TableCell>
-                              <TableCell className="text-right">
+                              <TableCell className={isRTL ? 'text-left' : 'text-right'}>
                                 <DropdownMenu>
                                   <DropdownMenuTrigger asChild>
                                     <Button variant="ghost" size="icon" className="hover:bg-slate-100 dark:hover:bg-slate-700">
@@ -661,8 +663,8 @@ export const TeamManagement = () => {
                                         className="dark:text-white dark:focus:bg-slate-700"
                                         onClick={() => openEditUserModal(user)}
                                       >
-                                        <Edit className="h-4 w-4 mr-2" />
-                                        Edit
+                                        <Edit className={`h-4 w-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
+                                        {t('common.edit')}
                                       </DropdownMenuItem>
                                     </Permission>
                                     <Permission permission="user:update">
@@ -670,7 +672,7 @@ export const TeamManagement = () => {
                                         className="dark:text-white dark:focus:bg-slate-700"
                                         onClick={() => handleToggleUserActive(user.id, user.is_active)}
                                       >
-                                        {user.is_active ? "Deactivate" : "Activate"}
+                                        {user.is_active ? t('teamManagement.deactivate') : t('teamManagement.activate')}
                                       </DropdownMenuItem>
                                     </Permission>
                                     <Permission permission="user:delete">
@@ -678,8 +680,8 @@ export const TeamManagement = () => {
                                         className="text-red-500 dark:text-red-400 dark:focus:bg-slate-700"
                                         onClick={() => handleDeleteUser(user.id)}
                                       >
-                                        <Trash2 className="h-4 w-4 mr-2" />
-                                        Delete
+                                        <Trash2 className={`h-4 w-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
+                                        {t('common.delete')}
                                       </DropdownMenuItem>
                                     </Permission>
                                   </DropdownMenuContent>
@@ -697,28 +699,28 @@ export const TeamManagement = () => {
 
             {/* TEAMS TAB */}
             <TabsContent value="teams" className="space-y-5 pt-5">
-              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+              <div className={`flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4`}>
                 <div>
-                  <h3 className="text-lg font-semibold dark:text-white">Manage Teams</h3>
-                  <p className="text-sm text-muted-foreground dark:text-gray-400">Create and organize teams within your organization</p>
+                  <h3 className="text-lg font-semibold dark:text-white">{t('teamManagement.manageTeams')}</h3>
+                  <p className="text-sm text-muted-foreground dark:text-gray-400">{t('teamManagement.manageTeamsDesc')}</p>
                 </div>
                 <Permission permission="team:create">
                   <Dialog open={isCreateTeamModalOpen} onOpenChange={setCreateTeamModalOpen}>
                     <DialogTrigger asChild>
-                      <Button className="flex items-center gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white btn-hover-lift">
+                      <Button className={`flex items-center gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white btn-hover-lift `}>
                         <Plus className="h-4 w-4" />
-                        Create Team
+                        {t('teamManagement.createTeam')}
                       </Button>
                     </DialogTrigger>
-                  <DialogContent className="dark:bg-slate-800 dark:border-slate-700">
+                  <DialogContent className="dark:bg-slate-800 dark:border-slate-700" dir={isRTL ? 'rtl' : 'ltr'}>
                     <DialogHeader>
-                      <DialogTitle className="dark:text-white">Create New Team</DialogTitle>
+                      <DialogTitle className="dark:text-white">{t('teamManagement.dialogs.createTeam.title')}</DialogTitle>
                     </DialogHeader>
                     <div className="py-4">
-                      <Label htmlFor="new-team-name" className="text-sm dark:text-gray-300 mb-1.5 block">Team Name</Label>
+                      <Label htmlFor="new-team-name" className="text-sm dark:text-gray-300 mb-1.5 block">{t('teamManagement.dialogs.createTeam.label')}</Label>
                       <Input
                         id="new-team-name"
-                        placeholder="e.g., Engineering, Marketing, Sales"
+                        placeholder={t('teamManagement.dialogs.createTeam.placeholder')}
                         value={newTeamName}
                         onChange={(e) => setNewTeamName(e.target.value)}
                         className="dark:bg-slate-900 dark:border-slate-600 dark:text-white"
@@ -726,14 +728,14 @@ export const TeamManagement = () => {
                     </div>
                     <DialogFooter>
                       <Button variant="outline" onClick={() => setCreateTeamModalOpen(false)} className="dark:border-slate-600 dark:text-white dark:hover:bg-slate-700">
-                        Cancel
+                        {t('common.cancel')}
                       </Button>
                       <Button
                         onClick={handleCreateTeam}
                         disabled={createTeamMutation.isPending}
                         className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white"
                       >
-                        {createTeamMutation.isPending ? "Creating..." : "Create Team"}
+                        {createTeamMutation.isPending ? t('teamManagement.dialogs.createTeam.creating') : t('teamManagement.dialogs.createTeam.button')}
                       </Button>
                     </DialogFooter>
                   </DialogContent>
@@ -745,7 +747,7 @@ export const TeamManagement = () => {
                   <div className="col-span-full flex items-center justify-center py-12">
                     <div className="flex items-center gap-2 text-muted-foreground dark:text-gray-400">
                       <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-600 dark:border-blue-400"></div>
-                      <span>Loading teams...</span>
+                      <span>{t('teamManagement.loading.teams')}</span>
                     </div>
                   </div>
                 ) : teams.length === 0 ? (
@@ -753,7 +755,7 @@ export const TeamManagement = () => {
                     <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-slate-100 dark:bg-slate-800 mb-4">
                       <Users className="h-8 w-8 text-slate-400 dark:text-slate-600" />
                     </div>
-                    <p className="text-muted-foreground dark:text-gray-400">No teams created yet. Create your first team to get started.</p>
+                    <p className="text-muted-foreground dark:text-gray-400">{t('teamManagement.noTeamsYet')}</p>
                   </div>
                 ) : (
                   teams.map((team) => (
@@ -778,8 +780,8 @@ export const TeamManagement = () => {
                                   className="dark:text-white dark:focus:bg-slate-700"
                                   onClick={() => openEditTeamModal(team)}
                                 >
-                                  <Edit className="h-4 w-4 mr-2" />
-                                  Edit
+                                  <Edit className={`h-4 w-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
+                                  {t('common.edit')}
                                 </DropdownMenuItem>
                               </Permission>
                               <Permission permission="team:delete">
@@ -787,8 +789,8 @@ export const TeamManagement = () => {
                                   className="text-red-500 dark:text-red-400 dark:focus:bg-slate-700"
                                   onClick={() => handleDeleteTeam(team.id)}
                                 >
-                                  <Trash2 className="h-4 w-4 mr-2" />
-                                  Delete
+                                  <Trash2 className={`h-4 w-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
+                                  {t('common.delete')}
                                 </DropdownMenuItem>
                               </Permission>
                             </DropdownMenuContent>
@@ -797,7 +799,7 @@ export const TeamManagement = () => {
                       </CardHeader>
                       <CardContent className="flex-grow pt-4">
                         <div className="flex items-center justify-between mb-3">
-                          <h4 className="font-semibold text-sm dark:text-gray-300 uppercase tracking-wider">Members</h4>
+                          <h4 className="font-semibold text-sm dark:text-gray-300 uppercase tracking-wider">{t('teamManagement.members')}</h4>
                           <span className="text-xs px-2 py-1 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 font-medium">
                             {team.members.length}
                           </span>
@@ -809,14 +811,14 @@ export const TeamManagement = () => {
                                 key={member.id}
                                 className="flex justify-between items-center text-sm p-2 rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700"
                               >
-                                <div className="flex items-center gap-2 flex-1 min-w-0">
+                                <div className={`flex items-center gap-2 flex-1 min-w-0 `}>
                                   <Avatar className="h-6 w-6">
                                     <AvatarImage src={member.user?.profile_picture_url} />
                                     <AvatarFallback className="text-xs bg-gradient-to-br from-blue-100 to-indigo-100 dark:from-blue-900/50 dark:to-indigo-900/50 text-blue-700 dark:text-blue-300">
                                       {member.user?.email?.charAt(0).toUpperCase() || 'U'}
                                     </AvatarFallback>
                                   </Avatar>
-                                  <span className="dark:text-white truncate">{member.user?.email || 'Unknown'}</span>
+                                  <span className="dark:text-white truncate">{member.user?.email || t('teamManagement.unknown')}</span>
                                 </div>
                                 <Permission permission="team:update">
                                   <Button
@@ -832,7 +834,7 @@ export const TeamManagement = () => {
                             ))
                           ) : (
                             <div className="text-center py-6">
-                              <p className="text-sm text-gray-500 dark:text-gray-400">No members yet.</p>
+                              <p className="text-sm text-gray-500 dark:text-gray-400">{t('teamManagement.noMembersYet')}</p>
                             </div>
                           )}
                         </div>
@@ -841,11 +843,11 @@ export const TeamManagement = () => {
                         <Permission permission="team:update">
                           <Button
                             variant="outline"
-                            className="w-full dark:border-slate-600 dark:text-white dark:hover:bg-slate-700 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors"
+                            className={`w-full dark:border-slate-600 dark:text-white dark:hover:bg-slate-700 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors flex items-center gap-2 `}
                             onClick={() => openAddMemberModal(team)}
                           >
-                            <UserPlus className="h-4 w-4 mr-2" />
-                            Add Member
+                            <UserPlus className="h-4 w-4" />
+                            {t('teamManagement.addMember')}
                           </Button>
                         </Permission>
                       </CardContent>
@@ -857,18 +859,18 @@ export const TeamManagement = () => {
 
             {/* PERMISSIONS TAB */}
             <TabsContent value="permissions" className="space-y-5 pt-5">
-              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+              <div className={`flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4`}>
                 <div>
-                  <h3 className="text-lg font-semibold dark:text-white">Manage Roles</h3>
-                  <p className="text-sm text-muted-foreground dark:text-gray-400">Define roles and assign permissions to control access</p>
+                  <h3 className="text-lg font-semibold dark:text-white">{t('teamManagement.manageRoles')}</h3>
+                  <p className="text-sm text-muted-foreground dark:text-gray-400">{t('teamManagement.manageRolesDesc')}</p>
                 </div>
                 <Permission permission="role:create">
                   <Button
-                    className="flex items-center gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white btn-hover-lift"
+                    className={`flex items-center gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white btn-hover-lift `}
                     onClick={() => openRoleModal(null)}
                   >
                     <Plus className="h-4 w-4" />
-                    Create Role
+                    {t('teamManagement.createRole')}
                   </Button>
                 </Permission>
               </div>
@@ -877,7 +879,7 @@ export const TeamManagement = () => {
                   <div className="flex items-center justify-center py-12">
                     <div className="flex items-center gap-2 text-muted-foreground dark:text-gray-400">
                       <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-600 dark:border-blue-400"></div>
-                      <span>Loading roles...</span>
+                      <span>{t('teamManagement.loading.roles')}</span>
                     </div>
                   </div>
                 ) : roles.length === 0 ? (
@@ -885,7 +887,7 @@ export const TeamManagement = () => {
                     <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-slate-100 dark:bg-slate-800 mb-4">
                       <Shield className="h-8 w-8 text-slate-400 dark:text-slate-600" />
                     </div>
-                    <p className="text-muted-foreground dark:text-gray-400">No roles created yet. Create your first role to get started.</p>
+                    <p className="text-muted-foreground dark:text-gray-400">{t('teamManagement.noRolesYet')}</p>
                   </div>
                 ) : (
                   roles.map((role) => (
@@ -898,20 +900,20 @@ export const TeamManagement = () => {
                           <div className="flex-1">
                             <CardTitle className="text-base dark:text-white">{role.name}</CardTitle>
                             <CardDescription className="dark:text-gray-400 mt-1">
-                              {role.description || "No description provided"}
+                              {role.description || t('teamManagement.noDescription')}
                             </CardDescription>
                           </div>
                         </div>
-                        <div className="flex items-center gap-2">
+                        <div className={`flex items-center gap-2 `}>
                           <Permission permission="role:update">
                             <Button
                               variant="outline"
                               size="sm"
                               onClick={() => openRoleModal(role)}
-                              className="dark:border-slate-600 dark:text-white dark:hover:bg-slate-700"
+                              className={`dark:border-slate-600 dark:text-white dark:hover:bg-slate-700 flex items-center gap-2 `}
                             >
-                              <Edit className="h-4 w-4 mr-2" />
-                              Edit
+                              <Edit className="h-4 w-4" />
+                              {t('common.edit')}
                             </Button>
                           </Permission>
                           <Permission permission="role:delete">
@@ -919,17 +921,17 @@ export const TeamManagement = () => {
                               variant="destructive"
                               size="sm"
                               onClick={() => deleteRoleMutation.mutate(role.id)}
-                              className="bg-red-600 hover:bg-red-700"
+                              className={`bg-red-600 hover:bg-red-700 flex items-center gap-2 `}
                             >
-                              <Trash2 className="h-4 w-4 mr-2" />
-                              Delete
+                              <Trash2 className="h-4 w-4" />
+                              {t('common.delete')}
                             </Button>
                           </Permission>
                         </div>
                       </CardHeader>
                       <CardContent className="pt-4">
                         <div className="flex items-center justify-between mb-3">
-                          <h4 className="font-semibold text-sm dark:text-gray-300 uppercase tracking-wider">Permissions</h4>
+                          <h4 className="font-semibold text-sm dark:text-gray-300 uppercase tracking-wider">{t('teamManagement.permissions')}</h4>
                           <span className="text-xs px-2 py-1 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 font-medium">
                             {role.permissions.length}
                           </span>
@@ -939,16 +941,16 @@ export const TeamManagement = () => {
                             {role.permissions.map((p) => (
                               <div
                                 key={p.id}
-                                className="flex items-center text-sm p-2 rounded-lg bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800"
+                                className={`flex items-center text-sm p-2 rounded-lg bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 `}
                               >
-                                <Check className="h-4 w-4 mr-2 text-green-600 dark:text-green-400 flex-shrink-0" />
+                                <Check className={`h-4 w-4 ${isRTL ? 'ml-2' : 'mr-2'} text-green-600 dark:text-green-400 flex-shrink-0`} />
                                 <span className="dark:text-white truncate">{p.name}</span>
                               </div>
                             ))}
                           </div>
                         ) : (
                           <div className="text-center py-6 bg-slate-50 dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700">
-                            <p className="text-sm text-gray-500 dark:text-gray-400">No permissions assigned to this role.</p>
+                            <p className="text-sm text-gray-500 dark:text-gray-400">{t('teamManagement.noPermissions')}</p>
                           </div>
                         )}
                       </CardContent>
@@ -963,26 +965,26 @@ export const TeamManagement = () => {
 
       {/* Add Member Modal */}
       <Dialog open={isAddMemberModalOpen} onOpenChange={setAddMemberModalOpen}>
-        <DialogContent className="dark:bg-slate-800 dark:border-slate-700">
+        <DialogContent className="dark:bg-slate-800 dark:border-slate-700" dir={isRTL ? 'rtl' : 'ltr'}>
           <DialogHeader>
-            <DialogTitle className="dark:text-white flex items-center gap-2">
+            <DialogTitle className={`dark:text-white flex items-center gap-2 `}>
               <UserPlus className="h-5 w-5 text-blue-600 dark:text-blue-400" />
-              Add Member to {selectedTeamForMember?.name}
+              {t('teamManagement.dialogs.addMember.title', { teamName: selectedTeamForMember?.name })}
             </DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div>
               <div className="flex items-center justify-between mb-2">
                 <Label className="text-sm dark:text-gray-300">
-                  Select Members
+                  {t('teamManagement.dialogs.addMember.selectMembers')}
                 </Label>
                 <span className="text-xs px-2 py-1 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 font-medium">
-                  {selectedUserIds.length} selected
+                  {t('teamManagement.dialogs.addMember.selected', { count: selectedUserIds.length })}
                 </span>
               </div>
               {availableUsers.length === 0 ? (
                 <div className="text-center py-8 border border-slate-200 dark:border-slate-700 rounded-lg bg-slate-50 dark:bg-slate-900">
-                  <p className="text-sm text-gray-500 dark:text-gray-400">All users are already members of this team.</p>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">{t('teamManagement.dialogs.addMember.allMembersAdded')}</p>
                 </div>
               ) : (
                 <div className="grid grid-cols-1 gap-2 max-h-80 overflow-y-auto p-3 border rounded-lg bg-slate-50 dark:bg-slate-900/50 border-slate-200 dark:border-slate-700">
@@ -1036,23 +1038,23 @@ export const TeamManagement = () => {
             </div>
             <div>
               <Label htmlFor="role-select" className="text-sm dark:text-gray-300 mb-1.5 block">
-                Team Role
+                {t('teamManagement.dialogs.addMember.teamRole')}
               </Label>
               <Select onValueChange={setSelectedMemberRole} defaultValue="member">
                 <SelectTrigger id="role-select" className="dark:bg-slate-900 dark:border-slate-600 dark:text-white">
-                  <SelectValue placeholder="Select a role" />
+                  <SelectValue placeholder={t('teamManagement.dialogs.addMember.selectRole')} />
                 </SelectTrigger>
                 <SelectContent className="dark:bg-slate-800 dark:border-slate-700">
                   <SelectItem value="member" className="dark:text-white dark:focus:bg-slate-700">
-                    <div className="flex items-center gap-2">
+                    <div className={`flex items-center gap-2 `}>
                       <Badge className="h-4 w-4" />
-                      Member
+                      {t('teamManagement.dialogs.addMember.member')}
                     </div>
                   </SelectItem>
                   <SelectItem value="admin" className="dark:text-white dark:focus:bg-slate-700">
-                    <div className="flex items-center gap-2">
+                    <div className={`flex items-center gap-2 `}>
                       <Shield className="h-4 w-4" />
-                      Admin
+                      {t('teamManagement.dialogs.addMember.admin')}
                     </div>
                   </SelectItem>
                 </SelectContent>
@@ -1065,7 +1067,7 @@ export const TeamManagement = () => {
               onClick={() => setAddMemberModalOpen(false)}
               className="dark:border-slate-600 dark:text-white dark:hover:bg-slate-700"
             >
-              Cancel
+              {t('common.cancel')}
             </Button>
             <Button
               onClick={handleAddMember}
@@ -1074,13 +1076,13 @@ export const TeamManagement = () => {
             >
               {addMemberMutation.isPending ? (
                 <>
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                  Adding...
+                  <div className={`animate-spin rounded-full h-4 w-4 border-b-2 border-white ${isRTL ? 'ml-2' : 'mr-2'}`}></div>
+                  {t('teamManagement.dialogs.addMember.adding')}
                 </>
               ) : (
                 <>
-                  <UserPlus className="h-4 w-4 mr-2" />
-                  Add {selectedUserIds.length > 0 ? `${selectedUserIds.length} ` : ''}Member{selectedUserIds.length !== 1 ? 's' : ''}
+                  <UserPlus className={`h-4 w-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
+                  {t('teamManagement.dialogs.addMember.button', { count: selectedUserIds.length })}
                 </>
               )}
             </Button>
@@ -1090,15 +1092,15 @@ export const TeamManagement = () => {
 
       {/* Edit Team Modal */}
       <Dialog open={isEditTeamModalOpen} onOpenChange={setEditTeamModalOpen}>
-        <DialogContent className="dark:bg-slate-800 dark:border-slate-700">
+        <DialogContent className="dark:bg-slate-800 dark:border-slate-700" dir={isRTL ? 'rtl' : 'ltr'}>
           <DialogHeader>
-            <DialogTitle className="dark:text-white">Edit Team</DialogTitle>
+            <DialogTitle className="dark:text-white">{t('teamManagement.dialogs.editTeam.title')}</DialogTitle>
           </DialogHeader>
           <div className="py-4">
-            <Label htmlFor="edit-team-name" className="text-sm dark:text-gray-300 mb-1.5 block">Team Name</Label>
+            <Label htmlFor="edit-team-name" className="text-sm dark:text-gray-300 mb-1.5 block">{t('teamManagement.dialogs.editTeam.label')}</Label>
             <Input
               id="edit-team-name"
-              placeholder="Enter team name"
+              placeholder={t('teamManagement.dialogs.editTeam.placeholder')}
               value={editTeamName}
               onChange={(e) => setEditTeamName(e.target.value)}
               className="dark:bg-slate-900 dark:border-slate-600 dark:text-white"
@@ -1106,14 +1108,14 @@ export const TeamManagement = () => {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setEditTeamModalOpen(false)} className="dark:border-slate-600 dark:text-white dark:hover:bg-slate-700">
-              Cancel
+              {t('common.cancel')}
             </Button>
             <Button
               onClick={handleUpdateTeam}
               disabled={updateTeamMutation.isPending}
               className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white"
             >
-              {updateTeamMutation.isPending ? "Updating..." : "Update Team"}
+              {updateTeamMutation.isPending ? t('teamManagement.dialogs.editTeam.updating') : t('teamManagement.dialogs.editTeam.button')}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -1121,16 +1123,16 @@ export const TeamManagement = () => {
 
       {/* Edit User Modal */}
       <Dialog open={isEditUserModalOpen} onOpenChange={setEditUserModalOpen}>
-        <DialogContent className="dark:bg-slate-800 dark:border-slate-700">
+        <DialogContent className="dark:bg-slate-800 dark:border-slate-700" dir={isRTL ? 'rtl' : 'ltr'}>
           <DialogHeader>
-            <DialogTitle className="dark:text-white">Edit User</DialogTitle>
+            <DialogTitle className="dark:text-white">{t('teamManagement.dialogs.editUser.title')}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div>
-              <Label htmlFor="edit-user-email" className="text-sm dark:text-gray-300 mb-1.5 block">Email Address</Label>
+              <Label htmlFor="edit-user-email" className="text-sm dark:text-gray-300 mb-1.5 block">{t('teamManagement.dialogs.editUser.emailLabel')}</Label>
               <Input
                 id="edit-user-email"
-                placeholder="user@example.com"
+                placeholder={t('teamManagement.dialogs.editUser.emailPlaceholder')}
                 type="email"
                 value={editUserEmail}
                 onChange={(e) => setEditUserEmail(e.target.value)}
@@ -1138,48 +1140,48 @@ export const TeamManagement = () => {
               />
             </div>
             <div>
-              <Label htmlFor="edit-user-first-name" className="text-sm dark:text-gray-300 mb-1.5 block">First Name</Label>
+              <Label htmlFor="edit-user-first-name" className="text-sm dark:text-gray-300 mb-1.5 block">{t('teamManagement.dialogs.editUser.firstNameLabel')}</Label>
               <Input
                 id="edit-user-first-name"
-                placeholder="First Name"
+                placeholder={t('teamManagement.dialogs.editUser.firstNamePlaceholder')}
                 value={editUserFirstName}
                 onChange={(e) => setEditUserFirstName(e.target.value)}
                 className="dark:bg-slate-900 dark:border-slate-600 dark:text-white"
               />
             </div>
             <div>
-              <Label htmlFor="edit-user-last-name" className="text-sm dark:text-gray-300 mb-1.5 block">Last Name</Label>
+              <Label htmlFor="edit-user-last-name" className="text-sm dark:text-gray-300 mb-1.5 block">{t('teamManagement.dialogs.editUser.lastNameLabel')}</Label>
               <Input
                 id="edit-user-last-name"
-                placeholder="Last Name"
+                placeholder={t('teamManagement.dialogs.editUser.lastNamePlaceholder')}
                 value={editUserLastName}
                 onChange={(e) => setEditUserLastName(e.target.value)}
                 className="dark:bg-slate-900 dark:border-slate-600 dark:text-white"
               />
             </div>
             <div>
-              <Label htmlFor="edit-user-password" className="text-sm dark:text-gray-300 mb-1.5 block">New Password</Label>
+              <Label htmlFor="edit-user-password" className="text-sm dark:text-gray-300 mb-1.5 block">{t('teamManagement.dialogs.editUser.passwordLabel')}</Label>
               <Input
                 id="edit-user-password"
-                placeholder="Leave blank to keep current password"
+                placeholder={t('teamManagement.dialogs.editUser.passwordPlaceholder')}
                 type="password"
                 value={editUserPassword}
                 onChange={(e) => setEditUserPassword(e.target.value)}
                 className="dark:bg-slate-900 dark:border-slate-600 dark:text-white"
               />
-              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Only fill this field if you want to change the user's password</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{t('teamManagement.dialogs.editUser.passwordHint')}</p>
             </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setEditUserModalOpen(false)} className="dark:border-slate-600 dark:text-white dark:hover:bg-slate-700">
-              Cancel
+              {t('common.cancel')}
             </Button>
             <Button
               onClick={handleUpdateUser}
               disabled={updateUserMutation.isPending}
               className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white"
             >
-              {updateUserMutation.isPending ? "Updating..." : "Update User"}
+              {updateUserMutation.isPending ? t('teamManagement.dialogs.editUser.updating') : t('teamManagement.dialogs.editUser.button')}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -1187,21 +1189,21 @@ export const TeamManagement = () => {
 
       {/* Create/Edit Role Modal */}
       <Dialog open={isRoleModalOpen} onOpenChange={setRoleModalOpen}>
-        <DialogContent className="max-w-2xl dark:bg-slate-800 dark:border-slate-700">
+        <DialogContent className="max-w-2xl dark:bg-slate-800 dark:border-slate-700" dir={isRTL ? 'rtl' : 'ltr'}>
           <DialogHeader>
-            <DialogTitle className="dark:text-white flex items-center gap-2">
+            <DialogTitle className={`dark:text-white flex items-center gap-2 `}>
               <Shield className="h-5 w-5 text-blue-600 dark:text-blue-400" />
-              {selectedRole ? 'Edit Role' : 'Create New Role'}
+              {selectedRole ? t('teamManagement.dialogs.role.titleEdit') : t('teamManagement.dialogs.role.titleCreate')}
             </DialogTitle>
           </DialogHeader>
           <div className="space-y-5 py-4">
             <div>
               <Label htmlFor="role-name" className="text-sm dark:text-gray-300 mb-1.5 block">
-                Role Name
+                {t('teamManagement.dialogs.role.nameLabel')}
               </Label>
               <Input
                 id="role-name"
-                placeholder="e.g., Administrator, Editor, Viewer"
+                placeholder={t('teamManagement.dialogs.role.namePlaceholder')}
                 value={roleName}
                 onChange={(e) => setRoleName(e.target.value)}
                 className="dark:bg-slate-900 dark:border-slate-600 dark:text-white"
@@ -1209,11 +1211,11 @@ export const TeamManagement = () => {
             </div>
             <div>
               <Label htmlFor="role-description" className="text-sm dark:text-gray-300 mb-1.5 block">
-                Role Description
+                {t('teamManagement.dialogs.role.descriptionLabel')}
               </Label>
               <Input
                 id="role-description"
-                placeholder="Brief description of this role's purpose"
+                placeholder={t('teamManagement.dialogs.role.descriptionPlaceholder')}
                 value={roleDescription}
                 onChange={(e) => setRoleDescription(e.target.value)}
                 className="dark:bg-slate-900 dark:border-slate-600 dark:text-white"
@@ -1222,17 +1224,17 @@ export const TeamManagement = () => {
             <div>
               <div className="flex items-center justify-between mb-3">
                 <h4 className="font-semibold text-sm dark:text-gray-300 uppercase tracking-wider">
-                  Permissions
+                  {t('teamManagement.permissions')}
                 </h4>
                 <span className="text-xs px-2 py-1 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 font-medium">
-                  {rolePermissions.length} selected
+                  {t('teamManagement.dialogs.role.permissionsSelected', { count: rolePermissions.length })}
                 </span>
               </div>
               {isLoadingPermissions ? (
                 <div className="flex items-center justify-center py-8">
                   <div className="flex items-center gap-2 text-muted-foreground dark:text-gray-400">
                     <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-600 dark:border-blue-400"></div>
-                    <span>Loading permissions...</span>
+                    <span>{t('teamManagement.loading.permissions')}</span>
                   </div>
                 </div>
               ) : (
@@ -1271,7 +1273,7 @@ export const TeamManagement = () => {
               onClick={() => setRoleModalOpen(false)}
               className="dark:border-slate-600 dark:text-white dark:hover:bg-slate-700"
             >
-              Cancel
+              {t('common.cancel')}
             </Button>
             <Button
               onClick={handleSaveRole}
@@ -1280,13 +1282,13 @@ export const TeamManagement = () => {
             >
               {roleMutation.isPending ? (
                 <>
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                  Saving...
+                  <div className={`animate-spin rounded-full h-4 w-4 border-b-2 border-white ${isRTL ? 'ml-2' : 'mr-2'}`}></div>
+                  {t('teamManagement.dialogs.role.saving')}
                 </>
               ) : (
                 <>
-                  <Check className="h-4 w-4 mr-2" />
-                  Save Role
+                  <Check className={`h-4 w-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
+                  {t('teamManagement.dialogs.role.button')}
                 </>
               )}
             </Button>

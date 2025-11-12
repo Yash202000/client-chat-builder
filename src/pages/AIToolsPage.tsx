@@ -10,8 +10,10 @@ import { useAuth } from '@/hooks/useAuth';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Heart, Eye, PlusCircle, Upload, Download, Wrench, Search, Star } from 'lucide-react';
 import { Permission } from '@/components/Permission';
+import { useI18n } from '@/hooks/useI18n';
 
 const AIToolsPage = () => {
+  const { t, isRTL } = useI18n();
   const [categories, setCategories] = useState([]);
   const [tools, setTools] = useState([]);
   const [filteredTools, setFilteredTools] = useState([]);
@@ -94,36 +96,36 @@ const AIToolsPage = () => {
   };
 
   return (
-    <div className="flex h-[calc(100vh-4rem)] bg-slate-50 dark:bg-slate-900 overflow-hidden">
+    <div className="flex h-[calc(100vh-4rem)] bg-slate-50 dark:bg-slate-900 overflow-hidden" dir={isRTL ? 'rtl' : 'ltr'}>
       {/* Sidebar */}
       <div className="w-80 flex-shrink-0 border-r border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 flex flex-col">
         <div className="p-6 border-b border-slate-200 dark:border-slate-700 bg-gradient-to-r from-slate-50 to-slate-100 dark:from-slate-800 dark:to-slate-900">
           <h2 className="text-xl font-bold dark:text-white flex items-center gap-2">
             <Wrench className="h-5 w-5 text-teal-600 dark:text-teal-400" />
-            Categories
+            {t('aiToolsPage.categories')}
           </h2>
-          <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">Browse by category</p>
+          <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">{t('aiToolsPage.browseByCategory')}</p>
         </div>
 
         <Permission permission="ai-tool-category:create">
           <div className="p-4 border-b border-slate-200 dark:border-slate-700 bg-teal-50 dark:bg-teal-900/20">
-            <p className="text-xs font-semibold text-teal-900 dark:text-teal-100 mb-3">CREATE CATEGORY</p>
+            <p className="text-xs font-semibold text-teal-900 dark:text-teal-100 mb-3">{t('aiToolsPage.createCategory')}</p>
             <div className="flex flex-col gap-2">
               <Input
-                placeholder="Category name..."
+                placeholder={t('aiToolsPage.categoryNamePlaceholder')}
                 value={newCategoryName}
                 onChange={(e) => setNewCategoryName(e.target.value)}
                 className="dark:bg-slate-900 dark:border-slate-600 dark:text-white text-sm"
               />
               <Input
-                placeholder="Icon class..."
+                placeholder={t('aiToolsPage.iconClassPlaceholder')}
                 value={newCategoryIcon}
                 onChange={(e) => setNewCategoryIcon(e.target.value)}
                 className="dark:bg-slate-900 dark:border-slate-600 dark:text-white text-sm"
               />
               <Button onClick={handleCreateCategory} size="sm" className="bg-teal-600 hover:bg-teal-700 text-white">
                 <PlusCircle className="h-3 w-3 mr-1" />
-                Create
+                {t('common.create')}
               </Button>
             </div>
           </div>
@@ -137,7 +139,7 @@ const AIToolsPage = () => {
                 selectedCategory === null ? 'bg-teal-100 dark:bg-teal-900/50 text-teal-900 dark:text-teal-100' : 'dark:text-gray-300'
               }`}
             >
-              All Tools
+              {t('aiToolsPage.allTools')}
             </li>
             {categories.map((category: any) => (
               <li
@@ -161,27 +163,27 @@ const AIToolsPage = () => {
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
             <div>
               <h1 className="text-4xl font-bold bg-gradient-to-r from-teal-600 to-emerald-600 bg-clip-text text-transparent mb-2">
-                🛠️ AI Tools
+                🛠️ {t('aiToolsPage.title')}
               </h1>
-              <p className="text-gray-600 dark:text-gray-400">Discover and manage AI-powered tools</p>
+              <p className="text-gray-600 dark:text-gray-400">{t('aiToolsPage.subtitle')}</p>
             </div>
             <div className="flex gap-2">
               <Permission permission="ai-tool:import">
                 <Button onClick={handleImport} variant="outline" size="sm" className="dark:border-slate-600 dark:text-white dark:hover:bg-slate-700">
                   <Upload className="h-4 w-4 mr-1" />
-                  Import
+                  {t('aiToolsPage.import')}
                 </Button>
               </Permission>
               <Permission permission="ai-tool:export">
                 <Button onClick={handleExport} variant="outline" size="sm" className="dark:border-slate-600 dark:text-white dark:hover:bg-slate-700">
                   <Download className="h-4 w-4 mr-1" />
-                  Export
+                  {t('aiToolsPage.export')}
                 </Button>
               </Permission>
               <Permission permission="ai-tool:create">
                 <Button onClick={handleCreateTool} className="bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-700 hover:to-emerald-700 text-white" size="sm">
                   <PlusCircle className="h-4 w-4 mr-1" />
-                  Create Tool
+                  {t('aiToolsPage.createTool')}
                 </Button>
               </Permission>
               <input
@@ -198,7 +200,7 @@ const AIToolsPage = () => {
             <div className="flex-1 relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400 dark:text-gray-500" />
               <Input
-                placeholder="Search tools..."
+                placeholder={t('aiToolsPage.searchPlaceholder')}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-10 dark:bg-slate-900 dark:border-slate-600 dark:text-white"
@@ -206,13 +208,13 @@ const AIToolsPage = () => {
             </div>
             <Select value={sortBy} onValueChange={setSortBy}>
               <SelectTrigger className="w-full md:w-48 dark:bg-slate-900 dark:border-slate-600 dark:text-white">
-                <SelectValue placeholder="Sort by..." />
+                <SelectValue placeholder={t('aiToolsPage.sortBy')} />
               </SelectTrigger>
               <SelectContent className="dark:bg-slate-800 dark:border-slate-700">
-                <SelectItem value="recently_added" className="dark:text-white dark:focus:bg-slate-700">Recently Added</SelectItem>
-                <SelectItem value="most_liked" className="dark:text-white dark:focus:bg-slate-700">Most Liked</SelectItem>
-                <SelectItem value="most_viewed" className="dark:text-white dark:focus:bg-slate-700">Most Viewed</SelectItem>
-                <SelectItem value="favourite_tools" className="dark:text-white dark:focus:bg-slate-700">Favourite Tools</SelectItem>
+                <SelectItem value="recently_added" className="dark:text-white dark:focus:bg-slate-700">{t('aiToolsPage.recentlyAdded')}</SelectItem>
+                <SelectItem value="most_liked" className="dark:text-white dark:focus:bg-slate-700">{t('aiToolsPage.mostLiked')}</SelectItem>
+                <SelectItem value="most_viewed" className="dark:text-white dark:focus:bg-slate-700">{t('aiToolsPage.mostViewed')}</SelectItem>
+                <SelectItem value="favourite_tools" className="dark:text-white dark:focus:bg-slate-700">{t('aiToolsPage.favouriteTools')}</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -262,7 +264,7 @@ const AIToolsPage = () => {
                     </div>
                     <NavLink to={`/dashboard/ai-tools/${tool.id}`} className="w-full">
                       <Button variant="outline" size="sm" className="w-full dark:border-slate-600 dark:text-white dark:hover:bg-slate-700 hover:bg-gradient-to-r hover:from-teal-600 hover:to-emerald-600 hover:text-white hover:border-transparent transition-all">
-                        View Tool
+                        {t('aiToolsPage.viewTool')}
                       </Button>
                     </NavLink>
                   </CardFooter>
@@ -274,9 +276,9 @@ const AIToolsPage = () => {
               <div className="w-20 h-20 bg-gradient-to-br from-teal-100 to-emerald-100 dark:from-teal-900/50 dark:to-emerald-900/50 rounded-full flex items-center justify-center mb-4">
                 <Wrench className="h-10 w-10 text-teal-600 dark:text-teal-400" />
               </div>
-              <h3 className="text-xl font-semibold text-gray-800 dark:text-white mb-2">No tools found</h3>
+              <h3 className="text-xl font-semibold text-gray-800 dark:text-white mb-2">{t('aiToolsPage.noToolsFound')}</h3>
               <p className="text-gray-500 dark:text-gray-400 max-w-md">
-                {searchTerm || selectedCategory ? 'Try adjusting your search or filters' : 'No AI tools available yet'}
+                {searchTerm || selectedCategory ? t('aiToolsPage.adjustFilters') : t('aiToolsPage.noToolsYet')}
               </p>
             </div>
           )}

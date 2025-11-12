@@ -1,18 +1,22 @@
 import { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { MessageSquare, X, Mic, Send, Loader2, Bot, User } from 'lucide-react';
+import { MessageSquare, X, Mic, Send, Loader2, Bot, User, Minus } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { WidgetForm } from '@/components/WidgetForm';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { VoiceAgentPreview } from './components/previews/VoiceAgentPreview';
+import { TypingIndicator } from '@/components/TypingIndicator';
 
 // Type definitions
 interface WidgetProps {
   agentId: string;
   companyId: string;
   backendUrl: string;
+  rtlOverride?: boolean | null;
+  languageOverride?: string | null;
+  positionOverride?: string | null;
 }
 
 interface WidgetSettings {
@@ -29,6 +33,7 @@ interface WidgetSettings {
   user_message_text_color: string;
   bot_message_color: string;
   bot_message_text_color: string;
+  time_color?: string;
   widget_size: 'small' | 'medium' | 'large';
   show_header: boolean;
   dark_mode: boolean;
@@ -40,6 +45,10 @@ interface WidgetSettings {
   voice_id?: string;
   stt_provider?: string;
   communication_mode: 'chat' | 'voice' | 'chat_and_voice';
+  meta?: {
+    z_index?: number;
+    [key: string]: any; // Allow any additional customizations
+  };
 }
 
 interface Message {
@@ -51,6 +60,7 @@ interface Message {
   options?: string[];
   fields?: any[];
   videoCallUrl?: string;
+  assignee_name?: string;  // Name of the agent who sent this message
 }
 
 const widgetSizes = {
@@ -61,10 +71,79 @@ const widgetSizes = {
 
 const generateSessionId = () => Date.now(); // milliseconds timestamp
 
+// RTL languages list
+const RTL_LANGUAGES = ['ar', 'he', 'fa', 'ur'];
+
+// Helper function to detect browser language
+const detectBrowserLanguage = (): string => {
+  const browserLang = navigator.language || (navigator as any).userLanguage;
+  // Extract language code (e.g., 'en-US' -> 'en')
+  return browserLang.split('-')[0];
+};
+
+// Helper function to get language texts from settings
+const getLanguageTexts = (settings: WidgetSettings, lang: string) => {
+  const languages = settings.meta?.languages;
+  if (!languages) {
+    // Fallback to old direct fields
+    return {
+      welcome_message: settings.welcome_message,
+      header_title: settings.header_title,
+      input_placeholder: settings.input_placeholder,
+      proactive_message: settings.proactive_message,
+    };
+  }
+
+  // Try to get the requested language, fallback to default, then to 'en', then to first available
+  const defaultLang = settings.meta?.default_language || 'en';
+  return languages[lang] || languages[defaultLang] || languages['en'] || languages[Object.keys(languages)[0]] || {
+    welcome_message: settings.welcome_message || "Hi! How can I help you today?",
+    header_title: settings.header_title || "Customer Support",
+    input_placeholder: settings.input_placeholder || "Type a message...",
+    proactive_message: settings.proactive_message || "Hello! Do you have any questions?",
+  };
+};
+
+// Helper functions for session persistence
+const getStorageKey = (agentId: string, companyId: string) =>
+  `agentconnect_session_${companyId}_${agentId}`;
+
+const getStoredSession = (agentId: string, companyId: string): { sessionId: string; timestamp: number } | null => {
+  try {
+    const key = getStorageKey(agentId, companyId);
+    const stored = localStorage.getItem(key);
+    if (stored) {
+      return JSON.parse(stored);
+    }
+  } catch (error) {
+    console.error('Error reading stored session:', error);
+  }
+  return null;
+};
+
+const storeSession = (agentId: string, companyId: string, sessionId: string | number) => {
+  try {
+    const key = getStorageKey(agentId, companyId);
+    const data = {
+      sessionId: String(sessionId),
+      timestamp: Date.now(),
+    };
+    localStorage.setItem(key, JSON.stringify(data));
+  } catch (error) {
+    console.error('Error storing session:', error);
+  }
+};
+
+const isSessionExpired = (timestamp: number, expirationDays: number = 30): boolean => {
+  const expirationTime = expirationDays * 24 * 60 * 60 * 1000; // days to milliseconds
+  return Date.now() - timestamp > expirationTime;
+};
+
 // Main Widget Component
-const Widget = ({ agentId, companyId, backendUrl }: WidgetProps) => {
+const Widget = ({ agentId, companyId, backendUrl, rtlOverride, languageOverride, positionOverride }: WidgetProps) => {
   const [settings, setSettings] = useState<WidgetSettings | null>(null);
   const [isOpen, setIsOpen] = useState(false);
+  const [isMinimized, setIsMinimized] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
@@ -74,6 +153,7 @@ const Widget = ({ agentId, companyId, backendUrl }: WidgetProps) => {
   const [isRecording, setIsRecording] = useState(false);
   const [activeForm, setActiveForm] = useState<any[] | null>(null);
   const [liveKitToken, setLiveKitToken] = useState<string | null>(null);
+  const [unreadCount, setUnreadCount] = useState(0);
   
   const isProactiveSession = useRef(false);
   const ws = useRef<WebSocket | null>(null);
@@ -84,6 +164,18 @@ const Widget = ({ agentId, companyId, backendUrl }: WidgetProps) => {
 
   const audioPlaybackTimer = useRef<NodeJS.Timeout | null>(null);
   const incomingAudioChunks = useRef<Blob[]>([]);
+
+  // Reconnection state
+  const reconnectAttempts = useRef(0);
+  const reconnectTimer = useRef<NodeJS.Timeout | null>(null);
+  const heartbeatTimer = useRef<NodeJS.Timeout | null>(null);
+  const shouldReconnect = useRef(true);
+  const currentSessionId = useRef<string | null>(null);
+  const [isConnected, setIsConnected] = useState(false);
+
+  // Calculate localized texts based on current language
+  const currentLanguage = languageOverride || detectBrowserLanguage() || settings?.meta?.default_language || 'en';
+  const localizedTexts = settings ? getLanguageTexts(settings, currentLanguage) : null;
 
   // Fetch settings
   useEffect(() => {
@@ -121,11 +213,214 @@ const Widget = ({ agentId, companyId, backendUrl }: WidgetProps) => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
+  // Clear timers helper
+  const clearTimers = () => {
+    if (reconnectTimer.current) {
+      clearTimeout(reconnectTimer.current);
+      reconnectTimer.current = null;
+    }
+    if (heartbeatTimer.current) {
+      clearInterval(heartbeatTimer.current);
+      heartbeatTimer.current = null;
+    }
+  };
+
+  // Start heartbeat to keep connection alive
+  const startHeartbeat = () => {
+    clearTimers();
+    heartbeatTimer.current = setInterval(() => {
+      if (ws.current?.readyState === WebSocket.OPEN) {
+        ws.current.send(JSON.stringify({ type: 'ping' }));
+      }
+    }, 30000); // Send ping every 30 seconds
+  };
+
+  // Connect to main WebSocket with reconnection
+  const connectWebSocket = () => {
+    if (!currentSessionId.current || !isOpen) return;
+
+    const wsUrl = `${backendUrl.replace('http', 'ws')}/api/v1/ws/public/${companyId}/${agentId}/${currentSessionId.current}?user_type=user`;
+
+    console.log('[Widget] Connecting to WebSocket:', wsUrl);
+    ws.current = new WebSocket(wsUrl);
+
+    ws.current.onopen = () => {
+      console.log('[Widget] WebSocket connected');
+      setIsConnected(true);
+      reconnectAttempts.current = 0;
+      startHeartbeat();
+
+      // Show welcome message only on first connection (not reconnection)
+      if (messages.length === 0) {
+        const initialMessageText = isProactiveSession.current
+          ? (localizedTexts?.proactive_message || settings?.proactive_message)
+          : (localizedTexts?.welcome_message || settings?.welcome_message);
+        if (initialMessageText) {
+          setMessages([{ id: 'welcome', sender: 'agent', text: initialMessageText, type: 'message', timestamp: new Date().toISOString() }]);
+        }
+        isProactiveSession.current = false;
+      }
+    };
+
+    ws.current.onmessage = (event) => {
+      const data = JSON.parse(event.data);
+
+      // Handle pong response
+      if (data.type === 'pong') return;
+
+      // Handle ping from backend - respond with pong
+      if (data.type === 'ping') {
+        if (ws.current?.readyState === WebSocket.OPEN) {
+          ws.current.send(JSON.stringify({ type: 'pong' }));
+        }
+        return;
+      }
+
+      if (data.message_type === 'typing') {
+        // Only process typing indicator if feature is enabled
+        if (settings?.typing_indicator_enabled) {
+          setIsTyping(data.is_typing);
+        }
+        return;
+      }
+
+      if (data.message_type === 'tool_use') {
+        setIsUsingTool(true);
+        return;
+      }
+
+      setIsTyping(false);
+      setIsUsingTool(false);
+
+      const newMessage: Message = {
+        id: data.id || `msg-${Date.now()}`,
+        sender: data.sender,
+        text: data.message,
+        type: data.message_type,
+        timestamp: data.timestamp || new Date().toISOString(),
+        options: data.options,
+        fields: data.fields,
+        videoCallUrl: data.message_type === 'video_call_invitation' ? `${settings?.frontend_url}/video-call?token=${data.token}&livekitUrl=${encodeURIComponent(settings?.livekit_url || '')}&sessionId=${currentSessionId.current}` : undefined,
+        assignee_name: data.assignee_name  // Include agent name from backend
+      };
+
+      // Increment unread count if minimized and message is from agent/system
+      if (isMinimized && (data.sender === 'agent' || data.sender === 'system')) {
+        setUnreadCount(prev => prev + 1);
+      }
+
+      setMessages(prev => {
+        // For user messages from backend, check if we have an optimistic version to replace
+        if (data.sender === 'user' && data.id) {
+          // Find the most recent temp message with matching content
+          const tempMessageIndex = prev.findIndex(msg =>
+            msg.id.toString().startsWith('temp_') &&  // Is a temp message
+            msg.sender === 'user' &&                   // From user
+            msg.text === data.message                  // Same content
+          );
+
+          if (tempMessageIndex !== -1) {
+            // Replace temp message with real one from backend
+            const updated = [...prev];
+            updated[tempMessageIndex] = newMessage;
+            console.log(`✅ Replaced temp message with real ID: ${data.id}`);
+            return updated;
+          }
+        }
+
+        // Check for duplicates by real ID
+        if (prev.find(msg => msg.id === newMessage.id)) return prev;
+
+        // Add new message (agent messages, or user message if no temp found)
+        return [...prev, newMessage];
+      });
+
+      if (data.message_type === 'form') {
+        setActiveForm(data.fields);
+      }
+    };
+
+    ws.current.onclose = (event) => {
+      console.log('[Widget] WebSocket closed:', event.code, event.reason);
+      setIsConnected(false);
+      clearTimers();
+
+      // Attempt to reconnect if widget is still open and should reconnect
+      if (shouldReconnect.current && isOpen && reconnectAttempts.current < 10) {
+        const delay = Math.min(3000 * (reconnectAttempts.current + 1), 15000); // Max 15 seconds
+        console.log(`[Widget] Reconnecting in ${delay}ms (attempt ${reconnectAttempts.current + 1}/10)`);
+
+        reconnectAttempts.current += 1;
+        reconnectTimer.current = setTimeout(() => {
+          connectWebSocket();
+        }, delay);
+      } else if (reconnectAttempts.current >= 10) {
+        console.error('[Widget] Max reconnection attempts reached');
+      }
+    };
+
+    ws.current.onerror = (error) => {
+      console.error('[Widget] WebSocket error:', error);
+    };
+  };
+
+  // Connect to voice WebSocket
+  const connectVoiceWebSocket = () => {
+    if (!currentSessionId.current || settings?.communication_mode !== 'chat_and_voice') return;
+
+    const voiceUrl = `${backendUrl.replace('http', 'ws')}/api/v1/ws/public/voice/${companyId}/${agentId}/${currentSessionId.current}?user_type=user&voice_id=${settings?.voice_id || 'default'}&stt_provider=${settings?.stt_provider || 'groq'}`;
+    voiceWs.current = new WebSocket(voiceUrl);
+
+    voiceWs.current.onopen = () => {
+      console.log('[Widget] Voice WebSocket connected');
+    };
+
+    voiceWs.current.onmessage = async (event) => {
+      if (event.data instanceof Blob) {
+        incomingAudioChunks.current.push(event.data);
+        if (audioPlaybackTimer.current) clearTimeout(audioPlaybackTimer.current);
+        audioPlaybackTimer.current = setTimeout(() => {
+          if (incomingAudioChunks.current.length > 0) {
+            const fullAudioBlob = new Blob(incomingAudioChunks.current, { type: 'audio/webm' });
+            const audioUrl = URL.createObjectURL(fullAudioBlob);
+            new Audio(audioUrl).play();
+            incomingAudioChunks.current = [];
+          }
+        }, 300);
+      }
+    };
+
+    voiceWs.current.onclose = () => {
+      console.log('[Widget] Voice WebSocket closed');
+    };
+
+    voiceWs.current.onerror = (error) => {
+      console.error('[Widget] Voice WebSocket error:', error);
+    };
+  };
+
   // WebSocket connection management
   useEffect(() => {
     if (isOpen) {
-      const newSessionId = generateSessionId();
+      // Try to retrieve existing session from localStorage
+      const storedSession = getStoredSession(agentId, companyId);
+      let newSessionId: string | number;
+
+      if (storedSession && !isSessionExpired(storedSession.timestamp)) {
+        // Reuse existing session if not expired
+        newSessionId = storedSession.sessionId;
+        console.log('Resuming existing session:', newSessionId);
+      } else {
+        // Generate new session and store it
+        newSessionId = generateSessionId();
+        storeSession(agentId, companyId, newSessionId);
+        console.log('Created new session:', newSessionId);
+      }
+
       setSessionId(newSessionId);
+      currentSessionId.current = newSessionId;
+      shouldReconnect.current = true;
+      reconnectAttempts.current = 0;
 
       if (settings?.communication_mode === 'voice') {
         const fetchToken = async () => {
@@ -152,84 +447,26 @@ const Widget = ({ agentId, companyId, backendUrl }: WidgetProps) => {
         return;
       }
 
-      const wsUrl = `${backendUrl.replace('http', 'ws')}/api/v1/ws/public/${companyId}/${agentId}/${newSessionId}?user_type=user`;
-      ws.current = new WebSocket(wsUrl);
+      // Connect WebSocket
+      connectWebSocket();
 
-      ws.current.onopen = () => {
-        const initialMessageText = isProactiveSession.current ? settings?.proactive_message : settings?.welcome_message;
-        if (initialMessageText) {
-          setMessages([{ id: 'welcome', sender: 'agent', text: initialMessageText, type: 'message', timestamp: new Date().toISOString() }]);
-        }
-        isProactiveSession.current = false;
-      };
-
-      ws.current.onmessage = (event) => {
-        const data = JSON.parse(event.data);
-        
-        if (data.message_type === 'typing') {
-            setIsTyping(data.is_typing);
-            return;
-        }
-
-        if (data.message_type === 'tool_use') {
-            setIsUsingTool(true);
-            // Optionally, you can display which tool is being used
-            // const toolName = data.tool_call?.function?.name;
-            // console.log(`Agent is using tool: ${toolName}`);
-            return;
-        }
-        
-        setIsTyping(false);
-        setIsUsingTool(false); // A new message arrived, so the tool is no longer in use.
-
-        const newMessage: Message = {
-          id: data.id || `msg-${Date.now()}`,
-          sender: data.sender,
-          text: data.message,
-          type: data.message_type,
-          timestamp: data.timestamp || new Date().toISOString(),
-          options: data.options,
-          fields: data.fields,
-          videoCallUrl: data.message_type === 'video_call_invitation' ? `${settings?.frontend_url}/video-call?token=${data.token}&livekitUrl=${encodeURIComponent(settings?.livekit_url || '')}&sessionId=${newSessionId}` : undefined
-        };
-        
-        setMessages(prev => {
-            if (prev.find(msg => msg.id === newMessage.id)) return prev;
-            return [...prev, newMessage];
-        });
-
-        if (data.message_type === 'form') {
-          setActiveForm(data.fields);
-        }
-      };
-
+      // Connect voice WebSocket if needed
       if (settings?.communication_mode === 'chat_and_voice') {
-        const voiceUrl = `${backendUrl.replace('http', 'ws')}/api/v1/ws/public/voice/${companyId}/${agentId}/${newSessionId}?user_type=user&voice_id=${settings?.voice_id || 'default'}&stt_provider=${settings?.stt_provider || 'groq'}`;
-        voiceWs.current = new WebSocket(voiceUrl);
-
-        voiceWs.current.onmessage = async (event) => {
-          if (event.data instanceof Blob) {
-            incomingAudioChunks.current.push(event.data);
-            if (audioPlaybackTimer.current) clearTimeout(audioPlaybackTimer.current);
-            audioPlaybackTimer.current = setTimeout(() => {
-              if (incomingAudioChunks.current.length > 0) {
-                const fullAudioBlob = new Blob(incomingAudioChunks.current, { type: 'audio/webm' });
-                const audioUrl = URL.createObjectURL(fullAudioBlob);
-                new Audio(audioUrl).play();
-                incomingAudioChunks.current = [];
-              }
-            }, 300);
-          }
-        };
+        connectVoiceWebSocket();
       }
 
     } else {
+      shouldReconnect.current = false;
+      clearTimers();
       ws.current?.close();
       voiceWs.current?.close();
       setLiveKitToken(null);
+      setIsConnected(false);
     }
 
     return () => {
+      shouldReconnect.current = false;
+      clearTimers();
       ws.current?.close();
       voiceWs.current?.close();
     };
@@ -238,6 +475,18 @@ const Widget = ({ agentId, companyId, backendUrl }: WidgetProps) => {
   const handleSendMessage = (text: string, payload?: any) => {
     const messageText = text.trim();
     if (!messageText && !payload) return;
+
+    // OPTIMISTIC UPDATE: Show user message immediately
+    const optimisticMessage: Message = {
+      id: `temp_${Date.now()}`,
+      sender: 'user',
+      text: messageText,
+      type: 'message',
+      timestamp: new Date().toISOString(),
+    };
+    setMessages(prev => [...prev, optimisticMessage]);
+
+    // Send to backend
     const messageToSend = { message: payload || messageText, message_type: 'message', sender: 'user' };
     if (ws.current?.readyState === WebSocket.OPEN) {
       ws.current.send(JSON.stringify(messageToSend));
@@ -280,40 +529,96 @@ const Widget = ({ agentId, companyId, backendUrl }: WidgetProps) => {
     }
   };
 
-  if (isLoading || !settings) return null;
-  const { position, primary_color, agent_avatar_url, widget_size, border_radius, dark_mode, header_title, show_header, input_placeholder, user_message_color, user_message_text_color, bot_message_color, bot_message_text_color } = settings;
-  const [vertical, horizontal] = position.split('-');
+  if (isLoading || !settings || !localizedTexts) return null;
+  const { position, primary_color, agent_avatar_url, widget_size, border_radius, dark_mode, show_header, user_message_color, user_message_text_color, bot_message_color, bot_message_text_color, time_color } = settings;
+
+  // Extract localized texts
+  const { welcome_message, header_title, input_placeholder, proactive_message } = localizedTexts;
+
+  // Position priority: data-position attribute > meta.position > direct position field > default
+  const widgetPosition = positionOverride || settings.meta?.position || position || 'bottom-right';
+  const [vertical, horizontal] = widgetPosition.split('-');
   const size = widgetSizes[widget_size] || widgetSizes.medium;
 
+  // RTL can be overridden by embed code data attribute, otherwise check if language is RTL, otherwise use setting from meta
+  // Use != null to check for both null and undefined
+  const isRTL = rtlOverride != null ? rtlOverride : (RTL_LANGUAGES.includes(currentLanguage) || settings.meta?.rtl_enabled || false);
+
   return (
-  <div style={{ position: 'fixed', zIndex: 9999, [vertical]: '20px', [horizontal]: '20px' }}>
+  <div style={{ position: 'fixed', zIndex: settings.meta?.z_index || 9999, [vertical]: '20px', [horizontal]: '20px' }}>
     {!isOpen && (
-      <Button
-        onClick={() => setIsOpen(true)}
-        style={{
-          width: '60px',
-          height: '60px',
-          borderRadius: '50%',
-          background: primary_color,
-          boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
-        }}
-        className="flex items-center justify-center p-0 overflow-hidden"
-      >
-        {agent_avatar_url ? (
-          <img
-            src={`${backendUrl}/api/v1/proxy/image-proxy?url=${encodeURIComponent(agent_avatar_url)}`}
-            alt="Avatar"
-            className="w-full h-full object-cover"
-            onError={(e) => {
-              // Fallback to icon if image fails to load
-              e.currentTarget.style.display = 'none';
-              e.currentTarget.parentElement!.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>';
-            }}
-          />
-        ) : (
-          <MessageSquare size={32} color="white" />
-        )}
-      </Button>
+      <div className="relative group">
+        {/* Pulsing ring animation */}
+        <div
+          className="absolute inset-0 rounded-full animate-ping opacity-75"
+          style={{
+            background: primary_color,
+            width: '60px',
+            height: '60px',
+            animationDuration: '2s',
+          }}
+        />
+
+        {/* Main button */}
+        <Button
+          onClick={() => setIsOpen(true)}
+          style={{
+            width: '60px',
+            height: '60px',
+            borderRadius: '50%',
+            background: primary_color,
+            boxShadow: '0 8px 24px rgba(0,0,0,0.25), 0 4px 12px rgba(0,0,0,0.15), 0 2px 6px rgba(0,0,0,0.1)',
+            transition: 'all 0.3s ease',
+          }}
+          className="flex items-center justify-center p-0 overflow-hidden relative hover:scale-110 hover:shadow-2xl active:scale-95"
+          onMouseEnter={(e) => {
+            e.currentTarget.style.boxShadow = `0 12px 36px rgba(0,0,0,0.3), 0 8px 20px rgba(0,0,0,0.2), 0 0 24px ${primary_color}80`;
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.boxShadow = '0 8px 24px rgba(0,0,0,0.25), 0 4px 12px rgba(0,0,0,0.15), 0 2px 6px rgba(0,0,0,0.1)';
+          }}
+        >
+          {agent_avatar_url ? (
+            <img
+              src={`${backendUrl}/api/v1/proxy/image-proxy?url=${encodeURIComponent(agent_avatar_url)}`}
+              alt="Avatar"
+              className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
+              onError={(e) => {
+                // Fallback to icon if image fails to load
+                e.currentTarget.style.display = 'none';
+                e.currentTarget.parentElement!.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>';
+              }}
+            />
+          ) : (
+            <MessageSquare size={32} color="white" className="transition-transform duration-300 group-hover:scale-110" />
+          )}
+
+          {/* Notification indicator (shows when connected) */}
+          {isConnected && (
+            <span
+              className="absolute top-0 right-0 w-4 h-4 bg-green-500 border-2 border-white rounded-full animate-pulse"
+              style={{ boxShadow: '0 0 10px rgba(34, 197, 94, 0.5)' }}
+            />
+          )}
+        </Button>
+
+        {/* Tooltip on hover */}
+        <div
+          className="absolute opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none whitespace-nowrap"
+          style={{
+            [horizontal === 'right' ? 'right' : 'left']: '70px',
+            [vertical === 'bottom' ? 'bottom' : 'top']: '50%',
+            transform: 'translateY(-50%)',
+          }}
+        >
+          <div
+            className="px-3 py-2 rounded-lg text-white text-sm font-medium shadow-lg"
+            style={{ background: primary_color }}
+          >
+            {header_title || 'Chat with us'}
+          </div>
+        </div>
+      </div>
     )}
 
     {isOpen && settings?.communication_mode === 'voice' && liveKitToken && (
@@ -328,8 +633,68 @@ const Widget = ({ agentId, companyId, backendUrl }: WidgetProps) => {
     )}
 
 
-    {isOpen && settings?.communication_mode !== 'voice' && (
+    {/* Minimized Widget View */}
+    {isOpen && isMinimized && settings?.communication_mode !== 'voice' && (
       <div
+        dir={isRTL ? 'rtl' : 'ltr'}
+        style={{
+          width: '280px',
+          borderRadius: `${border_radius}px`,
+          boxShadow: '0 10px 30px rgba(0,0,0,0.15)',
+          position: 'absolute',
+          [vertical === 'bottom' ? 'bottom' : 'top']: '80px',
+          [horizontal === 'right' ? 'right' : 'left']: '0',
+          background: primary_color,
+        }}
+        className="flex items-center justify-between p-4 text-white cursor-pointer hover:opacity-90 transition-opacity"
+        onClick={() => {
+          setIsMinimized(false);
+          setUnreadCount(0);
+        }}
+      >
+        <div className="flex items-center gap-3">
+          {agent_avatar_url ? (
+            <div className="relative w-10 h-10 rounded-full overflow-hidden border-2 border-white/50 bg-white/10 flex items-center justify-center">
+              <span className="text-white font-bold text-sm absolute inset-0 flex items-center justify-center z-0">
+                {header_title.charAt(0).toUpperCase()}
+              </span>
+              <img
+                src={`${backendUrl}/api/v1/proxy/image-proxy?url=${encodeURIComponent(agent_avatar_url)}`}
+                alt="Avatar"
+                className="w-full h-full object-cover absolute inset-0 z-10"
+                onError={(e) => {
+                  e.currentTarget.style.display = 'none';
+                }}
+              />
+            </div>
+          ) : (
+            <div className="relative w-10 h-10 rounded-full overflow-hidden border-2 border-white/50 bg-white/10 flex items-center justify-center">
+              <span className="text-white font-bold text-sm">
+                {header_title.charAt(0).toUpperCase()}
+              </span>
+            </div>
+          )}
+          <div>
+            <div className="font-bold">{header_title}</div>
+            {unreadCount > 0 && (
+              <div className="text-xs">
+                {unreadCount} new message{unreadCount > 1 ? 's' : ''}
+              </div>
+            )}
+          </div>
+        </div>
+        {unreadCount > 0 && (
+          <div className="bg-white text-gray-900 rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold">
+            {unreadCount > 9 ? '9+' : unreadCount}
+          </div>
+        )}
+      </div>
+    )}
+
+    {/* Full Widget View */}
+    {isOpen && !isMinimized && settings?.communication_mode !== 'voice' && (
+      <div
+        dir={isRTL ? 'rtl' : 'ltr'}
         style={{
           width: `${size.width}px`,
           height: `${size.height}px`,
@@ -377,14 +742,29 @@ const Widget = ({ agentId, companyId, backendUrl }: WidgetProps) => {
               )}
               <span className="font-bold text-lg">{header_title}</span>
             </div>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => setIsOpen(false)}
-              className="text-white hover:bg-white/20"
-            >
-              <X className="h-6 w-6" />
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => {
+                  setIsMinimized(true);
+                  setUnreadCount(0);
+                }}
+                className="text-white hover:bg-white/20"
+                title="Minimize"
+              >
+                <Minus className="h-5 w-5" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setIsOpen(false)}
+                className="text-white hover:bg-white/20"
+                title="Close"
+              >
+                <X className="h-6 w-6" />
+              </Button>
+            </div>
           </div>
         )}
         <div className="flex-grow p-4 overflow-y-auto space-y-4">
@@ -398,9 +778,11 @@ const Widget = ({ agentId, companyId, backendUrl }: WidgetProps) => {
                         {msg.sender === 'agent' ? <Bot size={14} /> : <User size={14} />}
                       </AvatarFallback>
                     </Avatar>
-                    <span className="text-xs font-semibold">{msg.sender === 'agent' ? 'Agent' : 'You'}</span>
+                    <span className="text-xs font-semibold">
+                      {msg.sender === 'agent' ? (msg.assignee_name || 'Agent') : 'You'}
+                    </span>
                   </div>
-                  <span className={cn('text-xs', dark_mode ? 'text-gray-400' : 'text-gray-500', msg.sender === 'user' && 'text-opacity-80')}>
+                  <span className="text-xs" style={{ color: time_color || (dark_mode ? '#9CA3AF' : '#6B7280') }}>
                     {new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                   </span>
                 </div>
@@ -433,7 +815,21 @@ const Widget = ({ agentId, companyId, backendUrl }: WidgetProps) => {
               </div>
             </div>
           ))}
-          {isTyping && <div className="text-sm text-gray-500 italic px-2">Agent is typing...</div>}
+          {isTyping && settings?.typing_indicator_enabled && (
+            <div className="flex w-full justify-start">
+              <div className="flex items-end gap-2">
+                <Avatar className="h-5 w-5">
+                  <AvatarFallback className="bg-transparent text-xs" style={{ color: bot_message_text_color }}>
+                    <Bot size={14} />
+                  </AvatarFallback>
+                </Avatar>
+                <TypingIndicator
+                  backgroundColor={bot_message_color}
+                  dotColor={bot_message_text_color}
+                />
+              </div>
+            </div>
+          )}
           {isUsingTool && <div className="text-sm text-gray-500 italic px-2">Using a tool...</div>}
           <div ref={messagesEndRef} />
         </div>

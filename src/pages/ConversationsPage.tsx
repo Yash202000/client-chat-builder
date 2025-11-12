@@ -13,8 +13,13 @@ import { Session, User } from '@/types';
 import { useAuth } from "@/hooks/useAuth";
 import { MessageSquare, Phone, Globe, Instagram, Mail, Send, Search, Filter, Archive, PanelLeftClose, PanelRightOpen } from 'lucide-react'; // Icons for channels
 import { getWebSocketUrl } from '@/config/api';
+import { formatDistanceToNow } from 'date-fns';
+import { useTranslation } from 'react-i18next';
+import { useI18n } from '@/hooks/useI18n';
 
 const ConversationsPage: React.FC = () => {
+  const { t } = useTranslation();
+  const { isRTL } = useI18n();
   const queryClient = useQueryClient();
   const { user, token, authFetch, isLoading: isAuthLoading } = useAuth();
   const [selectedSessionId, setSelectedSessionId] = useState<string | null>(null);
@@ -22,17 +27,18 @@ const ConversationsPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'mine' | 'open' | 'resolved' | 'all'>('open');
   const [unreadAssignments, setUnreadAssignments] = useState(0);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  const [reopenedSessions, setReopenedSessions] = useState<Set<string>>(new Set());
 
   const companyId = useMemo(() => user?.company_id, [user]);
 
   // Update browser tab title with unread count
   React.useEffect(() => {
     if (unreadAssignments > 0) {
-      document.title = `(${unreadAssignments}) New Assignments - AgentConnect`;
+      document.title = `(${unreadAssignments}) ${t('conversations.newAssignments')}`;
     } else {
-      document.title = 'Conversations - AgentConnect';
+      document.title = t('conversations.pageTitle');
     }
-  }, [unreadAssignments]);
+  }, [unreadAssignments, t]);
 
   // Clear unread counter when viewing 'mine' tab
   React.useEffect(() => {
@@ -106,19 +112,17 @@ const ConversationsPage: React.FC = () => {
 
   const wsUrl = companyId ? `${getWebSocketUrl()}/api/v1/ws/updates/ws/${companyId}?token=${token}` : null;
 
-  // Connect to the company-wide WebSocket for real-time updates
-  useWebSocket(
-    wsUrl,
-    {
-      onMessage: (event) => {
+  // Memoize WebSocket options to prevent unnecessary reconnections
+  const wsOptions = useMemo(() => ({
+    onMessage: (event) => {
         const eventData = JSON.parse(event.data);
         console.log('[WebSocket] Received event:', eventData.type, eventData);
 
         if (eventData.type === 'new_session') {
           console.log('[WebSocket] 🆕 New session created:', eventData.session);
           toast({
-            title: "New Conversation",
-            description: `A new conversation has started`,
+            title: t('conversations.notifications.newConversation'),
+            description: t('conversations.notifications.newConversationDesc'),
             variant: "info",
           });
           // Invalidate queries to refetch session list and counts
@@ -126,8 +130,8 @@ const ConversationsPage: React.FC = () => {
           queryClient.invalidateQueries({ queryKey: ['sessionCounts', companyId] });
         } else if (eventData.type === 'new_message') {
           toast({
-            title: "New Message",
-            description: `New message received in conversation`,
+            title: t('conversations.notifications.newMessage'),
+            description: t('conversations.notifications.newMessageDesc'),
             variant: "info",
           });
           // Invalidate queries to refetch session list and counts
@@ -160,14 +164,17 @@ const ConversationsPage: React.FC = () => {
               title: (
                 <div className="flex items-center gap-2">
                   <span className="text-2xl animate-bounce">🔔</span>
-                  <span className="font-bold">New Assignment!</span>
+                  <span className="font-bold">{t('conversations.notifications.newAssignment')}</span>
                 </div>
               ) as any,
               description: (
                 <div className="space-y-1">
                   <p className="font-semibold">{eventData.message}</p>
                   <p className="text-xs text-muted-foreground">
-                    Channel: {eventData.channel} • {eventData.is_client_connected ? '🟢 Client Online' : '🔴 Client Offline'}
+                    {t('conversations.notifications.assignmentInfo', {
+                      channel: eventData.channel,
+                      status: eventData.is_client_connected ? t('conversations.notifications.clientOnline') : t('conversations.notifications.clientOffline')
+                    })}
                   </p>
                   <button
                     onClick={() => {
@@ -177,7 +184,7 @@ const ConversationsPage: React.FC = () => {
                     }}
                     className="mt-2 text-xs bg-amber-500 text-white px-3 py-1 rounded hover:bg-amber-600"
                   >
-                    View Conversation →
+                    {t('conversations.notifications.viewConversation')}
                   </button>
                 </div>
               ) as any,
@@ -193,12 +200,121 @@ const ConversationsPage: React.FC = () => {
               setActiveTab('mine');
             }
           }
+        } else if (eventData.type === 'session_reopened') {
+          // Handle conversation reopening from resolved status
+          console.log('[WebSocket] 🔄 Session reopened:', eventData.session_id);
+
+          // Mark session as reopened for animation
+          setReopenedSessions(prev => new Set(prev).add(eventData.session_id));
+          // Remove animation after 2 seconds
+          setTimeout(() => {
+            setReopenedSessions(prev => {
+              const newSet = new Set(prev);
+              newSet.delete(eventData.session_id);
+              return newSet;
+            });
+          }, 2000);
+
+          // Calculate time since resolution
+          const timeSinceResolution = eventData.time_since_resolution
+            ? `${Math.round(eventData.time_since_resolution / 3600)} hours ago`
+            : 'recently';
+
+          // Handler for "Assign to Me" button
+          const handleAssignToMe = async () => {
+            try {
+              const response = await authFetch(`/api/v1/conversations/${eventData.session_id}/assignee`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ user_id: user?.id })
+              });
+              if (response.ok) {
+                toast({
+                  title: t('conversations.notifications.assignedSuccess'),
+                  description: t('conversations.notifications.assignedSuccessDesc'),
+                  variant: "default",
+                });
+                queryClient.invalidateQueries({ queryKey: ['sessions', companyId] });
+              }
+            } catch (error) {
+              console.error('Failed to assign conversation:', error);
+            }
+          };
+
+          // Determine if this is assigned to current user
+          const isAssignedToCurrentUser = eventData.status === 'assigned' && eventData.assignee_id === user?.id;
+
+          // Show enhanced toast notification with quick actions
+          toast({
+            title: (
+              <div className="flex items-center gap-2">
+                <span className="text-2xl">🔄</span>
+                <span className="font-bold">
+                  {isAssignedToCurrentUser ? t('conversations.notifications.sessionReopenedYours') : t('conversations.notifications.sessionReopened')}
+                </span>
+              </div>
+            ) as any,
+            description: (
+              <div className="space-y-2">
+                <p className="font-semibold">
+                  {isAssignedToCurrentUser
+                    ? t('conversations.notifications.sessionReopenedDescYours')
+                    : t('conversations.notifications.sessionReopenedDesc')}
+                </p>
+                <div className="text-xs text-muted-foreground space-y-1">
+                  <p>{t('conversations.notifications.reopenedTime', { time: timeSinceResolution })}</p>
+                  <p>{t('conversations.notifications.reopenCount', { count: eventData.reopen_count || 1 })}</p>
+                  {eventData.contact_name && (
+                    <p>{t('conversations.notifications.contactName', { name: eventData.contact_name })}</p>
+                  )}
+                  {isAssignedToCurrentUser && (
+                    <p className="text-amber-600 dark:text-amber-400 font-semibold">{t('conversations.notifications.assignedToYou')}</p>
+                  )}
+                </div>
+                <div className="flex gap-2 mt-3">
+                  <button
+                    onClick={() => {
+                      setSelectedSessionId(eventData.session_id);
+                      // If status is 'assigned' and assigned to me, go to 'mine', otherwise 'open'
+                      if (eventData.status === 'assigned' && eventData.assignee_id === user?.id) {
+                        setActiveTab('mine');
+                      } else {
+                        setActiveTab('open');
+                      }
+                    }}
+                    className="text-xs bg-blue-500 text-white px-3 py-1.5 rounded hover:bg-blue-600 font-medium transition-colors"
+                  >
+                    {t('conversations.notifications.viewNow')}
+                  </button>
+                  {(!eventData.assignee_id || eventData.assignee_id !== user?.id) && (
+                    <button
+                      onClick={handleAssignToMe}
+                      className="text-xs bg-purple-500 text-white px-3 py-1.5 rounded hover:bg-purple-600 font-medium transition-colors"
+                    >
+                      {t('conversations.notifications.assignToMe')}
+                    </button>
+                  )}
+                </div>
+              </div>
+            ) as any,
+            duration: 10000,
+          });
+
+          // Invalidate queries to refetch session list and counts
+          // This ensures the conversation moves from resolved to open tab
+          queryClient.invalidateQueries({ queryKey: ['sessions', companyId] });
+          queryClient.invalidateQueries({ queryKey: ['sessionCounts', companyId] });
         } else if (eventData.type === 'session_status_update') {
           // Handle real-time status updates (active/inactive/resolved) and connection status
-          console.log(`Session ${eventData.session_id} status changed to: ${eventData.status}, connected: ${eventData.is_client_connected}`);
+          console.log(`Session ${eventData.session_id} status changed to: ${eventData.status}, connected: ${eventData.is_client_connected}, assignee: ${eventData.assignee_id}`);
 
           // Invalidate counts immediately
           queryClient.invalidateQueries({ queryKey: ['sessionCounts', companyId] });
+
+          // If this is the currently selected session, invalidate its details to refresh assignee
+          if (selectedSessionId === eventData.session_id) {
+            queryClient.invalidateQueries({ queryKey: ['sessionDetails', selectedSessionId] });
+          }
 
           // Update the current tab's sessions list
           queryClient.setQueryData<Session[]>(['sessions', companyId, activeTab, user?.id], (oldSessions) => {
@@ -209,7 +325,7 @@ const ConversationsPage: React.FC = () => {
             if (sessionExists) {
               // Check if the session still belongs in the current tab after status change
               const isResolvedStatus = ['resolved', 'archived'].includes(eventData.status);
-              const isAssignedToMe = eventData.status === 'assigned' && oldSessions.find(s => s.session_id === eventData.session_id)?.assignee_id === user?.id;
+              const isAssignedToMe = eventData.status === 'assigned' && eventData.assignee_id === user?.id;
 
               const shouldStayInTab =
                 (activeTab === 'mine' && isAssignedToMe) ||
@@ -218,12 +334,13 @@ const ConversationsPage: React.FC = () => {
                 activeTab === 'all';
 
               if (shouldStayInTab) {
-                // Update the status and connection state
+                // Update the status, connection state, and assignee
                 return oldSessions.map(session =>
                   session.session_id === eventData.session_id
                     ? {
                         ...session,
                         status: eventData.status,
+                        assignee_id: eventData.assignee_id ?? session.assignee_id,
                         is_client_connected: eventData.is_client_connected ?? session.is_client_connected
                       }
                     : session
@@ -242,8 +359,10 @@ const ConversationsPage: React.FC = () => {
         }
       },
       enabled: !!wsUrl,
-    }
-  );
+    }), [companyId, queryClient, selectedSessionId, user?.id, activeTab, wsUrl]);
+
+  // Connect to the company-wide WebSocket for real-time updates
+  useWebSocket(wsUrl, wsOptions);
 
   const getAssigneeEmail = (assigneeId?: number) => {
     if (!assigneeId || !users || !Array.isArray(users)) return 'N/A';
@@ -325,6 +444,8 @@ const ConversationsPage: React.FC = () => {
   const ConversationCard = ({ session }: { session: Session }) => {
     const assignedToMe = isAssignedToMe(session);
     const isDisconnected = assignedToMe && !session.is_client_connected;
+    const isRecentlyReopened = reopenedSessions.has(session.conversation_id);
+    const hasBeenReopened = (session.reopen_count ?? 0) > 0;
 
     return (
       <button
@@ -340,24 +461,25 @@ const ConversationsPage: React.FC = () => {
           ${session.status === 'resolved' ? 'hover:opacity-100' : ''}
           ${assignedToMe ? 'font-semibold' : ''}
           ${isDisconnected ? 'opacity-75' : ''}
+          ${isRecentlyReopened ? 'conversation-reopened' : ''}
         `}
       >
-        <div className="flex items-start gap-3">
+        <div className={`flex items-start gap-3 ${isRTL ? 'flex-row-reverse' : ''}`}>
           <div className="flex-shrink-0 mt-1 relative">
             {getChannelIcon(session.channel)}
             {/* Connection status indicator for assigned conversations */}
             {assignedToMe && session.is_client_connected && (
-              <span className="absolute -top-1 -right-1 h-2 w-2 bg-green-500 rounded-full animate-pulse" title="Client connected"></span>
+              <span className={`absolute -top-1 h-2 w-2 bg-green-500 rounded-full animate-pulse ${isRTL ? '-left-1' : '-right-1'}`} title="Client connected"></span>
             )}
             {assignedToMe && !session.is_client_connected && (
-              <span className="absolute -top-1 -right-1 h-2 w-2 bg-red-500 rounded-full" title="Client disconnected"></span>
+              <span className={`absolute -top-1 h-2 w-2 bg-red-500 rounded-full ${isRTL ? '-left-1' : '-right-1'}`} title="Client disconnected"></span>
             )}
             {/* Status indicator dot for non-assigned */}
             {!assignedToMe && session.status === 'active' && (
-              <span className="absolute -top-1 -right-1 h-2 w-2 bg-green-500 rounded-full animate-pulse"></span>
+              <span className={`absolute -top-1 h-2 w-2 bg-green-500 rounded-full animate-pulse ${isRTL ? '-left-1' : '-right-1'}`}></span>
             )}
             {!assignedToMe && session.status === 'inactive' && (
-              <span className="absolute -top-1 -right-1 h-2 w-2 bg-gray-400 rounded-full"></span>
+              <span className={`absolute -top-1 h-2 w-2 bg-gray-400 rounded-full ${isRTL ? '-left-1' : '-right-1'}`}></span>
             )}
           </div>
           <div className="flex-grow min-w-0">
@@ -373,12 +495,12 @@ const ConversationsPage: React.FC = () => {
                     ? 'text-amber-900 dark:text-amber-100'
                     : 'dark:text-white'
                 }`}>
-                  {session.contact_name || session.contact_phone || 'Unknown Contact'}
+                  {session.contact_name || session.contact_phone || t('conversations.card.unknownContact')}
                 </h4>
               </div>
               <Badge
                 variant={getStatusBadgeVariant(session.status)}
-                className={`ml-2 flex-shrink-0 text-xs ${
+                className={`${isRTL ? 'mr-2' : 'ml-2'} flex-shrink-0 text-xs ${
                   session.status === 'active' ? 'bg-green-500 text-white' : ''
                 } ${
                   session.status === 'inactive' ? 'bg-gray-500 text-white' : ''
@@ -388,30 +510,40 @@ const ConversationsPage: React.FC = () => {
                   assignedToMe ? 'bg-amber-500 text-white' : ''
                 }`}
               >
-                {assignedToMe ? 'Mine' : session.status}
+                {assignedToMe ? t('conversations.status.mine') : session.status}
               </Badge>
+              {hasBeenReopened && (
+                <Badge className={`${isRTL ? 'mr-1' : 'ml-1'} flex-shrink-0 text-xs reopened-badge border-0`}>
+                  🔄 {session.reopen_count}
+                </Badge>
+              )}
             </div>
             <p className="text-xs text-muted-foreground truncate">
               {new Date(Number(session.conversation_id)).toLocaleString()}
             </p>
             {session.status === 'assigned' && !assignedToMe && (
               <p className="text-xs text-purple-600 dark:text-purple-400 mt-1 truncate flex items-center gap-1">
-                <span className="text-sm">💼</span> Assigned to {getAssigneeEmail(session.assignee_id)}
+                <span className="text-sm">💼</span> {t('conversations.card.assignedTo', { email: getAssigneeEmail(session.assignee_id) })}
               </p>
             )}
             {assignedToMe && session.is_client_connected && (
               <p className="text-xs text-amber-700 dark:text-amber-300 mt-1 truncate flex items-center gap-1 font-semibold">
-                <span className="text-sm">🟢</span> Assigned to you - Client online
+                <span className="text-sm">🟢</span> {t('conversations.card.assignedToYouOnline')}
               </p>
             )}
             {assignedToMe && !session.is_client_connected && (
               <p className="text-xs text-red-600 dark:text-red-400 mt-1 truncate flex items-center gap-1 font-semibold">
-                <span className="text-sm">🔴</span> Client disconnected
+                <span className="text-sm">🔴</span> {t('conversations.card.clientDisconnected')}
               </p>
             )}
             {session.status === 'resolved' && (
               <p className="text-xs text-blue-600 dark:text-blue-400 mt-1 truncate flex items-center gap-1">
-                ✓ Resolved conversation
+                {t('conversations.card.resolvedConversation')}
+              </p>
+            )}
+            {hasBeenReopened && session.last_reopened_at && (
+              <p className="text-xs text-orange-600 dark:text-orange-400 mt-1 truncate flex items-center gap-1">
+                {t('conversations.card.reopened', { time: formatDistanceToNow(new Date(session.last_reopened_at), { addSuffix: true }) })}
               </p>
             )}
           </div>
@@ -429,13 +561,21 @@ const ConversationsPage: React.FC = () => {
             {/* Collapse/Expand Button */}
             <button
               onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
-              className="absolute -right-3 top-1/2 -translate-y-1/2 z-10 bg-gradient-to-br from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white rounded-full p-2 shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-110 group"
-              title={isSidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+              className={`absolute ${isRTL ? '-left-3' : '-right-3'} top-1/2 -translate-y-1/2 z-10 bg-gradient-to-br from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white rounded-full p-2 shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-110 group`}
+              title={isSidebarCollapsed ? t('conversations.expandSidebar') : t('conversations.collapseSidebar')}
             >
               {isSidebarCollapsed ? (
-                <PanelRightOpen className="h-4 w-4 transition-transform duration-200 group-hover:translate-x-0.5" />
+                isRTL ? (
+                  <PanelLeftClose className="h-4 w-4 transition-transform duration-200 group-hover:-translate-x-0.5 scale-x-[-1]" />
+                ) : (
+                  <PanelRightOpen className="h-4 w-4 transition-transform duration-200 group-hover:translate-x-0.5" />
+                )
               ) : (
-                <PanelLeftClose className="h-4 w-4 transition-transform duration-200 group-hover:-translate-x-0.5" />
+                isRTL ? (
+                  <PanelRightOpen className="h-4 w-4 transition-transform duration-200 group-hover:translate-x-0.5 scale-x-[-1]" />
+                ) : (
+                  <PanelLeftClose className="h-4 w-4 transition-transform duration-200 group-hover:-translate-x-0.5" />
+                )
               )}
             </button>
 
@@ -443,21 +583,21 @@ const ConversationsPage: React.FC = () => {
               {!isSidebarCollapsed && (
                 <>
                   <div className="flex items-center justify-between">
-                    <CardTitle className="text-lg dark:text-white">Inbox</CardTitle>
-                    <Badge variant="outline" className="ml-2 dark:border-slate-600 dark:text-slate-300">
+                    <CardTitle className="text-lg dark:text-white">{t('conversations.inbox')}</CardTitle>
+                    <Badge variant="outline" className={`${isRTL ? 'mr-2' : 'ml-2'} dark:border-slate-600 dark:text-slate-300`}>
                       {sessionCounts?.all || 0}
                     </Badge>
                   </div>
 
               {/* Search Bar */}
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Search className={`absolute top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground ${isRTL ? 'right-3' : 'left-3'}`} />
                 <Input
                   type="text"
-                  placeholder="Search conversations..."
+                  placeholder={t('conversations.search')}
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-10 bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700"
+                  className={`bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 ${isRTL ? 'pr-10' : 'pl-10'}`}
                 />
               </div>
 
@@ -469,7 +609,7 @@ const ConversationsPage: React.FC = () => {
                     className="text-xs font-medium data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-600 data-[state=active]:to-blue-500 data-[state=active]:text-white data-[state=active]:shadow-md transition-all duration-200"
                   >
                     <span className="flex items-center gap-1.5">
-                      <span>Open</span>
+                      <span>{t('conversations.tabs.open')}</span>
                       <span className="font-semibold">({sessionCounts?.open || 0})</span>
                     </span>
                   </TabsTrigger>
@@ -478,7 +618,7 @@ const ConversationsPage: React.FC = () => {
                     className="text-xs font-medium data-[state=active]:bg-gradient-to-r data-[state=active]:from-amber-600 data-[state=active]:to-orange-500 data-[state=active]:text-white data-[state=active]:shadow-md transition-all duration-200 relative"
                   >
                     <span className="flex items-center gap-1.5">
-                      <span>Mine</span>
+                      <span>{t('conversations.tabs.mine')}</span>
                       <span className="font-semibold">({sessionCounts?.mine || 0})</span>
                       {unreadAssignments > 0 && (
                         <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] font-bold rounded-full h-5 w-5 flex items-center justify-center animate-pulse shadow-lg border-2 border-white dark:border-slate-800">
@@ -492,7 +632,7 @@ const ConversationsPage: React.FC = () => {
                     className="text-xs font-medium data-[state=active]:bg-gradient-to-r data-[state=active]:from-green-600 data-[state=active]:to-emerald-500 data-[state=active]:text-white data-[state=active]:shadow-md transition-all duration-200"
                   >
                     <span className="flex items-center gap-1.5">
-                      <span>Resolved</span>
+                      <span>{t('conversations.tabs.resolved')}</span>
                       <span className="font-semibold">({sessionCounts?.resolved || 0})</span>
                     </span>
                   </TabsTrigger>
@@ -501,7 +641,7 @@ const ConversationsPage: React.FC = () => {
                     className="text-xs font-medium data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-violet-500 data-[state=active]:text-white data-[state=active]:shadow-md transition-all duration-200"
                   >
                     <span className="flex items-center gap-1.5">
-                      <span>All</span>
+                      <span>{t('conversations.tabs.all')}</span>
                       <span className="font-semibold">({sessionCounts?.all || 0})</span>
                     </span>
                   </TabsTrigger>
@@ -529,7 +669,7 @@ const ConversationsPage: React.FC = () => {
                 <div className="flex items-center justify-center h-full">
                   <div className="text-center">
                     <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-2"></div>
-                    <p className="text-sm text-muted-foreground">Loading conversations...</p>
+                    <p className="text-sm text-muted-foreground">{t('conversations.loadingConversations')}</p>
                   </div>
                 </div>
               ) : filteredSessions.length > 0 && !isSidebarCollapsed ? (
@@ -539,7 +679,7 @@ const ConversationsPage: React.FC = () => {
                     <>
                       <div className="px-3 py-2 bg-green-100 dark:bg-green-900 sticky top-0 z-10">
                         <p className="text-xs font-semibold text-green-800 dark:text-green-200 uppercase">
-                          🟢 Active ({filteredSessions.filter(s => s.status === 'active').length})
+                          {t('conversations.statusGroups.active')} ({filteredSessions.filter(s => s.status === 'active').length})
                         </p>
                       </div>
                       {filteredSessions.filter(s => s.status === 'active').map((session) => (
@@ -552,7 +692,7 @@ const ConversationsPage: React.FC = () => {
                     <>
                       <div className="px-3 py-2 bg-gray-100 dark:bg-gray-800 sticky top-0 z-10">
                         <p className="text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase">
-                          ⚫ Inactive ({filteredSessions.filter(s => s.status === 'inactive').length})
+                          {t('conversations.statusGroups.inactive')} ({filteredSessions.filter(s => s.status === 'inactive').length})
                         </p>
                       </div>
                       {filteredSessions.filter(s => s.status === 'inactive').map((session) => (
@@ -565,7 +705,7 @@ const ConversationsPage: React.FC = () => {
                     <>
                       <div className="px-3 py-2 bg-purple-100 dark:bg-purple-900 sticky top-0 z-10">
                         <p className="text-xs font-semibold text-purple-800 dark:text-purple-200 uppercase">
-                          👤 Assigned ({filteredSessions.filter(s => s.status === 'assigned').length})
+                          {t('conversations.statusGroups.assigned')} ({filteredSessions.filter(s => s.status === 'assigned').length})
                         </p>
                       </div>
                       {filteredSessions.filter(s => s.status === 'assigned').map((session) => (
@@ -578,7 +718,7 @@ const ConversationsPage: React.FC = () => {
                     <>
                       <div className="px-3 py-2 bg-red-100 dark:bg-red-900 sticky top-0 z-10">
                         <p className="text-xs font-semibold text-red-800 dark:text-red-200 uppercase">
-                          🔴 Pending ({filteredSessions.filter(s => s.status === 'pending').length})
+                          {t('conversations.statusGroups.pending')} ({filteredSessions.filter(s => s.status === 'pending').length})
                         </p>
                       </div>
                       {filteredSessions.filter(s => s.status === 'pending').map((session) => (
@@ -591,7 +731,7 @@ const ConversationsPage: React.FC = () => {
                     <>
                       <div className="px-3 py-2 bg-blue-100 dark:bg-blue-900 sticky top-0 z-10">
                         <p className="text-xs font-semibold text-blue-800 dark:text-blue-200 uppercase">
-                          ✓ Resolved ({filteredSessions.filter(s => s.status === 'resolved').length})
+                          {t('conversations.statusGroups.resolved')} ({filteredSessions.filter(s => s.status === 'resolved').length})
                         </p>
                       </div>
                       {filteredSessions.filter(s => s.status === 'resolved').map((session) => (
@@ -604,7 +744,7 @@ const ConversationsPage: React.FC = () => {
                     <>
                       <div className="px-3 py-2 bg-slate-100 dark:bg-slate-800 sticky top-0 z-10">
                         <p className="text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase">
-                          📁 Archived ({filteredSessions.filter(s => s.status === 'archived').length})
+                          {t('conversations.statusGroups.archived')} ({filteredSessions.filter(s => s.status === 'archived').length})
                         </p>
                       </div>
                       {filteredSessions.filter(s => s.status === 'archived').map((session) => (
@@ -626,7 +766,7 @@ const ConversationsPage: React.FC = () => {
                             ? 'bg-blue-100 dark:bg-blue-900'
                             : 'hover:bg-gray-100 dark:hover:bg-slate-700'
                         }`}
-                        title={session.contact_name || 'Unknown Contact'}
+                        title={session.contact_name || t('conversations.card.unknownContact')}
                       >
                         <div className="flex flex-col items-center gap-1">
                           {getChannelIcon(session.channel)}
@@ -646,7 +786,7 @@ const ConversationsPage: React.FC = () => {
                   <div className="text-center">
                     <MessageSquare className="h-12 w-12 text-muted-foreground mx-auto mb-3 opacity-50" />
                     <p className="text-sm text-muted-foreground">
-                      {searchQuery ? 'No conversations match your search' : `No ${activeTab} conversations`}
+                      {searchQuery ? t('conversations.emptyState.noMatches') : t('conversations.emptyState.noConversations', { tab: activeTab })}
                     </p>
                   </div>
                 </div>
@@ -665,9 +805,9 @@ const ConversationsPage: React.FC = () => {
                 <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-br from-blue-100 to-purple-100 dark:from-blue-900 dark:to-purple-900 mb-4">
                   <MessageSquare className="h-8 w-8 text-blue-600 dark:text-blue-400" />
                 </div>
-                <h3 className="text-lg font-semibold mb-2 dark:text-white">No conversation selected</h3>
+                <h3 className="text-lg font-semibold mb-2 dark:text-white">{t('conversations.emptyState.noSelection')}</h3>
                 <p className="text-muted-foreground">
-                  Select a conversation from the list to view messages
+                  {t('conversations.emptyState.noSelectionDesc')}
                 </p>
               </div>
             </Card>
@@ -684,9 +824,9 @@ const ConversationsPage: React.FC = () => {
                 <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-br from-green-100 to-emerald-100 dark:from-green-900 dark:to-emerald-900 mb-4">
                   <Phone className="h-8 w-8 text-green-600 dark:text-green-400" />
                 </div>
-                <h3 className="text-lg font-semibold mb-2 dark:text-white">Contact Details</h3>
+                <h3 className="text-lg font-semibold mb-2 dark:text-white">{t('conversations.emptyState.contactDetails')}</h3>
                 <p className="text-muted-foreground text-sm">
-                  Select a conversation to view contact information
+                  {t('conversations.emptyState.contactDetailsDesc')}
                 </p>
               </div>
             </Card>

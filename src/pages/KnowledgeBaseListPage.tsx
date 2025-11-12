@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { KnowledgeBase } from "@/types";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Plus, Edit, Trash2, BookOpen, Eye } from "lucide-react";
 import { Permission } from "@/components/Permission";
+import { useI18n } from "@/hooks/useI18n";
 import {
   Dialog,
   DialogContent,
@@ -36,7 +37,16 @@ import { solarizedlight } from 'react-syntax-highlighter/dist/esm/styles/prism';
 
 const KnowledgeBasePage = () => {
   const queryClient = useQueryClient();
+  const { t, isRTL, currentLanguage } = useI18n();
   const companyId = 1; // Hardcoded company ID for now
+
+  console.log('KnowledgeBasePage render - Current language:', currentLanguage);
+  console.log('KnowledgeBasePage render - isRTL:', isRTL);
+  console.log('KnowledgeBasePage render - t("knowledgeBase.title"):', t("knowledgeBase.title"));
+
+  useEffect(() => {
+    console.log('KnowledgeBasePage useEffect - Language changed to:', currentLanguage);
+  }, [currentLanguage]);
 
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isImportDialogOpen, setIsImportDialogOpen] = useState(false);
@@ -290,36 +300,36 @@ const KnowledgeBasePage = () => {
     <div className="flex items-center justify-center py-12">
       <div className="flex items-center gap-2 text-muted-foreground dark:text-gray-400">
         <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-purple-600 dark:border-purple-400"></div>
-        <span>Loading knowledge bases...</span>
+        <span>{t("knowledgeBase.loading")}</span>
       </div>
     </div>
   );
   if (isError) return (
     <div className="text-center py-12">
-      <div className="text-red-600 dark:text-red-400">Error loading knowledge bases.</div>
+      <div className="text-red-600 dark:text-red-400">{t("knowledgeBase.error")}</div>
     </div>
   );
 
   return (
-    <div className="w-full max-w-7xl mx-auto p-4 md:p-8 space-y-8">
-      <header className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+    <div className={`w-full max-w-7xl mx-auto p-4 md:p-8 space-y-8 ${isRTL ? 'text-right' : 'text-left'}`}>
+      <header className={`flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 ${isRTL ? 'sm:flex-row-reverse' : ''}`}>
         <div>
           <h1 className="text-4xl font-bold bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent mb-2">
-            📚 Knowledge Bases
+            {t("knowledgeBase.title")}
           </h1>
-          <p className="text-gray-600 dark:text-gray-400 text-lg">Manage the knowledge your AI agents use to provide accurate responses</p>
+          <p className="text-gray-600 dark:text-gray-400 text-lg">{t("knowledgeBase.subtitle")}</p>
         </div>
-        <div className="flex items-center gap-3">
+        <div className={`flex items-center gap-3 ${isRTL ? 'flex-row-reverse' : ''}`}>
           <Permission permission="knowledgebase:create">
-            <Button onClick={() => setIsImportDialogOpen(true)} variant="outline" className="dark:border-slate-600 dark:text-white dark:hover:bg-slate-700">
-              <BookOpen className="h-4 w-4 mr-2" />
-              Import from URL
+            <Button onClick={() => setIsImportDialogOpen(true)} variant="outline" className={`dark:border-slate-600 dark:text-white dark:hover:bg-slate-700 flex items-center ${isRTL ? 'flex-row-reverse' : ''}`}>
+              <BookOpen className={`h-4 w-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
+              {t("knowledgeBase.importFromUrl")}
             </Button>
           </Permission>
           <Permission permission="knowledgebase:create">
-            <Button onClick={() => setIsCreateDialogOpen(true)} className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white shadow-lg hover:shadow-xl transition-all">
-              <Plus className="h-4 w-4 mr-2" />
-              Create New
+            <Button onClick={() => setIsCreateDialogOpen(true)} className={`bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white shadow-lg hover:shadow-xl transition-all flex items-center ${isRTL ? 'flex-row-reverse' : ''}`}>
+              <Plus className={`h-4 w-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
+              {t("knowledgeBase.createNew")}
             </Button>
           </Permission>
         </div>
@@ -338,16 +348,16 @@ const KnowledgeBasePage = () => {
                 </div>
               </CardHeader>
               <CardContent className="pt-4">
-                <CardDescription className="line-clamp-3 text-gray-600 dark:text-gray-400 mb-4">
-                  {kb.description || "No description provided."}
+                <CardDescription className={`line-clamp-3 text-gray-600 dark:text-gray-400 mb-4 ${isRTL ? 'text-right' : 'text-left'}`}>
+                  {kb.description || t("knowledgeBase.noDescription")}
                 </CardDescription>
-                <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-200 dark:border-slate-700">
-                  <Button variant="outline" size="sm" onClick={() => handlePreviewClick(kb)} className="dark:border-slate-600 dark:text-white dark:hover:bg-slate-700">
-                    <Eye className="h-4 w-4 mr-1" /> Preview
+                <div className={`flex items-center gap-2 pt-2 border-t border-slate-200 dark:border-slate-700 ${isRTL ? 'justify-start flex-row-reverse' : 'justify-end'}`}>
+                  <Button variant="outline" size="sm" onClick={() => handlePreviewClick(kb)} className={`dark:border-slate-600 dark:text-white dark:hover:bg-slate-700 flex items-center ${isRTL ? 'flex-row-reverse' : ''}`}>
+                    <Eye className={`h-4 w-4 ${isRTL ? 'ml-1' : 'mr-1'}`} /> {t("knowledgeBase.preview")}
                   </Button>
                   <Permission permission="knowledgebase:update">
-                    <Button variant="outline" size="sm" onClick={() => handleEditClick(kb)} className="dark:border-slate-600 dark:text-white dark:hover:bg-slate-700">
-                      <Edit className="h-4 w-4 mr-1" /> Edit
+                    <Button variant="outline" size="sm" onClick={() => handleEditClick(kb)} className={`dark:border-slate-600 dark:text-white dark:hover:bg-slate-700 flex items-center ${isRTL ? 'flex-row-reverse' : ''}`}>
+                      <Edit className={`h-4 w-4 ${isRTL ? 'ml-1' : 'mr-1'}`} /> {t("knowledgeBase.edit")}
                     </Button>
                   </Permission>
                   <Permission permission="knowledgebase:delete">
@@ -357,17 +367,17 @@ const KnowledgeBasePage = () => {
                           <Trash2 className="h-4 w-4" />
                         </Button>
                       </AlertDialogTrigger>
-                      <AlertDialogContent className="dark:bg-slate-800 dark:border-slate-700">
+                      <AlertDialogContent className={`dark:bg-slate-800 dark:border-slate-700 ${isRTL ? 'text-right' : 'text-left'}`}>
                         <AlertDialogHeader>
-                          <AlertDialogTitle className="dark:text-white">Are you absolutely sure?</AlertDialogTitle>
+                          <AlertDialogTitle className="dark:text-white">{t("knowledgeBase.deleteDialog.title")}</AlertDialogTitle>
                           <AlertDialogDescription className="dark:text-gray-400">
-                            This will permanently delete the <span className="font-bold text-white">{kb.name}</span> knowledge base. This action cannot be undone.
+                            {t("knowledgeBase.deleteDialog.description")} <span className="font-bold text-white">{kb.name}</span> {t("knowledgeBase.deleteDialog.description2")}
                           </AlertDialogDescription>
                         </AlertDialogHeader>
-                        <AlertDialogFooter>
-                          <AlertDialogCancel className="dark:border-slate-600 dark:text-white dark:hover:bg-slate-700">Cancel</AlertDialogCancel>
+                        <AlertDialogFooter className={isRTL ? 'flex-row-reverse' : ''}>
+                          <AlertDialogCancel className="dark:border-slate-600 dark:text-white dark:hover:bg-slate-700">{t("knowledgeBase.deleteDialog.cancel")}</AlertDialogCancel>
                           <AlertDialogAction onClick={() => deleteKnowledgeBaseMutation.mutate(kb.id)} className="bg-red-600 hover:bg-red-700">
-                            Delete
+                            {t("knowledgeBase.deleteDialog.delete")}
                           </AlertDialogAction>
                         </AlertDialogFooter>
                       </AlertDialogContent>
@@ -383,30 +393,30 @@ const KnowledgeBasePage = () => {
           <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-slate-100 dark:bg-slate-800 mb-4">
             <BookOpen className="w-8 h-8 text-slate-400 dark:text-slate-500" />
           </div>
-          <h3 className="text-xl font-semibold text-gray-800 dark:text-white">No knowledge bases found</h3>
-          <p className="text-gray-500 dark:text-gray-400 mt-2">Create your first knowledge base to get started</p>
-          <Button onClick={() => setIsCreateDialogOpen(true)} className="mt-6 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white">
-            <Plus className="mr-2 h-4 w-4" /> Create Knowledge Base
+          <h3 className="text-xl font-semibold text-gray-800 dark:text-white">{t("knowledgeBase.noKnowledgeBasesFound")}</h3>
+          <p className="text-gray-500 dark:text-gray-400 mt-2">{t("knowledgeBase.createFirstMessage")}</p>
+          <Button onClick={() => setIsCreateDialogOpen(true)} className={`mt-6 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white flex items-center ${isRTL ? 'flex-row-reverse' : ''}`}>
+            <Plus className={`h-4 w-4 ${isRTL ? 'ml-2' : 'mr-2'}`} /> {t("knowledgeBase.createNew")}
           </Button>
         </div>
       )}
 
       {/* Preview Knowledge Base Dialog */}
       <Dialog open={isPreviewDialogOpen} onOpenChange={setIsPreviewDialogOpen}>
-        <DialogContent className="sm:max-w-[80vw] max-h-[80vh] overflow-y-auto dark:bg-slate-800 dark:border-slate-700">
+        <DialogContent className={`sm:max-w-[80vw] max-h-[80vh] overflow-y-auto dark:bg-slate-800 dark:border-slate-700 ${isRTL ? 'text-right' : 'text-left'}`}>
           <DialogHeader>
-            <DialogTitle className="dark:text-white">Preview: {currentKnowledgeBase?.name}</DialogTitle>
+            <DialogTitle className="dark:text-white">{t("knowledgeBase.previewDialog.title")} {currentKnowledgeBase?.name}</DialogTitle>
           </DialogHeader>
           {isLoadingPreview ? (
             <div className="flex items-center justify-center py-8">
               <div className="flex items-center gap-2 text-muted-foreground dark:text-gray-400">
                 <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-purple-600 dark:border-purple-400"></div>
-                <span>Loading content...</span>
+                <span>{t("knowledgeBase.loadingContent")}</span>
               </div>
             </div>
           ) : (
-            <div className="bg-slate-50 dark:bg-slate-900 rounded-lg p-4 max-h-[60vh] overflow-y-auto">
-              <pre className="text-sm dark:text-gray-300 whitespace-pre-wrap">{previewContent?.content || ""}</pre>
+            <div className={`bg-slate-50 dark:bg-slate-900 rounded-lg p-4 max-h-[60vh] overflow-y-auto ${isRTL ? 'text-right' : 'text-left'}`}>
+              <pre className={`text-sm dark:text-gray-300 whitespace-pre-wrap ${isRTL ? 'text-right' : 'text-left'}`}>{previewContent?.content || ""}</pre>
             </div>
           )}
         </DialogContent>

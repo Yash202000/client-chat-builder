@@ -1,6 +1,6 @@
 
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" dir="ltr">
   <head>
     <!-- <meta http-equiv="Content-Security-Policy" content="default-src 'self'; connect-src 'self' wss://*.livekit.cloud;" /> -->
     <meta charset="UTF-8" />
@@ -23,7 +23,8 @@
   <body>
     <div id="root"></div>
     <!-- Load runtime environment configuration before app -->
-    <script src="/env-config.js"></script>
+    <!-- Only needed for production Docker deployments, not for dev mode -->
+    <!-- <script src="/env-config.js"></script> -->
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

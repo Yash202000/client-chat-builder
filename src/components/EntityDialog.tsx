@@ -21,6 +21,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { useI18n } from '@/hooks/useI18n';
 
 interface Entity {
   name: string;
@@ -46,6 +47,7 @@ export const EntityDialog: React.FC<EntityDialogProps> = ({
   entity,
   onSave,
 }) => {
+  const { t, isRTL } = useI18n();
   const [formData, setFormData] = useState<Entity>({
     name: '',
     type: 'text',
@@ -97,13 +99,13 @@ export const EntityDialog: React.FC<EntityDialogProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto" dir={isRTL ? 'rtl' : 'ltr'}>
         <DialogHeader>
           <DialogTitle>
-            {entity ? 'Edit Entity' : 'Add New Entity'}
+            {entity ? t('workflows.entityDialog.editTitle') : t('workflows.entityDialog.createTitle')}
           </DialogTitle>
           <DialogDescription>
-            Configure what information to extract from user messages
+            {t('workflows.entityDialog.description')}
           </DialogDescription>
         </DialogHeader>
 
@@ -111,23 +113,21 @@ export const EntityDialog: React.FC<EntityDialogProps> = ({
           {/* Entity Name */}
           <div className="space-y-2">
             <Label htmlFor="entity-name">
-              Entity Name <span className="text-red-500">*</span>
+              {t('workflows.entityDialog.nameLabel')} <span className="text-red-500">*</span>
             </Label>
             <Input
               id="entity-name"
               value={formData.name}
               onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-              placeholder="e.g., order_number, email, phone"
+              placeholder={t('workflows.entityDialog.namePlaceholder')}
               className="font-mono"
+              dir={isRTL ? 'rtl' : 'ltr'}
             />
-            <p className="text-xs text-slate-600 dark:text-slate-400">
-              Use snake_case format. This will be available as {`{{context.${formData.name || 'entity_name'}}}`}
-            </p>
           </div>
 
           {/* Entity Type */}
           <div className="space-y-2">
-            <Label htmlFor="entity-type">Entity Type</Label>
+            <Label htmlFor="entity-type">{t('workflows.entityDialog.typeLabel')}</Label>
             <Select
               value={formData.type}
               onValueChange={(value) => setFormData({ ...formData, type: value })}
@@ -136,19 +136,19 @@ export const EntityDialog: React.FC<EntityDialogProps> = ({
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="text">Text</SelectItem>
-                <SelectItem value="number">Number</SelectItem>
-                <SelectItem value="email">Email</SelectItem>
-                <SelectItem value="phone">Phone</SelectItem>
-                <SelectItem value="date">Date</SelectItem>
-                <SelectItem value="url">URL</SelectItem>
+                <SelectItem value="string">{t('workflows.entityDialog.types.string')}</SelectItem>
+                <SelectItem value="number">{t('workflows.entityDialog.types.number')}</SelectItem>
+                <SelectItem value="email">{t('workflows.entityDialog.types.email')}</SelectItem>
+                <SelectItem value="phone">{t('workflows.entityDialog.types.phone')}</SelectItem>
+                <SelectItem value="date">{t('workflows.entityDialog.types.date')}</SelectItem>
+                <SelectItem value="custom">{t('workflows.entityDialog.types.custom')}</SelectItem>
               </SelectContent>
             </Select>
           </div>
 
           {/* Extraction Method */}
           <div className="space-y-2">
-            <Label htmlFor="extraction-method">Extraction Method</Label>
+            <Label htmlFor="extraction-method">{t('workflows.entityDialog.extractionMethodLabel')}</Label>
             <Select
               value={formData.extraction_method}
               onValueChange={(value) =>
@@ -159,69 +159,66 @@ export const EntityDialog: React.FC<EntityDialogProps> = ({
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="llm">LLM (AI-powered)</SelectItem>
-                <SelectItem value="regex">Regex Pattern</SelectItem>
+                <SelectItem value="llm">{t('workflows.entityDialog.extractionMethods.llm')}</SelectItem>
+                <SelectItem value="regex">{t('workflows.entityDialog.extractionMethods.regex')}</SelectItem>
+                <SelectItem value="keyword">{t('workflows.entityDialog.extractionMethods.keyword')}</SelectItem>
+                <SelectItem value="pattern">{t('workflows.entityDialog.extractionMethods.pattern')}</SelectItem>
               </SelectContent>
             </Select>
-            <p className="text-xs text-slate-600 dark:text-slate-400">
-              {formData.extraction_method === 'llm'
-                ? 'AI will intelligently extract the value from context'
-                : 'Use a regex pattern for precise matching'}
-            </p>
           </div>
 
           {/* Validation Regex */}
           {formData.extraction_method === 'regex' && (
             <div className="space-y-2">
-              <Label htmlFor="validation-regex">Regex Pattern</Label>
+              <Label htmlFor="validation-regex">{t('workflows.entityDialog.validationRegexLabel')}</Label>
               <Input
                 id="validation-regex"
                 value={formData.validation_regex || ''}
                 onChange={(e) =>
                   setFormData({ ...formData, validation_regex: e.target.value })
                 }
-                placeholder="e.g., ^ORD-[0-9]{6}$"
+                placeholder={t('workflows.entityDialog.validationRegexPlaceholder')}
                 className="font-mono text-sm"
+                dir="ltr"
               />
-              <p className="text-xs text-slate-600 dark:text-slate-400">
-                Regular expression pattern to match and extract the value
-              </p>
             </div>
           )}
 
           {/* Description */}
           <div className="space-y-2">
-            <Label htmlFor="description">Description (Optional)</Label>
+            <Label htmlFor="description">{t('workflows.entityDialog.descriptionLabel')}</Label>
             <Textarea
               id="description"
               value={formData.description || ''}
               onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-              placeholder="Describe what this entity represents..."
+              placeholder={t('workflows.entityDialog.descriptionPlaceholder')}
               rows={2}
+              dir={isRTL ? 'rtl' : 'ltr'}
             />
           </div>
 
           {/* Example Values */}
           <div className="space-y-2">
-            <Label>Example Values (Optional)</Label>
+            <Label>{t('workflows.entityDialog.exampleValuesLabel')}</Label>
             <p className="text-xs text-slate-600 dark:text-slate-400 mb-2">
-              Provide examples to help the AI understand what to extract
+              {t('workflows.entityDialog.exampleValuesHint')}
             </p>
-            <div className="flex gap-2">
+            <div className={`flex gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
               <Input
                 value={exampleInput}
                 onChange={(e) => setExampleInput(e.target.value)}
                 onKeyPress={(e) =>
                   e.key === 'Enter' && (e.preventDefault(), handleAddExample())
                 }
-                placeholder="e.g., ORD-123456, john@email.com"
+                placeholder={t('workflows.entityDialog.exampleValuesPlaceholder')}
+                dir={isRTL ? 'rtl' : 'ltr'}
               />
               <Button onClick={handleAddExample} type="button" size="sm">
                 <Plus className="h-4 w-4" />
               </Button>
             </div>
             {(formData.example_values?.length || 0) > 0 && (
-              <div className="flex flex-wrap gap-2 mt-3 p-3 bg-slate-50 dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700">
+              <div className={`flex flex-wrap gap-2 mt-3 p-3 bg-slate-50 dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 ${isRTL ? 'flex-row-reverse' : ''}`}>
                 {formData.example_values?.map((example, idx) => (
                   <Badge
                     key={idx}
@@ -242,13 +239,13 @@ export const EntityDialog: React.FC<EntityDialogProps> = ({
           </div>
 
           {/* Required Toggle */}
-          <div className="flex items-center justify-between p-4 rounded-lg border border-slate-200 dark:border-slate-700">
+          <div className={`flex items-center justify-between p-4 rounded-lg border border-slate-200 dark:border-slate-700 ${isRTL ? 'flex-row-reverse' : ''}`}>
             <div>
               <Label htmlFor="required" className="cursor-pointer">
-                Required Entity
+                {t('workflows.entityDialog.requiredLabel')}
               </Label>
               <p className="text-xs text-slate-600 dark:text-slate-400 mt-1">
-                Workflow will prompt user if this entity is missing
+                {t('workflows.entityDialog.requiredDesc')}
               </p>
             </div>
             <Switch
@@ -263,32 +260,30 @@ export const EntityDialog: React.FC<EntityDialogProps> = ({
           {/* Prompt if Missing */}
           {formData.required && (
             <div className="space-y-2">
-              <Label htmlFor="prompt-text">Prompt if Missing</Label>
+              <Label htmlFor="prompt-text">{t('workflows.entityDialog.promptIfMissingLabel')}</Label>
               <Input
                 id="prompt-text"
                 value={formData.prompt_if_missing || ''}
                 onChange={(e) =>
                   setFormData({ ...formData, prompt_if_missing: e.target.value })
                 }
-                placeholder="e.g., What is your order number?"
+                placeholder={t('workflows.entityDialog.promptIfMissingPlaceholder')}
+                dir={isRTL ? 'rtl' : 'ltr'}
               />
-              <p className="text-xs text-slate-600 dark:text-slate-400">
-                Message to ask the user if this entity is not found
-              </p>
             </div>
           )}
         </div>
 
-        <DialogFooter>
+        <DialogFooter className={isRTL ? 'flex-row-reverse' : ''}>
           <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Cancel
+            {t('workflows.entityDialog.cancelButton')}
           </Button>
           <Button
             onClick={handleSave}
             disabled={!formData.name.trim()}
             className="bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600"
           >
-            Save Entity
+            {t('workflows.entityDialog.saveButton')}
           </Button>
         </DialogFooter>
       </DialogContent>

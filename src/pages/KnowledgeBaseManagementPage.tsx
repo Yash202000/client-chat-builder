@@ -6,10 +6,11 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Plus, Trash2, Edit, LinkIcon, Brain, Eye } from "lucide-react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
+import { useI18n } from "@/hooks/useI18n";
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { solarizedlight } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import { Permission } from "@/components/Permission";
@@ -19,6 +20,10 @@ const KnowledgeBaseManagementPage = () => {
   const companyId = 1; // Hardcoded for now
   const { toast } = useToast();
   const { authFetch } = useAuth();
+  const { t, isRTL } = useI18n();
+
+  console.log('KnowledgeBaseManagementPage - Current language:', isRTL ? 'ar' : 'en');
+  console.log('KnowledgeBaseManagementPage - isRTL:', isRTL);
 
   const { data: knowledgeBases, isLoading } = useQuery<KnowledgeBase[]>({ queryKey: ['knowledgeBases', companyId], queryFn: async () => {
     const response = await authFetch(`/api/v1/knowledge-bases/`);
@@ -221,26 +226,27 @@ const KnowledgeBaseManagementPage = () => {
   };
 
   return (
-    <div className="space-y-6 p-6 animate-fade-in">
+    <div className={`space-y-6 p-6 animate-fade-in text-left`}>
       {/* Enhanced Header */}
-      <div className="flex justify-between items-start">
+      <div className={`flex justify-between items-start`}>
         <div>
           <h2 className="text-4xl font-bold bg-gradient-to-r from-indigo-600 to-blue-600 bg-clip-text text-transparent mb-2">
-            Knowledge Bases
+            {t("knowledgeBase.title")}
           </h2>
-          <p className="text-gray-600 dark:text-gray-400 text-lg">Upload documents and manage your knowledge repositories</p>
+          <p className="text-gray-600 dark:text-gray-400 text-lg">{t("knowledgeBase.managePage.subtitle")}</p>
         </div>
-        <div className="flex gap-2">
+        <div className={`flex gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
           <Permission permission="knowledgebase:create">
             <Dialog open={isImportUrlDialogOpen} onOpenChange={setIsImportUrlDialogOpen}>
               <DialogTrigger asChild>
-                <Button variant="outline" className="btn-hover-lift">
-                  <LinkIcon className="mr-2 h-4 w-4" /> Import from URL
+                <Button variant="outline" className={`btn-hover-lift flex items-center ${isRTL ? 'flex-row-reverse' : ''}`}>
+                  <LinkIcon className={`h-4 w-4 ${isRTL ? 'ml-2' : 'mr-2'}`} /> {t("knowledgeBase.importFromUrl")}
                 </Button>
               </DialogTrigger>
             <DialogContent className="bg-white dark:bg-slate-800">
               <DialogHeader>
-                <DialogTitle className="dark:text-white">Import Knowledge Base from URL</DialogTitle>
+                <DialogTitle className={`dark:text-white text-left`}>{t("knowledgeBase.importDialog.title")}</DialogTitle>
+                <DialogDescription className={`text-left`}>{t("knowledgeBase.importDialog.description")}</DialogDescription>
               </DialogHeader>
               <ImportUrlForm onSubmit={handleImportUrl} knowledgeBases={knowledgeBases || []} />
             </DialogContent>
@@ -249,13 +255,14 @@ const KnowledgeBaseManagementPage = () => {
           <Permission permission="knowledgebase:create">
             <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
             <DialogTrigger asChild>
-              <Button className="bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700 text-white btn-hover-lift">
-                <Plus className="mr-2 h-4 w-4" /> Create Knowledge Base
+              <Button className={`bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700 text-white btn-hover-lift flex items-center ${isRTL ? 'flex-row-reverse' : ''}`}>
+                <Plus className={`h-4 w-4 ${isRTL ? 'ml-2' : 'mr-2'}`} /> {t("knowledgeBase.createNew")}
               </Button>
             </DialogTrigger>
             <DialogContent className="bg-white dark:bg-slate-800">
               <DialogHeader>
-                <DialogTitle className="dark:text-white">Create New Knowledge Base</DialogTitle>
+                <DialogTitle className={`dark:text-white text-left`}>{t("knowledgeBase.createDialog.title")}</DialogTitle>
+                <DialogDescription className={`text-left`}>{t("knowledgeBase.createDialog.description")}</DialogDescription>
               </DialogHeader>
               <KnowledgeBaseForm onSubmit={handleCreate} />
             </DialogContent>
@@ -270,7 +277,7 @@ const KnowledgeBaseManagementPage = () => {
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-muted-foreground dark:text-gray-400">Total Knowledge Bases</p>
+                <p className="text-sm font-medium text-muted-foreground dark:text-gray-400">{t("knowledgeBase.managePage.totalKnowledgeBases")}</p>
                 <h3 className="text-3xl font-bold bg-gradient-to-r from-indigo-600 to-blue-600 bg-clip-text text-transparent">
                   {knowledgeBases?.length || 0}
                 </h3>
@@ -286,7 +293,7 @@ const KnowledgeBaseManagementPage = () => {
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-muted-foreground dark:text-gray-400">Local</p>
+                <p className="text-sm font-medium text-muted-foreground dark:text-gray-400">{t("knowledgeBase.managePage.local")}</p>
                 <h3 className="text-3xl font-bold bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent">
                   {knowledgeBases?.filter(kb => kb.type === 'local').length || 0}
                 </h3>
@@ -302,7 +309,7 @@ const KnowledgeBaseManagementPage = () => {
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-muted-foreground dark:text-gray-400">Remote</p>
+                <p className="text-sm font-medium text-muted-foreground dark:text-gray-400">{t("knowledgeBase.managePage.remote")}</p>
                 <h3 className="text-3xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
                   {knowledgeBases?.filter(kb => kb.type === 'remote').length || 0}
                 </h3>
@@ -318,14 +325,14 @@ const KnowledgeBaseManagementPage = () => {
       {/* Knowledge Bases Grid */}
       <Card className="card-shadow bg-white dark:bg-slate-800">
         <CardHeader className="border-b border-slate-200 dark:border-slate-700">
-          <CardTitle className="text-2xl dark:text-white">Your Knowledge Bases</CardTitle>
+          <CardTitle className="text-2xl dark:text-white">{t("knowledgeBase.managePage.yourKnowledgeBases")}</CardTitle>
         </CardHeader>
         <CardContent className="p-6">
           {isLoading ? (
             <div className="flex items-center justify-center py-12">
               <div className="text-center">
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto mb-4"></div>
-                <p className="text-muted-foreground">Loading knowledge bases...</p>
+                <p className="text-muted-foreground">{t("knowledgeBase.managePage.loadingKnowledgeBases")}</p>
               </div>
             </div>
           ) : knowledgeBases && knowledgeBases.length > 0 ? (
@@ -348,7 +355,7 @@ const KnowledgeBaseManagementPage = () => {
                           ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400 border border-green-200 dark:border-green-800'
                           : 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400 border border-purple-200 dark:border-purple-800'
                       }`}>
-                        {kb.type === 'local' ? '💾 Local' : '☁️ Remote'}
+                        {kb.type === 'local' ? t("knowledgeBase.managePage.localBadge") : t("knowledgeBase.managePage.remoteBadge")}
                       </span>
                     </div>
                     <div className="flex items-center gap-1">
@@ -363,7 +370,8 @@ const KnowledgeBaseManagementPage = () => {
                         </DialogTrigger>
                         <DialogContent className="sm:max-w-[80vw] max-h-[80vh] overflow-y-auto bg-white dark:bg-slate-800">
                           <DialogHeader>
-                            <DialogTitle className="dark:text-white">Preview: {selectedKb?.name}</DialogTitle>
+                            <DialogTitle className="dark:text-white">{t("knowledgeBase.managePage.previewTitle")} {selectedKb?.name}</DialogTitle>
+                            <DialogDescription>{t("knowledgeBase.managePage.previewDescription")}</DialogDescription>
                           </DialogHeader>
                           {isLoadingPreview ? (
                             <div className="flex items-center justify-center py-8">
@@ -388,7 +396,7 @@ const KnowledgeBaseManagementPage = () => {
                           </DialogTrigger>
                           <DialogContent className="bg-white dark:bg-slate-800">
                             <DialogHeader>
-                              <DialogTitle className="dark:text-white">Generate Q&A for {selectedKb?.name}</DialogTitle>
+                              <DialogTitle className="dark:text-white">{t("knowledgeBase.managePage.generateQnATitle")} {selectedKb?.name}</DialogTitle>
                             </DialogHeader>
                             <GenerateQnAForm kb={selectedKb} onSubmit={handleGenerateQnA} />
                           </DialogContent>
@@ -406,7 +414,7 @@ const KnowledgeBaseManagementPage = () => {
                           </DialogTrigger>
                           <DialogContent className="bg-white dark:bg-slate-800">
                             <DialogHeader>
-                              <DialogTitle className="dark:text-white">Edit Knowledge Base</DialogTitle>
+                              <DialogTitle className="dark:text-white">{t("knowledgeBase.managePage.editKnowledgeBase")}</DialogTitle>
                             </DialogHeader>
                             <KnowledgeBaseForm kb={selectedKb} onSubmit={(values) => handleUpdate({ ...kb, ...values })} />
                           </DialogContent>
@@ -428,10 +436,10 @@ const KnowledgeBaseManagementPage = () => {
                 <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-gradient-to-br from-indigo-100 to-blue-100 dark:from-indigo-900/30 dark:to-blue-900/30 mb-6">
                   <span className="text-4xl">📚</span>
                 </div>
-                <h3 className="text-xl font-semibold mb-2 dark:text-white">No Knowledge Bases Yet</h3>
-                <p className="text-muted-foreground mb-6">Get started by creating your first knowledge base</p>
-                <Button onClick={() => setIsCreateDialogOpen(true)} className="bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700 text-white">
-                  <Plus className="mr-2 h-4 w-4" /> Create Knowledge Base
+                <h3 className="text-xl font-semibold mb-2 dark:text-white">{t("knowledgeBase.managePage.noKnowledgeBasesYet")}</h3>
+                <p className="text-muted-foreground mb-6">{t("knowledgeBase.managePage.getStartedMessage")}</p>
+                <Button onClick={() => setIsCreateDialogOpen(true)} className={`bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700 text-white `}>
+                  <Plus className={`h-4 w-4 ${isRTL ? 'ml-2' : 'mr-2'}`} /> {t("knowledgeBase.managePage.createKnowledgeBase")}
                 </Button>
               </div>
             </div>
@@ -443,6 +451,7 @@ const KnowledgeBaseManagementPage = () => {
 };
 
 const KnowledgeBaseForm = ({ kb, onSubmit }: { kb?: KnowledgeBase, onSubmit: (values: any, file?: File, vectorStoreType?: string) => void }) => {
+  const { t, isRTL } = useI18n();
   const [values, setValues] = useState(kb || { name: "", description: "", type: "local", provider: "", connection_details: {} });
   const [file, setFile] = useState<File | undefined>();
   const [vectorStoreType, setVectorStoreType] = useState("chroma"); // Default to ChromaDB
@@ -459,58 +468,63 @@ const KnowledgeBaseForm = ({ kb, onSubmit }: { kb?: KnowledgeBase, onSubmit: (va
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
+    <form onSubmit={handleSubmit} className={`space-y-4 text-left`}>
       <Input
-        placeholder="Name"
+        placeholder={t("knowledgeBase.forms.name")}
         value={values.name}
         onChange={(e) => setValues({ ...values, name: e.target.value })}
         required
+        className='text-left'
       />
       <Textarea
-        placeholder="Description"
+        placeholder={t("knowledgeBase.forms.description")}
         value={values.description}
         onChange={(e) => setValues({ ...values, description: e.target.value })}
+        className='text-left'
       />
       <div>
-        <Label>Type</Label>
+        <Label>{t("knowledgeBase.forms.type")}</Label>
         <select
           value={values.type}
           onChange={(e) => setValues({ ...values, type: e.target.value })}
-          className="w-full mt-1 p-2 border rounded-md"
+          className={`w-full mt-1 p-2 border rounded-md dark:bg-slate-700 dark:border-slate-600 dark:text-white text-left`}
         >
-          <option value="local">Local (File Upload)</option>
-          <option value="remote">Remote</option>
+          <option value="local">{t("knowledgeBase.forms.typeLocalOption")}</option>
+          <option value="remote">{t("knowledgeBase.forms.typeRemoteOption")}</option>
         </select>
       </div>
       {values.type === "remote" && (
         <>
           <div>
-            <Label>Provider</Label>
+            <Label>{t("knowledgeBase.forms.provider")}</Label>
             <select
               value={values.provider}
               onChange={(e) => setValues({ ...values, provider: e.target.value })}
-              className="w-full mt-1 p-2 border rounded-md"
+              className={`w-full mt-1 p-2 border rounded-md dark:bg-slate-700 dark:border-slate-600 dark:text-white text-left`}
             >
-              <option value="">Select Provider</option>
+              <option value="">{t("knowledgeBase.forms.selectProvider")}</option>
               <option value="chroma">Chroma</option>
             </select>
           </div>
           {values.provider === "chroma" && (
             <>
               <Input
-                placeholder="Host"
+                placeholder={t("knowledgeBase.forms.host")}
                 value={values.connection_details?.host || ""}
                 onChange={(e) => setValues({ ...values, connection_details: { ...values.connection_details, host: e.target.value } })}
+                className={isRTL ? 'text-right' : 'text-left'}
               />
               <Input
-                placeholder="Port"
+                placeholder={t("knowledgeBase.forms.port")}
                 value={values.connection_details?.port || ""}
                 onChange={(e) => setValues({ ...values, connection_details: { ...values.connection_details, port: e.target.value } })}
+                className={isRTL ? 'text-right' : 'text-left'}
               />
               <Input
-                placeholder="Collection Name"
+                placeholder={t("knowledgeBase.forms.collectionName")}
                 value={values.connection_details?.collection_name || ""}
                 onChange={(e) => setValues({ ...values, connection_details: { ...values.connection_details, collection_name: e.target.value } })}
+                className={isRTL ? 'text-right' : 'text-left'}
               />
             </>
           )}
@@ -519,7 +533,7 @@ const KnowledgeBaseForm = ({ kb, onSubmit }: { kb?: KnowledgeBase, onSubmit: (va
       {values.type === "local" && !kb && (
         <>
           <div>
-            <Label htmlFor="file">Document</Label>
+            <Label htmlFor="file">{t("knowledgeBase.forms.document")}</Label>
             <Input
               id="file"
               type="file"
@@ -529,24 +543,25 @@ const KnowledgeBaseForm = ({ kb, onSubmit }: { kb?: KnowledgeBase, onSubmit: (va
             />
           </div>
           <div>
-            <Label>Vector Store Type</Label>
+            <Label>{t("knowledgeBase.forms.vectorStoreType")}</Label>
             <select
               value={vectorStoreType}
               onChange={(e) => setVectorStoreType(e.target.value)}
-              className="w-full mt-1 p-2 border rounded-md"
+              className={`w-full mt-1 p-2 border rounded-md dark:bg-slate-700 dark:border-slate-600 dark:text-white text-left`}
             >
-              <option value="chroma">ChromaDB</option>
-              <option value="faiss">FAISS (Local File System)</option>
+              <option value="chroma">{t("knowledgeBase.forms.chromaDB")}</option>
+              <option value="faiss">{t("knowledgeBase.forms.faiss")}</option>
             </select>
           </div>
         </>
       )}
-      <Button type="submit">{kb ? "Update" : "Create"}</Button>
+      <Button type="submit">{kb ? t("knowledgeBase.forms.update") : t("knowledgeBase.forms.create")}</Button>
     </form>
   );
 };
 
 const ImportUrlForm = ({ onSubmit, knowledgeBases }: { onSubmit: (data: { url: string; name: string; description?: string; knowledge_base_id?: number }) => void; knowledgeBases: KnowledgeBase[] }) => {
+  const { t, isRTL } = useI18n();
   const [url, setUrl] = useState("");
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
@@ -558,49 +573,53 @@ const ImportUrlForm = ({ onSubmit, knowledgeBases }: { onSubmit: (data: { url: s
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <Label htmlFor="url">URL</Label>
+    <form onSubmit={handleSubmit} className={`space-y-4 text-left`}>
+      <Label htmlFor="url">{t("knowledgeBase.forms.url")}</Label>
       <Input
         id="url"
-        placeholder="https://example.com/article"
+        placeholder={t("knowledgeBase.forms.urlPlaceholder")}
         value={url}
         onChange={(e) => setUrl(e.target.value)}
+        className='text-left'
       />
-      <Label htmlFor="name">Name (for new KB)</Label>
+      <Label htmlFor="name">{t("knowledgeBase.forms.nameForNewKB")}</Label>
       <Input
         id="name"
-        placeholder="Knowledge Base Name"
+        placeholder={t("knowledgeBase.forms.kbNamePlaceholder")}
         value={name}
         onChange={(e) => setName(e.target.value)}
+        className='text-left'
       />
-      <Label htmlFor="description">Description (for new KB)</Label>
+      <Label htmlFor="description">{t("knowledgeBase.forms.descriptionForNewKB")}</Label>
       <Textarea
         id="description"
-        placeholder="Optional description"
+        placeholder={t("knowledgeBase.forms.optionalDescription")}
         value={description}
         onChange={(e) => setDescription(e.target.value)}
+        className='text-left'
       />
-      <Label htmlFor="append-to-kb">Append to existing Knowledge Base (optional)</Label>
+      <Label htmlFor="append-to-kb">{t("knowledgeBase.forms.appendToExisting")}</Label>
       <select
         id="append-to-kb"
         value={selectedKbId || ""}
         onChange={(e) => setSelectedKbId(e.target.value ? parseInt(e.target.value) : undefined)}
-        className="w-full mt-1 p-2 border rounded-md"
+        className={`w-full mt-1 p-2 border rounded-md dark:bg-slate-700 dark:border-slate-600 dark:text-white text-left`}
       >
-        <option value="">Create New</option>
+        <option value="">{t("knowledgeBase.forms.createNew")}</option>
         {knowledgeBases.map((kb) => (
           <option key={kb.id} value={kb.id}>
             {kb.name}
           </option>
         ))}
       </select>
-      <Button type="submit">Import</Button>
+      <Button type="submit">{t("knowledgeBase.forms.import")}</Button>
     </form>
   );
 };
 
 const GenerateQnAForm = ({ kb, onSubmit }: { kb: KnowledgeBase | null; onSubmit: (data: { knowledge_base_id: number; prompt: string }) => void }) => {
-  const [prompt, setPrompt] = useState("Generate 5 question and answer pairs from the following content.");
+  const { t, isRTL } = useI18n();
+  const [prompt, setPrompt] = useState(t("knowledgeBase.forms.qnaDefaultPrompt"));
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -610,15 +629,16 @@ const GenerateQnAForm = ({ kb, onSubmit }: { kb: KnowledgeBase | null; onSubmit:
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <Label htmlFor="qna-prompt">Prompt for Q&A Generation</Label>
+    <form onSubmit={handleSubmit} className={`space-y-4 text-left`}>
+      <Label htmlFor="qna-prompt">{t("knowledgeBase.forms.qnaPromptLabel")}</Label>
       <Textarea
         id="qna-prompt"
         value={prompt}
         onChange={(e) => setPrompt(e.target.value)}
         rows={5}
+        className='text-left'
       />
-      <Button type="submit">Generate Q&A</Button>
+      <Button type="submit">{t("knowledgeBase.forms.generateQnA")}</Button>
     </form>
   );
 };

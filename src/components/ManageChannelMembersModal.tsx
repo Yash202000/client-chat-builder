@@ -9,6 +9,7 @@ import { getChannelMembers, addChannelMember, removeChannelMember } from '@/serv
 import { getUsers } from '@/services/userService';
 import { User } from '@/types/user';
 import { cn } from '@/lib/utils';
+import { useI18n } from '@/hooks/useI18n';
 
 interface ManageChannelMembersModalProps {
   isOpen: boolean;
@@ -23,6 +24,7 @@ const ManageChannelMembersModal: React.FC<ManageChannelMembersModalProps> = ({
   channelId,
   userPresences,
 }) => {
+  const { t, isRTL } = useI18n();
   const queryClient = useQueryClient();
   const [searchTerm, setSearchTerm] = useState('');
 
@@ -60,13 +62,13 @@ const ManageChannelMembersModal: React.FC<ManageChannelMembersModalProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent>
+      <DialogContent dir={isRTL ? 'rtl' : 'ltr'}>
         <DialogHeader>
-          <DialogTitle>Manage Channel Members</DialogTitle>
+          <DialogTitle>{t('teamChat.dialogs.manageMembers.title')}</DialogTitle>
         </DialogHeader>
         <div className="space-y-4">
           <div>
-            <h3 className="text-lg font-medium">Current Members</h3>
+            <h3 className="text-lg font-medium">{t('teamChat.dialogs.manageMembers.currentMembers')}</h3>
             {isLoadingMembers ? (
               <Loader2 className="h-5 w-5 animate-spin" />
             ) : (
@@ -91,9 +93,9 @@ const ManageChannelMembersModal: React.FC<ManageChannelMembersModalProps> = ({
             )}
           </div>
           <div>
-            <h3 className="text-lg font-medium">Add Members</h3>
+            <h3 className="text-lg font-medium">{t('teamChat.dialogs.manageMembers.addMembers')}</h3>
             <Input
-              placeholder="Search by email..."
+              placeholder={t('teamChat.dialogs.manageMembers.searchPlaceholder')}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="mt-2"
@@ -109,7 +111,7 @@ const ManageChannelMembersModal: React.FC<ManageChannelMembersModalProps> = ({
                       onClick={() => addMemberMutation.mutate(user.id)}
                       disabled={addMemberMutation.isLoading}
                     >
-                      Add
+                      {t('teamChat.dialogs.manageMembers.addButton')}
                     </Button>
                   </div>
                 ))}
@@ -118,7 +120,7 @@ const ManageChannelMembersModal: React.FC<ManageChannelMembersModalProps> = ({
           </div>
         </div>
         <DialogFooter>
-          <Button onClick={onClose}>Close</Button>
+          <Button onClick={onClose}>{t('common.close')}</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

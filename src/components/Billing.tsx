@@ -4,8 +4,10 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 import { CheckCircle2, CreditCard, Loader2, Crown, Zap } from "lucide-react";
+import { useI18n } from '@/hooks/useI18n';
 
 export const Billing = () => {
+  const { t, isRTL } = useI18n();
   const { authFetch, companyId } = useAuth();
 
   // 1. Fetch available subscription plans
@@ -58,19 +60,19 @@ export const Billing = () => {
       <div className="flex items-center justify-center py-16">
         <div className="flex items-center gap-2 text-muted-foreground dark:text-gray-400">
           <Loader2 className="h-5 w-5 animate-spin text-amber-600 dark:text-amber-400" />
-          <span>Loading billing information...</span>
+          <span>{t('billing.loading')}</span>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="w-full max-w-7xl mx-auto p-4 md:p-8 space-y-8">
+    <div className="w-full max-w-7xl mx-auto p-4 md:p-8 space-y-8" dir={isRTL ? 'rtl' : 'ltr'}>
       <header>
         <h1 className="text-4xl font-bold bg-gradient-to-r from-amber-600 to-yellow-600 bg-clip-text text-transparent mb-2">
-          💳 Subscription & Billing
+          💳 {t('billing.title')}
         </h1>
-        <p className="text-gray-600 dark:text-gray-400 text-lg">Manage your plan and view billing details</p>
+        <p className="text-gray-600 dark:text-gray-400 text-lg">{t('billing.subtitle')}</p>
       </header>
 
       {/* Current Plan Section */}
@@ -78,32 +80,32 @@ export const Billing = () => {
         <CardHeader className="border-b border-slate-200 dark:border-slate-700 bg-gradient-to-r from-slate-50 to-slate-100 dark:from-slate-800 dark:to-slate-900">
           <CardTitle className="dark:text-white flex items-center gap-2">
             <CreditCard className="h-5 w-5 text-amber-600 dark:text-amber-400" />
-            Current Plan
+            {t('billing.currentPlan')}
           </CardTitle>
-          <CardDescription className="dark:text-gray-400">Your active subscription</CardDescription>
+          <CardDescription className="dark:text-gray-400">{t('billing.activeSubscription')}</CardDescription>
         </CardHeader>
         <CardContent className="pt-6">
           {status ? (
-            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-              <div className="flex items-center gap-4">
+            <div className={`flex flex-col md:flex-row md:items-center ${isRTL ? 'md:flex-row-reverse' : ''} md:justify-between gap-4`}>
+              <div className={`flex items-center gap-4 ${isRTL ? 'flex-row-reverse' : ''}`}>
                 <div className="w-16 h-16 bg-gradient-to-br from-amber-100 to-yellow-100 dark:from-amber-900/50 dark:to-yellow-900/50 rounded-xl flex items-center justify-center shadow-sm">
                   <Crown className="h-8 w-8 text-amber-600 dark:text-amber-400" />
                 </div>
                 <div>
                   <p className="text-2xl font-bold dark:text-white">{status.plan}</p>
-                  <p className="text-sm text-green-600 dark:text-green-400 capitalize flex items-center gap-1 mt-1">
+                  <p className={`text-sm text-green-600 dark:text-green-400 capitalize flex items-center gap-1 mt-1 ${isRTL ? 'flex-row-reverse' : ''}`}>
                     <CheckCircle2 className="h-4 w-4" />
                     {status.status}
                   </p>
                 </div>
               </div>
               <Button variant="outline" className="dark:border-slate-600 dark:text-white dark:hover:bg-slate-700">
-                Manage Subscription
+                {t('billing.manageSubscription')}
               </Button>
             </div>
           ) : (
             <div className="text-center py-8 border-2 border-dashed border-slate-300 dark:border-slate-700 rounded-lg bg-slate-50 dark:bg-slate-900/50">
-              <p className="text-gray-600 dark:text-gray-400">Could not load subscription status.</p>
+              <p className="text-gray-600 dark:text-gray-400">{t('billing.couldNotLoadStatus')}</p>
             </div>
           )}
         </CardContent>
@@ -112,11 +114,11 @@ export const Billing = () => {
       {/* Available Plans Section */}
       <div>
         <div className="mb-6">
-          <h2 className="text-2xl font-bold dark:text-white flex items-center gap-2">
+          <h2 className={`text-2xl font-bold dark:text-white flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
             <Zap className="h-6 w-6 text-amber-600 dark:text-amber-400" />
-            Available Plans
+            {t('billing.availablePlans')}
           </h2>
-          <p className="text-gray-600 dark:text-gray-400 mt-1">Choose the perfect plan for your needs</p>
+          <p className="text-gray-600 dark:text-gray-400 mt-1">{t('billing.choosePlan')}</p>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {plans?.map((plan, index) => {
@@ -131,13 +133,13 @@ export const Billing = () => {
                 }`}
               >
                 {isPremium && (
-                  <div className="absolute top-0 right-0 bg-gradient-to-r from-amber-600 to-yellow-600 text-white text-xs font-semibold px-3 py-1 rounded-bl-lg">
-                    Popular
+                  <div className={`absolute top-0 ${isRTL ? 'left-0 rounded-br-lg' : 'right-0 rounded-bl-lg'} bg-gradient-to-r from-amber-600 to-yellow-600 text-white text-xs font-semibold px-3 py-1`}>
+                    {t('billing.popular')}
                   </div>
                 )}
                 {isCurrentPlan && (
-                  <div className="absolute top-0 left-0 bg-gradient-to-r from-green-600 to-emerald-600 text-white text-xs font-semibold px-3 py-1 rounded-br-lg">
-                    Current
+                  <div className={`absolute top-0 ${isRTL ? 'right-0 rounded-bl-lg' : 'left-0 rounded-br-lg'} bg-gradient-to-r from-green-600 to-emerald-600 text-white text-xs font-semibold px-3 py-1`}>
+                    {t('billing.current')}
                   </div>
                 )}
                 <CardHeader className="border-b border-slate-200 dark:border-slate-700 bg-gradient-to-r from-slate-50 to-slate-100 dark:from-slate-800 dark:to-slate-900">
@@ -158,7 +160,7 @@ export const Billing = () => {
                     <p className="text-5xl font-bold dark:text-white">
                       ${plan.price}
                     </p>
-                    <span className="text-sm font-normal text-gray-500 dark:text-gray-400">per month</span>
+                    <span className="text-sm font-normal text-gray-500 dark:text-gray-400">{t('billing.perMonth')}</span>
                   </div>
                   <ul className="space-y-3">
                     {plan.features && typeof plan.features === 'string'
@@ -183,16 +185,16 @@ export const Billing = () => {
                   >
                     {isCreatingCheckout ? (
                       <>
-                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                        Redirecting...
+                        <Loader2 className={`h-4 w-4 ${isRTL ? 'ml-2' : 'mr-2'} animate-spin`} />
+                        {t('billing.redirecting')}
                       </>
                     ) : isCurrentPlan ? (
                       <>
-                        <CheckCircle2 className="h-4 w-4 mr-2" />
-                        Current Plan
+                        <CheckCircle2 className={`h-4 w-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
+                        {t('billing.currentPlan')}
                       </>
                     ) : (
-                      'Choose Plan'
+                      t('billing.choosePlanButton')
                     )}
                   </Button>
                 </div>

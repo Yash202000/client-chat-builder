@@ -8,6 +8,7 @@ import { Label } from '@/components/ui/label';
 import { toast } from '@/hooks/use-toast';
 import { useAuth } from "@/hooks/useAuth";
 import { Trash2, UploadCloud } from 'lucide-react';
+import { useI18n } from '@/hooks/useI18n';
 
 interface VoiceProfile {
     id: number;
@@ -16,6 +17,7 @@ interface VoiceProfile {
 }
 
 const VoicesPage: React.FC = () => {
+    const { t, isRTL } = useI18n();
     const queryClient = useQueryClient();
     const { authFetch } = useAuth();
     const [voiceName, setVoiceName] = useState('');
@@ -51,12 +53,12 @@ const VoicesPage: React.FC = () => {
             return response.json();
         },
         onSuccess: () => {
-            toast({ title: 'Success', description: 'Voice cloning process started.' });
+            toast({ title: t('common.success'), description: t('voices.toasts.cloningStarted') });
             queryClient.invalidateQueries({ queryKey: ['voiceProfiles'] });
             setVoiceName('');
             setFiles(null);
         },
-        onError: (e: Error) => toast({ title: 'Error', description: e.message, variant: 'destructive' }),
+        onError: (e: Error) => toast({ title: t('common.error'), description: e.message, variant: 'destructive' }),
     });
 
     const deleteMutation = useMutation({
@@ -64,30 +66,30 @@ const VoicesPage: React.FC = () => {
             method: 'DELETE',
         }),
         onSuccess: () => {
-            toast({ title: 'Success', description: 'Voice profile deleted.' });
+            toast({ title: t('common.success'), description: t('voices.toasts.voiceDeleted') });
             queryClient.invalidateQueries({ queryKey: ['voiceProfiles'] });
         },
-        onError: (e: Error) => toast({ title: 'Error', description: e.message, variant: 'destructive' }),
+        onError: (e: Error) => toast({ title: t('common.error'), description: e.message, variant: 'destructive' }),
     });
 
     return (
-        <div className="space-y-6">
+        <div className="space-y-6" dir={isRTL ? 'rtl' : 'ltr'}>
             <Card>
                 <CardHeader>
-                    <CardTitle>Clone a New Voice</CardTitle>
+                    <CardTitle>{t('voices.cloneNewVoice')}</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
                     <div>
-                        <Label htmlFor="voiceName">Voice Name</Label>
+                        <Label htmlFor="voiceName">{t('voices.voiceName')}</Label>
                         <Input
                             id="voiceName"
                             value={voiceName}
                             onChange={(e) => setVoiceName(e.target.value)}
-                            placeholder="e.g., Morgan's Voice"
+                            placeholder={t('voices.voiceNamePlaceholder')}
                         />
                     </div>
                     <div>
-                        <Label htmlFor="audioFiles">Audio Samples (up to 25)</Label>
+                        <Label htmlFor="audioFiles">{t('voices.audioSamples')}</Label>
                         <Input
                             id="audioFiles"
                             type="file"
@@ -97,19 +99,19 @@ const VoicesPage: React.FC = () => {
                         />
                     </div>
                     <Button onClick={() => cloneMutation.mutate()} disabled={cloneMutation.isPending}>
-                        {cloneMutation.isPending ? 'Cloning...' : <><UploadCloud className="mr-2 h-4 w-4" /> Start Cloning</>}
+                        {cloneMutation.isPending ? t('voices.cloning') : <><UploadCloud className={`h-4 w-4 ${isRTL ? 'ml-2' : 'mr-2'}`} /> {t('voices.startCloning')}</>}
                     </Button>
                 </CardContent>
             </Card>
             <Card>
                 <CardHeader>
-                    <CardTitle>Your Voice Library</CardTitle>
+                    <CardTitle>{t('voices.yourVoiceLibrary')}</CardTitle>
                 </CardHeader>
                 <CardContent>
-                    {isLoading ? <p>Loading voices...</p> : (
+                    {isLoading ? <p>{t('voices.loadingVoices')}</p> : (
                         <ul className="space-y-2">
                             {voiceProfiles?.map(vp => (
-                                <li key={vp.id} className="flex items-center justify-between p-2 border rounded-md">
+                                <li key={vp.id} className={`flex items-center justify-between p-2 border rounded-md ${isRTL ? 'flex-row-reverse' : ''}`}>
                                     <span>{vp.name}</span>
                                     <Button variant="destructive" size="sm" onClick={() => deleteMutation.mutate(vp.id)}>
                                         <Trash2 className="h-4 w-4" />

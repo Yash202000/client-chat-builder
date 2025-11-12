@@ -30,6 +30,9 @@ import {
 import { CreateAgentDialog } from "@/components/CreateAgentDialog";
 import { Permission } from "./Permission";
 import { PresenceSelector } from "@/components/PresenceSelector";
+import { LanguageSwitcher } from "@/components/LanguageSwitcher";
+import { useTranslation } from "react-i18next";
+import { useI18n } from "@/hooks/useI18n";
 
 const AppLayout = () => {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
@@ -37,41 +40,43 @@ const AppLayout = () => {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const { user, logout } = useAuth();
   const { theme, toggleTheme } = useTheme();
+  const { t } = useTranslation();
+  const { isRTL } = useI18n();
   console.log("Logged in user:", user);
 
   const sidebarItems = [
     // Core Operations
-    { title: "Active Clients", url: "/dashboard/conversations", icon: Inbox, permission: "conversation:read" },
-    { title: "Agents", url: "/dashboard/agents", icon: Bot, permission: "agent:read" },
-    { title: "Agent Builder", url: "/dashboard/builder", icon: Settings, permission: "agent:update" },
-    { title: "Widget Designer", url: "/dashboard/designer", icon: Palette, permission: "company_settings:update" },
+    { titleKey: "navigation.activeClients", url: "/dashboard/conversations", icon: Inbox, permission: "conversation:read" },
+    { titleKey: "navigation.agents", url: "/dashboard/agents", icon: Bot, permission: "agent:read" },
+    { titleKey: "navigation.agentBuilder", url: "/dashboard/builder", icon: Settings, permission: "agent:update" },
+    { titleKey: "navigation.widgetDesigner", url: "/dashboard/designer", icon: Palette, permission: "company_settings:update" },
 
     // Analytics & Monitoring
-    { title: "Reports", url: "/dashboard/reports", icon: BarChart3, permission: "analytics:read" },
+    { titleKey: "navigation.reports", url: "/dashboard/reports", icon: BarChart3, permission: "analytics:read" },
 
     // Configuration & Resources
-    { title: "Knowledge Bases", url: "/dashboard/knowledge-base/manage", icon: BookOpen, permission: "knowledgebase:read" },
-    { title: "Custom Tools", url: "/dashboard/tools", icon: Zap, permission: "tool:read" },
-    { title: "Custom Workflows", url: "/dashboard/workflows", icon: WorkflowIcon, permission: "workflow:read" },
-    { title: "Voice Lab", url: "/dashboard/voice-lab", icon: Mic, permission: "voice:create" },
+    { titleKey: "navigation.knowledgeBases", url: "/dashboard/knowledge-base/manage", icon: BookOpen, permission: "knowledgebase:read" },
+    { titleKey: "navigation.customTools", url: "/dashboard/tools", icon: Zap, permission: "tool:read" },
+    { titleKey: "navigation.customWorkflows", url: "/dashboard/workflows", icon: WorkflowIcon, permission: "workflow:read" },
+    { titleKey: "navigation.voiceLab", url: "/dashboard/voice-lab", icon: Mic, permission: "voice:create" },
 
     // Team & Communication
-    { title: "Team Management", url: "/dashboard/team", icon: Users, permission: "user:read" },
-    { title: "Team Chat", url: "/dashboard/team-chat", icon: MessageSquare, permission: "user:read" },
+    { titleKey: "navigation.teamManagement", url: "/dashboard/team", icon: Users, permission: "user:read" },
+    { titleKey: "navigation.teamChat", url: "/dashboard/team-chat", icon: MessageSquare, permission: "chat:read" },
 
     // AI Features
-    { title: "AI Chat", url: "/dashboard/ai-chat", icon: MessageSquare, permission: "chat:read" },
-    { title: "AI Tools", url: "/dashboard/ai-tools", icon: Sparkles, permission: "ai-tool:read" },
-    { title: "AI Image Generator", url: "/dashboard/ai-image-generator", icon: Sparkles, permission: "image:create" },
-    { title: "AI Image Gallery", url: "/dashboard/ai-image-gallery", icon: FileText, permission: "image:read" },
-    { title: "Vision AI", url: "/dashboard/object-detection", icon: Sparkles, permission: "image:create" },
+    { titleKey: "navigation.aiChat", url: "/dashboard/ai-chat", icon: MessageSquare, permission: "ai-chat:read" },
+    { titleKey: "navigation.aiTools", url: "/dashboard/ai-tools", icon: Sparkles, permission: "ai-tool:read" },
+    { titleKey: "navigation.aiImageGenerator", url: "/dashboard/ai-image-generator", icon: Sparkles, permission: "image:create" },
+    { titleKey: "navigation.aiImageGallery", url: "/dashboard/ai-image-gallery", icon: FileText, permission: "image:read" },
+    { titleKey: "navigation.visionAI", url: "/dashboard/object-detection", icon: Sparkles, permission: "image:create" },
 
     // System & Administration
-    { title: "Settings", url: "/dashboard/settings", icon: FileText, permission: "company_settings:update" },
-    { title: "API Vault", url: "/dashboard/vault", icon: Key, permission: "company_settings:update" },
-    { title: "Billing", url: "/dashboard/billing", icon: CreditCard, permission: "billing:manage" },
-    { title: "Manage Plans", url: "/dashboard/admin/subscriptions", icon: Sparkles, admin: true },
-    { title: "Companies", url: "/dashboard/companies", icon: Building, admin: true },
+    { titleKey: "navigation.settings", url: "/dashboard/settings", icon: FileText, permission: "company_settings:update" },
+    { titleKey: "navigation.apiVault", url: "/dashboard/vault", icon: Key, permission: "company_settings:update" },
+    { titleKey: "navigation.billing", url: "/dashboard/billing", icon: CreditCard, permission: "billing:manage" },
+    { titleKey: "navigation.managePlans", url: "/dashboard/admin/subscriptions", icon: Sparkles, admin: true },
+    { titleKey: "navigation.companies", url: "/dashboard/companies", icon: Building, admin: true },
   ];
 
   return (
@@ -97,6 +102,9 @@ const AppLayout = () => {
               </div>
             </div>
             <div className="flex items-center gap-3">
+              {/* Language Switcher */}
+              <LanguageSwitcher />
+
               {/* Theme Toggle */}
               <Button
                 variant="outline"
@@ -145,9 +153,9 @@ const AppLayout = () => {
                   </div>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem asChild>
-                    <NavLink to="/dashboard/profile">Profile</NavLink>
+                    <NavLink to="/dashboard/profile">{t('navigation.profile')}</NavLink>
                   </DropdownMenuItem>
-                  <DropdownMenuItem onClick={logout}>Logout</DropdownMenuItem>
+                  <DropdownMenuItem onClick={logout}>{t('common.logout')}</DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
 
@@ -175,9 +183,9 @@ const AppLayout = () => {
                   </div>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem asChild>
-                    <NavLink to="/dashboard/profile">Profile</NavLink>
+                    <NavLink to="/dashboard/profile">{t('navigation.profile')}</NavLink>
                   </DropdownMenuItem>
-                  <DropdownMenuItem onClick={logout}>Logout</DropdownMenuItem>
+                  <DropdownMenuItem onClick={logout}>{t('common.logout')}</DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
             </div>
@@ -188,20 +196,28 @@ const AppLayout = () => {
       <div className="flex flex-1 overflow-hidden">
         {/* Enhanced Sidebar with Dark Mode */}
         <aside
-          className={`flex-shrink-0 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-700 transition-all duration-300 relative ${
+          className={`flex-shrink-0 bg-white dark:bg-slate-900 ${isRTL ? 'border-l' : 'border-r'} border-slate-200 dark:border-slate-700 transition-all duration-300 relative ${
             sidebarOpen ? '' : '-ml-64 lg:ml-0'
           } ${sidebarCollapsed ? 'w-16' : 'w-64'}`}
         >
           {/* Collapse/Expand Button for Desktop */}
           <button
             onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-            className="hidden lg:flex absolute -right-3 top-8 z-20 bg-gradient-to-br from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white rounded-full p-2 shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-110 group"
-            title={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+            className={`hidden lg:flex absolute ${isRTL ? '-left-3' : '-right-3'} top-8 z-20 bg-gradient-to-br from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white rounded-full p-2 shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-110 group`}
+            title={sidebarCollapsed ? t("navigation.expandSidebar") : t("navigation.collapseSidebar")}
           >
             {sidebarCollapsed ? (
-              <PanelLeftOpen className="h-4 w-4 transition-transform duration-200 group-hover:translate-x-0.5" />
+              isRTL ? (
+                <PanelLeftClose className="h-4 w-4 transition-transform duration-200 group-hover:-translate-x-0.5 scale-x-[-1]" />
+              ) : (
+                <PanelLeftOpen className="h-4 w-4 transition-transform duration-200 group-hover:translate-x-0.5" />
+              )
             ) : (
-              <PanelLeftClose className="h-4 w-4 transition-transform duration-200 group-hover:-translate-x-0.5" />
+              isRTL ? (
+                <PanelLeftOpen className="h-4 w-4 transition-transform duration-200 group-hover:translate-x-0.5 scale-x-[-1]" />
+              ) : (
+                <PanelLeftClose className="h-4 w-4 transition-transform duration-200 group-hover:-translate-x-0.5" />
+              )
             )}
           </button>
 
@@ -224,7 +240,7 @@ const AppLayout = () => {
                             : 'text-gray-700 dark:text-gray-300 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-gray-900 dark:hover:text-white'
                         }`
                       }
-                      title={sidebarCollapsed ? item.title : undefined}
+                      title={sidebarCollapsed ? t(item.titleKey) : undefined}
                     >
                       {({ isActive }) => (
                         <>
@@ -233,7 +249,7 @@ const AppLayout = () => {
                               isActive ? '' : 'group-hover:scale-110'
                             } ${sidebarCollapsed ? 'flex-shrink-0' : ''}`}
                           />
-                          {!sidebarCollapsed && <span className="truncate">{item.title}</span>}
+                          {!sidebarCollapsed && <span className="truncate">{t(item.titleKey)}</span>}
                         </>
                       )}
                     </NavLink>

@@ -8,8 +8,10 @@ import { useAuth } from '@/hooks/useAuth';
 import { IntegrationDialog } from './IntegrationDialog';
 import { Zap, Trash2, Edit } from 'lucide-react';
 import GoogleAuth from './GoogleAuth';
+import { useI18n } from '@/hooks/useI18n';
 
 export const IntegrationsList: React.FC = () => {
+  const { t, isRTL } = useI18n();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedIntegration, setSelectedIntegration] = useState<Integration | null>(null);
   const { authFetch } = useAuth();
@@ -22,7 +24,7 @@ export const IntegrationsList: React.FC = () => {
       }
       if (event.data === 'linkedin-success' || event.data === 'google-success') {
         queryClient.invalidateQueries({ queryKey: ['integrations'] });
-        toast({ title: 'Success', variant: 'success', description: 'Integration connected successfully.' });
+        toast({ title: t('integrations.success'), variant: 'success', description: t('integrations.connectedSuccess') });
       }
     };
 
@@ -49,11 +51,11 @@ export const IntegrationsList: React.FC = () => {
       if (!response.ok) throw new Error('Failed to delete integration');
     },
     onSuccess: () => {
-      toast({ title: 'Success', variant: 'success', description: 'Integration deleted successfully.' });
+      toast({ title: t('integrations.success'), variant: 'success', description: t('integrations.deletedSuccess') });
       queryClient.invalidateQueries({ queryKey: ['integrations'] });
     },
     onError: () => {
-      toast({ title: 'Error', description: 'Failed to delete integration.', variant: 'destructive' });
+      toast({ title: t('integrations.error'), description: t('integrations.deletedError'), variant: 'destructive' });
     },
   });
 
@@ -68,25 +70,25 @@ export const IntegrationsList: React.FC = () => {
   };
 
   const handleDelete = (integrationId: number) => {
-    if (window.confirm('Are you sure you want to delete this integration?')) {
+    if (window.confirm(t('integrations.confirmDelete'))) {
       deleteMutation.mutate(integrationId);
     }
   };
 
   return (
-    <Card className="card-shadow-lg border-slate-200 dark:border-slate-700 dark:bg-slate-800">
-      <CardHeader className="flex flex-row items-center justify-between border-b border-slate-200 dark:border-slate-700 bg-gradient-to-r from-slate-50 to-slate-100 dark:from-slate-800 dark:to-slate-900">
+    <Card className="card-shadow-lg border-slate-200 dark:border-slate-700 dark:bg-slate-800" dir={isRTL ? 'rtl' : 'ltr'}>
+      <CardHeader className={`flex flex-row items-center ${isRTL ? 'flex-row-reverse' : ''} justify-between border-b border-slate-200 dark:border-slate-700 bg-gradient-to-r from-slate-50 to-slate-100 dark:from-slate-800 dark:to-slate-900`}>
         <div>
           <CardTitle className="flex items-center gap-2 dark:text-white">
             <Zap className="h-5 w-5 text-cyan-600 dark:text-cyan-400" />
-            Channel Integrations
+            {t('integrations.title')}
           </CardTitle>
-          <CardDescription className="dark:text-gray-400">Connect with external messaging channels</CardDescription>
+          <CardDescription className="dark:text-gray-400">{t('integrations.subtitle')}</CardDescription>
         </div>
         <div className="flex items-center gap-2">
           <GoogleAuth />
           <Button onClick={handleAddNew} className="bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-700 hover:to-blue-700 text-white btn-hover-lift">
-            Add New
+            {t('integrations.addNew')}
           </Button>
         </div>
       </CardHeader>
@@ -95,24 +97,24 @@ export const IntegrationsList: React.FC = () => {
           <div className="flex items-center justify-center py-8">
             <div className="flex items-center gap-2 text-muted-foreground dark:text-gray-400">
               <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-cyan-600 dark:border-cyan-400"></div>
-              <span>Loading integrations...</span>
+              <span>{t('integrations.loading')}</span>
             </div>
           </div>
         ) : (
           <div className="space-y-3">
             {integrations && integrations.length > 0 ? (
               integrations.map((integration) => (
-                <div key={integration.id} className="flex items-center justify-between p-4 border border-slate-200 dark:border-slate-700 rounded-lg bg-slate-50 dark:bg-slate-900/50 hover:shadow-md transition-shadow">
+                <div key={integration.id} className={`flex items-center ${isRTL ? 'flex-row-reverse' : ''} justify-between p-4 border border-slate-200 dark:border-slate-700 rounded-lg bg-slate-50 dark:bg-slate-900/50 hover:shadow-md transition-shadow`}>
                   <div>
                     <h4 className="font-semibold dark:text-white">{integration.name}</h4>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">Type: <span className="capitalize">{integration.type}</span></p>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">{t('integrations.type')}: <span className="capitalize">{integration.type}</span></p>
                   </div>
-                  <div className="flex items-center gap-2">
+                  <div className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
                     <Button variant="outline" size="sm" onClick={() => handleEdit(integration)} className="dark:border-slate-600 dark:text-white dark:hover:bg-slate-700">
-                      <Edit className="h-4 w-4 mr-2" /> Edit
+                      <Edit className={`h-4 w-4 ${isRTL ? 'ml-2' : 'mr-2'}`} /> {t('integrations.edit')}
                     </Button>
                     <Button variant="destructive" size="sm" onClick={() => handleDelete(integration.id)} className="bg-red-600 hover:bg-red-700">
-                      <Trash2 className="h-4 w-4 mr-2" /> Delete
+                      <Trash2 className={`h-4 w-4 ${isRTL ? 'ml-2' : 'mr-2'}`} /> {t('integrations.delete')}
                     </Button>
                   </div>
                 </div>
@@ -122,7 +124,7 @@ export const IntegrationsList: React.FC = () => {
                 <div className="h-16 w-16 rounded-full bg-slate-100 dark:bg-slate-700 flex items-center justify-center mx-auto mb-4">
                   <Zap className="h-8 w-8 text-slate-400 dark:text-slate-500" />
                 </div>
-                <p className="text-sm text-slate-500 dark:text-slate-400">No integrations configured yet. Click "Add New" to get started.</p>
+                <p className="text-sm text-slate-500 dark:text-slate-400">{t('integrations.noIntegrations')}</p>
               </div>
             )}
           </div>

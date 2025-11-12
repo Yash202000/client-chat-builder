@@ -30,7 +30,7 @@ export default defineConfig(({ mode }) => {
       "script-src 'self' 'sha256-Z2/iFzh9VMlVkEOar1f/oSHWwQk3ve1qk/C2WdsC4Xk='; " +
       "object-src 'none'; " +
       "style-src 'self' 'unsafe-inline'; " +
-      `img-src 'self' ${backendUrl} data: blob:; ` +
+      `img-src 'self' ${backendUrl} https://avatar.vercel.sh data: blob:; ` +
       "font-src 'self' data:; " +
       `connect-src 'self' ${backendUrl} https://*.livekit.cloud wss://*.livekit.cloud ws: wss: https://ultralytics.com;`
     }

@@ -11,6 +11,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Loader2 } from 'lucide-react';
+import { useI18n } from '@/hooks/useI18n';
 
 interface CreateChannelModalProps {
   isOpen: boolean;
@@ -25,6 +26,7 @@ const CreateChannelModal: React.FC<CreateChannelModalProps> = ({
   onSubmit,
   isLoading,
 }) => {
+  const { t, isRTL } = useI18n();
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
 
@@ -36,32 +38,32 @@ const CreateChannelModal: React.FC<CreateChannelModalProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent>
+      <DialogContent dir={isRTL ? 'rtl' : 'ltr'}>
         <DialogHeader>
-          <DialogTitle>Create a new channel</DialogTitle>
+          <DialogTitle>{t('teamChat.dialogs.createChannel.title')}</DialogTitle>
           <DialogDescription>
-            Channels are where your team communicates. Best when organized around a topic — #marketing, for example.
+            {t('teamChat.dialogs.createChannel.description')}
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-4 py-2 pb-4">
           <div className="space-y-2">
             <label htmlFor="name" className="text-sm font-medium">
-              Channel Name
+              {t('teamChat.dialogs.createChannel.nameLabel')}
             </label>
             <Input
               id="name"
-              placeholder="# e.g. marketing"
+              placeholder={t('teamChat.dialogs.createChannel.namePlaceholder')}
               value={name}
               onChange={(e) => setName(e.target.value)}
             />
           </div>
           <div className="space-y-2">
             <label htmlFor="description" className="text-sm font-medium">
-              Description (optional)
+              {t('teamChat.dialogs.createChannel.descLabel')}
             </label>
             <Input
               id="description"
-              placeholder="What's this channel about?"
+              placeholder={t('teamChat.dialogs.createChannel.descPlaceholder')}
               value={description}
               onChange={(e) => setDescription(e.target.value)}
             />
@@ -69,13 +71,13 @@ const CreateChannelModal: React.FC<CreateChannelModalProps> = ({
         </div>
         <DialogFooter>
           <Button variant="ghost" onClick={onClose}>
-            Cancel
+            {t('common.cancel')}
           </Button>
           <Button onClick={handleSubmit} disabled={isLoading || !name.trim()}>
             {isLoading ? (
               <Loader2 className="h-4 w-4 animate-spin" />
             ) : (
-              'Create Channel'
+              t('teamChat.dialogs.createChannel.button')
             )}
           </Button>
         </DialogFooter>

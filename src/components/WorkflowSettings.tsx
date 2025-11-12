@@ -26,6 +26,7 @@ import { cn } from '@/lib/utils';
 import { IntentDialog } from './IntentDialog';
 import { EntityDialog } from './EntityDialog';
 import { TestIntentDialog } from './TestIntentDialog';
+import { useI18n } from '@/hooks/useI18n';
 
 interface Intent {
   id: string;
@@ -61,6 +62,7 @@ interface WorkflowSettingsProps {
 }
 
 export const WorkflowSettings: React.FC<WorkflowSettingsProps> = ({ open, onOpenChange, workflowId }) => {
+  const { t, isRTL } = useI18n();
   const [config, setConfig] = useState<IntentConfig>({
     enabled: false,
     trigger_intents: [],
@@ -103,7 +105,7 @@ export const WorkflowSettings: React.FC<WorkflowSettingsProps> = ({ open, onOpen
       });
     } catch (error) {
       console.error('Error fetching intent config:', error);
-      toast.error('Failed to load intent configuration');
+      toast.error(t('workflows.settingsDialog.toasts.loadFailed'));
     } finally {
       setLoading(false);
     }
@@ -111,7 +113,7 @@ export const WorkflowSettings: React.FC<WorkflowSettingsProps> = ({ open, onOpen
 
   const saveIntentConfig = async () => {
     if (!workflowId) {
-      toast.error('No workflow selected');
+      toast.error(t('workflows.settingsDialog.toasts.noWorkflow'));
       return;
     }
 
@@ -123,10 +125,10 @@ export const WorkflowSettings: React.FC<WorkflowSettingsProps> = ({ open, onOpen
         body: JSON.stringify({ intent_config: config }),
       });
       if (!response.ok) throw new Error('Failed to save intent config');
-      toast.success('Intent configuration saved successfully');
+      toast.success(t('workflows.settingsDialog.toasts.saveSuccess'));
     } catch (error) {
       console.error('Error saving intent config:', error);
-      toast.error('Failed to save intent configuration');
+      toast.error(t('workflows.settingsDialog.toasts.saveFailed'));
     } finally {
       setSaving(false);
     }
@@ -153,7 +155,7 @@ export const WorkflowSettings: React.FC<WorkflowSettingsProps> = ({ open, onOpen
       ...config,
       trigger_intents: config.trigger_intents.filter(i => i.id !== intentId),
     });
-    toast.success('Intent removed');
+    toast.success(t('workflows.settingsDialog.toasts.intentRemoved'));
   };
 
   const handleAddEntity = () => {
@@ -176,32 +178,32 @@ export const WorkflowSettings: React.FC<WorkflowSettingsProps> = ({ open, onOpen
       ...config,
       entities: config.entities.filter(e => e.name !== entityName),
     });
-    toast.success('Entity removed');
+    toast.success(t('workflows.settingsDialog.toasts.entityRemoved'));
   };
 
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden p-0">
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden p-0" dir={isRTL ? 'rtl' : 'ltr'}>
           {loading ? (
             <div className="p-6 h-full flex items-center justify-center bg-white dark:bg-slate-900">
-              <div className="text-slate-600 dark:text-slate-400">Loading settings...</div>
+              <div className="text-slate-600 dark:text-slate-400">{t('workflows.settingsDialog.loading')}</div>
             </div>
           ) : (
             <div className="h-full flex flex-col bg-white dark:bg-slate-900 overflow-y-auto">
       {/* Header */}
       <div className="p-6 border-b border-slate-200 dark:border-slate-700">
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-3">
+        <div className={`flex items-center justify-between mb-4 `}>
+          <div className={`flex items-center gap-3 `}>
             <div className="p-2 rounded-lg bg-gradient-to-br from-violet-500 to-purple-500">
               <Settings className="h-5 w-5 text-white" />
             </div>
             <div>
               <h2 className="text-xl font-bold text-slate-900 dark:text-white">
-                Workflow Settings
+                {t('workflows.settingsDialog.title')}
               </h2>
               <p className="text-sm text-slate-600 dark:text-slate-400">
-                Configure intent detection and automation
+                {t('workflows.settingsDialog.description')}
               </p>
             </div>
           </div>
@@ -211,18 +213,18 @@ export const WorkflowSettings: React.FC<WorkflowSettingsProps> = ({ open, onOpen
         </div>
 
         {/* Enable Intent Detection Toggle */}
-        <div className="flex items-center justify-between p-4 rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
-          <div className="flex items-center gap-3">
+        <div className={`flex items-center justify-between p-4 rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 `}>
+          <div className={`flex items-center gap-3 `}>
             <Sparkles className={cn(
               "h-5 w-5",
               config.enabled ? "text-violet-500" : "text-slate-400"
             )} />
             <div>
               <Label htmlFor="enable-intents" className="text-sm font-semibold cursor-pointer">
-                Enable Intent Detection
+                {t('workflows.settingsDialog.enableIntentDetection')}
               </Label>
               <p className="text-xs text-slate-600 dark:text-slate-400">
-                Automatically detect user intents and trigger workflow
+                {t('workflows.settingsDialog.enableIntentDetectionDescription')}
               </p>
             </div>
           </div>
@@ -241,16 +243,16 @@ export const WorkflowSettings: React.FC<WorkflowSettingsProps> = ({ open, onOpen
             {/* Auto-Trigger Settings */}
             <div className="space-y-4">
               <h3 className="text-lg font-semibold text-slate-900 dark:text-white">
-                Auto-Trigger Settings
+                {t('workflows.settingsDialog.autoTriggerSettings')}
               </h3>
 
-              <div className="flex items-center justify-between p-4 rounded-lg border border-slate-200 dark:border-slate-700">
+              <div className={`flex items-center justify-between p-4 rounded-lg border border-slate-200 dark:border-slate-700 `}>
                 <div>
                   <Label htmlFor="auto-trigger" className="text-sm font-medium cursor-pointer">
-                    Auto-trigger workflow
+                    {t('workflows.settingsDialog.autoTriggerWorkflow')}
                   </Label>
                   <p className="text-xs text-slate-600 dark:text-slate-400 mt-1">
-                    Execute workflow automatically when intent is detected
+                    {t('workflows.settingsDialog.autoTriggerWorkflowDescription')}
                   </p>
                 </div>
                 <Switch
@@ -264,7 +266,7 @@ export const WorkflowSettings: React.FC<WorkflowSettingsProps> = ({ open, onOpen
 
               <div className="space-y-2">
                 <Label htmlFor="min-confidence">
-                  Minimum Confidence ({Math.round(config.min_confidence * 100)}%)
+                  {t('workflows.settingsDialog.minimumConfidence', { percentage: Math.round(config.min_confidence * 100) })}
                 </Label>
                 <input
                   id="min-confidence"
@@ -279,24 +281,24 @@ export const WorkflowSettings: React.FC<WorkflowSettingsProps> = ({ open, onOpen
                   className="w-full h-2 bg-slate-200 dark:bg-slate-700 rounded-lg appearance-none cursor-pointer accent-violet-500"
                 />
                 <p className="text-xs text-slate-600 dark:text-slate-400">
-                  Workflow will only auto-trigger if confidence is above this threshold
+                  {t('workflows.settingsDialog.confidenceThresholdDescription')}
                 </p>
               </div>
             </div>
 
             {/* Trigger Intents */}
             <div className="space-y-4">
-              <div className="flex items-center justify-between">
+              <div className={`flex items-center justify-between `}>
                 <h3 className="text-lg font-semibold text-slate-900 dark:text-white">
-                  Trigger Intents
+                  {t('workflows.settingsDialog.triggerIntents')}
                 </h3>
                 <Button
                   onClick={handleAddIntent}
                   size="sm"
                   className="bg-gradient-to-r from-violet-500 to-purple-500 hover:from-violet-600 hover:to-purple-600"
                 >
-                  <Plus className="h-4 w-4 mr-2" />
-                  Add Intent
+                  <Plus className={`h-4 w-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
+                  {t('workflows.settingsDialog.addIntent')}
                 </Button>
               </div>
 
@@ -304,15 +306,15 @@ export const WorkflowSettings: React.FC<WorkflowSettingsProps> = ({ open, onOpen
                 <div className="p-8 text-center border-2 border-dashed border-slate-300 dark:border-slate-700 rounded-lg">
                   <AlertCircle className="h-12 w-12 text-slate-400 mx-auto mb-3" />
                   <p className="text-slate-600 dark:text-slate-400 mb-4">
-                    No intents configured yet
+                    {t('workflows.settingsDialog.noIntentsConfigured')}
                   </p>
                   <Button
                     onClick={handleAddIntent}
                     variant="outline"
                     size="sm"
                   >
-                    <Plus className="h-4 w-4 mr-2" />
-                    Add Your First Intent
+                    <Plus className={`h-4 w-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
+                    {t('workflows.settingsDialog.addFirstIntent')}
                   </Button>
                 </div>
               ) : (
@@ -322,13 +324,13 @@ export const WorkflowSettings: React.FC<WorkflowSettingsProps> = ({ open, onOpen
                       key={intent.id}
                       className="p-4 rounded-lg border border-slate-200 dark:border-slate-700 hover:border-violet-300 dark:hover:border-violet-600 transition-colors"
                     >
-                      <div className="flex items-start justify-between mb-3">
+                      <div className={`flex items-start justify-between mb-3 `}>
                         <div className="flex-1">
                           <h4 className="font-semibold text-slate-900 dark:text-white mb-1">
-                            {intent.name || 'Unnamed Intent'}
+                            {intent.name || t('workflows.settingsDialog.unnamedIntent')}
                           </h4>
-                          <div className="flex items-center gap-2 text-xs text-slate-600 dark:text-slate-400">
-                            <span>Confidence: {Math.round(intent.confidence_threshold * 100)}%</span>
+                          <div className={`flex items-center gap-2 text-xs text-slate-600 dark:text-slate-400 `}>
+                            <span>{t('workflows.settingsDialog.confidence')}: {Math.round(intent.confidence_threshold * 100)}%</span>
                           </div>
                         </div>
                         <div className="flex gap-2">
@@ -354,7 +356,7 @@ export const WorkflowSettings: React.FC<WorkflowSettingsProps> = ({ open, onOpen
                       {intent.keywords.length > 0 && (
                         <div className="mb-2">
                           <span className="text-xs font-medium text-slate-600 dark:text-slate-400 mb-1 block">
-                            Keywords:
+                            {t('workflows.settingsDialog.keywords')}:
                           </span>
                           <div className="flex flex-wrap gap-1">
                             {intent.keywords.map((kw, idx) => (
@@ -369,11 +371,11 @@ export const WorkflowSettings: React.FC<WorkflowSettingsProps> = ({ open, onOpen
                       {intent.training_phrases.length > 0 && (
                         <div>
                           <span className="text-xs font-medium text-slate-600 dark:text-slate-400 mb-1 block">
-                            Training Phrases:
+                            {t('workflows.settingsDialog.trainingPhrases')}:
                           </span>
                           <div className="text-xs text-slate-600 dark:text-slate-400">
                             {intent.training_phrases.slice(0, 2).join(', ')}
-                            {intent.training_phrases.length > 2 && ` +${intent.training_phrases.length - 2} more`}
+                            {intent.training_phrases.length > 2 && ` ${t('workflows.settingsDialog.moreItems', { count: intent.training_phrases.length - 2 })}`}
                           </div>
                         </div>
                       )}
@@ -385,24 +387,24 @@ export const WorkflowSettings: React.FC<WorkflowSettingsProps> = ({ open, onOpen
 
             {/* Entities */}
             <div className="space-y-4">
-              <div className="flex items-center justify-between">
+              <div className={`flex items-center justify-between `}>
                 <h3 className="text-lg font-semibold text-slate-900 dark:text-white">
-                  Entities
+                  {t('workflows.settingsDialog.entities')}
                 </h3>
                 <Button
                   onClick={handleAddEntity}
                   size="sm"
                   variant="outline"
                 >
-                  <Plus className="h-4 w-4 mr-2" />
-                  Add Entity
+                  <Plus className={`h-4 w-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
+                  {t('workflows.settingsDialog.addEntity')}
                 </Button>
               </div>
 
               {config.entities.length === 0 ? (
                 <div className="p-6 text-center border border-dashed border-slate-300 dark:border-slate-700 rounded-lg">
                   <p className="text-sm text-slate-600 dark:text-slate-400">
-                    No entities configured
+                    {t('workflows.settingsDialog.noEntitiesConfigured')}
                   </p>
                 </div>
               ) : (
@@ -410,7 +412,7 @@ export const WorkflowSettings: React.FC<WorkflowSettingsProps> = ({ open, onOpen
                   {config.entities.map((entity, idx) => (
                     <div
                       key={idx}
-                      className="flex items-center justify-between p-3 rounded-lg border border-slate-200 dark:border-slate-700"
+                      className={`flex items-center justify-between p-3 rounded-lg border border-slate-200 dark:border-slate-700 `}
                     >
                       <div className="flex-1">
                         <div className="font-medium text-sm text-slate-900 dark:text-white">
@@ -418,7 +420,7 @@ export const WorkflowSettings: React.FC<WorkflowSettingsProps> = ({ open, onOpen
                         </div>
                         <div className="text-xs text-slate-600 dark:text-slate-400">
                           {entity.type} • {entity.extraction_method}
-                          {entity.required && ' • Required'}
+                          {entity.required && ` • ${t('workflows.settingsDialog.required')}`}
                         </div>
                       </div>
                       <div className="flex gap-2">
@@ -453,8 +455,8 @@ export const WorkflowSettings: React.FC<WorkflowSettingsProps> = ({ open, onOpen
                 className="w-full"
                 disabled={config.trigger_intents.length === 0}
               >
-                <TestTube className="h-4 w-4 mr-2" />
-                Test Intent Detection
+                <TestTube className={`h-4 w-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
+                {t('workflows.settingsDialog.testIntentDetection')}
               </Button>
             </div>
           </>
@@ -463,17 +465,17 @@ export const WorkflowSettings: React.FC<WorkflowSettingsProps> = ({ open, onOpen
 
       {/* Footer */}
       <div className="p-6 border-t border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800">
-        <div className="flex gap-3">
+        <div className={`flex gap-3 `}>
           <Button
             onClick={saveIntentConfig}
             disabled={saving}
             className="flex-1 bg-gradient-to-r from-violet-500 to-purple-500 hover:from-violet-600 hover:to-purple-600"
           >
-            <Save className="h-4 w-4 mr-2" />
-            {saving ? 'Saving...' : 'Save Configuration'}
+            <Save className={`h-4 w-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
+            {saving ? t('workflows.settingsDialog.saving') : t('workflows.settingsDialog.saveConfiguration')}
           </Button>
           <Button onClick={() => onOpenChange(false)} variant="outline">
-            Close
+            {t('workflows.settingsDialog.close')}
           </Button>
         </div>
       </div>
@@ -503,7 +505,7 @@ export const WorkflowSettings: React.FC<WorkflowSettingsProps> = ({ open, onOpen
             });
           }
           setShowIntentDialog(false);
-          toast.success('Intent saved');
+          toast.success(t('workflows.settingsDialog.toasts.intentSaved'));
         }}
       />
 
@@ -527,7 +529,7 @@ export const WorkflowSettings: React.FC<WorkflowSettingsProps> = ({ open, onOpen
             });
           }
           setShowEntityDialog(false);
-          toast.success('Entity saved');
+          toast.success(t('workflows.settingsDialog.toasts.entitySaved'));
         }}
       />
 

@@ -1,8 +1,10 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { toast } from 'sonner';
 import { useAuth } from "@/hooks/useAuth";
+import { useI18n } from '@/hooks/useI18n';
 
-const VariableInput = ({ value, onChange, placeholder, availableVars }) => {
+const VariableInput = ({ value, onChange, placeholder, availableVars, isRTL }) => {
+  const { t } = useI18n();
     const [showVars, setShowVars] = useState(false);
     const containerRef = useRef(null);
 
@@ -22,25 +24,25 @@ const VariableInput = ({ value, onChange, placeholder, availableVars }) => {
     }, [containerRef]);
 
     return (
-        <div className="relative" ref={containerRef}>
+        <div className="relative" ref={containerRef} dir={isRTL ? 'rtl' : 'ltr'}>
             <input
                 type="text"
                 value={value || ''}
                 onChange={onChange}
-                className="w-full px-3 py-2 pr-12 rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400"
+                className={`w-full px-3 py-2 ${isRTL ? 'pl-12 pr-3' : 'pr-12 pl-3'} rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400`}
                 placeholder={placeholder}
             />
             <button
                 onClick={() => setShowVars(!showVars)}
-                title="Select a variable"
-                className="absolute right-0.5 top-0.5 bottom-0.5 border-none bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 cursor-pointer px-3 rounded-r-md text-slate-700 dark:text-slate-300 text-sm transition-colors"
+                title={t("workflows.editor.properties.selectVariable")}
+                className={`absolute ${isRTL ? 'left-0.5 rounded-l-md' : 'right-0.5 rounded-r-md'} top-0.5 bottom-0.5 border-none bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 cursor-pointer px-3 text-slate-700 dark:text-slate-300 text-sm transition-colors`}
             >
                 {`{...}`}
             </button>
             {showVars && (
                 <ul className="absolute top-full left-0 right-0 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 list-none p-0 mt-1 z-10 max-h-52 overflow-y-auto rounded-md shadow-lg">
                     {availableVars.length === 0 ? (
-                        <li className="px-3 py-2 text-slate-500 dark:text-slate-400">No variables available</li>
+                        <li className="px-3 py-2 text-slate-500 dark:text-slate-400">{t("workflows.editor.properties.noVariablesAvailable")}</li>
                     ) : (
                         availableVars.map(v => (
                             <li
@@ -60,6 +62,7 @@ const VariableInput = ({ value, onChange, placeholder, availableVars }) => {
 };
 
 const PropertiesPanel = ({ selectedNode, nodes, setNodes, deleteNode }) => {
+  const { t, isRTL } = useI18n();
   const [tools, setTools] = useState([]);
   const [knowledgeBases, setKnowledgeBases] = useState([]);
   const [agents, setAgents] = useState([]);
@@ -230,58 +233,62 @@ const PropertiesPanel = ({ selectedNode, nodes, setNodes, deleteNode }) => {
   };
 
   const renderNodeProperties = () => {
-    if (!currentNode) return <div className="text-slate-500 dark:text-slate-400 p-5">Select a node to view its properties.</div>;
+    if (!currentNode) return <div className="text-slate-500 dark:text-slate-400 p-5" dir={isRTL ? 'rtl' : 'ltr'}>{t("workflows.editor.properties.selectNode")}</div>;
 
     return (
-      <div className="p-3">
+      <div className="p-3" dir={isRTL ? 'rtl' : 'ltr'}>
         <div className="mb-5 p-4 bg-slate-50 dark:bg-slate-800/50 rounded-lg border border-slate-200 dark:border-slate-700">
-          <h3 className="text-base font-semibold mb-4 text-slate-900 dark:text-slate-100">Node Settings</h3>
+          <h3 className="text-base font-semibold mb-4 text-slate-900 dark:text-slate-100">{t("workflows.editor.properties.nodeSettings")}</h3>
           <div className="mb-4">
-            <label className="block mb-2 font-medium text-sm text-slate-700 dark:text-slate-300">Node Label:</label>
+            <label className="block mb-2 font-medium text-sm text-slate-700 dark:text-slate-300">{t("workflows.editor.properties.nodeLabel")}</label>
             <input
               type="text"
               value={currentNode.data.label || ''}
               onChange={(e) => handleDataChange('label', e.target.value)}
               className="w-full px-3 py-2 rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400"
+              dir={isRTL ? 'rtl' : 'ltr'}
             />
           </div>
         </div>
 
         {currentNode.type === 'llm' && (
           <div className="mb-5 p-4 bg-slate-50 dark:bg-slate-800/50 rounded-lg border border-slate-200 dark:border-slate-700">
-            <h3 className="text-base font-semibold mb-4 text-slate-900 dark:text-slate-100">LLM Configuration</h3>
+            <h3 className="text-base font-semibold mb-4 text-slate-900 dark:text-slate-100">{t("workflows.editor.properties.llmConfiguration")}</h3>
             <div className="mb-4">
-              <label className="block mb-2 font-medium text-sm text-slate-700 dark:text-slate-300">Model:</label>
+              <label className="block mb-2 font-medium text-sm text-slate-700 dark:text-slate-300">{t("workflows.editor.properties.model")}</label>
               <select
                 value={currentNode.data.model || ''}
                 onChange={(e) => handleDataChange('model', e.target.value)}
                 className="w-full px-3 py-2 rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400"
+                dir={isRTL ? 'rtl' : 'ltr'}
               >
-                <option value="">Select a model</option>
+                <option value="">{t("workflows.editor.properties.selectModel")}</option>
                 <option value="groq/llama3-8b-8192">Groq Llama3 8b</option>
                 <option value="gemini/gemini-pro">Gemini Pro</option>
               </select>
             </div>
             <div className="mb-4">
-              <label className="block mb-2 font-medium text-sm text-slate-700 dark:text-slate-300">Knowledge Base:</label>
+              <label className="block mb-2 font-medium text-sm text-slate-700 dark:text-slate-300">{t("workflows.editor.properties.knowledgeBase")}</label>
               <select
                 value={currentNode.data.knowledge_base_id || ''}
                 onChange={(e) => handleDataChange('knowledge_base_id', e.target.value ? parseInt(e.target.value) : null)}
                 className="w-full px-3 py-2 rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400"
+                dir={isRTL ? 'rtl' : 'ltr'}
               >
-                <option value="">None</option>
+                <option value="">{t("workflows.editor.properties.none")}</option>
                 {knowledgeBases.map((kb) => (
                   <option key={kb.id} value={kb.id}>{kb.name}</option>
                 ))}
               </select>
             </div>
             <div className="mb-4">
-              <label className="block mb-2 font-medium text-sm text-slate-700 dark:text-slate-300">Prompt:</label>
+              <label className="block mb-2 font-medium text-sm text-slate-700 dark:text-slate-300">{t("workflows.editor.properties.prompt")}</label>
               <VariableInput
                 value={currentNode.data.prompt || ''}
                 onChange={(e) => handleDataChange('prompt', e.target.value)}
-                placeholder="e.g., What is the capital of {{context.country}}?"
+                placeholder={t("workflows.editor.properties.promptPlaceholder")}
                 availableVars={availableVariables}
+                isRTL={isRTL}
               />
             </div>
           </div>
@@ -289,15 +296,16 @@ const PropertiesPanel = ({ selectedNode, nodes, setNodes, deleteNode }) => {
 
         {currentNode.type === 'tool' && (
           <div className="mb-5 p-4 bg-slate-50 dark:bg-slate-800/50 rounded-lg border border-slate-200 dark:border-slate-700">
-            <h3 className="text-base font-semibold mb-4 text-slate-900 dark:text-slate-100">Tool Configuration</h3>
+            <h3 className="text-base font-semibold mb-4 text-slate-900 dark:text-slate-100">{t("workflows.editor.properties.toolConfiguration")}</h3>
             <div className="mb-4">
-              <label className="block mb-2 font-medium text-sm text-slate-700 dark:text-slate-300">Tool:</label>
+              <label className="block mb-2 font-medium text-sm text-slate-700 dark:text-slate-300">{t("workflows.editor.properties.tool")}</label>
               <select
                 className="w-full px-3 py-2 rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400"
                 onChange={(e) => onToolChange(e.target.value)}
                 value={currentNode.data.tool || ''}
+                dir={isRTL ? 'rtl' : 'ltr'}
               >
-                <option value="">Select a tool</option>
+                <option value="">{t("workflows.editor.properties.selectTool")}</option>
                 {tools.map(tool => <option key={tool.id} value={tool.name}>{tool.name}</option>)}
               </select>
             </div>
@@ -307,45 +315,48 @@ const PropertiesPanel = ({ selectedNode, nodes, setNodes, deleteNode }) => {
 
         {currentNode.type === 'condition' && (
           <div className="mb-5 p-4 bg-slate-50 dark:bg-slate-800/50 rounded-lg border border-slate-200 dark:border-slate-700">
-            <h3 className="text-base font-semibold mb-4 text-slate-900 dark:text-slate-100">Condition Logic</h3>
+            <h3 className="text-base font-semibold mb-4 text-slate-900 dark:text-slate-100">{t("workflows.editor.properties.conditionLogic")}</h3>
             <div className="mb-4">
-              <label className="block mb-2 font-medium text-sm text-slate-700 dark:text-slate-300">Variable:</label>
+              <label className="block mb-2 font-medium text-sm text-slate-700 dark:text-slate-300">{t("workflows.editor.properties.variable")}</label>
               <select
                 value={currentNode.data.variable || ''}
                 onChange={(e) => handleDataChange('variable', e.target.value)}
                 className="w-full px-3 py-2 rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400"
+                dir={isRTL ? 'rtl' : 'ltr'}
               >
-                <option value="">Select a variable</option>
+                <option value="">{t("workflows.editor.properties.selectVariable")}</option>
                 {availableVariables.map(v => (
                   <option key={v.value} value={v.value}>{v.label}</option>
                 ))}
               </select>
             </div>
             <div className="mb-4">
-              <label className="block mb-2 font-medium text-sm text-slate-700 dark:text-slate-300">Operator:</label>
+              <label className="block mb-2 font-medium text-sm text-slate-700 dark:text-slate-300">{t("workflows.editor.properties.operator")}</label>
               <select
                 value={currentNode.data.operator || 'equals'}
                 onChange={(e) => handleDataChange('operator', e.target.value)}
                 className="w-full px-3 py-2 rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400"
+                dir={isRTL ? 'rtl' : 'ltr'}
               >
-                <option value="equals">Equals</option>
-                <option value="not_equals">Not Equals</option>
-                <option value="contains">Contains</option>
-                <option value="greater_than">Greater Than</option>
-                <option value="less_than">Less Than</option>
-                <option value="is_set">Is Set (Exists)</option>
-                <option value="is_not_set">Is Not Set (Doesn't Exist)</option>
+                <option value="equals">{t("workflows.editor.properties.operators.equals")}</option>
+                <option value="not_equals">{t("workflows.editor.properties.operators.notEquals")}</option>
+                <option value="contains">{t("workflows.editor.properties.operators.contains")}</option>
+                <option value="greater_than">{t("workflows.editor.properties.operators.greaterThan")}</option>
+                <option value="less_than">{t("workflows.editor.properties.operators.lessThan")}</option>
+                <option value="is_set">{t("workflows.editor.properties.operators.isSet")}</option>
+                <option value="is_not_set">{t("workflows.editor.properties.operators.isNotSet")}</option>
               </select>
             </div>
             <div className="mb-4">
-              <label className="block mb-2 font-medium text-sm text-slate-700 dark:text-slate-300">Value:</label>
+              <label className="block mb-2 font-medium text-sm text-slate-700 dark:text-slate-300">{t("workflows.editor.properties.value")}</label>
               <input
                 type="text"
                 value={currentNode.data.value || ''}
                 onChange={(e) => handleDataChange('value', e.target.value)}
                 className="w-full px-3 py-2 rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 disabled:opacity-50 disabled:cursor-not-allowed"
-                placeholder="Value to compare against"
+                placeholder={t("workflows.editor.properties.valuePlaceholder")}
                 disabled={['is_set', 'is_not_set'].includes(currentNode.data.operator)}
+                dir={isRTL ? 'rtl' : 'ltr'}
               />
             </div>
           </div>
@@ -353,27 +364,29 @@ const PropertiesPanel = ({ selectedNode, nodes, setNodes, deleteNode }) => {
 
         {currentNode.type === 'knowledge' && (
           <div className="mb-5 p-4 bg-slate-50 dark:bg-slate-800/50 rounded-lg border border-slate-200 dark:border-slate-700">
-            <h3 className="text-base font-semibold mb-4 text-slate-900 dark:text-slate-100">Knowledge Search</h3>
+            <h3 className="text-base font-semibold mb-4 text-slate-900 dark:text-slate-100">{t("workflows.editor.properties.knowledgeSearch")}</h3>
             <div className="mb-4">
-              <label className="block mb-2 font-medium text-sm text-slate-700 dark:text-slate-300">Knowledge Base:</label>
+              <label className="block mb-2 font-medium text-sm text-slate-700 dark:text-slate-300">{t("workflows.editor.properties.knowledgeBase")}</label>
               <select
                 value={currentNode.data.knowledge_base_id || ''}
                 onChange={(e) => handleDataChange('knowledge_base_id', e.target.value ? parseInt(e.target.value) : null)}
                 className="w-full px-3 py-2 rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400"
+                dir={isRTL ? 'rtl' : 'ltr'}
               >
-                <option value="">None</option>
+                <option value="">{t("workflows.editor.properties.none")}</option>
                 {knowledgeBases.map((kb) => (
                   <option key={kb.id} value={kb.id}>{kb.name}</option>
                 ))}
               </select>
             </div>
             <div className="mb-4">
-              <label className="block mb-2 font-medium text-sm text-slate-700 dark:text-slate-300">Query:</label>
+              <label className="block mb-2 font-medium text-sm text-slate-700 dark:text-slate-300">{t("workflows.editor.properties.query")}</label>
               <VariableInput
                 value={currentNode.data.query || ''}
                 onChange={(e) => handleDataChange('query', e.target.value)}
-                placeholder="e.g., What is the capital of {{context.country}}?"
+                placeholder={t("workflows.editor.properties.queryPlaceholder")}
                 availableVars={availableVariables}
+                isRTL={isRTL}
               />
             </div>
           </div>
@@ -381,22 +394,24 @@ const PropertiesPanel = ({ selectedNode, nodes, setNodes, deleteNode }) => {
 
         {currentNode.type === 'http_request' && (
           <div className="mb-5 p-4 bg-slate-50 dark:bg-slate-800/50 rounded-lg border border-slate-200 dark:border-slate-700">
-            <h3 className="text-base font-semibold mb-4 text-slate-900 dark:text-slate-100">HTTP Request</h3>
+            <h3 className="text-base font-semibold mb-4 text-slate-900 dark:text-slate-100">{t("workflows.editor.properties.httpRequest")}</h3>
             <div className="mb-4">
-              <label className="block mb-2 font-medium text-sm text-slate-700 dark:text-slate-300">URL:</label>
+              <label className="block mb-2 font-medium text-sm text-slate-700 dark:text-slate-300">{t("workflows.editor.properties.url")}</label>
               <VariableInput
                 value={currentNode.data.url || ''}
                 onChange={(e) => handleDataChange('url', e.target.value)}
-                placeholder="e.g., https://api.example.com/data"
+                placeholder={t("workflows.editor.properties.urlPlaceholder")}
                 availableVars={availableVariables}
+                isRTL={isRTL}
               />
             </div>
             <div className="mb-4">
-              <label className="block mb-2 font-medium text-sm text-slate-700 dark:text-slate-300">Method:</label>
+              <label className="block mb-2 font-medium text-sm text-slate-700 dark:text-slate-300">{t("workflows.editor.properties.method")}</label>
               <select
                 value={currentNode.data.method || 'GET'}
                 onChange={(e) => handleDataChange('method', e.target.value)}
                 className="w-full px-3 py-2 rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400"
+                dir={isRTL ? 'rtl' : 'ltr'}
               >
                 <option value="GET">GET</option>
                 <option value="POST">POST</option>
@@ -405,23 +420,25 @@ const PropertiesPanel = ({ selectedNode, nodes, setNodes, deleteNode }) => {
               </select>
             </div>
             <div className="mb-4">
-              <label className="block mb-2 font-medium text-sm text-slate-700 dark:text-slate-300">Headers (JSON):</label>
+              <label className="block mb-2 font-medium text-sm text-slate-700 dark:text-slate-300">{t("workflows.editor.properties.httpHeaders")}</label>
               <textarea
                 value={currentNode.data.headers || ''}
                 onChange={(e) => handleDataChange('headers', e.target.value)}
-                placeholder='e.g., {"Content-Type": "application/json"}'
+                placeholder={t("workflows.editor.properties.httpHeadersPlaceholder")}
                 rows={4}
                 className="w-full px-3 py-2 rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400"
+                dir="ltr"
               />
             </div>
             <div className="mb-4">
-              <label className="block mb-2 font-medium text-sm text-slate-700 dark:text-slate-300">Body (JSON):</label>
+              <label className="block mb-2 font-medium text-sm text-slate-700 dark:text-slate-300">{t("workflows.editor.properties.httpBody")}</label>
               <textarea
                 value={currentNode.data.body || ''}
                 onChange={(e) => handleDataChange('body', e.target.value)}
-                placeholder='e.g., {"key": "{{context.value}}"}'
+                placeholder={t("workflows.editor.properties.httpBodyPlaceholder")}
                 rows={6}
                 className="w-full px-3 py-2 rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400"
+                dir="ltr"
               />
             </div>
           </div>
@@ -429,25 +446,27 @@ const PropertiesPanel = ({ selectedNode, nodes, setNodes, deleteNode }) => {
 
         {currentNode.type === 'data_manipulation' && (
           <div className="mb-5 p-4 bg-slate-50 dark:bg-slate-800/50 rounded-lg border border-slate-200 dark:border-slate-700">
-            <h3 className="text-base font-semibold mb-4 text-slate-900 dark:text-slate-100">Data Manipulation</h3>
+            <h3 className="text-base font-semibold mb-4 text-slate-900 dark:text-slate-100">{t("workflows.editor.properties.dataManipulation")}</h3>
             <div className="mb-4">
-              <label className="block mb-2 font-medium text-sm text-slate-700 dark:text-slate-300">Expression (Python):</label>
+              <label className="block mb-2 font-medium text-sm text-slate-700 dark:text-slate-300">{t("workflows.editor.properties.dataExpression")}</label>
               <textarea
                 value={currentNode.data.expression || ''}
                 onChange={(e) => handleDataChange('expression', e.target.value)}
-                placeholder="e.g., context.user_input.upper()"
+                placeholder={t("workflows.editor.properties.dataExpressionPlaceholder")}
                 rows={5}
                 className="w-full px-3 py-2 rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400"
+                dir="ltr"
               />
             </div>
             <div className="mb-4">
-              <label className="block mb-2 font-medium text-sm text-slate-700 dark:text-slate-300">Output Variable Name:</label>
+              <label className="block mb-2 font-medium text-sm text-slate-700 dark:text-slate-300">{t("workflows.editor.properties.outputVariable")}</label>
               <input
                 type="text"
                 value={currentNode.data.output_variable || ''}
                 onChange={(e) => handleDataChange('output_variable', e.target.value)}
                 className="w-full px-3 py-2 rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400"
-                placeholder="e.g., transformed_data"
+                placeholder={t("workflows.editor.properties.outputVariablePlaceholder")}
+                dir={isRTL ? 'rtl' : 'ltr'}
               />
             </div>
           </div>
@@ -455,15 +474,16 @@ const PropertiesPanel = ({ selectedNode, nodes, setNodes, deleteNode }) => {
 
         {currentNode.type === 'code' && (
           <div className="mb-5 p-4 bg-slate-50 dark:bg-slate-800/50 rounded-lg border border-slate-200 dark:border-slate-700">
-            <h3 className="text-base font-semibold mb-4 text-slate-900 dark:text-slate-100">Code Execution</h3>
+            <h3 className="text-base font-semibold mb-4 text-slate-900 dark:text-slate-100">{t("workflows.editor.properties.codeExecution")}</h3>
             <div className="mb-4">
-              <label className="block mb-2 font-medium text-sm text-slate-700 dark:text-slate-300">Python Code:</label>
+              <label className="block mb-2 font-medium text-sm text-slate-700 dark:text-slate-300">{t("workflows.editor.properties.pythonCode")}</label>
               <textarea
                 value={currentNode.data.code || ''}
                 onChange={(e) => handleDataChange('code', e.target.value)}
-                placeholder="e.g., print('Hello, World!') result = context.user_input * 2"
+                placeholder={t("workflows.editor.properties.pythonCodePlaceholder")}
                 rows={10}
                 className="w-full px-3 py-2 rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400"
+                dir="ltr"
               />
             </div>
           </div>
@@ -471,15 +491,16 @@ const PropertiesPanel = ({ selectedNode, nodes, setNodes, deleteNode }) => {
 
         {currentNode.type === 'listen' && (
           <div className="mb-5 p-4 bg-slate-50 dark:bg-slate-800/50 rounded-lg border border-slate-200 dark:border-slate-700">
-            <h3 className="text-base font-semibold mb-4 text-slate-900 dark:text-slate-100">Listen for Input</h3>
+            <h3 className="text-base font-semibold mb-4 text-slate-900 dark:text-slate-100">{t("workflows.editor.properties.listenForInput")}</h3>
             <div className="mb-4">
-              <label className="block mb-2 font-medium text-sm text-slate-700 dark:text-slate-300">Save User Input to Variable:</label>
+              <label className="block mb-2 font-medium text-sm text-slate-700 dark:text-slate-300">{t("workflows.editor.properties.saveInputToVariable")}</label>
               <input
                 type="text"
                 value={(currentNode.data.params?.save_to_variable) || ''}
                 onChange={(e) => handleParamsChange('save_to_variable', e.target.value)}
                 className="w-full px-3 py-2 rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400"
-                placeholder="e.g., user_email"
+                placeholder={t("workflows.editor.properties.saveInputToVariablePlaceholder")}
+                dir={isRTL ? 'rtl' : 'ltr'}
               />
             </div>
           </div>
@@ -487,43 +508,46 @@ const PropertiesPanel = ({ selectedNode, nodes, setNodes, deleteNode }) => {
 
         {currentNode.type === 'prompt' && (
           <div className="mb-5 p-4 bg-slate-50 dark:bg-slate-800/50 rounded-lg border border-slate-200 dark:border-slate-700">
-            <h3 className="text-base font-semibold mb-4 text-slate-900 dark:text-slate-100">Prompt for Input</h3>
+            <h3 className="text-base font-semibold mb-4 text-slate-900 dark:text-slate-100">{t("workflows.editor.properties.promptForInput")}</h3>
             <div className="mb-4">
-              <label className="block mb-2 font-medium text-sm text-slate-700 dark:text-slate-300">Prompt Text:</label>
+              <label className="block mb-2 font-medium text-sm text-slate-700 dark:text-slate-300">{t("workflows.editor.properties.promptText")}</label>
               <VariableInput
                 value={(currentNode.data.params?.prompt_text) || ''}
                 onChange={(e) => handleParamsChange('prompt_text', e.target.value)}
-                placeholder="e.g., What would you like to do today?"
+                placeholder={t("workflows.editor.properties.promptTextPlaceholder")}
                 availableVars={availableVariables}
+                isRTL={isRTL}
               />
               <p className="text-xs text-slate-500 dark:text-slate-400 mt-2">
-                The message shown to the user.
+                {t("workflows.editor.properties.promptTextHelp")}
               </p>
             </div>
             <div className="mb-4">
-              <label className="block mb-2 font-medium text-sm text-slate-700 dark:text-slate-300">Save Response As:</label>
+              <label className="block mb-2 font-medium text-sm text-slate-700 dark:text-slate-300">{t("workflows.editor.properties.saveResponseAs")}</label>
               <input
                 type="text"
                 value={(currentNode.data.params?.save_to_variable) || ''}
                 onChange={(e) => handleParamsChange('save_to_variable', e.target.value)}
                 className="w-full px-3 py-2 rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400"
-                placeholder="e.g., user_choice"
+                placeholder={t("workflows.editor.properties.saveResponseAsPlaceholder")}
+                dir={isRTL ? 'rtl' : 'ltr'}
               />
               <p className="text-xs text-slate-500 dark:text-slate-400 mt-2">
-                Variable to store user's response. Access with <code className="px-1.5 py-0.5 bg-slate-200 dark:bg-slate-700 rounded text-xs">{`{{context.${(currentNode.data.params?.save_to_variable) || 'variable_name'}}}`}</code>
+                {t("workflows.editor.properties.saveResponseHelp")} <code className="px-1.5 py-0.5 bg-slate-200 dark:bg-slate-700 rounded text-xs">{`{{context.${(currentNode.data.params?.save_to_variable) || 'variable_name'}}}`}</code>
               </p>
             </div>
             <div className="mb-4">
-              <label className="block mb-2 font-medium text-sm text-slate-700 dark:text-slate-300">Options (comma-separated):</label>
+              <label className="block mb-2 font-medium text-sm text-slate-700 dark:text-slate-300">{t("workflows.editor.properties.optionsCommaSeparated")}</label>
               <input
                 type="text"
                 value={(currentNode.data.params?.options) || ''}
                 onChange={(e) => handleParamsChange('options', e.target.value)}
                 className="w-full px-3 py-2 rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400"
-                placeholder="e.g., Login, Register, Browse"
+                placeholder={t("workflows.editor.properties.optionsPlaceholder")}
+                dir={isRTL ? 'rtl' : 'ltr'}
               />
               <p className="text-xs text-slate-500 dark:text-slate-400 mt-2">
-                Optional. Leave empty for free-form text input.
+                {t("workflows.editor.properties.optionsHelp")}
               </p>
             </div>
           </div>
@@ -531,56 +555,58 @@ const PropertiesPanel = ({ selectedNode, nodes, setNodes, deleteNode }) => {
 
         {currentNode.type === 'form' && (
           <div className="mb-5 p-4 bg-slate-50 dark:bg-slate-800/50 rounded-lg border border-slate-200 dark:border-slate-700">
-            <h3 className="text-base font-semibold mb-4 text-slate-900 dark:text-slate-100">Form Configuration</h3>
+            <h3 className="text-base font-semibold mb-4 text-slate-900 dark:text-slate-100">{t("workflows.editor.properties.formConfiguration")}</h3>
             <div className="mb-4">
-              <label className="block mb-2 font-medium text-sm text-slate-700 dark:text-slate-300">Form Title:</label>
+              <label className="block mb-2 font-medium text-sm text-slate-700 dark:text-slate-300">{t("workflows.editor.properties.formTitle")}</label>
               <input
                 type="text"
                 value={(currentNode.data.params?.title) || ''}
                 onChange={(e) => handleParamsChange('title', e.target.value)}
                 className="w-full px-3 py-2 rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400"
-                placeholder="e.g., Customer Information"
+                placeholder={t("workflows.editor.properties.formTitlePlaceholder")}
+                dir={isRTL ? 'rtl' : 'ltr'}
               />
             </div>
             <div className="mb-5">
-              <label className="block mb-2 font-medium text-sm text-slate-700 dark:text-slate-300">Save Form Data to Variable:</label>
+              <label className="block mb-2 font-medium text-sm text-slate-700 dark:text-slate-300">{t("workflows.editor.properties.saveFormDataToVariable")}</label>
               <input
                 type="text"
                 value={(currentNode.data.params?.save_to_variable) || ''}
                 onChange={(e) => handleParamsChange('save_to_variable', e.target.value)}
                 className="w-full px-3 py-2 rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400"
-                placeholder="e.g., customer_data"
+                placeholder={t("workflows.editor.properties.saveFormDataToVariablePlaceholder")}
+                dir={isRTL ? 'rtl' : 'ltr'}
               />
             </div>
 
             <div>
-              <h4 className="text-sm font-semibold mb-3 text-slate-900 dark:text-slate-100">Form Fields</h4>
+              <h4 className="text-sm font-semibold mb-3 text-slate-900 dark:text-slate-100">{t("workflows.editor.properties.formFields")}</h4>
               {(currentNode.data.params?.fields || []).map((field, index) => (
                 <div key={index} className="border border-slate-300 dark:border-slate-600 rounded-md p-3 mb-3 bg-white dark:bg-slate-900">
                   <div className="flex justify-between items-center mb-3">
-                    <strong className="text-sm text-slate-900 dark:text-slate-100">Field #{index + 1}</strong>
+                    <strong className="text-sm text-slate-900 dark:text-slate-100">{t("workflows.editor.properties.fieldNumber", { number: index + 1 })}</strong>
                     <button onClick={() => {
                       const newFields = [...currentNode.data.params.fields];
                       newFields.splice(index, 1);
                       handleParamsChange('fields', newFields);
-                    }} className="text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 bg-transparent border-none cursor-pointer text-sm">Remove</button>
+                    }} className="text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 bg-transparent border-none cursor-pointer text-sm">{t("workflows.editor.properties.removeField")}</button>
                   </div>
                   <div className="mb-2">
-                    <label className="block mb-1 text-xs font-medium text-slate-700 dark:text-slate-300">Name (Variable Key):</label>
-                    <input type="text" value={field.name} onChange={(e) => handleFieldChange(index, 'name', e.target.value)} className="w-full px-2 py-1.5 text-xs rounded border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400" placeholder="e.g., full_name" />
+                    <label className="block mb-1 text-xs font-medium text-slate-700 dark:text-slate-300">{t("workflows.editor.properties.fieldName")}</label>
+                    <input type="text" value={field.name} onChange={(e) => handleFieldChange(index, 'name', e.target.value)} className="w-full px-2 py-1.5 text-xs rounded border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400" placeholder={t("workflows.editor.properties.fieldNamePlaceholder")} dir={isRTL ? 'rtl' : 'ltr'} />
                   </div>
                   <div className="mb-2">
-                    <label className="block mb-1 text-xs font-medium text-slate-700 dark:text-slate-300">Label (Display Text):</label>
-                    <input type="text" value={field.label} onChange={(e) => handleFieldChange(index, 'label', e.target.value)} className="w-full px-2 py-1.5 text-xs rounded border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400" placeholder="e.g., Full Name" />
+                    <label className="block mb-1 text-xs font-medium text-slate-700 dark:text-slate-300">{t("workflows.editor.properties.fieldLabel")}</label>
+                    <input type="text" value={field.label} onChange={(e) => handleFieldChange(index, 'label', e.target.value)} className="w-full px-2 py-1.5 text-xs rounded border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400" placeholder={t("workflows.editor.properties.fieldLabelPlaceholder")} dir={isRTL ? 'rtl' : 'ltr'} />
                   </div>
                   <div>
-                    <label className="block mb-1 text-xs font-medium text-slate-700 dark:text-slate-300">Type:</label>
-                    <select value={field.type} onChange={(e) => handleFieldChange(index, 'type', e.target.value)} className="w-full px-2 py-1.5 text-xs rounded border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400">
-                      <option value="text">Text</option>
-                      <option value="email">Email</option>
-                      <option value="number">Number</option>
-                      <option value="tel">Phone</option>
-                      <option value="textarea">Text Area</option>
+                    <label className="block mb-1 text-xs font-medium text-slate-700 dark:text-slate-300">{t("workflows.editor.properties.fieldType")}</label>
+                    <select value={field.type} onChange={(e) => handleFieldChange(index, 'type', e.target.value)} className="w-full px-2 py-1.5 text-xs rounded border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400" dir={isRTL ? 'rtl' : 'ltr'}>
+                      <option value="text">{t("workflows.editor.properties.fieldTypes.text")}</option>
+                      <option value="email">{t("workflows.editor.properties.fieldTypes.email")}</option>
+                      <option value="number">{t("workflows.editor.properties.fieldTypes.number")}</option>
+                      <option value="tel">{t("workflows.editor.properties.fieldTypes.phone")}</option>
+                      <option value="textarea">{t("workflows.editor.properties.fieldTypes.textarea")}</option>
                     </select>
                   </div>
                 </div>
@@ -589,7 +615,7 @@ const PropertiesPanel = ({ selectedNode, nodes, setNodes, deleteNode }) => {
                 const newFields = [...(currentNode.data.params?.fields || []), { name: '', label: '', type: 'text' }];
                 handleParamsChange('fields', newFields);
               }} className="w-full py-2.5 bg-blue-50 dark:bg-blue-950/30 border border-dashed border-blue-300 dark:border-blue-700 rounded cursor-pointer text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-950/50 transition-colors text-sm font-medium">
-                + Add Field
+                {t("workflows.editor.properties.addField")}
               </button>
             </div>
           </div>
@@ -597,17 +623,18 @@ const PropertiesPanel = ({ selectedNode, nodes, setNodes, deleteNode }) => {
 
         {currentNode.type === 'output' && (
           <div className="mb-5 p-4 bg-slate-50 dark:bg-slate-800/50 rounded-lg border border-slate-200 dark:border-slate-700">
-            <h3 className="text-base font-semibold mb-4 text-slate-900 dark:text-slate-100">Workflow Output</h3>
+            <h3 className="text-base font-semibold mb-4 text-slate-900 dark:text-slate-100">{t("workflows.editor.properties.workflowOutput")}</h3>
             <div className="mb-4">
-              <label className="block mb-2 font-medium text-sm text-slate-700 dark:text-slate-300">Output Value:</label>
+              <label className="block mb-2 font-medium text-sm text-slate-700 dark:text-slate-300">{t("workflows.editor.properties.outputValue")}</label>
               <VariableInput
                 value={currentNode.data.output_value || ''}
                 onChange={(e) => handleDataChange('output_value', e.target.value)}
-                placeholder="e.g., {{llm_node_id.output}}"
+                placeholder={t("workflows.editor.properties.outputValuePlaceholder")}
                 availableVars={availableVariables}
+                isRTL={isRTL}
               />
               <p className="text-xs text-slate-500 dark:text-slate-400 mt-2">
-                This message will be sent back to the user as the final response.
+                {t("workflows.editor.properties.outputValueHelp")}
               </p>
             </div>
           </div>
@@ -615,16 +642,17 @@ const PropertiesPanel = ({ selectedNode, nodes, setNodes, deleteNode }) => {
 
         {currentNode.type === 'start' && (
           <div className="mb-5 p-4 bg-slate-50 dark:bg-slate-800/50 rounded-lg border border-slate-200 dark:border-slate-700">
-            <h3 className="text-base font-semibold mb-4 text-slate-900 dark:text-slate-100">Start Node</h3>
-            <p className="text-sm text-slate-600 dark:text-slate-400 mb-4">This node marks the beginning of your workflow.</p>
+            <h3 className="text-base font-semibold mb-4 text-slate-900 dark:text-slate-100">{t("workflows.editor.properties.startNode")}</h3>
+            <p className="text-sm text-slate-600 dark:text-slate-400 mb-4">{t("workflows.editor.properties.startNodeDescription")}</p>
             <div className="mb-4">
-              <label className="block mb-2 font-medium text-sm text-slate-700 dark:text-slate-300">Initial Input Variable Name:</label>
+              <label className="block mb-2 font-medium text-sm text-slate-700 dark:text-slate-300">{t("workflows.editor.properties.initialInputVariable")}</label>
               <input
                 type="text"
                 value={currentNode.data.initial_input_variable || 'user_message'}
                 onChange={(e) => handleDataChange('initial_input_variable', e.target.value)}
                 className="w-full px-3 py-2 rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400"
-                placeholder="e.g., user_query"
+                placeholder={t("workflows.editor.properties.initialInputVariablePlaceholder")}
+                dir={isRTL ? 'rtl' : 'ltr'}
               />
             </div>
           </div>
@@ -636,44 +664,47 @@ const PropertiesPanel = ({ selectedNode, nodes, setNodes, deleteNode }) => {
         {currentNode.type === 'trigger_websocket' && (
           <div className="mb-5 p-4 bg-cyan-50 dark:bg-cyan-900/20 rounded-lg border-2 border-cyan-200 dark:border-cyan-700">
             <h3 className="text-base font-bold mb-2 text-cyan-900 dark:text-cyan-100 flex items-center gap-2">
-              <span className="text-cyan-600 dark:text-cyan-400">⚡</span> WebSocket Trigger
+              <span className="text-cyan-600 dark:text-cyan-400">⚡</span> {t("workflows.editor.properties.triggers.websocket")}
             </h3>
-            <p className="text-sm text-cyan-700 dark:text-cyan-300 mb-4">Triggers workflow when a WebSocket message is received</p>
+            <p className="text-sm text-cyan-700 dark:text-cyan-300 mb-4">{t("workflows.editor.properties.triggers.websocketDescription")}</p>
             <div className="mb-4">
-              <label className="block mb-2 font-medium text-sm text-slate-700 dark:text-slate-300">Trigger Label:</label>
+              <label className="block mb-2 font-medium text-sm text-slate-700 dark:text-slate-300">{t("workflows.editor.properties.triggers.triggerLabel")}</label>
               <input
                 type="text"
                 value={currentNode.data.label || ''}
                 onChange={(e) => handleDataChange('label', e.target.value)}
                 className="w-full px-3 py-2 rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500 dark:focus:ring-cyan-400"
-                placeholder="e.g., Customer Support Chat"
+                placeholder={t("workflows.editor.properties.triggers.triggerLabelPlaceholder")}
+                dir={isRTL ? 'rtl' : 'ltr'}
               />
             </div>
             <div className="mb-4">
-              <label className="block mb-2 font-medium text-sm text-slate-700 dark:text-slate-300">Fallback Agent:</label>
+              <label className="block mb-2 font-medium text-sm text-slate-700 dark:text-slate-300">{t("workflows.editor.properties.triggers.fallbackAgent")}</label>
               <select
                 value={currentNode.data.agent_id || ''}
                 onChange={(e) => handleAgentChange(e.target.value)}
                 className="w-full px-3 py-2 rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500 dark:focus:ring-cyan-400"
+                dir={isRTL ? 'rtl' : 'ltr'}
               >
-                <option value="">Select Agent</option>
+                <option value="">{t("workflows.editor.properties.triggers.selectAgent")}</option>
                 {agents.map(agent => (
                   <option key={agent.id} value={agent.id}>
                     {agent.name}
                   </option>
                 ))}
               </select>
-              <p className="text-xs text-slate-600 dark:text-slate-400 mt-1">Agent to use if workflow fails or no intent matches</p>
+              <p className="text-xs text-slate-600 dark:text-slate-400 mt-1">{t("workflows.editor.properties.triggers.fallbackAgentHelp")}</p>
             </div>
             <div className="mb-4">
-              <label className="block mb-2 font-medium text-sm text-slate-700 dark:text-slate-300">Auto Respond:</label>
+              <label className="block mb-2 font-medium text-sm text-slate-700 dark:text-slate-300">{t("workflows.editor.properties.triggers.autoRespond")}</label>
               <select
                 value={currentNode.data.auto_respond !== false ? 'true' : 'false'}
                 onChange={(e) => handleDataChange('auto_respond', e.target.value === 'true')}
                 className="w-full px-3 py-2 rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500 dark:focus:ring-cyan-400"
+                dir={isRTL ? 'rtl' : 'ltr'}
               >
-                <option value="true">Yes - Auto respond immediately</option>
-                <option value="false">No - Wait for manual trigger</option>
+                <option value="true">{t("workflows.editor.properties.triggers.autoRespondYes")}</option>
+                <option value="false">{t("workflows.editor.properties.triggers.autoRespondNo")}</option>
               </select>
             </div>
           </div>
@@ -683,44 +714,47 @@ const PropertiesPanel = ({ selectedNode, nodes, setNodes, deleteNode }) => {
         {currentNode.type === 'trigger_whatsapp' && (
           <div className="mb-5 p-4 bg-green-50 dark:bg-green-900/20 rounded-lg border-2 border-green-200 dark:border-green-700">
             <h3 className="text-base font-bold mb-2 text-green-900 dark:text-green-100 flex items-center gap-2">
-              <span className="text-green-600 dark:text-green-400">⚡</span> WhatsApp Trigger
+              <span className="text-green-600 dark:text-green-400">⚡</span> {t("workflows.editor.properties.triggers.whatsapp")}
             </h3>
-            <p className="text-sm text-green-700 dark:text-green-300 mb-4">Triggers workflow when a WhatsApp message is received</p>
+            <p className="text-sm text-green-700 dark:text-green-300 mb-4">{t("workflows.editor.properties.triggers.whatsappDescription")}</p>
             <div className="mb-4">
-              <label className="block mb-2 font-medium text-sm text-slate-700 dark:text-slate-300">Trigger Label:</label>
+              <label className="block mb-2 font-medium text-sm text-slate-700 dark:text-slate-300">{t("workflows.editor.properties.triggers.triggerLabel")}</label>
               <input
                 type="text"
                 value={currentNode.data.label || ''}
                 onChange={(e) => handleDataChange('label', e.target.value)}
                 className="w-full px-3 py-2 rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 text-sm focus:outline-none focus:ring-2 focus:ring-green-500 dark:focus:ring-green-400"
-                placeholder="e.g., WhatsApp Support"
+                placeholder={t("workflows.editor.properties.triggers.whatsappPlaceholder")}
+                dir={isRTL ? 'rtl' : 'ltr'}
               />
             </div>
             <div className="mb-4">
-              <label className="block mb-2 font-medium text-sm text-slate-700 dark:text-slate-300">Fallback Agent:</label>
+              <label className="block mb-2 font-medium text-sm text-slate-700 dark:text-slate-300">{t("workflows.editor.properties.triggers.fallbackAgent")}</label>
               <select
                 value={currentNode.data.agent_id || ''}
                 onChange={(e) => handleAgentChange(e.target.value)}
                 className="w-full px-3 py-2 rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 text-sm focus:outline-none focus:ring-2 focus:ring-green-500 dark:focus:ring-green-400"
+                dir={isRTL ? 'rtl' : 'ltr'}
               >
-                <option value="">Select Agent</option>
+                <option value="">{t("workflows.editor.properties.triggers.selectAgent")}</option>
                 {agents.map(agent => (
                   <option key={agent.id} value={agent.id}>
                     {agent.name}
                   </option>
                 ))}
               </select>
-              <p className="text-xs text-slate-600 dark:text-slate-400 mt-1">Agent to use if workflow fails or no intent matches</p>
+              <p className="text-xs text-slate-600 dark:text-slate-400 mt-1">{t("workflows.editor.properties.triggers.fallbackAgentHelp")}</p>
             </div>
             <div className="mb-4">
-              <label className="block mb-2 font-medium text-sm text-slate-700 dark:text-slate-300">Auto Respond:</label>
+              <label className="block mb-2 font-medium text-sm text-slate-700 dark:text-slate-300">{t("workflows.editor.properties.triggers.autoRespond")}</label>
               <select
                 value={currentNode.data.auto_respond !== false ? 'true' : 'false'}
                 onChange={(e) => handleDataChange('auto_respond', e.target.value === 'true')}
                 className="w-full px-3 py-2 rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 text-sm focus:outline-none focus:ring-2 focus:ring-green-500 dark:focus:ring-green-400"
+                dir={isRTL ? 'rtl' : 'ltr'}
               >
-                <option value="true">Yes - Auto respond immediately</option>
-                <option value="false">No - Wait for manual trigger</option>
+                <option value="true">{t("workflows.editor.properties.triggers.autoRespondYes")}</option>
+                <option value="false">{t("workflows.editor.properties.triggers.autoRespondNo")}</option>
               </select>
             </div>
           </div>
@@ -730,44 +764,47 @@ const PropertiesPanel = ({ selectedNode, nodes, setNodes, deleteNode }) => {
         {currentNode.type === 'trigger_telegram' && (
           <div className="mb-5 p-4 bg-sky-50 dark:bg-sky-900/20 rounded-lg border-2 border-sky-200 dark:border-sky-700">
             <h3 className="text-base font-bold mb-2 text-sky-900 dark:text-sky-100 flex items-center gap-2">
-              <span className="text-sky-600 dark:text-sky-400">⚡</span> Telegram Trigger
+              <span className="text-sky-600 dark:text-sky-400">⚡</span> {t("workflows.editor.properties.triggers.telegram")}
             </h3>
-            <p className="text-sm text-sky-700 dark:text-sky-300 mb-4">Triggers workflow when a Telegram message is received</p>
+            <p className="text-sm text-sky-700 dark:text-sky-300 mb-4">{t("workflows.editor.properties.triggers.telegramDescription")}</p>
             <div className="mb-4">
-              <label className="block mb-2 font-medium text-sm text-slate-700 dark:text-slate-300">Trigger Label:</label>
+              <label className="block mb-2 font-medium text-sm text-slate-700 dark:text-slate-300">{t("workflows.editor.properties.triggers.triggerLabel")}</label>
               <input
                 type="text"
                 value={currentNode.data.label || ''}
                 onChange={(e) => handleDataChange('label', e.target.value)}
                 className="w-full px-3 py-2 rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 text-sm focus:outline-none focus:ring-2 focus:ring-sky-500 dark:focus:ring-sky-400"
-                placeholder="e.g., Telegram Bot Support"
+                placeholder={t("workflows.editor.properties.triggers.telegramPlaceholder")}
+                dir={isRTL ? 'rtl' : 'ltr'}
               />
             </div>
             <div className="mb-4">
-              <label className="block mb-2 font-medium text-sm text-slate-700 dark:text-slate-300">Fallback Agent:</label>
+              <label className="block mb-2 font-medium text-sm text-slate-700 dark:text-slate-300">{t("workflows.editor.properties.triggers.fallbackAgent")}</label>
               <select
                 value={currentNode.data.agent_id || ''}
                 onChange={(e) => handleAgentChange(e.target.value)}
                 className="w-full px-3 py-2 rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 text-sm focus:outline-none focus:ring-2 focus:ring-sky-500 dark:focus:ring-sky-400"
+                dir={isRTL ? 'rtl' : 'ltr'}
               >
-                <option value="">Select Agent</option>
+                <option value="">{t("workflows.editor.properties.triggers.selectAgent")}</option>
                 {agents.map(agent => (
                   <option key={agent.id} value={agent.id}>
                     {agent.name}
                   </option>
                 ))}
               </select>
-              <p className="text-xs text-slate-600 dark:text-slate-400 mt-1">Agent to use if workflow fails or no intent matches</p>
+              <p className="text-xs text-slate-600 dark:text-slate-400 mt-1">{t("workflows.editor.properties.triggers.fallbackAgentHelp")}</p>
             </div>
             <div className="mb-4">
-              <label className="block mb-2 font-medium text-sm text-slate-700 dark:text-slate-300">Auto Respond:</label>
+              <label className="block mb-2 font-medium text-sm text-slate-700 dark:text-slate-300">{t("workflows.editor.properties.triggers.autoRespond")}</label>
               <select
                 value={currentNode.data.auto_respond !== false ? 'true' : 'false'}
                 onChange={(e) => handleDataChange('auto_respond', e.target.value === 'true')}
                 className="w-full px-3 py-2 rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 text-sm focus:outline-none focus:ring-2 focus:ring-sky-500 dark:focus:ring-sky-400"
+                dir={isRTL ? 'rtl' : 'ltr'}
               >
-                <option value="true">Yes - Auto respond immediately</option>
-                <option value="false">No - Wait for manual trigger</option>
+                <option value="true">{t("workflows.editor.properties.triggers.autoRespondYes")}</option>
+                <option value="false">{t("workflows.editor.properties.triggers.autoRespondNo")}</option>
               </select>
             </div>
           </div>
@@ -777,44 +814,47 @@ const PropertiesPanel = ({ selectedNode, nodes, setNodes, deleteNode }) => {
         {currentNode.type === 'trigger_instagram' && (
           <div className="mb-5 p-4 bg-pink-50 dark:bg-pink-900/20 rounded-lg border-2 border-pink-200 dark:border-pink-700">
             <h3 className="text-base font-bold mb-2 text-pink-900 dark:text-pink-100 flex items-center gap-2">
-              <span className="text-pink-600 dark:text-pink-400">⚡</span> Instagram Trigger
+              <span className="text-pink-600 dark:text-pink-400">⚡</span> {t("workflows.editor.properties.triggers.instagram")}
             </h3>
-            <p className="text-sm text-pink-700 dark:text-pink-300 mb-4">Triggers workflow when an Instagram DM is received</p>
+            <p className="text-sm text-pink-700 dark:text-pink-300 mb-4">{t("workflows.editor.properties.triggers.instagramDescription")}</p>
             <div className="mb-4">
-              <label className="block mb-2 font-medium text-sm text-slate-700 dark:text-slate-300">Trigger Label:</label>
+              <label className="block mb-2 font-medium text-sm text-slate-700 dark:text-slate-300">{t("workflows.editor.properties.triggers.triggerLabel")}</label>
               <input
                 type="text"
                 value={currentNode.data.label || ''}
                 onChange={(e) => handleDataChange('label', e.target.value)}
                 className="w-full px-3 py-2 rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 text-sm focus:outline-none focus:ring-2 focus:ring-pink-500 dark:focus:ring-pink-400"
-                placeholder="e.g., Instagram Customer Service"
+                placeholder={t("workflows.editor.properties.triggers.instagramPlaceholder")}
+                dir={isRTL ? 'rtl' : 'ltr'}
               />
             </div>
             <div className="mb-4">
-              <label className="block mb-2 font-medium text-sm text-slate-700 dark:text-slate-300">Fallback Agent:</label>
+              <label className="block mb-2 font-medium text-sm text-slate-700 dark:text-slate-300">{t("workflows.editor.properties.triggers.fallbackAgent")}</label>
               <select
                 value={currentNode.data.agent_id || ''}
                 onChange={(e) => handleAgentChange(e.target.value)}
                 className="w-full px-3 py-2 rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 text-sm focus:outline-none focus:ring-2 focus:ring-pink-500 dark:focus:ring-pink-400"
+                dir={isRTL ? 'rtl' : 'ltr'}
               >
-                <option value="">Select Agent</option>
+                <option value="">{t("workflows.editor.properties.triggers.selectAgent")}</option>
                 {agents.map(agent => (
                   <option key={agent.id} value={agent.id}>
                     {agent.name}
                   </option>
                 ))}
               </select>
-              <p className="text-xs text-slate-600 dark:text-slate-400 mt-1">Agent to use if workflow fails or no intent matches</p>
+              <p className="text-xs text-slate-600 dark:text-slate-400 mt-1">{t("workflows.editor.properties.triggers.fallbackAgentHelp")}</p>
             </div>
             <div className="mb-4">
-              <label className="block mb-2 font-medium text-sm text-slate-700 dark:text-slate-300">Auto Respond:</label>
+              <label className="block mb-2 font-medium text-sm text-slate-700 dark:text-slate-300">{t("workflows.editor.properties.triggers.autoRespond")}</label>
               <select
                 value={currentNode.data.auto_respond !== false ? 'true' : 'false'}
                 onChange={(e) => handleDataChange('auto_respond', e.target.value === 'true')}
                 className="w-full px-3 py-2 rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 text-sm focus:outline-none focus:ring-2 focus:ring-pink-500 dark:focus:ring-pink-400"
+                dir={isRTL ? 'rtl' : 'ltr'}
               >
-                <option value="true">Yes - Auto respond immediately</option>
-                <option value="false">No - Wait for manual trigger</option>
+                <option value="true">{t("workflows.editor.properties.triggers.autoRespondYes")}</option>
+                <option value="false">{t("workflows.editor.properties.triggers.autoRespondNo")}</option>
               </select>
             </div>
           </div>
@@ -825,29 +865,31 @@ const PropertiesPanel = ({ selectedNode, nodes, setNodes, deleteNode }) => {
         {/* Intent Router Node */}
         {currentNode.type === 'intent_router' && (
           <div className="mb-5 p-4 bg-slate-50 dark:bg-slate-800/50 rounded-lg border border-slate-200 dark:border-slate-700">
-            <h3 className="text-base font-semibold mb-4 text-slate-900 dark:text-slate-100">Intent Router</h3>
-            <p className="text-sm text-slate-600 dark:text-slate-400 mb-4">Route conversations based on detected intents.</p>
+            <h3 className="text-base font-semibold mb-4 text-slate-900 dark:text-slate-100">{t("workflows.editor.properties.chat.intentRouter")}</h3>
+            <p className="text-sm text-slate-600 dark:text-slate-400 mb-4">{t("workflows.editor.properties.chat.intentRouterDescription")}</p>
             <div className="mb-4">
-              <label className="block mb-2 font-medium text-sm text-slate-700 dark:text-slate-300">Default Route (No Intent):</label>
+              <label className="block mb-2 font-medium text-sm text-slate-700 dark:text-slate-300">{t("workflows.editor.properties.chat.defaultRoute")}</label>
               <select
                 value={currentNode.data.default_route || ''}
                 onChange={(e) => handleDataChange('default_route', e.target.value)}
                 className="w-full px-3 py-2 rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400"
+                dir={isRTL ? 'rtl' : 'ltr'}
               >
-                <option value="">Select default action</option>
-                <option value="continue">Continue to next node</option>
-                <option value="escalate">Escalate to human</option>
-                <option value="fallback">Use fallback response</option>
+                <option value="">{t("workflows.editor.properties.chat.selectDefaultAction")}</option>
+                <option value="continue">{t("workflows.editor.properties.chat.continueToNext")}</option>
+                <option value="escalate">{t("workflows.editor.properties.chat.escalateToHuman")}</option>
+                <option value="fallback">{t("workflows.editor.properties.chat.useFallback")}</option>
               </select>
             </div>
             <div className="mb-4">
-              <label className="block mb-2 font-medium text-sm text-slate-700 dark:text-slate-300">Save Intent To Variable:</label>
+              <label className="block mb-2 font-medium text-sm text-slate-700 dark:text-slate-300">{t("workflows.editor.properties.chat.saveIntentTo")}</label>
               <input
                 type="text"
                 value={currentNode.data.intent_variable || 'detected_intent'}
                 onChange={(e) => handleDataChange('intent_variable', e.target.value)}
                 className="w-full px-3 py-2 rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400"
-                placeholder="e.g., detected_intent"
+                placeholder={t("workflows.editor.properties.chat.saveIntentToPlaceholder")}
+                dir={isRTL ? 'rtl' : 'ltr'}
               />
             </div>
           </div>
@@ -856,20 +898,21 @@ const PropertiesPanel = ({ selectedNode, nodes, setNodes, deleteNode }) => {
         {/* Entity Collector Node */}
         {currentNode.type === 'entity_collector' && (
           <div className="mb-5 p-4 bg-slate-50 dark:bg-slate-800/50 rounded-lg border border-slate-200 dark:border-slate-700">
-            <h3 className="text-base font-semibold mb-4 text-slate-900 dark:text-slate-100">Entity Collector</h3>
-            <p className="text-sm text-slate-600 dark:text-slate-400 mb-4">Extract and collect entities from user messages.</p>
+            <h3 className="text-base font-semibold mb-4 text-slate-900 dark:text-slate-100">{t("workflows.editor.properties.chat.entityCollector")}</h3>
+            <p className="text-sm text-slate-600 dark:text-slate-400 mb-4">{t("workflows.editor.properties.chat.entityCollectorDescription")}</p>
             <div className="mb-4">
-              <label className="block mb-2 font-medium text-sm text-slate-700 dark:text-slate-300">Entities to Collect (comma-separated):</label>
+              <label className="block mb-2 font-medium text-sm text-slate-700 dark:text-slate-300">{t("workflows.editor.properties.chat.entitiesToCollect")}</label>
               <input
                 type="text"
                 value={currentNode.data.entity_names || ''}
                 onChange={(e) => handleDataChange('entity_names', e.target.value)}
                 className="w-full px-3 py-2 rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400"
-                placeholder="e.g., order_number, email, phone"
+                placeholder={t("workflows.editor.properties.chat.entitiesToCollectPlaceholder")}
+                dir={isRTL ? 'rtl' : 'ltr'}
               />
             </div>
             <div className="mb-4">
-              <label className="block mb-2 font-medium text-sm text-slate-700 dark:text-slate-300">Max Collection Attempts:</label>
+              <label className="block mb-2 font-medium text-sm text-slate-700 dark:text-slate-300">{t("workflows.editor.properties.chat.maxAttempts")}</label>
               <input
                 type="number"
                 value={currentNode.data.max_attempts || 3}
@@ -877,16 +920,18 @@ const PropertiesPanel = ({ selectedNode, nodes, setNodes, deleteNode }) => {
                 className="w-full px-3 py-2 rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400"
                 min="1"
                 max="10"
+                dir={isRTL ? 'rtl' : 'ltr'}
               />
             </div>
             <div className="mb-4">
-              <label className="block mb-2 font-medium text-sm text-slate-700 dark:text-slate-300">Save Entities To:</label>
+              <label className="block mb-2 font-medium text-sm text-slate-700 dark:text-slate-300">{t("workflows.editor.properties.chat.saveEntitiesTo")}</label>
               <input
                 type="text"
                 value={currentNode.data.save_to_variable || 'collected_entities'}
                 onChange={(e) => handleDataChange('save_to_variable', e.target.value)}
                 className="w-full px-3 py-2 rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400"
-                placeholder="e.g., collected_entities"
+                placeholder={t("workflows.editor.properties.chat.saveEntitiesToPlaceholder")}
+                dir={isRTL ? 'rtl' : 'ltr'}
               />
             </div>
           </div>
@@ -895,39 +940,42 @@ const PropertiesPanel = ({ selectedNode, nodes, setNodes, deleteNode }) => {
         {/* Check Entity Node */}
         {currentNode.type === 'check_entity' && (
           <div className="mb-5 p-4 bg-slate-50 dark:bg-slate-800/50 rounded-lg border border-slate-200 dark:border-slate-700">
-            <h3 className="text-base font-semibold mb-4 text-slate-900 dark:text-slate-100">Check Entity</h3>
-            <p className="text-sm text-slate-600 dark:text-slate-400 mb-4">Verify if specific entities exist in the context.</p>
+            <h3 className="text-base font-semibold mb-4 text-slate-900 dark:text-slate-100">{t("workflows.editor.properties.chat.checkEntity")}</h3>
+            <p className="text-sm text-slate-600 dark:text-slate-400 mb-4">{t("workflows.editor.properties.chat.checkEntityDescription")}</p>
             <div className="mb-4">
-              <label className="block mb-2 font-medium text-sm text-slate-700 dark:text-slate-300">Entity Name to Check:</label>
+              <label className="block mb-2 font-medium text-sm text-slate-700 dark:text-slate-300">{t("workflows.editor.properties.chat.entityNameToCheck")}</label>
               <input
                 type="text"
                 value={currentNode.data.entity_name || ''}
                 onChange={(e) => handleDataChange('entity_name', e.target.value)}
                 className="w-full px-3 py-2 rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400"
-                placeholder="e.g., order_number"
+                placeholder={t("workflows.editor.properties.chat.entityNameToCheckPlaceholder")}
+                dir={isRTL ? 'rtl' : 'ltr'}
               />
             </div>
             <div className="mb-4">
-              <label className="block mb-2 font-medium text-sm text-slate-700 dark:text-slate-300">Validation Rule:</label>
+              <label className="block mb-2 font-medium text-sm text-slate-700 dark:text-slate-300">{t("workflows.editor.properties.chat.validationRule")}</label>
               <select
                 value={currentNode.data.validation_rule || 'exists'}
                 onChange={(e) => handleDataChange('validation_rule', e.target.value)}
                 className="w-full px-3 py-2 rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400"
+                dir={isRTL ? 'rtl' : 'ltr'}
               >
-                <option value="exists">Entity exists</option>
-                <option value="not_empty">Not empty</option>
-                <option value="matches_pattern">Matches pattern</option>
+                <option value="exists">{t("workflows.editor.properties.chat.entityExists")}</option>
+                <option value="not_empty">{t("workflows.editor.properties.chat.notEmpty")}</option>
+                <option value="matches_pattern">{t("workflows.editor.properties.chat.matchesPattern")}</option>
               </select>
             </div>
             {currentNode.data.validation_rule === 'matches_pattern' && (
               <div className="mb-4">
-                <label className="block mb-2 font-medium text-sm text-slate-700 dark:text-slate-300">Regex Pattern:</label>
+                <label className="block mb-2 font-medium text-sm text-slate-700 dark:text-slate-300">{t("workflows.editor.properties.chat.regexPattern")}</label>
                 <input
                   type="text"
                   value={currentNode.data.validation_pattern || ''}
                   onChange={(e) => handleDataChange('validation_pattern', e.target.value)}
                   className="w-full px-3 py-2 rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400"
-                  placeholder="e.g., ^ORD-[0-9]{6}$"
+                  placeholder={t("workflows.editor.properties.chat.regexPatternPlaceholder")}
+                  dir="ltr"
                 />
               </div>
             )}
@@ -937,37 +985,40 @@ const PropertiesPanel = ({ selectedNode, nodes, setNodes, deleteNode }) => {
         {/* Update Context Node */}
         {currentNode.type === 'update_context' && (
           <div className="mb-5 p-4 bg-slate-50 dark:bg-slate-800/50 rounded-lg border border-slate-200 dark:border-slate-700">
-            <h3 className="text-base font-semibold mb-4 text-slate-900 dark:text-slate-100">Update Context</h3>
-            <p className="text-sm text-slate-600 dark:text-slate-400 mb-4">Add or update variables in the conversation context.</p>
+            <h3 className="text-base font-semibold mb-4 text-slate-900 dark:text-slate-100">{t("workflows.editor.properties.chat.updateContext")}</h3>
+            <p className="text-sm text-slate-600 dark:text-slate-400 mb-4">{t("workflows.editor.properties.chat.updateContextDescription")}</p>
             <div className="mb-4">
-              <label className="block mb-2 font-medium text-sm text-slate-700 dark:text-slate-300">Variable Name:</label>
+              <label className="block mb-2 font-medium text-sm text-slate-700 dark:text-slate-300">{t("workflows.editor.properties.chat.variableName")}</label>
               <input
                 type="text"
                 value={currentNode.data.variable_name || ''}
                 onChange={(e) => handleDataChange('variable_name', e.target.value)}
                 className="w-full px-3 py-2 rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400"
-                placeholder="e.g., user_preferences"
+                placeholder={t("workflows.editor.properties.chat.variableNamePlaceholder")}
+                dir={isRTL ? 'rtl' : 'ltr'}
               />
             </div>
             <div className="mb-4">
-              <label className="block mb-2 font-medium text-sm text-slate-700 dark:text-slate-300">Variable Value:</label>
+              <label className="block mb-2 font-medium text-sm text-slate-700 dark:text-slate-300">{t("workflows.editor.properties.chat.variableValue")}</label>
               <VariableInput
                 value={currentNode.data.variable_value || ''}
                 onChange={(e) => handleDataChange('variable_value', e.target.value)}
-                placeholder="e.g., {{context.selected_option}}"
+                placeholder={t("workflows.editor.properties.chat.variableValuePlaceholder")}
                 availableVars={availableVariables}
+                isRTL={isRTL}
               />
             </div>
             <div className="mb-4">
-              <label className="block mb-2 font-medium text-sm text-slate-700 dark:text-slate-300">Update Mode:</label>
+              <label className="block mb-2 font-medium text-sm text-slate-700 dark:text-slate-300">{t("workflows.editor.properties.chat.updateMode")}</label>
               <select
                 value={currentNode.data.update_mode || 'set'}
                 onChange={(e) => handleDataChange('update_mode', e.target.value)}
                 className="w-full px-3 py-2 rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400"
+                dir={isRTL ? 'rtl' : 'ltr'}
               >
-                <option value="set">Set (overwrite)</option>
-                <option value="append">Append to list</option>
-                <option value="merge">Merge objects</option>
+                <option value="set">{t("workflows.editor.properties.chat.updateModeSet")}</option>
+                <option value="append">{t("workflows.editor.properties.chat.updateModeAppend")}</option>
+                <option value="merge">{t("workflows.editor.properties.chat.updateModeMerge")}</option>
               </select>
             </div>
           </div>
@@ -976,26 +1027,28 @@ const PropertiesPanel = ({ selectedNode, nodes, setNodes, deleteNode }) => {
         {/* Tag Conversation Node */}
         {currentNode.type === 'tag_conversation' && (
           <div className="mb-5 p-4 bg-slate-50 dark:bg-slate-800/50 rounded-lg border border-slate-200 dark:border-slate-700">
-            <h3 className="text-base font-semibold mb-4 text-slate-900 dark:text-slate-100">Tag Conversation</h3>
-            <p className="text-sm text-slate-600 dark:text-slate-400 mb-4">Add tags to the conversation for organization and analytics.</p>
+            <h3 className="text-base font-semibold mb-4 text-slate-900 dark:text-slate-100">{t("workflows.editor.properties.chat.tagConversation")}</h3>
+            <p className="text-sm text-slate-600 dark:text-slate-400 mb-4">{t("workflows.editor.properties.chat.tagConversationDescription")}</p>
             <div className="mb-4">
-              <label className="block mb-2 font-medium text-sm text-slate-700 dark:text-slate-300">Tags (comma-separated):</label>
+              <label className="block mb-2 font-medium text-sm text-slate-700 dark:text-slate-300">{t("workflows.editor.properties.chat.tags")}</label>
               <input
                 type="text"
                 value={currentNode.data.tags || ''}
                 onChange={(e) => handleDataChange('tags', e.target.value)}
                 className="w-full px-3 py-2 rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400"
-                placeholder="e.g., support, refund, high-priority"
+                placeholder={t("workflows.editor.properties.chat.tagsPlaceholder")}
+                dir={isRTL ? 'rtl' : 'ltr'}
               />
             </div>
             <div className="mb-4">
-              <label className="block mb-2 font-medium text-sm text-slate-700 dark:text-slate-300">Dynamic Tag From Variable:</label>
+              <label className="block mb-2 font-medium text-sm text-slate-700 dark:text-slate-300">{t("workflows.editor.properties.chat.dynamicTagFromVariable")}</label>
               <select
                 value={currentNode.data.dynamic_tag_variable || ''}
                 onChange={(e) => handleDataChange('dynamic_tag_variable', e.target.value)}
                 className="w-full px-3 py-2 rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400"
+                dir={isRTL ? 'rtl' : 'ltr'}
               >
-                <option value="">None (use static tags only)</option>
+                <option value="">{t("workflows.editor.properties.chat.noneStaticOnly")}</option>
                 {availableVariables.map(v => (
                   <option key={v.value} value={v.value}>{v.label}</option>
                 ))}
@@ -1007,56 +1060,60 @@ const PropertiesPanel = ({ selectedNode, nodes, setNodes, deleteNode }) => {
         {/* Assign to Agent Node */}
         {currentNode.type === 'assign_to_agent' && (
           <div className="mb-5 p-4 bg-slate-50 dark:bg-slate-800/50 rounded-lg border border-slate-200 dark:border-slate-700">
-            <h3 className="text-base font-semibold mb-4 text-slate-900 dark:text-slate-100">Assign to Agent</h3>
-            <p className="text-sm text-slate-600 dark:text-slate-400 mb-4">Route conversation to a specific agent or team.</p>
+            <h3 className="text-base font-semibold mb-4 text-slate-900 dark:text-slate-100">{t("workflows.editor.properties.chat.assignToAgent")}</h3>
+            <p className="text-sm text-slate-600 dark:text-slate-400 mb-4">{t("workflows.editor.properties.chat.assignToAgentDescription")}</p>
             <div className="mb-4">
-              <label className="block mb-2 font-medium text-sm text-slate-700 dark:text-slate-300">Assignment Type:</label>
+              <label className="block mb-2 font-medium text-sm text-slate-700 dark:text-slate-300">{t("workflows.editor.properties.chat.assignmentType")}</label>
               <select
                 value={currentNode.data.assignment_type || 'specific'}
                 onChange={(e) => handleDataChange('assignment_type', e.target.value)}
                 className="w-full px-3 py-2 rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400"
+                dir={isRTL ? 'rtl' : 'ltr'}
               >
-                <option value="specific">Specific Agent</option>
-                <option value="team">Team/Department</option>
-                <option value="round_robin">Round Robin</option>
-                <option value="least_busy">Least Busy</option>
+                <option value="specific">{t("workflows.editor.properties.chat.specificAgent")}</option>
+                <option value="team">{t("workflows.editor.properties.chat.teamDepartment")}</option>
+                <option value="round_robin">{t("workflows.editor.properties.chat.roundRobin")}</option>
+                <option value="least_busy">{t("workflows.editor.properties.chat.leastBusy")}</option>
               </select>
             </div>
             {currentNode.data.assignment_type === 'specific' && (
               <div className="mb-4">
-                <label className="block mb-2 font-medium text-sm text-slate-700 dark:text-slate-300">Agent ID/Email:</label>
+                <label className="block mb-2 font-medium text-sm text-slate-700 dark:text-slate-300">{t("workflows.editor.properties.chat.agentIdEmail")}</label>
                 <input
                   type="text"
                   value={currentNode.data.agent_id || ''}
                   onChange={(e) => handleDataChange('agent_id', e.target.value)}
                   className="w-full px-3 py-2 rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400"
-                  placeholder="e.g., agent@company.com"
+                  placeholder={t("workflows.editor.properties.chat.agentIdEmailPlaceholder")}
+                  dir={isRTL ? 'rtl' : 'ltr'}
                 />
               </div>
             )}
             {currentNode.data.assignment_type === 'team' && (
               <div className="mb-4">
-                <label className="block mb-2 font-medium text-sm text-slate-700 dark:text-slate-300">Team Name:</label>
+                <label className="block mb-2 font-medium text-sm text-slate-700 dark:text-slate-300">{t("workflows.editor.properties.chat.teamName")}</label>
                 <input
                   type="text"
                   value={currentNode.data.team_name || ''}
                   onChange={(e) => handleDataChange('team_name', e.target.value)}
                   className="w-full px-3 py-2 rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400"
-                  placeholder="e.g., Support, Sales, Technical"
+                  placeholder={t("workflows.editor.properties.chat.teamNamePlaceholder")}
+                  dir={isRTL ? 'rtl' : 'ltr'}
                 />
               </div>
             )}
             <div className="mb-4">
-              <label className="block mb-2 font-medium text-sm text-slate-700 dark:text-slate-300">Priority:</label>
+              <label className="block mb-2 font-medium text-sm text-slate-700 dark:text-slate-300">{t("workflows.editor.properties.chat.priority")}</label>
               <select
                 value={currentNode.data.priority || 'normal'}
                 onChange={(e) => handleDataChange('priority', e.target.value)}
                 className="w-full px-3 py-2 rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400"
+                dir={isRTL ? 'rtl' : 'ltr'}
               >
-                <option value="low">Low</option>
-                <option value="normal">Normal</option>
-                <option value="high">High</option>
-                <option value="urgent">Urgent</option>
+                <option value="low">{t("workflows.editor.properties.chat.priorityLow")}</option>
+                <option value="normal">{t("workflows.editor.properties.chat.priorityNormal")}</option>
+                <option value="high">{t("workflows.editor.properties.chat.priorityHigh")}</option>
+                <option value="urgent">{t("workflows.editor.properties.chat.priorityUrgent")}</option>
               </select>
             </div>
           </div>
@@ -1065,41 +1122,44 @@ const PropertiesPanel = ({ selectedNode, nodes, setNodes, deleteNode }) => {
         {/* Set Status Node */}
         {currentNode.type === 'set_status' && (
           <div className="mb-5 p-4 bg-slate-50 dark:bg-slate-800/50 rounded-lg border border-slate-200 dark:border-slate-700">
-            <h3 className="text-base font-semibold mb-4 text-slate-900 dark:text-slate-100">Set Status</h3>
-            <p className="text-sm text-slate-600 dark:text-slate-400 mb-4">Update the conversation status.</p>
+            <h3 className="text-base font-semibold mb-4 text-slate-900 dark:text-slate-100">{t("workflows.editor.properties.chat.setStatus")}</h3>
+            <p className="text-sm text-slate-600 dark:text-slate-400 mb-4">{t("workflows.editor.properties.chat.setStatusDescription")}</p>
             <div className="mb-4">
-              <label className="block mb-2 font-medium text-sm text-slate-700 dark:text-slate-300">New Status:</label>
+              <label className="block mb-2 font-medium text-sm text-slate-700 dark:text-slate-300">{t("workflows.editor.properties.chat.newStatus")}</label>
               <select
                 value={currentNode.data.status || 'active'}
                 onChange={(e) => handleDataChange('status', e.target.value)}
                 className="w-full px-3 py-2 rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400"
+                dir={isRTL ? 'rtl' : 'ltr'}
               >
-                <option value="active">Active</option>
-                <option value="waiting">Waiting for User</option>
-                <option value="resolved">Resolved</option>
-                <option value="closed">Closed</option>
-                <option value="escalated">Escalated</option>
-                <option value="pending">Pending Review</option>
+                <option value="active">{t("workflows.editor.properties.chat.statusActive")}</option>
+                <option value="waiting">{t("workflows.editor.properties.chat.statusWaiting")}</option>
+                <option value="resolved">{t("workflows.editor.properties.chat.statusResolved")}</option>
+                <option value="closed">{t("workflows.editor.properties.chat.statusClosed")}</option>
+                <option value="escalated">{t("workflows.editor.properties.chat.statusEscalated")}</option>
+                <option value="pending">{t("workflows.editor.properties.chat.statusPending")}</option>
               </select>
             </div>
             <div className="mb-4">
-              <label className="block mb-2 font-medium text-sm text-slate-700 dark:text-slate-300">Status Reason (Optional):</label>
+              <label className="block mb-2 font-medium text-sm text-slate-700 dark:text-slate-300">{t("workflows.editor.properties.chat.statusReason")}</label>
               <VariableInput
                 value={currentNode.data.status_reason || ''}
                 onChange={(e) => handleDataChange('status_reason', e.target.value)}
-                placeholder="e.g., Issue resolved via {{context.resolution_method}}"
+                placeholder={t("workflows.editor.properties.chat.statusReasonPlaceholder")}
                 availableVars={availableVariables}
+                isRTL={isRTL}
               />
             </div>
             <div className="mb-4">
-              <label className="block mb-2 font-medium text-sm text-slate-700 dark:text-slate-300">Auto-close After (minutes):</label>
+              <label className="block mb-2 font-medium text-sm text-slate-700 dark:text-slate-300">{t("workflows.editor.properties.chat.autoCloseAfter")}</label>
               <input
                 type="number"
                 value={currentNode.data.auto_close_minutes || ''}
                 onChange={(e) => handleDataChange('auto_close_minutes', e.target.value ? parseInt(e.target.value) : '')}
                 className="w-full px-3 py-2 rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400"
-                placeholder="Leave empty for no auto-close"
+                placeholder={t("workflows.editor.properties.chat.autoCloseAfterPlaceholder")}
                 min="0"
+                dir={isRTL ? 'rtl' : 'ltr'}
               />
             </div>
           </div>
@@ -1109,15 +1169,15 @@ const PropertiesPanel = ({ selectedNode, nodes, setNodes, deleteNode }) => {
   };
 
   return (
-    <div className="p-5 h-full overflow-y-auto bg-white dark:bg-slate-800">
-      <div className="font-bold text-base mb-5 border-b border-slate-200 dark:border-slate-700 pb-3 text-slate-900 dark:text-slate-100">Properties</div>
+    <div className="p-5 h-full overflow-y-auto bg-white dark:bg-slate-800" dir={isRTL ? 'rtl' : 'ltr'}>
+      <div className="font-bold text-base mb-5 border-b border-slate-200 dark:border-slate-700 pb-3 text-slate-900 dark:text-slate-100">{t("workflows.editor.properties.nodeSettings")}</div>
       {renderNodeProperties()}
       {currentNode && (
         <button
           onClick={deleteNode}
           className="mt-5 px-4 py-2.5 bg-red-600 hover:bg-red-700 dark:bg-red-500 dark:hover:bg-red-600 text-white border-none rounded-lg cursor-pointer w-full transition-colors font-medium"
         >
-          Delete Node
+          {t("workflows.editor.properties.deleteNode")}
         </button>
       )}
     </div>
