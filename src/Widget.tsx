@@ -1,12 +1,11 @@
 import { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { MessageSquare, X, Mic, Send, Loader2, Bot, User, Minus } from 'lucide-react';
+import { MessageSquare, X, Mic, Send, Loader2, Bot, User, Minus, MicOff, FileText, Image as ImageIcon, File, Download } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { WidgetForm } from '@/components/WidgetForm';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-import { VoiceAgentPreview } from './components/previews/VoiceAgentPreview';
 import { TypingIndicator } from '@/components/TypingIndicator';
 import CallingModal from '@/components/CallingModal';
 
@@ -52,16 +51,26 @@ interface WidgetSettings {
   };
 }
 
+interface Attachment {
+  id?: number;
+  file_name: string;
+  file_url?: string;  // Optional - for S3 URLs from internal chat
+  file_data?: string;  // Optional - for base64 data from conversation broadcasts
+  file_type: string;
+  file_size: number;
+}
+
 interface Message {
   id: string | number;
   sender: 'user' | 'agent' | 'system';
   text: string;
-  type: 'message' | 'prompt' | 'form' | 'video_call_invitation';
+  type: 'message' | 'prompt' | 'form' | 'video_call_invitation' | 'attachment';
   timestamp: string;
   options?: string[];
   fields?: any[];
   videoCallUrl?: string;
   assignee_name?: string;  // Name of the agent who sent this message
+  attachments?: Attachment[];  // File attachments sent with message
 }
 
 const widgetSizes = {
@@ -74,6 +83,20 @@ const generateSessionId = () => Date.now(); // milliseconds timestamp
 
 // RTL languages list
 const RTL_LANGUAGES = ['ar', 'he', 'fa', 'ur'];
+
+// Helper function to get file icon based on type
+const getFileIcon = (fileType: string) => {
+  if (fileType.startsWith('image/')) return ImageIcon;
+  if (fileType.includes('pdf') || fileType.includes('document')) return FileText;
+  return File;
+};
+
+// Helper function to format file size
+const formatFileSize = (bytes: number): string => {
+  if (bytes < 1024) return bytes + ' B';
+  if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+  return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+};
 
 // Helper function to detect browser language
 const detectBrowserLanguage = (): string => {
@@ -155,6 +178,8 @@ const Widget = ({ agentId, companyId, backendUrl, rtlOverride, languageOverride,
   const [activeForm, setActiveForm] = useState<any[] | null>(null);
   const [liveKitToken, setLiveKitToken] = useState<string | null>(null);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [isVoiceActive, setIsVoiceActive] = useState(false); // For voice visualization
+  const [isMicEnabled, setIsMicEnabled] = useState(false); // Manual mic control for voice mode
 
   // Call state management
   const [isCallActive, setIsCallActive] = useState(false);
@@ -175,6 +200,15 @@ const Widget = ({ agentId, companyId, backendUrl, rtlOverride, languageOverride,
 
   const audioPlaybackTimer = useRef<NodeJS.Timeout | null>(null);
   const incomingAudioChunks = useRef<Blob[]>([]);
+
+  // Voice Activity Detection (VAD) state for voice-only mode
+  const vadTimer = useRef<NodeJS.Timeout | null>(null);
+  const audioStream = useRef<MediaStream | null>(null);
+  const audioContext = useRef<AudioContext | null>(null);
+  const analyser = useRef<AnalyserNode | null>(null);
+  const isSpeaking = useRef(false);
+  const silenceStart = useRef<number | null>(null);
+  const isMicEnabledRef = useRef(false); // Ref to track mic state in closures
 
   // Reconnection state
   const reconnectAttempts = useRef(0);
@@ -387,7 +421,8 @@ const Widget = ({ agentId, companyId, backendUrl, rtlOverride, languageOverride,
         options: data.options,
         fields: data.fields,
         videoCallUrl: data.message_type === 'video_call_invitation' ? `${settings?.frontend_url}/video-call?token=${data.token}&livekitUrl=${encodeURIComponent(settings?.livekit_url || '')}&sessionId=${currentSessionId.current}` : undefined,
-        assignee_name: data.assignee_name  // Include agent name from backend
+        assignee_name: data.assignee_name,  // Include agent name from backend
+        attachments: data.attachments || []  // Include file attachments if present
       };
 
       // Increment unread count if minimized and message is from agent/system
@@ -464,14 +499,28 @@ const Widget = ({ agentId, companyId, backendUrl, rtlOverride, languageOverride,
   };
 
   // Connect to voice WebSocket
-  const connectVoiceWebSocket = () => {
-    if (!currentSessionId.current || settings?.communication_mode !== 'chat_and_voice') return;
+  const connectVoiceWebSocket = async () => {
+    if (!currentSessionId.current) return;
+    if (settings?.communication_mode !== 'chat_and_voice' && settings?.communication_mode !== 'voice') return;
 
     const voiceUrl = `${backendUrl.replace('http', 'ws')}/api/v1/ws/public/voice/${companyId}/${agentId}/${currentSessionId.current}?user_type=user&voice_id=${settings?.voice_id || 'default'}&stt_provider=${settings?.stt_provider || 'groq'}`;
     voiceWs.current = new WebSocket(voiceUrl);
 
-    voiceWs.current.onopen = () => {
+    voiceWs.current.onopen = async () => {
       console.log('[Widget] Voice WebSocket connected');
+
+      // Request microphone permission once when WebSocket connects
+      // This keeps the stream alive for the entire session
+      if (settings?.communication_mode === 'voice' || settings?.communication_mode === 'chat_and_voice') {
+        try {
+          console.log('[Widget] Requesting microphone permission...');
+          const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+          audioStream.current = stream;
+          console.log('[Widget] ✅ Microphone permission granted and stream acquired');
+        } catch (error) {
+          console.error('[Widget] ❌ Failed to get microphone permission:', error);
+        }
+      }
     };
 
     voiceWs.current.onmessage = async (event) => {
@@ -482,7 +531,17 @@ const Widget = ({ agentId, companyId, backendUrl, rtlOverride, languageOverride,
           if (incomingAudioChunks.current.length > 0) {
             const fullAudioBlob = new Blob(incomingAudioChunks.current, { type: 'audio/webm' });
             const audioUrl = URL.createObjectURL(fullAudioBlob);
-            new Audio(audioUrl).play();
+            const audio = new Audio(audioUrl);
+
+            // For voice-only mode, pause VAD while playing response
+            if (settings?.communication_mode === 'voice') {
+              pauseVAD();
+              audio.onended = () => {
+                resumeVAD();
+              };
+            }
+
+            audio.play();
             incomingAudioChunks.current = [];
           }
         }, 300);
@@ -491,11 +550,226 @@ const Widget = ({ agentId, companyId, backendUrl, rtlOverride, languageOverride,
 
     voiceWs.current.onclose = () => {
       console.log('[Widget] Voice WebSocket closed');
+      stopVoiceActivityDetection();
     };
 
     voiceWs.current.onerror = (error) => {
       console.error('[Widget] Voice WebSocket error:', error);
     };
+  };
+
+  // Voice Activity Detection - Automatically detect when user speaks
+  const startVoiceActivityDetection = async () => {
+    try {
+      // Reuse existing audio stream if available, otherwise request permission
+      let stream = audioStream.current;
+      if (!stream) {
+        console.log('[VAD] No existing stream, requesting microphone permission...');
+        stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        audioStream.current = stream;
+        console.log('[VAD] ✅ Microphone permission granted');
+      } else {
+        console.log('[VAD] ✅ Reusing existing microphone stream (no permission prompt)');
+      }
+
+      // Setup audio analysis (only if not already set up)
+      if (!audioContext.current || audioContext.current.state === 'closed') {
+        audioContext.current = new AudioContext();
+        const source = audioContext.current.createMediaStreamSource(stream);
+        analyser.current = audioContext.current.createAnalyser();
+        analyser.current.fftSize = 2048;
+        source.connect(analyser.current);
+        console.log('[VAD] Audio analysis context created');
+      }
+
+      // Setup media recorder
+      mediaRecorder.current = new MediaRecorder(stream);
+      audioChunks.current = [];
+
+      mediaRecorder.current.ondataavailable = (e) => {
+        if (e.data.size > 0) {
+          audioChunks.current.push(e.data);
+        }
+      };
+
+      mediaRecorder.current.onstop = () => {
+        if (audioChunks.current.length > 0 && voiceWs.current?.readyState === WebSocket.OPEN) {
+          const audioBlob = new Blob(audioChunks.current, { type: 'audio/webm' });
+          voiceWs.current.send(audioBlob);
+          console.log('[VAD] Sent audio chunk:', audioBlob.size, 'bytes');
+        }
+        audioChunks.current = [];
+      };
+
+      // Start continuous recording
+      mediaRecorder.current.start();
+
+      // Start monitoring audio levels
+      monitorAudioLevel();
+      console.log('[VAD] Voice Activity Detection started');
+    } catch (error) {
+      console.error('[VAD] Error starting voice detection:', error);
+    }
+  };
+
+  // Monitor audio level to detect speech
+  const monitorAudioLevel = () => {
+    if (!analyser.current) return;
+
+    const bufferLength = analyser.current.frequencyBinCount;
+    const dataArray = new Uint8Array(bufferLength);
+
+    const checkAudioLevel = () => {
+      // Stop monitoring if analyser is gone or mic is disabled
+      if (!analyser.current || !isMicEnabledRef.current) {
+        if (vadTimer.current) {
+          clearTimeout(vadTimer.current);
+          vadTimer.current = null;
+        }
+        return;
+      }
+
+      analyser.current.getByteFrequencyData(dataArray);
+
+      // Calculate average volume
+      const average = dataArray.reduce((sum, value) => sum + value, 0) / bufferLength;
+
+      // Threshold for detecting speech (adjust as needed)
+      const SPEECH_THRESHOLD = 30;
+      const SILENCE_DURATION = 1500; // 1.5 seconds of silence to stop
+
+      if (average > SPEECH_THRESHOLD) {
+        // User is speaking
+        if (!isSpeaking.current) {
+          console.log('[VAD] Speech detected, starting recording');
+          isSpeaking.current = true;
+          setIsVoiceActive(true);
+
+          // Start a new recording session
+          if (mediaRecorder.current?.state === 'inactive') {
+            audioChunks.current = [];
+            mediaRecorder.current.start();
+          }
+        }
+        silenceStart.current = null;
+      } else {
+        // Silence detected
+        if (isSpeaking.current) {
+          if (silenceStart.current === null) {
+            silenceStart.current = Date.now();
+          } else {
+            const silenceDuration = Date.now() - silenceStart.current;
+
+            if (silenceDuration > SILENCE_DURATION) {
+              console.log('[VAD] Silence detected, stopping recording');
+              isSpeaking.current = false;
+              setIsVoiceActive(false);
+              silenceStart.current = null;
+
+              // Stop recording and send
+              if (mediaRecorder.current?.state === 'recording') {
+                mediaRecorder.current.stop();
+
+                // Start a new recording immediately for next speech
+                setTimeout(() => {
+                  if (mediaRecorder.current?.state === 'inactive' && isMicEnabledRef.current) {
+                    audioChunks.current = [];
+                    mediaRecorder.current?.start();
+                  }
+                }, 100);
+              }
+            }
+          }
+        }
+      }
+
+      // Continue monitoring
+      vadTimer.current = setTimeout(checkAudioLevel, 100);
+    };
+
+    checkAudioLevel();
+  };
+
+  // Pause VAD while AI is speaking
+  const pauseVAD = () => {
+    console.log('[VAD] Pausing voice detection');
+    if (vadTimer.current) {
+      clearTimeout(vadTimer.current);
+      vadTimer.current = null;
+    }
+    if (mediaRecorder.current?.state === 'recording') {
+      mediaRecorder.current.pause();
+    }
+  };
+
+  // Resume VAD after AI finishes speaking
+  const resumeVAD = () => {
+    console.log('[VAD] Resuming voice detection');
+    // Only resume if mic is still enabled
+    if (!isMicEnabledRef.current) return;
+
+    if (mediaRecorder.current?.state === 'paused') {
+      mediaRecorder.current.resume();
+    }
+    monitorAudioLevel();
+  };
+
+  // Stop Voice Activity Detection (but keep stream alive for reuse)
+  const stopVoiceActivityDetection = () => {
+    console.log('[VAD] Stopping voice detection (keeping stream alive)');
+
+    if (vadTimer.current) {
+      clearTimeout(vadTimer.current);
+      vadTimer.current = null;
+    }
+
+    if (mediaRecorder.current?.state === 'recording' || mediaRecorder.current?.state === 'paused') {
+      mediaRecorder.current.stop();
+    }
+
+    // DON'T stop the audio stream - keep it alive for reuse
+    // DON'T close audio context - keep it alive for reuse
+    // This prevents permission prompts on every toggle
+
+    isSpeaking.current = false;
+    silenceStart.current = null;
+  };
+
+  // Completely cleanup voice resources (called on widget close)
+  const cleanupVoiceResources = () => {
+    console.log('[VAD] Cleaning up all voice resources');
+
+    stopVoiceActivityDetection();
+
+    if (audioStream.current) {
+      audioStream.current.getTracks().forEach(track => track.stop());
+      audioStream.current = null;
+    }
+
+    if (audioContext.current) {
+      audioContext.current.close();
+      audioContext.current = null;
+    }
+
+    analyser.current = null;
+  };
+
+  // Handle manual mic toggle for voice mode
+  const handleMicToggle = async () => {
+    if (isMicEnabled) {
+      // Turn mic off
+      console.log('[Voice] Mic disabled by user');
+      setIsMicEnabled(false);
+      isMicEnabledRef.current = false;
+      setIsVoiceActive(false);
+      stopVoiceActivityDetection();
+    } else {
+      // Turn mic on
+      console.log('[Voice] Mic enabled by user');
+      setIsMicEnabled(true);
+      isMicEnabledRef.current = true;
+      await startVoiceActivityDetection();
+    }
   };
 
   // WebSocket connection management
@@ -521,36 +795,13 @@ const Widget = ({ agentId, companyId, backendUrl, rtlOverride, languageOverride,
       shouldReconnect.current = true;
       reconnectAttempts.current = 0;
 
-      if (settings?.communication_mode === 'voice') {
-        const fetchToken = async () => {
-          try {
-            const response = await fetch(`${backendUrl}/api/v1/video-calls/token`, {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-              },
-              body: JSON.stringify({
-                room_name: newSessionId,
-                participant_name: `User-${newSessionId}`,
-                agent_id: agentId,
-              }),
-            });
-            if (!response.ok) throw new Error('Failed to fetch LiveKit token');
-            const data = await response.json();
-            setLiveKitToken(data.access_token);
-          } catch (error) {
-            console.error('AgentConnect: Error fetching LiveKit token:', error);
-          }
-        };
-        fetchToken();
-        return;
+      // Connect chat WebSocket only for chat and chat_and_voice modes
+      if (settings?.communication_mode === 'chat' || settings?.communication_mode === 'chat_and_voice') {
+        connectWebSocket();
       }
 
-      // Connect WebSocket
-      connectWebSocket();
-
-      // Connect voice WebSocket if needed
-      if (settings?.communication_mode === 'chat_and_voice') {
+      // Connect voice WebSocket for voice and chat_and_voice modes
+      if (settings?.communication_mode === 'voice' || settings?.communication_mode === 'chat_and_voice') {
         connectVoiceWebSocket();
       }
 
@@ -559,8 +810,12 @@ const Widget = ({ agentId, companyId, backendUrl, rtlOverride, languageOverride,
       clearTimers();
       ws.current?.close();
       voiceWs.current?.close();
+      cleanupVoiceResources(); // Cleanup all voice resources when widget closes
       setLiveKitToken(null);
       setIsConnected(false);
+      setIsMicEnabled(false);
+      isMicEnabledRef.current = false;
+      setIsVoiceActive(false);
     }
 
     return () => {
@@ -568,6 +823,10 @@ const Widget = ({ agentId, companyId, backendUrl, rtlOverride, languageOverride,
       clearTimers();
       ws.current?.close();
       voiceWs.current?.close();
+      cleanupVoiceResources(); // Cleanup all voice resources on unmount
+      setIsMicEnabled(false);
+      isMicEnabledRef.current = false;
+      setIsVoiceActive(false);
     };
   }, [isOpen, agentId, companyId, backendUrl, settings]);
 
@@ -720,15 +979,181 @@ const Widget = ({ agentId, companyId, backendUrl, rtlOverride, languageOverride,
       </div>
     )}
 
-    {isOpen && settings?.communication_mode === 'voice' && liveKitToken && (
-      <VoiceAgentPreview
-        liveKitToken={liveKitToken}
-        shouldConnect={isOpen}
-        setShouldConnect={setIsOpen}
-        livekitUrl={settings.livekit_url}
-        customization={settings}
-        backendUrl={backendUrl}
-      />
+    {isOpen && settings?.communication_mode === 'voice' && (
+      <div
+        dir={isRTL ? 'rtl' : 'ltr'}
+        style={{
+          width: '360px',
+          height: '500px',
+          borderRadius: `${border_radius}px`,
+          boxShadow: '0 10px 30px rgba(0,0,0,0.15)',
+          position: 'absolute',
+          [vertical === 'bottom' ? 'bottom' : 'top']: '80px',
+          [horizontal === 'right' ? 'right' : 'left']: '0',
+        }}
+        className={cn(
+          'flex flex-col overflow-hidden',
+          dark_mode ? 'bg-gray-900 text-gray-100' : 'bg-white text-gray-800'
+        )}
+      >
+        {/* Voice Mode Header */}
+        {show_header && (
+          <div
+            style={{
+              background: primary_color,
+              borderTopLeftRadius: `${border_radius}px`,
+              borderTopRightRadius: `${border_radius}px`,
+            }}
+            className="p-4 text-white flex justify-between items-center flex-shrink-0"
+          >
+            <div className="flex items-center gap-3">
+              {agent_avatar_url ? (
+                <div className="relative w-10 h-10 rounded-full overflow-hidden border-2 border-white/50 bg-white/10 flex items-center justify-center">
+                  <span className="text-white font-bold text-sm absolute inset-0 flex items-center justify-center z-0">
+                    {header_title.charAt(0).toUpperCase()}
+                  </span>
+                  <img
+                    src={`${backendUrl}/api/v1/proxy/image-proxy?url=${encodeURIComponent(agent_avatar_url)}`}
+                    alt="Voice Avatar"
+                    className="w-full h-full object-cover absolute inset-0 z-10"
+                    onError={(e) => {
+                      e.currentTarget.style.display = 'none';
+                    }}
+                  />
+                </div>
+              ) : (
+                <div className="relative w-10 h-10 rounded-full overflow-hidden border-2 border-white/50 bg-white/10 flex items-center justify-center">
+                  <span className="text-white font-bold text-sm">
+                    {header_title.charAt(0).toUpperCase()}
+                  </span>
+                </div>
+              )}
+              <span className="font-bold text-lg">{header_title}</span>
+            </div>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setIsOpen(false)}
+              className="text-white hover:bg-white/20"
+              title="Close"
+            >
+              <X className="h-6 w-6" />
+            </Button>
+          </div>
+        )}
+
+        {/* Voice Visualization Area */}
+        <div className="flex-grow flex flex-col items-center justify-center p-8">
+          {/* Avatar with pulsing animation */}
+          <div className="relative mb-8">
+            <div
+              className={cn(
+                "absolute inset-0 rounded-full animate-pulse",
+                isVoiceActive ? "opacity-75" : "opacity-0"
+              )}
+              style={{
+                background: primary_color,
+                width: '140px',
+                height: '140px',
+                animationDuration: '1s',
+              }}
+            />
+            {agent_avatar_url ? (
+              <div className="relative w-32 h-32 rounded-full overflow-hidden border-4 border-white shadow-2xl">
+                <img
+                  src={`${backendUrl}/api/v1/proxy/image-proxy?url=${encodeURIComponent(agent_avatar_url)}`}
+                  alt="Agent Avatar"
+                  className="w-full h-full object-cover"
+                  onError={(e) => {
+                    e.currentTarget.style.display = 'none';
+                    e.currentTarget.parentElement!.innerHTML = `<div class="w-full h-full flex items-center justify-center" style="background: ${primary_color}"><svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="22"/></svg></div>`;
+                  }}
+                />
+              </div>
+            ) : (
+              <div
+                className="w-32 h-32 rounded-full flex items-center justify-center border-4 border-white shadow-2xl"
+                style={{ background: primary_color }}
+              >
+                <Mic size={64} color="white" />
+              </div>
+            )}
+          </div>
+
+          {/* Status Text */}
+          <div className="text-center space-y-2">
+            <h3 className="text-xl font-bold">
+              {!isMicEnabled ? 'Voice Assistant' : isVoiceActive ? 'Listening...' : 'Ready to listen'}
+            </h3>
+            <p className={cn("text-sm", dark_mode ? "text-gray-400" : "text-gray-600")}>
+              {!isMicEnabled
+                ? 'Click the microphone to start'
+                : isVoiceActive
+                ? 'Speak now, I\'m listening'
+                : 'Start speaking anytime'}
+            </p>
+          </div>
+
+          {/* Visual indicator for voice activity */}
+          <div className="mt-8 flex gap-2">
+            {[...Array(5)].map((_, i) => (
+              <div
+                key={i}
+                className={cn(
+                  "w-2 rounded-full transition-all duration-300",
+                  isVoiceActive && isMicEnabled ? "h-12 animate-pulse" : "h-4"
+                )}
+                style={{
+                  background: isMicEnabled ? primary_color : (dark_mode ? '#4B5563' : '#D1D5DB'),
+                  animationDelay: `${i * 0.1}s`,
+                }}
+              />
+            ))}
+          </div>
+
+          {/* Mic Toggle Button */}
+          <div className="mt-8">
+            <Button
+              onClick={handleMicToggle}
+              size="lg"
+              className={cn(
+                "w-20 h-20 rounded-full transition-all duration-300 shadow-lg",
+                isMicEnabled
+                  ? "hover:scale-110 active:scale-95"
+                  : "hover:scale-110 active:scale-95"
+              )}
+              style={{
+                background: isMicEnabled ? primary_color : (dark_mode ? '#374151' : '#E5E7EB'),
+                color: isMicEnabled ? 'white' : (dark_mode ? '#9CA3AF' : '#6B7280'),
+              }}
+            >
+              {isMicEnabled ? <Mic size={32} /> : <MicOff size={32} />}
+            </Button>
+          </div>
+
+          {/* Instructions */}
+          <div className="mt-6 text-center">
+            <p className={cn("text-xs", dark_mode ? "text-gray-500" : "text-gray-500")}>
+              {isMicEnabled
+                ? 'Microphone is active. Speak naturally.'
+                : 'Click microphone to enable voice'}
+            </p>
+          </div>
+        </div>
+
+        {/* Connection status */}
+        <div className="p-4 border-t flex items-center justify-center gap-2">
+          <div
+            className={cn(
+              "w-2 h-2 rounded-full",
+              voiceWs.current?.readyState === WebSocket.OPEN ? "bg-green-500" : "bg-red-500"
+            )}
+          />
+          <span className={cn("text-xs", dark_mode ? "text-gray-400" : "text-gray-600")}>
+            {voiceWs.current?.readyState === WebSocket.OPEN ? 'Connected' : 'Connecting...'}
+          </span>
+        </div>
+      </div>
     )}
 
 
@@ -911,6 +1336,76 @@ const Widget = ({ agentId, companyId, backendUrl, rtlOverride, languageOverride,
                   </div>
                 )}
                 {msg.type === 'video_call_invitation' && (<Button onClick={() => window.open(msg.videoCallUrl, '_blank', 'width=800,height=600')} className="mt-2 w-full" style={{background: primary_color, color: 'white'}}>Join Video Call</Button>)}
+
+                {/* Attachments Display */}
+                {msg.attachments && msg.attachments.length > 0 && (
+                  <div className="mt-2 space-y-2">
+                    {msg.attachments.map((attachment, idx) => {
+                      const FileIcon = getFileIcon(attachment.file_type);
+                      const isImage = attachment.file_type.startsWith('image/');
+
+                      // Handle base64 data (from conversation broadcasts) or URL (from S3)
+                      const fileSource = attachment.file_data
+                        ? `data:${attachment.file_type};base64,${attachment.file_data}`
+                        : `${backendUrl}/api/v1/chat/files/${attachment.file_url?.split('/').pop()}`;
+
+                      return (
+                        <div
+                          key={idx}
+                          className={cn(
+                            "rounded-lg overflow-hidden border",
+                            dark_mode ? "border-gray-600 bg-gray-800" : "border-gray-200 bg-gray-50"
+                          )}
+                        >
+                          {isImage ? (
+                            // Image preview with download overlay
+                            <div className="relative group">
+                              <img
+                                src={fileSource}
+                                alt={attachment.file_name}
+                                className="w-full max-h-48 object-contain cursor-pointer"
+                                onClick={() => window.open(fileSource, '_blank')}
+                              />
+                              <a
+                                href={fileSource}
+                                download={attachment.file_name}
+                                className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity bg-black/50 hover:bg-black/70 text-white rounded-full p-2"
+                                title="Download"
+                              >
+                                <Download size={16} />
+                              </a>
+                              <div className="p-2 text-xs truncate">
+                                {attachment.file_name}
+                              </div>
+                            </div>
+                          ) : (
+                            // File download button
+                            <a
+                              href={fileSource}
+                              download={attachment.file_name}
+                              className={cn(
+                                "flex items-center gap-3 p-3 hover:opacity-80 transition-opacity",
+                                dark_mode ? "hover:bg-gray-700" : "hover:bg-gray-100"
+                              )}
+                            >
+                              <div
+                                className="flex-shrink-0 w-10 h-10 rounded-lg flex items-center justify-center"
+                                style={{ background: primary_color + '20', color: primary_color }}
+                              >
+                                <FileIcon size={20} />
+                              </div>
+                              <div className="flex-grow min-w-0">
+                                <div className="text-sm font-medium truncate">{attachment.file_name}</div>
+                                <div className="text-xs opacity-70">{formatFileSize(attachment.file_size)}</div>
+                              </div>
+                              <Download size={18} className="flex-shrink-0 opacity-50" />
+                            </a>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
             </div>
           ))}

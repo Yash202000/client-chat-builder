@@ -20,6 +20,11 @@ import { useVoiceConnection } from '@/hooks/use-voice-connection';
 import { getWebSocketUrl } from '@/config/api';
 import { useTranslation } from 'react-i18next';
 import { useI18n } from '@/hooks/useI18n';
+import FileUpload from './FileUpload';
+import { uploadConversationFile } from '@/services/chatService';
+import RichTextEditor from './RichTextEditor';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 
 interface ConversationDetailProps {
   sessionId: string;
@@ -85,11 +90,14 @@ export const ConversationDetail: React.FC<ConversationDetailProps> = ({ sessionI
   const [suggestedReplies, setSuggestedReplies] = useState<string[]>([]);
   const [isAgentTyping, setIsAgentTyping] = useState(false);
   const [hasInitiallyLoaded, setHasInitiallyLoaded] = useState(false);
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+  const [isUploadingFiles, setIsUploadingFiles] = useState(false);
   const typingTimeoutRef = useRef<NodeJS.Timeout>();
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const ws = useRef<WebSocket | null>(null);
   const previousScrollHeight = useRef<number>(0);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
   const { authFetch, token } = useAuth();
   const { isRecording, startRecording, stopRecording } = useVoiceConnection(agentId, sessionId);
 
@@ -254,7 +262,10 @@ export const ConversationDetail: React.FC<ConversationDetailProps> = ({ sessionI
 
     // Only auto-scroll if user is already near the bottom
     if (isNearBottom) {
-      scrollToBottom(true); // Smooth scroll for new messages
+      // Small delay to ensure DOM has updated with new message
+      setTimeout(() => {
+        scrollToBottom(true); // Smooth scroll for new messages
+      }, 50);
     }
   }, [messages, hasInitiallyLoaded]);
 
@@ -409,12 +420,29 @@ export const ConversationDetail: React.FC<ConversationDetailProps> = ({ sessionI
     }, 2000);
   };
 
-  const handleSendMessage = () => {
-    if (message.trim()) {
-      // Clear typing timeout and send typing stop
-      if (typingTimeoutRef.current) {
-        clearTimeout(typingTimeoutRef.current);
+  // Handler for RichTextEditor onChange
+  const handleRichTextChange = (value: string) => {
+    setMessage(value);
+
+    // Send typing start event
+    if (!isAgentTyping && value.length > 0) {
+      setIsAgentTyping(true);
+      if (ws.current?.readyState === WebSocket.OPEN) {
+        ws.current.send(JSON.stringify({
+          type: 'agent_typing',
+          is_typing: true,
+          session_id: sessionId
+        }));
       }
+    }
+
+    // Clear any existing timeout
+    if (typingTimeoutRef.current) {
+      clearTimeout(typingTimeoutRef.current);
+    }
+
+    // Set new timeout to send typing stop after 2 seconds of inactivity
+    typingTimeoutRef.current = setTimeout(() => {
       setIsAgentTyping(false);
       if (ws.current?.readyState === WebSocket.OPEN) {
         ws.current.send(JSON.stringify({
@@ -423,8 +451,64 @@ export const ConversationDetail: React.FC<ConversationDetailProps> = ({ sessionI
           session_id: sessionId
         }));
       }
+    }, 2000);
+  };
 
-      sendMessageMutation.mutate({ message: message.trim(), message_type: 'message', sender: 'agent' });
+  // File upload handlers
+  const handleFileSelect = (files: File[]) => {
+    setSelectedFiles(prev => [...prev, ...files]);
+  };
+
+  const handleFileRemove = (index: number) => {
+    setSelectedFiles(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const handleSendMessage = async () => {
+    if (!message.trim() && selectedFiles.length === 0) return;
+
+    const messageContent = message.trim() || '📎 File attachment';
+
+    // Clear typing timeout and send typing stop
+    if (typingTimeoutRef.current) {
+      clearTimeout(typingTimeoutRef.current);
+    }
+    setIsAgentTyping(false);
+    if (ws.current?.readyState === WebSocket.OPEN) {
+      ws.current.send(JSON.stringify({
+        type: 'agent_typing',
+        is_typing: false,
+        session_id: sessionId
+      }));
+    }
+
+    // If there are files, upload them first (they'll be broadcasted via WebSocket)
+    if (selectedFiles.length > 0) {
+      setIsUploadingFiles(true);
+
+      for (const file of selectedFiles) {
+        try {
+          await uploadConversationFile(file, sessionId);
+          toast({
+            title: 'File sent',
+            description: `${file.name} was sent to the widget`,
+          });
+        } catch (error) {
+          console.error('Failed to send file:', error);
+          toast({
+            title: 'Send failed',
+            description: `Failed to send ${file.name}`,
+            variant: 'destructive',
+          });
+        }
+      }
+
+      setIsUploadingFiles(false);
+      setSelectedFiles([]);
+    }
+
+    // Send message if there's text (files are already sent above)
+    if (message.trim()) {
+      sendMessageMutation.mutate({ message: messageContent, message_type: 'message', sender: 'agent' });
     }
   };
 
@@ -611,9 +695,26 @@ export const ConversationDetail: React.FC<ConversationDetailProps> = ({ sessionI
                               : `bg-gradient-to-br from-blue-600 to-purple-600 text-white ${isRTL ? 'rounded-bl-sm' : 'rounded-br-sm'}`
                           }`}
                         >
-                          <p className="text-sm leading-relaxed whitespace-pre-wrap break-words">
-                            {msg.message}
-                          </p>
+                          <div className="prose prose-sm dark:prose-invert max-w-full prose-p:my-1 prose-headings:my-2">
+                            <ReactMarkdown
+                              remarkPlugins={[remarkGfm]}
+                              components={{
+                                a: ({node, ...props}) => (
+                                  <a
+                                    {...props}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className={msg.sender === 'user' ? 'text-blue-600 hover:underline' : 'text-blue-200 hover:underline'}
+                                  />
+                                ),
+                                p: ({node, ...props}) => <p className="text-sm leading-relaxed break-words" {...props} />,
+                                strong: ({node, ...props}) => <strong className="font-bold" {...props} />,
+                                em: ({node, ...props}) => <em className="italic" {...props} />,
+                              }}
+                            >
+                              {msg.message}
+                            </ReactMarkdown>
+                          </div>
                         </div>
                         <p className={`text-xs mt-1.5 px-1 ${msg.sender === 'user' ? 'text-gray-500 dark:text-gray-400' : 'text-gray-600 dark:text-gray-400'}`}>
                           {new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
@@ -660,25 +761,34 @@ export const ConversationDetail: React.FC<ConversationDetailProps> = ({ sessionI
             </TabsList>
 
             <TabsContent value="reply" className="mt-4">
-              <div className="bg-white dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-700 card-shadow p-1">
-                <Textarea
+              <div className="bg-white dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-700 card-shadow overflow-hidden">
+                <RichTextEditor
                   value={message}
-                  onChange={handleMessageChange}
+                  onChange={handleRichTextChange}
                   placeholder={t('conversations.detail.messageInput')}
-                  className="border-0 focus-visible:ring-0 resize-none min-h-[80px]"
-                  rows={3}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' && !e.shiftKey) {
-                      e.preventDefault();
-                      handleSendMessage();
-                    }
-                  }}
+                  onEnterKey={handleSendMessage}
                 />
+                {/* File Upload Preview (if files selected) */}
+                {selectedFiles.length > 0 && (
+                  <div className="px-3 pb-2">
+                    <FileUpload
+                      onFileSelect={handleFileSelect}
+                      onFileRemove={handleFileRemove}
+                      selectedFiles={selectedFiles}
+                      isUploading={isUploadingFiles}
+                    />
+                  </div>
+                )}
+
                 <div className={`flex items-center justify-between px-3 pb-2 pt-1 ${isRTL ? 'flex-row-reverse' : ''}`}>
                   <div className="flex items-center gap-1">
-                    <Button variant="ghost" size="icon" className="h-8 w-8">
-                      <Paperclip className="h-4 w-4 text-gray-500" />
-                    </Button>
+                    <FileUpload
+                      onFileSelect={handleFileSelect}
+                      onFileRemove={handleFileRemove}
+                      selectedFiles={[]}
+                      isUploading={isUploadingFiles}
+                      multiple={true}
+                    />
                     <Button
                       variant={isRecording ? "destructive" : "ghost"}
                       size="icon"
@@ -690,7 +800,7 @@ export const ConversationDetail: React.FC<ConversationDetailProps> = ({ sessionI
                   </div>
                   <Button
                     onClick={handleSendMessage}
-                    disabled={sendMessageMutation.isPending || !message.trim()}
+                    disabled={sendMessageMutation.isPending || (!message.trim() && selectedFiles.length === 0) || isUploadingFiles}
                     size="sm"
                     className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white btn-hover-lift"
                   >
@@ -724,13 +834,12 @@ export const ConversationDetail: React.FC<ConversationDetailProps> = ({ sessionI
             </TabsContent>
 
             <TabsContent value="note" className="mt-4">
-              <div className="bg-gradient-to-r from-yellow-50 to-amber-50 dark:from-yellow-900/20 dark:to-amber-900/20 rounded-lg border-2 border-yellow-300 dark:border-yellow-600 card-shadow p-1">
-                <Textarea
+              <div className="bg-gradient-to-r from-yellow-50 to-amber-50 dark:from-yellow-900/20 dark:to-amber-900/20 rounded-lg border-2 border-yellow-300 dark:border-yellow-600 card-shadow overflow-hidden">
+                <RichTextEditor
                   value={note}
-                  onChange={(e) => setNote(e.target.value)}
+                  onChange={(value) => setNote(value)}
                   placeholder={t('conversations.detail.noteInput')}
-                  className="border-0 bg-transparent focus-visible:ring-0 resize-none min-h-[80px] text-gray-900 dark:text-gray-100 placeholder:text-yellow-700 dark:placeholder:text-yellow-300"
-                  rows={3}
+                  className="bg-transparent [&_.border-b]:border-yellow-300 dark:[&_.border-b]:border-yellow-600"
                 />
                 <div className={`flex items-center justify-between px-3 pb-2 pt-1 ${isRTL ? 'flex-row-reverse' : ''}`}>
                   <div className="flex items-center gap-2 text-xs text-yellow-800 dark:text-yellow-300">

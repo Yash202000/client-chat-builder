@@ -87,6 +87,29 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     fetchAndSetUser();
   }, [fetchAndSetUser]);
 
+  // Session validation on page visibility change
+  useEffect(() => {
+    const handleVisibilityChange = async () => {
+      if (document.visibilityState === 'visible' && token && user) {
+        try {
+          // Validate the session is still active when user returns to the page
+          const response = await authFetch('/api/v1/users/me');
+          if (!response.ok) {
+            console.warn('Session validation failed on visibility change');
+          }
+        } catch (error) {
+          console.error('Failed to validate session on visibility change:', error);
+          // authFetch will handle 401 errors and redirect to login
+        }
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [token, user, authFetch]);
+
   const login = (newToken: string) => {
     setToken(newToken);
     localStorage.setItem('accessToken', newToken);

@@ -18,6 +18,11 @@ export const BrandingProvider = ({ children }) => {
       return response.json();
     },
     enabled: !!companyId,
+    retry: 2,
+    // Don't throw errors to the ErrorBoundary, just log them
+    throwOnError: false,
+    // Use default settings if the query fails
+    placeholderData: null,
   });
 
   useEffect(() => {

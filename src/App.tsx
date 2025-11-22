@@ -56,8 +56,26 @@ import AIToolDetailPage from "./pages/AIToolDetailPage";
 import AIToolEditPage from "./pages/AIToolEditPage";
 import KnowledgeBaseProcessing from "./pages/KnowledgeBaseProcessing";
 import { ObjectDetectionPage } from "./pages/ObjectDetectionPage";
+import ErrorBoundary from "./components/ErrorBoundary";
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 5 * 60 * 1000, // 5 minutes
+      gcTime: 10 * 60 * 1000, // 10 minutes (formerly cacheTime)
+      retry: (failureCount, error: any) => {
+        // Don't retry on 401 (unauthorized) errors
+        if (error?.message === 'Unauthorized' || error?.status === 401) {
+          return false;
+        }
+        // Retry up to 2 times for other errors
+        return failureCount < 2;
+      },
+      refetchOnWindowFocus: true,
+      refetchOnReconnect: true,
+    },
+  },
+});
 
 const AppRoutes = () => {
   const { user } = useAuth();
@@ -125,21 +143,23 @@ const AppRoutes = () => {
 }
 
 const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <ThemeProvider>
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <AuthProvider>
-            <BrandingProvider>
-              <AppRoutes />
-            </BrandingProvider>
-          </AuthProvider>
-        </BrowserRouter>
-      </TooltipProvider>
-    </ThemeProvider>
-  </QueryClientProvider>
+  <ErrorBoundary>
+    <QueryClientProvider client={queryClient}>
+      <ThemeProvider>
+        <TooltipProvider>
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
+            <AuthProvider>
+              <BrandingProvider>
+                <AppRoutes />
+              </BrandingProvider>
+            </AuthProvider>
+          </BrowserRouter>
+        </TooltipProvider>
+      </ThemeProvider>
+    </QueryClientProvider>
+  </ErrorBoundary>
 );
 
 export default App;

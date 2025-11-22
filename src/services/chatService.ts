@@ -97,6 +97,22 @@ export const uploadFile = async (file: File, messageId?: number, channelId?: num
   return response.data;
 };
 
+// File upload for conversations (broadcasts via WebSocket, doesn't save to S3)
+export const uploadConversationFile = async (file: File, sessionId: string) => {
+  const formData = new FormData();
+  formData.append('file', file);
+  formData.append('session_id', sessionId);
+
+  const token = localStorage.getItem('accessToken');
+  const response = await axios.post(`${API_URL}/api/v1/chat/conversation/upload`, formData, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+      'Content-Type': 'multipart/form-data',
+    },
+  });
+  return response.data;
+};
+
 export const downloadFile = async (fileKey: string) => {
   const token = localStorage.getItem('accessToken');
   const response = await axios.get(`${API_URL}/api/v1/chat/download/${fileKey}`, {
