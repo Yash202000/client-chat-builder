@@ -27,14 +27,24 @@ export const ContactProfile: React.FC<ContactProfileProps> = ({ sessionId }) => 
   const [formData, setFormData] = useState<Partial<Contact>>({});
   const { authFetch } = useAuth();
 
-  const { data: contact, isLoading } = useQuery<Contact>({
+  const { data: contact, isLoading } = useQuery<Contact | null>({
     queryKey: ['contact', sessionId],
     queryFn: async () => {
       const response = await authFetch(`/api/v1/contacts/by_session/${sessionId}`);
-      if (!response.ok) throw new Error('Failed to fetch contact');
-      return response.json();
+      if (!response.ok) {
+        // If session not found, throw error
+        if (response.status === 404) {
+          throw new Error('Session not found');
+        }
+        // For other errors, throw
+        throw new Error('Failed to fetch contact');
+      }
+      const data = await response.json();
+      // API returns null for sessions without contact
+      return data;
     },
     enabled: !!sessionId,
+    retry: false, // Don't retry on failure
   });
 
   // When contact data is fetched or changes, update the form data
@@ -131,6 +141,15 @@ export const ContactProfile: React.FC<ContactProfileProps> = ({ sessionId }) => 
 
       {/* Scrollable Content */}
       <CardContent className="flex-1 overflow-y-auto p-6 space-y-6 bg-white dark:bg-slate-800">
+        {/* Show info banner when no contact exists yet */}
+        {!contact && (
+          <div className="bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-900 rounded-lg p-3 text-sm">
+            <p className="text-blue-800 dark:text-blue-300">
+              <strong>Anonymous User:</strong> The AI will collect contact information during the conversation.
+            </p>
+          </div>
+        )}
+
         {/* Avatar Section */}
         <div className="flex flex-col items-center">
           <Avatar className="h-24 w-24 text-3xl ring-4 ring-slate-200 dark:ring-slate-700 shadow-lg">

@@ -11,6 +11,39 @@ import { useI18n } from "@/hooks/useI18n";
 import { toast } from "sonner";
 import { ArrowLeft } from "lucide-react";
 
+// Provider-specific model configurations
+const PROVIDER_MODELS: Record<string, Array<{ value: string; label: string }>> = {
+  groq: [
+    { value: 'llama-3.3-70b-versatile', label: 'Llama 3.3 70B Versatile (Recommended)' },
+    { value: 'llama-3.1-70b-versatile', label: 'Llama 3.1 70B Versatile' },
+    { value: 'llama-3.1-8b-instant', label: 'Llama 3.1 8B Instant' },
+    { value: 'llama3-70b-8192', label: 'Llama 3 70B' },
+    { value: 'llama3-8b-8192', label: 'Llama 3 8B' },
+    { value: 'mixtral-8x7b-32768', label: 'Mixtral 8x7B' },
+    { value: 'gemma2-9b-it', label: 'Gemma 2 9B' },
+  ],
+  gemini: [
+    { value: 'gemini-1.5-pro', label: 'Gemini 1.5 Pro (Recommended)' },
+    { value: 'gemini-1.5-flash', label: 'Gemini 1.5 Flash' },
+    { value: 'gemini-pro', label: 'Gemini Pro' },
+    { value: 'gemini-1.5-flash-8b', label: 'Gemini 1.5 Flash 8B' },
+  ],
+  openai: [
+    { value: 'gpt-4o', label: 'GPT-4o (Recommended)' },
+    { value: 'gpt-4o-mini', label: 'GPT-4o Mini' },
+    { value: 'gpt-4-turbo', label: 'GPT-4 Turbo' },
+    { value: 'gpt-4', label: 'GPT-4' },
+    { value: 'gpt-3.5-turbo', label: 'GPT-3.5 Turbo' },
+  ],
+};
+
+// Default models for each provider
+const DEFAULT_MODELS: Record<string, string> = {
+  groq: 'llama-3.3-70b-versatile',
+  gemini: 'gemini-1.5-pro',
+  openai: 'gpt-4o',
+};
+
 export const AgentSettingsPage = () => {
   const { agentId } = useParams<{ agentId: string }>();
   const navigate = useNavigate();
@@ -67,6 +100,20 @@ export const AgentSettingsPage = () => {
       });
     }
   }, [agent]);
+
+  // Reset model to default when provider changes
+  useEffect(() => {
+    const currentModels = PROVIDER_MODELS[agentConfig.llm_provider] || [];
+    const isCurrentModelValid = currentModels.some(model => model.value === agentConfig.model_name);
+
+    // If current model is not in the new provider's list, reset to default
+    if (!isCurrentModelValid && agentConfig.llm_provider) {
+      const defaultModel = DEFAULT_MODELS[agentConfig.llm_provider];
+      if (defaultModel) {
+        setAgentConfig(prev => ({ ...prev, model_name: defaultModel }));
+      }
+    }
+  }, [agentConfig.llm_provider]);
 
   const mutation = useMutation({
     mutationFn: (updatedConfig: Partial<Agent>) => {
@@ -238,17 +285,26 @@ export const AgentSettingsPage = () => {
                     >
                       <option value="groq">{t("agents.settingsPage.llmProviders.groq")}</option>
                       <option value="gemini">{t("agents.settingsPage.llmProviders.gemini")}</option>
+                      <option value="openai">{t("agents.settingsPage.llmProviders.openai")}</option>
                     </select>
                   </div>
                   <div>
                     <Label htmlFor="modelName" className="text-sm font-medium dark:text-gray-300">{t("agents.settingsPage.modelName")}</Label>
-                    <Input
+                    <select
                       id="modelName"
                       value={agentConfig.model_name}
                       onChange={(e) => setAgentConfig({ ...agentConfig, model_name: e.target.value })}
-                      className="mt-1.5 dark:bg-slate-800 dark:border-slate-600 dark:text-white font-mono text-sm"
-                      placeholder={t("agents.settingsPage.enterModelName")}
-                    />
+                      className="w-full mt-1.5 p-2 border rounded-md bg-white dark:bg-slate-800 dark:border-slate-600 dark:text-white focus:ring-2 focus:ring-green-500 transition-all"
+                    >
+                      {PROVIDER_MODELS[agentConfig.llm_provider]?.map((model) => (
+                        <option key={model.value} value={model.value}>
+                          {model.label}
+                        </option>
+                      ))}
+                    </select>
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1.5">
+                      {t("agents.settingsPage.modelDesc")}
+                    </p>
                   </div>
                   <div>
                     <Label htmlFor="embeddingModel" className="text-sm font-medium dark:text-gray-300">{t("agents.settingsPage.embeddingModel")}</Label>
@@ -282,6 +338,7 @@ export const AgentSettingsPage = () => {
                     >
                       <option value="voice_engine">{t("agents.settingsPage.ttsProviders.voice_engine")}</option>
                       <option value="localai">{t("agents.settingsPage.ttsProviders.localai")}</option>
+                      <option value="openai">{t("agents.settingsPage.ttsProviders.openai")}</option>
                     </select>
                   </div>
                   <div>
@@ -294,6 +351,7 @@ export const AgentSettingsPage = () => {
                     >
                       <option value="deepgram">{t("agents.settingsPage.sttProviders.deepgram")}</option>
                       <option value="groq">{t("agents.settingsPage.sttProviders.groq")}</option>
+                      <option value="openai">{t("agents.settingsPage.sttProviders.openai")}</option>
                     </select>
                   </div>
                   <div>

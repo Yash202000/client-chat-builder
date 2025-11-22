@@ -74,7 +74,18 @@ export const CreateCredentialDialog: React.FC<CreateCredentialDialogProps> = ({
           </div>
           <div className="grid grid-cols-4 items-center gap-4">
             <Label htmlFor="service" className="text-right">Service</Label>
-            <Input id="service" value={service} onChange={(e) => setService(e.target.value)} className="col-span-3" />
+            <select
+              id="service"
+              value={service}
+              onChange={(e) => setService(e.target.value)}
+              className="col-span-3 p-2 border rounded-md dark:bg-slate-900 dark:border-slate-600 dark:text-white"
+              required
+            >
+              <option value="">Select a service</option>
+              <option value="groq">Groq</option>
+              <option value="gemini">Gemini</option>
+              <option value="openai">OpenAI</option>
+            </select>
           </div>
           <div className="grid grid-cols-4 items-center gap-4">
             <Label htmlFor="credentials" className="text-right">Credentials (JSON)</Label>

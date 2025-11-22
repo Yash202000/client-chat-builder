@@ -189,6 +189,14 @@ export const ConversationDetail: React.FC<ConversationDetailProps> = ({ sessionI
           return;
         }
 
+        // Handle contact update messages
+        if (newMessage.type === 'contact_updated') {
+          console.log('[WebSocket] Contact updated:', newMessage);
+          // Refresh session details to get updated contact info
+          queryClient.invalidateQueries({ queryKey: ['sessionDetails', sessionId] });
+          return;
+        }
+
         // Filter out typing indicator messages - they should not appear as messages
         if (newMessage.message_type === 'typing') {
           return;
@@ -861,16 +869,6 @@ export const ConversationDetail: React.FC<ConversationDetailProps> = ({ sessionI
           </Tabs>
         </footer>
       </div>
-
-      {contact && (
-        <ConversationSidebar
-          contactName={contact.name || 'Unknown User'}
-          contactEmail={contact.email || 'No email'}
-          contactPhone={contact.phone_number || 'No phone'}
-          sessionId={sessionId}
-          createdAt={sessionDetails?.created_at}
-        />
-      )}
 
       {isCallModalOpen && (
         <VideoCallModal 

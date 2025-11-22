@@ -137,6 +137,7 @@
       "personality": "Personality",
       "timezone": "Timezone",
       "modelName": "Model Name",
+      "modelDesc": "Select the AI model for this agent. Different models offer varying performance and capabilities.",
       "embeddingModel": "Embedding Model",
       "ttsProvider": "Text-to-Speech Provider",
       "sttProvider": "Speech-to-Text Provider",
@@ -169,7 +170,8 @@
       },
       "llmProviders": {
         "groq": "Groq",
-        "gemini": "Gemini"
+        "gemini": "Gemini",
+        "openai": "OpenAI"
       },
       "embeddingModels": {
         "gemini": "Gemini",
@@ -178,11 +180,13 @@
       },
       "ttsProviders": {
         "voice_engine": "Custom Voice Engine",
-        "localai": "Local AI"
+        "localai": "Local AI",
+        "openai": "OpenAI"
       },
       "sttProviders": {
         "deepgram": "Deepgram",
-        "groq": "Groq"
+        "groq": "Groq",
+        "openai": "OpenAI"
       },
       "voices": {
         "default": "Default Voice"
@@ -809,8 +813,13 @@
     "namePlaceholder": "e.g., My OpenAI Key",
     "nameDesc": "A descriptive name for your credential.",
     "serviceLabel": "Service",
-    "servicePlaceholder": "e.g., openai",
-    "serviceDesc": "The name of the service (e.g., openai, google, etc.).",
+    "servicePlaceholder": "Select a service",
+    "serviceDesc": "The AI service provider for this API key.",
+    "services": {
+      "groq": "Groq",
+      "gemini": "Gemini",
+      "openai": "OpenAI"
+    },
     "apiKeyLabel": "API Key",
     "newApiKeyLabel": "New API Key (Leave blank to keep current)",
     "apiKeyPlaceholder": "sk-...",

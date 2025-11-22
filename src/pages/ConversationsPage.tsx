@@ -356,6 +356,18 @@ const ConversationsPage: React.FC = () => {
 
           // Also invalidate all tab queries to ensure consistency
           queryClient.invalidateQueries({ queryKey: ['sessions', companyId] });
+        } else if (eventData.type === 'contact_updated') {
+          // Handle real-time contact updates when AI collects contact information
+          console.log('[WebSocket] 📇 Contact updated:', eventData);
+
+          // Invalidate contact query to refresh ContactProfile component
+          if (selectedSessionId === eventData.session_id) {
+            queryClient.invalidateQueries({ queryKey: ['contact', selectedSessionId] });
+            queryClient.invalidateQueries({ queryKey: ['sessionDetails', selectedSessionId] });
+          }
+
+          // Also refresh sessions list to show updated contact name
+          queryClient.invalidateQueries({ queryKey: ['sessions', companyId] });
         }
       },
       enabled: !!wsUrl,

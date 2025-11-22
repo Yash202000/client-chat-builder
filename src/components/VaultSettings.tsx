@@ -175,14 +175,18 @@ export const VaultSettings = () => {
       </div>
       <div className="space-y-2">
         <Label htmlFor="service" className="dark:text-gray-300">{t('vault.serviceLabel')}</Label>
-        <Input
+        <select
           id="service"
           value={formData.service}
           onChange={(e) => setFormData({ ...formData, service: e.target.value })}
-          placeholder={t('vault.servicePlaceholder')}
           required
-          className="dark:bg-slate-900 dark:border-slate-600 dark:text-white"
-        />
+          className="w-full p-2 border rounded-md dark:bg-slate-900 dark:border-slate-600 dark:text-white focus:ring-2 focus:ring-blue-500 transition-all"
+        >
+          <option value="">{t('vault.servicePlaceholder')}</option>
+          <option value="groq">{t('vault.services.groq')}</option>
+          <option value="gemini">{t('vault.services.gemini')}</option>
+          <option value="openai">{t('vault.services.openai')}</option>
+        </select>
         <p className="text-xs text-gray-500 dark:text-gray-400">{t('vault.serviceDesc')}</p>
       </div>
       <div className="space-y-2">
