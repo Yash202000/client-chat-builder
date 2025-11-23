@@ -79,7 +79,11 @@
     "visionAI": "Vision AI",
     "internalChat": "Internal Chat",
     "teamChat": "Team Chat",
-    "clientPortal": "Client Portal"
+    "clientPortal": "Client Portal",
+    "crm": "CRM",
+    "contacts": "Contacts",
+    "leads": "Leads",
+    "campaigns": "Campaigns"
   },
   "agents": {
     "title": "Your AI Agents",

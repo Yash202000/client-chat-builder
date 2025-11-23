@@ -14,18 +14,18 @@ import axios from "axios";
 import IncomingCallModal from "@/components/IncomingCallModal";
 import { BACKEND_URL } from "@/config/env";
 import { API_BASE_URL } from "@/config/api";
-import { 
-  Plus, 
-  MessageSquare, 
-  Settings, 
-  BarChart3, 
-  Bot, 
-  Users, 
-  Inbox, 
-  FileText, 
-  Sparkles, 
+import {
+  Plus,
+  MessageSquare,
+  Settings,
+  BarChart3,
+  Bot,
+  Users,
+  Inbox,
+  FileText,
+  Sparkles,
   WorkflowIcon as WorkflowIcon,
-  Zap, 
+  Zap,
   Palette,
   Menu,
   X,
@@ -33,7 +33,10 @@ import {
   BookOpen,
   CreditCard,
   Mic,
-  Building
+  Building,
+  Target,
+  Send,
+  TrendingUp
 } from "lucide-react";
 import { CreateAgentDialog } from "@/components/CreateAgentDialog";
 import { Permission } from "./Permission";
@@ -379,6 +382,12 @@ const AppLayout = () => {
 
     // Analytics & Monitoring
     { titleKey: "navigation.reports", url: "/dashboard/reports", icon: BarChart3, permission: "analytics:read" },
+
+    // CRM
+    { titleKey: "navigation.crm", url: "/dashboard/crm", icon: TrendingUp, permission: "crm:read" },
+    { titleKey: "navigation.contacts", url: "/dashboard/crm/contacts", icon: Users, permission: "crm:read" },
+    { titleKey: "navigation.leads", url: "/dashboard/crm/leads", icon: Target, permission: "crm:read" },
+    { titleKey: "navigation.campaigns", url: "/dashboard/crm/campaigns", icon: Send, permission: "crm:read" },
 
     // Configuration & Resources
     { titleKey: "navigation.knowledgeBases", url: "/dashboard/knowledge-base/manage", icon: BookOpen, permission: "knowledgebase:read" },

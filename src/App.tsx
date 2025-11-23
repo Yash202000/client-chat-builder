@@ -57,6 +57,12 @@ import AIToolEditPage from "./pages/AIToolEditPage";
 import KnowledgeBaseProcessing from "./pages/KnowledgeBaseProcessing";
 import { ObjectDetectionPage } from "./pages/ObjectDetectionPage";
 import ErrorBoundary from "./components/ErrorBoundary";
+// CRM Pages
+import CRMDashboard from "./pages/CRM/CRMDashboard";
+import LeadsPage from "./pages/CRM/LeadsPage";
+import ContactsPage from "./pages/CRM/ContactsPage";
+import CampaignsPage from "./pages/CRM/CampaignsPage";
+import AnalyticsPage from "./pages/CRM/AnalyticsPage";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -127,6 +133,12 @@ const AppRoutes = () => {
           <Route path="ai-tools/:id" element={<AIToolDetailPage />} />
           <Route path="ai-tools/:id/edit" element={<AIToolEditPage />} />
           <Route path="object-detection" element={<ObjectDetectionPage />} />
+          {/* CRM Routes */}
+          <Route path="crm" element={<CRMDashboard />} />
+          <Route path="crm/leads" element={<LeadsPage />} />
+          <Route path="crm/contacts" element={<ContactsPage />} />
+          <Route path="crm/campaigns" element={<CampaignsPage />} />
+          <Route path="crm/analytics" element={<AnalyticsPage />} />
         </Route>
       </Route>
       <Route path="/client-portal" element={<ProtectedRoute />}>
