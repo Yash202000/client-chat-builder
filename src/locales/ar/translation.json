@@ -2186,11 +2186,19 @@
       },
       "types": {
         "email": "بريد إلكتروني",
+        "emailDesc": "إرسال حملات بريد إلكتروني إلى جهات الاتصال الخاصة بك",
         "sms": "رسائل نصية",
+        "smsDesc": "إرسال رسائل نصية إلى أرقام الهواتف",
+        "whatsapp": "واتساب",
+        "whatsappDesc": "إرسال رسائل واتساب",
+        "voice": "صوتي",
+        "voiceDesc": "مكالمات صوتية آلية",
         "social": "وسائل التواصل الاجتماعي",
         "ads": "إعلانات",
         "content": "محتوى",
         "event": "حدث",
+        "multi_channel": "متعدد القنوات",
+        "multiChannelDesc": "الجمع بين قنوات متعددة",
         "other": "أخرى"
       },
       "status": {
@@ -2238,6 +2246,28 @@
         "duplicate": "نسخ",
         "viewReport": "عرض التقرير",
         "export": "تصدير"
+      },
+      "create": {
+        "selectType": "اختر نوع الحملة التي تريد إنشاءها",
+        "campaignDetails": "تفاصيل الحملة",
+        "basicInfo": "المعلومات الأساسية حول حملتك",
+        "scheduleAndBudget": "الجدولة والميزانية",
+        "setTimeline": "حدد الجدول الزمني والميزانية لحملتك",
+        "goalType": "نوع الهدف",
+        "selectGoalType": "اختر نوع الهدف",
+        "goalTarget": "الهدف المستهدف",
+        "namePlaceholder": "مثال: تخفيضات الصيف 2024",
+        "descriptionPlaceholder": "صف أهداف حملتك والجمهور المستهدف...",
+        "goalPlaceholder": "مثال: 100 عميل محتمل",
+        "creating": "جاري الإنشاء...",
+        "required": "مطلوب"
+      },
+      "goals": {
+        "awareness": "الوعي بالعلامة التجارية",
+        "engagement": "التفاعل",
+        "leads": "توليد العملاء المحتملين",
+        "conversions": "التحويلات",
+        "sales": "المبيعات"
       }
     },
     "common": {

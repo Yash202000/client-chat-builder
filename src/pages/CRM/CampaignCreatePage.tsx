@@ -31,11 +31,11 @@ import axios from 'axios';
 import { useToast } from '@/hooks/use-toast';
 
 const CAMPAIGN_TYPES = [
-  { value: 'email', label: 'Email', icon: Mail, description: 'Send email campaigns to your contacts' },
-  { value: 'sms', label: 'SMS', icon: MessageSquare, description: 'Send SMS messages to phone numbers' },
-  { value: 'whatsapp', label: 'WhatsApp', icon: MessageSquare, description: 'Send WhatsApp messages' },
-  { value: 'voice', label: 'Voice', icon: Phone, description: 'Automated voice calls' },
-  { value: 'multi_channel', label: 'Multi-Channel', icon: Layers, description: 'Combine multiple channels' },
+  { value: 'email', labelKey: 'email', icon: Mail, descKey: 'emailDesc' },
+  { value: 'sms', labelKey: 'sms', icon: MessageSquare, descKey: 'smsDesc' },
+  { value: 'whatsapp', labelKey: 'whatsapp', icon: MessageSquare, descKey: 'whatsappDesc' },
+  { value: 'voice', labelKey: 'voice', icon: Phone, descKey: 'voiceDesc' },
+  { value: 'multi_channel', labelKey: 'multi_channel', icon: Layers, descKey: 'multiChannelDesc' },
 ];
 
 export default function CampaignCreatePage() {
@@ -134,7 +134,7 @@ export default function CampaignCreatePage() {
               {t('crm.campaigns.fields.type')}
             </CardTitle>
             <CardDescription className="dark:text-gray-400">
-              Select the type of campaign you want to create
+              {t('crm.campaigns.create.selectType')}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -162,9 +162,9 @@ export default function CampaignCreatePage() {
                       <Icon className={cn("h-6 w-6", isSelected ? "text-white" : "text-slate-600 dark:text-slate-300")} />
                     </div>
                     <h4 className={cn("font-semibold mb-1", isSelected ? "text-orange-600 dark:text-orange-400" : "dark:text-white")}>
-                      {type.label}
+                      {t(`crm.campaigns.types.${type.labelKey}`)}
                     </h4>
-                    <p className="text-xs text-gray-500 dark:text-gray-400">{type.description}</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">{t(`crm.campaigns.types.${type.descKey}`)}</p>
                   </div>
                 );
               })}
@@ -176,10 +176,10 @@ export default function CampaignCreatePage() {
         <Card className="border-slate-200 dark:border-slate-700 dark:bg-slate-800">
           <CardHeader>
             <CardTitle className="text-lg font-semibold dark:text-white">
-              Campaign Details
+              {t('crm.campaigns.create.campaignDetails')}
             </CardTitle>
             <CardDescription className="dark:text-gray-400">
-              Basic information about your campaign
+              {t('crm.campaigns.create.basicInfo')}
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -190,27 +190,27 @@ export default function CampaignCreatePage() {
                 </Label>
                 <Input
                   id="name"
-                  placeholder="e.g., Summer Sale 2024"
+                  placeholder={t('crm.campaigns.create.namePlaceholder')}
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                   className="dark:bg-slate-900 dark:border-slate-600"
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="goal_type">Goal Type</Label>
+                <Label htmlFor="goal_type">{t('crm.campaigns.create.goalType')}</Label>
                 <Select
                   value={formData.goal_type}
                   onValueChange={(value) => setFormData({ ...formData, goal_type: value })}
                 >
                   <SelectTrigger className="dark:bg-slate-900 dark:border-slate-600">
-                    <SelectValue placeholder="Select goal type" />
+                    <SelectValue placeholder={t('crm.campaigns.create.selectGoalType')} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="awareness">Brand Awareness</SelectItem>
-                    <SelectItem value="engagement">Engagement</SelectItem>
-                    <SelectItem value="leads">Lead Generation</SelectItem>
-                    <SelectItem value="conversions">Conversions</SelectItem>
-                    <SelectItem value="sales">Sales</SelectItem>
+                    <SelectItem value="awareness">{t('crm.campaigns.goals.awareness')}</SelectItem>
+                    <SelectItem value="engagement">{t('crm.campaigns.goals.engagement')}</SelectItem>
+                    <SelectItem value="leads">{t('crm.campaigns.goals.leads')}</SelectItem>
+                    <SelectItem value="conversions">{t('crm.campaigns.goals.conversions')}</SelectItem>
+                    <SelectItem value="sales">{t('crm.campaigns.goals.sales')}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -220,7 +220,7 @@ export default function CampaignCreatePage() {
               <Label htmlFor="description">{t('crm.campaigns.fields.description')}</Label>
               <Textarea
                 id="description"
-                placeholder="Describe your campaign objectives and target audience..."
+                placeholder={t('crm.campaigns.create.descriptionPlaceholder')}
                 value={formData.description}
                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                 rows={3}
@@ -235,10 +235,10 @@ export default function CampaignCreatePage() {
           <CardHeader>
             <CardTitle className="text-lg font-semibold dark:text-white flex items-center gap-2">
               <Calendar className="h-5 w-5 text-orange-500" />
-              Schedule & Budget
+              {t('crm.campaigns.create.scheduleAndBudget')}
             </CardTitle>
             <CardDescription className="dark:text-gray-400">
-              Set your campaign timeline and budget
+              {t('crm.campaigns.create.setTimeline')}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -275,11 +275,11 @@ export default function CampaignCreatePage() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="goal_value">Goal Target</Label>
+                <Label htmlFor="goal_value">{t('crm.campaigns.create.goalTarget')}</Label>
                 <Input
                   id="goal_value"
                   type="number"
-                  placeholder="e.g., 100 leads"
+                  placeholder={t('crm.campaigns.create.goalPlaceholder')}
                   value={formData.goal_value}
                   onChange={(e) => setFormData({ ...formData, goal_value: e.target.value })}
                   className="dark:bg-slate-900 dark:border-slate-600"
@@ -307,7 +307,7 @@ export default function CampaignCreatePage() {
             {loading ? (
               <div className="flex items-center gap-2">
                 <div className="h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                Creating...
+                {t('crm.campaigns.create.creating')}
               </div>
             ) : (
               <>

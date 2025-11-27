@@ -2198,11 +2198,19 @@
       },
       "types": {
         "email": "Email",
+        "emailDesc": "Send email campaigns to your contacts",
         "sms": "SMS",
+        "smsDesc": "Send SMS messages to phone numbers",
+        "whatsapp": "WhatsApp",
+        "whatsappDesc": "Send WhatsApp messages",
+        "voice": "Voice",
+        "voiceDesc": "Automated voice calls",
         "social": "Social Media",
         "ads": "Ads",
         "content": "Content",
         "event": "Event",
+        "multi_channel": "Multi-Channel",
+        "multiChannelDesc": "Combine multiple channels",
         "other": "Other"
       },
       "status": {
@@ -2250,6 +2258,28 @@
         "duplicate": "Duplicate",
         "viewReport": "View Report",
         "export": "Export"
+      },
+      "create": {
+        "selectType": "Select the type of campaign you want to create",
+        "campaignDetails": "Campaign Details",
+        "basicInfo": "Basic information about your campaign",
+        "scheduleAndBudget": "Schedule & Budget",
+        "setTimeline": "Set your campaign timeline and budget",
+        "goalType": "Goal Type",
+        "selectGoalType": "Select goal type",
+        "goalTarget": "Goal Target",
+        "namePlaceholder": "e.g., Summer Sale 2024",
+        "descriptionPlaceholder": "Describe your campaign objectives and target audience...",
+        "goalPlaceholder": "e.g., 100 leads",
+        "creating": "Creating...",
+        "required": "required"
+      },
+      "goals": {
+        "awareness": "Brand Awareness",
+        "engagement": "Engagement",
+        "leads": "Lead Generation",
+        "conversions": "Conversions",
+        "sales": "Sales"
       }
     },
     "common": {
