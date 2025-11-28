@@ -1,17 +1,13 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import {
   ArrowLeft,
-  Send,
   Mail,
   MessageSquare,
   Phone,
   Layers,
   Calendar,
-  DollarSign,
-  Users,
-  Target,
   Save,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -38,11 +34,13 @@ const CAMPAIGN_TYPES = [
   { value: 'multi_channel', labelKey: 'multi_channel', icon: Layers, descKey: 'multiChannelDesc' },
 ];
 
-export default function CampaignCreatePage() {
+export default function CampaignEditPage() {
+  const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { t } = useTranslation();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
+  const [fetching, setFetching] = useState(true);
   const [formData, setFormData] = useState({
     name: '',
     description: '',
@@ -54,13 +52,58 @@ export default function CampaignCreatePage() {
     end_date: '',
   });
 
+  const getAuthHeaders = () => {
+    const token = localStorage.getItem('accessToken');
+    return { Authorization: `Bearer ${token}` };
+  };
+
+  useEffect(() => {
+    fetchCampaign();
+  }, [id]);
+
+  const formatDateForInput = (dateString?: string) => {
+    if (!dateString) return '';
+    const date = new Date(dateString);
+    return date.toISOString().slice(0, 16);
+  };
+
+  const fetchCampaign = async () => {
+    try {
+      setFetching(true);
+      const headers = getAuthHeaders();
+      const response = await axios.get(`/api/v1/campaigns/${id}`, { headers });
+      const campaign = response.data;
+
+      setFormData({
+        name: campaign.name || '',
+        description: campaign.description || '',
+        campaign_type: campaign.campaign_type?.toLowerCase() || '',
+        goal_type: campaign.goal_type || '',
+        goal_value: campaign.goal_value?.toString() || '',
+        budget: campaign.budget?.toString() || '',
+        start_date: formatDateForInput(campaign.start_date),
+        end_date: formatDateForInput(campaign.end_date),
+      });
+    } catch (error) {
+      console.error('Error fetching campaign:', error);
+      toast({
+        title: t('crm.common.error'),
+        description: t('crm.campaigns.fetchError'),
+        variant: 'destructive',
+      });
+      navigate('/dashboard/crm/campaigns');
+    } finally {
+      setFetching(false);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!formData.name || !formData.campaign_type) {
       toast({
         title: t('crm.common.error'),
-        description: 'Campaign name and type are required',
+        description: t('crm.campaigns.edit.requiredFields'),
         variant: 'destructive',
       });
       return;
@@ -68,14 +111,12 @@ export default function CampaignCreatePage() {
 
     setLoading(true);
     try {
-      const token = localStorage.getItem('accessToken');
-      const headers = { Authorization: `Bearer ${token}` };
+      const headers = getAuthHeaders();
 
       const payload: any = {
         name: formData.name,
         description: formData.description || null,
         campaign_type: formData.campaign_type,
-        status: 'draft',
       };
 
       if (formData.goal_type) payload.goal_type = formData.goal_type;
@@ -84,25 +125,37 @@ export default function CampaignCreatePage() {
       if (formData.start_date) payload.start_date = new Date(formData.start_date).toISOString();
       if (formData.end_date) payload.end_date = new Date(formData.end_date).toISOString();
 
-      const response = await axios.post('/api/v1/campaigns/', payload, { headers });
+      await axios.patch(`/api/v1/campaigns/${id}`, payload, { headers });
 
       toast({
         title: t('crm.common.success'),
-        description: 'Campaign created successfully',
+        description: t('crm.campaigns.edit.updated'),
       });
 
-      navigate(`/dashboard/crm/campaigns/${response.data.id}`);
+      navigate(`/dashboard/crm/campaigns/${id}`);
     } catch (error: any) {
-      console.error('Error creating campaign:', error);
+      console.error('Error updating campaign:', error);
       toast({
         title: t('crm.common.error'),
-        description: error.response?.data?.detail || 'Failed to create campaign',
+        description: error.response?.data?.detail || t('crm.campaigns.updateError'),
         variant: 'destructive',
       });
     } finally {
       setLoading(false);
     }
   };
+
+  if (fetching) {
+    return (
+      <div className="p-6">
+        <div className="animate-pulse space-y-6">
+          <div className="h-8 w-64 bg-slate-200 dark:bg-slate-700 rounded" />
+          <div className="h-48 bg-slate-200 dark:bg-slate-700 rounded-xl" />
+          <div className="h-48 bg-slate-200 dark:bg-slate-700 rounded-xl" />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6 p-6 animate-fade-in">
@@ -111,17 +164,17 @@ export default function CampaignCreatePage() {
         <Button
           variant="ghost"
           size="icon"
-          onClick={() => navigate('/dashboard/crm/campaigns')}
+          onClick={() => navigate(`/dashboard/crm/campaigns/${id}`)}
           className="h-10 w-10"
         >
           <ArrowLeft className="h-5 w-5" />
         </Button>
         <div>
           <h2 className="text-3xl font-bold bg-gradient-to-r from-orange-600 to-red-600 bg-clip-text text-transparent">
-            {t('crm.campaigns.addCampaign')}
+            {t('crm.campaigns.editCampaign')}
           </h2>
           <p className="text-gray-600 dark:text-gray-400">
-            {t('crm.campaigns.subtitle')}
+            {t('crm.campaigns.edit.subtitle')}
           </p>
         </div>
       </div>
@@ -295,7 +348,7 @@ export default function CampaignCreatePage() {
           <Button
             type="button"
             variant="outline"
-            onClick={() => navigate('/dashboard/crm/campaigns')}
+            onClick={() => navigate(`/dashboard/crm/campaigns/${id}`)}
             className="dark:bg-slate-800 dark:border-slate-600"
           >
             {t('crm.common.cancel')}
@@ -308,12 +361,12 @@ export default function CampaignCreatePage() {
             {loading ? (
               <div className="flex items-center gap-2">
                 <div className="h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                {t('crm.campaigns.create.creating')}
+                {t('crm.campaigns.edit.saving')}
               </div>
             ) : (
               <>
                 <Save className="h-4 w-4 mr-2" />
-                {t('crm.campaigns.addCampaign')}
+                {t('crm.campaigns.edit.saveChanges')}
               </>
             )}
           </Button>

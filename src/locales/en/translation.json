@@ -2274,13 +2274,51 @@
         "creating": "Creating...",
         "required": "required"
       },
+      "edit": {
+        "subtitle": "Update your campaign settings",
+        "requiredFields": "Campaign name and type are required",
+        "updated": "Campaign updated successfully",
+        "saving": "Saving...",
+        "saveChanges": "Save Changes"
+      },
       "goals": {
-        "awareness": "Brand Awareness",
+        "lead_generation": "Lead Generation",
+        "nurture": "Nurture",
+        "conversion": "Conversion",
         "engagement": "Engagement",
-        "leads": "Lead Generation",
-        "conversions": "Conversions",
-        "sales": "Sales"
-      }
+        "retention": "Retention",
+        "reactivation": "Reactivation"
+      },
+      "detail": {
+        "overview": "Overview",
+        "analytics": "Analytics",
+        "contacts": "Contacts",
+        "of": "of",
+        "engaged": "engaged",
+        "spent": "Spent",
+        "lastRun": "Last Run",
+        "created": "Created",
+        "analyticsComingSoon": "Campaign analytics coming soon",
+        "contactsComingSoon": "Campaign contacts list coming soon"
+      },
+      "views": {
+        "list": "List",
+        "calendar": "Calendar"
+      },
+      "calendar": {
+        "today": "Today",
+        "more": "more",
+        "legend": "Legend"
+      },
+      "notFound": "Campaign not found",
+      "backToCampaigns": "Back to Campaigns",
+      "fetchError": "Failed to load campaign",
+      "statusUpdated": "Campaign status updated",
+      "updateError": "Failed to update campaign",
+      "deleted": "Campaign deleted successfully",
+      "deleteError": "Failed to delete campaign",
+      "deleteConfirmTitle": "Delete Campaign?",
+      "markComplete": "Mark as Complete"
     },
     "common": {
       "save": "Save",

@@ -2262,13 +2262,51 @@
         "creating": "جاري الإنشاء...",
         "required": "مطلوب"
       },
+      "edit": {
+        "subtitle": "تحديث إعدادات حملتك",
+        "requiredFields": "اسم الحملة ونوعها مطلوبان",
+        "updated": "تم تحديث الحملة بنجاح",
+        "saving": "جاري الحفظ...",
+        "saveChanges": "حفظ التغييرات"
+      },
       "goals": {
-        "awareness": "الوعي بالعلامة التجارية",
+        "lead_generation": "توليد العملاء المحتملين",
+        "nurture": "رعاية العملاء",
+        "conversion": "التحويل",
         "engagement": "التفاعل",
-        "leads": "توليد العملاء المحتملين",
-        "conversions": "التحويلات",
-        "sales": "المبيعات"
-      }
+        "retention": "الاحتفاظ بالعملاء",
+        "reactivation": "إعادة التنشيط"
+      },
+      "detail": {
+        "overview": "نظرة عامة",
+        "analytics": "التحليلات",
+        "contacts": "جهات الاتصال",
+        "of": "من",
+        "engaged": "تفاعلوا",
+        "spent": "المنفق",
+        "lastRun": "آخر تشغيل",
+        "created": "تاريخ الإنشاء",
+        "analyticsComingSoon": "تحليلات الحملة قريباً",
+        "contactsComingSoon": "قائمة جهات اتصال الحملة قريباً"
+      },
+      "views": {
+        "list": "قائمة",
+        "calendar": "تقويم"
+      },
+      "calendar": {
+        "today": "اليوم",
+        "more": "المزيد",
+        "legend": "دليل الألوان"
+      },
+      "notFound": "الحملة غير موجودة",
+      "backToCampaigns": "العودة إلى الحملات",
+      "fetchError": "فشل في تحميل الحملة",
+      "statusUpdated": "تم تحديث حالة الحملة",
+      "updateError": "فشل في تحديث الحملة",
+      "deleted": "تم حذف الحملة بنجاح",
+      "deleteError": "فشل في حذف الحملة",
+      "deleteConfirmTitle": "حذف الحملة؟",
+      "markComplete": "وضع علامة مكتمل"
     },
     "common": {
       "save": "حفظ",

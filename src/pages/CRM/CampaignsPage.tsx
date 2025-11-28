@@ -21,6 +21,11 @@ import {
   DollarSign,
   Zap,
   Eye,
+  CalendarDays,
+  List,
+  ChevronLeft,
+  ChevronRight,
+  Clock,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -50,6 +55,8 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Progress } from '@/components/ui/progress';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
 import axios from 'axios';
 import { useToast } from '@/hooks/use-toast';
@@ -104,6 +111,8 @@ export default function CampaignsPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [typeFilter, setTypeFilter] = useState<string>('all');
+  const [viewMode, setViewMode] = useState<'list' | 'calendar'>('list');
+  const [currentMonth, setCurrentMonth] = useState(new Date());
 
   useEffect(() => {
     fetchCampaigns();
@@ -187,6 +196,47 @@ export default function CampaignsPage() {
     ? (campaigns.reduce((sum, c) => sum + parseFloat(String(calculateEngagementRate(c))), 0) / campaigns.length).toFixed(1)
     : 0;
 
+  // Calendar helpers
+  const getDaysInMonth = (date: Date) => {
+    const year = date.getFullYear();
+    const month = date.getMonth();
+    const firstDay = new Date(year, month, 1);
+    const lastDay = new Date(year, month + 1, 0);
+    const daysInMonth = lastDay.getDate();
+    const startingDay = firstDay.getDay();
+    return { daysInMonth, startingDay, year, month };
+  };
+
+  const getCampaignsForDate = (date: Date) => {
+    return filteredCampaigns.filter((campaign) => {
+      if (!campaign.start_date) return false;
+      const startDate = new Date(campaign.start_date);
+      const endDate = campaign.end_date ? new Date(campaign.end_date) : startDate;
+      return date >= new Date(startDate.setHours(0, 0, 0, 0)) &&
+             date <= new Date(endDate.setHours(23, 59, 59, 999));
+    });
+  };
+
+  const formatTime = (dateString: string) => {
+    return new Date(dateString).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  };
+
+  const navigateMonth = (direction: 'prev' | 'next') => {
+    setCurrentMonth((prev) => {
+      const newDate = new Date(prev);
+      if (direction === 'prev') {
+        newDate.setMonth(newDate.getMonth() - 1);
+      } else {
+        newDate.setMonth(newDate.getMonth() + 1);
+      }
+      return newDate;
+    });
+  };
+
+  const { daysInMonth, startingDay, year, month } = getDaysInMonth(currentMonth);
+  const monthName = currentMonth.toLocaleString('default', { month: 'long', year: 'numeric' });
+  const weekDays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+
   const metrics = [
     {
       title: t('crm.campaigns.stats.total'),
@@ -250,13 +300,46 @@ export default function CampaignsPage() {
             {t('crm.campaigns.subtitle')}
           </p>
         </div>
-        <Button
-          onClick={() => navigate('/dashboard/crm/campaigns/new')}
-          className="bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-700 hover:to-red-700 text-white"
-        >
-          <Plus className="h-4 w-4 mr-2" />
-          {t('crm.campaigns.addCampaign')}
-        </Button>
+        <div className="flex items-center gap-3">
+          {/* View Mode Toggle */}
+          <div className="flex items-center bg-slate-100 dark:bg-slate-800 rounded-lg p-1">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setViewMode('list')}
+              className={cn(
+                "h-8 px-3",
+                viewMode === 'list'
+                  ? "bg-white dark:bg-slate-700 shadow-sm"
+                  : "hover:bg-transparent"
+              )}
+            >
+              <List className="h-4 w-4 mr-1.5" />
+              {t('crm.campaigns.views.list')}
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setViewMode('calendar')}
+              className={cn(
+                "h-8 px-3",
+                viewMode === 'calendar'
+                  ? "bg-white dark:bg-slate-700 shadow-sm"
+                  : "hover:bg-transparent"
+              )}
+            >
+              <CalendarDays className="h-4 w-4 mr-1.5" />
+              {t('crm.campaigns.views.calendar')}
+            </Button>
+          </div>
+          <Button
+            onClick={() => navigate('/dashboard/crm/campaigns/new')}
+            className="bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-700 hover:to-red-700 text-white"
+          >
+            <Plus className="h-4 w-4 mr-2" />
+            {t('crm.campaigns.addCampaign')}
+          </Button>
+        </div>
       </div>
 
       {/* Stats Cards */}
@@ -337,7 +420,8 @@ export default function CampaignsPage() {
         </CardContent>
       </Card>
 
-      {/* Campaigns Table */}
+      {/* Campaigns Table / Calendar */}
+      {viewMode === 'list' ? (
       <Card className="border-slate-200 dark:border-slate-700 dark:bg-slate-800 overflow-hidden">
         <Table>
           <TableHeader>
@@ -494,6 +578,148 @@ export default function CampaignsPage() {
           </TableBody>
         </Table>
       </Card>
+      ) : (
+      /* Calendar View */
+      <Card className="border-slate-200 dark:border-slate-700 dark:bg-slate-800">
+        <CardContent className="p-6">
+          {/* Calendar Header */}
+          <div className="flex items-center justify-between mb-6">
+            <h3 className="text-xl font-semibold dark:text-white">{monthName}</h3>
+            <div className="flex items-center gap-2">
+              <Button variant="outline" size="icon" onClick={() => navigateMonth('prev')}>
+                <ChevronLeft className="h-4 w-4" />
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setCurrentMonth(new Date())}
+              >
+                {t('crm.campaigns.calendar.today')}
+              </Button>
+              <Button variant="outline" size="icon" onClick={() => navigateMonth('next')}>
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+
+          {/* Calendar Grid */}
+          <div className="grid grid-cols-7 gap-1">
+            {/* Week Day Headers */}
+            {weekDays.map((day) => (
+              <div
+                key={day}
+                className="h-10 flex items-center justify-center text-sm font-medium text-gray-500 dark:text-gray-400"
+              >
+                {day}
+              </div>
+            ))}
+
+            {/* Empty cells for days before month starts */}
+            {Array.from({ length: startingDay }).map((_, index) => (
+              <div
+                key={`empty-${index}`}
+                className="min-h-[120px] bg-slate-50 dark:bg-slate-900/30 rounded-lg p-2"
+              />
+            ))}
+
+            {/* Calendar Days */}
+            {Array.from({ length: daysInMonth }).map((_, index) => {
+              const day = index + 1;
+              const date = new Date(year, month, day);
+              const isToday = new Date().toDateString() === date.toDateString();
+              const dayCampaigns = getCampaignsForDate(date);
+
+              return (
+                <div
+                  key={day}
+                  className={cn(
+                    "min-h-[120px] rounded-lg p-2 border transition-colors",
+                    isToday
+                      ? "border-orange-500 bg-orange-50 dark:bg-orange-900/20"
+                      : "border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-900/50"
+                  )}
+                >
+                  <div className={cn(
+                    "text-sm font-medium mb-2",
+                    isToday ? "text-orange-600 dark:text-orange-400" : "dark:text-white"
+                  )}>
+                    {day}
+                  </div>
+                  <div className="space-y-1">
+                    <TooltipProvider>
+                      {dayCampaigns.slice(0, 3).map((campaign) => {
+                        const Icon = CAMPAIGN_TYPE_ICONS[campaign.campaign_type] || Send;
+                        return (
+                          <Tooltip key={campaign.id}>
+                            <TooltipTrigger asChild>
+                              <div
+                                onClick={() => navigate(`/dashboard/crm/campaigns/${campaign.id}`)}
+                                className={cn(
+                                  "text-xs px-2 py-1 rounded cursor-pointer truncate flex items-center gap-1",
+                                  campaign.status === 'active'
+                                    ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
+                                    : campaign.status === 'scheduled'
+                                    ? "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400"
+                                    : campaign.status === 'draft'
+                                    ? "bg-slate-100 text-slate-700 dark:bg-slate-700 dark:text-slate-300"
+                                    : "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400"
+                                )}
+                              >
+                                <Icon className="h-3 w-3 flex-shrink-0" />
+                                <span className="truncate">{campaign.name}</span>
+                              </div>
+                            </TooltipTrigger>
+                            <TooltipContent side="right" className="max-w-xs">
+                              <div className="space-y-1">
+                                <p className="font-semibold">{campaign.name}</p>
+                                <div className="flex items-center gap-1 text-xs text-gray-500">
+                                  <Clock className="h-3 w-3" />
+                                  {campaign.start_date && formatTime(campaign.start_date)}
+                                  {campaign.end_date && ` - ${formatTime(campaign.end_date)}`}
+                                </div>
+                                <Badge className={cn("text-xs", STATUS_COLORS[campaign.status])}>
+                                  {t(`crm.campaigns.status.${campaign.status}`)}
+                                </Badge>
+                              </div>
+                            </TooltipContent>
+                          </Tooltip>
+                        );
+                      })}
+                    </TooltipProvider>
+                    {dayCampaigns.length > 3 && (
+                      <div className="text-xs text-gray-500 dark:text-gray-400 px-2">
+                        +{dayCampaigns.length - 3} {t('crm.campaigns.calendar.more')}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Legend */}
+          <div className="flex items-center gap-4 mt-6 pt-4 border-t border-slate-200 dark:border-slate-700">
+            <span className="text-sm text-gray-500 dark:text-gray-400">{t('crm.campaigns.calendar.legend')}:</span>
+            <div className="flex items-center gap-1">
+              <div className="w-3 h-3 rounded bg-green-500" />
+              <span className="text-xs text-gray-600 dark:text-gray-400">{t('crm.campaigns.status.active')}</span>
+            </div>
+            <div className="flex items-center gap-1">
+              <div className="w-3 h-3 rounded bg-blue-500" />
+              <span className="text-xs text-gray-600 dark:text-gray-400">{t('crm.campaigns.status.scheduled')}</span>
+            </div>
+            <div className="flex items-center gap-1">
+              <div className="w-3 h-3 rounded bg-slate-400" />
+              <span className="text-xs text-gray-600 dark:text-gray-400">{t('crm.campaigns.status.draft')}</span>
+            </div>
+            <div className="flex items-center gap-1">
+              <div className="w-3 h-3 rounded bg-yellow-500" />
+              <span className="text-xs text-gray-600 dark:text-gray-400">{t('crm.campaigns.status.paused')}</span>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+      )}
     </div>
   );
 }

@@ -64,6 +64,8 @@ import LeadDetailPage from "./pages/CRM/LeadDetailPage";
 import ContactsPage from "./pages/CRM/ContactsPage";
 import CampaignsPage from "./pages/CRM/CampaignsPage";
 import CampaignCreatePage from "./pages/CRM/CampaignCreatePage";
+import CampaignDetailPage from "./pages/CRM/CampaignDetailPage";
+import CampaignEditPage from "./pages/CRM/CampaignEditPage";
 import AnalyticsPage from "./pages/CRM/AnalyticsPage";
 
 const queryClient = new QueryClient({
@@ -142,6 +144,8 @@ const AppRoutes = () => {
           <Route path="crm/contacts" element={<ContactsPage />} />
           <Route path="crm/campaigns" element={<CampaignsPage />} />
           <Route path="crm/campaigns/new" element={<CampaignCreatePage />} />
+          <Route path="crm/campaigns/:id" element={<CampaignDetailPage />} />
+          <Route path="crm/campaigns/:id/edit" element={<CampaignEditPage />} />
           <Route path="crm/analytics" element={<AnalyticsPage />} />
         </Route>
       </Route>
