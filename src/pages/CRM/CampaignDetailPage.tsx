@@ -23,6 +23,7 @@ import {
   MoreVertical,
   FileText,
   Sparkles,
+  RefreshCw,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -183,17 +184,132 @@ export default function CampaignDetailPage() {
     try {
       setActionLoading(true);
       const headers = getAuthHeaders();
-      await axios.patch(`/api/v1/campaigns/${id}`, { status: newStatus }, { headers });
-      setCampaign(prev => prev ? { ...prev, status: newStatus } : null);
-      toast({
-        title: t('crm.common.success'),
-        description: t('crm.campaigns.statusUpdated'),
-      });
-    } catch (error) {
+
+      if (newStatus === 'active' && campaign?.status === 'draft') {
+        // Launching campaign - need to enroll contacts first, then start
+
+        // Step 1: Auto-enroll contacts from segment/criteria
+        let enrolledCount = 0;
+        let totalEnrolled = 0;
+        try {
+          const enrollResponse = await axios.post(`/api/v1/campaigns/${id}/enroll-from-criteria`, {}, { headers });
+          enrolledCount = enrollResponse.data?.enrolled_count || 0;
+          totalEnrolled = enrollResponse.data?.total_enrolled || enrolledCount;
+          console.log('Enrollment result:', enrollResponse.data);
+        } catch (enrollError: any) {
+          console.log('Enrollment error:', enrollError.response?.data || enrollError.message);
+        }
+
+        // Use total_enrolled (includes existing enrollments) for the check
+        if (totalEnrolled === 0) {
+          toast({
+            title: t('crm.campaigns.noContacts', 'No contacts to target'),
+            description: t('crm.campaigns.noContactsDesc', 'Please configure the target audience (segment or filter criteria) before launching.'),
+            variant: 'destructive',
+          });
+          setActionLoading(false);
+          return;
+        }
+
+        // Use totalEnrolled for display
+        enrolledCount = totalEnrolled;
+
+        // Step 2: Start the campaign (this activates enrollments and schedules messages)
+        const startResponse = await axios.post(`/api/v1/campaigns/${id}/start`, {}, { headers });
+
+        if (startResponse.data.success) {
+          setCampaign(prev => prev ? { ...prev, status: 'active' } : null);
+
+          // Check if campaign is scheduled for future or started immediately
+          if (startResponse.data.status === 'scheduled') {
+            const scheduledDate = new Date(startResponse.data.scheduled_for);
+            toast({
+              title: t('crm.campaigns.scheduled', 'Campaign Scheduled'),
+              description: t('crm.campaigns.scheduledDesc', `Campaign will start at ${scheduledDate.toLocaleString()}. ${enrolledCount} contacts enrolled.`),
+            });
+          } else {
+            toast({
+              title: t('crm.common.success'),
+              description: t('crm.campaigns.launchedWithCount', `Campaign launched! ${enrolledCount} contacts enrolled.`),
+            });
+          }
+          // Refresh to get updated metrics
+          fetchCampaign();
+        }
+      } else if (newStatus === 'active' && (campaign?.status === 'paused' || campaign?.status === 'active')) {
+        // Resuming paused campaign or re-launching active campaign with no enrollments
+
+        // First check if there are enrollments, if not, enroll contacts
+        let enrolledCount = campaign?.total_contacts || 0;
+
+        if (enrolledCount === 0) {
+          // Try to enroll contacts first
+          try {
+            const enrollResponse = await axios.post(`/api/v1/campaigns/${id}/enroll-from-criteria`, {}, { headers });
+            enrolledCount = enrollResponse.data?.enrolled_count || 0;
+            console.log('Enrollment result:', enrollResponse.data);
+          } catch (enrollError: any) {
+            console.log('Enrollment error:', enrollError.response?.data || enrollError.message);
+          }
+
+          if (enrolledCount === 0) {
+            toast({
+              title: t('crm.campaigns.noContacts', 'No contacts to target'),
+              description: t('crm.campaigns.noContactsDesc', 'Please configure the target audience (segment or filter criteria) before launching.'),
+              variant: 'destructive',
+            });
+            setActionLoading(false);
+            return;
+          }
+        }
+
+        if (campaign?.status === 'paused') {
+          await axios.post(`/api/v1/campaigns/${id}/resume`, {}, { headers });
+        }
+
+        // Start/restart the campaign to process queue
+        const startResponse = await axios.post(`/api/v1/campaigns/${id}/start`, {}, { headers });
+
+        setCampaign(prev => prev ? { ...prev, status: 'active' } : null);
+
+        // Check if campaign is scheduled for future or started immediately
+        if (startResponse.data.status === 'scheduled') {
+          const scheduledDate = new Date(startResponse.data.scheduled_for);
+          toast({
+            title: t('crm.campaigns.scheduled', 'Campaign Scheduled'),
+            description: t('crm.campaigns.scheduledDesc', `Campaign will start at ${scheduledDate.toLocaleString()}. ${enrolledCount} contacts enrolled.`),
+          });
+        } else {
+          toast({
+            title: t('crm.common.success'),
+            description: enrolledCount > 0
+              ? t('crm.campaigns.launchedWithCount', `Campaign launched! ${enrolledCount} contacts enrolled.`)
+              : t('crm.campaigns.resumed', 'Campaign resumed'),
+          });
+        }
+        fetchCampaign();
+      } else if (newStatus === 'paused') {
+        // Pausing campaign
+        await axios.post(`/api/v1/campaigns/${id}/pause`, {}, { headers });
+        setCampaign(prev => prev ? { ...prev, status: 'paused' } : null);
+        toast({
+          title: t('crm.common.success'),
+          description: t('crm.campaigns.paused', 'Campaign paused'),
+        });
+      } else {
+        // Other status changes (completed, etc.)
+        await axios.patch(`/api/v1/campaigns/${id}`, { status: newStatus }, { headers });
+        setCampaign(prev => prev ? { ...prev, status: newStatus } : null);
+        toast({
+          title: t('crm.common.success'),
+          description: t('crm.campaigns.statusUpdated'),
+        });
+      }
+    } catch (error: any) {
       console.error('Error updating status:', error);
       toast({
         title: t('crm.common.error'),
-        description: t('crm.campaigns.updateError'),
+        description: error.response?.data?.detail || t('crm.campaigns.updateError'),
         variant: 'destructive',
       });
     } finally {
@@ -224,14 +340,51 @@ export default function CampaignDetailPage() {
     }
   };
 
+  const handleRelaunch = async () => {
+    try {
+      setActionLoading(true);
+      const headers = getAuthHeaders();
+
+      // Call relaunch endpoint to reset campaign
+      const response = await axios.post(`/api/v1/campaigns/${id}/relaunch`, {}, { headers });
+
+      if (response.data.success) {
+        setCampaign(prev => prev ? { ...prev, status: 'draft' } : null);
+        toast({
+          title: t('crm.campaigns.relaunchReady', 'Ready to Re-launch'),
+          description: t('crm.campaigns.relaunchReadyDesc', 'Campaign has been reset. You can now launch it again.'),
+        });
+        fetchCampaign();
+      }
+    } catch (error: any) {
+      console.error('Error re-launching campaign:', error);
+      toast({
+        title: t('crm.common.error'),
+        description: error.response?.data?.detail || t('crm.campaigns.relaunchError', 'Failed to re-launch campaign'),
+        variant: 'destructive',
+      });
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
   const formatDate = (dateString?: string) => {
     if (!dateString) return '-';
-    return new Date(dateString).toLocaleDateString(undefined, {
+    // Backend returns UTC dates - ensure proper parsing
+    // If the date string doesn't have timezone info, append 'Z' to treat it as UTC
+    let normalizedDateString = dateString;
+    if (!dateString.endsWith('Z') && !dateString.includes('+') && !dateString.includes('-', 10)) {
+      normalizedDateString = dateString + 'Z';
+    }
+    const date = new Date(normalizedDateString);
+    // Format in local timezone with date and time
+    return date.toLocaleString(undefined, {
       year: 'numeric',
       month: 'short',
       day: 'numeric',
       hour: '2-digit',
       minute: '2-digit',
+      hour12: true,
     });
   };
 
@@ -353,6 +506,16 @@ export default function CampaignDetailPage() {
             >
               <Play className="h-4 w-4 mr-2" />
               {t('crm.campaigns.actions.resume')}
+            </Button>
+          )}
+          {campaign.status === 'completed' && (
+            <Button
+              onClick={handleRelaunch}
+              disabled={actionLoading}
+              className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white"
+            >
+              <RefreshCw className="h-4 w-4 mr-2" />
+              {t('crm.campaigns.actions.relaunch', 'Re-launch')}
             </Button>
           )}
 

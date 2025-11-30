@@ -102,6 +102,13 @@ export default function CampaignCreatePage() {
     setSelectedTemplate(null);
   }, [formData.campaign_type]);
 
+  const formatDateForSubmit = (dateString?: string) => {
+    if (!dateString) return null;
+    // datetime-local gives us local time, convert to ISO for API
+    const date = new Date(dateString);
+    return date.toISOString();
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -129,8 +136,8 @@ export default function CampaignCreatePage() {
       if (formData.goal_type) payload.goal_type = formData.goal_type;
       if (formData.goal_value) payload.goal_value = parseInt(formData.goal_value);
       if (formData.budget) payload.budget = parseFloat(formData.budget);
-      if (formData.start_date) payload.start_date = new Date(formData.start_date).toISOString();
-      if (formData.end_date) payload.end_date = new Date(formData.end_date).toISOString();
+      if (formData.start_date) payload.start_date = formatDateForSubmit(formData.start_date);
+      if (formData.end_date) payload.end_date = formatDateForSubmit(formData.end_date);
 
       // Add audience targeting
       if (audienceSelection.type === 'segment' && audienceSelection.segment_id) {

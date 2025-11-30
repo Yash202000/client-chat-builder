@@ -59,9 +59,20 @@ export const Settings = () => {
     primaryColor: "",
     secondaryColor: "",
     customDomain: "",
-    maxFileSize: 10, // Initialize with default value
-    sessionTimeout: 30, // Initialize with default value
+    maxFileSize: 10,
+    sessionTimeout: 30,
+    // SMTP Settings
+    smtpHost: "",
+    smtpPort: 587,
+    smtpUser: "",
+    smtpPassword: "",
+    smtpUseTls: true,
+    smtpFromEmail: "",
+    smtpFromName: "",
   });
+
+  const [testingSmtp, setTestingSmtp] = useState(false);
+  const [testEmail, setTestEmail] = useState("");
 
   const { data: companies } = useQuery<Company[]>({
     queryKey: ['companies'],
@@ -104,6 +115,14 @@ export const Settings = () => {
             emailNotifications: notificationData.email_notifications_enabled,
             slackNotifications: notificationData.slack_notifications_enabled,
             autoAssignment: notificationData.auto_assignment_enabled,
+            // SMTP Settings
+            smtpHost: companyData.smtp_host || "",
+            smtpPort: companyData.smtp_port || 587,
+            smtpUser: companyData.smtp_user || "",
+            smtpPassword: companyData.smtp_password || "",
+            smtpUseTls: companyData.smtp_use_tls !== false,
+            smtpFromEmail: companyData.smtp_from_email || "",
+            smtpFromName: companyData.smtp_from_name || "",
           }));
         } else {
           toast({
@@ -127,6 +146,61 @@ export const Settings = () => {
 
   const handleSettingChange = (key: string, value: any) => {
     setSettings(prev => ({ ...prev, [key]: value }));
+  };
+
+  const handleTestSmtp = async () => {
+    if (!testEmail) {
+      toast({
+        title: t('settings.error'),
+        description: t('settings.enterTestEmail', 'Please enter a test email address'),
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      setTestingSmtp(true);
+      const response = await authFetch(`/api/v1/company-settings/test-smtp`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          to_email: testEmail,
+          smtp_host: settings.smtpHost,
+          smtp_port: settings.smtpPort,
+          smtp_user: settings.smtpUser,
+          smtp_password: settings.smtpPassword,
+          smtp_use_tls: settings.smtpUseTls,
+          smtp_from_email: settings.smtpFromEmail,
+          smtp_from_name: settings.smtpFromName,
+        }),
+      });
+
+      if (response.ok) {
+        toast({
+          title: t('settings.success'),
+          description: t('settings.testEmailSent', 'Test email sent successfully!'),
+        });
+        playSuccessSound();
+      } else {
+        const error = await response.json();
+        toast({
+          title: t('settings.error'),
+          description: error.detail || t('settings.testEmailFailed', 'Failed to send test email'),
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      console.error("Failed to test SMTP", error);
+      toast({
+        title: t('settings.error'),
+        description: t('settings.unexpectedError'),
+        variant: "destructive",
+      });
+    } finally {
+      setTestingSmtp(false);
+    }
   };
 
   const handleSaveChanges = async () => {
@@ -154,6 +228,13 @@ export const Settings = () => {
             primary_color: settings.primaryColor,
             secondary_color: settings.secondaryColor,
             custom_domain: settings.customDomain,
+            smtp_host: settings.smtpHost || null,
+            smtp_port: settings.smtpPort || 587,
+            smtp_user: settings.smtpUser || null,
+            smtp_password: settings.smtpPassword || null,
+            smtp_use_tls: settings.smtpUseTls,
+            smtp_from_email: settings.smtpFromEmail || null,
+            smtp_from_name: settings.smtpFromName || null,
           }),
         }),
         authFetch(`/api/v1/notification-settings/`, {
@@ -202,8 +283,9 @@ export const Settings = () => {
       </div>
 
       <Tabs defaultValue="general" className="space-y-6" dir={isRTL ? 'rtl' : 'ltr'}>
-        <TabsList className="grid w-full grid-cols-3 lg:grid-cols-6 bg-slate-100 dark:bg-slate-900 p-1">
+        <TabsList className="grid w-full grid-cols-4 lg:grid-cols-7 bg-slate-100 dark:bg-slate-900 p-1">
           <TabsTrigger value="general" className="data-[state=active]:bg-white dark:data-[state=active]:bg-slate-800 data-[state=active]:text-cyan-600 dark:data-[state=active]:text-cyan-400">{t('settings.general')}</TabsTrigger>
+          <TabsTrigger value="email" className="data-[state=active]:bg-white dark:data-[state=active]:bg-slate-800 data-[state=active]:text-cyan-600 dark:data-[state=active]:text-cyan-400">{t('settings.email', 'Email')}</TabsTrigger>
           <TabsTrigger value="notifications" className="data-[state=active]:bg-white dark:data-[state=active]:bg-slate-800 data-[state=active]:text-cyan-600 dark:data-[state=active]:text-cyan-400">{t('settings.notifications')}</TabsTrigger>
           <TabsTrigger value="security" className="data-[state=active]:bg-white dark:data-[state=active]:bg-slate-800 data-[state=active]:text-cyan-600 dark:data-[state=active]:text-cyan-400">{t('settings.security')}</TabsTrigger>
           <TabsTrigger value="integrations" className="data-[state=active]:bg-white dark:data-[state=active]:bg-slate-800 data-[state=active]:text-cyan-600 dark:data-[state=active]:text-cyan-400">{t('settings.integrations')}</TabsTrigger>
@@ -357,6 +439,129 @@ export const Settings = () => {
               </CardContent>
             </Card>
           </div>
+        </TabsContent>
+
+        <TabsContent value="email" className="space-y-6" dir={isRTL ? 'rtl' : 'ltr'}>
+          <Card className="card-shadow-lg border-slate-200 dark:border-slate-700 dark:bg-slate-800">
+            <CardHeader className="border-b border-slate-200 dark:border-slate-700 bg-gradient-to-r from-slate-50 to-slate-100 dark:from-slate-800 dark:to-slate-900">
+              <CardTitle className="flex items-center gap-2 dark:text-white">
+                <Mail className="h-5 w-5 text-cyan-600 dark:text-cyan-400" />
+                {t('settings.smtpConfiguration', 'SMTP Configuration')}
+              </CardTitle>
+              <CardDescription className="dark:text-gray-400">
+                {t('settings.smtpDescription', 'Configure your email server settings for sending campaign emails')}
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4 pt-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="smtpHost" className="dark:text-gray-300">{t('settings.smtpHost', 'SMTP Host')}</Label>
+                  <Input
+                    id="smtpHost"
+                    value={settings.smtpHost}
+                    onChange={(e) => handleSettingChange("smtpHost", e.target.value)}
+                    className="dark:bg-slate-900 dark:border-slate-600 dark:text-white mt-1.5"
+                    placeholder="smtp.gmail.com"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="smtpPort" className="dark:text-gray-300">{t('settings.smtpPort', 'SMTP Port')}</Label>
+                  <Input
+                    id="smtpPort"
+                    type="number"
+                    value={settings.smtpPort}
+                    onChange={(e) => handleSettingChange("smtpPort", parseInt(e.target.value) || 587)}
+                    className="dark:bg-slate-900 dark:border-slate-600 dark:text-white mt-1.5"
+                    placeholder="587"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="smtpUser" className="dark:text-gray-300">{t('settings.smtpUser', 'SMTP Username')}</Label>
+                  <Input
+                    id="smtpUser"
+                    value={settings.smtpUser}
+                    onChange={(e) => handleSettingChange("smtpUser", e.target.value)}
+                    className="dark:bg-slate-900 dark:border-slate-600 dark:text-white mt-1.5"
+                    placeholder="your-email@gmail.com"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="smtpPassword" className="dark:text-gray-300">{t('settings.smtpPassword', 'SMTP Password')}</Label>
+                  <Input
+                    id="smtpPassword"
+                    type="password"
+                    value={settings.smtpPassword}
+                    onChange={(e) => handleSettingChange("smtpPassword", e.target.value)}
+                    className="dark:bg-slate-900 dark:border-slate-600 dark:text-white mt-1.5"
+                    placeholder="••••••••••••"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="smtpFromEmail" className="dark:text-gray-300">{t('settings.smtpFromEmail', 'From Email')}</Label>
+                  <Input
+                    id="smtpFromEmail"
+                    type="email"
+                    value={settings.smtpFromEmail}
+                    onChange={(e) => handleSettingChange("smtpFromEmail", e.target.value)}
+                    className="dark:bg-slate-900 dark:border-slate-600 dark:text-white mt-1.5"
+                    placeholder="noreply@yourcompany.com"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="smtpFromName" className="dark:text-gray-300">{t('settings.smtpFromName', 'From Name')}</Label>
+                  <Input
+                    id="smtpFromName"
+                    value={settings.smtpFromName}
+                    onChange={(e) => handleSettingChange("smtpFromName", e.target.value)}
+                    className="dark:bg-slate-900 dark:border-slate-600 dark:text-white mt-1.5"
+                    placeholder="Your Company Name"
+                  />
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between p-3 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/50">
+                <div>
+                  <Label className="dark:text-white">{t('settings.smtpUseTls', 'Use TLS')}</Label>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">{t('settings.smtpUseTlsDesc', 'Enable TLS encryption for secure email transmission')}</p>
+                </div>
+                <Switch
+                  checked={settings.smtpUseTls}
+                  onCheckedChange={(checked) => handleSettingChange("smtpUseTls", checked)}
+                />
+              </div>
+
+              <div className="pt-4 border-t border-slate-200 dark:border-slate-700">
+                <h4 className="font-medium dark:text-white mb-3">{t('settings.testSmtp', 'Test Configuration')}</h4>
+                <div className="flex gap-3">
+                  <Input
+                    type="email"
+                    value={testEmail}
+                    onChange={(e) => setTestEmail(e.target.value)}
+                    className="flex-1 dark:bg-slate-900 dark:border-slate-600 dark:text-white"
+                    placeholder={t('settings.testEmailPlaceholder', 'Enter email to send test')}
+                  />
+                  <Button
+                    onClick={handleTestSmtp}
+                    disabled={testingSmtp || !settings.smtpHost || !settings.smtpUser}
+                    variant="outline"
+                    className="dark:border-slate-600 dark:text-white"
+                  >
+                    {testingSmtp ? (
+                      <span className="flex items-center gap-2">
+                        <span className="animate-spin">⏳</span>
+                        {t('settings.sending', 'Sending...')}
+                      </span>
+                    ) : (
+                      <span className="flex items-center gap-2">
+                        <Mail className="h-4 w-4" />
+                        {t('settings.sendTestEmail', 'Send Test Email')}
+                      </span>
+                    )}
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         </TabsContent>
 
         <TabsContent value="notifications" className="space-y-6" dir={isRTL ? 'rtl' : 'ltr'}>

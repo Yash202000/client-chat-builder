@@ -107,8 +107,27 @@ export default function CampaignEditPage() {
 
   const formatDateForInput = (dateString?: string) => {
     if (!dateString) return '';
+    // Backend returns UTC dates - ensure proper parsing
+    // If the date string doesn't have timezone info, append 'Z' to treat it as UTC
+    let normalizedDateString = dateString;
+    if (!dateString.endsWith('Z') && !dateString.includes('+') && !dateString.includes('-', 10)) {
+      normalizedDateString = dateString + 'Z';
+    }
+    const date = new Date(normalizedDateString);
+    // Format for datetime-local input (YYYY-MM-DDTHH:mm) in local timezone
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    const hours = String(date.getHours()).padStart(2, '0');
+    const minutes = String(date.getMinutes()).padStart(2, '0');
+    return `${year}-${month}-${day}T${hours}:${minutes}`;
+  };
+
+  const formatDateForSubmit = (dateString?: string) => {
+    if (!dateString) return null;
+    // datetime-local gives us local time, convert to ISO for API
     const date = new Date(dateString);
-    return date.toISOString().slice(0, 16);
+    return date.toISOString();
   };
 
   const fetchCampaign = async () => {
@@ -203,8 +222,8 @@ export default function CampaignEditPage() {
       if (formData.goal_type) payload.goal_type = formData.goal_type;
       if (formData.goal_value) payload.goal_value = parseInt(formData.goal_value);
       if (formData.budget) payload.budget = parseFloat(formData.budget);
-      if (formData.start_date) payload.start_date = new Date(formData.start_date).toISOString();
-      if (formData.end_date) payload.end_date = new Date(formData.end_date).toISOString();
+      if (formData.start_date) payload.start_date = formatDateForSubmit(formData.start_date);
+      if (formData.end_date) payload.end_date = formatDateForSubmit(formData.end_date);
 
       // Add audience targeting
       if (audienceSelection.type === 'segment' && audienceSelection.segment_id) {
