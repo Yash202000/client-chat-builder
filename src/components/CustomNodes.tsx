@@ -37,20 +37,88 @@ export const ToolNode = ({ data }) => (
   </div>
 );
 
-export const ConditionNode = ({ data }) => (
-  <div className="px-4 py-3 border-2 border-amber-200 dark:border-amber-700 rounded-xl bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-950/50 dark:to-orange-950/50 shadow-lg hover:shadow-xl transition-shadow backdrop-blur-sm">
-    <Handle type="target" position={Position.Top} className="w-3 h-3 !bg-amber-500 dark:!bg-amber-400 border-2 border-white dark:border-slate-800" />
-    <div className="flex items-center gap-2 mb-2">
-      <div className="p-1.5 rounded-lg bg-amber-500 dark:bg-amber-600">
-        <GitBranch size={16} className="text-white" />
+// Color palette for multi-condition handles
+const CONDITION_COLORS = [
+  { bg: '!bg-green-500 dark:!bg-green-400', text: 'text-green-600' },   // 0 - if
+  { bg: '!bg-blue-500 dark:!bg-blue-400', text: 'text-blue-600' },     // 1 - else if
+  { bg: '!bg-purple-500 dark:!bg-purple-400', text: 'text-purple-600' }, // 2
+  { bg: '!bg-orange-500 dark:!bg-orange-400', text: 'text-orange-600' }, // 3
+  { bg: '!bg-cyan-500 dark:!bg-cyan-400', text: 'text-cyan-600' },     // 4
+  { bg: '!bg-pink-500 dark:!bg-pink-400', text: 'text-pink-600' },     // 5
+];
+
+export const ConditionNode = ({ data }) => {
+  const conditions = data.conditions || [];
+  const isMultiCondition = conditions.length > 0;
+  const totalHandles = isMultiCondition ? conditions.length + 1 : 2; // +1 for else, or 2 for true/false
+
+  // Calculate handle positions
+  const getHandlePosition = (index: number) => {
+    const spacing = 100 / (totalHandles + 1);
+    return `${spacing * (index + 1)}%`;
+  };
+
+  return (
+    <div className={`px-4 py-3 border-2 border-amber-200 dark:border-amber-700 rounded-xl bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-950/50 dark:to-orange-950/50 shadow-lg hover:shadow-xl transition-shadow backdrop-blur-sm ${isMultiCondition ? 'min-w-[180px]' : ''}`}
+         style={{ minWidth: isMultiCondition ? `${Math.max(180, totalHandles * 50)}px` : undefined }}>
+      <Handle type="target" position={Position.Top} className="w-3 h-3 !bg-amber-500 dark:!bg-amber-400 border-2 border-white dark:border-slate-800" />
+      <div className="flex items-center gap-2 mb-2">
+        <div className="p-1.5 rounded-lg bg-amber-500 dark:bg-amber-600">
+          <GitBranch size={16} className="text-white" />
+        </div>
+        <strong className="text-sm font-semibold text-slate-900 dark:text-white">{data.label}</strong>
       </div>
-      <strong className="text-sm font-semibold text-slate-900 dark:text-white">{data.label}</strong>
+      <div className="text-xs text-slate-600 dark:text-slate-400 font-medium">
+        {isMultiCondition ? `Multi-Condition (${conditions.length})` : 'Conditional Logic'}
+      </div>
+
+      {isMultiCondition ? (
+        <>
+          {/* Render handles for each condition (0, 1, 2, ...) */}
+          {conditions.map((condition, index) => (
+            <Handle
+              key={index}
+              type="source"
+              position={Position.Bottom}
+              id={String(index)}
+              style={{ left: getHandlePosition(index) }}
+              className={`w-3 h-3 ${CONDITION_COLORS[index % CONDITION_COLORS.length].bg} border-2 border-white dark:border-slate-800`}
+              title={`Condition ${index}: ${condition.value || 'not set'}`}
+            />
+          ))}
+          {/* Else handle */}
+          <Handle
+            type="source"
+            position={Position.Bottom}
+            id="else"
+            style={{ left: getHandlePosition(conditions.length) }}
+            className="w-3 h-3 !bg-red-500 dark:!bg-red-400 border-2 border-white dark:border-slate-800"
+            title="Else (no condition matched)"
+          />
+          {/* Handle labels */}
+          <div className="flex justify-around mt-2 text-[10px] font-medium">
+            {conditions.map((_, index) => (
+              <span key={index} className={CONDITION_COLORS[index % CONDITION_COLORS.length].text}>
+                {index}
+              </span>
+            ))}
+            <span className="text-red-500">else</span>
+          </div>
+        </>
+      ) : (
+        <>
+          {/* Legacy true/false handles */}
+          <Handle type="source" position={Position.Bottom} id="true" style={{ left: '25%' }} className="w-3 h-3 !bg-green-500 dark:!bg-green-400 border-2 border-white dark:border-slate-800" />
+          <Handle type="source" position={Position.Bottom} id="false" style={{ left: '75%' }} className="w-3 h-3 !bg-red-500 dark:!bg-red-400 border-2 border-white dark:border-slate-800" />
+          <div className="flex justify-between mt-2 px-4 text-[10px] font-medium">
+            <span className="text-green-600">true</span>
+            <span className="text-red-500">false</span>
+          </div>
+        </>
+      )}
     </div>
-    <div className="text-xs text-slate-600 dark:text-slate-400 font-medium">Conditional Logic</div>
-    <Handle type="source" position={Position.Bottom} id="true" style={{ left: '25%' }} className="w-3 h-3 !bg-green-500 dark:!bg-green-400 border-2 border-white dark:border-slate-800" />
-    <Handle type="source" position={Position.Bottom} id="false" style={{ left: '75%' }} className="w-3 h-3 !bg-red-500 dark:!bg-red-400 border-2 border-white dark:border-slate-800" />
-  </div>
-);
+  );
+};
 
 export const OutputNode = ({ data }) => (
   <div className="px-4 py-3 border-2 border-indigo-200 dark:border-indigo-700 rounded-xl bg-gradient-to-br from-indigo-50 to-blue-50 dark:from-indigo-950 dark:to-blue-950 shadow-lg hover:shadow-xl transition-shadow">

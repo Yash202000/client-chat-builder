@@ -109,16 +109,53 @@ const VisualWorkflowBuilder = () => {
       // Skip validation for output nodes (they don't need outgoing edges)
       if (node.type === 'output') return;
 
-      // Check condition nodes for both true and false edges
+      // Check condition nodes for required edges
       if (node.type === 'condition') {
-        const hasTrueEdge = outgoingEdges.some(edge => edge.sourceHandle === 'true');
-        const hasFalseEdge = outgoingEdges.some(edge => edge.sourceHandle === 'false');
+        const conditions = node.data.conditions || [];
+        const isMultiCondition = conditions.length > 0;
 
-        if (!hasTrueEdge) {
-          errors.push(t("workflows.editor.validation.missingTrueEdge", { label: node.data.label || node.id }));
-        }
-        if (!hasFalseEdge) {
-          errors.push(t("workflows.editor.validation.missingFalseEdge", { label: node.data.label || node.id }));
+        // Debug logging
+        console.log('[Condition Validation] Node:', node.id);
+        console.log('[Condition Validation] conditions array:', conditions);
+        console.log('[Condition Validation] isMultiCondition:', isMultiCondition);
+        console.log('[Condition Validation] outgoingEdges:', outgoingEdges);
+        console.log('[Condition Validation] outgoingEdges sourceHandles:', outgoingEdges.map(e => e.sourceHandle));
+
+        if (isMultiCondition) {
+          // Multi-condition format: check for numeric handles (0, 1, 2, ...) and 'else'
+          const missingHandles = [];
+
+          // Check each condition has an edge
+          conditions.forEach((_, index) => {
+            const hasEdge = outgoingEdges.some(edge => edge.sourceHandle === String(index));
+            console.log(`[Condition Validation] Checking handle "${index}" (string: "${String(index)}") - hasEdge:`, hasEdge);
+            if (!hasEdge) {
+              missingHandles.push(index);
+            }
+          });
+
+          // Check for else edge
+          const hasElseEdge = outgoingEdges.some(edge => edge.sourceHandle === 'else');
+          console.log('[Condition Validation] hasElseEdge:', hasElseEdge);
+          console.log('[Condition Validation] missingHandles:', missingHandles);
+
+          if (missingHandles.length > 0) {
+            errors.push(`Condition node "${node.data.label || node.id}" is missing edges for conditions: ${missingHandles.join(', ')}`);
+          }
+          if (!hasElseEdge) {
+            errors.push(`Condition node "${node.data.label || node.id}" is missing ELSE edge`);
+          }
+        } else {
+          // Legacy format: check for true/false edges
+          const hasTrueEdge = outgoingEdges.some(edge => edge.sourceHandle === 'true');
+          const hasFalseEdge = outgoingEdges.some(edge => edge.sourceHandle === 'false');
+
+          if (!hasTrueEdge) {
+            errors.push(t("workflows.editor.validation.missingTrueEdge", { label: node.data.label || node.id }));
+          }
+          if (!hasFalseEdge) {
+            errors.push(t("workflows.editor.validation.missingFalseEdge", { label: node.data.label || node.id }));
+          }
         }
       }
       // Check all other nodes (except start, triggers, and output) have at least one outgoing edge

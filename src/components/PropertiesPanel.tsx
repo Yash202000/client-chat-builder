@@ -316,49 +316,119 @@ const PropertiesPanel = ({ selectedNode, nodes, setNodes, deleteNode }) => {
         {currentNode.type === 'condition' && (
           <div className="mb-5 p-4 bg-slate-50 dark:bg-slate-800/50 rounded-lg border border-slate-200 dark:border-slate-700">
             <h3 className="text-base font-semibold mb-4 text-slate-900 dark:text-slate-100">{t("workflows.editor.properties.conditionLogic")}</h3>
-            <div className="mb-4">
-              <label className="block mb-2 font-medium text-sm text-slate-700 dark:text-slate-300">{t("workflows.editor.properties.variable")}</label>
-              <select
-                value={currentNode.data.variable || ''}
-                onChange={(e) => handleDataChange('variable', e.target.value)}
-                className="w-full px-3 py-2 rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400"
-                dir={isRTL ? 'rtl' : 'ltr'}
-              >
-                <option value="">{t("workflows.editor.properties.selectVariable")}</option>
-                {availableVariables.map(v => (
-                  <option key={v.value} value={v.value}>{v.label}</option>
-                ))}
-              </select>
-            </div>
-            <div className="mb-4">
-              <label className="block mb-2 font-medium text-sm text-slate-700 dark:text-slate-300">{t("workflows.editor.properties.operator")}</label>
-              <select
-                value={currentNode.data.operator || 'equals'}
-                onChange={(e) => handleDataChange('operator', e.target.value)}
-                className="w-full px-3 py-2 rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400"
-                dir={isRTL ? 'rtl' : 'ltr'}
-              >
-                <option value="equals">{t("workflows.editor.properties.operators.equals")}</option>
-                <option value="not_equals">{t("workflows.editor.properties.operators.notEquals")}</option>
-                <option value="contains">{t("workflows.editor.properties.operators.contains")}</option>
-                <option value="greater_than">{t("workflows.editor.properties.operators.greaterThan")}</option>
-                <option value="less_than">{t("workflows.editor.properties.operators.lessThan")}</option>
-                <option value="is_set">{t("workflows.editor.properties.operators.isSet")}</option>
-                <option value="is_not_set">{t("workflows.editor.properties.operators.isNotSet")}</option>
-              </select>
-            </div>
-            <div className="mb-4">
-              <label className="block mb-2 font-medium text-sm text-slate-700 dark:text-slate-300">{t("workflows.editor.properties.value")}</label>
-              <input
-                type="text"
-                value={currentNode.data.value || ''}
-                onChange={(e) => handleDataChange('value', e.target.value)}
-                className="w-full px-3 py-2 rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 disabled:opacity-50 disabled:cursor-not-allowed"
-                placeholder={t("workflows.editor.properties.valuePlaceholder")}
-                disabled={['is_set', 'is_not_set'].includes(currentNode.data.operator)}
-                dir={isRTL ? 'rtl' : 'ltr'}
-              />
-            </div>
+            <p className="text-xs text-slate-500 dark:text-slate-400 mb-4">
+              Add multiple conditions for if/elseif/else logic. Conditions are evaluated in order.
+            </p>
+
+            {/* Multi-condition UI */}
+            {(currentNode.data.conditions || []).map((condition, index) => (
+              <div key={index} className="border border-slate-300 dark:border-slate-600 rounded-md p-3 mb-3 bg-white dark:bg-slate-900">
+                <div className="flex justify-between items-center mb-3">
+                  <strong className="text-sm text-slate-900 dark:text-slate-100">
+                    {index === 0 ? 'If' : `Else If`} (Handle: {index})
+                  </strong>
+                  <button
+                    onClick={() => {
+                      const newConditions = [...(currentNode.data.conditions || [])];
+                      newConditions.splice(index, 1);
+                      handleDataChange('conditions', newConditions);
+                    }}
+                    className="text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 bg-transparent border-none cursor-pointer text-sm"
+                  >
+                    Remove
+                  </button>
+                </div>
+                <div className="mb-2">
+                  <label className="block mb-1 text-xs font-medium text-slate-700 dark:text-slate-300">{t("workflows.editor.properties.variable")}</label>
+                  <select
+                    value={condition.variable || ''}
+                    onChange={(e) => {
+                      const newConditions = [...(currentNode.data.conditions || [])];
+                      newConditions[index] = { ...newConditions[index], variable: e.target.value };
+                      handleDataChange('conditions', newConditions);
+                    }}
+                    className="w-full px-2 py-1.5 text-xs rounded border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    dir={isRTL ? 'rtl' : 'ltr'}
+                  >
+                    <option value="">{t("workflows.editor.properties.selectVariable")}</option>
+                    {availableVariables.map(v => (
+                      <option key={v.value} value={v.value}>{v.label}</option>
+                    ))}
+                  </select>
+                </div>
+                <div className="mb-2">
+                  <label className="block mb-1 text-xs font-medium text-slate-700 dark:text-slate-300">{t("workflows.editor.properties.operator")}</label>
+                  <select
+                    value={condition.operator || 'contains'}
+                    onChange={(e) => {
+                      const newConditions = [...(currentNode.data.conditions || [])];
+                      newConditions[index] = { ...newConditions[index], operator: e.target.value };
+                      handleDataChange('conditions', newConditions);
+                    }}
+                    className="w-full px-2 py-1.5 text-xs rounded border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    dir={isRTL ? 'rtl' : 'ltr'}
+                  >
+                    <option value="equals">{t("workflows.editor.properties.operators.equals")}</option>
+                    <option value="not_equals">{t("workflows.editor.properties.operators.notEquals")}</option>
+                    <option value="contains">{t("workflows.editor.properties.operators.contains")}</option>
+                    <option value="greater_than">{t("workflows.editor.properties.operators.greaterThan")}</option>
+                    <option value="less_than">{t("workflows.editor.properties.operators.lessThan")}</option>
+                    <option value="is_set">{t("workflows.editor.properties.operators.isSet")}</option>
+                    <option value="is_not_set">{t("workflows.editor.properties.operators.isNotSet")}</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block mb-1 text-xs font-medium text-slate-700 dark:text-slate-300">{t("workflows.editor.properties.value")}</label>
+                  <input
+                    type="text"
+                    value={condition.value || ''}
+                    onChange={(e) => {
+                      const newConditions = [...(currentNode.data.conditions || [])];
+                      newConditions[index] = { ...newConditions[index], value: e.target.value };
+                      handleDataChange('conditions', newConditions);
+                    }}
+                    className="w-full px-2 py-1.5 text-xs rounded border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
+                    placeholder={t("workflows.editor.properties.valuePlaceholder")}
+                    disabled={['is_set', 'is_not_set'].includes(condition.operator)}
+                    dir={isRTL ? 'rtl' : 'ltr'}
+                  />
+                </div>
+              </div>
+            ))}
+
+            {/* Else handle info */}
+            {(currentNode.data.conditions || []).length > 0 && (
+              <div className="border border-dashed border-slate-400 dark:border-slate-500 rounded-md p-3 mb-3 bg-slate-100 dark:bg-slate-700/50">
+                <strong className="text-sm text-slate-700 dark:text-slate-300">Else (Handle: else)</strong>
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                  This path is taken if none of the above conditions match.
+                </p>
+              </div>
+            )}
+
+            {/* Add condition button */}
+            <button
+              onClick={() => {
+                const newConditions = [...(currentNode.data.conditions || []), { variable: '', operator: 'contains', value: '' }];
+                handleDataChange('conditions', newConditions);
+              }}
+              className="w-full py-2.5 bg-blue-50 dark:bg-blue-950/30 border border-dashed border-blue-300 dark:border-blue-700 rounded cursor-pointer text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-950/50 transition-colors text-sm font-medium"
+            >
+              + Add Condition
+            </button>
+
+            {/* Legacy single condition support info */}
+            {(currentNode.data.conditions || []).length === 0 && (currentNode.data.variable || currentNode.data.operator) && (
+              <div className="mt-4 p-3 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-700 rounded-md">
+                <p className="text-xs text-yellow-700 dark:text-yellow-300">
+                  <strong>Legacy mode:</strong> This node uses old single-condition format.
+                  Add a new condition above to upgrade to multi-condition mode.
+                </p>
+                <div className="mt-2 text-xs text-slate-600 dark:text-slate-400">
+                  Current: {currentNode.data.variable} {currentNode.data.operator} "{currentNode.data.value}"
+                </div>
+              </div>
+            )}
           </div>
         )}
 
