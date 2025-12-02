@@ -1097,7 +1097,8 @@
       "foundTools": "Found {{count}} tools on this server.",
       "inspectionFailed": "Inspection Failed",
       "updateConnection": "Update Connection",
-      "createConnection": "Create Connection"
+      "createConnection": "Create Connection",
+      "builtinNameReadonly": "Built-in tool names cannot be changed"
     },
     "followUp": {
       "title": "Follow-up Questions",
