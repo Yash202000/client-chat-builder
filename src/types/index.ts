@@ -89,15 +89,30 @@ export interface KnowledgeBase {
   content: string;
 }
 
+export interface FollowUpFieldConfig {
+  question: string;
+  lookup_source?: string | null;
+}
+
+export interface FollowUpConfig {
+  enabled: boolean;
+  fields: Record<string, FollowUpFieldConfig>;
+  completion_message?: string;
+  completion_message_template?: string;
+}
+
 export interface Tool {
   id: number;
   name: string;
   description?: string;
-  tool_type: "custom" | "mcp";
+  tool_type: "custom" | "mcp" | "builtin";
   parameters?: any; // JSON schema
   code?: string;
   mcp_server_url?: string;
   configuration?: any;
+  is_pre_built?: boolean;
+  company_id?: number | null; // null for global builtin tools
+  follow_up_config?: FollowUpConfig | null;
 }
 
 export interface PreBuiltConnector {

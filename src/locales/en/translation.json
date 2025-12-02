@@ -1067,7 +1067,8 @@
     },
     "toolTypes": {
       "custom": "Custom",
-      "mcpConnection": "MCP Connection"
+      "mcpConnection": "MCP Connection",
+      "builtin": "Built-in"
     },
     "edit": "Edit",
     "test": "Test",
@@ -1097,6 +1098,18 @@
       "inspectionFailed": "Inspection Failed",
       "updateConnection": "Update Connection",
       "createConnection": "Create Connection"
+    },
+    "followUp": {
+      "title": "Follow-up Questions",
+      "enable": "Enable Follow-up",
+      "enableDescription": "Ask follow-up questions to collect missing data from users",
+      "fields": "Fields to Collect",
+      "questionPlaceholder": "Question to ask (e.g., What's your email address?)",
+      "lookupSourcePlaceholder": "Lookup source (e.g., contact.email, context.user_id)",
+      "newFieldPlaceholder": "Field name (e.g., email)",
+      "completionMessage": "Completion Message",
+      "completionMessageDescription": "Message shown when all fields are collected. Use {{field_name}} for placeholders.",
+      "completionMessagePlaceholder": "Thank you, {{name}}! How can I help you today?"
     }
   },
   "workflows": {
@@ -1120,6 +1133,7 @@
     "inactive": "Inactive",
     "edit": "Edit",
     "activate": "Activate",
+    "deactivate": "Deactivate",
     "deleteConfirm": "Are you sure you want to delete this workflow and all its versions?",
     "toasts": {
       "loadFailed": "Failed to load workflows.",
@@ -1129,6 +1143,8 @@
       "versionCreateFailed": "Failed to create version: {{message}}",
       "versionActivated": "Workflow version activated.",
       "versionActivateFailed": "Failed to activate version: {{message}}",
+      "versionDeactivated": "Workflow version deactivated.",
+      "versionDeactivateFailed": "Failed to deactivate version: {{message}}",
       "workflowDeleted": "Workflow and its versions deleted.",
       "deletionFailed": "Deletion failed."
     },

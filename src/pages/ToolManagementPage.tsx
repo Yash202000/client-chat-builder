@@ -1,13 +1,14 @@
 import { useEffect, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Tool } from "@/types";
+import { Tool, FollowUpConfig, FollowUpFieldConfig } from "@/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Plus, Trash2, Edit, Search, Play } from "lucide-react";
+import { Plus, Trash2, Edit, Search, Play, ChevronDown, ChevronRight, MessageSquare } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 import { useAuth } from "@/hooks/useAuth";
 import { useI18n } from "@/hooks/useI18n";
 
@@ -210,8 +211,12 @@ const ToolManagementPage = () => {
                 <div className="flex-1">
                   <h4 className="font-semibold flex items-center gap-2 dark:text-white">
                     {tool.name}
-                    <span className="text-xs font-normal bg-gradient-to-r from-emerald-100 to-teal-100 dark:from-emerald-900/50 dark:to-teal-900/50 text-emerald-700 dark:text-emerald-400 py-0.5 px-2 rounded-full border border-emerald-200 dark:border-emerald-800">
-                      {tool.tool_type === 'mcp' ? t("tools.toolTypes.mcpConnection") : t("tools.toolTypes.custom")}
+                    <span className={`text-xs font-normal py-0.5 px-2 rounded-full border ${
+                      tool.tool_type === 'builtin'
+                        ? 'bg-gradient-to-r from-purple-100 to-violet-100 dark:from-purple-900/50 dark:to-violet-900/50 text-purple-700 dark:text-purple-400 border-purple-200 dark:border-purple-800'
+                        : 'bg-gradient-to-r from-emerald-100 to-teal-100 dark:from-emerald-900/50 dark:to-teal-900/50 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800'
+                    }`}>
+                      {tool.tool_type === 'mcp' ? t("tools.toolTypes.mcpConnection") : tool.tool_type === 'builtin' ? t("tools.toolTypes.builtin") : t("tools.toolTypes.custom")}
                     </span>
                   </h4>
                   <p className="text-sm text-gray-600 dark:text-gray-400">{tool.description}</p>
@@ -220,47 +225,52 @@ const ToolManagementPage = () => {
                   )}
                 </div>
                 <div className="flex items-center gap-2">
-                    <Dialog open={isEditDialogOpen && selectedTool?.id === tool.id} onOpenChange={(isOpen) => {
-                        if (!isOpen) setSelectedTool(null);
-                        setIsEditDialogOpen(isOpen);
-                      }}>
-                        <DialogTrigger asChild>
-                          <Button variant="outline" size="sm" onClick={() => setSelectedTool(tool)} className={`dark:border-slate-600 dark:text-white dark:hover:bg-slate-700 flex items-center ${isRTL ? 'flex-row-reverse' : ''}`}>
-                            <Edit className={`h-4 w-4 ${isRTL ? 'ml-1' : 'mr-1'}`} /> {t("tools.edit")}
-                          </Button>
-                        </DialogTrigger>
-                        <DialogContent className="dark:bg-slate-800 dark:border-slate-700">
-                          <DialogHeader>
-                            <DialogTitle className="dark:text-white">Edit {tool.tool_type === 'mcp' ? 'Connection' : 'Tool'}</DialogTitle>
-                          </DialogHeader>
-                          {tool.tool_type === 'custom' ? (
-                            <ToolForm tool={tool} onSubmit={(values) => handleUpdate({ ...tool, ...values })} onBack={() => setIsEditDialogOpen(false)} />
-                          ) : (
-                            <McpToolForm tool={tool} onSubmit={(values) => handleUpdate({ ...tool, ...values })} onBack={() => setIsEditDialogOpen(false)} />
-                          )}
-                        </DialogContent>
-                      </Dialog>
-                  {tool.tool_type === 'custom' && (
-                      <Dialog open={isTestDialogOpen && selectedTool?.id === tool.id} onOpenChange={(isOpen) => {
-                        if (!isOpen) setSelectedTool(null);
-                        setIsTestDialogOpen(isOpen);
-                      }}>
-                        <DialogTrigger asChild>
-                          <Button variant="outline" size="sm" onClick={() => setSelectedTool(tool)} className={`dark:border-slate-600 dark:text-white dark:hover:bg-slate-700 flex items-center ${isRTL ? 'flex-row-reverse' : ''}`}>
-                            <Play className={`h-4 w-4 ${isRTL ? 'ml-1' : 'mr-1'}`} /> {t("tools.test")}
-                          </Button>
-                        </DialogTrigger>
-                        <DialogContent className="dark:bg-slate-800 dark:border-slate-700">
-                          <DialogHeader>
-                            <DialogTitle className="dark:text-white">Test {tool.name}</DialogTitle>
-                          </DialogHeader>
-                          <TestToolDialog tool={tool} companyId={companyId} />
-                        </DialogContent>
-                      </Dialog>
+                  {/* Hide edit/delete for builtin tools */}
+                  {tool.tool_type !== 'builtin' && (
+                    <>
+                      <Dialog open={isEditDialogOpen && selectedTool?.id === tool.id} onOpenChange={(isOpen) => {
+                          if (!isOpen) setSelectedTool(null);
+                          setIsEditDialogOpen(isOpen);
+                        }}>
+                          <DialogTrigger asChild>
+                            <Button variant="outline" size="sm" onClick={() => setSelectedTool(tool)} className={`dark:border-slate-600 dark:text-white dark:hover:bg-slate-700 flex items-center ${isRTL ? 'flex-row-reverse' : ''}`}>
+                              <Edit className={`h-4 w-4 ${isRTL ? 'ml-1' : 'mr-1'}`} /> {t("tools.edit")}
+                            </Button>
+                          </DialogTrigger>
+                          <DialogContent className="dark:bg-slate-800 dark:border-slate-700">
+                            <DialogHeader>
+                              <DialogTitle className="dark:text-white">Edit {tool.tool_type === 'mcp' ? 'Connection' : 'Tool'}</DialogTitle>
+                            </DialogHeader>
+                            {tool.tool_type === 'custom' ? (
+                              <ToolForm tool={tool} onSubmit={(values) => handleUpdate({ ...tool, ...values })} onBack={() => setIsEditDialogOpen(false)} />
+                            ) : (
+                              <McpToolForm tool={tool} onSubmit={(values) => handleUpdate({ ...tool, ...values })} onBack={() => setIsEditDialogOpen(false)} />
+                            )}
+                          </DialogContent>
+                        </Dialog>
+                    {tool.tool_type === 'custom' && (
+                        <Dialog open={isTestDialogOpen && selectedTool?.id === tool.id} onOpenChange={(isOpen) => {
+                          if (!isOpen) setSelectedTool(null);
+                          setIsTestDialogOpen(isOpen);
+                        }}>
+                          <DialogTrigger asChild>
+                            <Button variant="outline" size="sm" onClick={() => setSelectedTool(tool)} className={`dark:border-slate-600 dark:text-white dark:hover:bg-slate-700 flex items-center ${isRTL ? 'flex-row-reverse' : ''}`}>
+                              <Play className={`h-4 w-4 ${isRTL ? 'ml-1' : 'mr-1'}`} /> {t("tools.test")}
+                            </Button>
+                          </DialogTrigger>
+                          <DialogContent className="dark:bg-slate-800 dark:border-slate-700">
+                            <DialogHeader>
+                              <DialogTitle className="dark:text-white">Test {tool.name}</DialogTitle>
+                            </DialogHeader>
+                            <TestToolDialog tool={tool} companyId={companyId} />
+                          </DialogContent>
+                        </Dialog>
+                    )}
+                    <Button variant="destructive" size="sm" onClick={() => deleteToolMutation.mutate(tool.id)} className="bg-red-600 hover:bg-red-700">
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                    </>
                   )}
-                  <Button variant="destructive" size="sm" onClick={() => deleteToolMutation.mutate(tool.id)} className="bg-red-600 hover:bg-red-700">
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
                 </div>
               </div>
             ))
@@ -281,11 +291,87 @@ const ToolManagementPage = () => {
 
 const ToolForm = ({ tool, onSubmit, onBack }: { tool?: Tool, onSubmit: (values: any) => void, onBack: () => void }) => {
   const { t, isRTL } = useI18n();
-  const [values, setValues] = useState(tool || { name: "", description: "", code: "", parameters: { type: "object", properties: {}, required: [] }, tool_type: "custom" });
+  const [values, setValues] = useState(tool || {
+    name: "",
+    description: "",
+    code: "",
+    parameters: { type: "object", properties: {}, required: [] },
+    tool_type: "custom",
+    follow_up_config: null as FollowUpConfig | null
+  });
+  const [showFollowUp, setShowFollowUp] = useState(tool?.follow_up_config?.enabled || false);
+  const [newFieldName, setNewFieldName] = useState("");
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     onSubmit(values);
+  };
+
+  const toggleFollowUpEnabled = (enabled: boolean) => {
+    if (enabled) {
+      setValues({
+        ...values,
+        follow_up_config: {
+          enabled: true,
+          fields: {},
+          completion_message: "",
+          completion_message_template: ""
+        }
+      });
+    } else {
+      setValues({
+        ...values,
+        follow_up_config: null
+      });
+    }
+  };
+
+  const addField = () => {
+    if (!newFieldName.trim() || !values.follow_up_config) return;
+    const fieldKey = newFieldName.trim().toLowerCase().replace(/\s+/g, '_');
+    setValues({
+      ...values,
+      follow_up_config: {
+        ...values.follow_up_config,
+        fields: {
+          ...values.follow_up_config.fields,
+          [fieldKey]: {
+            question: "",
+            lookup_source: null
+          }
+        }
+      }
+    });
+    setNewFieldName("");
+  };
+
+  const updateField = (fieldName: string, updates: Partial<FollowUpFieldConfig>) => {
+    if (!values.follow_up_config) return;
+    setValues({
+      ...values,
+      follow_up_config: {
+        ...values.follow_up_config,
+        fields: {
+          ...values.follow_up_config.fields,
+          [fieldName]: {
+            ...values.follow_up_config.fields[fieldName],
+            ...updates
+          }
+        }
+      }
+    });
+  };
+
+  const removeField = (fieldName: string) => {
+    if (!values.follow_up_config) return;
+    const { [fieldName]: removed, ...rest } = values.follow_up_config.fields;
+    setValues({
+      ...values,
+      follow_up_config: {
+        ...values.follow_up_config,
+        fields: rest
+      }
+    });
   };
 
   return (
@@ -323,6 +409,124 @@ const ToolForm = ({ tool, onSubmit, onBack }: { tool?: Tool, onSubmit: (values: 
           className={`font-mono text-sm dark:bg-slate-900 dark:border-slate-600 dark:text-white ${isRTL ? 'text-right' : 'text-left'}`}
         />
       </div>
+
+      {/* Follow-up Questions Configuration */}
+      <div className="border border-slate-200 dark:border-slate-700 rounded-lg overflow-hidden">
+        <button
+          type="button"
+          onClick={() => setShowFollowUp(!showFollowUp)}
+          className="w-full flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
+        >
+          <div className="flex items-center gap-2">
+            <MessageSquare className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+            <span className="font-medium dark:text-white">{t("tools.followUp.title")}</span>
+          </div>
+          {showFollowUp ? (
+            <ChevronDown className="h-4 w-4 dark:text-gray-400" />
+          ) : (
+            <ChevronRight className="h-4 w-4 dark:text-gray-400" />
+          )}
+        </button>
+
+        {showFollowUp && (
+          <div className="p-4 space-y-4 border-t border-slate-200 dark:border-slate-700">
+            <div className="flex items-center justify-between">
+              <div>
+                <Label className="dark:text-gray-300">{t("tools.followUp.enable")}</Label>
+                <p className="text-xs text-gray-500 dark:text-gray-400">{t("tools.followUp.enableDescription")}</p>
+              </div>
+              <Switch
+                checked={values.follow_up_config?.enabled || false}
+                onCheckedChange={toggleFollowUpEnabled}
+              />
+            </div>
+
+            {values.follow_up_config?.enabled && (
+              <>
+                {/* Fields Configuration */}
+                <div className="space-y-3">
+                  <Label className="dark:text-gray-300">{t("tools.followUp.fields")}</Label>
+
+                  {Object.entries(values.follow_up_config.fields).map(([fieldName, fieldConfig]) => (
+                    <div key={fieldName} className="p-3 bg-slate-50 dark:bg-slate-900 rounded-lg space-y-2">
+                      <div className="flex items-center justify-between">
+                        <span className="font-medium text-sm dark:text-white">{fieldName}</span>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => removeField(fieldName)}
+                          className="h-6 w-6 p-0 text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20"
+                        >
+                          <Trash2 className="h-3 w-3" />
+                        </Button>
+                      </div>
+                      <Input
+                        placeholder={t("tools.followUp.questionPlaceholder")}
+                        value={fieldConfig.question}
+                        onChange={(e) => updateField(fieldName, { question: e.target.value })}
+                        className="dark:bg-slate-800 dark:border-slate-600 dark:text-white text-sm"
+                      />
+                      <Input
+                        placeholder={t("tools.followUp.lookupSourcePlaceholder")}
+                        value={fieldConfig.lookup_source || ""}
+                        onChange={(e) => updateField(fieldName, { lookup_source: e.target.value || null })}
+                        className="dark:bg-slate-800 dark:border-slate-600 dark:text-white text-sm"
+                      />
+                    </div>
+                  ))}
+
+                  {/* Add new field */}
+                  <div className="flex gap-2">
+                    <Input
+                      placeholder={t("tools.followUp.newFieldPlaceholder")}
+                      value={newFieldName}
+                      onChange={(e) => setNewFieldName(e.target.value)}
+                      className="dark:bg-slate-900 dark:border-slate-600 dark:text-white text-sm"
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          e.preventDefault();
+                          addField();
+                        }
+                      }}
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={addField}
+                      disabled={!newFieldName.trim()}
+                      className="dark:border-slate-600 dark:text-white dark:hover:bg-slate-700"
+                    >
+                      <Plus className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+
+                {/* Completion Message */}
+                <div className="space-y-2">
+                  <Label className="dark:text-gray-300">{t("tools.followUp.completionMessage")}</Label>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">{t("tools.followUp.completionMessageDescription")}</p>
+                  <Input
+                    placeholder={t("tools.followUp.completionMessagePlaceholder")}
+                    value={values.follow_up_config.completion_message_template || values.follow_up_config.completion_message || ""}
+                    onChange={(e) => setValues({
+                      ...values,
+                      follow_up_config: {
+                        ...values.follow_up_config!,
+                        completion_message_template: e.target.value,
+                        completion_message: ""
+                      }
+                    })}
+                    className="dark:bg-slate-900 dark:border-slate-600 dark:text-white"
+                  />
+                </div>
+              </>
+            )}
+          </div>
+        )}
+      </div>
+
       <div className={`flex justify-between pt-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
         <Button type="button" variant="ghost" onClick={onBack} className="dark:text-white dark:hover:bg-slate-700">{t("tools.forms.back")}</Button>
         <Button type="submit" className="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white">

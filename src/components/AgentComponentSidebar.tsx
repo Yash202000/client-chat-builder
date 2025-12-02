@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Zap, BrainCircuit, Cloud, Code } from 'lucide-react';
+import { Zap, BrainCircuit, Cloud, Code, Shield } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { useAuth } from '@/hooks/useAuth';
 import { Tool, KnowledgeBase, Agent } from '@/types';
@@ -69,6 +69,8 @@ export const AgentComponentSidebar = ({ agent }: { agent: Agent }) => {
         return <Cloud className="text-blue-500" size={32} />;
       case 'custom':
         return <Code className="text-green-500" size={32} />;
+      case 'builtin':
+        return <Shield className="text-purple-500" size={32} />;
       default:
         return <Zap className="text-orange-500" size={32} />;
     }

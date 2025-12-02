@@ -76,6 +76,17 @@ const WorkflowManagementPage = () => {
     }
   };
 
+  const deactivateWorkflowVersion = async (versionId) => {
+    try {
+      const response = await authFetch(`/api/v1/workflows/versions/${versionId}/deactivate`, { method: 'PUT' });
+      if (!response.ok) throw new Error('Failed to deactivate version');
+      toast.success(t("workflows.toasts.versionDeactivated"));
+      fetchWorkflows();
+    } catch (error) {
+      toast.error(t("workflows.toasts.versionDeactivateFailed", { message: error.message }));
+    }
+  };
+
   const deleteWorkflow = async (workflowId) => {
     if (window.confirm(t("workflows.deleteConfirm"))) {
         try {
@@ -287,7 +298,18 @@ const WorkflowManagementPage = () => {
                                     {t("workflows.edit")}
                                   </Button>
                                 </Permission>
-                                {!version.is_active && (
+                                {version.is_active ? (
+                                  <Permission permission="workflow:update">
+                                    <Button
+                                      size="sm"
+                                      variant="outline"
+                                      onClick={() => deactivateWorkflowVersion(version.id)}
+                                      className="border-orange-300 text-orange-600 hover:bg-orange-50 dark:border-orange-700 dark:text-orange-400 dark:hover:bg-orange-900/30"
+                                    >
+                                      {t("workflows.deactivate")}
+                                    </Button>
+                                  </Permission>
+                                ) : (
                                   <Permission permission="workflow:update">
                                     <Button
                                       size="sm"
