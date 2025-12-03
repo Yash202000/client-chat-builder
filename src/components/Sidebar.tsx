@@ -118,7 +118,7 @@ const Sidebar = () => {
               type="tool"
               label={tool.name}
               icon={<Zap size={20} />}
-              nodeData={{ tool_id: tool.id, name: tool.name, parameters: tool.parameters }}
+              nodeData={{ tool_id: tool.id, tool_name: tool.name, parameters: tool.parameters }}
               isRTL={isRTL}
             />
           ))}
@@ -133,7 +133,7 @@ const Sidebar = () => {
               type="tool"
               label={tool.name}
               icon={<Cog size={20} />}
-              nodeData={{ tool_id: tool.id, name: tool.name, parameters: tool.parameters }}
+              nodeData={{ tool_id: tool.id, tool_name: tool.name, parameters: tool.parameters }}
               isRTL={isRTL}
             />
           ))}
@@ -148,7 +148,7 @@ const Sidebar = () => {
               type="tool"
               label={tool.name}
               icon={<Wrench size={20} />}
-              nodeData={{ tool_id: tool.id, name: tool.name, parameters: tool.parameters }}
+              nodeData={{ tool_id: tool.id, tool_name: tool.name, parameters: tool.parameters }}
               isRTL={isRTL}
             />
           ))}

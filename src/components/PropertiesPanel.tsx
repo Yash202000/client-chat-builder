@@ -199,8 +199,10 @@ const PropertiesPanel = ({ selectedNode, nodes, setNodes, deleteNode }) => {
           ...n,
           data: {
             ...n.data,
-            tool: toolName,
-            params: {
+            tool_name: toolName,  // Standardized key for backend
+            tool: toolName,       // Keep for backwards compatibility
+            parameters: {},       // Standardized key for backend
+            params: {             // Keep for backwards compatibility
               toolParameters: tool?.parameters?.properties || {}
             }
           }
@@ -210,9 +212,27 @@ const PropertiesPanel = ({ selectedNode, nodes, setNodes, deleteNode }) => {
     }))
   };
 
+  const handleToolParamsChange = (paramName, value) => {
+    // Write to both 'parameters' (new standard) and 'params' (backwards compat)
+    if (!currentNode) return;
+    const newParams = { ...(currentNode.data.params || {}), [paramName]: value };
+    const newParameters = { ...(currentNode.data.parameters || {}), [paramName]: value };
+    setNodes(nds => nds.map(n => {
+      if (n.id === currentNode.id) {
+        return { ...n, data: { ...n.data, params: newParams, parameters: newParameters } };
+      }
+      return n;
+    }));
+  };
+
   const renderToolParams = () => {
-    const tool = tools.find(t => t.name === currentNode.data.tool);
+    // Support both tool_name (new) and tool (old) keys for backwards compatibility
+    const toolName = currentNode.data.tool_name || currentNode.data.tool;
+    const tool = tools.find(t => t.name === toolName);
     if (!tool || !tool.parameters || !tool.parameters.properties) return null;
+
+    // Read from both parameters (new) and params (old) keys
+    const toolParams = currentNode.data.parameters || currentNode.data.params || {};
 
     return (
       <div style={{ marginTop: '15px' }}>
@@ -221,8 +241,8 @@ const PropertiesPanel = ({ selectedNode, nodes, setNodes, deleteNode }) => {
           <div key={paramName} style={{ marginBottom: '10px' }}>
             <label style={{ display: 'block', marginBottom: '5px', fontSize: '14px' }}>{param.title || paramName}</label>
             <VariableInput
-              value={currentNode.data.params?.[paramName] || ''}
-              onChange={(e) => handleParamsChange(paramName, e.target.value)}
+              value={toolParams[paramName] || ''}
+              onChange={(e) => handleToolParamsChange(paramName, e.target.value)}
               placeholder={param.description}
               availableVars={availableVariables}
             />
@@ -302,7 +322,7 @@ const PropertiesPanel = ({ selectedNode, nodes, setNodes, deleteNode }) => {
               <select
                 className="w-full px-3 py-2 rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400"
                 onChange={(e) => onToolChange(e.target.value)}
-                value={currentNode.data.tool || ''}
+                value={currentNode.data.tool_name || currentNode.data.tool || ''}
                 dir={isRTL ? 'rtl' : 'ltr'}
               >
                 <option value="">{t("workflows.editor.properties.selectTool")}</option>
