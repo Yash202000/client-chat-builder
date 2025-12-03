@@ -53,6 +53,7 @@ const Sidebar = () => {
   const { t, isRTL } = useI18n();
   const [prebuiltTools, setPrebuiltTools] = useState([]);
   const [customTools, setCustomTools] = useState([]);
+  const [builtinTools, setBuiltinTools] = useState([]);
   const { authFetch } = useAuth();
 
   useEffect(() => {
@@ -71,6 +72,7 @@ const Sidebar = () => {
 
     fetchTools('pre_built', setPrebuiltTools);
     fetchTools('custom', setCustomTools);
+    fetchTools('builtin', setBuiltinTools);
   }, [authFetch]);
 
   return (
@@ -107,6 +109,21 @@ const Sidebar = () => {
         <DraggableNode type="assign_to_agent" label={t("workflows.editor.sidebar.nodes.assignToAgent")} icon={<UserPlus size={20} />} nodeData={{}} isRTL={isRTL} />
         <DraggableNode type="set_status" label={t("workflows.editor.sidebar.nodes.setStatus")} icon={<Activity size={20} />} nodeData={{}} isRTL={isRTL} />
       </AccordionSection>
+
+      {builtinTools.length > 0 && (
+        <AccordionSection title={t("workflows.editor.sidebar.builtinTools")} isRTL={isRTL}>
+          {builtinTools.map(tool => (
+            <DraggableNode
+              key={tool.id}
+              type="tool"
+              label={tool.name}
+              icon={<Zap size={20} />}
+              nodeData={{ tool_id: tool.id, name: tool.name, parameters: tool.parameters }}
+              isRTL={isRTL}
+            />
+          ))}
+        </AccordionSection>
+      )}
 
       {prebuiltTools.length > 0 && (
         <AccordionSection title={t("workflows.editor.sidebar.prebuiltTools")} isRTL={isRTL}>

@@ -1305,6 +1305,7 @@
         "triggers": "Triggers",
         "coreNodes": "Core Nodes",
         "chatConversation": "Chat & Conversation",
+        "builtinTools": "Built-in Tools",
         "prebuiltTools": "Pre-built Tools",
         "customTools": "Custom Tools",
         "nodes": {
