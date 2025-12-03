@@ -41,6 +41,7 @@ const InternalVideoCallPage: React.FC = () => {
   const roomName = queryParams.get('roomName');
   const channelId = queryParams.get('channelId');
   const callId = queryParams.get('callId');
+  const sessionId = queryParams.get('sessionId'); // For handoff calls
 
   // Debug: Log the parameters
   console.log('=== [VIDEO CALL - PAGE LOADED] ===');
@@ -135,7 +136,9 @@ const InternalVideoCallPage: React.FC = () => {
       callId,
       channelId,
       roomName,
+      sessionId,
       hasCallId: !!callId,
+      hasSessionId: !!sessionId,
       callIdType: typeof callId
     });
 
@@ -171,6 +174,29 @@ const InternalVideoCallPage: React.FC = () => {
     } else {
       console.warn('[Video Call] ⚠️ No callId available - cannot end call on backend');
       console.warn('[Video Call] This means the call status will remain "active" in the database!');
+    }
+
+    // End handoff call if this was a handoff (decrement agent's session count)
+    if (sessionId) {
+      try {
+        const token = localStorage.getItem('accessToken');
+        console.log('[Video Call] Ending handoff call for session:', sessionId);
+        const response = await axios.post(
+          `${API_BASE_URL}/api/v1/handoff/end`,
+          { session_id: sessionId },
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        console.log('[Video Call] Handoff end response:', response.data);
+        console.log('[Video Call] Successfully ended handoff - agent session count decremented');
+      } catch (error: any) {
+        console.error('[Video Call] Failed to end handoff call');
+        console.error('[Video Call] Error details:', {
+          message: error.message,
+          response: error.response?.data,
+          status: error.response?.status
+        });
+        // Still navigate even if the handoff end fails
+      }
     }
 
     // Restore previous presence status

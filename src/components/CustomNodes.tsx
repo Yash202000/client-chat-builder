@@ -32,8 +32,8 @@ export const ToolNode = ({ data }) => (
       <strong className="text-sm font-semibold text-slate-900 dark:text-white">{data.label}</strong>
     </div>
     <div className="text-xs text-slate-600 dark:text-slate-400 font-medium">Tool Execution</div>
-    <Handle type="source" position={Position.Bottom} id="output" className="w-3 h-3 !bg-slate-600 dark:!bg-slate-400 border-2 border-white dark:border-slate-800" />
-    <Handle type="source" position={Position.Right} id="error" className="w-3 h-3 !bg-red-500 dark:!bg-red-400 border-2 border-white dark:border-slate-800" />
+    <Handle type="source" position={Position.Bottom} id="error" className="w-3 h-3 !bg-slate-600 dark:!bg-slate-400 border-2 border-white dark:border-slate-800" />
+    <Handle type="source" position={Position.Right} id="output" className="w-3 h-3 !bg-red-500 dark:!bg-red-400 border-2 border-white dark:border-slate-800" />
   </div>
 );
 
