@@ -237,17 +237,69 @@ const PropertiesPanel = ({ selectedNode, nodes, setNodes, deleteNode }) => {
     return (
       <div style={{ marginTop: '15px' }}>
         <h4 style={{ marginBottom: '10px', fontWeight: 'bold' }}>Tool Parameters</h4>
-        {Object.entries(tool.parameters.properties).map(([paramName, param]) => (
-          <div key={paramName} style={{ marginBottom: '10px' }}>
-            <label style={{ display: 'block', marginBottom: '5px', fontSize: '14px' }}>{param.title || paramName}</label>
-            <VariableInput
-              value={toolParams[paramName] || ''}
-              onChange={(e) => handleToolParamsChange(paramName, e.target.value)}
-              placeholder={param.description}
-              availableVars={availableVariables}
-            />
-          </div>
-        ))}
+        {Object.entries(tool.parameters.properties).map(([paramName, param]: [string, any]) => {
+          // Display labels for enum options (especially for languages)
+          const getEnumLabel = (value: string): string => {
+            const languageLabels: Record<string, string> = {
+              'auto': 'Auto Detect',
+              'en': 'English',
+              'ar': 'Arabic (العربية)',
+              'es': 'Spanish (Español)',
+              'fr': 'French (Français)',
+              'de': 'German (Deutsch)',
+              'zh': 'Chinese (中文)',
+              'ja': 'Japanese (日本語)',
+              'ko': 'Korean (한국어)',
+              'pt': 'Portuguese (Português)',
+              'ru': 'Russian (Русский)',
+              'hi': 'Hindi (हिन्दी)',
+              'it': 'Italian (Italiano)',
+              'nl': 'Dutch (Nederlands)',
+              'tr': 'Turkish (Türkçe)',
+              'pl': 'Polish (Polski)',
+              'vi': 'Vietnamese (Tiếng Việt)',
+              'th': 'Thai (ไทย)',
+              'id': 'Indonesian (Bahasa)',
+              'llm': 'LLM (AI Translation)',
+              'google': 'Google Translate',
+              // LLM Model options
+              'groq/llama-3.3-70b-versatile': 'Groq - Llama 3.3 70B',
+              'groq/llama-3.1-8b-instant': 'Groq - Llama 3.1 8B (Fast)',
+              'openai/gpt-4o': 'OpenAI - GPT-4o',
+              'openai/gpt-4o-mini': 'OpenAI - GPT-4o Mini',
+              'gemini/gemini-1.5-pro': 'Gemini - 1.5 Pro',
+              'gemini/gemini-1.5-flash': 'Gemini - 1.5 Flash'
+            };
+            return languageLabels[value] || value;
+          };
+
+          return (
+            <div key={paramName} style={{ marginBottom: '10px' }}>
+              <label style={{ display: 'block', marginBottom: '5px', fontSize: '14px' }}>{param.title || paramName}</label>
+              {/* If parameter has enum values, render as dropdown */}
+              {param.enum && Array.isArray(param.enum) ? (
+                <select
+                  value={toolParams[paramName] || ''}
+                  onChange={(e) => handleToolParamsChange(paramName, e.target.value)}
+                  className="w-full px-3 py-2 rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400"
+                  dir={isRTL ? 'rtl' : 'ltr'}
+                >
+                  <option value="">{t("workflows.editor.properties.select")} {paramName.replace(/_/g, ' ')}</option>
+                  {param.enum.map((option: string) => (
+                    <option key={option} value={option}>{getEnumLabel(option)}</option>
+                  ))}
+                </select>
+              ) : (
+                <VariableInput
+                  value={toolParams[paramName] || ''}
+                  onChange={(e) => handleToolParamsChange(paramName, e.target.value)}
+                  placeholder={param.description}
+                  availableVars={availableVariables}
+                />
+              )}
+            </div>
+          );
+        })}
       </div>
     );
   };
@@ -268,6 +320,12 @@ const PropertiesPanel = ({ selectedNode, nodes, setNodes, deleteNode }) => {
               className="w-full px-3 py-2 rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400"
               dir={isRTL ? 'rtl' : 'ltr'}
             />
+          </div>
+          <div className="mb-4">
+            <label className="block mb-2 font-medium text-sm text-slate-700 dark:text-slate-300">{t("workflows.editor.properties.nodeId")}</label>
+            <div className="w-full px-3 py-2 rounded-md border border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 text-sm font-mono select-all">
+              {currentNode.id}
+            </div>
           </div>
         </div>
 
