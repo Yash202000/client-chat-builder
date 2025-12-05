@@ -186,6 +186,7 @@ export const VaultSettings = () => {
           <option value="groq">{t('vault.services.groq')}</option>
           <option value="gemini">{t('vault.services.gemini')}</option>
           <option value="openai">{t('vault.services.openai')}</option>
+          <option value="google_translate">{t('vault.services.google_translate')}</option>
         </select>
         <p className="text-xs text-gray-500 dark:text-gray-400">{t('vault.serviceDesc')}</p>
       </div>

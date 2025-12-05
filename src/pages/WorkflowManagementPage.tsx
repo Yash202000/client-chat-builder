@@ -11,7 +11,23 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { Badge } from "@/components/ui/badge";
-import { Edit, Copy, PlusCircle, Trash2, WorkflowIcon, Sparkles } from 'lucide-react';
+import { Edit, Copy, PlusCircle, Trash2, WorkflowIcon, Sparkles, Upload, Download } from 'lucide-react';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { useAuth } from "@/hooks/useAuth";
 import { useI18n } from "@/hooks/useI18n";
 import CreateWorkflowDialog from '@/components/CreateWorkflowDialog'; // Assuming this component exists
@@ -20,6 +36,12 @@ const WorkflowManagementPage = () => {
   const { t, isRTL } = useI18n();
   const [workflows, setWorkflows] = useState([]);
   const [isCreateDialogOpen, setCreateDialogOpen] = useState(false);
+  const [isImportDialogOpen, setImportDialogOpen] = useState(false);
+  const [importFile, setImportFile] = useState<File | null>(null);
+  const [importData, setImportData] = useState<any>(null);
+  const [selectedAgentId, setSelectedAgentId] = useState<string>("");
+  const [agents, setAgents] = useState<any[]>([]);
+  const [isImporting, setIsImporting] = useState(false);
   const { authFetch } = useAuth();
   const navigate = useNavigate();
 
@@ -99,6 +121,106 @@ const WorkflowManagementPage = () => {
     }
   };
 
+  // Export workflow as JSON file
+  const handleExport = async (workflowId: number, workflowName: string) => {
+    try {
+      const response = await authFetch(`/api/v1/workflows/${workflowId}/export`);
+      if (!response.ok) throw new Error('Export failed');
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${workflowName.replace(/\s+/g, '_')}_workflow.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
+
+      toast.success(t("workflows.toasts.exportSuccess") || "Workflow exported successfully");
+    } catch (error) {
+      toast.error(t("workflows.toasts.exportFailed") || "Failed to export workflow");
+    }
+  };
+
+  // Fetch agents for import dialog
+  const fetchAgents = async () => {
+    try {
+      const response = await authFetch('/api/v1/agents/');
+      if (response.ok) {
+        const data = await response.json();
+        setAgents(data);
+      }
+    } catch (error) {
+      console.error('Failed to fetch agents:', error);
+    }
+  };
+
+  // Handle file selection for import
+  const handleFileSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    setImportFile(file);
+
+    try {
+      const content = await file.text();
+      const data = JSON.parse(content);
+      setImportData(data);
+    } catch (error) {
+      toast.error(t("workflows.toasts.invalidFile") || "Invalid JSON file");
+      setImportFile(null);
+      setImportData(null);
+    }
+  };
+
+  // Open import dialog
+  const openImportDialog = () => {
+    fetchAgents();
+    setImportDialogOpen(true);
+  };
+
+  // Close import dialog and reset state
+  const closeImportDialog = () => {
+    setImportDialogOpen(false);
+    setImportFile(null);
+    setImportData(null);
+    setSelectedAgentId("");
+  };
+
+  // Import workflow
+  const handleImport = async () => {
+    if (!importData || !selectedAgentId) {
+      toast.error(t("workflows.toasts.selectAgent") || "Please select an agent");
+      return;
+    }
+
+    setIsImporting(true);
+    try {
+      const response = await authFetch('/api/v1/workflows/import', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          agent_id: parseInt(selectedAgentId),
+          workflow_data: importData
+        })
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.detail || 'Import failed');
+      }
+
+      toast.success(t("workflows.toasts.importSuccess") || "Workflow imported successfully");
+      closeImportDialog();
+      fetchWorkflows();
+    } catch (error: any) {
+      toast.error(error.message || t("workflows.toasts.importFailed") || "Failed to import workflow");
+    } finally {
+      setIsImporting(false);
+    }
+  };
+
   return (
     <>
       <CreateWorkflowDialog
@@ -118,16 +240,29 @@ const WorkflowManagementPage = () => {
                 {t("workflows.subtitle")}
               </p>
             </div>
-            <Permission permission="workflow:create">
-              <Button
-                onClick={() => setCreateDialogOpen(true)}
-                size="lg"
-                className={`bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white shadow-lg hover:shadow-xl transition-all flex items-center ${isRTL ? 'flex-row-reverse' : ''}`}
-              >
-                <PlusCircle className={`h-5 w-5 ${isRTL ? 'ml-2' : 'mr-2'}`} />
-                {t("workflows.createWorkflow")}
-              </Button>
-            </Permission>
+            <div className={`flex gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
+              <Permission permission="workflow:create">
+                <Button
+                  onClick={openImportDialog}
+                  size="lg"
+                  variant="outline"
+                  className={`border-slate-300 dark:border-slate-600 hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center ${isRTL ? 'flex-row-reverse' : ''}`}
+                >
+                  <Upload className={`h-5 w-5 ${isRTL ? 'ml-2' : 'mr-2'}`} />
+                  {t("workflows.importWorkflow") || "Import"}
+                </Button>
+              </Permission>
+              <Permission permission="workflow:create">
+                <Button
+                  onClick={() => setCreateDialogOpen(true)}
+                  size="lg"
+                  className={`bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white shadow-lg hover:shadow-xl transition-all flex items-center ${isRTL ? 'flex-row-reverse' : ''}`}
+                >
+                  <PlusCircle className={`h-5 w-5 ${isRTL ? 'ml-2' : 'mr-2'}`} />
+                  {t("workflows.createWorkflow")}
+                </Button>
+              </Permission>
+            </div>
           </div>
 
           {/* Stats Cards */}
@@ -223,6 +358,19 @@ const WorkflowManagementPage = () => {
                           <Badge variant="outline" className={`${isRTL ? 'ml-2' : 'mr-2'} dark:border-slate-600 dark:text-gray-300`}>
                             {workflow.versions.length} {workflow.versions.length === 1 ? t("workflows.version") : t("workflows.versionsPlural")}
                           </Badge>
+                          <Permission permission="workflow:read">
+                            <div
+                              role="button"
+                              aria-label="Export workflow"
+                              className="p-2 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-900/30 transition-colors"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleExport(workflow.id, workflow.name);
+                              }}
+                            >
+                              <Download className="h-4 w-4 text-blue-500 dark:text-blue-400" />
+                            </div>
+                          </Permission>
                           <Permission permission="workflow:delete">
                             <div
                               role="button"
@@ -333,6 +481,89 @@ const WorkflowManagementPage = () => {
           </CardContent>
         </Card>
       </div>
+
+      {/* Import Workflow Dialog */}
+      <Dialog open={isImportDialogOpen} onOpenChange={setImportDialogOpen}>
+        <DialogContent className="sm:max-w-md dark:bg-slate-800 dark:border-slate-700">
+          <DialogHeader>
+            <DialogTitle className="dark:text-white">{t("workflows.importWorkflow") || "Import Workflow"}</DialogTitle>
+            <DialogDescription className="dark:text-gray-400">
+              {t("workflows.importDescription") || "Upload a workflow JSON file to import it into your workspace."}
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4 py-4">
+            {/* File Upload */}
+            <div className="space-y-2">
+              <Label htmlFor="workflow-file" className="dark:text-gray-300">
+                {t("workflows.selectFile") || "Workflow File"}
+              </Label>
+              <input
+                id="workflow-file"
+                type="file"
+                accept=".json"
+                onChange={handleFileSelect}
+                className="w-full px-3 py-2 border rounded-md dark:bg-slate-900 dark:border-slate-600 dark:text-white file:mr-4 file:py-1 file:px-3 file:rounded file:border-0 file:bg-blue-50 file:text-blue-700 dark:file:bg-blue-900/50 dark:file:text-blue-300 hover:file:bg-blue-100 cursor-pointer"
+              />
+            </div>
+
+            {/* Preview imported workflow info */}
+            {importData && (
+              <div className="p-3 bg-slate-100 dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-700">
+                <h4 className="font-medium text-sm mb-2 dark:text-white">{t("workflows.preview") || "Preview"}</h4>
+                <div className="text-sm space-y-1">
+                  <p className="dark:text-gray-300">
+                    <span className="text-gray-500 dark:text-gray-500">{t("workflows.name") || "Name"}:</span>{" "}
+                    {importData.workflow?.name || "Unknown"}
+                  </p>
+                  <p className="dark:text-gray-300">
+                    <span className="text-gray-500 dark:text-gray-500">{t("workflows.description") || "Description"}:</span>{" "}
+                    {importData.workflow?.description || "No description"}
+                  </p>
+                  {importData.required_tools?.length > 0 && (
+                    <p className="dark:text-gray-300">
+                      <span className="text-gray-500 dark:text-gray-500">{t("workflows.requiredTools") || "Required Tools"}:</span>{" "}
+                      {importData.required_tools.join(", ")}
+                    </p>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* Agent Selection */}
+            <div className="space-y-2">
+              <Label htmlFor="agent-select" className="dark:text-gray-300">
+                {t("workflows.selectAgent") || "Assign to Agent"}
+              </Label>
+              <Select value={selectedAgentId} onValueChange={setSelectedAgentId}>
+                <SelectTrigger className="dark:bg-slate-900 dark:border-slate-600 dark:text-white">
+                  <SelectValue placeholder={t("workflows.selectAgentPlaceholder") || "Select an agent..."} />
+                </SelectTrigger>
+                <SelectContent className="dark:bg-slate-800 dark:border-slate-700">
+                  {agents.map((agent) => (
+                    <SelectItem key={agent.id} value={agent.id.toString()} className="dark:text-white dark:hover:bg-slate-700">
+                      {agent.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          <DialogFooter className="gap-2">
+            <Button variant="outline" onClick={closeImportDialog} className="dark:border-slate-600 dark:text-white dark:hover:bg-slate-700">
+              {t("common.cancel") || "Cancel"}
+            </Button>
+            <Button
+              onClick={handleImport}
+              disabled={!importData || !selectedAgentId || isImporting}
+              className="bg-blue-600 hover:bg-blue-700 text-white"
+            >
+              {isImporting ? (t("common.importing") || "Importing...") : (t("workflows.import") || "Import")}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   );
 };

@@ -199,8 +199,10 @@ const PropertiesPanel = ({ selectedNode, nodes, setNodes, deleteNode }) => {
           ...n,
           data: {
             ...n.data,
-            tool: toolName,
-            params: {
+            tool_name: toolName,  // Standardized key for backend
+            tool: toolName,       // Keep for backwards compatibility
+            parameters: {},       // Standardized key for backend
+            params: {             // Keep for backwards compatibility
               toolParameters: tool?.parameters?.properties || {}
             }
           }
@@ -210,24 +212,94 @@ const PropertiesPanel = ({ selectedNode, nodes, setNodes, deleteNode }) => {
     }))
   };
 
+  const handleToolParamsChange = (paramName, value) => {
+    // Write to both 'parameters' (new standard) and 'params' (backwards compat)
+    if (!currentNode) return;
+    const newParams = { ...(currentNode.data.params || {}), [paramName]: value };
+    const newParameters = { ...(currentNode.data.parameters || {}), [paramName]: value };
+    setNodes(nds => nds.map(n => {
+      if (n.id === currentNode.id) {
+        return { ...n, data: { ...n.data, params: newParams, parameters: newParameters } };
+      }
+      return n;
+    }));
+  };
+
   const renderToolParams = () => {
-    const tool = tools.find(t => t.name === currentNode.data.tool);
+    // Support both tool_name (new) and tool (old) keys for backwards compatibility
+    const toolName = currentNode.data.tool_name || currentNode.data.tool;
+    const tool = tools.find(t => t.name === toolName);
     if (!tool || !tool.parameters || !tool.parameters.properties) return null;
+
+    // Read from both parameters (new) and params (old) keys
+    const toolParams = currentNode.data.parameters || currentNode.data.params || {};
 
     return (
       <div style={{ marginTop: '15px' }}>
         <h4 style={{ marginBottom: '10px', fontWeight: 'bold' }}>Tool Parameters</h4>
-        {Object.entries(tool.parameters.properties).map(([paramName, param]) => (
-          <div key={paramName} style={{ marginBottom: '10px' }}>
-            <label style={{ display: 'block', marginBottom: '5px', fontSize: '14px' }}>{param.title || paramName}</label>
-            <VariableInput
-              value={currentNode.data.params?.[paramName] || ''}
-              onChange={(e) => handleParamsChange(paramName, e.target.value)}
-              placeholder={param.description}
-              availableVars={availableVariables}
-            />
-          </div>
-        ))}
+        {Object.entries(tool.parameters.properties).map(([paramName, param]: [string, any]) => {
+          // Display labels for enum options (especially for languages)
+          const getEnumLabel = (value: string): string => {
+            const languageLabels: Record<string, string> = {
+              'auto': 'Auto Detect',
+              'en': 'English',
+              'ar': 'Arabic (العربية)',
+              'es': 'Spanish (Español)',
+              'fr': 'French (Français)',
+              'de': 'German (Deutsch)',
+              'zh': 'Chinese (中文)',
+              'ja': 'Japanese (日本語)',
+              'ko': 'Korean (한국어)',
+              'pt': 'Portuguese (Português)',
+              'ru': 'Russian (Русский)',
+              'hi': 'Hindi (हिन्दी)',
+              'it': 'Italian (Italiano)',
+              'nl': 'Dutch (Nederlands)',
+              'tr': 'Turkish (Türkçe)',
+              'pl': 'Polish (Polski)',
+              'vi': 'Vietnamese (Tiếng Việt)',
+              'th': 'Thai (ไทย)',
+              'id': 'Indonesian (Bahasa)',
+              'llm': 'LLM (AI Translation)',
+              'google': 'Google Translate',
+              // LLM Model options
+              'groq/llama-3.3-70b-versatile': 'Groq - Llama 3.3 70B',
+              'groq/llama-3.1-8b-instant': 'Groq - Llama 3.1 8B (Fast)',
+              'openai/gpt-4o': 'OpenAI - GPT-4o',
+              'openai/gpt-4o-mini': 'OpenAI - GPT-4o Mini',
+              'gemini/gemini-1.5-pro': 'Gemini - 1.5 Pro',
+              'gemini/gemini-1.5-flash': 'Gemini - 1.5 Flash'
+            };
+            return languageLabels[value] || value;
+          };
+
+          return (
+            <div key={paramName} style={{ marginBottom: '10px' }}>
+              <label style={{ display: 'block', marginBottom: '5px', fontSize: '14px' }}>{param.title || paramName}</label>
+              {/* If parameter has enum values, render as dropdown */}
+              {param.enum && Array.isArray(param.enum) ? (
+                <select
+                  value={toolParams[paramName] || ''}
+                  onChange={(e) => handleToolParamsChange(paramName, e.target.value)}
+                  className="w-full px-3 py-2 rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400"
+                  dir={isRTL ? 'rtl' : 'ltr'}
+                >
+                  <option value="">{t("workflows.editor.properties.select")} {paramName.replace(/_/g, ' ')}</option>
+                  {param.enum.map((option: string) => (
+                    <option key={option} value={option}>{getEnumLabel(option)}</option>
+                  ))}
+                </select>
+              ) : (
+                <VariableInput
+                  value={toolParams[paramName] || ''}
+                  onChange={(e) => handleToolParamsChange(paramName, e.target.value)}
+                  placeholder={param.description}
+                  availableVars={availableVariables}
+                />
+              )}
+            </div>
+          );
+        })}
       </div>
     );
   };
@@ -249,6 +321,12 @@ const PropertiesPanel = ({ selectedNode, nodes, setNodes, deleteNode }) => {
               dir={isRTL ? 'rtl' : 'ltr'}
             />
           </div>
+          <div className="mb-4">
+            <label className="block mb-2 font-medium text-sm text-slate-700 dark:text-slate-300">{t("workflows.editor.properties.nodeId")}</label>
+            <div className="w-full px-3 py-2 rounded-md border border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 text-sm font-mono select-all">
+              {currentNode.id}
+            </div>
+          </div>
         </div>
 
         {currentNode.type === 'llm' && (
@@ -263,8 +341,24 @@ const PropertiesPanel = ({ selectedNode, nodes, setNodes, deleteNode }) => {
                 dir={isRTL ? 'rtl' : 'ltr'}
               >
                 <option value="">{t("workflows.editor.properties.selectModel")}</option>
-                <option value="groq/llama3-8b-8192">Groq Llama3 8b</option>
-                <option value="gemini/gemini-pro">Gemini Pro</option>
+                <optgroup label="Groq">
+                  <option value="groq/llama-3.3-70b-versatile">Llama 3.3 70B Versatile</option>
+                  <option value="groq/llama-3.1-70b-versatile">Llama 3.1 70B Versatile</option>
+                  <option value="groq/llama-3.1-8b-instant">Llama 3.1 8B Instant</option>
+                  <option value="groq/llama3-8b-8192">Llama3 8B</option>
+                  <option value="groq/mixtral-8x7b-32768">Mixtral 8x7B</option>
+                </optgroup>
+                <optgroup label="OpenAI">
+                  <option value="openai/gpt-4o">GPT-4o</option>
+                  <option value="openai/gpt-4o-mini">GPT-4o Mini</option>
+                  <option value="openai/gpt-4-turbo">GPT-4 Turbo</option>
+                  <option value="openai/gpt-3.5-turbo">GPT-3.5 Turbo</option>
+                </optgroup>
+                <optgroup label="Gemini">
+                  <option value="gemini/gemini-1.5-pro">Gemini 1.5 Pro</option>
+                  <option value="gemini/gemini-1.5-flash">Gemini 1.5 Flash</option>
+                  <option value="gemini/gemini-pro">Gemini Pro</option>
+                </optgroup>
               </select>
             </div>
             <div className="mb-4">
@@ -280,6 +374,17 @@ const PropertiesPanel = ({ selectedNode, nodes, setNodes, deleteNode }) => {
                   <option key={kb.id} value={kb.id}>{kb.name}</option>
                 ))}
               </select>
+            </div>
+            <div className="mb-4">
+              <label className="block mb-2 font-medium text-sm text-slate-700 dark:text-slate-300">{t("workflows.editor.properties.systemPrompt")}</label>
+              <textarea
+                value={currentNode.data.system_prompt || ''}
+                onChange={(e) => handleDataChange('system_prompt', e.target.value)}
+                placeholder={t("workflows.editor.properties.systemPromptPlaceholder")}
+                className="w-full px-3 py-2 rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 min-h-[80px] resize-y"
+                dir={isRTL ? 'rtl' : 'ltr'}
+              />
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">{t("workflows.editor.properties.systemPromptHint")}</p>
             </div>
             <div className="mb-4">
               <label className="block mb-2 font-medium text-sm text-slate-700 dark:text-slate-300">{t("workflows.editor.properties.prompt")}</label>
@@ -302,7 +407,7 @@ const PropertiesPanel = ({ selectedNode, nodes, setNodes, deleteNode }) => {
               <select
                 className="w-full px-3 py-2 rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400"
                 onChange={(e) => onToolChange(e.target.value)}
-                value={currentNode.data.tool || ''}
+                value={currentNode.data.tool_name || currentNode.data.tool || ''}
                 dir={isRTL ? 'rtl' : 'ltr'}
               >
                 <option value="">{t("workflows.editor.properties.selectTool")}</option>
