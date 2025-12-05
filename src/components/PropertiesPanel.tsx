@@ -650,6 +650,114 @@ const PropertiesPanel = ({ selectedNode, nodes, setNodes, deleteNode }) => {
         {currentNode.type === 'code' && (
           <div className="mb-5 p-4 bg-slate-50 dark:bg-slate-800/50 rounded-lg border border-slate-200 dark:border-slate-700">
             <h3 className="text-base font-semibold mb-4 text-slate-900 dark:text-slate-100">{t("workflows.editor.properties.codeExecution")}</h3>
+
+            {/* Input Arguments Section */}
+            <div className="mb-4">
+              <label className="block mb-2 font-medium text-sm text-slate-700 dark:text-slate-300">{t("workflows.editor.properties.codeArguments")}</label>
+              <p className="text-xs text-slate-500 dark:text-slate-400 mb-2">{t("workflows.editor.properties.codeArgumentsHint")}</p>
+
+              {(currentNode.data.arguments || []).map((arg, index) => (
+                <div key={index} className="mb-3 p-3 bg-white dark:bg-slate-800 rounded border border-slate-200 dark:border-slate-600">
+                  <div className="flex justify-between items-center mb-2">
+                    <span className="text-xs font-medium text-slate-500 dark:text-slate-400">Argument {index + 1}</span>
+                    <button
+                      onClick={() => {
+                        const newArgs = [...(currentNode.data.arguments || [])];
+                        newArgs.splice(index, 1);
+                        handleDataChange('arguments', newArgs);
+                      }}
+                      className="text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 bg-transparent border-none cursor-pointer text-xs"
+                    >
+                      Remove
+                    </button>
+                  </div>
+                  <div className="mb-2">
+                    <label className="block text-xs text-slate-600 dark:text-slate-400 mb-1">{t("workflows.editor.properties.codeArgumentName")}</label>
+                    <input
+                      type="text"
+                      value={arg.name || ''}
+                      onChange={(e) => {
+                        const newArgs = [...(currentNode.data.arguments || [])];
+                        newArgs[index] = { ...newArgs[index], name: e.target.value };
+                        handleDataChange('arguments', newArgs);
+                      }}
+                      placeholder="e.g., my_data"
+                      className="w-full px-2 py-1.5 text-sm rounded border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono"
+                      dir="ltr"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs text-slate-600 dark:text-slate-400 mb-1">{t("workflows.editor.properties.codeArgumentValue")}</label>
+                    <VariableInput
+                      value={arg.value || ''}
+                      onChange={(e) => {
+                        const newArgs = [...(currentNode.data.arguments || [])];
+                        newArgs[index] = { ...newArgs[index], value: e.target.value };
+                        handleDataChange('arguments', newArgs);
+                      }}
+                      placeholder="e.g., {{context.variable}}"
+                      availableVars={availableVariables}
+                      isRTL={false}
+                    />
+                  </div>
+                </div>
+              ))}
+
+              <button
+                onClick={() => {
+                  const newArgs = [...(currentNode.data.arguments || []), { name: '', value: '' }];
+                  handleDataChange('arguments', newArgs);
+                }}
+                className="w-full py-2 bg-blue-50 dark:bg-blue-950/30 border border-dashed border-blue-300 dark:border-blue-700 rounded cursor-pointer text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-950/50 transition-colors text-sm font-medium"
+              >
+                + {t("workflows.editor.properties.addArgument")}
+              </button>
+            </div>
+
+            {/* Return Variables Section */}
+            <div className="mb-4">
+              <label className="block mb-2 font-medium text-sm text-slate-700 dark:text-slate-300">{t("workflows.editor.properties.returnVariables")}</label>
+              <p className="text-xs text-slate-500 dark:text-slate-400 mb-2">{t("workflows.editor.properties.returnVariablesHint")}</p>
+
+              {(currentNode.data.return_variables || []).map((varName, index) => (
+                <div key={index} className="flex gap-2 mb-2 items-center">
+                  <input
+                    type="text"
+                    value={varName || ''}
+                    onChange={(e) => {
+                      const newVars = [...(currentNode.data.return_variables || [])];
+                      newVars[index] = e.target.value;
+                      handleDataChange('return_variables', newVars);
+                    }}
+                    placeholder={t("workflows.editor.properties.returnVariableName")}
+                    className="flex-1 px-2 py-1.5 text-xs rounded border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono"
+                    dir="ltr"
+                  />
+                  <button
+                    onClick={() => {
+                      const newVars = [...(currentNode.data.return_variables || [])];
+                      newVars.splice(index, 1);
+                      handleDataChange('return_variables', newVars);
+                    }}
+                    className="px-2 py-1.5 text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 bg-transparent border-none cursor-pointer text-sm"
+                  >
+                    ✕
+                  </button>
+                </div>
+              ))}
+
+              <button
+                onClick={() => {
+                  const newVars = [...(currentNode.data.return_variables || []), ''];
+                  handleDataChange('return_variables', newVars);
+                }}
+                className="w-full py-2 bg-green-50 dark:bg-green-950/30 border border-dashed border-green-300 dark:border-green-700 rounded cursor-pointer text-green-600 dark:text-green-400 hover:bg-green-100 dark:hover:bg-green-950/50 transition-colors text-sm font-medium"
+              >
+                + {t("workflows.editor.properties.addReturnVariable")}
+              </button>
+            </div>
+
+            {/* Python Code Section */}
             <div className="mb-4">
               <label className="block mb-2 font-medium text-sm text-slate-700 dark:text-slate-300">{t("workflows.editor.properties.pythonCode")}</label>
               <textarea
