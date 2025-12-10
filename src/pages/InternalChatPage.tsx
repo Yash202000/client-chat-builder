@@ -38,6 +38,7 @@ import MessageThreadModal from '@/components/MessageThreadModal';
 import MessageReactions from '@/components/MessageReactions';
 import MentionInput from '@/components/MentionInput';
 import MentionText from '@/components/MentionText';
+import { SlashCommandInput } from '@/components/SlashCommandInput';
 import SearchModal from '@/components/SearchModal';
 import IncomingCallModal from '@/components/IncomingCallModal';
 import CallingModal from '@/components/CallingModal';
@@ -1507,14 +1508,13 @@ const InternalChatPage: React.FC = () => {
                       multiple={true}
                     />
 
-                    <MentionInput
+                    <SlashCommandInput
                       placeholder={t('teamChat.typeMessage')}
                       value={inputValue}
                       onChange={setInputValue}
                       onKeyPress={(e) => e.key === 'Enter' && !e.shiftKey && handleSendMessage()}
                       className="flex-1 px-5 py-3 rounded-full bg-slate-100 dark:bg-slate-900 border-slate-200 dark:border-slate-700 focus:border-purple-500 dark:focus:border-purple-400 focus:ring-2 focus:ring-purple-500/20 dark:focus:ring-purple-400/20 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500"
                       disabled={isUploadingFiles}
-                      users={channelMembers || []}
                     />
                     <Button
                       onClick={handleSendMessage}

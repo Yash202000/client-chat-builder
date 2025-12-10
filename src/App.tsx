@@ -71,6 +71,7 @@ import TagsPage from "./pages/CRM/TagsPage";
 import SegmentsPage from "./pages/CRM/SegmentsPage";
 import TemplatesPage from "./pages/CRM/TemplatesPage";
 import TemplateEditorPage from "./pages/CRM/TemplateEditorPage";
+import MessageTemplatesPage from "./pages/MessageTemplatesPage";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -154,6 +155,7 @@ const AppRoutes = () => {
           <Route path="crm/segments" element={<SegmentsPage />} />
           <Route path="crm/templates" element={<TemplatesPage />} />
           <Route path="crm/templates/:id" element={<TemplateEditorPage />} />
+          <Route path="message-templates" element={<MessageTemplatesPage />} />
           <Route path="crm/analytics" element={<AnalyticsPage />} />
         </Route>
       </Route>

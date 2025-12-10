@@ -36,6 +36,7 @@ import {
 import { Bold, Italic, Link as LinkIcon, List, ListOrdered } from 'lucide-react';
 import EmojiPicker from './EmojiPicker';
 import { cn } from '@/lib/utils';
+import { SlashCommandPlugin } from './SlashCommandPlugin';
 
 interface RichTextEditorProps {
   value: string;
@@ -348,7 +349,7 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
     <LexicalComposer initialConfig={initialConfig}>
       <div className={cn('relative', className)}>
         <ToolbarPlugin />
-        <div className="relative">
+        <div className="relative" style={{ zIndex: 1 }}>
           <RichTextPlugin
             contentEditable={
               <ContentEditable
@@ -363,6 +364,9 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
             }
             ErrorBoundary={() => <div>Error loading editor</div>}
           />
+          <SlashCommandPlugin onTemplateInsert={(id, content) => {
+            console.log('Template inserted:', id, content);
+          }} />
         </div>
         <HistoryPlugin />
         <OnChangePlugin onChange={handleChange} />

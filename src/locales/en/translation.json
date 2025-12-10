@@ -89,7 +89,8 @@
     "campaigns": "Campaigns",
     "tags": "Tags",
     "segments": "Segments",
-    "templates": "Templates"
+    "templates": "Templates",
+    "messageTemplates": "Message Templates"
   },
   "agents": {
     "title": "Your AI Agents",

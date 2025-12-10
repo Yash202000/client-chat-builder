@@ -25,6 +25,7 @@ import { uploadConversationFile } from '@/services/chatService';
 import RichTextEditor from './RichTextEditor';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import { replaceTemplateVariables } from '@/services/messageTemplateService';
 
 interface ConversationDetailProps {
   sessionId: string;
@@ -658,7 +659,10 @@ export const ConversationDetail: React.FC<ConversationDetailProps> = ({ sessionI
   const handleSendMessage = async () => {
     if (!message.trim() && selectedFiles.length === 0) return;
 
-    const messageContent = message.trim() || '📎 File attachment';
+    let messageContent = message.trim() || '📎 File attachment';
+
+    // Replace template variables with actual values
+    messageContent = await replaceTemplateVariables(messageContent, sessionId, agentId);
 
     // Clear typing timeout and send typing stop
     if (typingTimeoutRef.current) {

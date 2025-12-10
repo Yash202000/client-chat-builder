@@ -404,6 +404,7 @@ const AppLayout = () => {
     // Team & Communication
     { titleKey: "navigation.teamManagement", url: "/dashboard/team", icon: Users, permission: "user:read" },
     { titleKey: "navigation.teamChat", url: "/dashboard/team-chat", icon: MessageSquare, permission: "chat:read" },
+    { titleKey: "navigation.messageTemplates", url: "/dashboard/message-templates", icon: Sparkles, permission: "chat:create" },
 
     // AI Features
     { titleKey: "navigation.aiChat", url: "/dashboard/ai-chat", icon: MessageSquare, permission: "ai-chat:read" },

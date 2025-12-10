@@ -89,7 +89,8 @@
     "campaigns": "الحملات",
     "tags": "العلامات",
     "segments": "الشرائح",
-    "templates": "القوالب"
+    "templates": "القوالب",
+    "messageTemplates": "قوالب الرسائل"
   },
   "agents": {
     "title": "وكلاء الذكاء الاصطناعي الخاصة بك",
