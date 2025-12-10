@@ -844,10 +844,11 @@
     "servicePlaceholder": "Select a service",
     "serviceDesc": "The AI service provider for this API key.",
     "services": {
-      "groq": "Groq",
+      "deepgram": "Deepgram",
       "gemini": "Gemini",
-      "openai": "OpenAI",
-      "google_translate": "Google Translate"
+      "google_translate": "Google Translate",
+      "groq": "Groq",
+      "openai": "OpenAI"
     },
     "apiKeyLabel": "API Key",
     "newApiKeyLabel": "New API Key (Leave blank to keep current)",

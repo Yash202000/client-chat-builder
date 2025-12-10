@@ -840,10 +840,11 @@
     "servicePlaceholder": "اختر خدمة",
     "serviceDesc": "مزود خدمة الذكاء الاصطناعي لمفتاح API هذا.",
     "services": {
-      "groq": "Groq",
+      "deepgram": "Deepgram",
       "gemini": "Gemini",
-      "openai": "OpenAI",
-      "google_translate": "ترجمة Google"
+      "google_translate": "ترجمة Google",
+      "groq": "Groq",
+      "openai": "OpenAI"
     },
     "apiKeyLabel": "مفتاح API",
     "newApiKeyLabel": "مفتاح API الجديد (اتركه فارغًا للاحتفاظ بالحالي)",

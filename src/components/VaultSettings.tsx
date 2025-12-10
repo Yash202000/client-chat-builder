@@ -183,10 +183,11 @@ export const VaultSettings = () => {
           className="w-full p-2 border rounded-md dark:bg-slate-900 dark:border-slate-600 dark:text-white focus:ring-2 focus:ring-blue-500 transition-all"
         >
           <option value="">{t('vault.servicePlaceholder')}</option>
-          <option value="groq">{t('vault.services.groq')}</option>
+          <option value="deepgram">{t('vault.services.deepgram')}</option>
           <option value="gemini">{t('vault.services.gemini')}</option>
-          <option value="openai">{t('vault.services.openai')}</option>
           <option value="google_translate">{t('vault.services.google_translate')}</option>
+          <option value="groq">{t('vault.services.groq')}</option>
+          <option value="openai">{t('vault.services.openai')}</option>
         </select>
         <p className="text-xs text-gray-500 dark:text-gray-400">{t('vault.serviceDesc')}</p>
       </div>

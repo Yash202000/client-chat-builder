@@ -82,10 +82,11 @@ export const CreateCredentialDialog: React.FC<CreateCredentialDialogProps> = ({
               required
             >
               <option value="">Select a service</option>
-              <option value="groq">Groq</option>
+              <option value="deepgram">Deepgram</option>
               <option value="gemini">Gemini</option>
-              <option value="openai">OpenAI</option>
               <option value="google_translate">Google Translate</option>
+              <option value="groq">Groq</option>
+              <option value="openai">OpenAI</option>
             </select>
           </div>
           <div className="grid grid-cols-4 items-center gap-4">
