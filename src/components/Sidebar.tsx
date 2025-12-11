@@ -97,6 +97,7 @@ const Sidebar = () => {
         <DraggableNode type="code" label={t("workflows.editor.sidebar.nodes.code")} icon={<Code size={20} />} nodeData={{}} isRTL={isRTL} />
         <DraggableNode type="data_manipulation" label={t("workflows.editor.sidebar.nodes.dataManipulation")} icon={<SquareStack size={20} />} nodeData={{}} isRTL={isRTL} />
         <DraggableNode type="http_request" label={t("workflows.editor.sidebar.nodes.httpRequest")} icon={<Globe size={20} />} nodeData={{}} isRTL={isRTL} />
+        <DraggableNode type="extract_entities" label="Extract Entities" icon={<Target size={20} />} nodeData={{}} isRTL={isRTL} />
         <DraggableNode type="response" label={t("workflows.editor.sidebar.nodes.output")} icon={<MessageSquare size={20} />} nodeData={{}} isRTL={isRTL} />
       </AccordionSection>
 

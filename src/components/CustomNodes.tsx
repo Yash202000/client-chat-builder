@@ -432,6 +432,28 @@ export const QuestionClassifierNode = ({ data }) => {
   );
 };
 
+export const ExtractEntitiesNode = ({ data }) => {
+  const entities = data.entities || [];
+  const hasEntities = entities.length > 0;
+
+  return (
+    <div className="px-4 py-3 border-2 border-purple-200 dark:border-purple-700 rounded-xl bg-gradient-to-br from-purple-50 to-fuchsia-50 dark:from-purple-950/50 dark:to-fuchsia-950/50 shadow-lg hover:shadow-xl transition-shadow backdrop-blur-sm">
+      <Handle type="target" position={Position.Top} className="w-3 h-3 !bg-purple-500 dark:!bg-purple-400 border-2 border-white dark:border-slate-800" />
+      <div className="flex items-center gap-2 mb-2">
+        <div className="p-1.5 rounded-lg bg-purple-500 dark:bg-purple-600">
+          <Target size={16} className="text-white" />
+        </div>
+        <strong className="text-sm font-semibold text-slate-900 dark:text-white">{data.label || 'Extract Entities'}</strong>
+      </div>
+      <div className="text-xs text-slate-600 dark:text-slate-400 font-medium">
+        {hasEntities ? `Extract ${entities.length} ${entities.length === 1 ? 'entity' : 'entities'}` : 'LLM-powered extraction'}
+      </div>
+      <Handle type="source" position={Position.Bottom} id="output" className="w-3 h-3 !bg-slate-600 dark:!bg-slate-400 border-2 border-white dark:border-slate-800" />
+      <Handle type="source" position={Position.Right} id="error" className="w-3 h-3 !bg-red-500 dark:!bg-red-400 border-2 border-white dark:border-slate-800" />
+    </div>
+  );
+};
+
 // ========== TRIGGER NODES ==========
 
 export const TriggerWebSocketNode = ({ data }) => (

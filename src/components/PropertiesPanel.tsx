@@ -1284,6 +1284,141 @@ const PropertiesPanel = ({ selectedNode, nodes, setNodes, deleteNode }) => {
           </div>
         )}
 
+        {/* Extract Entities Node */}
+        {currentNode.type === 'extract_entities' && (
+          <div className="mb-5 p-4 bg-slate-50 dark:bg-slate-800/50 rounded-lg border border-slate-200 dark:border-slate-700">
+            <h3 className="text-base font-semibold mb-4 text-slate-900 dark:text-slate-100">Extract Entities (LLM)</h3>
+            <p className="text-sm text-slate-600 dark:text-slate-400 mb-4">Automatically extract entities from text using LLM. If extraction fails, prompts user for missing required entities.</p>
+
+            {/* LLM Model Selection */}
+            <div className="mb-4">
+              <label className="block mb-2 font-medium text-sm text-slate-700 dark:text-slate-300">LLM Model</label>
+              <select
+                value={currentNode.data.model || 'groq/llama-3.1-8b-instant'}
+                onChange={(e) => handleDataChange('model', e.target.value)}
+                className="w-full px-3 py-2 rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 dark:focus:ring-purple-400"
+                dir={isRTL ? 'rtl' : 'ltr'}
+              >
+                <option value="groq/llama-3.1-8b-instant">Groq - Llama 3.1 8B (Fast)</option>
+                <option value="groq/llama-3.3-70b-versatile">Groq - Llama 3.3 70B</option>
+                <option value="openai/gpt-4o-mini">OpenAI - GPT-4o Mini</option>
+                <option value="openai/gpt-4o">OpenAI - GPT-4o</option>
+              </select>
+            </div>
+
+            {/* Entities Configuration */}
+            <div className="mb-4">
+              <label className="block mb-2 font-medium text-sm text-slate-700 dark:text-slate-300">Entities to Extract</label>
+              <div className="space-y-2">
+                {(currentNode.data.entities || []).map((entity, index) => (
+                  <div key={index} className="p-3 bg-white dark:bg-slate-900 rounded-md border border-slate-200 dark:border-slate-600">
+                    <div className="flex gap-2 mb-2">
+                      <input
+                        type="text"
+                        value={entity.name || ''}
+                        onChange={(e) => {
+                          const newEntities = [...(currentNode.data.entities || [])];
+                          newEntities[index] = { ...newEntities[index], name: e.target.value };
+                          handleDataChange('entities', newEntities);
+                        }}
+                        className="flex-1 px-3 py-2 rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
+                        placeholder="Entity name (e.g., customer_name)"
+                        dir={isRTL ? 'rtl' : 'ltr'}
+                      />
+                      <button
+                        onClick={() => {
+                          const newEntities = (currentNode.data.entities || []).filter((_, i) => i !== index);
+                          handleDataChange('entities', newEntities);
+                        }}
+                        className="px-3 py-2 text-red-600 hover:bg-red-50 dark:hover:bg-red-950/30 rounded-md text-sm font-medium"
+                      >
+                        ✕
+                      </button>
+                    </div>
+                    <input
+                      type="text"
+                      value={entity.description || ''}
+                      onChange={(e) => {
+                        const newEntities = [...(currentNode.data.entities || [])];
+                        newEntities[index] = { ...newEntities[index], description: e.target.value };
+                        handleDataChange('entities', newEntities);
+                      }}
+                      className="w-full px-3 py-2 mb-2 rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
+                      placeholder="Description (e.g., Customer's full name)"
+                      dir={isRTL ? 'rtl' : 'ltr'}
+                    />
+                    <div className="flex gap-2">
+                      <select
+                        value={entity.type || 'text'}
+                        onChange={(e) => {
+                          const newEntities = [...(currentNode.data.entities || [])];
+                          newEntities[index] = { ...newEntities[index], type: e.target.value };
+                          handleDataChange('entities', newEntities);
+                        }}
+                        className="flex-1 px-3 py-2 rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
+                        dir={isRTL ? 'rtl' : 'ltr'}
+                      >
+                        <option value="text">Text</option>
+                        <option value="number">Number</option>
+                        <option value="email">Email</option>
+                        <option value="phone">Phone</option>
+                        <option value="date">Date</option>
+                      </select>
+                      <label className="flex items-center gap-2 px-3 py-2 bg-slate-100 dark:bg-slate-800 rounded-md">
+                        <input
+                          type="checkbox"
+                          checked={entity.required !== false}
+                          onChange={(e) => {
+                            const newEntities = [...(currentNode.data.entities || [])];
+                            newEntities[index] = { ...newEntities[index], required: e.target.checked };
+                            handleDataChange('entities', newEntities);
+                          }}
+                          className="w-4 h-4 text-purple-600 bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-600 rounded focus:ring-purple-500"
+                        />
+                        <span className="text-sm text-slate-700 dark:text-slate-300">Required</span>
+                      </label>
+                    </div>
+                  </div>
+                ))}
+                <button
+                  onClick={() => {
+                    const newEntities = [...(currentNode.data.entities || []), { name: '', description: '', type: 'text', required: true }];
+                    handleDataChange('entities', newEntities);
+                  }}
+                  className="w-full px-3 py-2 border-2 border-dashed border-slate-300 dark:border-slate-600 rounded-md text-slate-600 dark:text-slate-400 hover:border-purple-500 hover:text-purple-600 dark:hover:text-purple-400 text-sm font-medium transition-colors"
+                >
+                  + Add Entity
+                </button>
+              </div>
+            </div>
+
+            {/* Input Source */}
+            <div className="mb-4">
+              <label className="block mb-2 font-medium text-sm text-slate-700 dark:text-slate-300">Input Source</label>
+              <VariableInput
+                value={currentNode.data.input_source || '{{context.user_message}}'}
+                onChange={(value) => handleDataChange('input_source', value)}
+                placeholder="{{context.user_message}}"
+              />
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">The text to extract entities from (use variables like {'{{context.user_message}}'})</p>
+            </div>
+
+            {/* Retry Prompt Template */}
+            <div className="mb-4">
+              <label className="block mb-2 font-medium text-sm text-slate-700 dark:text-slate-300">Retry Prompt Template</label>
+              <input
+                type="text"
+                value={currentNode.data.retry_prompt_template || "I couldn't find your {entity_description}. Please provide it."}
+                onChange={(e) => handleDataChange('retry_prompt_template', e.target.value)}
+                className="w-full px-3 py-2 rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 dark:focus:ring-purple-400"
+                placeholder="I couldn't find your {entity_description}. Please provide it."
+                dir={isRTL ? 'rtl' : 'ltr'}
+              />
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">Message shown when asking user for missing entities. Use {'{entity_description}'} and {'{entity_name}'} placeholders.</p>
+            </div>
+          </div>
+        )}
+
         {/* Entity Collector Node */}
         {currentNode.type === 'entity_collector' && (
           <div className="mb-5 p-4 bg-slate-50 dark:bg-slate-800/50 rounded-lg border border-slate-200 dark:border-slate-700">
