@@ -1,6 +1,6 @@
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { MessageSquare, X, Mic, Send, Loader2, Bot, User } from 'lucide-react';
+import { MessageSquare, X, Mic, Send, Loader2, Bot, User, ImagePlus, MapPin } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { WidgetForm } from '@/components/WidgetForm';
 import ReactMarkdown from 'react-markdown';
@@ -237,11 +237,67 @@ export const WidgetUI = ({
             <div ref={messagesEndRef} />
           </div>
           {activeForm ? (<WidgetForm fields={activeForm} onSubmit={onFormSubmit} primaryColor={primary_color} darkMode={dark_mode} />) : (
-            <div className={cn('p-3 border-t', dark_mode ? 'border-gray-800' : 'border-gray-200')}>
+            <div className={cn('p-2 border-t', dark_mode ? 'border-gray-800' : 'border-gray-200')}>
               <div className="flex items-center gap-2">
-                <input type="text" value={inputValue} onChange={e => onInputChange(e.target.value)} onKeyPress={e => e.key === 'Enter' && onSendMessage(inputValue)} placeholder={input_placeholder} className={cn('flex-grow p-2 border rounded-md w-full text-sm', dark_mode ? 'bg-gray-800 border-gray-700 focus:ring-blue-500' : 'bg-white border-gray-300 focus:ring-blue-500')} />
-                <Button onClick={() => onSendMessage(inputValue)} style={{ background: primary_color }} className="text-white rounded-md h-9 w-9 p-0 flex-shrink-0"><Send size={18} /></Button>
-                  <Button onClick={onToggleRecording} variant="ghost" size="icon" className={cn('rounded-md h-9 w-9 flex-shrink-0', isRecording && 'text-red-500', dark_mode ? 'hover:bg-gray-700' : 'hover:bg-gray-100')}>{isRecording ? <Loader2 className="animate-spin" /> : <Mic size={18} />}</Button>
+                {/* Input container with icons inside - Instagram style */}
+                <div className={cn(
+                  'flex-grow flex items-center gap-1 px-3 py-2 border rounded-full transition-all',
+                  dark_mode ? 'bg-gray-800 border-gray-700' : 'bg-gray-100 border-gray-200'
+                )}>
+                  {/* Text input */}
+                  <input
+                    type="text"
+                    value={inputValue}
+                    onChange={e => onInputChange(e.target.value)}
+                    onKeyPress={e => e.key === 'Enter' && onSendMessage(inputValue)}
+                    placeholder={input_placeholder}
+                    className={cn(
+                      'flex-grow bg-transparent outline-none text-sm min-w-0',
+                      dark_mode ? 'text-white placeholder-gray-500' : 'text-gray-900 placeholder-gray-400'
+                    )}
+                  />
+                  {/* Right icons - hide when typing, show send when has content */}
+                  {inputValue ? (
+                    <button
+                      onClick={() => onSendMessage(inputValue)}
+                      className="p-1.5 rounded-full transition-colors"
+                      style={{ color: primary_color }}
+                    >
+                      <Send size={20} />
+                    </button>
+                  ) : (
+                    <>
+                      <button
+                        className={cn(
+                          'p-1.5 rounded-full transition-colors',
+                          dark_mode ? 'hover:bg-gray-700 text-gray-400' : 'hover:bg-gray-200 text-gray-500'
+                        )}
+                        title="Attach image"
+                      >
+                        <ImagePlus size={20} />
+                      </button>
+                      <button
+                        className={cn(
+                          'p-1.5 rounded-full transition-colors',
+                          dark_mode ? 'hover:bg-gray-700 text-gray-400' : 'hover:bg-gray-200 text-gray-500'
+                        )}
+                        title="Share location"
+                      >
+                        <MapPin size={20} />
+                      </button>
+                    </>
+                  )}
+                </div>
+                {/* Mic button - always outside */}
+                <button
+                  onClick={onToggleRecording}
+                  className={cn(
+                    'p-2 rounded-full transition-colors flex-shrink-0',
+                    isRecording ? 'bg-red-500 text-white' : (dark_mode ? 'bg-gray-800 text-gray-400 hover:bg-gray-700' : 'bg-gray-100 text-gray-500 hover:bg-gray-200')
+                  )}
+                >
+                  {isRecording ? <Loader2 className="animate-spin" size={20} /> : <Mic size={20} />}
+                </button>
               </div>
             </div>
           )}

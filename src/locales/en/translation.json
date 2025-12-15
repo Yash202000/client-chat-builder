@@ -1336,6 +1336,9 @@
         "resourceLoadFailed": "Failed to load resources."
       },
       "sidebar": {
+        "title": "Nodes",
+        "expand": "Expand sidebar",
+        "collapse": "Collapse sidebar",
         "triggers": "Triggers",
         "coreNodes": "Core Nodes",
         "chatConversation": "Chat & Conversation",
@@ -1535,6 +1538,12 @@
         "pythonCodePlaceholder": "e.g., print('Hello, World!')\\nresult = context.user_input * 2",
         "saveInputToVariable": "Save User Input to Variable:",
         "saveInputToVariablePlaceholder": "e.g., user_email",
+        "listenDataFormatTitle": "Data Format Saved to Variable:",
+        "listenTextOnly": "Text only",
+        "listenWithImage": "With image attachment",
+        "listenWithLocation": "With location attachment",
+        "listenTip": "Tip",
+        "listenTipText": "Images are automatically passed to LLM nodes for vision processing via {{context.user_attachments}}",
         "promptTextHelp": "The message shown to the user.",
         "saveResponseHelp": "Variable to store user's response. Access with",
         "optionsCommaSeparated": "Options (comma-separated):",

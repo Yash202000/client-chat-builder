@@ -786,6 +786,40 @@ const PropertiesPanel = ({ selectedNode, nodes, setNodes, deleteNode }) => {
                 dir={isRTL ? 'rtl' : 'ltr'}
               />
             </div>
+            {/* Data Format Hint */}
+            <div className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-md border border-blue-200 dark:border-blue-800">
+              <p className="text-xs font-medium text-blue-800 dark:text-blue-300 mb-2">{t("workflows.editor.properties.listenDataFormatTitle")}</p>
+              <div className="text-xs text-blue-700 dark:text-blue-400 space-y-1">
+                <p><strong>{t("workflows.editor.properties.listenTextOnly")}:</strong> <code className="bg-blue-100 dark:bg-blue-800 px-1 rounded">"user message"</code></p>
+                <p><strong>{t("workflows.editor.properties.listenWithImage")}:</strong></p>
+                <pre className="bg-blue-100 dark:bg-blue-800 p-2 rounded text-[10px] overflow-x-auto">
+{`{
+  "text": "message",
+  "attachments": [{
+    "file_name": "image.jpg",
+    "file_type": "image/jpeg",
+    "file_data": "base64..."
+  }]
+}`}
+                </pre>
+                <p><strong>{t("workflows.editor.properties.listenWithLocation")}:</strong></p>
+                <pre className="bg-blue-100 dark:bg-blue-800 p-2 rounded text-[10px] overflow-x-auto">
+{`{
+  "text": "message",
+  "attachments": [{
+    "file_type": "application/geo+json",
+    "location": {
+      "latitude": 25.276987,
+      "longitude": 55.296249
+    }
+  }]
+}`}
+                </pre>
+                <p className="mt-2 text-blue-600 dark:text-blue-400">
+                  <strong>{t("workflows.editor.properties.listenTip")}:</strong> {t("workflows.editor.properties.listenTipText")}
+                </p>
+              </div>
+            </div>
           </div>
         )}
 

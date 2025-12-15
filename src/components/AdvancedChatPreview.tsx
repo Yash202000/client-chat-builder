@@ -11,7 +11,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { Label } from "./ui/label";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import { Button } from "./ui/button";
-import { Bot, Loader2, MessageSquare, Mic, Send, User, X } from "lucide-react";
+import { Bot, Loader2, MessageSquare, Mic, Send, User, X, ImagePlus, MapPin } from "lucide-react";
 import { Input } from "./ui/input";
 import { cn } from "@/lib/utils";
 import { Agent } from "@/types";
@@ -635,22 +635,68 @@ export const AdvancedChatPreview = () => {
                       </div>
 
                       <div className="p-2 border-t" style={{borderColor: customization.dark_mode ? '#333' : '#eee'}}>
-                        <div className="flex space-x-2">
-                          <Input
-                            value={message}
-                            onChange={(e) => setMessage(e.target.value)}
-                            onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
-                            placeholder={customization.input_placeholder}
-                            className="flex-1 text-sm"
-                          />
-                          <Button size="icon" onClick={() => handleSendMessage()} style={{ background: customization.primary_color, color: 'white' }}>
-                              <Send className="h-4 w-4" />
-                            </Button>
-                            <Button onClick={handleToggleRecording} variant="ghost" size="icon" className={isRecording ? 'text-red-500' : ''}>
-                              {isRecording ? <Loader2 className="animate-spin" /> : <Mic className="h-4 w-4" />}
-                            </Button>
+                        <div className="flex items-center gap-2">
+                          {/* Input container with icons inside - Instagram style */}
+                          <div className={cn(
+                            'flex-grow flex items-center gap-1 px-3 py-2 border rounded-full transition-all',
+                            customization.dark_mode ? 'bg-gray-800 border-gray-700' : 'bg-gray-100 border-gray-200'
+                          )}>
+                            {/* Text input */}
+                            <input
+                              type="text"
+                              value={message}
+                              onChange={(e) => setMessage(e.target.value)}
+                              onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
+                              placeholder={customization.input_placeholder}
+                              className={cn(
+                                'flex-grow bg-transparent outline-none text-sm min-w-0',
+                                customization.dark_mode ? 'text-white placeholder-gray-500' : 'text-gray-900 placeholder-gray-400'
+                              )}
+                            />
+                            {/* Right icons - hide when typing, show send when has content */}
+                            {message ? (
+                              <button
+                                onClick={() => handleSendMessage()}
+                                className="p-1.5 rounded-full transition-colors"
+                                style={{ color: customization.primary_color }}
+                              >
+                                <Send size={20} />
+                              </button>
+                            ) : (
+                              <>
+                                <button
+                                  className={cn(
+                                    'p-1.5 rounded-full transition-colors',
+                                    customization.dark_mode ? 'hover:bg-gray-700 text-gray-400' : 'hover:bg-gray-200 text-gray-500'
+                                  )}
+                                  title="Attach image"
+                                >
+                                  <ImagePlus size={20} />
+                                </button>
+                                <button
+                                  className={cn(
+                                    'p-1.5 rounded-full transition-colors',
+                                    customization.dark_mode ? 'hover:bg-gray-700 text-gray-400' : 'hover:bg-gray-200 text-gray-500'
+                                  )}
+                                  title="Share location"
+                                >
+                                  <MapPin size={20} />
+                                </button>
+                              </>
+                            )}
                           </div>
+                          {/* Mic button - always outside */}
+                          <button
+                            onClick={handleToggleRecording}
+                            className={cn(
+                              'p-2 rounded-full transition-colors flex-shrink-0',
+                              isRecording ? 'bg-red-500 text-white' : (customization.dark_mode ? 'bg-gray-800 text-gray-400 hover:bg-gray-700' : 'bg-gray-100 text-gray-500 hover:bg-gray-200')
+                            )}
+                          >
+                            {isRecording ? <Loader2 className="animate-spin" size={20} /> : <Mic size={20} />}
+                          </button>
                         </div>
+                      </div>
                     </div>
                   ) : (
                     <Button

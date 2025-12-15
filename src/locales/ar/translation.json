@@ -1312,6 +1312,9 @@
         "resourceLoadFailed": "فشل تحميل الموارد."
       },
       "sidebar": {
+        "title": "العقد",
+        "expand": "توسيع الشريط الجانبي",
+        "collapse": "طي الشريط الجانبي",
         "triggers": "المشغلات",
         "coreNodes": "العقد الأساسية",
         "chatConversation": "الدردشة والمحادثة",
@@ -1510,6 +1513,12 @@
         "pythonCodePlaceholder": "مثال: print('مرحباً بالعالم!')\\nresult = context.user_input * 2",
         "saveInputToVariable": "حفظ إدخال المستخدم في متغير:",
         "saveInputToVariablePlaceholder": "مثال: user_email",
+        "listenDataFormatTitle": "تنسيق البيانات المحفوظة في المتغير:",
+        "listenTextOnly": "نص فقط",
+        "listenWithImage": "مع مرفق صورة",
+        "listenWithLocation": "مع مرفق موقع",
+        "listenTip": "نصيحة",
+        "listenTipText": "يتم تمرير الصور تلقائياً إلى عقد LLM للمعالجة البصرية عبر {{context.user_attachments}}",
         "promptTextHelp": "الرسالة المعروضة للمستخدم.",
         "saveResponseHelp": "متغير لتخزين استجابة المستخدم. الوصول باستخدام",
         "optionsCommaSeparated": "الخيارات (مفصولة بفواصل):",

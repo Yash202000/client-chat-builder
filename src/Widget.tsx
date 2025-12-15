@@ -1,13 +1,14 @@
 import { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { MessageSquare, X, Mic, Send, Loader2, Bot, User, Minus, MicOff, FileText, Image as ImageIcon, File, Download } from 'lucide-react';
+import { MessageSquare, X, Mic, Send, Loader2, Bot, User, Minus, MicOff, FileText, Image as ImageIcon, File, Download, ImagePlus, MapPin } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { WidgetForm } from '@/components/WidgetForm';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { TypingIndicator } from '@/components/TypingIndicator';
 import CallingModal from '@/components/CallingModal';
+import LocationPicker from '@/components/LocationPicker';
 
 // Type definitions
 interface WidgetProps {
@@ -58,6 +59,13 @@ interface Attachment {
   file_data?: string;  // Optional - for base64 data from conversation broadcasts
   file_type: string;
   file_size: number;
+  // Location data for geo attachments
+  location?: {
+    latitude: number;
+    longitude: number;
+    accuracy?: number;
+    address?: string;
+  };
 }
 
 interface Message {
@@ -197,6 +205,16 @@ const Widget = ({ agentId, companyId, backendUrl, rtlOverride, languageOverride,
   const mediaRecorder = useRef<MediaRecorder | null>(null);
   const audioChunks = useRef<Blob[]>([]);
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+
+  // Image upload state
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [filePreview, setFilePreview] = useState<string | null>(null);
+
+  // Location sharing state
+  const [selectedLocation, setSelectedLocation] = useState<{latitude: number; longitude: number} | null>(null);
+  const [showLocationPicker, setShowLocationPicker] = useState(false);
+  const [isGettingLocation, setIsGettingLocation] = useState(false);
 
   const audioPlaybackTimer = useRef<NodeJS.Timeout | null>(null);
   const incomingAudioChunks = useRef<Blob[]>([]);
@@ -830,26 +848,171 @@ const Widget = ({ agentId, companyId, backendUrl, rtlOverride, languageOverride,
     };
   }, [isOpen, agentId, companyId, backendUrl, settings]);
 
-  const handleSendMessage = (text: string, payload?: any) => {
+  // File upload helper functions
+  const fileToBase64 = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        const result = reader.result as string;
+        resolve(result.split(',')[1]); // Remove data:image/...;base64, prefix
+      };
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+  };
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    console.log('[Widget] File selected:', file?.name, file?.type, file?.size);
+    if (!file) return;
+
+    // Validate file type (images only)
+    if (!file.type.startsWith('image/')) {
+      console.error('[Widget] Only images are supported');
+      return;
+    }
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      console.error('[Widget] Image must be less than 5MB');
+      return;
+    }
+
+    console.log('[Widget] File accepted, setting preview');
+    setSelectedFile(file);
+    setFilePreview(URL.createObjectURL(file));
+  };
+
+  const clearSelectedFile = () => {
+    setSelectedFile(null);
+    if (filePreview) {
+      URL.revokeObjectURL(filePreview);
+      setFilePreview(null);
+    }
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
+  // Location handlers
+  const handleLocationClick = () => {
+    if (selectedLocation) {
+      // Already have a location, show picker to edit
+      setShowLocationPicker(true);
+    } else {
+      // Get current location first
+      getCurrentLocation();
+    }
+  };
+
+  const getCurrentLocation = () => {
+    setIsGettingLocation(true);
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        setSelectedLocation({
+          latitude: position.coords.latitude,
+          longitude: position.coords.longitude
+        });
+        setShowLocationPicker(true);
+        setIsGettingLocation(false);
+      },
+      (error) => {
+        console.error('[Widget] Location error:', error);
+        // Show picker anyway with default location (Dubai)
+        setShowLocationPicker(true);
+        setIsGettingLocation(false);
+      },
+      { enableHighAccuracy: true, timeout: 10000 }
+    );
+  };
+
+  const handleSendMessage = async (text: string, payload?: any) => {
     const messageText = text.trim();
-    if (!messageText && !payload) return;
+    if (!messageText && !payload && !selectedFile && !selectedLocation) return;
+
+    // Build attachments array
+    let attachments: Attachment[] = [];
+
+    // Add image attachment if file is selected
+    if (selectedFile) {
+      const base64 = await fileToBase64(selectedFile);
+      attachments.push({
+        file_name: selectedFile.name,
+        file_type: selectedFile.type,
+        file_size: selectedFile.size,
+        file_data: base64
+      });
+    }
+
+    // Add location attachment if location is selected
+    if (selectedLocation) {
+      attachments.push({
+        file_name: 'location',
+        file_type: 'application/geo+json',
+        file_size: 0,
+        location: {
+          latitude: selectedLocation.latitude,
+          longitude: selectedLocation.longitude
+        }
+      });
+    }
+
+    // Build display text for optimistic message
+    let displayText = messageText;
+    if (!displayText) {
+      if (selectedFile && selectedLocation) {
+        displayText = `[Image: ${selectedFile.name}] [Location]`;
+      } else if (selectedFile) {
+        displayText = `[Image: ${selectedFile.name}]`;
+      } else if (selectedLocation) {
+        displayText = `[Location: ${selectedLocation.latitude.toFixed(6)}, ${selectedLocation.longitude.toFixed(6)}]`;
+      }
+    }
 
     // OPTIMISTIC UPDATE: Show user message immediately
     const optimisticMessage: Message = {
       id: `temp_${Date.now()}`,
       sender: 'user',
-      text: messageText,
+      text: displayText,
       type: 'message',
       timestamp: new Date().toISOString(),
+      attachments: attachments.length > 0 ? attachments : undefined,
     };
     setMessages(prev => [...prev, optimisticMessage]);
 
     // Send to backend
-    const messageToSend = { message: payload || messageText, message_type: 'message', sender: 'user' };
+    const messageToSend: any = {
+      message: payload || messageText,
+      message_type: 'message',
+      sender: 'user'
+    };
+    if (attachments.length > 0) {
+      messageToSend.attachments = attachments;
+      console.log('[Widget] Sending message with attachments:', attachments.length, 'item(s)');
+    }
+
+    console.log('[Widget] Sending message:', { hasAttachments: attachments.length > 0, messageLength: messageToSend.message?.length });
+
     if (ws.current?.readyState === WebSocket.OPEN) {
-      ws.current.send(JSON.stringify(messageToSend));
+      const payload = JSON.stringify(messageToSend);
+      console.log('[Widget] WebSocket payload size:', payload.length, 'bytes');
+      console.log('[Widget] WebSocket payload keys:', Object.keys(messageToSend));
+      if (messageToSend.attachments) {
+        console.log('[Widget] Attachments in payload:', messageToSend.attachments.map((a: Attachment) => ({
+          name: a.file_name,
+          type: a.file_type,
+          size: a.file_size,
+          hasData: !!a.file_data,
+          hasLocation: !!a.location
+        })));
+      }
+      ws.current.send(payload);
+      console.log('[Widget] ✅ Message sent via WebSocket');
       setInputValue('');
+      clearSelectedFile();
+      setSelectedLocation(null);
       setMessages(prev => prev.map(m => ({ ...m, options: undefined })));
+    } else {
+      console.error('[Widget] ❌ WebSocket not open, state:', ws.current?.readyState);
     }
   };
 
@@ -1428,11 +1591,103 @@ const Widget = ({ agentId, companyId, backendUrl, rtlOverride, languageOverride,
           <div ref={messagesEndRef} />
         </div>
         {activeForm ? (<WidgetForm fields={activeForm} onSubmit={handleFormSubmit} primaryColor={primary_color} darkMode={dark_mode} />) : (
-          <div className={cn('p-3 border-t', dark_mode ? 'border-gray-800' : 'border-gray-200')}>
-            <div className="flex items-center gap-2">
-              <input type="text" value={inputValue} onChange={e => setInputValue(e.target.value)} onKeyPress={e => e.key === 'Enter' && handleSendMessage(inputValue)} placeholder={input_placeholder} className={cn('flex-grow p-2 border rounded-md w-full text-sm', dark_mode ? 'bg-gray-800 border-gray-700 focus:ring-blue-500' : 'bg-white border-gray-300 focus:ring-blue-500')} />
-              <Button onClick={() => handleSendMessage(inputValue)} style={{ background: primary_color }} className="text-white rounded-md h-9 w-9 p-0 flex-shrink-0"><Send size={18} /></Button>
-                <Button onClick={handleToggleRecording} variant="ghost" size="icon" className={cn('rounded-md h-9 w-9 flex-shrink-0', isRecording && 'text-red-500', dark_mode ? 'hover:bg-gray-700' : 'hover:bg-gray-100')}>{isRecording ? <Loader2 className="animate-spin" /> : <Mic size={18} />}</Button>
+          <div className={cn('border-t', dark_mode ? 'border-gray-800' : 'border-gray-200')}>
+            {/* Image Preview */}
+            {filePreview && (
+              <div className={cn('p-2 border-b flex items-center gap-2', dark_mode ? 'border-gray-700 bg-gray-800' : 'border-gray-200 bg-gray-50')}>
+                <img src={filePreview} alt="Preview" className="h-12 w-12 object-cover rounded" />
+                <span className={cn('text-xs truncate flex-grow', dark_mode ? 'text-gray-300' : 'text-gray-600')}>{selectedFile?.name}</span>
+                <Button variant="ghost" size="icon" onClick={clearSelectedFile} className="h-6 w-6 flex-shrink-0">
+                  <X size={14} />
+                </Button>
+              </div>
+            )}
+            {/* Location Preview */}
+            {selectedLocation && (
+              <div className={cn('p-2 border-b flex items-center gap-2', dark_mode ? 'border-gray-700 bg-gray-800' : 'border-gray-200 bg-gray-50')}>
+                <MapPin size={16} className="text-red-500 flex-shrink-0" />
+                <span className={cn('text-xs flex-grow', dark_mode ? 'text-gray-300' : 'text-gray-600')}>
+                  {selectedLocation.latitude.toFixed(6)}, {selectedLocation.longitude.toFixed(6)}
+                </span>
+                <Button variant="ghost" size="icon" onClick={() => setSelectedLocation(null)} className="h-6 w-6 flex-shrink-0">
+                  <X size={14} />
+                </Button>
+              </div>
+            )}
+            {/* Input Area - Instagram Style */}
+            <div className="p-2">
+              {/* Hidden file input */}
+              <input
+                type="file"
+                ref={fileInputRef}
+                className="hidden"
+                accept="image/*"
+                onChange={handleFileSelect}
+              />
+              <div className="flex items-center gap-2">
+                {/* Input container with icons inside */}
+                <div className={cn(
+                  'flex-grow flex items-center gap-1 px-3 py-2 border rounded-full transition-all',
+                  dark_mode ? 'bg-gray-800 border-gray-700' : 'bg-gray-100 border-gray-200'
+                )}>
+                  {/* Text input */}
+                  <input
+                    type="text"
+                    value={inputValue}
+                    onChange={e => setInputValue(e.target.value)}
+                    onKeyPress={e => e.key === 'Enter' && handleSendMessage(inputValue)}
+                    placeholder={input_placeholder}
+                    className={cn(
+                      'flex-grow bg-transparent outline-none text-sm min-w-0',
+                      dark_mode ? 'text-white placeholder-gray-500' : 'text-gray-900 placeholder-gray-400'
+                    )}
+                  />
+                  {/* Right icons - hide when typing, show send when has content */}
+                  {(inputValue || selectedFile || selectedLocation) ? (
+                    <button
+                      onClick={() => handleSendMessage(inputValue)}
+                      className="p-1.5 rounded-full transition-colors"
+                      style={{ color: primary_color }}
+                    >
+                      <Send size={20} />
+                    </button>
+                  ) : (
+                    <>
+                      <button
+                        onClick={() => fileInputRef.current?.click()}
+                        className={cn(
+                          'p-1.5 rounded-full transition-colors',
+                          dark_mode ? 'hover:bg-gray-700 text-gray-400' : 'hover:bg-gray-200 text-gray-500'
+                        )}
+                        title="Attach image"
+                      >
+                        <ImagePlus size={20} />
+                      </button>
+                      <button
+                        onClick={handleLocationClick}
+                        disabled={isGettingLocation}
+                        className={cn(
+                          'p-1.5 rounded-full transition-colors',
+                          dark_mode ? 'hover:bg-gray-700 text-gray-400' : 'hover:bg-gray-200 text-gray-500'
+                        )}
+                        title="Share location"
+                      >
+                        {isGettingLocation ? <Loader2 className="animate-spin" size={20} /> : <MapPin size={20} />}
+                      </button>
+                    </>
+                  )}
+                </div>
+                {/* Mic button - always outside */}
+                <button
+                  onClick={handleToggleRecording}
+                  className={cn(
+                    'p-2 rounded-full transition-colors flex-shrink-0',
+                    isRecording ? 'bg-red-500 text-white' : (dark_mode ? 'bg-gray-800 text-gray-400 hover:bg-gray-700' : 'bg-gray-100 text-gray-500 hover:bg-gray-200')
+                  )}
+                >
+                  {isRecording ? <Loader2 className="animate-spin" size={20} /> : <Mic size={20} />}
+                </button>
+              </div>
             </div>
           </div>
         )}
@@ -1451,6 +1706,17 @@ const Widget = ({ agentId, companyId, backendUrl, rtlOverride, languageOverride,
           setCallData(null);
           // TODO: Send cancel call request to backend
         }}
+      />
+    )}
+
+    {/* Location Picker Modal */}
+    {showLocationPicker && (
+      <LocationPicker
+        initialLocation={selectedLocation}
+        onLocationSelect={(lat, lng) => setSelectedLocation({ latitude: lat, longitude: lng })}
+        onClose={() => setShowLocationPicker(false)}
+        onConfirm={() => setShowLocationPicker(false)}
+        darkMode={dark_mode}
       />
     )}
   </div>

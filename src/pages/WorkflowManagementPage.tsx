@@ -404,7 +404,10 @@ const WorkflowManagementPage = () => {
                           </Permission>
                         </div>
                         <div className="space-y-2">
-                          {workflow.versions.sort((a, b) => b.version - a.version).map((version) => (
+                          {/* Always include parent workflow as version 1, plus any child versions */}
+                          {[workflow, ...workflow.versions]
+                            .sort((a, b) => b.version - a.version)
+                            .map((version) => (
                             <div
                               key={version.id}
                               className={`flex items-center justify-between p-4 bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 hover:border-blue-300 dark:hover:border-blue-600 transition-colors card-shadow `}
