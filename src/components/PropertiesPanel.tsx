@@ -978,6 +978,26 @@ const PropertiesPanel = ({ selectedNode, nodes, setNodes, deleteNode }) => {
                 <p className="text-xs text-slate-500 dark:text-slate-400 mt-2">
                   {t("workflows.editor.properties.optionsVariableHelp")}
                 </p>
+                {/* Accepted format hint */}
+                <div className="mt-3 p-3 bg-slate-100 dark:bg-slate-800 rounded-md border border-slate-200 dark:border-slate-600">
+                  <p className="text-xs font-medium text-slate-600 dark:text-slate-300 mb-2">
+                    {t("workflows.editor.properties.acceptedFormatsTitle")}
+                  </p>
+                  <div className="text-xs text-slate-500 dark:text-slate-400 font-mono space-y-2">
+                    <div>
+                      <span className="text-slate-600 dark:text-slate-300">{t("workflows.editor.properties.formatDict")}</span>
+                      <pre className="mt-1 p-2 bg-slate-200 dark:bg-slate-900 rounded text-[10px] overflow-x-auto">
+{`{"id1": "Option 1", "id2": "Option 2"}`}
+                      </pre>
+                    </div>
+                    <div>
+                      <span className="text-slate-600 dark:text-slate-300">{t("workflows.editor.properties.formatList")}</span>
+                      <pre className="mt-1 p-2 bg-slate-200 dark:bg-slate-900 rounded text-[10px] overflow-x-auto">
+{`[{"key": "id1", "value": "Option 1"}]`}
+                      </pre>
+                    </div>
+                  </div>
+                </div>
               </div>
             )}
           </div>
