@@ -837,7 +837,7 @@ export const ConversationDetail: React.FC<ConversationDetailProps> = ({ sessionI
             <div className="flex items-center gap-2 bg-white dark:bg-slate-900 rounded-lg px-3 py-2 border border-slate-200 dark:border-slate-700 card-shadow">
               <Flag className={`h-4 w-4 ${conversationPriority > 0 ? PRIORITY_CONFIG[conversationPriority]?.color : 'text-muted-foreground'}`} />
               <Select
-                key={`priority-${sessionId}`}
+                key={`priority-${sessionId}-${conversationPriority}`}
                 value={conversationPriority.toString()}
                 onValueChange={(value) => priorityMutation.mutate(parseInt(value))}
               >
