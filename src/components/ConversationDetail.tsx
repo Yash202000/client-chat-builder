@@ -551,10 +551,17 @@ export const ConversationDetail: React.FC<ConversationDetailProps> = ({ sessionI
       headers: { 'Content-Type': 'application/json'},
       body: JSON.stringify({ priority: newPriority }),
     }).then(res => { if (!res.ok) throw new Error('Failed to update priority'); return res.json(); }),
-    onSuccess: () => {
+    onSuccess: (_, newPriority) => {
+      // Optimistically update sessionDetails cache immediately so UI reflects change
+      queryClient.setQueryData(['sessionDetails', sessionId], (oldData: any) => {
+        if (oldData) {
+          return { ...oldData, priority: newPriority };
+        }
+        return oldData;
+      });
+      // Invalidate session lists to ensure consistency
       queryClient.invalidateQueries({ queryKey: ['sessions', agentId] });
       queryClient.invalidateQueries({ queryKey: ['sessions', companyId] });
-      queryClient.invalidateQueries({ queryKey: ['sessionDetails', sessionId] });
       toast({
         title: t('conversations.priority.updated', { defaultValue: 'Priority updated' }),
         description: t('conversations.priority.updatedDesc', { defaultValue: 'Conversation priority has been updated' }),
@@ -830,7 +837,7 @@ export const ConversationDetail: React.FC<ConversationDetailProps> = ({ sessionI
             <div className="flex items-center gap-2 bg-white dark:bg-slate-900 rounded-lg px-3 py-2 border border-slate-200 dark:border-slate-700 card-shadow">
               <Flag className={`h-4 w-4 ${conversationPriority > 0 ? PRIORITY_CONFIG[conversationPriority]?.color : 'text-muted-foreground'}`} />
               <Select
-                key={`priority-${sessionId}`}
+                key={`priority-${sessionId}-${conversationPriority}`}
                 value={conversationPriority.toString()}
                 onValueChange={(value) => priorityMutation.mutate(parseInt(value))}
               >
