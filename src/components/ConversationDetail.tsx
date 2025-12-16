@@ -551,10 +551,17 @@ export const ConversationDetail: React.FC<ConversationDetailProps> = ({ sessionI
       headers: { 'Content-Type': 'application/json'},
       body: JSON.stringify({ priority: newPriority }),
     }).then(res => { if (!res.ok) throw new Error('Failed to update priority'); return res.json(); }),
-    onSuccess: () => {
+    onSuccess: (_, newPriority) => {
+      // Optimistically update sessionDetails cache immediately so UI reflects change
+      queryClient.setQueryData(['sessionDetails', sessionId], (oldData: any) => {
+        if (oldData) {
+          return { ...oldData, priority: newPriority };
+        }
+        return oldData;
+      });
+      // Invalidate session lists to ensure consistency
       queryClient.invalidateQueries({ queryKey: ['sessions', agentId] });
       queryClient.invalidateQueries({ queryKey: ['sessions', companyId] });
-      queryClient.invalidateQueries({ queryKey: ['sessionDetails', sessionId] });
       toast({
         title: t('conversations.priority.updated', { defaultValue: 'Priority updated' }),
         description: t('conversations.priority.updatedDesc', { defaultValue: 'Conversation priority has been updated' }),
