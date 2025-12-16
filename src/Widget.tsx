@@ -218,6 +218,8 @@ const Widget = ({ agentId, companyId, backendUrl, rtlOverride, languageOverride,
 
   const audioPlaybackTimer = useRef<NodeJS.Timeout | null>(null);
   const incomingAudioChunks = useRef<Blob[]>([]);
+  const audioQueue = useRef<Blob[]>([]); // Queue of complete audio blobs to play
+  const isPlayingAudio = useRef(false); // Whether audio is currently playing
 
   // Voice Activity Detection (VAD) state for voice-only mode
   const vadTimer = useRef<NodeJS.Timeout | null>(null);
@@ -344,6 +346,11 @@ const Widget = ({ agentId, companyId, backendUrl, rtlOverride, languageOverride,
         if (settings?.typing_indicator_enabled) {
           setIsTyping(data.is_typing);
         }
+        return;
+      }
+
+      // Ignore audio_end markers (used for voice WebSocket audio queuing)
+      if (data.type === 'audio_end') {
         return;
       }
 
@@ -542,28 +549,89 @@ const Widget = ({ agentId, companyId, backendUrl, rtlOverride, languageOverride,
     };
 
     voiceWs.current.onmessage = async (event) => {
+      // Handle binary audio data
       if (event.data instanceof Blob) {
         incomingAudioChunks.current.push(event.data);
+        // Use a short debounce as backup in case audio_end isn't received
         if (audioPlaybackTimer.current) clearTimeout(audioPlaybackTimer.current);
         audioPlaybackTimer.current = setTimeout(() => {
           if (incomingAudioChunks.current.length > 0) {
-            const fullAudioBlob = new Blob(incomingAudioChunks.current, { type: 'audio/webm' });
-            const audioUrl = URL.createObjectURL(fullAudioBlob);
-            const audio = new Audio(audioUrl);
-
-            // For voice-only mode, pause VAD while playing response
-            if (settings?.communication_mode === 'voice') {
-              pauseVAD();
-              audio.onended = () => {
-                resumeVAD();
-              };
-            }
-
-            audio.play();
-            incomingAudioChunks.current = [];
+            finalizeAndQueueAudio();
           }
-        }, 300);
+        }, 500);
       }
+      // Handle text messages (e.g., audio_end marker)
+      else if (typeof event.data === 'string') {
+        try {
+          const data = JSON.parse(event.data);
+          if (data.type === 'audio_end') {
+            // Clear the backup timer since we got the proper end signal
+            if (audioPlaybackTimer.current) {
+              clearTimeout(audioPlaybackTimer.current);
+              audioPlaybackTimer.current = null;
+            }
+            // Finalize current audio chunks and queue for playback
+            if (incomingAudioChunks.current.length > 0) {
+              finalizeAndQueueAudio();
+            }
+          }
+        } catch (e) {
+          // Not JSON, ignore
+        }
+      }
+    };
+
+    // Helper to finalize audio chunks and add to queue
+    const finalizeAndQueueAudio = () => {
+      if (incomingAudioChunks.current.length === 0) return;
+
+      const fullAudioBlob = new Blob(incomingAudioChunks.current, { type: 'audio/webm' });
+      incomingAudioChunks.current = [];
+      audioQueue.current.push(fullAudioBlob);
+      console.log('[Widget] Audio queued, queue length:', audioQueue.current.length);
+
+      // Start playing if not already playing
+      if (!isPlayingAudio.current) {
+        playNextInQueue();
+      }
+    };
+
+    // Play audio from queue sequentially
+    const playNextInQueue = () => {
+      if (audioQueue.current.length === 0) {
+        isPlayingAudio.current = false;
+        return;
+      }
+
+      isPlayingAudio.current = true;
+      const audioBlob = audioQueue.current.shift()!;
+      const audioUrl = URL.createObjectURL(audioBlob);
+      const audio = new Audio(audioUrl);
+
+      // For voice-only mode, pause VAD while playing response
+      if (settings?.communication_mode === 'voice') {
+        pauseVAD();
+      }
+
+      audio.onended = () => {
+        URL.revokeObjectURL(audioUrl); // Clean up
+        if (settings?.communication_mode === 'voice' && audioQueue.current.length === 0) {
+          resumeVAD();
+        }
+        // Play next audio in queue
+        playNextInQueue();
+      };
+
+      audio.onerror = () => {
+        console.error('[Widget] Audio playback error');
+        URL.revokeObjectURL(audioUrl);
+        playNextInQueue(); // Try next audio
+      };
+
+      audio.play().catch(err => {
+        console.error('[Widget] Failed to play audio:', err);
+        playNextInQueue();
+      });
     };
 
     voiceWs.current.onclose = () => {
