@@ -149,6 +149,8 @@
       "timezone": "المنطقة الزمنية",
       "modelName": "اسم النموذج",
       "embeddingModel": "نموذج التضمين",
+      "visionEnabled": "الرؤية (معالجة الصور)",
+      "visionEnabledHelp": "تمكين معالجة الصور مع نموذج اللغة",
       "ttsProvider": "مزود تحويل النص إلى كلام",
       "sttProvider": "مزود تحويل الكلام إلى نص",
       "voiceId": "معرف الصوت",

@@ -89,6 +89,7 @@ export const AgentPropertiesPanel = ({ agent, selectedNode, onNodeDelete }) => {
     embedding_model: "gemini",
     model_name: "llama-3.3-70b-versatile",
     handoff_team_id: null as number | null,
+    vision_enabled: false,
   });
 
   const [hasChanges, setHasChanges] = useState(false);
@@ -108,6 +109,7 @@ export const AgentPropertiesPanel = ({ agent, selectedNode, onNodeDelete }) => {
         embedding_model: agent.embedding_model || "gemini",
         model_name: agent.model_name || "llama-3.3-70b-versatile",
         handoff_team_id: agent.handoff_team_id || null,
+        vision_enabled: agent.vision_enabled || false,
       });
       setHasChanges(false);
     }
@@ -290,6 +292,22 @@ export const AgentPropertiesPanel = ({ agent, selectedNode, onNodeDelete }) => {
                   <option value="nvidia">NVIDIA (Local)</option>
                   <option value="nvidia_api">NVIDIA (API)</option>
                 </select>
+              </div>
+              <div className="flex items-center justify-between py-2">
+                <div>
+                  <Label className="text-xs font-medium dark:text-gray-300">
+                    {t('agents.settingsPage.visionEnabled', { defaultValue: 'Vision (Image Processing)' })}
+                  </Label>
+                  <p className="text-xs text-slate-500 dark:text-slate-400">
+                    {t('agents.settingsPage.visionEnabledHelp', { defaultValue: 'Enable to process images with LLM' })}
+                  </p>
+                </div>
+                <input
+                  type="checkbox"
+                  checked={agentConfig.vision_enabled}
+                  onChange={(e) => handleConfigChange('vision_enabled', e.target.checked)}
+                  className="h-4 w-4 rounded border-gray-300 text-green-600 focus:ring-green-500"
+                />
               </div>
             </CollapsibleSection>
 

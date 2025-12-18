@@ -150,6 +150,8 @@
       "modelName": "Model Name",
       "modelDesc": "Select the AI model for this agent. Different models offer varying performance and capabilities.",
       "embeddingModel": "Embedding Model",
+      "visionEnabled": "Vision (Image Processing)",
+      "visionEnabledHelp": "Enable to process images with LLM",
       "ttsProvider": "Text-to-Speech Provider",
       "sttProvider": "Speech-to-Text Provider",
       "voiceId": "Voice ID",
