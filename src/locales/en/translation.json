@@ -1091,6 +1091,8 @@
     "small": "Small",
     "medium": "Medium",
     "large": "Large",
+    "width": "Width",
+    "height": "Height",
     "fontFamily": "Font Family",
     "borderRadius": "Border Radius",
     "zIndex": "Z-Index",

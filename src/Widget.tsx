@@ -1081,10 +1081,14 @@ const Widget = ({ agentId, companyId, backendUrl, rtlOverride, languageOverride,
 
     // Send to backend
     const messageToSend: any = {
-      message: payload || messageText,
+      message: messageText,  // Always send display text as message
       message_type: 'message',
       sender: 'user'
     };
+    // If payload exists (option key), include it separately for workflow variable storage
+    if (payload) {
+      messageToSend.option_key = payload;
+    }
     if (attachments.length > 0) {
       messageToSend.attachments = attachments;
       console.log('[Widget] Sending message with attachments:', attachments.length, 'item(s)');
@@ -1606,7 +1610,7 @@ const Widget = ({ agentId, companyId, backendUrl, rtlOverride, languageOverride,
                       return (
                         <Button
                           key={index}
-                          onClick={() => handleSendMessage(keyValue)}
+                          onClick={() => handleSendMessage(displayText, keyValue)}
                           variant="outline"
                           size="sm"
                           className={cn('rounded-full', dark_mode ? 'bg-gray-700 hover:bg-gray-600 border-gray-600' : 'bg-gray-100 hover:bg-gray-200 border-gray-300')}
@@ -1847,9 +1851,25 @@ const Widget = ({ agentId, companyId, backendUrl, rtlOverride, languageOverride,
     {showLocationPicker && (
       <LocationPicker
         initialLocation={selectedLocation}
-        onLocationSelect={(lat, lng) => setSelectedLocation({ latitude: lat, longitude: lng })}
-        onClose={() => setShowLocationPicker(false)}
-        onConfirm={() => setShowLocationPicker(false)}
+        onLocationSelect={(lat, lng) => {
+          console.log('[Widget] Location selected:', lat, lng);
+          setSelectedLocation({ latitude: lat, longitude: lng });
+        }}
+        onClose={() => {
+          console.log('[Widget] Location picker closed');
+          setShowLocationPicker(false);
+          setSelectedLocation(null);
+        }}
+        onConfirm={(lat, lng) => {
+          console.log('[Widget] Location confirmed:', lat, lng);
+          // Set the location first, then send
+          setSelectedLocation({ latitude: lat, longitude: lng });
+          // Use setTimeout to ensure state is updated before sending
+          setTimeout(() => {
+            handleSendMessage('');
+            setShowLocationPicker(false);
+          }, 0);
+        }}
         darkMode={dark_mode}
       />
     )}

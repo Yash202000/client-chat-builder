@@ -5,55 +5,78 @@ import 'leaflet/dist/leaflet.css';
 import { Button } from '@/components/ui/button';
 import { X, MapPin, Navigation, Check } from 'lucide-react';
 
-// Create custom marker icon using inline SVG to avoid bundler issues
-const customIcon = new L.Icon({
-  iconUrl: 'data:image/svg+xml;base64,' + btoa(`
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="32" height="32">
-      <path fill="#dc2626" d="M12 0C7.58 0 4 3.58 4 8c0 5.25 8 13 8 13s8-7.75 8-13c0-4.42-3.58-8-8-8zm0 11c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3z"/>
-      <circle cx="12" cy="8" r="3" fill="white"/>
-    </svg>
-  `),
-  iconSize: [32, 32],
-  iconAnchor: [16, 32],
-  popupAnchor: [0, -32],
+// Fix default marker icon paths for bundlers (Vite, Webpack, etc.)
+// @ts-ignore
+delete L.Icon.Default.prototype._getIconUrl;
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon-2x.png',
+  iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon.png',
+  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
 });
+
+console.log('[LocationPicker] Module loaded, default icon fixed');
 
 interface LocationPickerProps {
   initialLocation?: { latitude: number; longitude: number } | null;
   onLocationSelect: (lat: number, lng: number) => void;
   onClose: () => void;
-  onConfirm: () => void;
+  onConfirm: (lat: number, lng: number) => void;  // Now passes the confirmed location
   darkMode?: boolean;
 }
 
-// Component to handle map click events
-const MapClickHandler: React.FC<{
-  onLocationSelect: (lat: number, lng: number) => void;
-}> = ({ onLocationSelect }) => {
-  useMapEvents({
-    click: (e) => {
-      e.originalEvent.stopPropagation();
-      onLocationSelect(e.latlng.lat, e.latlng.lng);
-    },
-  });
+// Component to handle map setup and recentering (no click-to-place to avoid sliding)
+const MapSetup: React.FC<{
+  recenterTo: { lat: number; lng: number } | null;
+  onRecenterDone: () => void;
+}> = ({ recenterTo, onRecenterDone }) => {
+  const map = useMap();
+
+  // Handle recentering when "My Location" is clicked
+  React.useEffect(() => {
+    if (recenterTo) {
+      console.log('[MapSetup] Recentering to:', recenterTo);
+      map.setView([recenterTo.lat, recenterTo.lng], map.getZoom(), { animate: true });
+      onRecenterDone();
+    }
+  }, [recenterTo, map, onRecenterDone]);
+
+  // Initial invalidateSize (run once)
+  React.useEffect(() => {
+    console.log('[MapSetup] Initial setup - invalidating size');
+    setTimeout(() => {
+      map.invalidateSize();
+    }, 200);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   return null;
 };
 
 // Component to recenter map when position changes
 const MapController: React.FC<{ lat: number; lng: number; shouldRecenter: boolean }> = ({ lat, lng, shouldRecenter }) => {
   const map = useMap();
+  const hasInitialized = React.useRef(false);
+  const lastRecenter = React.useRef<string>('');
 
   useEffect(() => {
-    if (shouldRecenter) {
+    // Only recenter if flag is true AND position actually changed
+    const posKey = `${lat},${lng}`;
+    if (shouldRecenter && posKey !== lastRecenter.current) {
+      lastRecenter.current = posKey;
+      console.log('[MapController] Recentering to:', lat, lng);
       map.setView([lat, lng], map.getZoom(), { animate: true });
     }
   }, [lat, lng, shouldRecenter, map]);
 
-  // Fix map size calculation after render
+  // Fix map size calculation after initial render (run once)
   useEffect(() => {
-    setTimeout(() => {
-      map.invalidateSize();
-    }, 100);
+    if (!hasInitialized.current) {
+      hasInitialized.current = true;
+      console.log('[MapController] Initial invalidateSize');
+      setTimeout(() => {
+        map.invalidateSize();
+      }, 200);
+    }
   }, [map]);
 
   return null;
@@ -75,20 +98,26 @@ const LocationPicker: React.FC<LocationPickerProps> = ({
     lng: defaultLng,
   });
   const [isLocating, setIsLocating] = useState(false);
-  const [shouldRecenter, setShouldRecenter] = useState(false);
+  const [recenterTo, setRecenterTo] = useState<{ lat: number; lng: number } | null>(null);
   const markerRef = useRef<L.Marker>(null);
 
-  // Update position when initialLocation changes
+  // Update position when initialLocation changes (only on mount or when explicitly changed by parent)
+  // Skip if position is already set to the same values to prevent loops
   useEffect(() => {
-    if (initialLocation) {
+    if (initialLocation &&
+        (position.lat !== initialLocation.latitude || position.lng !== initialLocation.longitude)) {
+      console.log('[LocationPicker] Syncing position from initialLocation:', initialLocation);
       setPosition({ lat: initialLocation.latitude, lng: initialLocation.longitude });
     }
-  }, [initialLocation]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Only run on mount
 
   const handleLocationSelect = (lat: number, lng: number) => {
+    console.log('[LocationPicker] handleLocationSelect called:', lat, lng);
+    // Update local position state
     setPosition({ lat, lng });
+    // Notify parent
     onLocationSelect(lat, lng);
-    setShouldRecenter(false); // Don't recenter on click, just update marker
   };
 
   const handleGetCurrentLocation = () => {
@@ -96,9 +125,10 @@ const LocationPicker: React.FC<LocationPickerProps> = ({
     navigator.geolocation.getCurrentPosition(
       (pos) => {
         const { latitude, longitude } = pos.coords;
+        console.log('[LocationPicker] Got current location:', latitude, longitude);
         setPosition({ lat: latitude, lng: longitude });
         onLocationSelect(latitude, longitude);
-        setShouldRecenter(true); // Recenter map to new location
+        setRecenterTo({ lat: latitude, lng: longitude }); // Recenter map to new location
         setIsLocating(false);
       },
       (error) => {
@@ -112,12 +142,17 @@ const LocationPicker: React.FC<LocationPickerProps> = ({
 
   const handleMarkerDrag = () => {
     const marker = markerRef.current;
+    console.log('[LocationPicker] Marker drag ended, marker ref:', marker);
     if (marker) {
       const latlng = marker.getLatLng();
+      console.log('[LocationPicker] Marker dragged to:', latlng);
       setPosition({ lat: latlng.lat, lng: latlng.lng });
       onLocationSelect(latlng.lat, latlng.lng);
     }
   };
+
+  // Log render for debugging
+  console.log('[LocationPicker] Rendering with position:', position);
 
   return (
     <div
@@ -157,15 +192,32 @@ const LocationPicker: React.FC<LocationPickerProps> = ({
             .leaflet-control-container {
               z-index: 2;
             }
+            .leaflet-marker-pane {
+              z-index: 600 !important;
+            }
+            .leaflet-marker-icon {
+              cursor: grab !important;
+            }
+            .leaflet-marker-icon:active {
+              cursor: grabbing !important;
+            }
+            .location-marker {
+              background: transparent !important;
+              border: none !important;
+            }
           `}</style>
           <MapContainer
-            center={[position.lat, position.lng]}
+            center={[defaultLat, defaultLng]}
             zoom={15}
             style={{ height: '100%', width: '100%' }}
             zoomControl={true}
             scrollWheelZoom={true}
             dragging={true}
             doubleClickZoom={false}
+            touchZoom={true}
+            boxZoom={false}
+            keyboard={false}
+            tap={false}
           >
             <TileLayer
               attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
@@ -174,19 +226,26 @@ const LocationPicker: React.FC<LocationPickerProps> = ({
             <Marker
               position={[position.lat, position.lng]}
               draggable={true}
-              icon={customIcon}
               ref={markerRef}
               eventHandlers={{
+                dragstart: () => console.log('[Marker] Drag started'),
+                drag: () => console.log('[Marker] Dragging'),
                 dragend: handleMarkerDrag,
+                add: () => console.log('[Marker] Added to map at', position),
               }}
             />
-            <MapClickHandler onLocationSelect={handleLocationSelect} />
-            <MapController lat={position.lat} lng={position.lng} shouldRecenter={shouldRecenter} />
+            <MapSetup
+              recenterTo={recenterTo}
+              onRecenterDone={() => setRecenterTo(null)}
+            />
           </MapContainer>
         </div>
 
-        {/* Coordinates Display */}
+        {/* Instructions and Coordinates Display */}
         <div className={`p-3 border-t ${darkMode ? 'border-gray-700 bg-gray-900' : 'border-gray-200 bg-gray-50'}`}>
+          <div className={`text-xs mb-1 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+            Drag the marker to select location
+          </div>
           <div className={`text-xs font-mono ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
             <span className="font-semibold">Lat:</span> {position.lat.toFixed(6)}
             <span className="mx-2">|</span>
@@ -210,7 +269,14 @@ const LocationPicker: React.FC<LocationPickerProps> = ({
             <Button variant="outline" size="sm" onClick={onClose}>
               Cancel
             </Button>
-            <Button size="sm" onClick={onConfirm} className="flex items-center gap-1 bg-green-600 hover:bg-green-700">
+            <Button
+              size="sm"
+              onClick={() => {
+                console.log('[LocationPicker] Confirm clicked, position:', position);
+                onConfirm(position.lat, position.lng);
+              }}
+              className="flex items-center gap-1 bg-green-600 hover:bg-green-700"
+            >
               <Check className="w-4 h-4" />
               Confirm
             </Button>

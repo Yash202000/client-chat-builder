@@ -1084,6 +1084,8 @@
     "small": "صغير",
     "medium": "متوسط",
     "large": "كبير",
+    "width": "العرض",
+    "height": "الارتفاع",
     "fontFamily": "نوع الخط",
     "borderRadius": "نصف قطر الحدود",
     "zIndex": "Z-Index",
