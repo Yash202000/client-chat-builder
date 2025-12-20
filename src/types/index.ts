@@ -72,6 +72,17 @@ export interface Agent {
   knowledge_bases?: KnowledgeBase[];
 }
 
+export interface MessageAttachment {
+  file_name?: string;
+  file_url?: string;
+  file_type?: string;
+  file_size?: number;
+  location?: {
+    latitude: number;
+    longitude: number;
+  };
+}
+
 export interface ChatMessage {
   id: number;
   session_id: string;
@@ -84,6 +95,7 @@ export interface ChatMessage {
   contact_id: number;
   status?: string;
   assignee_id?: number;
+  attachments?: MessageAttachment[];
 }
 
 export interface Credential {

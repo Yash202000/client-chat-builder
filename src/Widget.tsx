@@ -473,12 +473,18 @@ const Widget = ({ agentId, companyId, backendUrl, rtlOverride, languageOverride,
       setMessages(prev => {
         // For user messages from backend, check if we have an optimistic version to replace
         if (data.sender === 'user' && data.id) {
-          // Find the most recent temp message with matching content
-          const tempMessageIndex = prev.findIndex(msg =>
-            msg.id.toString().startsWith('temp_') &&  // Is a temp message
-            msg.sender === 'user' &&                   // From user
-            msg.text === data.message                  // Same content
-          );
+          // Find the most recent temp message to replace
+          const tempMessageIndex = prev.findIndex(msg => {
+            if (!msg.id.toString().startsWith('temp_')) return false;  // Must be temp
+            if (msg.sender !== 'user') return false;                    // Must be from user
+
+            // Match by content OR by attachments (for attachment-only messages)
+            const textMatches = msg.text === data.message;
+            const bothHaveAttachments = msg.attachments && msg.attachments.length > 0 && data.attachments && data.attachments.length > 0;
+            const isAttachmentOnlyMessage = (!msg.text || msg.text === '') && bothHaveAttachments;
+
+            return textMatches || isAttachmentOnlyMessage;
+          });
 
           if (tempMessageIndex !== -1) {
             // Replace temp message with real one from backend
@@ -1044,28 +1050,21 @@ const Widget = ({ agentId, companyId, backendUrl, rtlOverride, languageOverride,
 
     // Add location attachment if location is selected
     if (selectedLocation) {
+      const locationData = {
+        latitude: selectedLocation.latitude,
+        longitude: selectedLocation.longitude
+      };
       attachments.push({
         file_name: 'location',
         file_type: 'application/geo+json',
-        file_size: 0,
-        location: {
-          latitude: selectedLocation.latitude,
-          longitude: selectedLocation.longitude
-        }
+        file_size: new Blob([JSON.stringify(locationData)]).size,
+        location: locationData
       });
     }
 
     // Build display text for optimistic message
-    let displayText = messageText;
-    if (!displayText) {
-      if (selectedFile && selectedLocation) {
-        displayText = `[Image: ${selectedFile.name}] [Location]`;
-      } else if (selectedFile) {
-        displayText = `[Image: ${selectedFile.name}]`;
-      } else if (selectedLocation) {
-        displayText = `[Location: ${selectedLocation.latitude.toFixed(6)}, ${selectedLocation.longitude.toFixed(6)}]`;
-      }
-    }
+    // If there's no text but there are attachments, show preview only (no placeholder text)
+    let displayText = messageText || '';
 
     // OPTIMISTIC UPDATE: Show user message immediately
     const optimisticMessage: Message = {

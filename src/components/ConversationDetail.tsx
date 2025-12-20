@@ -3,8 +3,8 @@ import { useQuery, useMutation, useQueryClient, useInfiniteQuery } from '@tansta
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { ChatMessage, User, Contact, PRIORITY_CONFIG } from '@/types';
-import { Paperclip, Send, CornerDownRight, Book, CheckCircle, Users, Video, Bot, Mic, MessageSquare, Sparkles, ArrowLeft, AlertTriangle, ArrowUp, Minus, ArrowDown, Flag, FileText } from 'lucide-react';
+import { ChatMessage, User, Contact, PRIORITY_CONFIG, MessageAttachment } from '@/types';
+import { Paperclip, Send, CornerDownRight, Book, CheckCircle, Users, Video, Bot, Mic, MessageSquare, Sparkles, ArrowLeft, AlertTriangle, ArrowUp, Minus, ArrowDown, Flag, FileText, Download, MapPin, Image, File } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from '@/hooks/use-toast';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -78,6 +78,142 @@ const isDifferentDay = (date1: string | Date, date2: string | Date): boolean => 
   return d1.getDate() !== d2.getDate() ||
          d1.getMonth() !== d2.getMonth() ||
          d1.getFullYear() !== d2.getFullYear();
+};
+
+// Use MessageAttachment from types
+
+// Helper to format file size
+const formatFileSize = (bytes?: number): string => {
+  if (!bytes) return '';
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+};
+
+// Helper to check if file is an image
+const isImageFile = (fileType?: string): boolean => {
+  return fileType?.startsWith('image/') || false;
+};
+
+// Attachment renderer component
+const AttachmentDisplay: React.FC<{ attachments: MessageAttachment[], sender: string }> = ({ attachments, sender }) => {
+  if (!attachments || attachments.length === 0) return null;
+
+  return (
+    <div className="mt-2 space-y-2">
+      {attachments.map((att, index) => {
+        // Location attachment
+        if (att.location) {
+          const { latitude, longitude } = att.location;
+          const mapsUrl = `https://www.google.com/maps?q=${latitude},${longitude}`;
+          return (
+            <a
+              key={index}
+              href={mapsUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className={`flex items-center gap-2 px-3 py-2 rounded-lg transition-colors ${
+                sender === 'user'
+                  ? 'bg-blue-50 hover:bg-blue-100 dark:bg-blue-900/30 dark:hover:bg-blue-900/50'
+                  : 'bg-white/20 hover:bg-white/30'
+              }`}
+            >
+              <MapPin className="h-4 w-4 flex-shrink-0" />
+              <span className="text-sm">
+                📍 Location ({latitude.toFixed(4)}, {longitude.toFixed(4)})
+              </span>
+            </a>
+          );
+        }
+
+        // File attachment
+        const hasDownload = att.file_url;
+
+        // Image preview for image files
+        if (isImageFile(att.file_type) && att.file_url) {
+          return (
+            <div key={index} className="space-y-1">
+              <a
+                href={att.file_url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="block"
+              >
+                <img
+                  src={att.file_url}
+                  alt={att.file_name || 'Image'}
+                  className="max-w-[200px] max-h-[200px] rounded-lg object-cover border border-slate-200 dark:border-slate-600"
+                />
+              </a>
+              <div className={`flex items-center gap-2 text-xs ${
+                sender === 'user' ? 'text-slate-600 dark:text-slate-400' : 'text-white/80'
+              }`}>
+                <Image className="h-3 w-3" />
+                <span>{att.file_name}</span>
+                {att.file_size && <span>({formatFileSize(att.file_size)})</span>}
+                {hasDownload && (
+                  <a
+                    href={att.file_url}
+                    download={att.file_name}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={`flex items-center gap-1 px-2 py-0.5 rounded ${
+                      sender === 'user'
+                        ? 'bg-blue-100 hover:bg-blue-200 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300'
+                        : 'bg-white/20 hover:bg-white/30'
+                    }`}
+                  >
+                    <Download className="h-3 w-3" />
+                    Download
+                  </a>
+                )}
+              </div>
+            </div>
+          );
+        }
+
+        // Non-image file attachment
+        return (
+          <div
+            key={index}
+            className={`flex items-center gap-2 px-3 py-2 rounded-lg ${
+              sender === 'user'
+                ? 'bg-slate-100 dark:bg-slate-600'
+                : 'bg-white/10'
+            }`}
+          >
+            <File className="h-4 w-4 flex-shrink-0" />
+            <div className="flex-1 min-w-0">
+              <span className="text-sm truncate block">{att.file_name || 'File'}</span>
+              {att.file_size && (
+                <span className={`text-xs ${
+                  sender === 'user' ? 'text-slate-500 dark:text-slate-400' : 'text-white/70'
+                }`}>
+                  {formatFileSize(att.file_size)}
+                </span>
+              )}
+            </div>
+            {hasDownload && (
+              <a
+                href={att.file_url}
+                download={att.file_name}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={`flex items-center gap-1 px-2 py-1 rounded text-xs font-medium transition-colors ${
+                  sender === 'user'
+                    ? 'bg-blue-100 hover:bg-blue-200 text-blue-700 dark:bg-blue-900/50 dark:hover:bg-blue-900/70 dark:text-blue-300'
+                    : 'bg-white/20 hover:bg-white/30'
+                }`}
+              >
+                <Download className="h-3 w-3" />
+                Download
+              </a>
+            )}
+          </div>
+        );
+      })}
+    </div>
+  );
 };
 
 // localStorage keys for draft auto-save
@@ -978,6 +1114,10 @@ export const ConversationDetail: React.FC<ConversationDetailProps> = ({ sessionI
                               {msg.message}
                             </ReactMarkdown>
                           </div>
+                          {/* Render attachments with download links */}
+                          {msg.attachments && msg.attachments.length > 0 && (
+                            <AttachmentDisplay attachments={msg.attachments} sender={msg.sender} />
+                          )}
                         </div>
                         <p className={`text-xs mt-1.5 px-1 ${msg.sender === 'user' ? 'text-gray-500 dark:text-gray-400' : 'text-gray-600 dark:text-gray-400'}`}>
                           {new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
