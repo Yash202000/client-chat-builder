@@ -507,7 +507,10 @@ export const AdvancedChatPreview = () => {
 -->`;
   };
 
-  const { width, height } = widgetSizes[customization.widget_size as keyof typeof widgetSizes];
+  // Prioritize custom dimensions over presets
+  const { width, height } = (customization.widget_width && customization.widget_height)
+    ? { width: customization.widget_width, height: customization.widget_height }
+    : widgetSizes[customization.widget_size as keyof typeof widgetSizes] || widgetSizes.medium;
 
   return (
     <>

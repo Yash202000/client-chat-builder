@@ -24,6 +24,8 @@ export interface WidgetSettings {
   bot_message_text_color: string;
   time_color?: string;
   widget_size: 'small' | 'medium' | 'large';
+  widget_width?: number;  // Custom width in px (overrides widget_size)
+  widget_height?: number; // Custom height in px (overrides widget_size)
   show_header: boolean;
   dark_mode: boolean;
   typing_indicator_enabled: boolean;
@@ -96,11 +98,14 @@ export const WidgetUI = ({
 }: WidgetUIProps) => {
   if (!settings) return null;
 
-  const { position, primary_color, agent_avatar_url, widget_size, border_radius, dark_mode, header_title, show_header, input_placeholder, user_message_color, user_message_text_color, bot_message_color, bot_message_text_color, time_color } = settings;
+  const { position, primary_color, agent_avatar_url, widget_size, widget_width, widget_height, border_radius, dark_mode, header_title, show_header, input_placeholder, user_message_color, user_message_text_color, bot_message_color, bot_message_text_color, time_color } = settings;
   // Read position from meta field, fallback to direct position for backward compatibility
   const widgetPosition = settings.meta?.position || position || 'bottom-right';
   const [vertical, horizontal] = widgetPosition.split('-');
-  const size = widgetSizes[widget_size] || widgetSizes.medium;
+  // Prioritize custom dimensions over presets
+  const size = (widget_width && widget_height)
+    ? { width: widget_width, height: widget_height }
+    : widgetSizes[widget_size] || widgetSizes.medium;
   const isRTL = settings.meta?.rtl_enabled || false;
 
   return (

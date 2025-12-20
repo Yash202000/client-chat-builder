@@ -400,15 +400,82 @@ export const WebChatCustomizer: React.FC<WebChatCustomizerPropsExtended> = ({
             <div className="bg-slate-50 dark:bg-slate-900/50 rounded-lg p-4 border border-slate-200 dark:border-slate-700">
               <h4 className={`font-semibold dark:text-white text-sm uppercase tracking-wider text-gray-700 dark:text-gray-300 mb-3 text-left`}>{t('designer.styleSettings')}</h4>
               <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <Label htmlFor="widget_size" className="text-xs dark:text-gray-300 mb-1.5 block text-left">{t('designer.widgetSize')}</Label>
-                  <select id="widget_size" value={customization.widget_size} onChange={(e) => updateCustomization("widget_size", e.target.value)} className={`w-full p-2 text-sm border rounded-md bg-white dark:bg-slate-800 dark:border-slate-600 dark:text-white focus:ring-2 focus:ring-pink-500 text-left`}>
-                    <option value="small">{t('designer.small')}</option>
-                    <option value="medium">{t('designer.medium')}</option>
-                    <option value="large">{t('designer.large')}</option>
-                  </select>
+                {/* Widget Size - Presets + Sliders */}
+                <div className="col-span-2">
+                  <Label className="text-xs dark:text-gray-300 mb-1.5 block text-left">{t('designer.widgetSize')}</Label>
+                  <div className="flex gap-2 mb-3">
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant={customization.widget_width === 320 && customization.widget_height === 450 ? "default" : "outline"}
+                      onClick={() => {
+                        updateCustomization("widget_width", 320);
+                        updateCustomization("widget_height", 450);
+                        updateCustomization("widget_size", "small");
+                      }}
+                      className="flex-1 text-xs"
+                    >
+                      {t('designer.small')}
+                    </Button>
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant={customization.widget_width === 360 && customization.widget_height === 550 ? "default" : "outline"}
+                      onClick={() => {
+                        updateCustomization("widget_width", 360);
+                        updateCustomization("widget_height", 550);
+                        updateCustomization("widget_size", "medium");
+                      }}
+                      className="flex-1 text-xs"
+                    >
+                      {t('designer.medium')}
+                    </Button>
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant={customization.widget_width === 400 && customization.widget_height === 650 ? "default" : "outline"}
+                      onClick={() => {
+                        updateCustomization("widget_width", 400);
+                        updateCustomization("widget_height", 650);
+                        updateCustomization("widget_size", "large");
+                      }}
+                      className="flex-1 text-xs"
+                    >
+                      {t('designer.large')}
+                    </Button>
+                  </div>
+                  <div className="space-y-2">
+                    <div>
+                      <Label htmlFor="widget_width" className="text-xs dark:text-gray-400 mb-1 block text-left">
+                        {t('designer.width')}: {customization.widget_width || 360}px
+                      </Label>
+                      <Input
+                        id="widget_width"
+                        type="range"
+                        min="280"
+                        max="500"
+                        value={customization.widget_width || 360}
+                        onChange={(e) => updateCustomization("widget_width", parseInt(e.target.value))}
+                        className="w-full dark:bg-slate-700"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="widget_height" className="text-xs dark:text-gray-400 mb-1 block text-left">
+                        {t('designer.height')}: {customization.widget_height || 550}px
+                      </Label>
+                      <Input
+                        id="widget_height"
+                        type="range"
+                        min="400"
+                        max="800"
+                        value={customization.widget_height || 550}
+                        onChange={(e) => updateCustomization("widget_height", parseInt(e.target.value))}
+                        className="w-full dark:bg-slate-700"
+                      />
+                    </div>
+                  </div>
                 </div>
-                <div>
+                <div className="col-span-2">
                   <Label htmlFor="font_family" className="text-xs dark:text-gray-300 mb-1.5 block text-left">{t('designer.fontFamily')}</Label>
                   <select id="font_family" value={customization.font_family} onChange={(e) => updateCustomization("font_family", e.target.value)} className={`w-full p-2 text-sm border rounded-md bg-white dark:bg-slate-800 dark:border-slate-600 dark:text-white focus:ring-2 focus:ring-pink-500 text-left`}>
                     <option value="Inter">Inter</option>

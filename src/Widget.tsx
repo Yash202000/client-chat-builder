@@ -36,6 +36,8 @@ interface WidgetSettings {
   bot_message_text_color: string;
   time_color?: string;
   widget_size: 'small' | 'medium' | 'large';
+  widget_width?: number;  // Custom width in px (overrides widget_size)
+  widget_height?: number; // Custom height in px (overrides widget_size)
   show_header: boolean;
   dark_mode: boolean;
   typing_indicator_enabled: boolean;
@@ -1149,7 +1151,7 @@ const Widget = ({ agentId, companyId, backendUrl, rtlOverride, languageOverride,
   };
 
   if (isLoading || !settings || !localizedTexts) return null;
-  const { position, primary_color, agent_avatar_url, widget_size, border_radius, dark_mode, show_header, user_message_color, user_message_text_color, bot_message_color, bot_message_text_color, time_color } = settings;
+  const { position, primary_color, agent_avatar_url, widget_size, widget_width, widget_height, border_radius, dark_mode, show_header, user_message_color, user_message_text_color, bot_message_color, bot_message_text_color, time_color } = settings;
 
   // Extract localized texts
   const { welcome_message, header_title, input_placeholder, proactive_message } = localizedTexts;
@@ -1157,7 +1159,10 @@ const Widget = ({ agentId, companyId, backendUrl, rtlOverride, languageOverride,
   // Position priority: data-position attribute > meta.position > direct position field > default
   const widgetPosition = positionOverride || settings.meta?.position || position || 'bottom-right';
   const [vertical, horizontal] = widgetPosition.split('-');
-  const size = widgetSizes[widget_size] || widgetSizes.medium;
+  // Prioritize custom dimensions over presets
+  const size = (widget_width && widget_height)
+    ? { width: widget_width, height: widget_height }
+    : widgetSizes[widget_size] || widgetSizes.medium;
 
   // RTL can be overridden by embed code data attribute, otherwise check if language is RTL, otherwise use setting from meta
   // Use != null to check for both null and undefined
