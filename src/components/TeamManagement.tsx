@@ -245,9 +245,12 @@ export const TeamManagement = () => {
     mutationFn: (userId: number) => authFetch(`/api/v1/users/${userId}`, {
       method: 'DELETE',
     }).then(res => { if (!res.ok) throw new Error('Failed to delete user'); return res.json() }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['users', companyId] });
-      toast({ title: t('common.success'), variant: 'success', description: t('teamManagement.toasts.userDeleted') });
+    onSuccess: (data) => {
+      queryClient.refetchQueries({ queryKey: ['users', companyId] });
+      const message = data.action === 'deleted'
+        ? t('teamManagement.toasts.userDeleted')
+        : t('teamManagement.toasts.userDeactivated') || 'User deactivated';
+      toast({ title: t('common.success'), variant: 'success', description: message });
       playSuccessSound();
     },
     onError: (e: Error) => toast({ title: t('common.error'), description: e.message, variant: 'destructive' }),

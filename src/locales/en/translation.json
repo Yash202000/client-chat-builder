@@ -43,7 +43,10 @@
     "date": "Date",
     "time": "Time",
     "type": "Type",
-    "language": "Language"
+    "language": "Language",
+    "start_over": "Start Over",
+    "close_widget": "Close Widget",
+    "conversation_reset": "Conversation reset. How can I help you?"
   },
   "navigation": {
     "dashboard": "Dashboard",
@@ -522,6 +525,7 @@
       "userCreated": "User created successfully.",
       "userUpdated": "User updated successfully!",
       "userDeleted": "User deleted successfully.",
+      "userDeactivated": "User deactivated successfully.",
       "userStatusUpdated": "User status updated successfully.",
       "teamCreated": "Team created successfully.",
       "teamUpdated": "Team updated successfully.",
