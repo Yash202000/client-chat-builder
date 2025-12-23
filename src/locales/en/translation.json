@@ -1440,7 +1440,9 @@
           "tagConversation": "Tag Conversation",
           "assignToAgent": "Assign to Agent",
           "setStatus": "Set Status",
-          "subworkflow": "Subworkflow"
+          "subworkflow": "Subworkflow",
+          "forEachLoop": "For Each Loop",
+          "whileLoop": "While Loop"
         }
       },
       "properties": {
@@ -1529,6 +1531,17 @@
         "note": "Note",
         "subworkflowPauseNote": "If the subworkflow pauses for user input, the parent workflow will also pause. Maximum nesting depth: 5 levels.",
         "subworkflowHasTriggersWarning": "This workflow has its own triggers and can also run standalone. Changes may affect both contexts.",
+        "forEachConfiguration": "For Each Loop Configuration",
+        "forEachDescription": "Iterates over each item in an array, executing the loop body for each element.",
+        "arraySource": "Array Source",
+        "arraySourceHint": "Select a variable containing an array to iterate over",
+        "itemVariableName": "Item Variable Name",
+        "itemVariableHint": "Access via {{context.item}} in loop body",
+        "indexVariableName": "Index Variable Name",
+        "indexVariableHint": "Access via {{context.index}} in loop body",
+        "whileConfiguration": "While Loop Configuration",
+        "whileDescription": "Repeats the loop body while all conditions are true.",
+        "whileConditionHint": "The loop continues while ALL conditions are true.",
         "addArgument": "Add Argument",
         "returnVariables": "Return Variables",
         "returnVariablesHint": "Variables to return and store in context after execution",

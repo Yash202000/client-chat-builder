@@ -1991,6 +1991,182 @@ const PropertiesPanel = ({ selectedNode, nodes, setNodes, deleteNode, workflowId
             </div>
           </div>
         )}
+
+        {/* For Each Loop Node */}
+        {currentNode.type === 'foreach_loop' && (
+          <div className="mb-5 p-4 bg-slate-50 dark:bg-slate-800/50 rounded-lg border border-slate-200 dark:border-slate-700">
+            <h3 className="text-base font-semibold mb-4 text-slate-900 dark:text-slate-100">
+              {t("workflows.editor.properties.forEachConfiguration") || "For Each Loop Configuration"}
+            </h3>
+            <p className="text-xs text-slate-500 dark:text-slate-400 mb-4">
+              {t("workflows.editor.properties.forEachDescription") || "Iterates over each item in an array, executing the loop body for each element."}
+            </p>
+
+            <div className="mb-4">
+              <label className="block mb-2 font-medium text-sm text-slate-700 dark:text-slate-300">
+                {t("workflows.editor.properties.arraySource") || "Array Source"}
+              </label>
+              <VariableInput
+                value={currentNode.data.array_source || ''}
+                onChange={(e) => handleDataChange('array_source', e.target.value)}
+                placeholder="{{context.items}} or {{node-id.output}}"
+                availableVars={availableVariables}
+                isRTL={isRTL}
+              />
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                {t("workflows.editor.properties.arraySourceHint") || "Select a variable containing an array to iterate over"}
+              </p>
+            </div>
+
+            <div className="mb-4">
+              <label className="block mb-2 font-medium text-sm text-slate-700 dark:text-slate-300">
+                {t("workflows.editor.properties.itemVariableName") || "Item Variable Name"}
+              </label>
+              <input
+                type="text"
+                value={currentNode.data.item_variable || 'item'}
+                onChange={(e) => handleDataChange('item_variable', e.target.value)}
+                className="w-full px-3 py-2 rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400"
+                placeholder="item"
+                dir={isRTL ? 'rtl' : 'ltr'}
+              />
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                {t("workflows.editor.properties.itemVariableHint") || "Access via {{context.item}} in loop body"}
+              </p>
+            </div>
+
+            <div className="mb-4">
+              <label className="block mb-2 font-medium text-sm text-slate-700 dark:text-slate-300">
+                {t("workflows.editor.properties.indexVariableName") || "Index Variable Name"}
+              </label>
+              <input
+                type="text"
+                value={currentNode.data.index_variable || 'index'}
+                onChange={(e) => handleDataChange('index_variable', e.target.value)}
+                className="w-full px-3 py-2 rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400"
+                placeholder="index"
+                dir={isRTL ? 'rtl' : 'ltr'}
+              />
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                {t("workflows.editor.properties.indexVariableHint") || "Access via {{context.index}} in loop body"}
+              </p>
+            </div>
+
+            {/* Connection info */}
+            <div className="mt-4 p-3 bg-teal-50 dark:bg-teal-900/20 border border-teal-200 dark:border-teal-700 rounded-md">
+              <p className="text-xs text-teal-700 dark:text-teal-300">
+                <strong>Connections:</strong> Connect the <span className="font-mono bg-teal-100 dark:bg-teal-800 px-1 rounded">loop</span> handle to loop body nodes, and the <span className="font-mono bg-slate-100 dark:bg-slate-700 px-1 rounded">exit</span> handle to the node after the loop. Connect the last node of your loop body back to this node.
+              </p>
+            </div>
+          </div>
+        )}
+
+        {/* While Loop Node */}
+        {currentNode.type === 'while_loop' && (
+          <div className="mb-5 p-4 bg-slate-50 dark:bg-slate-800/50 rounded-lg border border-slate-200 dark:border-slate-700">
+            <h3 className="text-base font-semibold mb-4 text-slate-900 dark:text-slate-100">
+              {t("workflows.editor.properties.whileConfiguration") || "While Loop Configuration"}
+            </h3>
+            <p className="text-xs text-slate-500 dark:text-slate-400 mb-4">
+              {t("workflows.editor.properties.whileDescription") || "Repeats the loop body while all conditions are true."}
+            </p>
+
+            {/* Multi-condition UI - reused from condition node */}
+            {(currentNode.data.conditions || []).map((condition, index) => (
+              <div key={index} className="border border-slate-300 dark:border-slate-600 rounded-md p-3 mb-3 bg-white dark:bg-slate-900">
+                <div className="flex justify-between items-center mb-3">
+                  <strong className="text-sm text-slate-900 dark:text-slate-100">
+                    {index === 0 ? 'While' : 'AND'} Condition {index + 1}
+                  </strong>
+                  <button
+                    onClick={() => {
+                      const newConditions = [...(currentNode.data.conditions || [])];
+                      newConditions.splice(index, 1);
+                      handleDataChange('conditions', newConditions);
+                    }}
+                    className="text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 bg-transparent border-none cursor-pointer text-sm"
+                  >
+                    Remove
+                  </button>
+                </div>
+                <div className="mb-2">
+                  <label className="block mb-1 text-xs font-medium text-slate-700 dark:text-slate-300">{t("workflows.editor.properties.variable")}</label>
+                  <VariableInput
+                    value={condition.variable || ''}
+                    onChange={(e) => {
+                      const newConditions = [...(currentNode.data.conditions || [])];
+                      newConditions[index] = { ...newConditions[index], variable: e.target.value };
+                      handleDataChange('conditions', newConditions);
+                    }}
+                    placeholder="{{context.variable_name}}"
+                    availableVars={availableVariables}
+                    isRTL={isRTL}
+                    className="text-xs"
+                  />
+                </div>
+                <div className="mb-2">
+                  <label className="block mb-1 text-xs font-medium text-slate-700 dark:text-slate-300">{t("workflows.editor.properties.operator")}</label>
+                  <select
+                    value={condition.operator || 'greater_than'}
+                    onChange={(e) => {
+                      const newConditions = [...(currentNode.data.conditions || [])];
+                      newConditions[index] = { ...newConditions[index], operator: e.target.value };
+                      handleDataChange('conditions', newConditions);
+                    }}
+                    className="w-full px-2 py-1.5 text-xs rounded border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    dir={isRTL ? 'rtl' : 'ltr'}
+                  >
+                    <option value="equals">{t("workflows.editor.properties.operators.equals")}</option>
+                    <option value="not_equals">{t("workflows.editor.properties.operators.notEquals")}</option>
+                    <option value="contains">{t("workflows.editor.properties.operators.contains")}</option>
+                    <option value="greater_than">{t("workflows.editor.properties.operators.greaterThan")}</option>
+                    <option value="less_than">{t("workflows.editor.properties.operators.lessThan")}</option>
+                    <option value="is_set">{t("workflows.editor.properties.operators.isSet")}</option>
+                    <option value="is_not_set">{t("workflows.editor.properties.operators.isNotSet")}</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block mb-1 text-xs font-medium text-slate-700 dark:text-slate-300">{t("workflows.editor.properties.value")}</label>
+                  <input
+                    type="text"
+                    value={condition.value || ''}
+                    onChange={(e) => {
+                      const newConditions = [...(currentNode.data.conditions || [])];
+                      newConditions[index] = { ...newConditions[index], value: e.target.value };
+                      handleDataChange('conditions', newConditions);
+                    }}
+                    className="w-full px-2 py-1.5 text-xs rounded border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
+                    placeholder={t("workflows.editor.properties.valuePlaceholder")}
+                    disabled={['is_set', 'is_not_set'].includes(condition.operator)}
+                    dir={isRTL ? 'rtl' : 'ltr'}
+                  />
+                </div>
+              </div>
+            ))}
+
+            {/* Add condition button */}
+            <button
+              onClick={() => {
+                const newConditions = [...(currentNode.data.conditions || []), { variable: '', operator: 'greater_than', value: '' }];
+                handleDataChange('conditions', newConditions);
+              }}
+              className="w-full py-2.5 bg-violet-50 dark:bg-violet-950/30 border border-dashed border-violet-300 dark:border-violet-700 rounded cursor-pointer text-violet-600 dark:text-violet-400 hover:bg-violet-100 dark:hover:bg-violet-950/50 transition-colors text-sm font-medium"
+            >
+              + Add Condition
+            </button>
+
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-3">
+              {t("workflows.editor.properties.whileConditionHint") || "The loop continues while ALL conditions are true."}
+            </p>
+
+            {/* Connection info */}
+            <div className="mt-4 p-3 bg-violet-50 dark:bg-violet-900/20 border border-violet-200 dark:border-violet-700 rounded-md">
+              <p className="text-xs text-violet-700 dark:text-violet-300">
+                <strong>Connections:</strong> Connect the <span className="font-mono bg-violet-100 dark:bg-violet-800 px-1 rounded">loop</span> handle to loop body nodes, and the <span className="font-mono bg-slate-100 dark:bg-slate-700 px-1 rounded">exit</span> handle to the node after the loop. Connect the last node of your loop body back to this node.
+              </p>
+            </div>
+          </div>
+        )}
       </div>
     );
   };

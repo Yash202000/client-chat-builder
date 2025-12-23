@@ -28,7 +28,8 @@ import {
   IntentRouterNode, EntityCollectorNode, CheckEntityNode, UpdateContextNode,
   TagConversationNode, AssignToAgentNode, SetStatusNode, QuestionClassifierNode,
   ExtractEntitiesNode, SubworkflowNode,
-  TriggerWebSocketNode, TriggerWhatsAppNode, TriggerTelegramNode, TriggerInstagramNode
+  TriggerWebSocketNode, TriggerWhatsAppNode, TriggerTelegramNode, TriggerInstagramNode,
+  ForEachLoopNode, WhileLoopNode
 } from './CustomNodes';
 import { useAuth } from "@/hooks/useAuth";
 import { Comments } from './Comments';
@@ -106,6 +107,8 @@ const VisualWorkflowBuilder = () => {
     extract_entities: ExtractEntitiesNode,
     // Subworkflow node
     subworkflow: SubworkflowNode,
+    // Loop nodes
+    foreach_loop: ForEachLoopNode, while_loop: WhileLoopNode,
     // Trigger nodes
     trigger_websocket: TriggerWebSocketNode, trigger_whatsapp: TriggerWhatsAppNode,
     trigger_telegram: TriggerTelegramNode, trigger_instagram: TriggerInstagramNode

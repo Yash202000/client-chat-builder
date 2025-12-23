@@ -1415,7 +1415,9 @@
           "tagConversation": "وسم المحادثة",
           "assignToAgent": "تعيين لوكيل",
           "setStatus": "تعيين الحالة",
-          "subworkflow": "سير عمل فرعي"
+          "subworkflow": "سير عمل فرعي",
+          "forEachLoop": "حلقة لكل عنصر",
+          "whileLoop": "حلقة بينما"
         }
       },
       "properties": {
@@ -1504,6 +1506,17 @@
         "note": "ملاحظة",
         "subworkflowPauseNote": "إذا توقف سير العمل الفرعي لانتظار مدخلات المستخدم، فسيتوقف سير العمل الرئيسي أيضاً. الحد الأقصى لعمق التداخل: 5 مستويات.",
         "subworkflowHasTriggersWarning": "لدى سير العمل هذا مشغلاته الخاصة ويمكن تشغيله بشكل مستقل. قد تؤثر التغييرات على كلا السياقين.",
+        "forEachConfiguration": "تكوين حلقة لكل عنصر",
+        "forEachDescription": "تتكرر على كل عنصر في المصفوفة، وتنفذ جسم الحلقة لكل عنصر.",
+        "arraySource": "مصدر المصفوفة",
+        "arraySourceHint": "حدد متغيرًا يحتوي على مصفوفة للتكرار عليها",
+        "itemVariableName": "اسم متغير العنصر",
+        "itemVariableHint": "الوصول عبر {{context.item}} في جسم الحلقة",
+        "indexVariableName": "اسم متغير الفهرس",
+        "indexVariableHint": "الوصول عبر {{context.index}} في جسم الحلقة",
+        "whileConfiguration": "تكوين حلقة بينما",
+        "whileDescription": "تكرر جسم الحلقة بينما جميع الشروط صحيحة.",
+        "whileConditionHint": "تستمر الحلقة بينما جميع الشروط صحيحة.",
         "addArgument": "إضافة معامل",
         "returnVariables": "متغيرات الإرجاع",
         "returnVariablesHint": "المتغيرات التي سيتم إرجاعها وتخزينها في السياق بعد التنفيذ",

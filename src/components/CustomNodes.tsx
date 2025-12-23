@@ -4,7 +4,8 @@ import { Handle, Position } from 'reactflow';
 import {
   Bot, Cog, GitBranch, MessageSquare, Ear, HelpCircle, BookOpen, Code,
   SquareStack, Globe, ClipboardList, Target, Notebook, CheckCircle,
-  Database, Tag, UserPlus, Activity, Zap, Phone, Send, Instagram, Wifi, Layers
+  Database, Tag, UserPlus, Activity, Zap, Phone, Send, Instagram, Wifi, Layers,
+  Repeat, RefreshCw
 } from 'lucide-react';
 
 export const LlmNode = ({ data }) => (
@@ -564,5 +565,85 @@ export const TriggerInstagramNode = ({ data }) => (
       <div className="text-[10px] text-pink-700 dark:text-pink-300 font-medium">Agent: {data.agent_name || `#${data.agent_id}`}</div>
     )}
     <Handle type="source" position={Position.Bottom} id="message" className="w-4 h-4 !bg-pink-500 dark:!bg-pink-400 border-2 border-white dark:border-slate-800" />
+  </div>
+);
+
+// ========== LOOP NODES ==========
+
+export const ForEachLoopNode = ({ data }) => (
+  <div className="px-4 py-3 border-2 border-teal-200 dark:border-teal-700 rounded-xl bg-gradient-to-br from-teal-50 to-cyan-50 dark:from-teal-950/50 dark:to-cyan-950/50 shadow-lg hover:shadow-xl transition-shadow backdrop-blur-sm min-w-[160px]">
+    <Handle type="target" position={Position.Top} className="w-3 h-3 !bg-teal-500 dark:!bg-teal-400 border-2 border-white dark:border-slate-800" />
+    <div className="flex items-center gap-2 mb-2">
+      <div className="p-1.5 rounded-lg bg-teal-500 dark:bg-teal-600">
+        <Repeat size={16} className="text-white" />
+      </div>
+      <strong className="text-sm font-semibold text-slate-900 dark:text-white">{data.label || 'For Each'}</strong>
+    </div>
+    <div className="text-xs text-slate-600 dark:text-slate-400 font-medium">Iterate over array</div>
+    {data.item_variable && (
+      <div className="text-[10px] text-teal-700 dark:text-teal-300 mt-1 truncate">
+        item: {data.item_variable}
+      </div>
+    )}
+    {/* Loop body handle - bottom left */}
+    <Handle
+      type="source"
+      position={Position.Bottom}
+      id="loop"
+      style={{ left: '25%' }}
+      className="w-3 h-3 !bg-teal-500 dark:!bg-teal-400 border-2 border-white dark:border-slate-800"
+    />
+    {/* Exit handle - bottom right */}
+    <Handle
+      type="source"
+      position={Position.Bottom}
+      id="exit"
+      style={{ left: '75%' }}
+      className="w-3 h-3 !bg-slate-500 dark:!bg-slate-400 border-2 border-white dark:border-slate-800"
+    />
+    {/* Handle labels */}
+    <div className="flex justify-between mt-2 px-4 text-[10px] font-medium">
+      <span className="text-teal-600 dark:text-teal-400">loop</span>
+      <span className="text-slate-500 dark:text-slate-400">exit</span>
+    </div>
+  </div>
+);
+
+export const WhileLoopNode = ({ data }) => (
+  <div className="px-4 py-3 border-2 border-violet-200 dark:border-violet-700 rounded-xl bg-gradient-to-br from-violet-50 to-purple-50 dark:from-violet-950/50 dark:to-purple-950/50 shadow-lg hover:shadow-xl transition-shadow backdrop-blur-sm min-w-[160px]">
+    <Handle type="target" position={Position.Top} className="w-3 h-3 !bg-violet-500 dark:!bg-violet-400 border-2 border-white dark:border-slate-800" />
+    <div className="flex items-center gap-2 mb-2">
+      <div className="p-1.5 rounded-lg bg-violet-500 dark:bg-violet-600">
+        <RefreshCw size={16} className="text-white" />
+      </div>
+      <strong className="text-sm font-semibold text-slate-900 dark:text-white">{data.label || 'While Loop'}</strong>
+    </div>
+    <div className="text-xs text-slate-600 dark:text-slate-400 font-medium">Repeat while true</div>
+    {data.conditions && data.conditions.length > 0 && (
+      <div className="text-[10px] text-violet-700 dark:text-violet-300 mt-1">
+        {data.conditions.length} condition{data.conditions.length > 1 ? 's' : ''}
+      </div>
+    )}
+    {/* Loop body handle - bottom left */}
+    <Handle
+      type="source"
+      position={Position.Bottom}
+      id="loop"
+      style={{ left: '25%' }}
+      className="w-3 h-3 !bg-violet-500 dark:!bg-violet-400 border-2 border-white dark:border-slate-800"
+    />
+    {/* Exit handle - bottom right */}
+    <Handle
+      type="source"
+      position={Position.Bottom}
+      id="exit"
+      style={{ left: '75%' }}
+      className="w-3 h-3 !bg-slate-500 dark:!bg-slate-400 border-2 border-white dark:border-slate-800"
+    />
+    {/* Handle labels */}
+    <div className="flex justify-between mt-2 px-4 text-[10px] font-medium">
+      <span className="text-violet-600 dark:text-violet-400">loop</span>
+      <span className="text-slate-500 dark:text-slate-400">exit</span>
+    </div>
   </div>
 );
