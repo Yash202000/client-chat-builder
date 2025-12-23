@@ -46,7 +46,8 @@
     "language": "اللغة",
     "start_over": "البدء من جديد",
     "close_widget": "إغلاق النافذة",
-    "conversation_reset": "تم إعادة تعيين المحادثة. كيف يمكنني مساعدتك؟"
+    "conversation_reset": "تم إعادة تعيين المحادثة. كيف يمكنني مساعدتك؟",
+    "select_option_placeholder": "يرجى اختيار أحد الخيارات أعلاه"
   },
   "navigation": {
     "dashboard": "لوحة التحكم",
@@ -1641,6 +1642,8 @@
         "optionsVariable": "متغير الخيارات",
         "optionsVariablePlaceholder": "مثال: {{context.dynamic_options}}",
         "optionsVariableHelp": "أشر إلى متغير يحتوي على بيانات الخيارات.",
+        "allowTextInput": "السماح بإدخال نص حر",
+        "allowTextInputHelp": "إذا لم يتم تحديده، يجب على المستخدم الاختيار من الخيارات أعلاه. سيتم تعطيل إدخال النص.",
         "acceptedFormatsTitle": "الصيغ المقبولة:",
         "formatDict": "قاموس (المفتاح ← النص المعروض):",
         "formatList": "قائمة كائنات مفتاح-قيمة:",

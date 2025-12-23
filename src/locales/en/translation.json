@@ -46,7 +46,8 @@
     "language": "Language",
     "start_over": "Start Over",
     "close_widget": "Close Widget",
-    "conversation_reset": "Conversation reset. How can I help you?"
+    "conversation_reset": "Conversation reset. How can I help you?",
+    "select_option_placeholder": "Please select an option above"
   },
   "navigation": {
     "dashboard": "Dashboard",
@@ -1666,6 +1667,8 @@
         "optionsVariable": "Options Variable",
         "optionsVariablePlaceholder": "e.g., {{context.dynamic_options}}",
         "optionsVariableHelp": "Reference a variable containing options data.",
+        "allowTextInput": "Allow free text input",
+        "allowTextInputHelp": "If unchecked, user must select from the options above. Text input will be disabled.",
         "acceptedFormatsTitle": "Accepted Formats:",
         "formatDict": "Dictionary (key → display text):",
         "formatList": "List of key-value objects:",

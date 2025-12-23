@@ -1057,6 +1057,25 @@ const PropertiesPanel = ({ selectedNode, nodes, setNodes, deleteNode, workflowId
                 </div>
               </div>
             )}
+
+            {/* Allow Free Text Input Option */}
+            <div className="mt-4 pt-4 border-t border-slate-200 dark:border-slate-700">
+              <div className="flex items-center gap-3">
+                <input
+                  type="checkbox"
+                  id="allow_text_input"
+                  checked={currentNode.data.params?.allow_text_input || false}
+                  onChange={(e) => handleParamsChange('allow_text_input', e.target.checked)}
+                  className="w-4 h-4 rounded border-slate-300 dark:border-slate-600 text-blue-600 focus:ring-blue-500 dark:focus:ring-blue-400"
+                />
+                <label htmlFor="allow_text_input" className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                  {t("workflows.editor.properties.allowTextInput")}
+                </label>
+              </div>
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-2 ml-7">
+                {t("workflows.editor.properties.allowTextInputHelp")}
+              </p>
+            </div>
           </div>
         )}
 

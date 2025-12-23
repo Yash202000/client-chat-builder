@@ -221,6 +221,9 @@ const Widget = ({ agentId, companyId, backendUrl, rtlOverride, languageOverride,
   // Expected input type constraint from workflow Listen node
   const [expectedInputType, setExpectedInputType] = useState<'any' | 'text' | 'attachment' | 'location'>('any');
 
+  // Disable text input when prompt requires option selection (allow_text_input = false)
+  const [isTextInputDisabled, setIsTextInputDisabled] = useState(false);
+
   const audioPlaybackTimer = useRef<NodeJS.Timeout | null>(null);
   const incomingAudioChunks = useRef<Blob[]>([]);
   const audioQueue = useRef<Blob[]>([]); // Queue of complete audio blobs to play
@@ -375,6 +378,10 @@ const Widget = ({ agentId, companyId, backendUrl, rtlOverride, languageOverride,
           if (lastMsg?.message_type === 'prompt' || lastMsg?.message_type === 'form') {
             setShowStartOver(true);
             setIsWorkflowPaused(true);
+            // Default to disabled text input for resumed prompts (allow_text_input defaults to false)
+            if (lastMsg?.message_type === 'prompt') {
+              setIsTextInputDisabled(true);
+            }
             console.log('[Widget] Resumed with paused workflow - showing Start Over option');
           }
         }
@@ -554,6 +561,14 @@ const Widget = ({ agentId, companyId, backendUrl, rtlOverride, languageOverride,
 
       if (data.message_type === 'form') {
         setActiveForm(data.fields);
+      }
+
+      // Handle prompt with allow_text_input - disable text input if not allowed
+      if (data.message_type === 'prompt' && data.options && data.options.length > 0) {
+        const allowTextInput = data.allow_text_input === true;  // Default to false
+        setIsTextInputDisabled(!allowTextInput);
+        setIsWorkflowPaused(true);
+        console.log('[Widget] Prompt received, allow_text_input:', allowTextInput, 'disabling input:', !allowTextInput);
       }
     };
 
@@ -1068,6 +1083,7 @@ const Widget = ({ agentId, companyId, backendUrl, rtlOverride, languageOverride,
         setShowResetMenu(false);
         setActiveForm(null);  // Clear any active form
         setExpectedInputType('any');  // Reset input constraint
+        setIsTextInputDisabled(false);  // Re-enable text input
 
         // Add system message to inform user
         setMessages(prev => [...prev, {
@@ -1092,6 +1108,7 @@ const Widget = ({ agentId, companyId, backendUrl, rtlOverride, languageOverride,
     if (isWorkflowPaused) {
       setShowResetMenu(prev => !prev);
     } else {
+      setIsTextInputDisabled(false);  // Reset input state on close
       setIsOpen(false);
     }
   };
@@ -1120,6 +1137,7 @@ const Widget = ({ agentId, companyId, backendUrl, rtlOverride, languageOverride,
     setShowStartOver(false);
     setIsWorkflowPaused(false);
     setShowResetMenu(false);
+    setIsTextInputDisabled(false);  // Re-enable text input after selection
 
     // Build attachments array
     let attachments: Attachment[] = [];
@@ -1651,7 +1669,7 @@ const Widget = ({ agentId, companyId, backendUrl, rtlOverride, languageOverride,
                     style={{ borderRadius: `${border_radius}px` }}
                   >
                     <button
-                      onClick={() => { setShowResetMenu(false); setIsOpen(false); }}
+                      onClick={() => { setShowResetMenu(false); setIsTextInputDisabled(false); setIsOpen(false); }}
                       className="w-full px-4 py-2 text-left text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2"
                     >
                       <X className="h-4 w-4" />
@@ -1717,13 +1735,22 @@ const Widget = ({ agentId, companyId, backendUrl, rtlOverride, languageOverride,
                           keyValue = String(option || '');
                         }
 
+                        // Only the last message's options should be clickable
+                        const isLastMessage = msg.id === messages[messages.length - 1]?.id;
+
                         return (
                           <Button
                             key={index}
-                            onClick={() => handleSendMessage(displayText, keyValue)}
+                            onClick={() => isLastMessage && handleSendMessage(displayText, keyValue)}
+                            disabled={!isLastMessage}
                             variant="outline"
                             size="sm"
-                            className={cn('rounded-full', dark_mode ? 'bg-gray-700 hover:bg-gray-600 border-gray-600' : 'bg-gray-100 hover:bg-gray-200 border-gray-300')}
+                            className={cn(
+                              'rounded-full',
+                              !isLastMessage
+                                ? 'opacity-50 cursor-not-allowed bg-gray-200 dark:bg-gray-800 border-gray-300 dark:border-gray-700'
+                                : dark_mode ? 'bg-gray-700 hover:bg-gray-600 border-gray-600' : 'bg-gray-100 hover:bg-gray-200 border-gray-300'
+                            )}
                           >
                             {displayText}
                           </Button>
@@ -1880,16 +1907,17 @@ const Widget = ({ agentId, companyId, backendUrl, rtlOverride, languageOverride,
                     type="text"
                     value={inputValue}
                     onChange={e => setInputValue(e.target.value)}
-                    onKeyPress={e => e.key === 'Enter' && handleSendMessage(inputValue)}
-                    disabled={expectedInputType === 'attachment' || expectedInputType === 'location'}
+                    onKeyPress={e => e.key === 'Enter' && !isTextInputDisabled && handleSendMessage(inputValue)}
+                    disabled={isTextInputDisabled || expectedInputType === 'attachment' || expectedInputType === 'location'}
                     placeholder={
+                      isTextInputDisabled ? (localizedTexts?.select_option_placeholder || 'Please select an option above') :
                       expectedInputType === 'attachment' ? 'Please attach an image' :
                       expectedInputType === 'location' ? 'Please share your location' :
                       input_placeholder
                     }
                     className={cn(
                       'flex-grow bg-transparent outline-none text-sm min-w-0',
-                      (expectedInputType === 'attachment' || expectedInputType === 'location')
+                      (isTextInputDisabled || expectedInputType === 'attachment' || expectedInputType === 'location')
                         ? 'opacity-50 cursor-not-allowed'
                         : '',
                       dark_mode ? 'text-white placeholder-gray-500' : 'text-gray-900 placeholder-gray-400'
@@ -1908,28 +1936,30 @@ const Widget = ({ agentId, companyId, backendUrl, rtlOverride, languageOverride,
                     <>
                       <button
                         onClick={() => fileInputRef.current?.click()}
-                        disabled={expectedInputType !== 'any' && expectedInputType !== 'attachment'}
+                        disabled={isTextInputDisabled || (expectedInputType !== 'any' && expectedInputType !== 'attachment')}
                         className={cn(
                           'p-1.5 rounded-full transition-colors',
-                          (expectedInputType !== 'any' && expectedInputType !== 'attachment')
+                          (isTextInputDisabled || (expectedInputType !== 'any' && expectedInputType !== 'attachment'))
                             ? 'opacity-40 cursor-not-allowed text-gray-400'
                             : (dark_mode ? 'hover:bg-gray-700 text-gray-400' : 'hover:bg-gray-200 text-gray-500')
                         )}
-                        title={expectedInputType === 'text' ? 'Text input expected' :
+                        title={isTextInputDisabled ? 'Please select an option' :
+                               expectedInputType === 'text' ? 'Text input expected' :
                                expectedInputType === 'location' ? 'Location input expected' : 'Attach image'}
                       >
                         <ImagePlus size={20} />
                       </button>
                       <button
                         onClick={handleLocationClick}
-                        disabled={isGettingLocation || (expectedInputType !== 'any' && expectedInputType !== 'location')}
+                        disabled={isTextInputDisabled || isGettingLocation || (expectedInputType !== 'any' && expectedInputType !== 'location')}
                         className={cn(
                           'p-1.5 rounded-full transition-colors',
-                          (expectedInputType !== 'any' && expectedInputType !== 'location')
+                          (isTextInputDisabled || (expectedInputType !== 'any' && expectedInputType !== 'location'))
                             ? 'opacity-40 cursor-not-allowed text-gray-400'
                             : (dark_mode ? 'hover:bg-gray-700 text-gray-400' : 'hover:bg-gray-200 text-gray-500')
                         )}
-                        title={expectedInputType === 'text' ? 'Text input expected' :
+                        title={isTextInputDisabled ? 'Please select an option' :
+                               expectedInputType === 'text' ? 'Text input expected' :
                                expectedInputType === 'attachment' ? 'Image input expected' : 'Share location'}
                       >
                         {isGettingLocation ? <Loader2 className="animate-spin" size={20} /> : <MapPin size={20} />}
@@ -1940,10 +1970,14 @@ const Widget = ({ agentId, companyId, backendUrl, rtlOverride, languageOverride,
                 {/* Mic button - always outside */}
                 <button
                   onClick={handleToggleRecording}
+                  disabled={isTextInputDisabled}
                   className={cn(
                     'p-2 rounded-full transition-colors flex-shrink-0',
-                    isRecording ? 'bg-red-500 text-white' : (dark_mode ? 'bg-gray-800 text-gray-400 hover:bg-gray-700' : 'bg-gray-100 text-gray-500 hover:bg-gray-200')
+                    isTextInputDisabled
+                      ? 'opacity-40 cursor-not-allowed bg-gray-100 text-gray-400'
+                      : isRecording ? 'bg-red-500 text-white' : (dark_mode ? 'bg-gray-800 text-gray-400 hover:bg-gray-700' : 'bg-gray-100 text-gray-500 hover:bg-gray-200')
                   )}
+                  title={isTextInputDisabled ? 'Please select an option' : 'Voice input'}
                 >
                   {isRecording ? <Loader2 className="animate-spin" size={20} /> : <Mic size={20} />}
                 </button>
