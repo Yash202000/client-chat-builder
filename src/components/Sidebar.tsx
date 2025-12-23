@@ -3,7 +3,8 @@ import {
   Bot, Cog, GitBranch, MessageSquare, Ear, HelpCircle, BookOpen, Code,
   SquareStack, Globe, ClipboardList, Wrench, ChevronDown, ChevronRight,
   Target, Notebook, CheckCircle, Database, Tag, UserPlus, Activity,
-  Zap, Wifi, Phone, Send, Instagram, PanelLeftClose, PanelLeft, Layers
+  Zap, Wifi, Phone, Send, Instagram, PanelLeftClose, PanelLeft, Layers,
+  Repeat, RefreshCw
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
@@ -128,6 +129,9 @@ const Sidebar = () => {
         <DraggableNode type="http_request" label={t("workflows.editor.sidebar.nodes.httpRequest")} icon={<Globe size={20} />} nodeData={{}} isRTL={isRTL} isCollapsed={isCollapsed} />
         <DraggableNode type="extract_entities" label="Extract Entities" icon={<Target size={20} />} nodeData={{}} isRTL={isRTL} isCollapsed={isCollapsed} />
         <DraggableNode type="subworkflow" label={t("workflows.editor.sidebar.nodes.subworkflow") || "Subworkflow"} icon={<Layers size={20} />} nodeData={{}} isRTL={isRTL} isCollapsed={isCollapsed} />
+        <DraggableNode type="foreach_loop" label={t("workflows.editor.sidebar.nodes.forEachLoop") || "For Each Loop"} icon={<Repeat size={20} />} nodeData={{}} isRTL={isRTL} isCollapsed={isCollapsed} />
+        <DraggableNode type="while_loop" label={t("workflows.editor.sidebar.nodes.whileLoop") || "While Loop"} icon={<RefreshCw size={20} />} nodeData={{}} isRTL={isRTL} isCollapsed={isCollapsed} />
+        <DraggableNode type="update_context" label={t("workflows.editor.sidebar.nodes.updateContext")} icon={<Database size={20} />} nodeData={{}} isRTL={isRTL} isCollapsed={isCollapsed} />
         <DraggableNode type="response" label={t("workflows.editor.sidebar.nodes.output")} icon={<MessageSquare size={20} />} nodeData={{}} isRTL={isRTL} isCollapsed={isCollapsed} />
       </AccordionSection>
 
@@ -136,7 +140,6 @@ const Sidebar = () => {
         <DraggableNode type="question_classifier" label={t("workflows.editor.sidebar.nodes.questionClassifier")} icon={<HelpCircle size={20} />} nodeData={{}} isRTL={isRTL} isCollapsed={isCollapsed} />
         <DraggableNode type="entity_collector" label={t("workflows.editor.sidebar.nodes.collectEntities")} icon={<Notebook size={20} />} nodeData={{}} isRTL={isRTL} isCollapsed={isCollapsed} />
         <DraggableNode type="check_entity" label={t("workflows.editor.sidebar.nodes.checkEntity")} icon={<CheckCircle size={20} />} nodeData={{}} isRTL={isRTL} isCollapsed={isCollapsed} />
-        <DraggableNode type="update_context" label={t("workflows.editor.sidebar.nodes.updateContext")} icon={<Database size={20} />} nodeData={{}} isRTL={isRTL} isCollapsed={isCollapsed} />
         <DraggableNode type="tag_conversation" label={t("workflows.editor.sidebar.nodes.tagConversation")} icon={<Tag size={20} />} nodeData={{}} isRTL={isRTL} isCollapsed={isCollapsed} />
         <DraggableNode type="assign_to_agent" label={t("workflows.editor.sidebar.nodes.assignToAgent")} icon={<UserPlus size={20} />} nodeData={{}} isRTL={isRTL} isCollapsed={isCollapsed} />
         <DraggableNode type="set_status" label={t("workflows.editor.sidebar.nodes.setStatus")} icon={<Activity size={20} />} nodeData={{}} isRTL={isRTL} isCollapsed={isCollapsed} />
