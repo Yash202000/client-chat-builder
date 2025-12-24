@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { MessageSquare, X, Mic, Send, Loader2, Bot, User, Minus, MicOff, FileText, Image as ImageIcon, File, Download, ImagePlus, MapPin } from 'lucide-react';
+import { MessageSquare, X, Mic, Send, Loader2, Bot, User, Minus, MicOff, FileText, Image as ImageIcon, File, Download, ImagePlus, MapPin, RotateCcw } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { WidgetForm } from '@/components/WidgetForm';
 import ReactMarkdown from 'react-markdown';
@@ -221,6 +221,9 @@ const Widget = ({ agentId, companyId, backendUrl, rtlOverride, languageOverride,
   // Expected input type constraint from workflow Listen node
   const [expectedInputType, setExpectedInputType] = useState<'any' | 'text' | 'attachment' | 'location'>('any');
 
+  // Disable text input when prompt requires option selection (allow_text_input = false)
+  const [isTextInputDisabled, setIsTextInputDisabled] = useState(false);
+
   const audioPlaybackTimer = useRef<NodeJS.Timeout | null>(null);
   const incomingAudioChunks = useRef<Blob[]>([]);
   const audioQueue = useRef<Blob[]>([]); // Queue of complete audio blobs to play
@@ -241,7 +244,13 @@ const Widget = ({ agentId, companyId, backendUrl, rtlOverride, languageOverride,
   const heartbeatTimer = useRef<NodeJS.Timeout | null>(null);
   const shouldReconnect = useRef(true);
   const currentSessionId = useRef<string | null>(null);
+  const isResumingSession = useRef(false);  // Track if resuming existing session (for skipping welcome message)
   const [isConnected, setIsConnected] = useState(false);
+
+  // Workflow reset state
+  const [showStartOver, setShowStartOver] = useState(false);  // Show "Start Over" button for resumed prompts
+  const [isWorkflowPaused, setIsWorkflowPaused] = useState(false);  // Workflow is waiting for user input
+  const [showResetMenu, setShowResetMenu] = useState(false);  // Show dropdown on X button click
 
   // Calculate localized texts based on current language
   const currentLanguage = languageOverride || detectBrowserLanguage() || settings?.meta?.default_language || 'en';
@@ -320,8 +329,9 @@ const Widget = ({ agentId, companyId, backendUrl, rtlOverride, languageOverride,
       reconnectAttempts.current = 0;
       startHeartbeat();
 
-      // Show welcome message only on first connection (not reconnection)
-      if (messages.length === 0) {
+      // Show welcome message only on first connection (not reconnection or session resumption)
+      // For resumed sessions, history will arrive via WebSocket message
+      if (messages.length === 0 && !isResumingSession.current) {
         const initialMessageText = isProactiveSession.current
           ? (localizedTexts?.proactive_message || settings?.proactive_message)
           : (localizedTexts?.welcome_message || settings?.welcome_message);
@@ -342,6 +352,38 @@ const Widget = ({ agentId, companyId, backendUrl, rtlOverride, languageOverride,
       if (data.type === 'ping') {
         if (ws.current?.readyState === WebSocket.OPEN) {
           ws.current.send(JSON.stringify({ type: 'pong' }));
+        }
+        return;
+      }
+
+      // Handle message history on reconnection
+      if (data.type === 'history') {
+        console.log('[Widget] Received message history:', data.messages?.length, 'messages');
+        if (data.messages && data.messages.length > 0) {
+          const historyMessages: Message[] = data.messages.map((msg: any) => ({
+            id: msg.id,
+            sender: msg.sender,
+            text: msg.message,
+            type: msg.message_type || 'message',
+            timestamp: msg.timestamp,
+            attachments: msg.attachments || [],
+            assignee_name: msg.assignee_name,
+            options: msg.options,
+          }));
+          setMessages(historyMessages);
+          isResumingSession.current = true;  // Skip welcome message since we have history
+
+          // Check if last message is a prompt (workflow paused) - show "Start Over" option
+          const lastMsg = data.messages[data.messages.length - 1];
+          if (lastMsg?.message_type === 'prompt' || lastMsg?.message_type === 'form') {
+            setShowStartOver(true);
+            setIsWorkflowPaused(true);
+            // Default to disabled text input for resumed prompts (allow_text_input defaults to false)
+            if (lastMsg?.message_type === 'prompt') {
+              setIsTextInputDisabled(true);
+            }
+            console.log('[Widget] Resumed with paused workflow - showing Start Over option');
+          }
         }
         return;
       }
@@ -519,6 +561,14 @@ const Widget = ({ agentId, companyId, backendUrl, rtlOverride, languageOverride,
 
       if (data.message_type === 'form') {
         setActiveForm(data.fields);
+      }
+
+      // Handle prompt with allow_text_input - disable text input if not allowed
+      if (data.message_type === 'prompt' && data.options && data.options.length > 0) {
+        const allowTextInput = data.allow_text_input === true;  // Default to false
+        setIsTextInputDisabled(!allowTextInput);
+        setIsWorkflowPaused(true);
+        console.log('[Widget] Prompt received, allow_text_input:', allowTextInput, 'disabling input:', !allowTextInput);
       }
     };
 
@@ -891,10 +941,12 @@ const Widget = ({ agentId, companyId, backendUrl, rtlOverride, languageOverride,
       if (storedSession && !isSessionExpired(storedSession.timestamp)) {
         // Reuse existing session if not expired
         newSessionId = storedSession.sessionId;
+        isResumingSession.current = true;  // History will be sent via WebSocket
         console.log('Resuming existing session:', newSessionId);
       } else {
         // Generate new session and store it
         newSessionId = generateSessionId();
+        isResumingSession.current = false;  // New session, show welcome message
         storeSession(agentId, companyId, newSessionId);
         console.log('Created new session:', newSessionId);
       }
@@ -1016,6 +1068,51 @@ const Widget = ({ agentId, companyId, backendUrl, rtlOverride, languageOverride,
     );
   };
 
+  // Reset workflow state and allow user to start fresh
+  const handleResetWorkflow = async () => {
+    if (!currentSessionId.current) return;
+
+    try {
+      const response = await fetch(`${backendUrl}/api/v1/conversations/widget/${currentSessionId.current}/reset-workflow`, {
+        method: 'POST'
+      });
+
+      if (response.ok) {
+        setShowStartOver(false);
+        setIsWorkflowPaused(false);
+        setShowResetMenu(false);
+        setActiveForm(null);  // Clear any active form
+        setExpectedInputType('any');  // Reset input constraint
+        setIsTextInputDisabled(false);  // Re-enable text input
+
+        // Add system message to inform user
+        setMessages(prev => [...prev, {
+          id: `reset-${Date.now()}`,
+          sender: 'agent',
+          text: localizedTexts?.conversation_reset || 'Conversation reset. How can I help you?',
+          type: 'message',
+          timestamp: new Date().toISOString()
+        }]);
+
+        console.log('[Widget] Workflow reset successfully');
+      } else {
+        console.error('[Widget] Failed to reset workflow:', response.statusText);
+      }
+    } catch (error) {
+      console.error('[Widget] Error resetting workflow:', error);
+    }
+  };
+
+  // Handle X button click - show menu if workflow is paused, otherwise close directly
+  const handleCloseClick = () => {
+    if (isWorkflowPaused) {
+      setShowResetMenu(prev => !prev);
+    } else {
+      setIsTextInputDisabled(false);  // Reset input state on close
+      setIsOpen(false);
+    }
+  };
+
   const handleSendMessage = async (text: string, payload?: any) => {
     const messageText = text.trim();
     if (!messageText && !payload && !selectedFile && !selectedLocation) return;
@@ -1035,6 +1132,12 @@ const Widget = ({ agentId, companyId, backendUrl, rtlOverride, languageOverride,
         return;
       }
     }
+
+    // Clear workflow reset states when user sends a message
+    setShowStartOver(false);
+    setIsWorkflowPaused(false);
+    setShowResetMenu(false);
+    setIsTextInputDisabled(false);  // Re-enable text input after selection
 
     // Build attachments array
     let attachments: Attachment[] = [];
@@ -1549,15 +1652,39 @@ const Widget = ({ agentId, companyId, backendUrl, rtlOverride, languageOverride,
               >
                 <Minus className="h-5 w-5" />
               </Button>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => setIsOpen(false)}
-                className="text-white hover:bg-white/20"
-                title="Close"
-              >
-                <X className="h-6 w-6" />
-              </Button>
+              <div className="relative">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={handleCloseClick}
+                  className="text-white hover:bg-white/20"
+                  title={isWorkflowPaused ? "Options" : "Close"}
+                >
+                  <X className="h-6 w-6" />
+                </Button>
+                {/* Dropdown menu for workflow reset */}
+                {showResetMenu && (
+                  <div
+                    className="absolute right-0 top-full mt-1 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 overflow-hidden z-50 min-w-[140px]"
+                    style={{ borderRadius: `${border_radius}px` }}
+                  >
+                    <button
+                      onClick={() => { setShowResetMenu(false); setIsTextInputDisabled(false); setIsOpen(false); }}
+                      className="w-full px-4 py-2 text-left text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2"
+                    >
+                      <X className="h-4 w-4" />
+                      {localizedTexts?.close_widget || 'Close Widget'}
+                    </button>
+                    <button
+                      onClick={handleResetWorkflow}
+                      className="w-full px-4 py-2 text-left text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2"
+                    >
+                      <RotateCcw className="h-4 w-4" />
+                      {localizedTexts?.start_over || 'Start Over'}
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         )}
@@ -1591,34 +1718,56 @@ const Widget = ({ agentId, companyId, backendUrl, rtlOverride, languageOverride,
                   </ReactMarkdown>
                 </div>
                 {msg.options && msg.options.length > 0 && (
-                  <div className="mt-2 flex flex-wrap gap-2">
-                    {msg.options.map((option, index) => {
-                      // Safely extract display text and key - always ensure string output
-                      let displayText: string;
-                      let keyValue: string;
+                  <div className="mt-2">
+                    <div className="flex flex-wrap gap-2">
+                      {msg.options.map((option, index) => {
+                        // Safely extract display text and key - always ensure string output
+                        let displayText: string;
+                        let keyValue: string;
 
-                      if (option && typeof option === 'object' && 'key' in option && 'value' in option) {
-                        // New key-value format
-                        displayText = String((option as {key: string; value: string}).value || (option as {key: string; value: string}).key || '');
-                        keyValue = String((option as {key: string; value: string}).key || '');
-                      } else {
-                        // Legacy string format
-                        displayText = String(option || '');
-                        keyValue = String(option || '');
-                      }
+                        if (option && typeof option === 'object' && 'key' in option && 'value' in option) {
+                          // New key-value format
+                          displayText = String((option as {key: string; value: string}).value || (option as {key: string; value: string}).key || '');
+                          keyValue = String((option as {key: string; value: string}).key || '');
+                        } else {
+                          // Legacy string format
+                          displayText = String(option || '');
+                          keyValue = String(option || '');
+                        }
 
-                      return (
-                        <Button
-                          key={index}
-                          onClick={() => handleSendMessage(displayText, keyValue)}
-                          variant="outline"
-                          size="sm"
-                          className={cn('rounded-full', dark_mode ? 'bg-gray-700 hover:bg-gray-600 border-gray-600' : 'bg-gray-100 hover:bg-gray-200 border-gray-300')}
-                        >
-                          {displayText}
-                        </Button>
-                      );
-                    })}
+                        // Only the last message's options should be clickable
+                        const isLastMessage = msg.id === messages[messages.length - 1]?.id;
+
+                        return (
+                          <Button
+                            key={index}
+                            onClick={() => isLastMessage && handleSendMessage(displayText, keyValue)}
+                            disabled={!isLastMessage}
+                            variant="outline"
+                            size="sm"
+                            className={cn(
+                              'rounded-full',
+                              !isLastMessage
+                                ? 'opacity-50 cursor-not-allowed bg-gray-200 dark:bg-gray-800 border-gray-300 dark:border-gray-700'
+                                : dark_mode ? 'bg-gray-700 hover:bg-gray-600 border-gray-600' : 'bg-gray-100 hover:bg-gray-200 border-gray-300'
+                            )}
+                          >
+                            {displayText}
+                          </Button>
+                        );
+                      })}
+                    </div>
+                    {/* Show "Start Over" only for resumed prompts (last message) */}
+                    {showStartOver && msg.id === messages[messages.length - 1]?.id && (
+                      <button
+                        onClick={handleResetWorkflow}
+                        className="mt-2 text-xs opacity-60 hover:opacity-100 underline flex items-center gap-1"
+                        style={{ color: dark_mode ? '#9CA3AF' : '#6B7280' }}
+                      >
+                        <RotateCcw className="h-3 w-3" />
+                        {localizedTexts?.start_over || 'Start Over'}
+                      </button>
+                    )}
                   </div>
                 )}
                 {msg.type === 'video_call_invitation' && (<Button onClick={() => window.open(msg.videoCallUrl, '_blank', 'width=800,height=600')} className="mt-2 w-full" style={{background: primary_color, color: 'white'}}>Join Video Call</Button>)}
@@ -1758,16 +1907,17 @@ const Widget = ({ agentId, companyId, backendUrl, rtlOverride, languageOverride,
                     type="text"
                     value={inputValue}
                     onChange={e => setInputValue(e.target.value)}
-                    onKeyPress={e => e.key === 'Enter' && handleSendMessage(inputValue)}
-                    disabled={expectedInputType === 'attachment' || expectedInputType === 'location'}
+                    onKeyPress={e => e.key === 'Enter' && !isTextInputDisabled && handleSendMessage(inputValue)}
+                    disabled={isTextInputDisabled || expectedInputType === 'attachment' || expectedInputType === 'location'}
                     placeholder={
+                      isTextInputDisabled ? (localizedTexts?.select_option_placeholder || 'Please select an option above') :
                       expectedInputType === 'attachment' ? 'Please attach an image' :
                       expectedInputType === 'location' ? 'Please share your location' :
                       input_placeholder
                     }
                     className={cn(
                       'flex-grow bg-transparent outline-none text-sm min-w-0',
-                      (expectedInputType === 'attachment' || expectedInputType === 'location')
+                      (isTextInputDisabled || expectedInputType === 'attachment' || expectedInputType === 'location')
                         ? 'opacity-50 cursor-not-allowed'
                         : '',
                       dark_mode ? 'text-white placeholder-gray-500' : 'text-gray-900 placeholder-gray-400'
@@ -1786,28 +1936,30 @@ const Widget = ({ agentId, companyId, backendUrl, rtlOverride, languageOverride,
                     <>
                       <button
                         onClick={() => fileInputRef.current?.click()}
-                        disabled={expectedInputType !== 'any' && expectedInputType !== 'attachment'}
+                        disabled={isTextInputDisabled || (expectedInputType !== 'any' && expectedInputType !== 'attachment')}
                         className={cn(
                           'p-1.5 rounded-full transition-colors',
-                          (expectedInputType !== 'any' && expectedInputType !== 'attachment')
+                          (isTextInputDisabled || (expectedInputType !== 'any' && expectedInputType !== 'attachment'))
                             ? 'opacity-40 cursor-not-allowed text-gray-400'
                             : (dark_mode ? 'hover:bg-gray-700 text-gray-400' : 'hover:bg-gray-200 text-gray-500')
                         )}
-                        title={expectedInputType === 'text' ? 'Text input expected' :
+                        title={isTextInputDisabled ? 'Please select an option' :
+                               expectedInputType === 'text' ? 'Text input expected' :
                                expectedInputType === 'location' ? 'Location input expected' : 'Attach image'}
                       >
                         <ImagePlus size={20} />
                       </button>
                       <button
                         onClick={handleLocationClick}
-                        disabled={isGettingLocation || (expectedInputType !== 'any' && expectedInputType !== 'location')}
+                        disabled={isTextInputDisabled || isGettingLocation || (expectedInputType !== 'any' && expectedInputType !== 'location')}
                         className={cn(
                           'p-1.5 rounded-full transition-colors',
-                          (expectedInputType !== 'any' && expectedInputType !== 'location')
+                          (isTextInputDisabled || (expectedInputType !== 'any' && expectedInputType !== 'location'))
                             ? 'opacity-40 cursor-not-allowed text-gray-400'
                             : (dark_mode ? 'hover:bg-gray-700 text-gray-400' : 'hover:bg-gray-200 text-gray-500')
                         )}
-                        title={expectedInputType === 'text' ? 'Text input expected' :
+                        title={isTextInputDisabled ? 'Please select an option' :
+                               expectedInputType === 'text' ? 'Text input expected' :
                                expectedInputType === 'attachment' ? 'Image input expected' : 'Share location'}
                       >
                         {isGettingLocation ? <Loader2 className="animate-spin" size={20} /> : <MapPin size={20} />}
@@ -1818,10 +1970,14 @@ const Widget = ({ agentId, companyId, backendUrl, rtlOverride, languageOverride,
                 {/* Mic button - always outside */}
                 <button
                   onClick={handleToggleRecording}
+                  disabled={isTextInputDisabled}
                   className={cn(
                     'p-2 rounded-full transition-colors flex-shrink-0',
-                    isRecording ? 'bg-red-500 text-white' : (dark_mode ? 'bg-gray-800 text-gray-400 hover:bg-gray-700' : 'bg-gray-100 text-gray-500 hover:bg-gray-200')
+                    isTextInputDisabled
+                      ? 'opacity-40 cursor-not-allowed bg-gray-100 text-gray-400'
+                      : isRecording ? 'bg-red-500 text-white' : (dark_mode ? 'bg-gray-800 text-gray-400 hover:bg-gray-700' : 'bg-gray-100 text-gray-500 hover:bg-gray-200')
                   )}
+                  title={isTextInputDisabled ? 'Please select an option' : 'Voice input'}
                 >
                   {isRecording ? <Loader2 className="animate-spin" size={20} /> : <Mic size={20} />}
                 </button>
