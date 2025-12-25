@@ -101,7 +101,9 @@ const AppRoutes = () => {
       <Route path="/login" element={<LoginPage />} />
       <Route path="/signup" element={<SignupPage />} />
       <Route path="/accept-invite" element={<AcceptInvitationPage />} />
-      <Route path="/preview/:publishId" element={<PublishedPreviewPage />} />
+      <Route path="/preview/:publishId" element={<PublishedPreviewPage mode="widget" />} />
+      <Route path="/chat/:publishId" element={<PublishedPreviewPage mode="fullpage" />} />
+      <Route path="/embed/:publishId" element={<PublishedPreviewPage mode="iframe" />} />
       <Route path="/dashboard" element={<ProtectedRoute />}>
         <Route element={<AppLayout />}>
           <Route index element={<Navigate to="/dashboard/conversations" replace />} />

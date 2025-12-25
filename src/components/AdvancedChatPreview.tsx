@@ -111,6 +111,11 @@ export const AdvancedChatPreview = () => {
   const [shouldConnect, setShouldConnect] = useState(false);
   const [publishedUrl, setPublishedUrl] = useState<string | null>(null);
   const [isPublishDialogOpen, setIsPublishDialogOpen] = useState(false);
+  const [publishStatus, setPublishStatus] = useState<{
+    is_published: boolean;
+    publish_id: string | null;
+    is_active: boolean;
+  } | null>(null);
 
   useEffect(() => {
     if (previewType === 'voice' && selectedAgentId) {
@@ -389,6 +394,33 @@ export const AdvancedChatPreview = () => {
     fetchWidgetSettings();
   }, [selectedAgentId, user]);
 
+  // Fetch publish status when agent is selected
+  useEffect(() => {
+    if (!selectedAgentId) {
+      setPublishStatus(null);
+      return;
+    }
+
+    const fetchPublishStatus = async () => {
+      try {
+        const response = await authFetch(`/api/v1/agents/${selectedAgentId}/publish-status`);
+        if (response.ok) {
+          const data = await response.json();
+          setPublishStatus(data);
+          if (data.is_published && data.publish_id) {
+            setPublishedUrl(`${window.location.origin}/preview/${data.publish_id}`);
+          } else {
+            setPublishedUrl(null);
+          }
+        }
+      } catch (error) {
+        console.error("Failed to fetch publish status:", error);
+        setPublishStatus(null);
+      }
+    };
+    fetchPublishStatus();
+  }, [selectedAgentId]);
+
   const updateCustomization = (key: string, value: string | number | boolean) => {
     setCustomization(prev => ({ ...prev, [key]: value }));
   };
@@ -438,7 +470,16 @@ export const AdvancedChatPreview = () => {
       if (response.ok) {
         const data = await response.json();
         setPublishedUrl(`${window.location.origin}/preview/${data.publish_id}`);
+        setPublishStatus({
+          is_published: true,
+          publish_id: data.publish_id,
+          is_active: data.is_active
+        });
         setIsPublishDialogOpen(true);
+        toast({
+          title: data.is_new ? 'Published!' : 'Updated!',
+          description: data.is_new ? 'Widget published successfully.' : 'Widget settings updated.',
+        });
       } else {
         const errorData = await response.json();
         toast({
@@ -452,6 +493,36 @@ export const AdvancedChatPreview = () => {
       toast({
         title: t('designer.error'),
         description: t('designer.errorPublishing'),
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleUnpublish = async () => {
+    if (!selectedAgentId) return;
+    try {
+      const response = await authFetch(`/api/v1/agents/${selectedAgentId}/unpublish`, {
+        method: 'POST',
+      });
+      if (response.ok) {
+        setPublishStatus(prev => prev ? { ...prev, is_active: false } : null);
+        toast({
+          title: 'Unpublished',
+          description: 'Widget has been unpublished. Public links are now disabled.',
+        });
+      } else {
+        const errorData = await response.json();
+        toast({
+          title: t('designer.error'),
+          description: errorData.detail || 'Failed to unpublish',
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      console.error("Failed to unpublish:", error);
+      toast({
+        title: t('designer.error'),
+        description: 'Failed to unpublish widget',
         variant: "destructive",
       });
     }
@@ -523,6 +594,8 @@ export const AdvancedChatPreview = () => {
               updateCustomization={updateCustomization}
               handleSaveChanges={handleSaveChanges}
               handlePublish={handlePublish}
+              handleUnpublish={handleUnpublish}
+              publishStatus={publishStatus}
               generateEmbedCode={generateEmbedCode}
               toast={toast}
               selectedAgentId={selectedAgentId}
@@ -731,28 +804,85 @@ export const AdvancedChatPreview = () => {
         </div>
       </div>
       <Dialog open={isPublishDialogOpen} onOpenChange={setIsPublishDialogOpen}>
-        <DialogContent>
+        <DialogContent className="max-w-lg">
           <DialogHeader>
             <DialogTitle>{t('designer.publishedSuccess')}</DialogTitle>
             <DialogDescription>
               {t('designer.publishedDesc')}
             </DialogDescription>
           </DialogHeader>
-          <div className="mt-4">
-            <Input
-              readOnly
-              value={publishedUrl || ""}
-              className="w-full"
-            />
-            <Button
-              className="mt-2 w-full"
-              onClick={() => {
-                navigator.clipboard.writeText(publishedUrl || "");
-                toast({ title: t('designer.copiedClipboard') });
-              }}
-            >
-              {t('designer.copyUrl')}
-            </Button>
+          <div className="mt-4 space-y-4">
+            {/* Widget Preview URL */}
+            <div>
+              <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 block">
+                Widget Preview (Floating Chat)
+              </label>
+              <div className="flex gap-2">
+                <Input
+                  readOnly
+                  value={publishedUrl || ""}
+                  className="flex-1"
+                />
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    navigator.clipboard.writeText(publishedUrl || "");
+                    toast({ title: t('designer.copiedClipboard') });
+                  }}
+                >
+                  Copy
+                </Button>
+              </div>
+            </div>
+
+            {/* Fullpage Chat URL */}
+            <div>
+              <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 block">
+                Fullpage Chat (Standalone App)
+              </label>
+              <div className="flex gap-2">
+                <Input
+                  readOnly
+                  value={publishedUrl?.replace('/preview/', '/chat/') || ""}
+                  className="flex-1"
+                />
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    navigator.clipboard.writeText(publishedUrl?.replace('/preview/', '/chat/') || "");
+                    toast({ title: t('designer.copiedClipboard') });
+                  }}
+                >
+                  Copy
+                </Button>
+              </div>
+            </div>
+
+            {/* iFrame Embed Code */}
+            <div>
+              <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 block">
+                iFrame Embed Code
+              </label>
+              <div className="flex gap-2">
+                <Input
+                  readOnly
+                  value={`<iframe src="${publishedUrl?.replace('/preview/', '/embed/') || ""}" width="400" height="600" frameborder="0"></iframe>`}
+                  className="flex-1 text-xs"
+                />
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    navigator.clipboard.writeText(`<iframe src="${publishedUrl?.replace('/preview/', '/embed/') || ""}" width="400" height="600" frameborder="0"></iframe>`);
+                    toast({ title: t('designer.copiedClipboard') });
+                  }}
+                >
+                  Copy
+                </Button>
+              </div>
+            </div>
           </div>
         </DialogContent>
       </Dialog>

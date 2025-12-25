@@ -10,11 +10,19 @@ import { useTranslation } from 'react-i18next';
 import { useI18n } from '@/hooks/useI18n';
 import { LanguageManager } from './LanguageManager';
 
+interface PublishStatus {
+  is_published: boolean;
+  publish_id: string | null;
+  is_active: boolean;
+}
+
 interface WebChatCustomizerProps {
   customization: any;
   updateCustomization: (key: string, value: any) => void;
   handleSaveChanges: () => void;
   handlePublish: () => void;
+  handleUnpublish?: () => void;
+  publishStatus?: PublishStatus | null;
   generateEmbedCode: () => string;
   toast: any;
   selectedAgentId: number | null;
@@ -33,6 +41,8 @@ export const WebChatCustomizer: React.FC<WebChatCustomizerPropsExtended> = ({
   updateCustomization,
   handleSaveChanges,
   handlePublish,
+  handleUnpublish,
+  publishStatus,
   generateEmbedCode,
   toast,
   selectedAgentId,
@@ -93,15 +103,31 @@ export const WebChatCustomizer: React.FC<WebChatCustomizerPropsExtended> = ({
       <CardHeader className="border-b border-slate-200 dark:border-slate-700 bg-gradient-to-r from-slate-50 to-slate-100 dark:from-slate-800 dark:to-slate-900 flex-shrink-0">
         <div className={`flex items-center justify-between mb-4 `}>
           <CardTitle className="dark:text-white text-2xl">{t('designer.webChatCustomization')}</CardTitle>
-          <div className={`flex gap-2 `}>
+          <div className={`flex items-center gap-2 `}>
+            {/* Publish Status Badge */}
+            {publishStatus?.is_published && (
+              <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                publishStatus.is_active
+                  ? 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300'
+                  : 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900 dark:text-yellow-300'
+              }`}>
+                {publishStatus.is_active ? 'Published' : 'Unpublished'}
+              </span>
+            )}
             <Button onClick={handleSaveChanges} disabled={!selectedAgentId} className="bg-gradient-to-r from-pink-600 to-red-600 hover:from-pink-700 hover:to-red-700 text-white btn-hover-lift">
               <Save className={`h-4 w-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
               {t('designer.save')}
             </Button>
             <Button onClick={handlePublish} disabled={!selectedAgentId} variant="outline" className="btn-hover-lift">
               <Send className={`h-4 w-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
-              {t('designer.publish')}
+              {publishStatus?.is_published && publishStatus?.is_active ? 'Update' : t('designer.publish')}
             </Button>
+            {/* Unpublish Button - only show when published and active */}
+            {publishStatus?.is_published && publishStatus?.is_active && handleUnpublish && (
+              <Button onClick={handleUnpublish} variant="outline" className="btn-hover-lift text-red-600 hover:text-red-700 hover:bg-red-50">
+                Unpublish
+              </Button>
+            )}
           </div>
         </div>
 
