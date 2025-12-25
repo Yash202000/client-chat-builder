@@ -373,16 +373,19 @@ const Widget = ({ agentId, companyId, backendUrl, rtlOverride, languageOverride,
           setMessages(historyMessages);
           isResumingSession.current = true;  // Skip welcome message since we have history
 
-          // Check if last message is a prompt (workflow paused) - show "Start Over" option
+          // Show "Start Over" option for any resumed session with history
+          setShowStartOver(true);
+          console.log('[Widget] Resumed session - showing Start Over option');
+
+          // Check if last message is a prompt/form (workflow paused) - disable inputs
           const lastMsg = data.messages[data.messages.length - 1];
           if (lastMsg?.message_type === 'prompt' || lastMsg?.message_type === 'form') {
-            setShowStartOver(true);
             setIsWorkflowPaused(true);
             // Default to disabled text input for resumed prompts (allow_text_input defaults to false)
             if (lastMsg?.message_type === 'prompt') {
               setIsTextInputDisabled(true);
             }
-            console.log('[Widget] Resumed with paused workflow - showing Start Over option');
+            console.log('[Widget] Resumed with paused workflow at prompt/form');
           }
         }
         return;
@@ -1757,20 +1760,21 @@ const Widget = ({ agentId, companyId, backendUrl, rtlOverride, languageOverride,
                         );
                       })}
                     </div>
-                    {/* Show "Start Over" only for resumed prompts (last message) */}
-                    {showStartOver && msg.id === messages[messages.length - 1]?.id && (
-                      <button
-                        onClick={handleResetWorkflow}
-                        className="mt-2 text-xs opacity-60 hover:opacity-100 underline flex items-center gap-1"
-                        style={{ color: dark_mode ? '#9CA3AF' : '#6B7280' }}
-                      >
-                        <RotateCcw className="h-3 w-3" />
-                        {localizedTexts?.start_over || 'Start Over'}
-                      </button>
-                    )}
                   </div>
                 )}
                 {msg.type === 'video_call_invitation' && (<Button onClick={() => window.open(msg.videoCallUrl, '_blank', 'width=800,height=600')} className="mt-2 w-full" style={{background: primary_color, color: 'white'}}>Join Video Call</Button>)}
+
+                {/* Show "Start Over" for last message of any resumed session */}
+                {showStartOver && msg.id === messages[messages.length - 1]?.id && (
+                  <button
+                    onClick={handleResetWorkflow}
+                    className="mt-2 text-xs opacity-60 hover:opacity-100 underline flex items-center gap-1"
+                    style={{ color: dark_mode ? '#9CA3AF' : '#6B7280' }}
+                  >
+                    <RotateCcw className="h-3 w-3" />
+                    {localizedTexts?.start_over || 'Start Over'}
+                  </button>
+                )}
 
                 {/* Attachments Display */}
                 {msg.attachments && msg.attachments.length > 0 && (

@@ -5,7 +5,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useI18n } from '@/hooks/useI18n';
 import { CodeEditorModal } from './CodeEditorModal';
 
-const VariableInput = ({ value, onChange, placeholder, availableVars, isRTL }) => {
+const VariableInput = ({ value, onChange, placeholder, availableVars = [], isRTL }) => {
   const { t } = useI18n();
     const [showVars, setShowVars] = useState(false);
     const containerRef = useRef(null);
@@ -495,21 +495,17 @@ const PropertiesPanel = ({ selectedNode, nodes, setNodes, deleteNode, workflowId
                 </div>
                 <div className="mb-2">
                   <label className="block mb-1 text-xs font-medium text-slate-700 dark:text-slate-300">{t("workflows.editor.properties.variable")}</label>
-                  <select
+                  <VariableInput
                     value={condition.variable || ''}
                     onChange={(e) => {
                       const newConditions = [...(currentNode.data.conditions || [])];
                       newConditions[index] = { ...newConditions[index], variable: e.target.value };
                       handleDataChange('conditions', newConditions);
                     }}
-                    className="w-full px-2 py-1.5 text-xs rounded border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    dir={isRTL ? 'rtl' : 'ltr'}
-                  >
-                    <option value="">{t("workflows.editor.properties.selectVariable")}</option>
-                    {availableVariables.map(v => (
-                      <option key={v.value} value={v.value}>{v.label}</option>
-                    ))}
-                  </select>
+                    placeholder={t("workflows.editor.properties.selectVariable")}
+                    availableVars={availableVariables}
+                    isRTL={isRTL}
+                  />
                 </div>
                 <div className="mb-2">
                   <label className="block mb-1 text-xs font-medium text-slate-700 dark:text-slate-300">{t("workflows.editor.properties.operator")}</label>
@@ -1640,8 +1636,10 @@ const PropertiesPanel = ({ selectedNode, nodes, setNodes, deleteNode, workflowId
               <label className="block mb-2 font-medium text-sm text-slate-700 dark:text-slate-300">Input Source</label>
               <VariableInput
                 value={currentNode.data.input_source || '{{context.user_message}}'}
-                onChange={(value) => handleDataChange('input_source', value)}
+                onChange={(e) => handleDataChange('input_source', e.target.value)}
                 placeholder="{{context.user_message}}"
+                availableVars={availableVariables}
+                isRTL={isRTL}
               />
               <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">The text to extract entities from (use variables like {'{{context.user_message}}'})</p>
             </div>

@@ -133,11 +133,11 @@ const Sidebar = () => {
         <DraggableNode type="while_loop" label={t("workflows.editor.sidebar.nodes.whileLoop") || "While Loop"} icon={<RefreshCw size={20} />} nodeData={{}} isRTL={isRTL} isCollapsed={isCollapsed} />
         <DraggableNode type="update_context" label={t("workflows.editor.sidebar.nodes.updateContext")} icon={<Database size={20} />} nodeData={{}} isRTL={isRTL} isCollapsed={isCollapsed} />
         <DraggableNode type="response" label={t("workflows.editor.sidebar.nodes.output")} icon={<MessageSquare size={20} />} nodeData={{}} isRTL={isRTL} isCollapsed={isCollapsed} />
+        <DraggableNode type="question_classifier" label={t("workflows.editor.sidebar.nodes.questionClassifier")} icon={<HelpCircle size={20} />} nodeData={{}} isRTL={isRTL} isCollapsed={isCollapsed} />
       </AccordionSection>
 
       <AccordionSection title={t("workflows.editor.sidebar.chatConversation")} isRTL={isRTL} isCollapsed={isCollapsed}>
         <DraggableNode type="intent_router" label={t("workflows.editor.sidebar.nodes.intentRouter")} icon={<Target size={20} />} nodeData={{}} isRTL={isRTL} isCollapsed={isCollapsed} />
-        <DraggableNode type="question_classifier" label={t("workflows.editor.sidebar.nodes.questionClassifier")} icon={<HelpCircle size={20} />} nodeData={{}} isRTL={isRTL} isCollapsed={isCollapsed} />
         <DraggableNode type="entity_collector" label={t("workflows.editor.sidebar.nodes.collectEntities")} icon={<Notebook size={20} />} nodeData={{}} isRTL={isRTL} isCollapsed={isCollapsed} />
         <DraggableNode type="check_entity" label={t("workflows.editor.sidebar.nodes.checkEntity")} icon={<CheckCircle size={20} />} nodeData={{}} isRTL={isRTL} isCollapsed={isCollapsed} />
         <DraggableNode type="tag_conversation" label={t("workflows.editor.sidebar.nodes.tagConversation")} icon={<Tag size={20} />} nodeData={{}} isRTL={isRTL} isCollapsed={isCollapsed} />

@@ -387,13 +387,13 @@ const AppLayout = () => {
     { titleKey: "navigation.reports", url: "/dashboard/reports", icon: BarChart3, permission: "analytics:read" },
 
     // CRM
-    { titleKey: "navigation.crm", url: "/dashboard/crm", icon: TrendingUp, permission: "crm:read" },
-    { titleKey: "navigation.contacts", url: "/dashboard/crm/contacts", icon: Users, permission: "crm:read" },
-    { titleKey: "navigation.leads", url: "/dashboard/crm/leads", icon: Target, permission: "crm:read" },
-    { titleKey: "navigation.campaigns", url: "/dashboard/crm/campaigns", icon: Send, permission: "crm:read" },
-    { titleKey: "navigation.tags", url: "/dashboard/crm/tags", icon: Tag, permission: "crm:read" },
-    { titleKey: "navigation.segments", url: "/dashboard/crm/segments", icon: Layers, permission: "crm:read" },
-    { titleKey: "navigation.templates", url: "/dashboard/crm/templates", icon: LayoutTemplate, permission: "crm:read" },
+    { titleKey: "navigation.crm", url: "/dashboard/crm", icon: TrendingUp, permission: "lead:read" },
+    { titleKey: "navigation.contacts", url: "/dashboard/crm/contacts", icon: Users, permission: "contact:read" },
+    { titleKey: "navigation.leads", url: "/dashboard/crm/leads", icon: Target, permission: "lead:read" },
+    { titleKey: "navigation.campaigns", url: "/dashboard/crm/campaigns", icon: Send, permission: "campaign:read" },
+    { titleKey: "navigation.tags", url: "/dashboard/crm/tags", icon: Tag, permission: "tag:read" },
+    { titleKey: "navigation.segments", url: "/dashboard/crm/segments", icon: Layers, permission: "segment:read" },
+    { titleKey: "navigation.templates", url: "/dashboard/crm/templates", icon: LayoutTemplate, permission: "email_template:read" },
 
     // Configuration & Resources
     { titleKey: "navigation.knowledgeBases", url: "/dashboard/knowledge-base/manage", icon: BookOpen, permission: "knowledgebase:read" },
@@ -404,7 +404,7 @@ const AppLayout = () => {
     // Team & Communication
     { titleKey: "navigation.teamManagement", url: "/dashboard/team", icon: Users, permission: "user:read" },
     { titleKey: "navigation.teamChat", url: "/dashboard/team-chat", icon: MessageSquare, permission: "chat:read" },
-    { titleKey: "navigation.messageTemplates", url: "/dashboard/message-templates", icon: Sparkles, permission: "chat:create" },
+    { titleKey: "navigation.messageTemplates", url: "/dashboard/message-templates", icon: Sparkles, permission: "message_template:read" },
 
     // AI Features
     { titleKey: "navigation.aiChat", url: "/dashboard/ai-chat", icon: MessageSquare, permission: "ai-chat:read" },
