@@ -23,7 +23,7 @@ import tailwindStyles from './index.css?inline';
 
   const agentId = scriptTag.getAttribute('data-agent-id');
   const companyId = scriptTag.getAttribute('data-company-id');
-  const backendUrl = scriptTag.getAttribute('data-backend-url') || 'http://localhost:8000';
+  const backendUrl = scriptTag.getAttribute('data-backend-url');
 
   // Only set rtlEnabled if data-rtl attribute is explicitly provided
   const rtlAttr = scriptTag.getAttribute('data-rtl');

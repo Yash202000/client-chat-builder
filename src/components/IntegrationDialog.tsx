@@ -361,16 +361,16 @@ export const IntegrationDialog: React.FC<IntegrationDialogProps> = ({ isOpen, on
                     throw new Error('Failed to fetch Microsoft 365 Client ID');
                   }
                   const { client_id } = await response.json();
-                  
+
                   const redirectUri = `${window.location.origin}/api/v1/teams-calendar/callback`;
                   const scope = "https://graph.microsoft.com/Calendars.ReadWrite https://graph.microsoft.com/User.Read offline_access";
                   const state = "some_random_state_string_m365"; // Should be a random, unique string
                   const m365AuthUrl = `https://login.microsoftonline.com/common/oauth2/v2.0/authorize?response_type=code&client_id=${client_id}&redirect_uri=${redirectUri}&scope=${scope}&state=${state}&response_mode=query`;
-                  
+
                   const width = 600, height = 600;
                   const left = (window.innerWidth / 2) - (width / 2);
                   const top = (window.innerHeight / 2) - (height / 2);
-                  
+
                   window.open(m365AuthUrl, 'Microsoft', `width=${width},height=${height},top=${top},left=${left}`);
                 } catch (error) {
                   toast({ title: 'Error', description: 'Could not initiate Microsoft 365 connection.', variant: 'destructive' });
@@ -380,6 +380,49 @@ export const IntegrationDialog: React.FC<IntegrationDialogProps> = ({ isOpen, on
               Connect with Microsoft
             </Button>
           </div>
+        );
+      case 'twilio_voice':
+        return (
+          <>
+            <div className={webhookInfoBoxClasses}>
+              <h4 className="font-medium text-sm dark:text-white">Webhook Configuration</h4>
+              <p className="text-xs text-gray-600 dark:text-gray-400">
+                Configure these URLs in your Twilio Console for your phone number.
+              </p>
+              <div className="space-y-1">
+                <Label htmlFor="voice_webhook_url" className="text-xs dark:text-gray-300">Voice Webhook URL</Label>
+                <Input id="voice_webhook_url" readOnly value={`${window.location.origin}/api/v1/twilio/webhook/voice`} className={readOnlyInputClasses} />
+              </div>
+              <div className="space-y-1">
+                <Label htmlFor="status_callback_url" className="text-xs dark:text-gray-300">Status Callback URL</Label>
+                <Input id="status_callback_url" readOnly value={`${window.location.origin}/api/v1/twilio/webhook/voice/status`} className={readOnlyInputClasses} />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="account_sid" className={labelClasses}>Account SID</Label>
+              <Input
+                id="account_sid"
+                value={credentials.account_sid || ''}
+                onChange={(e) => handleCredentialChange('account_sid', e.target.value)}
+                placeholder="Your Twilio Account SID (starts with AC)"
+                className={inputClasses}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="auth_token" className={labelClasses}>Auth Token</Label>
+              <Input
+                id="auth_token"
+                type="password"
+                value={credentials.auth_token || ''}
+                onChange={(e) => handleCredentialChange('auth_token', e.target.value)}
+                placeholder="Your Twilio Auth Token"
+                className={inputClasses}
+              />
+            </div>
+            <p className="text-xs text-blue-600 dark:text-blue-400 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
+              After saving, go to Settings → Twilio Voice to configure phone numbers and assign agents.
+            </p>
+          </>
         );
       default:
         return null;
@@ -418,6 +461,7 @@ export const IntegrationDialog: React.FC<IntegrationDialogProps> = ({ isOpen, on
                 <SelectItem value="linkedin" className="dark:text-white dark:focus:bg-slate-700">LinkedIn</SelectItem>
                 <SelectItem value="google_calendar" className="dark:text-white dark:focus:bg-slate-700">Google Calendar</SelectItem>
                 <SelectItem value="m365_calendar" className="dark:text-white dark:focus:bg-slate-700">Microsoft 365 Calendar</SelectItem>
+                <SelectItem value="twilio_voice" className="dark:text-white dark:focus:bg-slate-700">Twilio Voice</SelectItem>
               </SelectContent>
             </Select>
           </div>

@@ -18,7 +18,8 @@ import {
   Users,
   Database,
   Building,
-  ChevronsUpDown
+  ChevronsUpDown,
+  PhoneCall
 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/components/ui/use-toast";
@@ -28,6 +29,8 @@ import { IntegrationsList } from "./IntegrationsList";
 import { ApiKeys } from "./ApiKeys";
 import { ProactiveMessageTester } from "./ProactiveMessageTester";
 import { ApiDocs } from "./ApiDocs";
+import { TwilioPhoneNumbersManager } from "./TwilioPhoneNumbersManager";
+import { FreeSwitchPhoneNumbersManager } from "./FreeSwitchPhoneNumbersManager";
 import { useQuery } from "@tanstack/react-query";
 import { Company } from "@/types";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
@@ -283,9 +286,10 @@ export const Settings = () => {
       </div>
 
       <Tabs defaultValue="general" className="space-y-6" dir={isRTL ? 'rtl' : 'ltr'}>
-        <TabsList className="grid w-full grid-cols-4 lg:grid-cols-7 bg-slate-100 dark:bg-slate-900 p-1">
+        <TabsList className="grid w-full grid-cols-4 lg:grid-cols-8 bg-slate-100 dark:bg-slate-900 p-1">
           <TabsTrigger value="general" className="data-[state=active]:bg-white dark:data-[state=active]:bg-slate-800 data-[state=active]:text-cyan-600 dark:data-[state=active]:text-cyan-400">{t('settings.general')}</TabsTrigger>
           <TabsTrigger value="email" className="data-[state=active]:bg-white dark:data-[state=active]:bg-slate-800 data-[state=active]:text-cyan-600 dark:data-[state=active]:text-cyan-400">{t('settings.email', 'Email')}</TabsTrigger>
+          <TabsTrigger value="voice" className="data-[state=active]:bg-white dark:data-[state=active]:bg-slate-800 data-[state=active]:text-red-600 dark:data-[state=active]:text-red-400">{t('settings.voice', 'Voice')}</TabsTrigger>
           <TabsTrigger value="notifications" className="data-[state=active]:bg-white dark:data-[state=active]:bg-slate-800 data-[state=active]:text-cyan-600 dark:data-[state=active]:text-cyan-400">{t('settings.notifications')}</TabsTrigger>
           <TabsTrigger value="security" className="data-[state=active]:bg-white dark:data-[state=active]:bg-slate-800 data-[state=active]:text-cyan-600 dark:data-[state=active]:text-cyan-400">{t('settings.security')}</TabsTrigger>
           <TabsTrigger value="integrations" className="data-[state=active]:bg-white dark:data-[state=active]:bg-slate-800 data-[state=active]:text-cyan-600 dark:data-[state=active]:text-cyan-400">{t('settings.integrations')}</TabsTrigger>
@@ -562,6 +566,11 @@ export const Settings = () => {
               </div>
             </CardContent>
           </Card>
+        </TabsContent>
+
+        <TabsContent value="voice" className="space-y-6" dir={isRTL ? 'rtl' : 'ltr'}>
+          <TwilioPhoneNumbersManager />
+          <FreeSwitchPhoneNumbersManager />
         </TabsContent>
 
         <TabsContent value="notifications" className="space-y-6" dir={isRTL ? 'rtl' : 'ltr'}>

@@ -4,7 +4,7 @@ import {
   SquareStack, Globe, ClipboardList, Wrench, ChevronDown, ChevronRight,
   Target, Notebook, CheckCircle, Database, Tag, UserPlus, Activity,
   Zap, Wifi, Phone, Send, Instagram, PanelLeftClose, PanelLeft, Layers,
-  Repeat, RefreshCw
+  Repeat, RefreshCw, PhoneCall, Server
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
@@ -115,6 +115,8 @@ const Sidebar = () => {
         <DraggableNode type="trigger_whatsapp" label={t("workflows.editor.sidebar.nodes.whatsapp")} icon={<Phone size={20} />} nodeData={{}} isRTL={isRTL} isCollapsed={isCollapsed} />
         <DraggableNode type="trigger_telegram" label={t("workflows.editor.sidebar.nodes.telegram")} icon={<Send size={20} />} nodeData={{}} isRTL={isRTL} isCollapsed={isCollapsed} />
         <DraggableNode type="trigger_instagram" label={t("workflows.editor.sidebar.nodes.instagram")} icon={<Instagram size={20} />} nodeData={{}} isRTL={isRTL} isCollapsed={isCollapsed} />
+        <DraggableNode type="trigger_twilio_voice" label={t("workflows.editor.sidebar.nodes.twilioVoice") || "Twilio Voice"} icon={<PhoneCall size={20} />} nodeData={{}} isRTL={isRTL} isCollapsed={isCollapsed} />
+        <DraggableNode type="trigger_freeswitch" label={t("workflows.editor.sidebar.nodes.freeswitch") || "FreeSWITCH"} icon={<Server size={20} />} nodeData={{}} isRTL={isRTL} isCollapsed={isCollapsed} />
       </AccordionSection>
 
       <AccordionSection title={t("workflows.editor.sidebar.coreNodes")} isRTL={isRTL} isCollapsed={isCollapsed}>

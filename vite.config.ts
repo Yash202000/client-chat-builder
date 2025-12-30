@@ -7,7 +7,7 @@ import { componentTagger } from "lovable-tagger";
 export default defineConfig(({ mode }) => {
   // Load env file based on `mode` in the current working directory.
   const env = loadEnv(mode, process.cwd(), '');
-  const backendUrl = env.VITE_BACKEND_URL || 'http://localhost:8000';
+  const backendUrl = env.VITE_BACKEND_URL;
 
   console.log('🔧 Vite Config - Backend URL:', backendUrl);
   console.log('🔧 Vite Config - All VITE_ env vars:', Object.keys(env).filter(k => k.startsWith('VITE_')));
