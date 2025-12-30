@@ -1382,6 +1382,178 @@ const PropertiesPanel = ({ selectedNode, nodes, setNodes, deleteNode, workflowId
           </div>
         )}
 
+        {/* Twilio Voice Trigger */}
+        {currentNode.type === 'trigger_twilio_voice' && (
+          <div className="mb-5 p-4 bg-red-50 dark:bg-red-900/20 rounded-lg border-2 border-red-200 dark:border-red-700">
+            <h3 className="text-base font-bold mb-2 text-red-900 dark:text-red-100 flex items-center gap-2">
+              <span className="text-red-600 dark:text-red-400">📞</span> {t("workflows.editor.properties.triggers.twilioVoice") || "Twilio Voice Trigger"}
+            </h3>
+            <p className="text-sm text-red-700 dark:text-red-300 mb-4">{t("workflows.editor.properties.triggers.twilioVoiceDescription") || "Triggered when a voice call is received via Twilio. The AI agent will interact with the caller using speech."}</p>
+            <div className="mb-4">
+              <label className="block mb-2 font-medium text-sm text-slate-700 dark:text-slate-300">{t("workflows.editor.properties.triggers.triggerLabel")}</label>
+              <input
+                type="text"
+                value={currentNode.data.label || ''}
+                onChange={(e) => handleDataChange('label', e.target.value)}
+                className="w-full px-3 py-2 rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 text-sm focus:outline-none focus:ring-2 focus:ring-red-500 dark:focus:ring-red-400"
+                placeholder={t("workflows.editor.properties.triggers.twilioVoicePlaceholder") || "Voice Call Handler"}
+                dir={isRTL ? 'rtl' : 'ltr'}
+              />
+            </div>
+            <div className="mb-4">
+              <label className="block mb-2 font-medium text-sm text-slate-700 dark:text-slate-300">{t("workflows.editor.properties.triggers.fallbackAgent")}</label>
+              <select
+                value={currentNode.data.agent_id || ''}
+                onChange={(e) => handleAgentChange(e.target.value)}
+                className="w-full px-3 py-2 rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 text-sm focus:outline-none focus:ring-2 focus:ring-red-500 dark:focus:ring-red-400"
+                dir={isRTL ? 'rtl' : 'ltr'}
+              >
+                <option value="">{t("workflows.editor.properties.triggers.selectAgent")}</option>
+                {agents.map(agent => (
+                  <option key={agent.id} value={agent.id}>
+                    {agent.name}
+                  </option>
+                ))}
+              </select>
+              <p className="text-xs text-slate-600 dark:text-slate-400 mt-1">{t("workflows.editor.properties.triggers.fallbackAgentHelp")}</p>
+            </div>
+            <div className="mb-4">
+              <label className="block mb-2 font-medium text-sm text-slate-700 dark:text-slate-300">{t("workflows.editor.properties.triggers.welcomeMessage") || "Welcome Message"}</label>
+              <textarea
+                value={currentNode.data.welcome_message || ''}
+                onChange={(e) => handleDataChange('welcome_message', e.target.value)}
+                className="w-full px-3 py-2 rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 text-sm focus:outline-none focus:ring-2 focus:ring-red-500 dark:focus:ring-red-400"
+                placeholder={t("workflows.editor.properties.triggers.welcomeMessagePlaceholder") || "Hello! How can I help you today?"}
+                rows={2}
+                dir={isRTL ? 'rtl' : 'ltr'}
+              />
+              <p className="text-xs text-slate-600 dark:text-slate-400 mt-1">{t("workflows.editor.properties.triggers.welcomeMessageHelp") || "Initial greeting spoken when the call connects"}</p>
+            </div>
+            <div className="mb-4">
+              <label className="block mb-2 font-medium text-sm text-slate-700 dark:text-slate-300">{t("workflows.editor.properties.triggers.voiceLanguage") || "Voice Language"}</label>
+              <select
+                value={currentNode.data.language || 'en-US'}
+                onChange={(e) => handleDataChange('language', e.target.value)}
+                className="w-full px-3 py-2 rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 text-sm focus:outline-none focus:ring-2 focus:ring-red-500 dark:focus:ring-red-400"
+                dir={isRTL ? 'rtl' : 'ltr'}
+              >
+                <option value="en-US">English (US)</option>
+                <option value="en-GB">English (UK)</option>
+                <option value="es-ES">Spanish (Spain)</option>
+                <option value="es-MX">Spanish (Mexico)</option>
+                <option value="fr-FR">French</option>
+                <option value="de-DE">German</option>
+                <option value="it-IT">Italian</option>
+                <option value="pt-BR">Portuguese (Brazil)</option>
+                <option value="ja-JP">Japanese</option>
+                <option value="ko-KR">Korean</option>
+                <option value="zh-CN">Chinese (Simplified)</option>
+                <option value="ar-SA">Arabic</option>
+                <option value="hi-IN">Hindi</option>
+              </select>
+              <p className="text-xs text-slate-600 dark:text-slate-400 mt-1">{t("workflows.editor.properties.triggers.voiceLanguageHelp") || "Language for speech recognition and synthesis"}</p>
+            </div>
+            <div className="mb-4">
+              <label className="block mb-2 font-medium text-sm text-slate-700 dark:text-slate-300">{t("workflows.editor.properties.triggers.autoRespond")}</label>
+              <select
+                value={currentNode.data.auto_respond !== false ? 'true' : 'false'}
+                onChange={(e) => handleDataChange('auto_respond', e.target.value === 'true')}
+                className="w-full px-3 py-2 rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 text-sm focus:outline-none focus:ring-2 focus:ring-red-500 dark:focus:ring-red-400"
+                dir={isRTL ? 'rtl' : 'ltr'}
+              >
+                <option value="true">{t("workflows.editor.properties.triggers.autoRespondYes")}</option>
+                <option value="false">{t("workflows.editor.properties.triggers.autoRespondNo")}</option>
+              </select>
+            </div>
+          </div>
+        )}
+
+        {/* FreeSWITCH Trigger */}
+        {currentNode.type === 'trigger_freeswitch' && (
+          <div className="mb-5 p-4 bg-teal-50 dark:bg-teal-900/20 rounded-lg border-2 border-teal-200 dark:border-teal-700">
+            <h3 className="text-base font-bold mb-2 text-teal-900 dark:text-teal-100 flex items-center gap-2">
+              <span className="text-teal-600 dark:text-teal-400">🖥️</span> {t("workflows.editor.properties.triggers.freeswitch") || "FreeSWITCH Trigger"}
+            </h3>
+            <p className="text-sm text-teal-700 dark:text-teal-300 mb-4">{t("workflows.editor.properties.triggers.freeswitchDescription") || "Triggered when a voice call is received via FreeSWITCH. Self-hosted voice solution with full control."}</p>
+            <div className="mb-4">
+              <label className="block mb-2 font-medium text-sm text-slate-700 dark:text-slate-300">{t("workflows.editor.properties.triggers.triggerLabel")}</label>
+              <input
+                type="text"
+                value={currentNode.data.label || ''}
+                onChange={(e) => handleDataChange('label', e.target.value)}
+                className="w-full px-3 py-2 rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 dark:focus:ring-teal-400"
+                placeholder={t("workflows.editor.properties.triggers.freeswitchPlaceholder") || "FreeSWITCH Call Handler"}
+                dir={isRTL ? 'rtl' : 'ltr'}
+              />
+            </div>
+            <div className="mb-4">
+              <label className="block mb-2 font-medium text-sm text-slate-700 dark:text-slate-300">{t("workflows.editor.properties.triggers.fallbackAgent")}</label>
+              <select
+                value={currentNode.data.agent_id || ''}
+                onChange={(e) => handleAgentChange(e.target.value)}
+                className="w-full px-3 py-2 rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 dark:focus:ring-teal-400"
+                dir={isRTL ? 'rtl' : 'ltr'}
+              >
+                <option value="">{t("workflows.editor.properties.triggers.selectAgent")}</option>
+                {agents.map(agent => (
+                  <option key={agent.id} value={agent.id}>
+                    {agent.name}
+                  </option>
+                ))}
+              </select>
+              <p className="text-xs text-slate-600 dark:text-slate-400 mt-1">{t("workflows.editor.properties.triggers.fallbackAgentHelp")}</p>
+            </div>
+            <div className="mb-4">
+              <label className="block mb-2 font-medium text-sm text-slate-700 dark:text-slate-300">{t("workflows.editor.properties.triggers.welcomeMessage") || "Welcome Message"}</label>
+              <textarea
+                value={currentNode.data.welcome_message || ''}
+                onChange={(e) => handleDataChange('welcome_message', e.target.value)}
+                className="w-full px-3 py-2 rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 dark:focus:ring-teal-400"
+                placeholder={t("workflows.editor.properties.triggers.welcomeMessagePlaceholder") || "Hello! How can I help you today?"}
+                rows={2}
+                dir={isRTL ? 'rtl' : 'ltr'}
+              />
+              <p className="text-xs text-slate-600 dark:text-slate-400 mt-1">{t("workflows.editor.properties.triggers.welcomeMessageHelp") || "Initial greeting spoken when the call connects"}</p>
+            </div>
+            <div className="mb-4">
+              <label className="block mb-2 font-medium text-sm text-slate-700 dark:text-slate-300">{t("workflows.editor.properties.triggers.voiceLanguage") || "Voice Language"}</label>
+              <select
+                value={currentNode.data.language || 'en-US'}
+                onChange={(e) => handleDataChange('language', e.target.value)}
+                className="w-full px-3 py-2 rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 dark:focus:ring-teal-400"
+                dir={isRTL ? 'rtl' : 'ltr'}
+              >
+                <option value="en-US">English (US)</option>
+                <option value="en-GB">English (UK)</option>
+                <option value="es-ES">Spanish (Spain)</option>
+                <option value="es-MX">Spanish (Mexico)</option>
+                <option value="fr-FR">French</option>
+                <option value="de-DE">German</option>
+                <option value="it-IT">Italian</option>
+                <option value="pt-BR">Portuguese (Brazil)</option>
+                <option value="ja-JP">Japanese</option>
+                <option value="ko-KR">Korean</option>
+                <option value="zh-CN">Chinese (Simplified)</option>
+                <option value="ar-SA">Arabic</option>
+                <option value="hi-IN">Hindi</option>
+              </select>
+              <p className="text-xs text-slate-600 dark:text-slate-400 mt-1">{t("workflows.editor.properties.triggers.voiceLanguageHelp") || "Language for speech recognition and synthesis"}</p>
+            </div>
+            <div className="mb-4">
+              <label className="block mb-2 font-medium text-sm text-slate-700 dark:text-slate-300">{t("workflows.editor.properties.triggers.autoRespond")}</label>
+              <select
+                value={currentNode.data.auto_respond !== false ? 'true' : 'false'}
+                onChange={(e) => handleDataChange('auto_respond', e.target.value === 'true')}
+                className="w-full px-3 py-2 rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 dark:focus:ring-teal-400"
+                dir={isRTL ? 'rtl' : 'ltr'}
+              >
+                <option value="true">{t("workflows.editor.properties.triggers.autoRespondYes")}</option>
+                <option value="false">{t("workflows.editor.properties.triggers.autoRespondNo")}</option>
+              </select>
+            </div>
+          </div>
+        )}
+
         {/* ========== CHAT & CONVERSATION NODES ========== */}
 
         {/* Intent Router Node */}

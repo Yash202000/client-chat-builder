@@ -29,6 +29,7 @@ import {
   TagConversationNode, AssignToAgentNode, SetStatusNode, QuestionClassifierNode,
   ExtractEntitiesNode, SubworkflowNode,
   TriggerWebSocketNode, TriggerWhatsAppNode, TriggerTelegramNode, TriggerInstagramNode,
+  TriggerTwilioVoiceNode, TriggerFreeSwitchNode,
   ForEachLoopNode, WhileLoopNode
 } from './CustomNodes';
 import { useAuth } from "@/hooks/useAuth";
@@ -111,7 +112,8 @@ const VisualWorkflowBuilder = () => {
     foreach_loop: ForEachLoopNode, while_loop: WhileLoopNode,
     // Trigger nodes
     trigger_websocket: TriggerWebSocketNode, trigger_whatsapp: TriggerWhatsAppNode,
-    trigger_telegram: TriggerTelegramNode, trigger_instagram: TriggerInstagramNode
+    trigger_telegram: TriggerTelegramNode, trigger_instagram: TriggerInstagramNode,
+    trigger_twilio_voice: TriggerTwilioVoiceNode, trigger_freeswitch: TriggerFreeSwitchNode
   }), []);
 
   useEffect(() => {
@@ -145,7 +147,7 @@ const VisualWorkflowBuilder = () => {
     const errors = [];
 
     // Trigger node types that can start a workflow
-    const triggerTypes = ['trigger_websocket', 'trigger_whatsapp', 'trigger_telegram', 'trigger_instagram'];
+    const triggerTypes = ['trigger_websocket', 'trigger_whatsapp', 'trigger_telegram', 'trigger_instagram', 'trigger_twilio_voice', 'trigger_freeswitch'];
 
     // Check for start node OR trigger node
     const hasStartNode = nodes.some(node => node.type === 'start');

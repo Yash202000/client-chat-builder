@@ -5,7 +5,7 @@ import {
   Bot, Cog, GitBranch, MessageSquare, Ear, HelpCircle, BookOpen, Code,
   SquareStack, Globe, ClipboardList, Target, Notebook, CheckCircle,
   Database, Tag, UserPlus, Activity, Zap, Phone, Send, Instagram, Wifi, Layers,
-  Repeat, RefreshCw
+  Repeat, RefreshCw, PhoneCall, Server
 } from 'lucide-react';
 
 export const LlmNode = ({ data }) => (
@@ -565,6 +565,50 @@ export const TriggerInstagramNode = ({ data }) => (
       <div className="text-[10px] text-pink-700 dark:text-pink-300 font-medium">Agent: {data.agent_name || `#${data.agent_id}`}</div>
     )}
     <Handle type="source" position={Position.Bottom} id="message" className="w-4 h-4 !bg-pink-500 dark:!bg-pink-400 border-2 border-white dark:border-slate-800" />
+  </div>
+);
+
+export const TriggerTwilioVoiceNode = ({ data }) => (
+  <div className="px-5 py-4 border-3 border-red-300 dark:border-red-600 rounded-xl bg-gradient-to-br from-red-100 to-orange-100 dark:from-red-900/60 dark:to-orange-900/60 shadow-xl hover:shadow-2xl transition-shadow backdrop-blur-sm ring-2 ring-red-200 dark:ring-red-700">
+    <div className="flex items-center gap-2 mb-2">
+      <div className="p-2 rounded-lg bg-gradient-to-br from-red-500 to-orange-500 shadow-md">
+        <PhoneCall size={18} className="text-white" />
+      </div>
+      <div>
+        <strong className="text-sm font-bold text-slate-900 dark:text-white">{data.label || 'Twilio Voice Trigger'}</strong>
+        <div className="flex items-center gap-1 mt-0.5">
+          <Zap size={10} className="text-red-600 dark:text-red-400" />
+          <span className="text-[10px] font-semibold text-red-700 dark:text-red-300">TRIGGER</span>
+        </div>
+      </div>
+    </div>
+    <div className="text-xs text-slate-600 dark:text-slate-400 font-medium mb-1">Voice calls via Twilio</div>
+    {data.agent_id && (
+      <div className="text-[10px] text-red-700 dark:text-red-300 font-medium">Agent: {data.agent_name || `#${data.agent_id}`}</div>
+    )}
+    <Handle type="source" position={Position.Bottom} id="message" className="w-4 h-4 !bg-red-500 dark:!bg-red-400 border-2 border-white dark:border-slate-800" />
+  </div>
+);
+
+export const TriggerFreeSwitchNode = ({ data }) => (
+  <div className="px-5 py-4 border-3 border-teal-300 dark:border-teal-600 rounded-xl bg-gradient-to-br from-teal-100 to-cyan-100 dark:from-teal-900/60 dark:to-cyan-900/60 shadow-xl hover:shadow-2xl transition-shadow backdrop-blur-sm ring-2 ring-teal-200 dark:ring-teal-700">
+    <div className="flex items-center gap-2 mb-2">
+      <div className="p-2 rounded-lg bg-gradient-to-br from-teal-500 to-cyan-500 shadow-md">
+        <Server size={18} className="text-white" />
+      </div>
+      <div>
+        <strong className="text-sm font-bold text-slate-900 dark:text-white">{data.label || 'FreeSWITCH Trigger'}</strong>
+        <div className="flex items-center gap-1 mt-0.5">
+          <Zap size={10} className="text-teal-600 dark:text-teal-400" />
+          <span className="text-[10px] font-semibold text-teal-700 dark:text-teal-300">TRIGGER</span>
+        </div>
+      </div>
+    </div>
+    <div className="text-xs text-slate-600 dark:text-slate-400 font-medium mb-1">Voice calls via FreeSWITCH</div>
+    {data.agent_id && (
+      <div className="text-[10px] text-teal-700 dark:text-teal-300 font-medium">Agent: {data.agent_name || `#${data.agent_id}`}</div>
+    )}
+    <Handle type="source" position={Position.Bottom} id="message" className="w-4 h-4 !bg-teal-500 dark:!bg-teal-400 border-2 border-white dark:border-slate-800" />
   </div>
 );
 
