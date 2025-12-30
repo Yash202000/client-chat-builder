@@ -48,6 +48,7 @@ import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import NotificationBell from "@/components/NotificationBell";
 import { useTranslation } from "react-i18next";
 import { useI18n } from "@/hooks/useI18n";
+import { useBranding } from "@/hooks/BrandingProvider";
 
 const AppLayout = () => {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
@@ -57,6 +58,7 @@ const AppLayout = () => {
   const { theme, toggleTheme } = useTheme();
   const { t } = useTranslation();
   const { isRTL } = useI18n();
+  const branding = useBranding();
   const { toast } = useToast();
   const { soundEnabled, enableSound, showNotification } = useNotifications();
   const navigate = useNavigate();
@@ -427,21 +429,27 @@ const AppLayout = () => {
       <header className="flex-shrink-0 bg-white dark:bg-slate-800 border-b dark:border-slate-700 z-20">
         <div className="px-6 py-3">
           <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => setSidebarOpen(!sidebarOpen)}
-                className="lg:hidden"
-              >
-                {sidebarOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-              </Button>
-              <div className="flex items-center space-x-3">
-                 <div className="p-2 bg-gradient-to-br from-blue-600 via-purple-600 to-pink-600 rounded-lg shadow-md">
+            <div
+              className="flex items-center space-x-3 cursor-pointer lg:cursor-default"
+              onClick={() => {
+                // Only toggle sidebar on mobile/tablet screens
+                if (window.innerWidth < 1024) {
+                  setSidebarOpen(!sidebarOpen);
+                }
+              }}
+            >
+              {branding.logoUrl ? (
+                <img
+                  src={branding.logoUrl}
+                  alt={branding.companyName}
+                  className="h-10 w-10 object-contain rounded-lg"
+                />
+              ) : (
+                <div className="p-2 bg-gradient-to-br from-blue-600 via-purple-600 to-pink-600 rounded-lg shadow-md">
                   <MessageSquare className="h-6 w-6 text-white" />
                 </div>
-                <h1 className="text-xl font-bold text-gray-800 dark:text-white">AgentConnect</h1>
-              </div>
+              )}
+              <h1 className="text-xl font-bold text-gray-800 dark:text-white">{branding.companyName}</h1>
             </div>
             <div className="flex items-center gap-3">
               {/* Notification Bell */}

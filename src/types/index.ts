@@ -96,6 +96,7 @@ export interface ChatMessage {
   status?: string;
   assignee_id?: number;
   attachments?: MessageAttachment[];
+  options?: Array<{key: string; value: string}> | Array<string>;
 }
 
 export interface Credential {

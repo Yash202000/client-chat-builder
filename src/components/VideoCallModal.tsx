@@ -4,6 +4,7 @@ import { LiveKitRoom, VideoConference } from '@livekit/components-react';
 import '@livekit/components-styles';
 import { useAuth } from "@/hooks/useAuth";
 import { LIVEKIT_URL } from "@/config/env";
+import { toast } from 'sonner';
 
 interface VideoCallModalProps {
   sessionId: string;
@@ -24,7 +25,9 @@ export const VideoCallModal: React.FC<VideoCallModalProps> = ({ sessionId, userI
         const data = await resp.json();
         setToken(data.token);
       } catch (e) {
-        console.error(e);
+        console.error('Failed to get video call token:', e);
+        toast.error('Failed to start video call');
+        onClose();
       }
     })();
   }, [sessionId, userId]);
@@ -63,6 +66,11 @@ export const VideoCallModal: React.FC<VideoCallModalProps> = ({ sessionId, userI
                 data-lk-theme="default"
                 style={{ height: '100%' }}
                 onDisconnected={onClose}
+                onError={(error) => {
+                  console.error('Video call error:', error);
+                  toast.error('Video call connection failed');
+                  onClose();
+                }}
             >
                 <VideoConference />
             </LiveKitRoom>

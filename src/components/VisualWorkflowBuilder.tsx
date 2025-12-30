@@ -324,7 +324,15 @@ const VisualWorkflowBuilder = () => {
     
     setNodes((nds) => nds.concat(newNode));
   }, [reactFlowInstance, setNodes]);
-  const onNodeClick = useCallback((_, node) => setSelectedNode(node), []);
+  const onNodeClick = useCallback((_, node) => {
+    setSelectedNode(node);
+    // Auto-expand properties panel if collapsed
+    if (isPropertiesPanelCollapsed && propertiesPanelRef.current) {
+      propertiesPanelRef.current.expand();
+      setIsPropertiesPanelCollapsed(false);
+      localStorage.setItem('workflowBuilder.propertiesPanel.collapsed', 'false');
+    }
+  }, [isPropertiesPanelCollapsed]);
   const onPaneClick = useCallback(() => setSelectedNode(null), []);
   const deleteNode = useCallback(() => {
     if (selectedNode) {

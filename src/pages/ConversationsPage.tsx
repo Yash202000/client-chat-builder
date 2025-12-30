@@ -28,6 +28,7 @@ const ConversationsPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'mine' | 'open' | 'resolved' | 'all'>('open');
   const [unreadAssignments, setUnreadAssignments] = useState(0);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  const [isRightSidebarCollapsed, setIsRightSidebarCollapsed] = useState(false);
   const [reopenedSessions, setReopenedSessions] = useState<Set<string>>(new Set());
   const [sidebarView, setSidebarView] = useState<'contact' | 'summary'>('contact');
 
@@ -854,7 +855,12 @@ const ConversationsPage: React.FC = () => {
         </div>
 
         {/* Center - Conversation Detail */}
-        <div className={`h-full overflow-hidden transition-all duration-300 ${isSidebarCollapsed ? 'md:col-span-8' : 'md:col-span-6'}`}>
+        <div className={`h-full overflow-hidden transition-all duration-300 ${
+          isSidebarCollapsed && isRightSidebarCollapsed ? 'md:col-span-10' :
+          isSidebarCollapsed ? 'md:col-span-8' :
+          isRightSidebarCollapsed ? 'md:col-span-8' :
+          'md:col-span-6'
+        }`}>
           {selectedSessionId ? (
             <ConversationDetail
               sessionId={selectedSessionId}
@@ -877,29 +883,76 @@ const ConversationsPage: React.FC = () => {
         </div>
 
         {/* Right Sidebar - Contact Profile or Summary */}
-        <div className="md:col-span-3 h-full overflow-hidden">
-          {selectedSessionId ? (
-            sidebarView === 'summary' ? (
-              <ConversationSummary
-                sessionId={selectedSessionId}
-                onBack={() => setSidebarView('contact')}
-              />
-            ) : (
-              <ContactProfile sessionId={selectedSessionId} />
-            )
-          ) : (
-            <Card className="h-full flex items-center justify-center card-shadow-lg bg-white dark:bg-slate-800">
-              <div className="text-center p-8">
-                <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-br from-green-100 to-emerald-100 dark:from-green-900 dark:to-emerald-900 mb-4">
-                  <Phone className="h-8 w-8 text-green-600 dark:text-green-400" />
+        <div className={`h-full overflow-hidden transition-all duration-300 ${isRightSidebarCollapsed ? 'md:col-span-1' : 'md:col-span-3'}`}>
+          <Card className="h-full flex flex-col card-shadow-lg bg-white dark:bg-slate-800 relative">
+            {/* Collapse/Expand Button */}
+            <button
+              onClick={() => setIsRightSidebarCollapsed(!isRightSidebarCollapsed)}
+              className={`absolute ${isRTL ? '-right-3' : '-left-3'} top-1/2 -translate-y-1/2 z-10 bg-gradient-to-br from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white rounded-full p-2 shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-110 group`}
+              title={isRightSidebarCollapsed ? t('conversations.expandSidebar') : t('conversations.collapseSidebar')}
+            >
+              {isRightSidebarCollapsed ? (
+                isRTL ? (
+                  <PanelRightOpen className="h-4 w-4 transition-transform duration-200 group-hover:translate-x-0.5 scale-x-[-1]" />
+                ) : (
+                  <PanelLeftClose className="h-4 w-4 transition-transform duration-200 group-hover:-translate-x-0.5" />
+                )
+              ) : (
+                isRTL ? (
+                  <PanelLeftClose className="h-4 w-4 transition-transform duration-200 group-hover:-translate-x-0.5 scale-x-[-1]" />
+                ) : (
+                  <PanelRightOpen className="h-4 w-4 transition-transform duration-200 group-hover:translate-x-0.5" />
+                )
+              )}
+            </button>
+
+            {selectedSessionId ? (
+              isRightSidebarCollapsed ? (
+                /* Collapsed view - show minimal info */
+                <div className="flex flex-col items-center justify-center h-full p-2 gap-4">
+                  <div className="flex flex-col items-center gap-2">
+                    <div className="h-10 w-10 rounded-full bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center">
+                      <Phone className="h-5 w-5 text-white" />
+                    </div>
+                    <span className="text-xs text-muted-foreground text-center writing-mode-vertical" style={{ writingMode: 'vertical-rl', textOrientation: 'mixed' }}>
+                      {sidebarView === 'summary' ? t('conversations.detail.summary', { defaultValue: 'Summary' }) : t('conversations.emptyState.contactDetails', { defaultValue: 'Contact' })}
+                    </span>
+                  </div>
                 </div>
-                <h3 className="text-lg font-semibold mb-2 dark:text-white">{t('conversations.emptyState.contactDetails')}</h3>
-                <p className="text-muted-foreground text-sm">
-                  {t('conversations.emptyState.contactDetailsDesc')}
-                </p>
-              </div>
-            </Card>
-          )}
+              ) : (
+                /* Expanded view - show full content */
+                <div className="h-full overflow-hidden">
+                  {sidebarView === 'summary' ? (
+                    <ConversationSummary
+                      sessionId={selectedSessionId}
+                      onBack={() => setSidebarView('contact')}
+                    />
+                  ) : (
+                    <ContactProfile sessionId={selectedSessionId} />
+                  )}
+                </div>
+              )
+            ) : (
+              /* No session selected */
+              isRightSidebarCollapsed ? (
+                <div className="flex flex-col items-center justify-center h-full p-2">
+                  <Phone className="h-6 w-6 text-muted-foreground" />
+                </div>
+              ) : (
+                <div className="flex items-center justify-center h-full">
+                  <div className="text-center p-8">
+                    <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-br from-green-100 to-emerald-100 dark:from-green-900 dark:to-emerald-900 mb-4">
+                      <Phone className="h-8 w-8 text-green-600 dark:text-green-400" />
+                    </div>
+                    <h3 className="text-lg font-semibold mb-2 dark:text-white">{t('conversations.emptyState.contactDetails')}</h3>
+                    <p className="text-muted-foreground text-sm">
+                      {t('conversations.emptyState.contactDetailsDesc')}
+                    </p>
+                  </div>
+                </div>
+              )
+            )}
+          </Card>
         </div>
       </div>
     </div>

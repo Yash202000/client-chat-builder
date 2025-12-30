@@ -1135,6 +1135,33 @@ export const ConversationDetail: React.FC<ConversationDetailProps> = ({ sessionI
                           {msg.attachments && msg.attachments.length > 0 && (
                             <AttachmentDisplay attachments={msg.attachments} sender={msg.sender} />
                           )}
+                          {/* Render prompt options */}
+                          {msg.options && msg.options.length > 0 && (
+                            <div className="mt-2">
+                              <div className="flex flex-wrap gap-2">
+                                {msg.options.map((option, optionIndex) => {
+                                  let displayText: string;
+                                  if (option && typeof option === 'object' && 'key' in option && 'value' in option) {
+                                    displayText = String((option as {key: string; value: string}).value || (option as {key: string; value: string}).key || '');
+                                  } else {
+                                    displayText = String(option || '');
+                                  }
+                                  return (
+                                    <span
+                                      key={optionIndex}
+                                      className={`px-3 py-1 rounded-full text-xs font-medium ${
+                                        msg.sender === 'user'
+                                          ? 'bg-blue-100 text-blue-800 dark:bg-blue-900/50 dark:text-blue-300'
+                                          : 'bg-white/20 text-white'
+                                      }`}
+                                    >
+                                      {displayText}
+                                    </span>
+                                  );
+                                })}
+                              </div>
+                            </div>
+                          )}
                         </div>
                         <p className={`text-xs mt-1.5 px-1 ${msg.sender === 'user' ? 'text-gray-500 dark:text-gray-400' : 'text-gray-600 dark:text-gray-400'}`}>
                           {new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}

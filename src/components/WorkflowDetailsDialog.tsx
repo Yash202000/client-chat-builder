@@ -12,15 +12,19 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
-import { X } from 'lucide-react';
+import { X, RefreshCw } from 'lucide-react';
 import { useI18n } from '@/hooks/useI18n';
+import { useAuth } from '@/hooks/useAuth';
+import { toast } from 'sonner';
 
 export const WorkflowDetailsDialog = ({ isOpen, onClose, workflow, onSave }) => {
   const { t, isRTL } = useI18n();
+  const { authFetch } = useAuth();
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [triggerPhrases, setTriggerPhrases] = useState([]);
   const [currentPhrase, setCurrentPhrase] = useState('');
+  const [isRegenerating, setIsRegenerating] = useState(false);
 
   useEffect(() => {
     if (workflow) {
@@ -42,6 +46,35 @@ export const WorkflowDetailsDialog = ({ isOpen, onClose, workflow, onSave }) => 
 
   const handleRemovePhrase = (phraseToRemove) => {
     setTriggerPhrases(triggerPhrases.filter(phrase => phrase !== phraseToRemove));
+  };
+
+  const handleRegenerateDescription = async () => {
+    console.log('Regenerate clicked, workflow:', workflow);
+    if (!workflow?.id) {
+      console.error('No workflow ID');
+      return;
+    }
+
+    setIsRegenerating(true);
+    try {
+      const response = await authFetch(`/api/v1/workflows/${workflow.id}/regenerate-description`, {
+        method: 'POST',
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.detail || 'Failed to regenerate description');
+      }
+
+      const data = await response.json();
+      setDescription(data.description);
+      toast.success(t('workflows.detailsDialog.descriptionRegenerated') || 'Description regenerated from workflow steps');
+    } catch (error) {
+      console.error('Error regenerating description:', error);
+      toast.error(error.message || t('workflows.detailsDialog.regenerateFailed') || 'Failed to regenerate description');
+    } finally {
+      setIsRegenerating(false);
+    }
   };
 
   const handleSave = () => {
@@ -73,18 +106,34 @@ export const WorkflowDetailsDialog = ({ isOpen, onClose, workflow, onSave }) => 
               dir={isRTL ? 'rtl' : 'ltr'}
             />
           </div>
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="description" className={isRTL ? 'text-left' : 'text-right'}>
+          <div className="grid grid-cols-4 items-start gap-4">
+            <Label htmlFor="description" className={`pt-2 ${isRTL ? 'text-left' : 'text-right'}`}>
               {t('workflows.detailsDialog.descriptionLabel')}
             </Label>
-            <Textarea
-              id="description"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              className="col-span-3"
-              rows={3}
-              dir={isRTL ? 'rtl' : 'ltr'}
-            />
+            <div className="col-span-3 space-y-2">
+              <Textarea
+                id="description"
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                rows={3}
+                dir={isRTL ? 'rtl' : 'ltr'}
+                placeholder={t('workflows.detailsDialog.descriptionPlaceholder') || 'Describe what this workflow does...'}
+              />
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={handleRegenerateDescription}
+                disabled={isRegenerating}
+                className="h-8 text-xs"
+                title={t('workflows.detailsDialog.regenerateDescription') || 'Auto-generate from workflow steps'}
+              >
+                <RefreshCw className={`h-3 w-3 ${isRTL ? 'ml-1' : 'mr-1'} ${isRegenerating ? 'animate-spin' : ''}`} />
+                {isRegenerating
+                  ? (t('workflows.detailsDialog.regenerating') || 'Generating...')
+                  : (t('workflows.detailsDialog.autoGenerate') || 'Auto-generate')}
+              </Button>
+            </div>
           </div>
           <div className="grid grid-cols-4 items-start gap-4">
             <Label htmlFor="trigger-phrases" className={`${isRTL ? 'text-left' : 'text-right'} pt-2`}>

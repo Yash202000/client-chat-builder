@@ -111,6 +111,28 @@ const formatFileSize = (bytes: number): string => {
   return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
 };
 
+// Helper function to check if video call invitation is still valid
+const isVideoCallValid = (msg: Message, allMessages: Message[]): boolean => {
+  // 1. Check if invitation is older than 1 minute
+  const invitationTime = new Date(msg.timestamp).getTime();
+  const now = Date.now();
+  const oneMinute = 60 * 1000;
+  if (now - invitationTime > oneMinute) {
+    return false;
+  }
+
+  // 2. Check if 3+ messages were sent after this invitation
+  const msgIndex = allMessages.findIndex(m => m.id === msg.id);
+  if (msgIndex === -1) return false;
+
+  const messagesAfter = allMessages.slice(msgIndex + 1);
+  if (messagesAfter.length >= 3) {
+    return false;
+  }
+
+  return true;
+};
+
 // Helper function to detect browser language
 const detectBrowserLanguage = (): string => {
   const browserLang = navigator.language || (navigator as any).userLanguage;
@@ -1848,10 +1870,25 @@ const Widget = ({ agentId, companyId, backendUrl, rtlOverride, languageOverride,
                     </div>
                   </div>
                 )}
-                {msg.type === 'video_call_invitation' && (<Button onClick={() => window.open(msg.videoCallUrl, '_blank', 'width=800,height=600')} className="mt-2 w-full" style={{background: primary_color, color: 'white'}}>Join Video Call</Button>)}
+                {msg.type === 'video_call_invitation' && msg.videoCallUrl && (
+                  <Button
+                    onClick={() => window.open(msg.videoCallUrl, '_blank', 'width=800,height=600')}
+                    className="mt-2 w-full"
+                    style={{
+                      background: isVideoCallValid(msg, messages) ? primary_color : '#9CA3AF',
+                      color: 'white',
+                      cursor: isVideoCallValid(msg, messages) ? 'pointer' : 'not-allowed'
+                    }}
+                    disabled={!isVideoCallValid(msg, messages)}
+                  >
+                    {isVideoCallValid(msg, messages)
+                      ? (localizedTexts?.join_video_call || 'Join Video Call')
+                      : (localizedTexts?.video_call_expired || 'Video Call Expired')}
+                  </Button>
+                )}
 
-                {/* Show "Start Over" for last message of any resumed session */}
-                {showStartOver && msg.id === messages[messages.length - 1]?.id && (
+                {/* Show "Start Over" on every last agent message */}
+                {msg.sender === 'agent' && msg.id === messages[messages.length - 1]?.id && messages.length > 1 && (
                   <button
                     onClick={handleResetWorkflow}
                     className="mt-2 text-xs opacity-60 hover:opacity-100 underline flex items-center gap-1"
