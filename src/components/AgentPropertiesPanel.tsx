@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Trash2, ChevronDown, ChevronRight, Save } from 'lucide-react';
+import { Trash2, ChevronDown, ChevronRight, Save, PanelRightClose, PanelRight } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useI18n } from '@/hooks/useI18n';
 import { useAuth } from '@/hooks/useAuth';
@@ -60,7 +60,15 @@ const CollapsibleSection = ({ title, children, defaultOpen = false }: { title: s
   );
 };
 
-export const AgentPropertiesPanel = ({ agent, selectedNode, onNodeDelete }) => {
+interface AgentPropertiesPanelProps {
+  agent: any;
+  selectedNode: any;
+  onNodeDelete: (nodeId: string) => void;
+  isCollapsed?: boolean;
+  onToggle?: () => void;
+}
+
+export const AgentPropertiesPanel = ({ agent, selectedNode, onNodeDelete, isCollapsed = false, onToggle }: AgentPropertiesPanelProps) => {
   const { t } = useTranslation();
   const { isRTL } = useI18n();
   const { authFetch } = useAuth();
@@ -156,16 +164,60 @@ export const AgentPropertiesPanel = ({ agent, selectedNode, onNodeDelete }) => {
     mutation.mutate(agentConfig);
   };
 
+  // Collapsed view
+  if (isCollapsed) {
+    return (
+      <aside className={`w-14 bg-white dark:bg-slate-900 ${isRTL ? 'border-r' : 'border-l'} border-slate-200 dark:border-slate-700 flex flex-col h-full transition-all duration-200 ease-in-out`}>
+        <div className="flex items-center justify-center p-4">
+          {onToggle && (
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={onToggle}
+              className="h-7 w-7"
+              title={t('common.expand', { defaultValue: 'Expand' })}
+            >
+              <PanelRight className="h-4 w-4" />
+            </Button>
+          )}
+        </div>
+        {selectedNode && (
+          <div className="flex-1 flex items-center justify-center">
+            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-green-100 to-emerald-100 dark:from-green-900/30 dark:to-emerald-900/30 flex items-center justify-center" title={selectedNode.data.label}>
+              <ChevronRight className="h-4 w-4 text-green-600 dark:text-green-400" />
+            </div>
+          </div>
+        )}
+      </aside>
+    );
+  }
+
   if (!selectedNode) {
     return (
-      <div className={`w-80 p-4 bg-white dark:bg-slate-900 ${isRTL ? 'border-r' : 'border-l'} border-slate-200 dark:border-slate-700 flex items-center justify-center`}>
-        <div className="text-center">
-          <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-gradient-to-br from-green-100 to-emerald-100 dark:from-green-900/30 dark:to-emerald-900/30 mb-3">
-            <ChevronRight className="h-6 w-6 text-green-600 dark:text-green-400" />
-          </div>
-          <p className="text-sm text-gray-500 dark:text-gray-400">{t('builder.selectNodePrompt')}</p>
+      <aside className={`w-80 p-4 bg-white dark:bg-slate-900 ${isRTL ? 'border-r' : 'border-l'} border-slate-200 dark:border-slate-700 flex flex-col h-full transition-all duration-200 ease-in-out`}>
+        {/* Header with toggle */}
+        <div className="flex items-center justify-end mb-4">
+          {onToggle && (
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={onToggle}
+              className="h-7 w-7"
+              title={t('common.collapse', { defaultValue: 'Collapse' })}
+            >
+              <PanelRightClose className="h-4 w-4" />
+            </Button>
+          )}
         </div>
-      </div>
+        <div className="flex-1 flex items-center justify-center">
+          <div className="text-center">
+            <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-gradient-to-br from-green-100 to-emerald-100 dark:from-green-900/30 dark:to-emerald-900/30 mb-3">
+              <ChevronRight className="h-6 w-6 text-green-600 dark:text-green-400" />
+            </div>
+            <p className="text-sm text-gray-500 dark:text-gray-400">{t('builder.selectNodePrompt')}</p>
+          </div>
+        </div>
+      </aside>
     );
   }
 
@@ -186,10 +238,23 @@ export const AgentPropertiesPanel = ({ agent, selectedNode, onNodeDelete }) => {
   const selectClassName = "w-full p-2 text-sm border rounded-md bg-white dark:bg-slate-800 dark:border-slate-600 dark:text-white focus:ring-2 focus:ring-green-500 transition-all";
 
   return (
-    <aside className={`w-80 bg-white dark:bg-slate-900 ${isRTL ? 'border-r' : 'border-l'} border-slate-200 dark:border-slate-700 flex flex-col h-full`}>
+    <aside className={`w-80 bg-white dark:bg-slate-900 ${isRTL ? 'border-r' : 'border-l'} border-slate-200 dark:border-slate-700 flex flex-col h-full transition-all duration-200 ease-in-out`}>
       {/* Header */}
       <div className={`flex justify-between items-center p-4 border-b border-slate-200 dark:border-slate-700 ${isRTL ? 'flex-row-reverse' : ''}`}>
-        <h3 className="text-lg font-bold dark:text-white truncate">{selectedNode.data.label}</h3>
+        <div className="flex items-center gap-2 flex-1 min-w-0">
+          {onToggle && (
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={onToggle}
+              className="h-7 w-7 flex-shrink-0"
+              title={t('common.collapse', { defaultValue: 'Collapse' })}
+            >
+              <PanelRightClose className="h-4 w-4" />
+            </Button>
+          )}
+          <h3 className="text-lg font-bold dark:text-white truncate">{selectedNode.data.label}</h3>
+        </div>
         {(selectedNode.type === 'tools' || selectedNode.type === 'knowledge') && (
           <Button size="sm" variant="destructive" onClick={handleDelete} className="hover:scale-105 transition-transform flex-shrink-0">
             <Trash2 className="h-4 w-4" />
