@@ -719,13 +719,27 @@ export const Settings = () => {
               </div>
               <div>
                 <Label htmlFor="logoUrl" className="dark:text-gray-300">{t('settings.logoUrl')}</Label>
-                <Input
-                  id="logoUrl"
-                  value={settings.logoUrl}
-                  onChange={(e) => handleSettingChange("logoUrl", e.target.value)}
-                  className="dark:bg-slate-900 dark:border-slate-600 dark:text-white mt-1.5"
-                  placeholder={t('settings.logoUrlPlaceholder')}
-                />
+                <div className="flex items-center gap-4 mt-1.5">
+                  <Input
+                    id="logoUrl"
+                    value={settings.logoUrl}
+                    onChange={(e) => handleSettingChange("logoUrl", e.target.value)}
+                    className="dark:bg-slate-900 dark:border-slate-600 dark:text-white flex-1"
+                    placeholder={t('settings.logoUrlPlaceholder')}
+                  />
+                  {settings.logoUrl && (
+                    <div className="flex-shrink-0 h-12 w-12 border rounded-lg overflow-hidden bg-white dark:bg-slate-800 flex items-center justify-center">
+                      <img
+                        src={settings.logoUrl}
+                        alt="Logo preview"
+                        className="h-full w-full object-contain"
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).style.display = 'none';
+                        }}
+                      />
+                    </div>
+                  )}
+                </div>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>

@@ -1,14 +1,30 @@
 
-import { createContext, useContext, useEffect } from 'react';
+import { createContext, useContext, useEffect, useMemo } from 'react';
 import { useAuth } from './useAuth';
 import { useQuery } from '@tanstack/react-query';
 
-const BrandingContext = createContext(null);
+interface BrandingContextType {
+  primaryColor: string;
+  secondaryColor: string;
+  logoUrl: string | null;
+  companyName: string;
+  isLoading: boolean;
+}
+
+const defaultBranding: BrandingContextType = {
+  primaryColor: '#3B82F6',
+  secondaryColor: '#8B5CF6',
+  logoUrl: null,
+  companyName: 'AgentConnect',
+  isLoading: true,
+};
+
+const BrandingContext = createContext<BrandingContextType>(defaultBranding);
 
 export const BrandingProvider = ({ children }) => {
   const { companyId, authFetch } = useAuth();
 
-  const { data: settings } = useQuery({
+  const { data: settings, isLoading } = useQuery({
     queryKey: ['companySettings', companyId],
     queryFn: async () => {
       const response = await authFetch(`/api/v1/company-settings/`);
@@ -34,19 +50,24 @@ export const BrandingProvider = ({ children }) => {
       if (settings.secondary_color) {
         root.style.setProperty('--secondary-color', settings.secondary_color);
       }
-      if (settings.logo_url) {
-        // You can use this URL in your components
-      }
     }
   }, [settings]);
 
+  const brandingValue = useMemo<BrandingContextType>(() => ({
+    primaryColor: settings?.primary_color || defaultBranding.primaryColor,
+    secondaryColor: settings?.secondary_color || defaultBranding.secondaryColor,
+    logoUrl: settings?.logo_url || null,
+    companyName: settings?.company_name || defaultBranding.companyName,
+    isLoading,
+  }), [settings, isLoading]);
+
   return (
-    <BrandingContext.Provider value={null}>
+    <BrandingContext.Provider value={brandingValue}>
       {children}
     </BrandingContext.Provider>
   );
 };
 
-export const useBranding = () => {
+export const useBranding = (): BrandingContextType => {
   return useContext(BrandingContext);
 };
