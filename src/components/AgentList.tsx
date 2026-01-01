@@ -142,6 +142,8 @@ export const AgentList = () => {
       case 'messenger': return <MessageSquare className="h-4 w-4 text-blue-600" />;
       case 'telegram': return <Send className="h-4 w-4 text-sky-500" />;
       case 'gmail': return <Mail className="h-4 w-4 text-red-500" />;
+      case 'twilio_voice': return <Phone className="h-4 w-4 text-red-500" />;
+      case 'freeswitch': return <Phone className="h-4 w-4 text-purple-500" />;
       default: return <MessageSquare className="h-4 w-4 text-gray-500" />;
     }
   };

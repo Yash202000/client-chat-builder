@@ -396,7 +396,7 @@ export const ConversationDetail: React.FC<ConversationDetailProps> = ({ sessionI
   const { data: sessionDetails } = useQuery({
     queryKey: ['sessionDetails', sessionId],
     queryFn: async () => {
-      const res = await authFetch(`/api/v1/conversations/${agentId}/sessions/${sessionId}`);
+      const res = await authFetch(`/api/v1/conversations/${agentId}/sessions/${encodeURIComponent(sessionId)}`);
       if (!res.ok) throw new Error('Failed to fetch session details');
       return res.json();
     },
@@ -411,7 +411,7 @@ export const ConversationDetail: React.FC<ConversationDetailProps> = ({ sessionI
   }, [sessionDetails?.is_ai_enabled]);
 
   const toggleAiMutation = useMutation({
-    mutationFn: (enabled: boolean) => authFetch(`/api/v1/conversations/${sessionId}/toggle-ai`, {
+    mutationFn: (enabled: boolean) => authFetch(`/api/v1/conversations/${encodeURIComponent(sessionId)}/toggle-ai`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ is_ai_enabled: enabled }),
@@ -438,9 +438,10 @@ export const ConversationDetail: React.FC<ConversationDetailProps> = ({ sessionI
   } = useInfiniteQuery<ChatMessage[]>({
     queryKey: ['messages', agentId, sessionId, companyId],
     queryFn: async ({ pageParam }) => {
+      const encodedSessionId = encodeURIComponent(sessionId);
       const url = pageParam
-        ? `/api/v1/conversations/${agentId}/${sessionId}?limit=20&before_id=${pageParam}`
-        : `/api/v1/conversations/${agentId}/${sessionId}?limit=20`;
+        ? `/api/v1/conversations/${agentId}/${encodedSessionId}?limit=20&before_id=${pageParam}`
+        : `/api/v1/conversations/${agentId}/${encodedSessionId}?limit=20`;
       const response = await authFetch(url);
       if (!response.ok) throw new Error('Failed to fetch messages');
       return response.json();
@@ -619,7 +620,7 @@ export const ConversationDetail: React.FC<ConversationDetailProps> = ({ sessionI
   });
 
   const statusMutation = useMutation({
-    mutationFn: (newStatus: string) => authFetch(`/api/v1/conversations/${sessionId}/status`, {
+    mutationFn: (newStatus: string) => authFetch(`/api/v1/conversations/${encodeURIComponent(sessionId)}/status`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ status: newStatus }),
@@ -640,7 +641,7 @@ export const ConversationDetail: React.FC<ConversationDetailProps> = ({ sessionI
 
   const startCallMutation = useMutation({
     mutationFn: async () => {
-      const tokenResponse = await authFetch(`/api/v1/calls/token?session_id=${sessionId}&user_id=${sessionId}`);
+      const tokenResponse = await authFetch(`/api/v1/calls/token?session_id=${encodeURIComponent(sessionId)}&user_id=${encodeURIComponent(sessionId)}`);
       if (!tokenResponse.ok) throw new Error('Failed to get video call token');
       const tokenData = await tokenResponse.json();
       await authFetch(`/api/v1/calls/start`, {
@@ -663,7 +664,7 @@ export const ConversationDetail: React.FC<ConversationDetailProps> = ({ sessionI
   });
 
   const assigneeMutation = useMutation({
-    mutationFn: (newAssigneeId: number) => authFetch(`/api/v1/conversations/${sessionId}/assignee`, {
+    mutationFn: (newAssigneeId: number) => authFetch(`/api/v1/conversations/${encodeURIComponent(sessionId)}/assignee`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json'},
       body: JSON.stringify({ user_id: newAssigneeId }),
@@ -683,7 +684,7 @@ export const ConversationDetail: React.FC<ConversationDetailProps> = ({ sessionI
   });
 
   const priorityMutation = useMutation({
-    mutationFn: (newPriority: number) => authFetch(`/api/v1/conversations/${sessionId}/priority`, {
+    mutationFn: (newPriority: number) => authFetch(`/api/v1/conversations/${encodeURIComponent(sessionId)}/priority`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json'},
       body: JSON.stringify({ priority: newPriority }),

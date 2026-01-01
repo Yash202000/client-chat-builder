@@ -27,7 +27,7 @@ export const ConversationSummary: React.FC<ConversationSummaryProps> = ({ sessio
   const { data: summaryData, isLoading: isLoadingSummary } = useQuery<SummaryResponse>({
     queryKey: ['conversationSummary', sessionId],
     queryFn: async () => {
-      const response = await authFetch(`/api/v1/conversations/${sessionId}/summary`);
+      const response = await authFetch(`/api/v1/conversations/${encodeURIComponent(sessionId)}/summary`);
       if (!response.ok) throw new Error('Failed to fetch summary');
       return response.json();
     },
@@ -37,7 +37,7 @@ export const ConversationSummary: React.FC<ConversationSummaryProps> = ({ sessio
   // Generate summary mutation
   const generateSummaryMutation = useMutation({
     mutationFn: async () => {
-      const response = await authFetch(`/api/v1/conversations/${sessionId}/summary`, {
+      const response = await authFetch(`/api/v1/conversations/${encodeURIComponent(sessionId)}/summary`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
       });

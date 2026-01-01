@@ -338,6 +338,8 @@ export const Reports = () => {
       'instagram': '📷',
       'telegram': '✈️',
       'gmail': '📧',
+      'twilio_voice': '📞',
+      'freeswitch': '☎️',
     };
     return emojis[channel] || '💬';
   };

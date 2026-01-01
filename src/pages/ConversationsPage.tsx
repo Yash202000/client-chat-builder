@@ -228,7 +228,7 @@ const ConversationsPage: React.FC = () => {
           // Handler for "Assign to Me" button
           const handleAssignToMe = async () => {
             try {
-              const response = await authFetch(`/api/v1/conversations/${eventData.session_id}/assignee`, {
+              const response = await authFetch(`/api/v1/conversations/${encodeURIComponent(eventData.session_id)}/assignee`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ user_id: user?.id })
@@ -418,6 +418,8 @@ const ConversationsPage: React.FC = () => {
       case 'instagram': return <Instagram className="h-4 w-4 text-pink-500" />;
       case 'gmail': return <Mail className="h-4 w-4 text-red-500" />;
       case 'telegram': return <Send className="h-4 w-4 text-blue-400" />;
+      case 'twilio_voice': return <Phone className="h-4 w-4 text-red-500" />;
+      case 'freeswitch': return <Phone className="h-4 w-4 text-purple-500" />;
       case 'web':
       default:
         return <Globe className="h-4 w-4 text-gray-500" />;
@@ -578,7 +580,7 @@ const ConversationsPage: React.FC = () => {
               )}
             </div>
             <p className="text-xs text-muted-foreground truncate">
-              {new Date(Number(session.conversation_id)).toLocaleString()}
+              {session.last_message_timestamp ? new Date(session.last_message_timestamp).toLocaleString() : ''}
             </p>
             {session.assignee_id && !assignedToMe && (
               <p className="text-xs text-purple-600 dark:text-purple-400 mt-1 truncate flex items-center gap-1">
