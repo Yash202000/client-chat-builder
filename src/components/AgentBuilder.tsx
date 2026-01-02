@@ -51,6 +51,8 @@ export const AgentBuilder = ({ agent }: AgentBuilderProps) => {
   const { authFetch } = useAuth();
   const queryClient = useQueryClient();
   const [inspectedMcpTools, setInspectedMcpTools] = useState<number[]>([]);
+  const [leftSidebarCollapsed, setLeftSidebarCollapsed] = useState(false);
+  const [rightSidebarCollapsed, setRightSidebarCollapsed] = useState(false);
 
   useEffect(() => {
     const nodesToAdd = [];
@@ -314,7 +316,11 @@ export const AgentBuilder = ({ agent }: AgentBuilderProps) => {
     <div className="flex h-[80vh] w-full border-2 border-dashed border-slate-300 dark:border-slate-700 rounded-xl overflow-hidden card-shadow-lg bg-white dark:bg-slate-800">
       <AgentBuilderContext.Provider value={contextValue}>
         <ReactFlowProvider>
-          <AgentComponentSidebar agent={agent} />
+          <AgentComponentSidebar
+            agent={agent}
+            isCollapsed={leftSidebarCollapsed}
+            onToggle={() => setLeftSidebarCollapsed(!leftSidebarCollapsed)}
+          />
           <div className="flex-grow workflow-canvas bg-slate-50 dark:bg-slate-900">
             <ReactFlow
               nodes={nodes}
@@ -345,7 +351,13 @@ export const AgentBuilder = ({ agent }: AgentBuilderProps) => {
               <Controls className="bg-white dark:bg-slate-800 rounded-lg shadow-lg border dark:border-slate-700" />
             </ReactFlow>
           </div>
-          <AgentPropertiesPanel agent={agent} selectedNode={selectedNode} onNodeDelete={onNodeDelete} />
+          <AgentPropertiesPanel
+            agent={agent}
+            selectedNode={selectedNode}
+            onNodeDelete={onNodeDelete}
+            isCollapsed={rightSidebarCollapsed}
+            onToggle={() => setRightSidebarCollapsed(!rightSidebarCollapsed)}
+          />
         </ReactFlowProvider>
       </AgentBuilderContext.Provider>
     </div>
