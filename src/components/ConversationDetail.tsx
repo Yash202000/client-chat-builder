@@ -470,20 +470,23 @@ export const ConversationDetail: React.FC<ConversationDetailProps> = ({ sessionI
     if (sessionId && agentId && token) {
       ws.current = new WebSocket(`${getWebSocketUrl()}/api/v1/ws/${agentId}/${sessionId}?user_type=agent&token=${token}`);
       ws.current.onmessage = (event) => {
-        const newMessage = JSON.parse(event.data);
+        const rawMessage = JSON.parse(event.data);
 
         // Filter out ping/pong messages
-        if (newMessage.type === 'ping' || newMessage.type === 'pong') {
+        if (rawMessage.type === 'ping' || rawMessage.type === 'pong') {
           return;
         }
 
         // Handle contact update messages
-        if (newMessage.type === 'contact_updated') {
-          console.log('[WebSocket] Contact updated:', newMessage);
+        if (rawMessage.type === 'contact_updated') {
+          console.log('[WebSocket] Contact updated:', rawMessage);
           // Refresh session details to get updated contact info
           queryClient.invalidateQueries({ queryKey: ['sessionDetails', sessionId] });
           return;
         }
+
+        // Unwrap message if it's wrapped in { type: "message", message: {...} }
+        const newMessage = rawMessage.type === 'message' && rawMessage.message ? rawMessage.message : rawMessage;
 
         // Filter out typing indicator messages - they should not appear as messages
         if (newMessage.message_type === 'typing') {
@@ -1129,7 +1132,7 @@ export const ConversationDetail: React.FC<ConversationDetailProps> = ({ sessionI
                                 em: ({node, ...props}) => <em className="italic" {...props} />,
                               }}
                             >
-                              {msg.message}
+                              {typeof msg.message === 'string' ? msg.message : JSON.stringify(msg.message)}
                             </ReactMarkdown>
                           </div>
                           {/* Render attachments with download links */}
