@@ -254,6 +254,8 @@ const Widget = ({ agentId, companyId, backendUrl, rtlOverride, languageOverride,
   const incomingAudioChunks = useRef<Blob[]>([]);
   const audioQueue = useRef<Blob[]>([]); // Queue of complete audio blobs to play
   const isPlayingAudio = useRef(false); // Whether audio is currently playing
+  const currentAudioRef = useRef<HTMLAudioElement | null>(null); // Reference to currently playing audio
+  const audioStoppedByUser = useRef(false); // Flag to prevent new audio after user interaction
 
   // Voice Activity Detection (VAD) state for voice-only mode
   const vadTimer = useRef<NodeJS.Timeout | null>(null);
@@ -651,6 +653,11 @@ const Widget = ({ agentId, companyId, backendUrl, rtlOverride, languageOverride,
     };
 
     voiceWs.current.onmessage = async (event) => {
+      // Ignore audio if user has stopped playback
+      if (audioStoppedByUser.current) {
+        return;
+      }
+
       // Handle binary audio data
       if (event.data instanceof Blob) {
         incomingAudioChunks.current.push(event.data);
@@ -685,6 +692,12 @@ const Widget = ({ agentId, companyId, backendUrl, rtlOverride, languageOverride,
 
     // Helper to finalize audio chunks and add to queue
     const finalizeAndQueueAudio = () => {
+      // Don't queue if user stopped audio
+      if (audioStoppedByUser.current) {
+        incomingAudioChunks.current = [];
+        return;
+      }
+
       if (incomingAudioChunks.current.length === 0) return;
 
       const fullAudioBlob = new Blob(incomingAudioChunks.current, { type: 'audio/webm' });
@@ -700,8 +713,17 @@ const Widget = ({ agentId, companyId, backendUrl, rtlOverride, languageOverride,
 
     // Play audio from queue sequentially
     const playNextInQueue = () => {
+      // Don't play if user stopped audio
+      if (audioStoppedByUser.current) {
+        audioQueue.current = [];
+        isPlayingAudio.current = false;
+        currentAudioRef.current = null;
+        return;
+      }
+
       if (audioQueue.current.length === 0) {
         isPlayingAudio.current = false;
+        currentAudioRef.current = null;
         return;
       }
 
@@ -709,6 +731,7 @@ const Widget = ({ agentId, companyId, backendUrl, rtlOverride, languageOverride,
       const audioBlob = audioQueue.current.shift()!;
       const audioUrl = URL.createObjectURL(audioBlob);
       const audio = new Audio(audioUrl);
+      currentAudioRef.current = audio; // Store reference for stopping
 
       // For voice-only mode, pause VAD while playing response
       if (settings?.communication_mode === 'voice') {
@@ -717,6 +740,7 @@ const Widget = ({ agentId, companyId, backendUrl, rtlOverride, languageOverride,
 
       audio.onended = () => {
         URL.revokeObjectURL(audioUrl); // Clean up
+        currentAudioRef.current = null;
         if (settings?.communication_mode === 'voice' && audioQueue.current.length === 0) {
           resumeVAD();
         }
@@ -727,11 +751,13 @@ const Widget = ({ agentId, companyId, backendUrl, rtlOverride, languageOverride,
       audio.onerror = () => {
         console.error('[Widget] Audio playback error');
         URL.revokeObjectURL(audioUrl);
+        currentAudioRef.current = null;
         playNextInQueue(); // Try next audio
       };
 
       audio.play().catch(err => {
         console.error('[Widget] Failed to play audio:', err);
+        currentAudioRef.current = null;
         playNextInQueue();
       });
     };
@@ -900,6 +926,39 @@ const Widget = ({ agentId, companyId, backendUrl, rtlOverride, languageOverride,
       mediaRecorder.current.resume();
     }
     monitorAudioLevel();
+  };
+
+  // Stop audio playback when user starts typing or sends a message
+  const stopAudioPlayback = () => {
+    // Set flag to prevent new audio
+    audioStoppedByUser.current = true;
+
+    // Clear timer
+    if (audioPlaybackTimer.current) {
+      clearTimeout(audioPlaybackTimer.current);
+      audioPlaybackTimer.current = null;
+    }
+
+    // Stop current audio
+    if (currentAudioRef.current) {
+      currentAudioRef.current.pause();
+      currentAudioRef.current.currentTime = 0;
+      if (currentAudioRef.current.src) {
+        URL.revokeObjectURL(currentAudioRef.current.src);
+      }
+      currentAudioRef.current = null;
+    }
+
+    // Clear queues
+    audioQueue.current = [];
+    isPlayingAudio.current = false;
+    incomingAudioChunks.current = [];
+    setIsTyping(false);
+
+    // Reset flag after delay to allow new response audio
+    setTimeout(() => {
+      audioStoppedByUser.current = false;
+    }, 1000);
   };
 
   // Stop Voice Activity Detection (but keep stream alive for reuse)
@@ -1145,6 +1204,9 @@ const Widget = ({ agentId, companyId, backendUrl, rtlOverride, languageOverride,
   const handleSendMessage = async (text: string, payload?: any) => {
     const messageText = text.trim();
     if (!messageText && !payload && !selectedFile && !selectedLocation) return;
+
+    // Stop any playing audio
+    stopAudioPlayback();
 
     // Validate input type constraint
     if (expectedInputType !== 'any') {
@@ -2033,7 +2095,10 @@ const Widget = ({ agentId, companyId, backendUrl, rtlOverride, languageOverride,
                   <input
                     type="text"
                     value={inputValue}
-                    onChange={e => setInputValue(e.target.value)}
+                    onChange={e => {
+                      setInputValue(e.target.value);
+                      stopAudioPlayback();
+                    }}
                     onKeyPress={e => e.key === 'Enter' && !isTextInputDisabled && handleSendMessage(inputValue)}
                     disabled={isTextInputDisabled || expectedInputType === 'attachment' || expectedInputType === 'location'}
                     placeholder={
