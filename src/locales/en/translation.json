@@ -1513,6 +1513,7 @@
         "prebuiltTools": "Pre-built Tools",
         "customTools": "Custom Tools",
         "nodes": {
+          "start": "Start",
           "websocket": "WebSocket",
           "whatsapp": "WhatsApp",
           "telegram": "Telegram",

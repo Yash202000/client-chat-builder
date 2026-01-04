@@ -1489,6 +1489,7 @@
         "prebuiltTools": "أدوات جاهزة",
         "customTools": "أدوات مخصصة",
         "nodes": {
+          "start": "بداية",
           "websocket": "WebSocket",
           "whatsapp": "واتساب",
           "telegram": "تيليجرام",
