@@ -293,7 +293,8 @@
       "resolvedConversation": "✓ محادثة محلولة",
       "reopened": "🔄 أعيد فتحها {{time}}",
       "clientConnected": "العميل متصل",
-      "clientOffline": "العميل غير متصل"
+      "clientOffline": "العميل غير متصل",
+      "lastActive": "نشط {{time}}"
     },
     "notifications": {
       "title": "الإشعارات",
@@ -1489,6 +1490,7 @@
         "prebuiltTools": "أدوات جاهزة",
         "customTools": "أدوات مخصصة",
         "nodes": {
+          "start": "بداية",
           "websocket": "WebSocket",
           "whatsapp": "واتساب",
           "telegram": "تيليجرام",

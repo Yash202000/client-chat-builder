@@ -100,7 +100,7 @@ export const IntegrationDialog: React.FC<IntegrationDialogProps> = ({ isOpen, on
   };
 
   const renderCredentialFields = () => {
-    const webhookUrlBase = `${window.location.origin}/api/v1/webhooks/channels`;
+    const webhookUrlBase = `${window.location.origin}/api/v1/webhooks`;
 
     const webhookInfoBoxClasses = "space-y-2 p-4 border rounded-lg bg-slate-50 dark:bg-slate-900/50 border-slate-200 dark:border-slate-700";
     const labelClasses = "dark:text-gray-300";
