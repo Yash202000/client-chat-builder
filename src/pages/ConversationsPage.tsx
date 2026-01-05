@@ -514,6 +514,12 @@ const ConversationsPage: React.FC = () => {
     return session.assignee_id === user?.id;
   };
 
+  // Check if channel supports real-time connection status
+  // Only websocket/web channels can show online/offline - external platforms cannot
+  const isWebChannel = (channel?: string) => {
+    return !channel || channel === 'web' || channel === 'websocket' || channel === 'web_chat';
+  };
+
   // Conversation Card Component
   const ConversationCard = ({ session }: { session: Session }) => {
     const assignedToMe = isAssignedToMe(session);
@@ -545,11 +551,11 @@ const ConversationsPage: React.FC = () => {
         <div className={`flex items-start gap-3 ${isRTL ? 'flex-row-reverse' : ''}`}>
           <div className="flex-shrink-0 mt-1 relative">
             {getChannelIcon(session.channel)}
-            {/* Connection status indicator for assigned conversations */}
-            {assignedToMe && session.is_client_connected && (
+            {/* Connection status indicator for assigned conversations - only for web channels */}
+            {assignedToMe && isWebChannel(session.channel) && session.is_client_connected && (
               <span className={`absolute -top-1 h-2 w-2 bg-green-500 rounded-full animate-pulse ${isRTL ? '-left-1' : '-right-1'}`} title="Client connected"></span>
             )}
-            {assignedToMe && !session.is_client_connected && (
+            {assignedToMe && isWebChannel(session.channel) && !session.is_client_connected && (
               <span className={`absolute -top-1 h-2 w-2 bg-red-500 rounded-full ${isRTL ? '-left-1' : '-right-1'}`} title="Client disconnected"></span>
             )}
             {/* Status indicator dot for non-assigned */}
@@ -607,14 +613,21 @@ const ConversationsPage: React.FC = () => {
                 <span className="text-sm">💼</span> {t('conversations.card.assignedTo', { email: getAssigneeEmail(session.assignee_id) })}
               </p>
             )}
-            {assignedToMe && session.is_client_connected && (
+            {/* Web channel: show online/offline status */}
+            {assignedToMe && isWebChannel(session.channel) && session.is_client_connected && (
               <p className="text-xs text-amber-700 dark:text-amber-300 mt-1 truncate flex items-center gap-1 font-semibold">
                 <span className="text-sm">🟢</span> {t('conversations.card.assignedToYouOnline')}
               </p>
             )}
-            {assignedToMe && !session.is_client_connected && (
+            {assignedToMe && isWebChannel(session.channel) && !session.is_client_connected && (
               <p className="text-xs text-red-600 dark:text-red-400 mt-1 truncate flex items-center gap-1 font-semibold">
                 <span className="text-sm">🔴</span> {t('conversations.card.clientDisconnected')}
+              </p>
+            )}
+            {/* External channels: show last active time instead */}
+            {assignedToMe && !isWebChannel(session.channel) && session.last_message_timestamp && (
+              <p className="text-xs text-gray-600 dark:text-gray-400 mt-1 truncate flex items-center gap-1 font-semibold">
+                <span className="text-sm">⏱️</span> {t('conversations.card.lastActive', { time: formatDistanceToNow(new Date(session.last_message_timestamp), { addSuffix: true }) })}
               </p>
             )}
             {session.status === 'resolved' && (

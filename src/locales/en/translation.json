@@ -297,7 +297,8 @@
       "resolvedConversation": "✓ Resolved conversation",
       "reopened": "🔄 Reopened {{time}}",
       "clientConnected": "Client connected",
-      "clientOffline": "Client disconnected"
+      "clientOffline": "Client disconnected",
+      "lastActive": "Active {{time}}"
     },
     "notifications": {
       "title": "Notifications",

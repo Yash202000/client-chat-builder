@@ -293,7 +293,8 @@
       "resolvedConversation": "✓ محادثة محلولة",
       "reopened": "🔄 أعيد فتحها {{time}}",
       "clientConnected": "العميل متصل",
-      "clientOffline": "العميل غير متصل"
+      "clientOffline": "العميل غير متصل",
+      "lastActive": "نشط {{time}}"
     },
     "notifications": {
       "title": "الإشعارات",

@@ -50,6 +50,11 @@ export const AgentList = () => {
   const [channelFilter, setChannelFilter] = useState<string>('all');
   const [assigneeFilter, setAssigneeFilter] = useState<string>('all');
 
+  // Check if channel supports real-time connection status
+  const isWebChannel = (channel?: string) => {
+    return !channel || channel === 'web' || channel === 'websocket' || channel === 'web_chat';
+  };
+
   const { data: agents, isLoading, isError } = useQuery<Agent[]>({
     queryKey: ['agents', companyId],
     queryFn: async () => {
@@ -364,7 +369,8 @@ export const AgentList = () => {
                               <span className="font-semibold text-gray-900 dark:text-white truncate">
                                 {session.contact_name || session.contact_phone || `Session ${session.conversation_id.substring(0, 8)}...`}
                               </span>
-                              {session.is_client_connected && (
+                              {/* Only show online indicator for web channels */}
+                              {isWebChannel(session.channel) && session.is_client_connected && (
                                 <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse" title="Online"></span>
                               )}
                             </div>
