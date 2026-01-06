@@ -603,7 +603,7 @@ const Index = () => {
                 © 2025 AgentConnect. Building the future of AI-powered customer engagement.
               </p>
               <div className="flex items-center gap-6 text-sm text-gray-400">
-                <a href="#" className="hover:text-white transition-colors">Privacy Policy</a>
+                <a href="/privacy-policy" className="hover:text-white transition-colors">Privacy Policy</a>
                 <a href="#" className="hover:text-white transition-colors">Terms of Service</a>
                 <a href="#" className="hover:text-white transition-colors">Contact</a>
               </div>
