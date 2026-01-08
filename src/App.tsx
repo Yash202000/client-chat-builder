@@ -46,6 +46,7 @@ import { AgentWebhooksPage } from "./pages/AgentWebhooksPage";
 import { AgentCredentialsPage } from "./pages/AgentCredentialsPage";
 import GoogleCallback from "./pages/GoogleCallback";
 import PublishedPreviewPage from "./pages/PublishedPreviewPage";
+import PrivacyPolicy from "./pages/PrivacyPolicy";
 import AIImageGeneratorPage from "./pages/AIImageGeneratorPage";
 import AIImageGalleryPage from "./pages/AIImageGalleryPage";
 import AIChatPage from "./pages/AIChatPage";
@@ -100,6 +101,7 @@ const AppRoutes = () => {
       <Route path="/" element={<Index />} />
       <Route path="/login" element={<LoginPage />} />
       <Route path="/signup" element={<SignupPage />} />
+      <Route path="/privacy-policy" element={<PrivacyPolicy />} />
       <Route path="/accept-invite" element={<AcceptInvitationPage />} />
       <Route path="/preview/:publishId" element={<PublishedPreviewPage mode="widget" />} />
       <Route path="/chat/:publishId" element={<PublishedPreviewPage mode="fullpage" />} />
