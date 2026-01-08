@@ -186,6 +186,13 @@ const PropertiesPanel = ({ selectedNode, nodes, setNodes, deleteNode, workflowId
     handleDataChange('params', newParams);
   };
 
+  // Handle multiple params changes at once to avoid stale state issues
+  const handleMultipleParamsChange = (changes: Record<string, any>) => {
+    if (!currentNode) return;
+    const newParams = { ...(currentNode.data.params || {}), ...changes };
+    handleDataChange('params', newParams);
+  };
+
   const handleAgentChange = (agentId) => {
     if (!currentNode) return;
     const agent = agents.find(a => a.id === parseInt(agentId));
@@ -868,6 +875,129 @@ const PropertiesPanel = ({ selectedNode, nodes, setNodes, deleteNode, workflowId
                 {t("workflows.editor.properties.expectedInputTypeHelp") || "Widget will disable unavailable input options based on this setting."}
               </p>
             </div>
+            {/* Question Text (Optional) */}
+            <div className="mb-4">
+              <label className="block mb-2 font-medium text-sm text-slate-700 dark:text-slate-300">
+                {t("workflows.editor.properties.questionText") || "Question Text (Optional)"}
+              </label>
+              <VariableInput
+                value={(currentNode.data.params?.question_text) || ''}
+                onChange={(e) => handleParamsChange('question_text', e.target.value)}
+                placeholder={t("workflows.editor.properties.questionTextPlaceholder") || "e.g., What is your email address?"}
+                availableVars={availableVariables}
+                isRTL={isRTL}
+              />
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-2">
+                {t("workflows.editor.properties.questionTextHelp") || "Question to display. If empty, uses previous agent message for validation context."}
+              </p>
+            </div>
+            {/* Validation Mode */}
+            <div className="mb-4">
+              <label className="block mb-2 font-medium text-sm text-slate-700 dark:text-slate-300">
+                {t("workflows.editor.properties.validationMode") || "Validation Mode"}
+              </label>
+              <select
+                value={(currentNode.data.params?.validation_mode) || 'none'}
+                onChange={(e) => handleParamsChange('validation_mode', e.target.value)}
+                className="w-full px-3 py-2 rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400"
+                dir={isRTL ? 'rtl' : 'ltr'}
+              >
+                <option value="none">{t("workflows.editor.properties.validationModeNone") || "None - Accept any input"}</option>
+                <option value="exact">{t("workflows.editor.properties.validationModeExact") || "Exact - Basic type validation"}</option>
+                <option value="fuzzy">{t("workflows.editor.properties.validationModeFuzzy") || "Fuzzy - Similar text matching"}</option>
+                <option value="llm">{t("workflows.editor.properties.validationModeLlm") || "LLM - AI-powered semantic validation"}</option>
+              </select>
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-2">
+                {t("workflows.editor.properties.validationModeHelp") || "How strictly to validate user responses."}
+              </p>
+            </div>
+            {/* LLM Provider - shown when validation mode is LLM */}
+            {currentNode.data.params?.validation_mode === 'llm' && (
+              <div className="mb-4">
+                <label className="block mb-2 font-medium text-sm text-slate-700 dark:text-slate-300">
+                  {t("workflows.editor.properties.validationLlmProvider") || "LLM Provider"}
+                </label>
+                <select
+                  value={currentNode.data.params?.validation_llm_provider || 'groq'}
+                  onChange={(e) => {
+                    // Use handleMultipleParamsChange to update both provider and reset model atomically
+                    handleMultipleParamsChange({
+                      validation_llm_provider: e.target.value,
+                      validation_llm_model: ''
+                    });
+                  }}
+                  className="w-full px-3 py-2 rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400"
+                  dir={isRTL ? 'rtl' : 'ltr'}
+                >
+                  <option value="groq">Groq</option>
+                  <option value="openai">OpenAI</option>
+                  <option value="google">Google Gemini</option>
+                </select>
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-2">
+                  {t("workflows.editor.properties.validationLlmProviderHelp") || "Select the LLM provider for validation."}
+                </p>
+              </div>
+            )}
+            {/* LLM Model - shown when validation mode is LLM */}
+            {currentNode.data.params?.validation_mode === 'llm' && (
+              <div className="mb-4">
+                <label className="block mb-2 font-medium text-sm text-slate-700 dark:text-slate-300">
+                  {t("workflows.editor.properties.validationLlmModel") || "LLM Model"}
+                </label>
+                <select
+                  value={currentNode.data.params?.validation_llm_model || ''}
+                  onChange={(e) => handleParamsChange('validation_llm_model', e.target.value)}
+                  className="w-full px-3 py-2 rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400"
+                  dir={isRTL ? 'rtl' : 'ltr'}
+                >
+                  <option value="">{t("workflows.editor.properties.validationLlmModelDefault") || "Default (Provider's fastest model)"}</option>
+                  {(currentNode.data.params?.validation_llm_provider || 'groq') === 'groq' && (
+                    <>
+                      <option value="llama-3.1-8b-instant">Llama 3.1 8B Instant (Fastest)</option>
+                      <option value="llama-3.1-70b-versatile">Llama 3.1 70B Versatile</option>
+                      <option value="llama-3.3-70b-versatile">Llama 3.3 70B Versatile</option>
+                      <option value="mixtral-8x7b-32768">Mixtral 8x7B</option>
+                    </>
+                  )}
+                  {currentNode.data.params?.validation_llm_provider === 'openai' && (
+                    <>
+                      <option value="gpt-4o-mini">GPT-4o Mini (Fastest)</option>
+                      <option value="gpt-4o">GPT-4o</option>
+                      <option value="gpt-3.5-turbo">GPT-3.5 Turbo</option>
+                    </>
+                  )}
+                  {currentNode.data.params?.validation_llm_provider === 'google' && (
+                    <>
+                      <option value="gemini-1.5-flash">Gemini 1.5 Flash (Fastest)</option>
+                      <option value="gemini-1.5-pro">Gemini 1.5 Pro</option>
+                    </>
+                  )}
+                </select>
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-2">
+                  {t("workflows.editor.properties.validationLlmModelHelp") || "Select the model for validation. Leave empty for provider's default fast model."}
+                </p>
+              </div>
+            )}
+            {/* Max Retries - shown when validation is enabled */}
+            {(currentNode.data.params?.validation_mode && currentNode.data.params?.validation_mode !== 'none') && (
+              <div className="mb-4">
+                <label className="block mb-2 font-medium text-sm text-slate-700 dark:text-slate-300">
+                  {t("workflows.editor.properties.maxRetries") || "Maximum Retries"}
+                </label>
+                <input
+                  type="number"
+                  min="1"
+                  max="10"
+                  value={(currentNode.data.params?.max_retries) || 3}
+                  onChange={(e) => handleParamsChange('max_retries', parseInt(e.target.value) || 3)}
+                  className="w-full px-3 py-2 rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400"
+                  dir={isRTL ? 'rtl' : 'ltr'}
+                />
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-2">
+                  {t("workflows.editor.properties.maxRetriesHelp") || "Number of times to re-ask before continuing (default: 3)."}
+                </p>
+              </div>
+            )}
             {/* Data Format Hint */}
             <div className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-md border border-blue-200 dark:border-blue-800">
               <p className="text-xs font-medium text-blue-800 dark:text-blue-300 mb-2">{t("workflows.editor.properties.listenDataFormatTitle")}</p>
@@ -1072,6 +1202,112 @@ const PropertiesPanel = ({ selectedNode, nodes, setNodes, deleteNode, workflowId
                 {t("workflows.editor.properties.allowTextInputHelp")}
               </p>
             </div>
+            {/* Validation Mode for Prompt */}
+            <div className="mt-4 pt-4 border-t border-slate-200 dark:border-slate-700">
+              <label className="block mb-2 font-medium text-sm text-slate-700 dark:text-slate-300">
+                {t("workflows.editor.properties.validationMode") || "Validation Mode"}
+              </label>
+              <select
+                value={(currentNode.data.params?.validation_mode) || 'exact'}
+                onChange={(e) => handleParamsChange('validation_mode', e.target.value)}
+                className="w-full px-3 py-2 rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400"
+                dir={isRTL ? 'rtl' : 'ltr'}
+              >
+                <option value="exact">{t("workflows.editor.properties.validationModeExactPrompt") || "Exact - Strict string match"}</option>
+                <option value="fuzzy">{t("workflows.editor.properties.validationModeFuzzyPrompt") || "Fuzzy - Similar text matching"}</option>
+                <option value="llm">{t("workflows.editor.properties.validationModeLlmPrompt") || "LLM - AI-powered semantic matching"}</option>
+              </select>
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-2">
+                {t("workflows.editor.properties.validationModePromptHelp") || "How to match user responses to options (e.g., 'yes' → 'Yes, proceed')."}
+              </p>
+            </div>
+            {/* LLM Provider for Prompt - shown when validation mode is LLM */}
+            {currentNode.data.params?.validation_mode === 'llm' && (
+              <div className="mt-4">
+                <label className="block mb-2 font-medium text-sm text-slate-700 dark:text-slate-300">
+                  {t("workflows.editor.properties.validationLlmProvider") || "LLM Provider"}
+                </label>
+                <select
+                  value={currentNode.data.params?.validation_llm_provider || 'groq'}
+                  onChange={(e) => {
+                    // Use handleMultipleParamsChange to update both provider and reset model atomically
+                    handleMultipleParamsChange({
+                      validation_llm_provider: e.target.value,
+                      validation_llm_model: ''
+                    });
+                  }}
+                  className="w-full px-3 py-2 rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400"
+                  dir={isRTL ? 'rtl' : 'ltr'}
+                >
+                  <option value="groq">Groq</option>
+                  <option value="openai">OpenAI</option>
+                  <option value="google">Google Gemini</option>
+                </select>
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-2">
+                  {t("workflows.editor.properties.validationLlmProviderHelp") || "Select the LLM provider for validation."}
+                </p>
+              </div>
+            )}
+            {/* LLM Model for Prompt - shown when validation mode is LLM */}
+            {currentNode.data.params?.validation_mode === 'llm' && (
+              <div className="mt-4">
+                <label className="block mb-2 font-medium text-sm text-slate-700 dark:text-slate-300">
+                  {t("workflows.editor.properties.validationLlmModel") || "LLM Model"}
+                </label>
+                <select
+                  value={currentNode.data.params?.validation_llm_model || ''}
+                  onChange={(e) => handleParamsChange('validation_llm_model', e.target.value)}
+                  className="w-full px-3 py-2 rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400"
+                  dir={isRTL ? 'rtl' : 'ltr'}
+                >
+                  <option value="">{t("workflows.editor.properties.validationLlmModelDefault") || "Default (Provider's fastest model)"}</option>
+                  {(currentNode.data.params?.validation_llm_provider || 'groq') === 'groq' && (
+                    <>
+                      <option value="llama-3.1-8b-instant">Llama 3.1 8B Instant (Fastest)</option>
+                      <option value="llama-3.1-70b-versatile">Llama 3.1 70B Versatile</option>
+                      <option value="llama-3.3-70b-versatile">Llama 3.3 70B Versatile</option>
+                      <option value="mixtral-8x7b-32768">Mixtral 8x7B</option>
+                    </>
+                  )}
+                  {currentNode.data.params?.validation_llm_provider === 'openai' && (
+                    <>
+                      <option value="gpt-4o-mini">GPT-4o Mini (Fastest)</option>
+                      <option value="gpt-4o">GPT-4o</option>
+                      <option value="gpt-3.5-turbo">GPT-3.5 Turbo</option>
+                    </>
+                  )}
+                  {currentNode.data.params?.validation_llm_provider === 'google' && (
+                    <>
+                      <option value="gemini-1.5-flash">Gemini 1.5 Flash (Fastest)</option>
+                      <option value="gemini-1.5-pro">Gemini 1.5 Pro</option>
+                    </>
+                  )}
+                </select>
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-2">
+                  {t("workflows.editor.properties.validationLlmModelHelp") || "Select the model for validation. Leave empty for provider's default fast model."}
+                </p>
+              </div>
+            )}
+            {/* Max Retries for Prompt - shown when mode is fuzzy or llm */}
+            {(currentNode.data.params?.validation_mode === 'fuzzy' || currentNode.data.params?.validation_mode === 'llm') && (
+              <div className="mt-4">
+                <label className="block mb-2 font-medium text-sm text-slate-700 dark:text-slate-300">
+                  {t("workflows.editor.properties.maxRetries") || "Maximum Retries"}
+                </label>
+                <input
+                  type="number"
+                  min="1"
+                  max="10"
+                  value={(currentNode.data.params?.max_retries) || 3}
+                  onChange={(e) => handleParamsChange('max_retries', parseInt(e.target.value) || 3)}
+                  className="w-full px-3 py-2 rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400"
+                  dir={isRTL ? 'rtl' : 'ltr'}
+                />
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-2">
+                  {t("workflows.editor.properties.maxRetriesHelp") || "Number of times to re-ask before continuing (default: 3)."}
+                </p>
+              </div>
+            )}
           </div>
         )}
 
