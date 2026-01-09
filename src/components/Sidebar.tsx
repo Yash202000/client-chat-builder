@@ -4,7 +4,7 @@ import {
   SquareStack, Globe, ClipboardList, Wrench, ChevronDown, ChevronRight,
   Target, Notebook, CheckCircle, Database, Tag, UserPlus, Activity,
   Zap, Wifi, Phone, Send, Instagram, PanelLeftClose, PanelLeft, Layers,
-  Repeat, RefreshCw, PhoneCall, Server, PlayCircle
+  Repeat, RefreshCw, PhoneCall, Server, PlayCircle, ArrowRightLeft
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
@@ -146,6 +146,7 @@ const Sidebar = () => {
         <DraggableNode type="tag_conversation" label={t("workflows.editor.sidebar.nodes.tagConversation")} icon={<Tag size={20} />} nodeData={{}} isRTL={isRTL} isCollapsed={isCollapsed} />
         <DraggableNode type="assign_to_agent" label={t("workflows.editor.sidebar.nodes.assignToAgent")} icon={<UserPlus size={20} />} nodeData={{}} isRTL={isRTL} isCollapsed={isCollapsed} />
         <DraggableNode type="set_status" label={t("workflows.editor.sidebar.nodes.setStatus")} icon={<Activity size={20} />} nodeData={{}} isRTL={isRTL} isCollapsed={isCollapsed} />
+        <DraggableNode type="channel_redirect" label={t("workflows.editor.sidebar.nodes.channelRedirect")} icon={<ArrowRightLeft size={20} />} nodeData={{}} isRTL={isRTL} isCollapsed={isCollapsed} />
       </AccordionSection>
 
       {builtinTools.length > 0 && (

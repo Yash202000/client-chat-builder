@@ -2417,6 +2417,213 @@ const PropertiesPanel = ({ selectedNode, nodes, setNodes, deleteNode, workflowId
           </div>
         )}
 
+        {/* Channel Redirect Node */}
+        {currentNode.type === 'channel_redirect' && (
+          <div className="mb-5 p-4 bg-slate-50 dark:bg-slate-800/50 rounded-lg border border-slate-200 dark:border-slate-700">
+            <h3 className="text-base font-semibold mb-4 text-slate-900 dark:text-slate-100">
+              {t("workflows.editor.properties.channelRedirect.title") || "Channel Redirect"}
+            </h3>
+            <p className="text-sm text-slate-600 dark:text-slate-400 mb-4">
+              {t("workflows.editor.properties.channelRedirect.description") || "Redirect the conversation to another messaging channel"}
+            </p>
+
+            {/* Target Channel */}
+            <div className="mb-4">
+              <label className="block mb-2 font-medium text-sm text-slate-700 dark:text-slate-300">
+                {t("workflows.editor.properties.channelRedirect.targetChannel") || "Target Channel"}
+              </label>
+              <select
+                value={currentNode.data.target_channel || 'whatsapp'}
+                onChange={(e) => handleDataChange('target_channel', e.target.value)}
+                className="w-full px-3 py-2 rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400"
+                dir={isRTL ? 'rtl' : 'ltr'}
+              >
+                <option value="whatsapp">WhatsApp</option>
+                <option value="telegram">Telegram</option>
+                <option value="instagram">Instagram</option>
+                <option value="messenger">Messenger</option>
+              </select>
+            </div>
+
+            {/* Redirect Type */}
+            <div className="mb-4">
+              <label className="block mb-2 font-medium text-sm text-slate-700 dark:text-slate-300">
+                {t("workflows.editor.properties.channelRedirect.redirectType") || "Redirect Type"}
+              </label>
+              <select
+                value={currentNode.data.redirect_type || 'invite_link'}
+                onChange={(e) => handleDataChange('redirect_type', e.target.value)}
+                className="w-full px-3 py-2 rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400"
+                dir={isRTL ? 'rtl' : 'ltr'}
+              >
+                <option value="invite_link">{t("workflows.editor.properties.channelRedirect.inviteLink") || "Invite Link - Send message to target channel"}</option>
+                <option value="full_transfer">{t("workflows.editor.properties.channelRedirect.fullTransfer") || "Full Transfer - Migrate context to target channel"}</option>
+              </select>
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                {t("workflows.editor.properties.channelRedirect.redirectTypeHelp") || "Choose how to redirect the conversation"}
+              </p>
+            </div>
+
+            {/* Contact Info Source */}
+            <div className="mb-4">
+              <label className="block mb-2 font-medium text-sm text-slate-700 dark:text-slate-300">
+                {t("workflows.editor.properties.channelRedirect.contactInfoSource") || "Contact Info Source"}
+              </label>
+              <select
+                value={currentNode.data.contact_info_source || 'auto'}
+                onChange={(e) => handleDataChange('contact_info_source', e.target.value)}
+                className="w-full px-3 py-2 rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400"
+                dir={isRTL ? 'rtl' : 'ltr'}
+              >
+                <option value="auto">{t("workflows.editor.properties.channelRedirect.sourceAuto") || "Auto (Contact first, then variable)"}</option>
+                <option value="contact">{t("workflows.editor.properties.channelRedirect.sourceContact") || "From Contact Record"}</option>
+                <option value="variable">{t("workflows.editor.properties.channelRedirect.sourceVariable") || "From Workflow Variable"}</option>
+              </select>
+            </div>
+
+            {/* Variable Name - shown when source is auto or variable */}
+            {(currentNode.data.contact_info_source === 'auto' || currentNode.data.contact_info_source === 'variable') && (
+              <div className="mb-4">
+                <label className="block mb-2 font-medium text-sm text-slate-700 dark:text-slate-300">
+                  {t("workflows.editor.properties.channelRedirect.variableName") || "Variable Name (fallback)"}
+                </label>
+                <VariableInput
+                  value={currentNode.data.variable_name || ''}
+                  onChange={(e) => handleDataChange('variable_name', e.target.value)}
+                  placeholder="customer_phone"
+                  availableVars={availableVariables}
+                  isRTL={isRTL}
+                />
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                  {t("workflows.editor.properties.channelRedirect.variableNameHelp") || "Variable containing phone number or channel ID"}
+                </p>
+              </div>
+            )}
+
+            {/* Original Session Behavior */}
+            <div className="mb-4">
+              <label className="block mb-2 font-medium text-sm text-slate-700 dark:text-slate-300">
+                {t("workflows.editor.properties.channelRedirect.originalSessionBehavior") || "After Redirect"}
+              </label>
+              <select
+                value={currentNode.data.original_session_behavior || 'keep_active'}
+                onChange={(e) => handleDataChange('original_session_behavior', e.target.value)}
+                className="w-full px-3 py-2 rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400"
+                dir={isRTL ? 'rtl' : 'ltr'}
+              >
+                <option value="keep_active">{t("workflows.editor.properties.channelRedirect.keepActive") || "Keep Active (parallel sessions)"}</option>
+                <option value="pause">{t("workflows.editor.properties.channelRedirect.pause") || "Pause (resume if redirect fails)"}</option>
+                <option value="close">{t("workflows.editor.properties.channelRedirect.close") || "Close (mark resolved)"}</option>
+              </select>
+            </div>
+
+            {/* Workflow Continuation */}
+            <div className="mb-4">
+              <label className="block mb-2 font-medium text-sm text-slate-700 dark:text-slate-300">
+                {t("workflows.editor.properties.channelRedirect.workflowContinuation") || "Workflow Continuation"}
+              </label>
+              <select
+                value={currentNode.data.workflow_continuation || 'original'}
+                onChange={(e) => handleDataChange('workflow_continuation', e.target.value)}
+                className="w-full px-3 py-2 rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400"
+                dir={isRTL ? 'rtl' : 'ltr'}
+              >
+                <option value="original">{t("workflows.editor.properties.channelRedirect.continueOriginal") || "Continue on original channel"}</option>
+                <option value="transfer">{t("workflows.editor.properties.channelRedirect.transferWorkflow") || "Transfer workflow to target channel"}</option>
+              </select>
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                {t("workflows.editor.properties.channelRedirect.workflowContinuationHelp") || "Where should the workflow continue after redirect"}
+              </p>
+            </div>
+
+            {/* Invite Link Options */}
+            {currentNode.data.redirect_type === 'invite_link' && (
+              <div className="mb-4 p-3 bg-slate-100 dark:bg-slate-700/50 rounded-lg">
+                <label className="block mb-2 font-medium text-sm text-slate-700 dark:text-slate-300">
+                  {t("workflows.editor.properties.channelRedirect.inviteMessage") || "Invite Message"}
+                </label>
+                <VariableInput
+                  value={currentNode.data.invite_message || 'Continue our conversation on {{channel}}!'}
+                  onChange={(e) => handleDataChange('invite_message', e.target.value)}
+                  placeholder="Continue our conversation on {{channel}}!"
+                  availableVars={availableVariables}
+                  isRTL={isRTL}
+                  multiline={true}
+                />
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                  {t("workflows.editor.properties.channelRedirect.inviteMessageHelp") || "Use {{channel}} to insert the target channel name"}
+                </p>
+              </div>
+            )}
+
+            {/* Full Transfer Options */}
+            {currentNode.data.redirect_type === 'full_transfer' && (
+              <div className="mb-4 p-3 bg-slate-100 dark:bg-slate-700/50 rounded-lg space-y-4">
+                <div>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={currentNode.data.copy_context_variables || false}
+                      onChange={(e) => handleDataChange('copy_context_variables', e.target.checked)}
+                      className="w-4 h-4 rounded border-slate-300 dark:border-slate-600"
+                    />
+                    <span className="text-sm text-slate-700 dark:text-slate-300">
+                      {t("workflows.editor.properties.channelRedirect.copyContextVariables") || "Copy Context Variables"}
+                    </span>
+                  </label>
+                </div>
+                {currentNode.data.copy_context_variables && (
+                  <div>
+                    <label className="block mb-2 font-medium text-sm text-slate-700 dark:text-slate-300">
+                      {t("workflows.editor.properties.channelRedirect.variablesToCopy") || "Variables to Copy (comma-separated, empty = all)"}
+                    </label>
+                    <input
+                      type="text"
+                      value={(currentNode.data.context_variables_to_copy || []).join(', ')}
+                      onChange={(e) => handleDataChange('context_variables_to_copy', e.target.value.split(',').map(v => v.trim()).filter(v => v))}
+                      className="w-full px-3 py-2 rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400"
+                      placeholder="customer_name, order_id, preferences"
+                      dir={isRTL ? 'rtl' : 'ltr'}
+                    />
+                  </div>
+                )}
+                <div>
+                  <label className="block mb-2 font-medium text-sm text-slate-700 dark:text-slate-300">
+                    {t("workflows.editor.properties.channelRedirect.transferMessage") || "Transfer Welcome Message"}
+                  </label>
+                  <VariableInput
+                    value={currentNode.data.transfer_message || 'Continuing conversation from another channel.'}
+                    onChange={(e) => handleDataChange('transfer_message', e.target.value)}
+                    placeholder="Continuing conversation from another channel."
+                    availableVars={availableVariables}
+                    isRTL={isRTL}
+                    multiline={true}
+                  />
+                </div>
+              </div>
+            )}
+
+            {/* Error Handling */}
+            <div className="mb-4">
+              <label className="block mb-2 font-medium text-sm text-slate-700 dark:text-slate-300">
+                {t("workflows.editor.properties.channelRedirect.onFailure") || "On Failure"}
+              </label>
+              <select
+                value={currentNode.data.fallback_on_failure || 'continue'}
+                onChange={(e) => handleDataChange('fallback_on_failure', e.target.value)}
+                className="w-full px-3 py-2 rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400"
+                dir={isRTL ? 'rtl' : 'ltr'}
+              >
+                <option value="continue">{t("workflows.editor.properties.channelRedirect.continueFlow") || "Continue Flow"}</option>
+                <option value="error_edge">{t("workflows.editor.properties.channelRedirect.errorEdge") || "Use Error Edge"}</option>
+              </select>
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                {t("workflows.editor.properties.channelRedirect.onFailureHelp") || "What to do if redirect fails (missing contact info, channel not configured, etc.)"}
+              </p>
+            </div>
+          </div>
+        )}
+
         {/* For Each Loop Node */}
         {currentNode.type === 'foreach_loop' && (
           <div className="mb-5 p-4 bg-slate-50 dark:bg-slate-800/50 rounded-lg border border-slate-200 dark:border-slate-700">
