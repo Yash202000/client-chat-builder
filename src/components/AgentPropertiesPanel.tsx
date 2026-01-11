@@ -2,13 +2,14 @@ import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Trash2, ChevronDown, ChevronRight, Save, PanelRightClose, PanelRight } from 'lucide-react';
+import { Textarea } from '@/components/ui/textarea';
+import { Trash2, ChevronDown, ChevronRight, Save, PanelRightClose, PanelRight, Plus, X } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useI18n } from '@/hooks/useI18n';
 import { useAuth } from '@/hooks/useAuth';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { Team } from '@/types';
+import { Team, SpecializationTopic, AgentHandoffConfig } from '@/types';
 
 // Provider-specific model configurations
 const PROVIDER_MODELS: Record<string, Array<{ value: string; label: string }>> = {
@@ -98,6 +99,13 @@ export const AgentPropertiesPanel = ({ agent, selectedNode, onNodeDelete, isColl
     model_name: "llama-3.3-70b-versatile",
     handoff_team_id: null as number | null,
     vision_enabled: false,
+    // Agent-to-agent handoff fields
+    specialization_topics: [] as SpecializationTopic[],
+    handoff_config: {
+      accept_handoffs: false,
+      history_mode: 'full' as 'full' | 'summary' | 'none',
+      welcome_message_on_handoff: '',
+    } as AgentHandoffConfig,
   });
 
   const [hasChanges, setHasChanges] = useState(false);
@@ -118,6 +126,13 @@ export const AgentPropertiesPanel = ({ agent, selectedNode, onNodeDelete, isColl
         model_name: agent.model_name || "llama-3.3-70b-versatile",
         handoff_team_id: agent.handoff_team_id || null,
         vision_enabled: agent.vision_enabled || false,
+        // Agent-to-agent handoff fields
+        specialization_topics: agent.specialization_topics || [],
+        handoff_config: {
+          accept_handoffs: agent.handoff_config?.accept_handoffs ?? false,
+          history_mode: agent.handoff_config?.history_mode || 'full',
+          welcome_message_on_handoff: agent.handoff_config?.welcome_message_on_handoff || '',
+        },
       });
       setHasChanges(false);
     }
@@ -432,6 +447,140 @@ export const AgentPropertiesPanel = ({ agent, selectedNode, onNodeDelete, isColl
                 <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                   {t('agents.settingsPage.handoffTeamHelp', { defaultValue: 'Team to handle human support requests' })}
                 </p>
+              </div>
+            </CollapsibleSection>
+
+            {/* Agent Specialization */}
+            <CollapsibleSection title={t('agents.settingsPage.agentSpecialization', { defaultValue: 'Agent Specialization' })}>
+              <div className="space-y-3">
+                <p className="text-xs text-gray-500 dark:text-gray-400">
+                  {t('agents.settingsPage.specializationHelp', { defaultValue: 'Define topics this agent specializes in for agent-to-agent transfers.' })}
+                </p>
+
+                {/* Specialization Topics List */}
+                {agentConfig.specialization_topics.map((topic, index) => (
+                  <div key={index} className="bg-slate-50 dark:bg-slate-800 rounded-lg p-3 border border-slate-200 dark:border-slate-700">
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="flex-1 space-y-2">
+                        <Input
+                          value={topic.topic}
+                          onChange={(e) => {
+                            const newTopics = [...agentConfig.specialization_topics];
+                            newTopics[index] = { ...newTopics[index], topic: e.target.value };
+                            handleConfigChange('specialization_topics', newTopics);
+                          }}
+                          placeholder={t('agents.settingsPage.topicName', { defaultValue: 'Topic (e.g., billing, support)' })}
+                          className="text-sm dark:bg-slate-900 dark:border-slate-600 dark:text-white"
+                        />
+                        <Input
+                          value={topic.description}
+                          onChange={(e) => {
+                            const newTopics = [...agentConfig.specialization_topics];
+                            newTopics[index] = { ...newTopics[index], description: e.target.value };
+                            handleConfigChange('specialization_topics', newTopics);
+                          }}
+                          placeholder={t('agents.settingsPage.topicDescription', { defaultValue: 'Description of what this agent handles' })}
+                          className="text-sm dark:bg-slate-900 dark:border-slate-600 dark:text-white"
+                        />
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8 text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20"
+                        onClick={() => {
+                          const newTopics = agentConfig.specialization_topics.filter((_, i) => i !== index);
+                          handleConfigChange('specialization_topics', newTopics);
+                        }}
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+
+                {/* Add Topic Button */}
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="w-full border-dashed"
+                  onClick={() => {
+                    handleConfigChange('specialization_topics', [
+                      ...agentConfig.specialization_topics,
+                      { topic: '', description: '' }
+                    ]);
+                  }}
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  {t('agents.settingsPage.addTopic', { defaultValue: 'Add Specialization Topic' })}
+                </Button>
+              </div>
+            </CollapsibleSection>
+
+            {/* Agent-to-Agent Handoff Configuration */}
+            <CollapsibleSection title={t('agents.settingsPage.agentHandoff', { defaultValue: 'Agent-to-Agent Handoff' })}>
+              <div className="space-y-3">
+                {/* Accept Handoffs Toggle */}
+                <div className="flex items-center justify-between py-2">
+                  <div>
+                    <Label className="text-xs font-medium dark:text-gray-300">
+                      {t('agents.settingsPage.acceptHandoffs', { defaultValue: 'Accept Handoffs' })}
+                    </Label>
+                    <p className="text-xs text-slate-500 dark:text-slate-400">
+                      {t('agents.settingsPage.acceptHandoffsHelp', { defaultValue: 'Allow other agents to transfer conversations to this agent' })}
+                    </p>
+                  </div>
+                  <input
+                    type="checkbox"
+                    checked={agentConfig.handoff_config.accept_handoffs}
+                    onChange={(e) => handleConfigChange('handoff_config', {
+                      ...agentConfig.handoff_config,
+                      accept_handoffs: e.target.checked
+                    })}
+                    className="h-4 w-4 rounded border-gray-300 text-green-600 focus:ring-green-500"
+                  />
+                </div>
+
+                {/* History Mode */}
+                <div>
+                  <Label className="text-xs font-medium dark:text-gray-300">
+                    {t('agents.settingsPage.historyMode', { defaultValue: 'History Mode' })}
+                  </Label>
+                  <select
+                    value={agentConfig.handoff_config.history_mode}
+                    onChange={(e) => handleConfigChange('handoff_config', {
+                      ...agentConfig.handoff_config,
+                      history_mode: e.target.value as 'full' | 'summary' | 'none'
+                    })}
+                    className={selectClassName}
+                  >
+                    <option value="full">{t('agents.settingsPage.historyModes.full', { defaultValue: 'Full - Receive complete conversation history' })}</option>
+                    <option value="summary">{t('agents.settingsPage.historyModes.summary', { defaultValue: 'Summary - Receive only a summary' })}</option>
+                    <option value="none">{t('agents.settingsPage.historyModes.none', { defaultValue: 'None - Start fresh without context' })}</option>
+                  </select>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                    {t('agents.settingsPage.historyModeHelp', { defaultValue: 'How much conversation history to receive when taking over a conversation' })}
+                  </p>
+                </div>
+
+                {/* Welcome Message on Handoff */}
+                <div>
+                  <Label className="text-xs font-medium dark:text-gray-300">
+                    {t('agents.settingsPage.welcomeMessageOnHandoff', { defaultValue: 'Welcome Message on Handoff' })}
+                  </Label>
+                  <Textarea
+                    value={agentConfig.handoff_config.welcome_message_on_handoff}
+                    onChange={(e) => handleConfigChange('handoff_config', {
+                      ...agentConfig.handoff_config,
+                      welcome_message_on_handoff: e.target.value
+                    })}
+                    placeholder={t('agents.settingsPage.welcomeMessageOnHandoffPlaceholder', { defaultValue: "Hi! I'm the billing specialist. How can I help you today?" })}
+                    className="text-sm dark:bg-slate-800 dark:border-slate-600 dark:text-white resize-none"
+                    rows={3}
+                  />
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                    {t('agents.settingsPage.welcomeMessageOnHandoffHelp', { defaultValue: 'Message to send when this agent takes over a conversation' })}
+                  </p>
+                </div>
               </div>
             </CollapsibleSection>
           </div>

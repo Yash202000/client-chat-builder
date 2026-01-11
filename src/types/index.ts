@@ -35,6 +35,19 @@ export const PRIORITY_CONFIG: Record<number, { label: string; color: string; bgC
   4: { label: 'Urgent', color: 'text-red-600', bgColor: 'bg-red-100', borderColor: 'border-l-red-500' },
 };
 
+// Agent specialization topic configuration
+export interface SpecializationTopic {
+  topic: string;
+  description: string;
+}
+
+// Agent-to-agent handoff configuration
+export interface AgentHandoffConfig {
+  accept_handoffs?: boolean;
+  history_mode?: 'full' | 'summary' | 'none';
+  welcome_message_on_handoff?: string;
+}
+
 export interface Agent {
   id: number;
   name: string;
@@ -70,6 +83,9 @@ export interface Agent {
   updated_at: string;
   tools: Tool[];
   knowledge_bases?: KnowledgeBase[];
+  // Agent-to-agent handoff fields
+  specialization_topics?: SpecializationTopic[];
+  handoff_config?: AgentHandoffConfig;
 }
 
 export interface MessageAttachment {
