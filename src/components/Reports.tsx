@@ -342,6 +342,7 @@ export const Reports = () => {
       'gmail': '📧',
       'twilio_voice': '📞',
       'freeswitch': '☎️',
+      'api': '🔌',
     };
     return emojis[channel] || '💬';
   };
