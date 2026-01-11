@@ -35,6 +35,19 @@ export const PRIORITY_CONFIG: Record<number, { label: string; color: string; bgC
   4: { label: 'Urgent', color: 'text-red-600', bgColor: 'bg-red-100', borderColor: 'border-l-red-500' },
 };
 
+// Agent specialization topic configuration
+export interface SpecializationTopic {
+  topic: string;
+  description: string;
+}
+
+// Agent-to-agent handoff configuration
+export interface AgentHandoffConfig {
+  accept_handoffs?: boolean;
+  history_mode?: 'full' | 'summary' | 'none';
+  welcome_message_on_handoff?: string;
+}
+
 export interface Agent {
   id: number;
   name: string;
@@ -70,6 +83,9 @@ export interface Agent {
   updated_at: string;
   tools: Tool[];
   knowledge_bases?: KnowledgeBase[];
+  // Agent-to-agent handoff fields
+  specialization_topics?: SpecializationTopic[];
+  handoff_config?: AgentHandoffConfig;
 }
 
 export interface MessageAttachment {
@@ -311,3 +327,63 @@ export const NOTE_TYPE_CONFIG: Record<NoteType, { label: string; icon: string; c
   email: { label: 'Email', icon: 'Mail', color: 'text-purple-600', bgColor: 'bg-purple-100' },
   task: { label: 'Task', icon: 'CheckSquare', color: 'text-orange-600', bgColor: 'bg-orange-100' },
 };
+
+// API Channel Types
+export interface ApiKey {
+  id: number;
+  name: string;
+  key: string;
+  created_at: string;
+  expires_at?: string;
+  scopes?: string[];
+  last_used_at?: string;
+  is_active: boolean;
+}
+
+export interface ApiIntegration {
+  id: number;
+  name: string;
+  description?: string;
+  api_key_id: number;
+  company_id: number;
+  webhook_url?: string;
+  webhook_secret?: string;
+  webhook_enabled: boolean;
+  sync_response: boolean;
+  default_agent_id?: number;
+  default_workflow_id?: number;
+  rate_limit_requests?: number;
+  rate_limit_window?: number;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+  api_key_name?: string;
+  api_key_prefix?: string;
+}
+
+export interface ApiIntegrationCreate {
+  name: string;
+  description?: string;
+  webhook_url?: string;
+  webhook_secret?: string;
+  webhook_enabled?: boolean;
+  sync_response?: boolean;
+  default_agent_id?: number;
+  default_workflow_id?: number;
+  rate_limit_requests?: number;
+  rate_limit_window?: number;
+}
+
+export interface ApiIntegrationUpdate {
+  name?: string;
+  description?: string;
+  webhook_url?: string;
+  webhook_secret?: string;
+  webhook_enabled?: boolean;
+  sync_response?: boolean;
+  default_agent_id?: number;
+  default_workflow_id?: number;
+  rate_limit_requests?: number;
+  rate_limit_window?: number;
+  is_active?: boolean;
+}

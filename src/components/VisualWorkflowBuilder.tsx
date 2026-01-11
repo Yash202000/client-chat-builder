@@ -26,7 +26,7 @@ import {
   LlmNode, ToolNode, ConditionNode, OutputNode, StartNode, ListenNode, PromptNode,
   KnowledgeNode, CodeNode, DataManipulationNode, HttpRequestNode, FormNode,
   IntentRouterNode, EntityCollectorNode, CheckEntityNode, UpdateContextNode,
-  TagConversationNode, AssignToAgentNode, SetStatusNode, QuestionClassifierNode,
+  TagConversationNode, AssignToAgentNode, SetStatusNode, ChannelRedirectNode, QuestionClassifierNode,
   ExtractEntitiesNode, SubworkflowNode,
   TriggerWebSocketNode, TriggerWhatsAppNode, TriggerTelegramNode, TriggerInstagramNode,
   TriggerTwilioVoiceNode, TriggerFreeSwitchNode,
@@ -104,8 +104,8 @@ const VisualWorkflowBuilder = () => {
     // Chat-specific nodes
     intent_router: IntentRouterNode, entity_collector: EntityCollectorNode, check_entity: CheckEntityNode,
     update_context: UpdateContextNode, tag_conversation: TagConversationNode,
-    assign_to_agent: AssignToAgentNode, set_status: SetStatusNode, question_classifier: QuestionClassifierNode,
-    extract_entities: ExtractEntitiesNode,
+    assign_to_agent: AssignToAgentNode, set_status: SetStatusNode, channel_redirect: ChannelRedirectNode,
+    question_classifier: QuestionClassifierNode, extract_entities: ExtractEntitiesNode,
     // Subworkflow node
     subworkflow: SubworkflowNode,
     // Loop nodes

@@ -29,6 +29,7 @@ import { IntegrationsList } from "./IntegrationsList";
 import { ApiKeys } from "./ApiKeys";
 import { ProactiveMessageTester } from "./ProactiveMessageTester";
 import { ApiDocs } from "./ApiDocs";
+import { ApiIntegrationsList } from "./ApiIntegrationsList";
 import { TwilioPhoneNumbersManager } from "./TwilioPhoneNumbersManager";
 import { FreeSwitchPhoneNumbersManager } from "./FreeSwitchPhoneNumbersManager";
 import { useQuery } from "@tanstack/react-query";
@@ -795,11 +796,15 @@ export const Settings = () => {
           <Tabs defaultValue="api-keys" className="space-y-6" dir={isRTL ? 'rtl' : 'ltr'}>
             <TabsList>
               <TabsTrigger value="api-keys">{t('settings.apiKeys')}</TabsTrigger>
+              <TabsTrigger value="api-integrations">{t('settings.apiIntegrations', 'API Channel')}</TabsTrigger>
               <TabsTrigger value="tester">{t('settings.tester')}</TabsTrigger>
               <TabsTrigger value="documentation">{t('settings.documentation')}</TabsTrigger>
             </TabsList>
             <TabsContent value="api-keys">
               <ApiKeys />
+            </TabsContent>
+            <TabsContent value="api-integrations">
+              <ApiIntegrationsList />
             </TabsContent>
             <TabsContent value="tester">
               <ProactiveMessageTester />

@@ -5,7 +5,7 @@ import {
   Bot, Cog, GitBranch, MessageSquare, Ear, HelpCircle, BookOpen, Code,
   SquareStack, Globe, ClipboardList, Target, Notebook, CheckCircle,
   Database, Tag, UserPlus, Activity, Zap, Phone, Send, Instagram, Wifi, Layers,
-  Repeat, RefreshCw, PhoneCall, Server
+  Repeat, RefreshCw, PhoneCall, Server, ArrowRightLeft
 } from 'lucide-react';
 
 export const LlmNode = ({ data }) => (
@@ -352,6 +352,23 @@ export const SetStatusNode = ({ data }) => (
     </div>
     <div className="text-xs text-slate-600 dark:text-slate-400 font-medium">Changes conversation status</div>
     <Handle type="source" position={Position.Bottom} id="output" className="w-3 h-3 !bg-slate-600 dark:!bg-slate-400 border-2 border-white dark:border-slate-800" />
+  </div>
+);
+
+export const ChannelRedirectNode = ({ data }) => (
+  <div className="px-4 py-3 border-2 border-rose-200 dark:border-rose-700 rounded-xl bg-gradient-to-br from-rose-50 to-pink-50 dark:from-rose-950/50 dark:to-pink-950/50 shadow-lg hover:shadow-xl transition-shadow backdrop-blur-sm">
+    <Handle type="target" position={Position.Top} className="w-3 h-3 !bg-rose-500 dark:!bg-rose-400 border-2 border-white dark:border-slate-800" />
+    <div className="flex items-center gap-2 mb-2">
+      <div className="p-1.5 rounded-lg bg-rose-500 dark:bg-rose-600">
+        <ArrowRightLeft size={16} className="text-white" />
+      </div>
+      <strong className="text-sm font-semibold text-slate-900 dark:text-white">{data.label || 'Channel Redirect'}</strong>
+    </div>
+    <div className="text-xs text-slate-600 dark:text-slate-400 font-medium">
+      {data.target_channel ? `Redirect to ${data.target_channel}` : 'Redirects to another channel'}
+    </div>
+    <Handle type="source" position={Position.Bottom} id="output" className="w-3 h-3 !bg-slate-600 dark:!bg-slate-400 border-2 border-white dark:border-slate-800" />
+    <Handle type="source" position={Position.Right} id="error" className="w-3 h-3 !bg-red-500 dark:!bg-red-400 border-2 border-white dark:border-slate-800" />
   </div>
 );
 

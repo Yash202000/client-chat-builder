@@ -1269,31 +1269,76 @@ export const TeamManagement = () => {
                   </div>
                 </div>
               ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 max-h-80 overflow-y-auto p-3 border rounded-lg bg-slate-50 dark:bg-slate-900/50 border-slate-200 dark:border-slate-700">
-                  {permissions.map((p) => (
-                    <div
-                      key={p.id}
-                      className={`flex items-center space-x-2 p-2.5 rounded-lg border transition-all cursor-pointer hover:shadow-sm ${
-                        rolePermissions.includes(p.id)
-                          ? 'bg-blue-50 dark:bg-blue-900/30 border-blue-300 dark:border-blue-700'
-                          : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-600'
-                      }`}
-                      onClick={() => handlePermissionToggle(p.id)}
-                    >
-                      <Checkbox
-                        id={`perm-${p.id}`}
-                        checked={rolePermissions.includes(p.id)}
-                        onCheckedChange={() => handlePermissionToggle(p.id)}
-                        className="dark:border-slate-500"
-                      />
-                      <label
-                        htmlFor={`perm-${p.id}`}
-                        className="text-sm font-medium leading-none cursor-pointer dark:text-white flex-1"
-                      >
-                        {p.name}
-                      </label>
+                <div className="max-h-80 overflow-y-auto p-3 border rounded-lg bg-slate-50 dark:bg-slate-900/50 border-slate-200 dark:border-slate-700 space-y-4">
+                  {/* Page Access Permissions */}
+                  {permissions.filter(p => p.name.startsWith('page:')).length > 0 && (
+                    <div>
+                      <h5 className="text-xs font-semibold text-purple-600 dark:text-purple-400 uppercase tracking-wider mb-2 flex items-center gap-2">
+                        <Shield className="h-3.5 w-3.5" />
+                        {t('teamManagement.dialogs.role.pageAccess', 'Page Access')}
+                      </h5>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
+                        {permissions.filter(p => p.name.startsWith('page:')).map((p) => (
+                          <div
+                            key={p.id}
+                            className={`flex items-center space-x-2 p-2.5 rounded-lg border transition-all cursor-pointer hover:shadow-sm ${
+                              rolePermissions.includes(p.id)
+                                ? 'bg-purple-50 dark:bg-purple-900/30 border-purple-300 dark:border-purple-700'
+                                : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-600'
+                            }`}
+                            onClick={() => handlePermissionToggle(p.id)}
+                          >
+                            <Checkbox
+                              id={`perm-${p.id}`}
+                              checked={rolePermissions.includes(p.id)}
+                              onCheckedChange={() => handlePermissionToggle(p.id)}
+                              className="dark:border-slate-500"
+                            />
+                            <label
+                              htmlFor={`perm-${p.id}`}
+                              className="text-sm font-medium leading-none cursor-pointer dark:text-white flex-1"
+                            >
+                              {p.name.replace('page:', '')}
+                            </label>
+                          </div>
+                        ))}
+                      </div>
                     </div>
-                  ))}
+                  )}
+
+                  {/* API Permissions */}
+                  <div>
+                    <h5 className="text-xs font-semibold text-blue-600 dark:text-blue-400 uppercase tracking-wider mb-2 flex items-center gap-2">
+                      <Shield className="h-3.5 w-3.5" />
+                      {t('teamManagement.dialogs.role.apiPermissions', 'API Permissions')}
+                    </h5>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
+                      {permissions.filter(p => !p.name.startsWith('page:')).map((p) => (
+                        <div
+                          key={p.id}
+                          className={`flex items-center space-x-2 p-2.5 rounded-lg border transition-all cursor-pointer hover:shadow-sm ${
+                            rolePermissions.includes(p.id)
+                              ? 'bg-blue-50 dark:bg-blue-900/30 border-blue-300 dark:border-blue-700'
+                              : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-600'
+                          }`}
+                          onClick={() => handlePermissionToggle(p.id)}
+                        >
+                          <Checkbox
+                            id={`perm-${p.id}`}
+                            checked={rolePermissions.includes(p.id)}
+                            onCheckedChange={() => handlePermissionToggle(p.id)}
+                            className="dark:border-slate-500"
+                          />
+                          <label
+                            htmlFor={`perm-${p.id}`}
+                            className="text-sm font-medium leading-none cursor-pointer dark:text-white flex-1"
+                          >
+                            {p.name}
+                          </label>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
                 </div>
               )}
             </div>

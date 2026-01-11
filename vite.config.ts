@@ -32,6 +32,7 @@ export default defineConfig(({ mode }) => {
       "style-src 'self' 'unsafe-inline'; " +
       `img-src 'self' ${backendUrl} https://avatar.vercel.sh https: data: blob:; ` +
       "font-src 'self' data:; " +
+      "media-src 'self' blob:; " +
       `connect-src 'self' ${backendUrl} https://*.livekit.cloud wss://*.livekit.cloud ws: wss: https://ultralytics.com;`
     }
   },

@@ -1539,6 +1539,7 @@
           "tagConversation": "Tag Conversation",
           "assignToAgent": "Assign to Agent",
           "setStatus": "Set Status",
+          "channelRedirect": "Channel Redirect",
           "subworkflow": "Subworkflow",
           "forEachLoop": "For Each Loop",
           "whileLoop": "While Loop"
@@ -1919,6 +1920,38 @@
           "statusReasonPlaceholder": "e.g., Issue resolved via {{context.resolution_method}}",
           "autoCloseAfter": "Auto-close After (minutes):",
           "autoCloseAfterPlaceholder": "Leave empty for no auto-close"
+        },
+        "channelRedirect": {
+          "title": "Channel Redirect",
+          "description": "Redirect the conversation to another messaging channel",
+          "targetChannel": "Target Channel",
+          "redirectType": "Redirect Type",
+          "inviteLink": "Invite Link - Send message to target channel",
+          "fullTransfer": "Full Transfer - Migrate context to target channel",
+          "redirectTypeHelp": "Choose how to redirect the conversation",
+          "contactInfoSource": "Contact Info Source",
+          "sourceAuto": "Auto (Contact first, then variable)",
+          "sourceContact": "From Contact Record",
+          "sourceVariable": "From Workflow Variable",
+          "variableName": "Variable Name (fallback)",
+          "variableNameHelp": "Variable containing phone number or channel ID",
+          "originalSessionBehavior": "After Redirect",
+          "keepActive": "Keep Active (parallel sessions)",
+          "pause": "Pause (resume if redirect fails)",
+          "close": "Close (mark resolved)",
+          "inviteMessage": "Invite Message",
+          "inviteMessageHelp": "Use {{channel}} to insert the target channel name",
+          "copyContextVariables": "Copy Context Variables",
+          "variablesToCopy": "Variables to Copy (comma-separated, empty = all)",
+          "transferMessage": "Transfer Welcome Message",
+          "onFailure": "On Failure",
+          "continueFlow": "Continue Flow",
+          "errorEdge": "Use Error Edge",
+          "onFailureHelp": "What to do if redirect fails (missing contact info, channel not configured, etc.)",
+          "workflowContinuation": "Workflow Continuation",
+          "continueOriginal": "Continue on original channel",
+          "transferWorkflow": "Transfer workflow to target channel",
+          "workflowContinuationHelp": "Where should the workflow continue after redirect"
         }
       }
     }

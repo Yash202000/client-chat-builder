@@ -380,45 +380,45 @@ const AppLayout = () => {
 
   const sidebarItems = [
     // Core Operations
-    { titleKey: "navigation.activeClients", url: "/dashboard/conversations", icon: Inbox, permission: "conversation:read" },
-    { titleKey: "navigation.agents", url: "/dashboard/agents", icon: Bot, permission: "agent:read" },
-    { titleKey: "navigation.agentBuilder", url: "/dashboard/builder", icon: Settings, permission: "agent:update" },
-    { titleKey: "navigation.widgetDesigner", url: "/dashboard/designer", icon: Palette, permission: "company_settings:update" },
+    { titleKey: "navigation.activeClients", url: "/dashboard/conversations", icon: Inbox, permission: "page:conversations" },
+    { titleKey: "navigation.agents", url: "/dashboard/agents", icon: Bot, permission: "page:agents" },
+    { titleKey: "navigation.agentBuilder", url: "/dashboard/builder", icon: Settings, permission: "page:agent_builder" },
+    { titleKey: "navigation.widgetDesigner", url: "/dashboard/designer", icon: Palette, permission: "page:widget_designer" },
 
     // Analytics & Monitoring
-    { titleKey: "navigation.reports", url: "/dashboard/reports", icon: BarChart3, permission: "analytics:read" },
+    { titleKey: "navigation.reports", url: "/dashboard/reports", icon: BarChart3, permission: "page:reports" },
 
-    // CRM
-    { titleKey: "navigation.crm", url: "/dashboard/crm", icon: TrendingUp, permission: "lead:read" },
-    { titleKey: "navigation.contacts", url: "/dashboard/crm/contacts", icon: Users, permission: "contact:read" },
-    { titleKey: "navigation.leads", url: "/dashboard/crm/leads", icon: Target, permission: "lead:read" },
-    { titleKey: "navigation.campaigns", url: "/dashboard/crm/campaigns", icon: Send, permission: "campaign:read" },
-    { titleKey: "navigation.tags", url: "/dashboard/crm/tags", icon: Tag, permission: "tag:read" },
-    { titleKey: "navigation.segments", url: "/dashboard/crm/segments", icon: Layers, permission: "segment:read" },
-    { titleKey: "navigation.templates", url: "/dashboard/crm/templates", icon: LayoutTemplate, permission: "email_template:read" },
+    // CRM - Individual permissions for each section
+    { titleKey: "navigation.crm", url: "/dashboard/crm", icon: TrendingUp, permission: "page:crm_dashboard" },
+    { titleKey: "navigation.contacts", url: "/dashboard/crm/contacts", icon: Users, permission: "page:contacts" },
+    { titleKey: "navigation.leads", url: "/dashboard/crm/leads", icon: Target, permission: "page:leads" },
+    { titleKey: "navigation.campaigns", url: "/dashboard/crm/campaigns", icon: Send, permission: "page:campaigns" },
+    { titleKey: "navigation.tags", url: "/dashboard/crm/tags", icon: Tag, permission: "page:tags" },
+    { titleKey: "navigation.segments", url: "/dashboard/crm/segments", icon: Layers, permission: "page:segments" },
+    { titleKey: "navigation.templates", url: "/dashboard/crm/templates", icon: LayoutTemplate, permission: "page:crm_templates" },
 
     // Configuration & Resources
-    { titleKey: "navigation.knowledgeBases", url: "/dashboard/knowledge-base/manage", icon: BookOpen, permission: "knowledgebase:read" },
-    { titleKey: "navigation.customTools", url: "/dashboard/tools", icon: Zap, permission: "tool:read" },
-    { titleKey: "navigation.customWorkflows", url: "/dashboard/workflows", icon: WorkflowIcon, permission: "workflow:read" },
-    { titleKey: "navigation.voiceLab", url: "/dashboard/voice-lab", icon: Mic, permission: "voice:create" },
+    { titleKey: "navigation.knowledgeBases", url: "/dashboard/knowledge-base/manage", icon: BookOpen, permission: "page:knowledge_base" },
+    { titleKey: "navigation.customTools", url: "/dashboard/tools", icon: Zap, permission: "page:tools" },
+    { titleKey: "navigation.customWorkflows", url: "/dashboard/workflows", icon: WorkflowIcon, permission: "page:workflows" },
+    { titleKey: "navigation.voiceLab", url: "/dashboard/voice-lab", icon: Mic, permission: "page:voice_lab" },
 
     // Team & Communication
-    { titleKey: "navigation.teamManagement", url: "/dashboard/team", icon: Users, permission: "user:read" },
-    { titleKey: "navigation.teamChat", url: "/dashboard/team-chat", icon: MessageSquare, permission: "chat:read" },
-    { titleKey: "navigation.messageTemplates", url: "/dashboard/message-templates", icon: Sparkles, permission: "message_template:read" },
+    { titleKey: "navigation.teamManagement", url: "/dashboard/team", icon: Users, permission: "page:team_management" },
+    { titleKey: "navigation.teamChat", url: "/dashboard/team-chat", icon: MessageSquare, permission: "page:team_chat" },
+    { titleKey: "navigation.messageTemplates", url: "/dashboard/message-templates", icon: Sparkles, permission: "page:message_templates" },
 
-    // AI Features
-    { titleKey: "navigation.aiChat", url: "/dashboard/ai-chat", icon: MessageSquare, permission: "ai-chat:read" },
-    { titleKey: "navigation.aiTools", url: "/dashboard/ai-tools", icon: Sparkles, permission: "ai-tool:read" },
-    { titleKey: "navigation.aiImageGenerator", url: "/dashboard/ai-image-generator", icon: Sparkles, permission: "image:create" },
-    { titleKey: "navigation.aiImageGallery", url: "/dashboard/ai-image-gallery", icon: FileText, permission: "image:read" },
-    { titleKey: "navigation.visionAI", url: "/dashboard/object-detection", icon: Sparkles, permission: "image:create" },
+    // AI Features - Individual permissions
+    { titleKey: "navigation.aiChat", url: "/dashboard/ai-chat", icon: MessageSquare, permission: "page:ai_chat" },
+    { titleKey: "navigation.aiTools", url: "/dashboard/ai-tools", icon: Sparkles, permission: "page:ai_tools" },
+    { titleKey: "navigation.aiImageGenerator", url: "/dashboard/ai-image-generator", icon: Sparkles, permission: "page:ai_image_generator" },
+    { titleKey: "navigation.aiImageGallery", url: "/dashboard/ai-image-gallery", icon: FileText, permission: "page:ai_image_gallery" },
+    { titleKey: "navigation.visionAI", url: "/dashboard/object-detection", icon: Sparkles, permission: "page:vision_ai" },
 
     // System & Administration
-    { titleKey: "navigation.settings", url: "/dashboard/settings", icon: FileText, permission: "company_settings:update" },
-    { titleKey: "navigation.apiVault", url: "/dashboard/vault", icon: Key, permission: "company_settings:update" },
-    { titleKey: "navigation.billing", url: "/dashboard/billing", icon: CreditCard, permission: "billing:manage" },
+    { titleKey: "navigation.settings", url: "/dashboard/settings", icon: FileText, permission: "page:settings" },
+    { titleKey: "navigation.apiVault", url: "/dashboard/vault", icon: Key, permission: "page:api_vault" },
+    { titleKey: "navigation.billing", url: "/dashboard/billing", icon: CreditCard, permission: "page:billing" },
     { titleKey: "navigation.managePlans", url: "/dashboard/admin/subscriptions", icon: Sparkles, admin: true },
     { titleKey: "navigation.companies", url: "/dashboard/companies", icon: Building, admin: true },
   ];

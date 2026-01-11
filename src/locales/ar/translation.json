@@ -1515,6 +1515,7 @@
           "tagConversation": "وسم المحادثة",
           "assignToAgent": "تعيين لوكيل",
           "setStatus": "تعيين الحالة",
+          "channelRedirect": "تحويل القناة",
           "subworkflow": "سير عمل فرعي",
           "forEachLoop": "حلقة لكل عنصر",
           "whileLoop": "حلقة بينما"
@@ -1895,6 +1896,38 @@
           "statusReasonPlaceholder": "مثال: تم حل المشكلة عبر {{context.resolution_method}}",
           "autoCloseAfter": "الإغلاق التلقائي بعد (دقائق):",
           "autoCloseAfterPlaceholder": "اتركه فارغاً لعدم الإغلاق التلقائي"
+        },
+        "channelRedirect": {
+          "title": "تحويل القناة",
+          "description": "تحويل المحادثة إلى قناة مراسلة أخرى",
+          "targetChannel": "القناة المستهدفة",
+          "redirectType": "نوع التحويل",
+          "inviteLink": "رابط دعوة - إرسال رسالة للقناة المستهدفة",
+          "fullTransfer": "نقل كامل - نقل السياق للقناة المستهدفة",
+          "redirectTypeHelp": "اختر كيفية تحويل المحادثة",
+          "contactInfoSource": "مصدر معلومات الاتصال",
+          "sourceAuto": "تلقائي (جهة الاتصال أولاً، ثم المتغير)",
+          "sourceContact": "من سجل جهة الاتصال",
+          "sourceVariable": "من متغير سير العمل",
+          "variableName": "اسم المتغير (احتياطي)",
+          "variableNameHelp": "المتغير الذي يحتوي على رقم الهاتف أو معرف القناة",
+          "originalSessionBehavior": "بعد التحويل",
+          "keepActive": "إبقاء نشط (جلسات متوازية)",
+          "pause": "إيقاف مؤقت (استئناف إذا فشل التحويل)",
+          "close": "إغلاق (تحديد كمحلول)",
+          "inviteMessage": "رسالة الدعوة",
+          "inviteMessageHelp": "استخدم {{channel}} لإدراج اسم القناة المستهدفة",
+          "copyContextVariables": "نسخ متغيرات السياق",
+          "variablesToCopy": "المتغيرات للنسخ (مفصولة بفواصل، فارغ = الكل)",
+          "transferMessage": "رسالة ترحيب النقل",
+          "onFailure": "عند الفشل",
+          "continueFlow": "متابعة التدفق",
+          "errorEdge": "استخدام حافة الخطأ",
+          "onFailureHelp": "ماذا تفعل إذا فشل التحويل (معلومات اتصال مفقودة، قناة غير مُعدة، إلخ.)",
+          "workflowContinuation": "استمرار سير العمل",
+          "continueOriginal": "الاستمرار على القناة الأصلية",
+          "transferWorkflow": "نقل سير العمل للقناة المستهدفة",
+          "workflowContinuationHelp": "أين يجب أن يستمر سير العمل بعد التحويل"
         }
       }
     }
