@@ -1,10 +1,10 @@
 
 import React from 'react';
-import { Zap, BrainCircuit, Cloud, Code, Shield, PanelLeftClose, PanelLeft } from 'lucide-react';
+import { Zap, BrainCircuit, Cloud, Code, Shield, PanelLeftClose, PanelLeft, Layers } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useQuery } from '@tanstack/react-query';
 import { useAuth } from '@/hooks/useAuth';
-import { Tool, KnowledgeBase, Agent } from '@/types';
+import { Tool, KnowledgeBase, Agent, Workflow } from '@/types';
 import { useTranslation } from 'react-i18next';
 import { useI18n } from '@/hooks/useI18n';
 import {
@@ -62,11 +62,20 @@ export const AgentComponentSidebar = ({ agent, isCollapsed = false, onToggle }: 
     }
   });
 
-  const { data: knowledgeBases, isLoading: isLoadingKnowledgeBases } = useQuery<KnowledgeBase[]>({ 
-    queryKey: ['knowledgeBases'], 
+  const { data: knowledgeBases, isLoading: isLoadingKnowledgeBases } = useQuery<KnowledgeBase[]>({
+    queryKey: ['knowledgeBases'],
     queryFn: async () => {
       const response = await authFetch(`/api/v1/knowledge-bases/`);
       if (!response.ok) throw new Error('Failed to fetch knowledge bases');
+      return response.json();
+    }
+  });
+
+  const { data: workflows, isLoading: isLoadingWorkflows } = useQuery<Workflow[]>({
+    queryKey: ['workflows'],
+    queryFn: async () => {
+      const response = await authFetch(`/api/v1/workflows/`);
+      if (!response.ok) throw new Error('Failed to fetch workflows');
       return response.json();
     }
   });
@@ -86,6 +95,7 @@ export const AgentComponentSidebar = ({ agent, isCollapsed = false, onToggle }: 
 
   const attachedToolIds = new Set(agent.tools?.map(t => t.id) || []);
   const attachedKbIds = new Set(agent.knowledge_bases?.map(kb => kb.id) || []);
+  const attachedWorkflowIds = new Set(agent.workflows?.map(w => w.id) || []);
 
   return (
     <aside className={`${isCollapsed ? 'w-14' : 'w-64'} p-4 bg-white dark:bg-slate-900 ${isRTL ? 'border-l' : 'border-r'} border-slate-200 dark:border-slate-700 overflow-y-auto transition-all duration-200 ease-in-out`}>
@@ -148,6 +158,23 @@ export const AgentComponentSidebar = ({ agent, isCollapsed = false, onToggle }: 
               />
             ))
           )}
+          {isLoadingWorkflows ? (
+            <div className="flex items-center justify-center py-4">
+              <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-green-600"></div>
+            </div>
+          ) : (
+            workflows?.filter(w => w.is_active).map(workflow => (
+              <DraggableNode
+                key={`workflow-${workflow.id}`}
+                type="workflow"
+                label={workflow.name}
+                icon={<Layers className="text-purple-500" size={24} />}
+                resourceId={workflow.id}
+                isDisabled={attachedWorkflowIds.has(workflow.id)}
+                isCollapsed={true}
+              />
+            ))
+          )}
         </div>
       ) : (
         /* Expanded view - full accordion */
@@ -191,6 +218,32 @@ export const AgentComponentSidebar = ({ agent, isCollapsed = false, onToggle }: 
                   icon={<BrainCircuit className="text-indigo-500" size={32} />}
                   resourceId={kb.id}
                   isDisabled={attachedKbIds.has(kb.id)}
+                />
+              ))
+            )}
+          </AccordionContent>
+        </AccordionItem>
+        <AccordionItem value="item-3" className="border-slate-200 dark:border-slate-700">
+          <AccordionTrigger className="hover:no-underline dark:text-white">
+              <span className="flex items-center gap-2">
+                {t('builder.workflows', { defaultValue: 'Workflows' })}
+                <span className="text-xs text-green-600 dark:text-green-400 font-normal">(Active)</span>
+              </span>
+            </AccordionTrigger>
+          <AccordionContent>
+            {isLoadingWorkflows ? (
+              <div className="flex items-center justify-center py-4">
+                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-green-600"></div>
+              </div>
+            ) : (
+              workflows?.filter(w => w.is_active).map(workflow => (
+                <DraggableNode
+                  key={`workflow-${workflow.id}`}
+                  type="workflow"
+                  label={workflow.name}
+                  icon={<Layers className="text-purple-500" size={32} />}
+                  resourceId={workflow.id}
+                  isDisabled={attachedWorkflowIds.has(workflow.id)}
                 />
               ))
             )}

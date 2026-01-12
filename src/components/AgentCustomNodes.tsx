@@ -1,6 +1,6 @@
 import React, { useContext } from 'react';
 import { Handle, Position } from 'reactflow';
-import { Bot, Zap, BrainCircuit, Cloud, Code, X, MessageSquare } from 'lucide-react';
+import { Bot, Zap, BrainCircuit, Cloud, Code, X, MessageSquare, Layers } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { AgentBuilderContext } from './AgentBuilder';
 
@@ -85,6 +85,20 @@ export const KnowledgeNode = ({ data }) => {
         <span className="text-sm">{data.label}</span>
       </div>
       <Handle type="target" position={Position.Top} className="!bg-indigo-500 !w-3 !h-3 !border-2 !border-white dark:!border-slate-900" />
+    </div>
+  );
+};
+
+export const WorkflowNode = ({ data }) => {
+  return (
+    <div className={`${nodeWrapperStyle} border-purple-500 dark:border-purple-400`}>
+      <div className={nodeHeaderStyle}>
+        <div className="p-1.5 bg-gradient-to-br from-purple-500 to-violet-600 rounded-lg shadow-sm">
+          <Layers className="text-white" size={18} />
+        </div>
+        <span className="text-sm">{data.label}</span>
+      </div>
+      <Handle type="target" position={Position.Top} className="!bg-purple-500 !w-3 !h-3 !border-2 !border-white dark:!border-slate-900" />
     </div>
   );
 };

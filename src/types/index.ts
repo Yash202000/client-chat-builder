@@ -48,6 +48,18 @@ export interface AgentHandoffConfig {
   welcome_message_on_handoff?: string;
 }
 
+export interface Workflow {
+  id: number;
+  name: string;
+  description?: string;
+  is_active: boolean;
+  agent_ids?: number[];  // Many-to-many: workflow can be assigned to multiple agents
+  company_id: number;
+  trigger_phrases?: string[];
+  created_at: string;
+  updated_at: string;
+}
+
 export interface Agent {
   id: number;
   name: string;
@@ -83,6 +95,7 @@ export interface Agent {
   updated_at: string;
   tools: Tool[];
   knowledge_bases?: KnowledgeBase[];
+  workflows?: Workflow[];
   // Agent-to-agent handoff fields
   specialization_topics?: SpecializationTopic[];
   handoff_config?: AgentHandoffConfig;

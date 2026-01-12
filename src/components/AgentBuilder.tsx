@@ -16,7 +16,7 @@ import { useTranslation } from 'react-i18next';
 import { Agent, Tool, KnowledgeBase } from '@/types';
 import { AgentComponentSidebar } from './AgentComponentSidebar';
 import { AgentPropertiesPanel } from './AgentPropertiesPanel';
-import { AgentNode, ToolsNode, KnowledgeNode, McpSubToolNode, ChatMessageNode } from './AgentCustomNodes';
+import { AgentNode, ToolsNode, KnowledgeNode, WorkflowNode, McpSubToolNode, ChatMessageNode } from './AgentCustomNodes';
 import { useAuth } from '@/hooks/useAuth';
 
 interface AgentBuilderProps {
@@ -85,7 +85,20 @@ export const AgentBuilder = ({ agent }: AgentBuilderProps) => {
             edgesToAdd.push({ id: `agent-tool-edge-${tool.id}`, source: 'agent-node', target: toolNode.id, animated: true });
         });
     }
-    
+
+    if (agent.workflows?.length > 0) {
+        agent.workflows.forEach((workflow, index) => {
+            const workflowNode = {
+                id: `workflow-${workflow.id}`,
+                type: 'workflow',
+                data: { label: workflow.name, id: workflow.id },
+                position: { x: 450 + index * 200, y: 400 },
+            };
+            nodesToAdd.push(workflowNode);
+            edgesToAdd.push({ id: `agent-workflow-edge-${workflow.id}`, source: 'agent-node', target: workflowNode.id, animated: true });
+        });
+    }
+
     const finalNodes = [...initialNodes(agent.name), ...nodesToAdd];
     console.log("Setting nodes:", finalNodes);
     setNodes(finalNodes);
@@ -98,6 +111,7 @@ export const AgentBuilder = ({ agent }: AgentBuilderProps) => {
     agent: AgentNode,
     tools: ToolsNode,
     knowledge: KnowledgeNode,
+    workflow: WorkflowNode,
     mcp_sub_tool: McpSubToolNode,
     chat_message: ChatMessageNode,
   }), []);
@@ -139,10 +153,28 @@ export const AgentBuilder = ({ agent }: AgentBuilderProps) => {
                     const newToolIds = (agent.tools?.map(t => t.id) || []).filter(id => id !== toolId);
                     mutation.mutate({ tool_ids: newToolIds });
                 }
+                if (nodeToRemove.type === 'workflow') {
+                    // Remove agent from workflow's agent_ids (many-to-many)
+                    const workflowId = parseInt(nodeToRemove.id.split('-')[1]);
+                    authFetch(`/api/v1/workflows/${workflowId}`).then(async (response) => {
+                        if (response.ok) {
+                            const workflow = await response.json();
+                            const currentAgentIds = workflow.agent_ids || [];
+                            const newAgentIds = currentAgentIds.filter((id: number) => id !== agent.id);
+                            await authFetch(`/api/v1/workflows/${workflowId}`, {
+                                method: 'PUT',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ agent_ids: newAgentIds }),
+                            });
+                            await queryClient.invalidateQueries({ queryKey: ['agent', agent.id.toString()] });
+                            await queryClient.invalidateQueries({ queryKey: ['workflows'] });
+                        }
+                    });
+                }
             }
         }
     }
-  }, [onNodesChange, nodes, mutation, agent]);
+  }, [onNodesChange, nodes, mutation, agent, authFetch, queryClient]);
 
   const handleEdgesChange = useCallback((changes) => {
     onEdgesChange(changes);
@@ -161,10 +193,28 @@ export const AgentBuilder = ({ agent }: AgentBuilderProps) => {
             const newToolIds = (agent.tools?.map(t => t.id) || []).filter(id => id !== toolId);
             mutation.mutate({ tool_ids: newToolIds });
           }
+          if (targetNode?.type === 'workflow') {
+            // Remove agent from workflow's agent_ids (many-to-many)
+            const workflowId = parseInt(targetNode.id.split('-')[1]);
+            authFetch(`/api/v1/workflows/${workflowId}`).then(async (response) => {
+                if (response.ok) {
+                    const workflow = await response.json();
+                    const currentAgentIds = workflow.agent_ids || [];
+                    const newAgentIds = currentAgentIds.filter((id: number) => id !== agent.id);
+                    await authFetch(`/api/v1/workflows/${workflowId}`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ agent_ids: newAgentIds }),
+                    });
+                    await queryClient.invalidateQueries({ queryKey: ['agent', agent.id.toString()] });
+                    await queryClient.invalidateQueries({ queryKey: ['workflows'] });
+                }
+            });
+          }
         }
       }
     }
-  }, [onEdgesChange, nodes, edges, mutation, agent]);
+  }, [onEdgesChange, nodes, edges, mutation, agent, authFetch, queryClient]);
 
   const onDrop = useCallback((event) => {
     event.preventDefault();
@@ -192,7 +242,34 @@ export const AgentBuilder = ({ agent }: AgentBuilderProps) => {
       console.log("New tool IDs to be sent:", newToolIds);
       mutation.mutate({ tool_ids: newToolIds });
     }
-  }, [reactFlowInstance, nodes, agent, mutation]);
+    if (nodeType === 'workflow') {
+      // Add agent to workflow's agent_ids (many-to-many)
+      authFetch(`/api/v1/workflows/${id}`).then(async (response) => {
+        if (response.ok) {
+          const workflow = await response.json();
+          const currentAgentIds = workflow.agent_ids || [];
+          // Add current agent if not already present
+          if (!currentAgentIds.includes(agent.id)) {
+            const newAgentIds = [...currentAgentIds, agent.id];
+            const updateResponse = await authFetch(`/api/v1/workflows/${id}`, {
+              method: 'PUT',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ agent_ids: newAgentIds }),
+            });
+            if (updateResponse.ok) {
+              await queryClient.invalidateQueries({ queryKey: ['agent', agent.id.toString()] });
+              await queryClient.invalidateQueries({ queryKey: ['workflows'] });
+              toast.success(t('builder.workflowAssigned', { defaultValue: 'Workflow assigned to agent' }));
+            } else {
+              toast.error(t('builder.failedAssignWorkflow', { defaultValue: 'Failed to assign workflow' }));
+            }
+          }
+        } else {
+          toast.error(t('builder.failedAssignWorkflow', { defaultValue: 'Failed to assign workflow' }));
+        }
+      });
+    }
+  }, [reactFlowInstance, nodes, agent, mutation, authFetch, queryClient, t]);
 
   useEffect(() => {
     const mcpToolNodesToInspect = nodes.filter(
