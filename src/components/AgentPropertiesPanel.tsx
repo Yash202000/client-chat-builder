@@ -88,6 +88,8 @@ export const AgentPropertiesPanel = ({ agent, selectedNode, onNodeDelete, isColl
   // Agent config state
   const [agentConfig, setAgentConfig] = useState({
     name: "",
+    prompt: "",
+    welcome_message: "",
     personality: "helpful",
     language: "en",
     timezone: "UTC",
@@ -115,6 +117,8 @@ export const AgentPropertiesPanel = ({ agent, selectedNode, onNodeDelete, isColl
     if (agent) {
       setAgentConfig({
         name: agent.name || "",
+        prompt: agent.prompt || "",
+        welcome_message: agent.welcome_message || "",
         personality: agent.personality || "helpful",
         language: agent.language || "en",
         timezone: agent.timezone || "UTC",
@@ -332,6 +336,36 @@ export const AgentPropertiesPanel = ({ agent, selectedNode, onNodeDelete, isColl
                   <option value="America/Los_Angeles">{t('agents.settingsPage.timezones.pacific', { defaultValue: 'Pacific (US)' })}</option>
                   <option value="Asia/Kolkata">{t('agents.settingsPage.timezones.ist', { defaultValue: 'IST (India)' })}</option>
                 </select>
+              </div>
+            </CollapsibleSection>
+
+            {/* Prompts Section */}
+            <CollapsibleSection title={t('agents.settingsPage.prompts', { defaultValue: 'Prompts' })} defaultOpen={true}>
+              <div>
+                <Label className="text-xs font-medium dark:text-gray-300">{t('agents.settingsPage.systemPrompt', { defaultValue: 'System Prompt' })}</Label>
+                <Textarea
+                  value={agentConfig.prompt}
+                  onChange={(e) => handleConfigChange('prompt', e.target.value)}
+                  placeholder={t('agents.settingsPage.systemPromptPlaceholder', { defaultValue: 'You are a helpful assistant that...' })}
+                  className="mt-1 text-sm dark:bg-slate-800 dark:border-slate-600 dark:text-white resize-none"
+                  rows={6}
+                />
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                  {t('agents.settingsPage.systemPromptHelp', { defaultValue: 'Instructions that define how the agent behaves and responds' })}
+                </p>
+              </div>
+              <div>
+                <Label className="text-xs font-medium dark:text-gray-300">{t('agents.settingsPage.welcomeMessage', { defaultValue: 'Welcome Message' })}</Label>
+                <Textarea
+                  value={agentConfig.welcome_message}
+                  onChange={(e) => handleConfigChange('welcome_message', e.target.value)}
+                  placeholder={t('agents.settingsPage.welcomeMessagePlaceholder', { defaultValue: 'Hello! How can I help you today?' })}
+                  className="mt-1 text-sm dark:bg-slate-800 dark:border-slate-600 dark:text-white resize-none"
+                  rows={3}
+                />
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                  {t('agents.settingsPage.welcomeMessageHelp', { defaultValue: 'First message shown when a conversation starts' })}
+                </p>
               </div>
             </CollapsibleSection>
 

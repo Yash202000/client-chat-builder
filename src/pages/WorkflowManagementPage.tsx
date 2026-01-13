@@ -77,7 +77,7 @@ const WorkflowManagementPage = () => {
   }, [fetchWorkflows, fetchSubworkflowUsage]);
 
   const handleCreateWorkflow = async ({ name, description }) => {
-    const newWorkflowPayload = { name, description, agent_id: 1 };
+    const newWorkflowPayload = { name, description, agent_ids: [] };
     try {
       const response = await authFetch('/api/v1/workflows/?company_id=1', {
         method: 'POST',
