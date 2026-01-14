@@ -55,6 +55,14 @@ import AIToolCreatePage from "./pages/AIToolCreatePage";
 import AIToolDetailPage from "./pages/AIToolDetailPage";
 import AIToolEditPage from "./pages/AIToolEditPage";
 import KnowledgeBaseProcessing from "./pages/KnowledgeBaseProcessing";
+import KnowledgeBaseDetailPage from "./pages/KnowledgeBaseDetailPage";
+import {
+  KBContentTypeCreatePage,
+  KBContentTypeEditPage,
+  KBContentItemsListPage,
+  KBContentItemCreatePage,
+  KBContentItemEditPage,
+} from "./pages/KnowledgeBaseCMS";
 import { ObjectDetectionPage } from "./pages/ObjectDetectionPage";
 import ErrorBoundary from "./components/ErrorBoundary";
 // CRM Pages
@@ -73,6 +81,20 @@ import TemplatesPage from "./pages/CRM/TemplatesPage";
 import TemplateEditorPage from "./pages/CRM/TemplateEditorPage";
 import MessageTemplatesPage from "./pages/MessageTemplatesPage";
 import { AcceptInvitationPage } from "./pages/AcceptInvitationPage";
+// CMS Pages
+import {
+  CMSDashboardPage,
+  ContentTypesPage,
+  ContentTypeCreatePage,
+  ContentTypeEditPage,
+  ContentItemsPage,
+  ContentItemCreatePage,
+  ContentItemEditPage,
+  MediaLibraryPage,
+  CategoriesPage,
+  MarketplacePage,
+  CMSSettingsPage,
+} from "./pages/CMS";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -129,6 +151,13 @@ const AppRoutes = () => {
           <Route path="tools" element={<ToolManagementPage />} />
           <Route path="knowledge-base/manage" element={<KnowledgeBaseManagementPage />} />
           <Route path="knowledge-base/processing" element={<KnowledgeBaseProcessing />} />
+          {/* Knowledge Base Detail with CMS Integration */}
+          <Route path="knowledge-base/:id" element={<KnowledgeBaseDetailPage />} />
+          <Route path="knowledge-base/:id/content/types/new" element={<KBContentTypeCreatePage />} />
+          <Route path="knowledge-base/:id/content/types/:slug" element={<KBContentTypeEditPage />} />
+          <Route path="knowledge-base/:id/content/:typeSlug" element={<KBContentItemsListPage />} />
+          <Route path="knowledge-base/:id/content/:typeSlug/new" element={<KBContentItemCreatePage />} />
+          <Route path="knowledge-base/:id/content/:typeSlug/:itemId" element={<KBContentItemEditPage />} />
           <Route path="workflows" element={<WorkflowManagementPage />} />
           <Route path="workflows/:workflowId" element={<WorkflowBuilderPage />} />
           <Route path="voices" element={<VoicesPage />} />
@@ -161,6 +190,18 @@ const AppRoutes = () => {
           <Route path="crm/templates/:id" element={<TemplateEditorPage />} />
           <Route path="message-templates" element={<MessageTemplatesPage />} />
           <Route path="crm/analytics" element={<AnalyticsPage />} />
+          {/* CMS Routes */}
+          <Route path="cms" element={<CMSDashboardPage />} />
+          <Route path="cms/types" element={<ContentTypesPage />} />
+          <Route path="cms/types/new" element={<ContentTypeCreatePage />} />
+          <Route path="cms/types/:slug" element={<ContentTypeEditPage />} />
+          <Route path="cms/content/:typeSlug" element={<ContentItemsPage />} />
+          <Route path="cms/content/:typeSlug/new" element={<ContentItemCreatePage />} />
+          <Route path="cms/content/:typeSlug/:id" element={<ContentItemEditPage />} />
+          <Route path="cms/media" element={<MediaLibraryPage />} />
+          <Route path="cms/categories" element={<CategoriesPage />} />
+          <Route path="cms/marketplace" element={<MarketplacePage />} />
+          <Route path="cms/settings" element={<CMSSettingsPage />} />
         </Route>
       </Route>
       <Route path="/client-portal" element={<ProtectedRoute />}>

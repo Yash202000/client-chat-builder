@@ -39,7 +39,8 @@ import {
   TrendingUp,
   Tag,
   Layers,
-  LayoutTemplate
+  LayoutTemplate,
+  Database
 } from "lucide-react";
 import { CreateAgentDialog } from "@/components/CreateAgentDialog";
 import { Permission } from "./Permission";
@@ -397,7 +398,7 @@ const AppLayout = () => {
     { titleKey: "navigation.segments", url: "/dashboard/crm/segments", icon: Layers, permission: "page:segments" },
     { titleKey: "navigation.templates", url: "/dashboard/crm/templates", icon: LayoutTemplate, permission: "page:crm_templates" },
 
-    // Configuration & Resources
+    // Knowledge & Content (CMS is now inside Knowledge Bases)
     { titleKey: "navigation.knowledgeBases", url: "/dashboard/knowledge-base/manage", icon: BookOpen, permission: "page:knowledge_base" },
     { titleKey: "navigation.customTools", url: "/dashboard/tools", icon: Zap, permission: "page:tools" },
     { titleKey: "navigation.customWorkflows", url: "/dashboard/workflows", icon: WorkflowIcon, permission: "page:workflows" },
