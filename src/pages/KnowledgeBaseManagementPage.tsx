@@ -1,11 +1,12 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { Link, useNavigate } from "react-router-dom";
 import { KnowledgeBase } from "@/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Plus, Trash2, Edit, LinkIcon, Brain, Eye } from "lucide-react";
+import { Plus, Trash2, Edit, LinkIcon, Brain, Eye, ExternalLink, Database } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
@@ -77,6 +78,36 @@ const KnowledgeBaseManagementPage = () => {
     },
     onError: (error: Error) => {
       toast({ title: "Error", description: `Failed to create remote Knowledge Base: ${error.message}`, variant: "destructive" });
+    },
+  });
+
+  const createEmptyKnowledgeBaseMutation = useMutation({
+    mutationFn: async (data: { name: string; description?: string; vector_store_type?: string }) => {
+      const response = await authFetch(`/api/v1/knowledge-bases/create-empty`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          name: data.name,
+          description: data.description,
+          embedding_model: "nvidia",
+          vector_store_type: data.vector_store_type || "chroma"
+        }),
+      });
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ message: "Failed to create knowledge base" }));
+        throw new Error(errorData.message);
+      }
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['knowledgeBases', companyId] });
+      toast({ title: "Success", description: "Empty Knowledge Base created. You can now add documents." });
+      setIsCreateDialogOpen(false);
+    },
+    onError: (error: Error) => {
+      toast({ title: "Error", description: `Failed to create Knowledge Base: ${error.message}`, variant: "destructive" });
     },
   });
 
@@ -192,19 +223,25 @@ const KnowledgeBaseManagementPage = () => {
 
   const handleCreate = (values: Omit<KnowledgeBase, 'id'>, file?: File, vectorStoreType?: string) => {
     if (values.type === 'local') {
-      if (!file) {
-        toast({ title: "Error", description: "A file is required for local knowledge bases.", variant: "destructive" });
-        return;
+      if (file) {
+        // Create KB with file upload
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('name', values.name);
+        formData.append('description', values.description || '');
+        formData.append('embedding_model', 'nvidia');
+        if (vectorStoreType) {
+          formData.append('vector_store_type', vectorStoreType);
+        }
+        createKnowledgeBaseMutation.mutate(formData);
+      } else {
+        // Create empty KB - documents can be added later
+        createEmptyKnowledgeBaseMutation.mutate({
+          name: values.name,
+          description: values.description,
+          vector_store_type: vectorStoreType || 'chroma'
+        });
       }
-      const formData = new FormData();
-      formData.append('file', file);
-      formData.append('name', values.name);
-      formData.append('description', values.description || '');
-      formData.append('embedding_model', 'nvidia'); // Or make this selectable
-      if (vectorStoreType) {
-        formData.append('vector_store_type', vectorStoreType);
-      }
-      createKnowledgeBaseMutation.mutate(formData);
     } else {
       createRemoteKnowledgeBaseMutation.mutate(values);
     }
@@ -233,7 +270,9 @@ const KnowledgeBaseManagementPage = () => {
           <h2 className="text-4xl font-bold bg-gradient-to-r from-indigo-600 to-blue-600 bg-clip-text text-transparent mb-2">
             {t("knowledgeBase.title")}
           </h2>
-          <p className="text-gray-600 dark:text-gray-400 text-lg">{t("knowledgeBase.managePage.subtitle")}</p>
+          <p className="text-gray-600 dark:text-gray-400 text-lg">
+            Upload documents and create structured content for AI agents
+          </p>
         </div>
         <div className={`flex gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
           <Permission permission="knowledgebase:create">
@@ -338,17 +377,22 @@ const KnowledgeBaseManagementPage = () => {
           ) : knowledgeBases && knowledgeBases.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {knowledgeBases.map((kb) => (
-                <Card key={kb.id} className="card-shadow hover:shadow-lg transition-all duration-200 bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700">
+                <Card key={kb.id} className="card-shadow hover:shadow-lg transition-all duration-200 bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 group">
                   <CardContent className="p-5">
-                    <div className="flex items-start gap-3 mb-4">
-                      <div className="h-12 w-12 rounded-lg bg-gradient-to-br from-indigo-500 to-blue-500 flex items-center justify-center text-white font-bold text-lg shadow-md flex-shrink-0">
-                        {kb.name.substring(0, 2).toUpperCase()}
+                    <Link to={`/dashboard/knowledge-base/${kb.id}`} className="block">
+                      <div className="flex items-start gap-3 mb-4">
+                        <div className="h-12 w-12 rounded-lg bg-gradient-to-br from-indigo-500 to-blue-500 flex items-center justify-center text-white font-bold text-lg shadow-md flex-shrink-0">
+                          {kb.name.substring(0, 2).toUpperCase()}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2">
+                            <h4 className="font-semibold text-lg dark:text-white truncate">{kb.name}</h4>
+                            <ExternalLink className="w-4 h-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+                          </div>
+                          <p className="text-sm text-gray-500 dark:text-gray-400 line-clamp-2">{kb.description}</p>
+                        </div>
                       </div>
-                      <div className="flex-1 min-w-0">
-                        <h4 className="font-semibold text-lg dark:text-white truncate">{kb.name}</h4>
-                        <p className="text-sm text-gray-500 dark:text-gray-400 line-clamp-2">{kb.description}</p>
-                      </div>
-                    </div>
+                    </Link>
                     <div className="flex items-center gap-2 mb-4">
                       <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${
                         kb.type === 'local'
@@ -357,7 +401,16 @@ const KnowledgeBaseManagementPage = () => {
                       }`}>
                         {kb.type === 'local' ? t("knowledgeBase.managePage.localBadge") : t("knowledgeBase.managePage.remoteBadge")}
                       </span>
+                      {kb.chroma_collection_name && (
+                        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400 border border-blue-200 dark:border-blue-800">
+                          <Database className="w-3 h-3 mr-1" />
+                          Indexed
+                        </span>
+                      )}
                     </div>
+                    <p className="text-xs text-muted-foreground mb-3">
+                      Click to manage documents & structured content
+                    </p>
                     <div className="flex items-center gap-1">
                       <Dialog open={isPreviewDialogOpen && selectedKb?.id === kb.id} onOpenChange={(isOpen) => {
                         if (!isOpen) setSelectedKb(null);
@@ -533,14 +586,16 @@ const KnowledgeBaseForm = ({ kb, onSubmit }: { kb?: KnowledgeBase, onSubmit: (va
       {values.type === "local" && !kb && (
         <>
           <div>
-            <Label htmlFor="file">{t("knowledgeBase.forms.document")}</Label>
+            <Label htmlFor="file">{t("knowledgeBase.forms.document")} ({t("common.optional")})</Label>
             <Input
               id="file"
               type="file"
               onChange={handleFileChange}
               className="mt-1"
-              required
             />
+            <p className="text-xs text-muted-foreground mt-1">
+              {t("knowledgeBase.forms.documentOptionalNote")}
+            </p>
           </div>
           <div>
             <Label>{t("knowledgeBase.forms.vectorStoreType")}</Label>
