@@ -1,15 +1,51 @@
 import React, { useState, useEffect } from 'react';
 import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { toast } from '@/components/ui/use-toast';
 import { Integration } from '@/types';
 import { useAuth } from '@/hooks/useAuth';
 import { useNotifications } from '@/hooks/useNotifications';
 import { IntegrationDialog } from './IntegrationDialog';
-import { Zap, Trash2, Edit } from 'lucide-react';
+import { Zap, Trash2, Edit, Plus, MessageCircle, Mail, Send, Linkedin, Calendar, Phone } from 'lucide-react';
 import GoogleAuth from './GoogleAuth';
 import { useI18n } from '@/hooks/useI18n';
+
+// Platform-specific icons as SVG components
+const WhatsAppIcon = () => (
+  <svg viewBox="0 0 24 24" className="h-5 w-5" fill="currentColor">
+    <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
+  </svg>
+);
+
+const MessengerIcon = () => (
+  <svg viewBox="0 0 24 24" className="h-5 w-5" fill="currentColor">
+    <path d="M12 0C5.373 0 0 4.974 0 11.111c0 3.498 1.744 6.614 4.469 8.654V24l4.088-2.242c1.092.301 2.246.464 3.443.464 6.627 0 12-4.974 12-11.111S18.627 0 12 0zm1.191 14.963l-3.055-3.26-5.963 3.26L10.732 8l3.131 3.259L19.752 8l-6.561 6.963z"/>
+  </svg>
+);
+
+const InstagramIcon = () => (
+  <svg viewBox="0 0 24 24" className="h-5 w-5" fill="currentColor">
+    <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>
+  </svg>
+);
+
+const TelegramIcon = () => (
+  <svg viewBox="0 0 24 24" className="h-5 w-5" fill="currentColor">
+    <path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/>
+  </svg>
+);
+
+const GoogleCalendarIcon = () => (
+  <svg viewBox="0 0 24 24" className="h-5 w-5" fill="currentColor">
+    <path d="M19.5 3h-3V1.5h-1.5V3h-6V1.5H7.5V3h-3C3.675 3 3 3.675 3 4.5v15c0 .825.675 1.5 1.5 1.5h15c.825 0 1.5-.675 1.5-1.5v-15c0-.825-.675-1.5-1.5-1.5zm0 16.5h-15V8.25h15v11.25zM7.5 10.5h3v3h-3v-3zm4.5 0h3v3h-3v-3zm4.5 0h3v3h-3v-3z"/>
+  </svg>
+);
+
+const MicrosoftIcon = () => (
+  <svg viewBox="0 0 24 24" className="h-5 w-5" fill="currentColor">
+    <path d="M11.4 24H0V12.6h11.4V24zM24 24H12.6V12.6H24V24zM11.4 11.4H0V0h11.4v11.4zm12.6 0H12.6V0H24v11.4z"/>
+  </svg>
+);
 
 export const IntegrationsList: React.FC = () => {
   const { t, isRTL } = useI18n();
@@ -79,66 +115,174 @@ export const IntegrationsList: React.FC = () => {
     }
   };
 
+  // Type-specific colors and icons for integration cards
+  const typeConfig: Record<string, { border: string; bg: string; badge: string; iconBg: string; iconColor: string; icon: React.ReactNode }> = {
+    whatsapp: {
+      border: 'border-green-200/80 dark:border-green-700/60',
+      bg: 'from-white to-green-50 dark:from-slate-800 dark:to-slate-900',
+      badge: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400',
+      iconBg: 'bg-gradient-to-br from-green-500 to-green-600',
+      iconColor: 'text-white',
+      icon: <WhatsAppIcon />
+    },
+    messenger: {
+      border: 'border-blue-200/80 dark:border-blue-700/60',
+      bg: 'from-white to-blue-50 dark:from-slate-800 dark:to-slate-900',
+      badge: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
+      iconBg: 'bg-gradient-to-br from-blue-500 to-blue-600',
+      iconColor: 'text-white',
+      icon: <MessengerIcon />
+    },
+    instagram: {
+      border: 'border-pink-200/80 dark:border-pink-700/60',
+      bg: 'from-white to-pink-50 dark:from-slate-800 dark:to-slate-900',
+      badge: 'bg-pink-100 text-pink-700 dark:bg-pink-900/30 dark:text-pink-400',
+      iconBg: 'bg-gradient-to-br from-pink-500 via-purple-500 to-orange-400',
+      iconColor: 'text-white',
+      icon: <InstagramIcon />
+    },
+    gmail: {
+      border: 'border-red-200/80 dark:border-red-700/60',
+      bg: 'from-white to-red-50 dark:from-slate-800 dark:to-slate-900',
+      badge: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
+      iconBg: 'bg-gradient-to-br from-red-500 to-red-600',
+      iconColor: 'text-white',
+      icon: <Mail className="h-5 w-5" />
+    },
+    telegram: {
+      border: 'border-sky-200/80 dark:border-sky-700/60',
+      bg: 'from-white to-sky-50 dark:from-slate-800 dark:to-slate-900',
+      badge: 'bg-sky-100 text-sky-700 dark:bg-sky-900/30 dark:text-sky-400',
+      iconBg: 'bg-gradient-to-br from-sky-400 to-sky-600',
+      iconColor: 'text-white',
+      icon: <TelegramIcon />
+    },
+    linkedin: {
+      border: 'border-indigo-200/80 dark:border-indigo-700/60',
+      bg: 'from-white to-indigo-50 dark:from-slate-800 dark:to-slate-900',
+      badge: 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-400',
+      iconBg: 'bg-gradient-to-br from-blue-700 to-blue-800',
+      iconColor: 'text-white',
+      icon: <Linkedin className="h-5 w-5" />
+    },
+    google_calendar: {
+      border: 'border-amber-200/80 dark:border-amber-700/60',
+      bg: 'from-white to-amber-50 dark:from-slate-800 dark:to-slate-900',
+      badge: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400',
+      iconBg: 'bg-gradient-to-br from-amber-500 to-orange-500',
+      iconColor: 'text-white',
+      icon: <GoogleCalendarIcon />
+    },
+    m365_calendar: {
+      border: 'border-cyan-200/80 dark:border-cyan-700/60',
+      bg: 'from-white to-cyan-50 dark:from-slate-800 dark:to-slate-900',
+      badge: 'bg-cyan-100 text-cyan-700 dark:bg-cyan-900/30 dark:text-cyan-400',
+      iconBg: 'bg-gradient-to-br from-blue-600 to-cyan-600',
+      iconColor: 'text-white',
+      icon: <MicrosoftIcon />
+    },
+    twilio_voice: {
+      border: 'border-orange-200/80 dark:border-orange-700/60',
+      bg: 'from-white to-orange-50 dark:from-slate-800 dark:to-slate-900',
+      badge: 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400',
+      iconBg: 'bg-gradient-to-br from-red-500 to-orange-500',
+      iconColor: 'text-white',
+      icon: <Phone className="h-5 w-5" />
+    },
+  };
+
+  const defaultConfig = {
+    border: 'border-slate-200/80 dark:border-slate-700/60',
+    bg: 'from-white to-slate-50 dark:from-slate-800 dark:to-slate-900',
+    badge: 'bg-slate-100 text-slate-700 dark:bg-slate-900/30 dark:text-slate-400',
+    iconBg: 'bg-gradient-to-br from-slate-500 to-slate-600',
+    iconColor: 'text-white',
+    icon: <Zap className="h-5 w-5" />
+  };
+
+  const getTypeConfig = (type: string) => typeConfig[type] || defaultConfig;
+
   return (
-    <Card className="card-shadow-lg border-slate-200 dark:border-slate-700 dark:bg-slate-800" dir={isRTL ? 'rtl' : 'ltr'}>
-      <CardHeader className={`flex flex-row items-center ${isRTL ? 'flex-row-reverse' : ''} justify-between border-b border-slate-200 dark:border-slate-700 bg-gradient-to-r from-slate-50 to-slate-100 dark:from-slate-800 dark:to-slate-900`}>
-        <div>
-          <CardTitle className="flex items-center gap-2 dark:text-white">
-            <Zap className="h-5 w-5 text-cyan-600 dark:text-cyan-400" />
-            {t('integrations.title')}
-          </CardTitle>
-          <CardDescription className="dark:text-gray-400">{t('integrations.subtitle')}</CardDescription>
+    <div className="rounded-2xl border border-cyan-200/80 dark:border-cyan-700/60 bg-gradient-to-br from-white to-cyan-50 dark:from-slate-800 dark:to-slate-900 shadow-lg shadow-cyan-500/10 hover:shadow-cyan-500/20 transition-all" dir={isRTL ? 'rtl' : 'ltr'}>
+      <div className={`flex flex-row items-center ${isRTL ? 'flex-row-reverse' : ''} justify-between p-6 border-b border-cyan-200/60 dark:border-cyan-700/40 bg-gradient-to-r from-cyan-50/50 to-blue-50/50 dark:from-slate-800/50 dark:to-slate-900/50 rounded-t-2xl`}>
+        <div className="flex items-center gap-3">
+          <div className="p-2.5 rounded-xl bg-gradient-to-br from-cyan-500 to-blue-600 shadow-lg shadow-cyan-500/25">
+            <Zap className="h-5 w-5 text-white" />
+          </div>
+          <div>
+            <h3 className="text-lg font-semibold dark:text-white">{t('integrations.title')}</h3>
+            <p className="text-sm text-gray-600 dark:text-gray-400">{t('integrations.subtitle')}</p>
+          </div>
         </div>
-        <div className="flex items-center gap-2">
+        <div className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
           <GoogleAuth />
-          <Button onClick={handleAddNew} className="bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-700 hover:to-blue-700 text-white btn-hover-lift">
+          <Button onClick={handleAddNew} className="bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-700 hover:to-blue-700 text-white rounded-xl shadow-lg shadow-cyan-500/25 hover:shadow-cyan-500/40 hover:scale-[1.02] transition-all">
+            <Plus className={`h-4 w-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
             {t('integrations.addNew')}
           </Button>
         </div>
-      </CardHeader>
-      <CardContent className="pt-6">
+      </div>
+      <div className="p-6">
         {isLoading ? (
-          <div className="flex items-center justify-center py-8">
-            <div className="flex items-center gap-2 text-muted-foreground dark:text-gray-400">
-              <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-cyan-600 dark:border-cyan-400"></div>
-              <span>{t('integrations.loading')}</span>
+          <div className="flex items-center justify-center py-12">
+            <div className="flex flex-col items-center gap-3 text-muted-foreground dark:text-gray-400">
+              <div className="relative">
+                <div className="animate-spin rounded-full h-10 w-10 border-4 border-cyan-200 dark:border-cyan-800"></div>
+                <div className="animate-spin rounded-full h-10 w-10 border-4 border-transparent border-t-cyan-600 dark:border-t-cyan-400 absolute inset-0"></div>
+              </div>
+              <span className="text-sm font-medium">{t('integrations.loading')}</span>
             </div>
           </div>
         ) : (
           <div className="space-y-3">
             {integrations && integrations.length > 0 ? (
-              integrations.map((integration) => (
-                <div key={integration.id} className={`flex items-center ${isRTL ? 'flex-row-reverse' : ''} justify-between p-4 border border-slate-200 dark:border-slate-700 rounded-lg bg-slate-50 dark:bg-slate-900/50 hover:shadow-md transition-shadow`}>
-                  <div>
-                    <h4 className="font-semibold dark:text-white">{integration.name}</h4>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">{t('integrations.type')}: <span className="capitalize">{integration.type}</span></p>
+              integrations.map((integration) => {
+                const config = getTypeConfig(integration.type);
+                return (
+                  <div key={integration.id} className={`flex items-center ${isRTL ? 'flex-row-reverse' : ''} justify-between p-4 border ${config.border} rounded-xl bg-gradient-to-br ${config.bg} hover:shadow-md hover:scale-[1.01] transition-all`}>
+                    <div className={`flex items-center gap-3 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                      <div className={`p-2.5 rounded-xl ${config.iconBg} ${config.iconColor} shadow-lg`}>
+                        {config.icon}
+                      </div>
+                      <div>
+                        <h4 className="font-semibold dark:text-white">{integration.name}</h4>
+                        <span className={`inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium capitalize ${config.badge}`}>
+                          {integration.type.replace('_', ' ')}
+                        </span>
+                      </div>
+                    </div>
+                    <div className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                      <Button variant="outline" size="sm" onClick={() => handleEdit(integration)} className="rounded-lg dark:border-slate-600 dark:text-white dark:hover:bg-slate-700 hover:scale-[1.05] transition-all">
+                        <Edit className={`h-4 w-4 ${isRTL ? 'ml-1.5' : 'mr-1.5'}`} /> {t('integrations.edit')}
+                      </Button>
+                      <Button variant="destructive" size="sm" onClick={() => handleDelete(integration.id)} className="rounded-lg bg-red-600 hover:bg-red-700 hover:scale-[1.05] transition-all">
+                        <Trash2 className={`h-4 w-4 ${isRTL ? 'ml-1.5' : 'mr-1.5'}`} /> {t('integrations.delete')}
+                      </Button>
+                    </div>
                   </div>
-                  <div className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
-                    <Button variant="outline" size="sm" onClick={() => handleEdit(integration)} className="dark:border-slate-600 dark:text-white dark:hover:bg-slate-700">
-                      <Edit className={`h-4 w-4 ${isRTL ? 'ml-2' : 'mr-2'}`} /> {t('integrations.edit')}
-                    </Button>
-                    <Button variant="destructive" size="sm" onClick={() => handleDelete(integration.id)} className="bg-red-600 hover:bg-red-700">
-                      <Trash2 className={`h-4 w-4 ${isRTL ? 'ml-2' : 'mr-2'}`} /> {t('integrations.delete')}
-                    </Button>
-                  </div>
-                </div>
-              ))
+                );
+              })
             ) : (
-              <div className="text-center py-12">
-                <div className="h-16 w-16 rounded-full bg-slate-100 dark:bg-slate-700 flex items-center justify-center mx-auto mb-4">
-                  <Zap className="h-8 w-8 text-slate-400 dark:text-slate-500" />
+              <div className="text-center py-16">
+                <div className="h-20 w-20 rounded-2xl bg-gradient-to-br from-slate-100 to-slate-200 dark:from-slate-700 dark:to-slate-800 flex items-center justify-center mx-auto mb-4 shadow-lg">
+                  <Zap className="h-10 w-10 text-slate-400 dark:text-slate-500" />
                 </div>
-                <p className="text-sm text-slate-500 dark:text-slate-400">{t('integrations.noIntegrations')}</p>
+                <h4 className="text-lg font-semibold dark:text-white mb-1">No integrations yet</h4>
+                <p className="text-sm text-slate-500 dark:text-slate-400 mb-4">{t('integrations.noIntegrations')}</p>
+                <Button onClick={handleAddNew} className="bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-700 hover:to-blue-700 text-white rounded-xl">
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add your first integration
+                </Button>
               </div>
             )}
           </div>
         )}
-      </CardContent>
+      </div>
       <IntegrationDialog
         isOpen={isDialogOpen}
         onClose={() => setIsDialogOpen(false)}
         integration={selectedIntegration}
       />
-    </Card>
+    </div>
   );
 };

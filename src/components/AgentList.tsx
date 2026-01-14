@@ -435,68 +435,95 @@ export const AgentList = () => {
   return (
     <>
       {/* Stats Overview Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-        <Card className="bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-950/30 dark:to-pink-950/30 border-purple-200 dark:border-purple-800 card-shadow">
-          <CardContent className="pt-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mb-6">
+        <Card className="relative overflow-hidden bg-white dark:bg-slate-800 border-0 shadow-lg shadow-purple-500/10 hover:shadow-xl hover:shadow-purple-500/20 transition-all duration-300 group">
+          <div className="absolute inset-0 bg-gradient-to-br from-purple-500/5 via-pink-500/5 to-transparent dark:from-purple-500/10 dark:via-pink-500/10" />
+          <CardContent className="pt-6 pb-5 relative">
             <div className={`flex items-center justify-between ${isRTL ? 'flex-row-reverse' : ''}`}>
               <div>
-                <p className="text-sm font-medium text-muted-foreground dark:text-gray-400">{t('agents.totalAgents')}</p>
-                <h3 className="text-3xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
+                <p className="text-sm font-medium text-slate-500 dark:text-slate-400 mb-1">{t('agents.totalAgents')}</p>
+                <h3 className="text-4xl font-bold text-slate-900 dark:text-white">
                   {agents?.length || 0}
                 </h3>
               </div>
-              <div className="h-12 w-12 rounded-full bg-gradient-to-br from-purple-600 to-pink-600 flex items-center justify-center">
-                <span className="text-2xl">🤖</span>
+              <div className="h-14 w-14 rounded-2xl bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center shadow-lg shadow-purple-500/30 group-hover:scale-110 transition-transform duration-300">
+                <svg className="h-7 w-7 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <rect x="3" y="11" width="18" height="10" rx="2" />
+                  <circle cx="12" cy="5" r="2" />
+                  <path d="M12 7v4" />
+                  <line x1="8" y1="16" x2="8" y2="16" />
+                  <line x1="16" y1="16" x2="16" y2="16" />
+                </svg>
               </div>
+            </div>
+            <div className="mt-3 flex items-center gap-1 text-xs text-slate-400">
+              <span className="inline-block w-2 h-2 rounded-full bg-purple-500"></span>
+              All configured agents
             </div>
           </CardContent>
         </Card>
 
-        <Card className="bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-950/30 dark:to-emerald-950/30 border-green-200 dark:border-green-800 card-shadow">
-          <CardContent className="pt-6">
+        <Card className="relative overflow-hidden bg-white dark:bg-slate-800 border-0 shadow-lg shadow-emerald-500/10 hover:shadow-xl hover:shadow-emerald-500/20 transition-all duration-300 group">
+          <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/5 via-green-500/5 to-transparent dark:from-emerald-500/10 dark:via-green-500/10" />
+          <CardContent className="pt-6 pb-5 relative">
             <div className={`flex items-center justify-between ${isRTL ? 'flex-row-reverse' : ''}`}>
               <div>
-                <p className="text-sm font-medium text-muted-foreground dark:text-gray-400">{t('agents.active')}</p>
-                <h3 className="text-3xl font-bold bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent">
+                <p className="text-sm font-medium text-slate-500 dark:text-slate-400 mb-1">{t('agents.active')}</p>
+                <h3 className="text-4xl font-bold text-slate-900 dark:text-white">
                   {agents?.filter(a => a.status === 'active').length || 0}
                 </h3>
               </div>
-              <div className="h-12 w-12 rounded-full bg-gradient-to-br from-green-600 to-emerald-600 flex items-center justify-center">
-                <span className="text-2xl">✅</span>
+              <div className="h-14 w-14 rounded-2xl bg-gradient-to-br from-emerald-500 to-green-500 flex items-center justify-center shadow-lg shadow-emerald-500/30 group-hover:scale-110 transition-transform duration-300">
+                <svg className="h-7 w-7 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+                  <polyline points="22 4 12 14.01 9 11.01" />
+                </svg>
               </div>
+            </div>
+            <div className="mt-3 flex items-center gap-1 text-xs text-emerald-600 dark:text-emerald-400">
+              <span className="inline-block w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+              Currently running
             </div>
           </CardContent>
         </Card>
 
-        <Card className="bg-gradient-to-br from-blue-50 to-cyan-50 dark:from-blue-950/30 dark:to-cyan-950/30 border-blue-200 dark:border-blue-800 card-shadow">
-          <CardContent className="pt-6">
+        <Card className="relative overflow-hidden bg-white dark:bg-slate-800 border-0 shadow-lg shadow-slate-500/10 hover:shadow-xl hover:shadow-slate-500/20 transition-all duration-300 group">
+          <div className="absolute inset-0 bg-gradient-to-br from-slate-500/5 via-gray-500/5 to-transparent dark:from-slate-500/10 dark:via-gray-500/10" />
+          <CardContent className="pt-6 pb-5 relative">
             <div className={`flex items-center justify-between ${isRTL ? 'flex-row-reverse' : ''}`}>
               <div>
-                <p className="text-sm font-medium text-muted-foreground dark:text-gray-400">{t('agents.inactive')}</p>
-                <h3 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-cyan-600 bg-clip-text text-transparent">
+                <p className="text-sm font-medium text-slate-500 dark:text-slate-400 mb-1">{t('agents.inactive')}</p>
+                <h3 className="text-4xl font-bold text-slate-900 dark:text-white">
                   {agents?.filter(a => a.status !== 'active').length || 0}
                 </h3>
               </div>
-              <div className="h-12 w-12 rounded-full bg-gradient-to-br from-blue-600 to-cyan-600 flex items-center justify-center">
-                <span className="text-2xl">💤</span>
+              <div className="h-14 w-14 rounded-2xl bg-gradient-to-br from-slate-400 to-slate-500 dark:from-slate-600 dark:to-slate-700 flex items-center justify-center shadow-lg shadow-slate-500/30 group-hover:scale-110 transition-transform duration-300">
+                <svg className="h-7 w-7 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="12" cy="12" r="10" />
+                  <line x1="4.93" y1="4.93" x2="19.07" y2="19.07" />
+                </svg>
               </div>
+            </div>
+            <div className="mt-3 flex items-center gap-1 text-xs text-slate-400">
+              <span className="inline-block w-2 h-2 rounded-full bg-slate-400"></span>
+              Paused or disabled
             </div>
           </CardContent>
         </Card>
       </div>
 
       {/* Agents Table Card */}
-      <Card className="card-shadow bg-white dark:bg-slate-800">
-        <CardHeader className="border-b border-slate-200 dark:border-slate-700">
+      <Card className="border-0 shadow-lg shadow-slate-200/50 dark:shadow-none bg-white dark:bg-slate-800 overflow-hidden">
+        <CardHeader className="border-b border-slate-100 dark:border-slate-700 bg-gradient-to-r from-slate-50 to-white dark:from-slate-800 dark:to-slate-800 py-5">
           <div className={`flex justify-between items-center`}>
             <div>
-              <CardTitle className="text-2xl dark:text-white">{t('agents.yourAgents')}</CardTitle>
-              <CardDescription className="text-base">{t('agents.manageAgents')}</CardDescription>
+              <CardTitle className="text-xl font-semibold text-slate-900 dark:text-white">{t('agents.yourAgents')}</CardTitle>
+              <CardDescription className="text-slate-500 dark:text-slate-400 mt-1">{t('agents.manageAgents')}</CardDescription>
             </div>
             <Permission permission="agent:create">
               <Button
                 onClick={() => navigate('/dashboard/builder')}
-                className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white btn-hover-lift"
+                className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white shadow-lg shadow-purple-500/25 hover:shadow-purple-500/40 transition-all duration-200 hover:scale-[1.02]"
               >
                 <PlusCircle className={`h-4 w-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
                 {t('agents.createAgent')}
@@ -507,47 +534,53 @@ export const AgentList = () => {
         <CardContent className="p-0">
           <div className="overflow-x-auto">
             <Table>
-              <TableHeader className="bg-slate-50 dark:bg-slate-900">
-                <TableRow>
-                  <TableHead className="font-semibold dark:text-gray-300">{t('agents.agentName')}</TableHead>
-                  <TableHead className="font-semibold dark:text-gray-300">{t('agents.llmProvider')}</TableHead>
-                  <TableHead className="font-semibold dark:text-gray-300">{t('agents.model')}</TableHead>
-                  <TableHead className="font-semibold dark:text-gray-300">{t('agents.status')}</TableHead>
-                  <TableHead className={`font-semibold dark:text-gray-300 text-left`}>{t('agents.actions')}</TableHead>
+              <TableHeader>
+                <TableRow className="bg-slate-50/50 dark:bg-slate-900/50 hover:bg-slate-50/50">
+                  <TableHead className="font-semibold text-slate-600 dark:text-slate-300 text-xs uppercase tracking-wider">{t('agents.agentName')}</TableHead>
+                  <TableHead className="font-semibold text-slate-600 dark:text-slate-300 text-xs uppercase tracking-wider">{t('agents.llmProvider')}</TableHead>
+                  <TableHead className="font-semibold text-slate-600 dark:text-slate-300 text-xs uppercase tracking-wider">{t('agents.model')}</TableHead>
+                  <TableHead className="font-semibold text-slate-600 dark:text-slate-300 text-xs uppercase tracking-wider">{t('agents.status')}</TableHead>
+                  <TableHead className={`font-semibold text-slate-600 dark:text-slate-300 text-xs uppercase tracking-wider text-left`}>{t('agents.actions')}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {agents?.map((agent) => (
-                  <TableRow key={agent.id} className="hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
-                    <TableCell>
+                  <TableRow key={agent.id} className="group hover:bg-slate-50/80 dark:hover:bg-slate-700/30 transition-colors border-b border-slate-100 dark:border-slate-700/50">
+                    <TableCell className="py-4">
                       <div className={`flex items-center gap-3`}>
-                        <Avatar className="h-10 w-10 bg-gradient-to-br from-purple-600 to-pink-600 text-white border-2 border-white dark:border-slate-700 shadow-md">
-                          <AvatarFallback className="bg-gradient-to-br from-purple-600 to-pink-600 text-white font-semibold">
-                            {agent.name.substring(0, 2).toUpperCase()}
-                          </AvatarFallback>
-                        </Avatar>
+                        <div className="relative">
+                          <Avatar className="h-11 w-11 ring-2 ring-white dark:ring-slate-700 shadow-md">
+                            <AvatarFallback className="bg-gradient-to-br from-purple-500 via-pink-500 to-rose-500 text-white font-semibold text-sm">
+                              {agent.name.substring(0, 2).toUpperCase()}
+                            </AvatarFallback>
+                          </Avatar>
+                          {agent.status === 'active' && (
+                            <span className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 bg-emerald-500 rounded-full border-2 border-white dark:border-slate-800"></span>
+                          )}
+                        </div>
                         <div>
-                          <p className="font-semibold dark:text-white">{agent.name}</p>
-                          <p className="text-sm text-gray-500 dark:text-gray-400 truncate max-w-xs">{agent.prompt}</p>
+                          <p className="font-semibold text-slate-900 dark:text-white group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors">{agent.name}</p>
+                          <p className="text-sm text-slate-500 dark:text-slate-400 truncate max-w-xs">{agent.prompt}</p>
                         </div>
                       </div>
                     </TableCell>
-                    <TableCell className="dark:text-gray-300">
-                      <span className="inline-flex items-center px-2.5 py-1 rounded-md bg-slate-100 dark:bg-slate-700 text-sm font-medium">
+                    <TableCell className="py-4">
+                      <span className="inline-flex items-center px-2.5 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-700/50 text-sm font-medium text-slate-700 dark:text-slate-300 capitalize">
                         {agent.llm_provider}
                       </span>
                     </TableCell>
-                    <TableCell className="dark:text-gray-300">
-                      <span className="text-sm font-medium">{agent.model_name}</span>
+                    <TableCell className="py-4">
+                      <span className="text-sm font-medium text-slate-600 dark:text-slate-300">{agent.model_name}</span>
                     </TableCell>
-                    <TableCell>
+                    <TableCell className="py-4">
                       {agent.status === 'active' ? (
-                        <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400 border border-green-200 dark:border-green-800 ${isRTL ? 'flex-row-reverse' : ''}`}>
-                          <span className={`w-2 h-2 bg-green-600 dark:bg-green-400 rounded-full animate-pulse ${isRTL ? 'ml-2' : 'mr-2'}`}></span>
+                        <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                          <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse"></span>
                           {t('agents.active')}
                         </span>
                       ) : (
-                        <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
+                        <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-slate-100 text-slate-600 dark:bg-slate-700/50 dark:text-slate-400">
+                          <span className="w-1.5 h-1.5 bg-slate-400 rounded-full"></span>
                           {t('agents.inactive')}
                         </span>
                       )}

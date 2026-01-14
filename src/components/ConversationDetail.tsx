@@ -1,10 +1,11 @@
 import { useState, useRef, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient, useInfiniteQuery } from '@tanstack/react-query';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { ChatMessage, User, Contact, PRIORITY_CONFIG, MessageAttachment } from '@/types';
-import { Paperclip, Send, CornerDownRight, Book, CheckCircle, Users, Video, Bot, Mic, MessageSquare, Sparkles, ArrowLeft, AlertTriangle, ArrowUp, Minus, ArrowDown, Flag, FileText, Download, MapPin, Image, File } from 'lucide-react';
+import { Paperclip, Send, CornerDownRight, Book, CheckCircle, Users, Video, Bot, Mic, MessageSquare, Sparkles, ArrowLeft, AlertTriangle, ArrowUp, Minus, ArrowDown, Flag, FileText, Download, MapPin, Image, File, Clock, Loader2, ChevronUp, User as UserIcon } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from '@/hooks/use-toast';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -26,6 +27,60 @@ import RichTextEditor from './RichTextEditor';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { replaceTemplateVariables } from '@/services/messageTemplateService';
+
+// Animation variants for Framer Motion
+const messageVariants = {
+  hidden: { opacity: 0, y: 20, scale: 0.95 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    scale: 1,
+    transition: {
+      type: "spring",
+      stiffness: 400,
+      damping: 25
+    }
+  }
+};
+
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.03,
+      delayChildren: 0.1
+    }
+  }
+};
+
+const fadeInVariants = {
+  hidden: { opacity: 0 },
+  visible: { opacity: 1, transition: { duration: 0.3 } }
+};
+
+// Message Skeleton for loading state
+const MessageSkeleton = ({ isUser = false }: { isUser?: boolean }) => (
+  <div className={`flex items-end gap-3 ${isUser ? 'justify-start' : 'justify-end'}`}>
+    {isUser && (
+      <div className="w-10 h-10 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center">
+        <UserIcon className="h-5 w-5 text-slate-400 dark:text-slate-500" />
+      </div>
+    )}
+    <div className={`flex flex-col ${isUser ? 'items-start' : 'items-end'} max-w-[60%]`}>
+      <div className={`rounded-2xl p-4 skeleton`}>
+        <div className="h-4 w-32 rounded skeleton mb-2" />
+        <div className="h-4 w-48 rounded skeleton" />
+      </div>
+      <div className="h-3 w-16 rounded skeleton mt-1.5" />
+    </div>
+    {!isUser && (
+      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-400 via-purple-400 to-pink-400 flex items-center justify-center opacity-60">
+        <Bot className="h-5 w-5 text-white" />
+      </div>
+    )}
+  </div>
+);
 
 interface ConversationDetailProps {
   sessionId: string;
@@ -861,84 +916,152 @@ export const ConversationDetail: React.FC<ConversationDetailProps> = ({ sessionI
   const conversationPriority = sessionDetails?.priority ?? 0;
 
   return (
-    <div className="flex h-full bg-white dark:bg-slate-800 card-shadow-lg rounded-lg overflow-hidden">
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.3 }}
+      className="flex h-full bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm card-shadow-lg rounded-xl overflow-hidden border border-slate-200/50 dark:border-slate-700/50"
+    >
       <div className="flex flex-col flex-grow">
-        <header className="flex-shrink-0 border-b border-slate-200 dark:border-slate-700 bg-gradient-to-r from-white to-slate-50 dark:from-slate-800 dark:to-slate-900 shadow-sm">
+        {/* Enhanced Header */}
+        <motion.header
+          initial={{ y: -20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ duration: 0.4, ease: "easeOut" }}
+          className="flex-shrink-0 border-b border-slate-200/50 dark:border-slate-700/50 bg-gradient-to-r from-white via-slate-50/50 to-white dark:from-slate-800 dark:via-slate-900/50 dark:to-slate-800 relative overflow-hidden"
+        >
+          {/* Decorative gradient accent */}
+          <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500" />
+
           {/* Top Row - Title and Quick Actions */}
-          <div className={`flex items-center justify-between px-6 py-4 ${!readOnly ? 'border-b border-slate-200 dark:border-slate-700' : ''}`}>
-            <div className="flex items-center gap-3">
+          <div className={`flex items-center justify-between px-6 py-4 ${!readOnly ? 'border-b border-slate-100 dark:border-slate-700/50' : ''}`}>
+            <div className="flex items-center gap-4">
               {/* Back button for read-only mode */}
               {readOnly && onBack && (
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={onBack}
-                  className="hover:bg-slate-100 dark:hover:bg-slate-700"
-                >
-                  <ArrowLeft className="h-5 w-5" />
-                </Button>
+                <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={onBack}
+                    className="hover:bg-slate-100 dark:hover:bg-slate-700 rounded-xl"
+                  >
+                    <ArrowLeft className="h-5 w-5" />
+                  </Button>
+                </motion.div>
               )}
-              <div className="h-12 w-12 rounded-lg bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center shadow-md">
-                <MessageSquare className="h-6 w-6 text-white" />
+              {/* Contact Avatar */}
+              <div className="relative">
+                <motion.div
+                  initial={{ scale: 0.8 }}
+                  animate={{ scale: 1 }}
+                  transition={{ type: "spring", stiffness: 200, damping: 15 }}
+                >
+                  <Avatar className="h-12 w-12 border-2 border-white dark:border-slate-700 shadow-lg">
+                    <AvatarImage src={`https://avatar.vercel.sh/${contact?.email}.png`} alt={contact?.name || 'User'} />
+                    <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white font-bold">
+                      {contact?.name?.charAt(0)?.toUpperCase() || 'U'}
+                    </AvatarFallback>
+                  </Avatar>
+                </motion.div>
+                {/* Online indicator */}
+                <motion.div
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  className="absolute -bottom-0.5 -right-0.5 h-3.5 w-3.5 bg-green-500 rounded-full border-2 border-white dark:border-slate-800"
+                />
               </div>
-              <div>
-                <h2 className="text-xl font-bold dark:text-white">
-                  {readOnly ? t('conversations.detail.viewConversation', { defaultValue: 'View Conversation' }) : t('conversations.detail.conversation')}
-                </h2>
-                <p className="text-xs text-muted-foreground">{t('conversations.detail.sessionId', { id: sessionId.slice(0, 12) + '...' })}</p>
+
+              {/* Contact Info */}
+              <div className="flex flex-col">
+                <div className="flex items-center gap-2">
+                  <h2 className="text-lg font-bold text-slate-800 dark:text-white">
+                    {contact?.name || (readOnly ? t('conversations.detail.viewConversation', { defaultValue: 'View Conversation' }) : t('conversations.detail.conversation'))}
+                  </h2>
+                  <span className="px-2 py-0.5 bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 text-[10px] font-medium rounded-full">
+                    Customer
+                  </span>
+                </div>
+                <div className="flex items-center gap-2 mt-0.5">
+                  {contact?.email && (
+                    <span className="text-xs text-slate-500 dark:text-slate-400">{contact.email}</span>
+                  )}
+                  <span className="text-slate-300 dark:text-slate-600">•</span>
+                  <span className="text-xs text-slate-400 dark:text-slate-500 font-mono">
+                    #{sessionId.slice(0, 8)}
+                  </span>
+                </div>
               </div>
             </div>
 
-            <div className="flex items-center gap-2">
-              {/* Status Badge - always visible */}
-              <div className={`px-3 py-1.5 rounded-full text-xs font-medium ${
-                conversationStatus === 'resolved' ? 'bg-green-100 text-green-800' :
-                conversationStatus === 'active' ? 'bg-blue-100 text-blue-800' :
-                conversationStatus === 'assigned' ? 'bg-purple-100 text-purple-800' :
-                'bg-gray-100 text-gray-800'
-              }`}>
+            <div className="flex items-center gap-3">
+              {/* Enhanced Status Badge */}
+              <motion.div
+                initial={{ scale: 0.9, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                transition={{ delay: 0.2 }}
+                className={`px-4 py-2 rounded-xl text-xs font-semibold flex items-center gap-2 shadow-sm ${
+                  conversationStatus === 'resolved'
+                    ? 'bg-gradient-to-r from-green-100 to-emerald-100 text-green-700 dark:from-green-900/30 dark:to-emerald-900/30 dark:text-green-400'
+                    : conversationStatus === 'active'
+                    ? 'bg-gradient-to-r from-blue-100 to-indigo-100 text-blue-700 dark:from-blue-900/30 dark:to-indigo-900/30 dark:text-blue-400'
+                    : conversationStatus === 'assigned'
+                    ? 'bg-gradient-to-r from-purple-100 to-pink-100 text-purple-700 dark:from-purple-900/30 dark:to-pink-900/30 dark:text-purple-400'
+                    : 'bg-gradient-to-r from-slate-100 to-gray-100 text-slate-700 dark:from-slate-700 dark:to-gray-700 dark:text-slate-300'
+                }`}
+              >
+                <span className={`w-2 h-2 rounded-full ${
+                  conversationStatus === 'resolved' ? 'bg-green-500' :
+                  conversationStatus === 'active' ? 'bg-blue-500 animate-pulse' :
+                  conversationStatus === 'assigned' ? 'bg-purple-500' : 'bg-slate-400'
+                }`} />
                 {conversationStatus.charAt(0).toUpperCase() + conversationStatus.slice(1)}
-              </div>
+              </motion.div>
 
-              {/* Summary Button with Glow Effect */}
+              {/* AI Summary Button */}
               {onSummaryClick && (
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={onSummaryClick}
-                  className="relative btn-hover-lift border-purple-300 dark:border-purple-600 text-purple-700 dark:text-purple-300 hover:bg-purple-50 dark:hover:bg-purple-900/30 group overflow-hidden"
-                >
-                  {/* Glow effect */}
-                  <span className="absolute inset-0 bg-gradient-to-r from-purple-400/20 via-pink-400/20 to-purple-400/20 animate-pulse" />
-                  <span className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
-                  <Sparkles className={`h-4 w-4 ${isRTL ? 'ml-2' : 'mr-2'} relative z-10 text-purple-600 dark:text-purple-400`} />
-                  <span className="relative z-10">{t('conversations.detail.summary', { defaultValue: 'Summary' })}</span>
-                </Button>
+                <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+                  <Button
+                    size="sm"
+                    onClick={onSummaryClick}
+                    className="relative bg-gradient-to-r from-purple-500 via-indigo-500 to-blue-500 hover:from-purple-600 hover:via-indigo-600 hover:to-blue-600 text-white shadow-lg shadow-purple-500/25 group overflow-hidden rounded-xl h-9 px-4"
+                  >
+                    <span className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700" />
+                    <Sparkles className={`h-4 w-4 ${isRTL ? 'ml-2' : 'mr-2'} relative z-10`} />
+                    <span className="relative z-10 font-medium text-sm">{t('conversations.detail.summary', { defaultValue: 'AI Summary' })}</span>
+                  </Button>
+                </motion.div>
               )}
 
               {/* Action buttons - hidden in read-only mode */}
               {!readOnly && (
                 <>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => startCallMutation.mutate()}
-                    disabled={startCallMutation.isPending}
-                    className="btn-hover-lift"
-                  >
-                    <Video className={`h-4 w-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
-                    {t('conversations.detail.videoCall')}
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant={conversationStatus === 'resolved' ? 'outline' : 'default'}
-                    onClick={() => statusMutation.mutate('resolved')}
-                    disabled={statusMutation.isPending || conversationStatus === 'resolved'}
-                    className={conversationStatus === 'resolved' ? 'bg-green-100 text-green-800 hover:bg-green-200' : 'bg-blue-600 hover:bg-blue-700 text-white btn-hover-lift'}
-                  >
-                    <CheckCircle className={`h-4 w-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
-                    {conversationStatus === 'resolved' ? t('conversations.detail.resolved') : t('conversations.detail.resolve')}
-                  </Button>
+                  <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => startCallMutation.mutate()}
+                      disabled={startCallMutation.isPending}
+                      className="rounded-xl h-10 border-slate-200 dark:border-slate-600"
+                    >
+                      <Video className={`h-4 w-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
+                      {t('conversations.detail.videoCall')}
+                    </Button>
+                  </motion.div>
+                  <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+                    <Button
+                      size="sm"
+                      onClick={() => statusMutation.mutate('resolved')}
+                      disabled={statusMutation.isPending || conversationStatus === 'resolved'}
+                      className={`rounded-xl h-10 ${
+                        conversationStatus === 'resolved'
+                          ? 'bg-green-100 text-green-700 hover:bg-green-200 border border-green-200'
+                          : 'bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-lg shadow-blue-500/20'
+                      }`}
+                    >
+                      <CheckCircle className={`h-4 w-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
+                      {conversationStatus === 'resolved' ? t('conversations.detail.resolved') : t('conversations.detail.resolve')}
+                    </Button>
+                  </motion.div>
                 </>
               )}
             </div>
@@ -946,397 +1069,606 @@ export const ConversationDetail: React.FC<ConversationDetailProps> = ({ sessionI
 
           {/* Bottom Row - Controls (hidden in read-only mode) */}
           {!readOnly && (
-          <div className="flex items-center gap-4 px-6 py-3">
-            {/* AI Toggle */}
-            <div className="flex items-center gap-2 bg-white dark:bg-slate-900 rounded-lg px-3 py-2 border border-slate-200 dark:border-slate-700 card-shadow">
-              <Bot className={`h-4 w-4 ${isAiEnabled ? 'text-blue-600' : 'text-gray-400'}`} />
-              <Label htmlFor="ai-toggle" className="text-sm font-medium cursor-pointer">
-                {t('conversations.detail.aiReplies')}
-              </Label>
-              <Switch
-                key={`ai-toggle-${sessionId}`}
-                id="ai-toggle"
-                checked={isAiEnabled}
-                onCheckedChange={toggleAiMutation.mutate}
-                className="data-[state=checked]:bg-blue-600"
-              />
-            </div>
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2 }}
+              className="flex items-center gap-3 px-6 py-3 bg-gradient-to-r from-slate-50/50 to-white/50 dark:from-slate-900/30 dark:to-slate-800/30"
+            >
+              {/* AI Toggle - Enhanced */}
+              <div className="flex items-center gap-2 bg-white dark:bg-slate-800/80 rounded-xl px-4 py-2.5 border border-slate-200 dark:border-slate-700 shadow-sm transition-all hover:shadow-md">
+                <div className={`p-1.5 rounded-lg ${isAiEnabled ? 'bg-blue-100 dark:bg-blue-900/30' : 'bg-slate-100 dark:bg-slate-700'}`}>
+                  <Bot className={`h-4 w-4 transition-colors ${isAiEnabled ? 'text-blue-600 dark:text-blue-400' : 'text-slate-400'}`} />
+                </div>
+                <Label htmlFor="ai-toggle" className="text-sm font-medium cursor-pointer">
+                  {t('conversations.detail.aiReplies')}
+                </Label>
+                <Switch
+                  key={`ai-toggle-${sessionId}`}
+                  id="ai-toggle"
+                  checked={isAiEnabled}
+                  onCheckedChange={toggleAiMutation.mutate}
+                  className="data-[state=checked]:bg-gradient-to-r data-[state=checked]:from-blue-500 data-[state=checked]:to-indigo-500"
+                />
+              </div>
 
-            {/* Assign To */}
-            <div className="flex items-center gap-2 bg-white dark:bg-slate-900 rounded-lg px-3 py-2 border border-slate-200 dark:border-slate-700 card-shadow">
-              <Users className="h-4 w-4 text-muted-foreground" />
-              <Select
-                key={`assignee-${sessionId}`}
-                value={sessionDetails?.assignee_id?.toString() || undefined}
-                onValueChange={(value) => assigneeMutation.mutate(parseInt(value))}
-              >
-                <SelectTrigger className="border-0 h-auto p-0 focus:ring-0 w-[180px]">
-                  <SelectValue placeholder={t('conversations.detail.assignTo')} />
-                </SelectTrigger>
-                <SelectContent>
-                  {Array.isArray(users) && users.map(user => (
-                    <SelectItem key={user.id} value={user.id.toString()}>
-                      <div className="flex items-center gap-2">
-                        <div className="h-6 w-6 rounded-full bg-blue-100 flex items-center justify-center">
-                          <span className="text-xs font-semibold text-blue-600">
-                            {user.email.charAt(0).toUpperCase()}
-                          </span>
-                        </div>
-                        <span className="text-sm">{user.email}</span>
-                      </div>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            {/* Priority Selector */}
-            <div className="flex items-center gap-2 bg-white dark:bg-slate-900 rounded-lg px-3 py-2 border border-slate-200 dark:border-slate-700 card-shadow">
-              <Flag className={`h-4 w-4 ${conversationPriority > 0 ? PRIORITY_CONFIG[conversationPriority]?.color : 'text-muted-foreground'}`} />
-              <Select
-                key={`priority-${sessionId}-${conversationPriority}`}
-                value={conversationPriority.toString()}
-                onValueChange={(value) => priorityMutation.mutate(parseInt(value))}
-              >
-                <SelectTrigger className="border-0 h-auto p-0 focus:ring-0 w-[120px]">
-                  <SelectValue placeholder={t('conversations.priority.label', { defaultValue: 'Priority' })} />
-                </SelectTrigger>
-                <SelectContent>
-                  {[0, 1, 2, 3, 4].map((priority) => {
-                    const config = PRIORITY_CONFIG[priority];
-                    return (
-                      <SelectItem key={priority} value={priority.toString()}>
+              {/* Assign To - Enhanced */}
+              <div className="flex items-center gap-2 bg-white dark:bg-slate-800/80 rounded-xl px-4 py-2.5 border border-slate-200 dark:border-slate-700 shadow-sm transition-all hover:shadow-md">
+                <div className="p-1.5 rounded-lg bg-purple-100 dark:bg-purple-900/30">
+                  <Users className="h-4 w-4 text-purple-600 dark:text-purple-400" />
+                </div>
+                <Select
+                  key={`assignee-${sessionId}`}
+                  value={sessionDetails?.assignee_id?.toString() || undefined}
+                  onValueChange={(value) => assigneeMutation.mutate(parseInt(value))}
+                >
+                  <SelectTrigger className="border-0 h-auto p-0 focus:ring-0 w-[180px] font-medium">
+                    <SelectValue placeholder={t('conversations.detail.assignTo')} />
+                  </SelectTrigger>
+                  <SelectContent className="rounded-xl">
+                    {Array.isArray(users) && users.map(user => (
+                      <SelectItem key={user.id} value={user.id.toString()} className="rounded-lg">
                         <div className="flex items-center gap-2">
-                          <span className={config.color}>{getPriorityIcon(priority)}</span>
-                          <span className={`text-sm ${config.color}`}>
-                            {t(`conversations.priority.${config.label.toLowerCase()}`, { defaultValue: config.label })}
-                          </span>
+                          <div className="h-7 w-7 rounded-lg bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center shadow-sm">
+                            <span className="text-xs font-bold text-white">
+                              {user.email.charAt(0).toUpperCase()}
+                            </span>
+                          </div>
+                          <span className="text-sm font-medium">{user.email}</span>
                         </div>
                       </SelectItem>
-                    );
-                  })}
-                </SelectContent>
-              </Select>
-            </div>
-
-            {/* Status Badge */}
-            <div className={isRTL ? 'mr-auto' : 'ml-auto'}>
-              <div className={`px-3 py-1.5 rounded-full text-xs font-medium ${
-                conversationStatus === 'resolved' ? 'bg-green-100 text-green-800' :
-                conversationStatus === 'active' ? 'bg-blue-100 text-blue-800' :
-                conversationStatus === 'assigned' ? 'bg-purple-100 text-purple-800' :
-                'bg-gray-100 text-gray-800'
-              }`}>
-                {conversationStatus.charAt(0).toUpperCase() + conversationStatus.slice(1)}
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
-            </div>
-          </div>
+
+              {/* Priority Selector - Enhanced */}
+              <div className="flex items-center gap-2 bg-white dark:bg-slate-800/80 rounded-xl px-4 py-2.5 border border-slate-200 dark:border-slate-700 shadow-sm transition-all hover:shadow-md">
+                <div className={`p-1.5 rounded-lg ${conversationPriority > 0 ? PRIORITY_CONFIG[conversationPriority]?.bgColor : 'bg-slate-100 dark:bg-slate-700'}`}>
+                  <Flag className={`h-4 w-4 ${conversationPriority > 0 ? PRIORITY_CONFIG[conversationPriority]?.color : 'text-slate-400'}`} />
+                </div>
+                <Select
+                  key={`priority-${sessionId}-${conversationPriority}`}
+                  value={conversationPriority.toString()}
+                  onValueChange={(value) => priorityMutation.mutate(parseInt(value))}
+                >
+                  <SelectTrigger className="border-0 h-auto p-0 focus:ring-0 w-[120px] font-medium">
+                    <SelectValue placeholder={t('conversations.priority.label', { defaultValue: 'Priority' })} />
+                  </SelectTrigger>
+                  <SelectContent className="rounded-xl">
+                    {[0, 1, 2, 3, 4].map((priority) => {
+                      const config = PRIORITY_CONFIG[priority];
+                      return (
+                        <SelectItem key={priority} value={priority.toString()} className="rounded-lg">
+                          <div className="flex items-center gap-2">
+                            <span className={config.color}>{getPriorityIcon(priority)}</span>
+                            <span className={`text-sm font-medium ${config.color}`}>
+                              {t(`conversations.priority.${config.label.toLowerCase()}`, { defaultValue: config.label })}
+                            </span>
+                          </div>
+                        </SelectItem>
+                      );
+                    })}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Spacer */}
+              <div className={isRTL ? 'mr-auto' : 'ml-auto'} />
+            </motion.div>
           )}
-        </header>
+        </motion.header>
 
-        <main ref={messagesContainerRef} className="flex-grow overflow-y-auto p-6 bg-gradient-to-b from-slate-50 to-white dark:from-slate-900 dark:to-slate-800">
-          {isLoading ? (
-            <div className="flex items-center justify-center h-full">
-              <div className="text-center">
-                <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600 mx-auto mb-3"></div>
-                <p className="text-sm text-muted-foreground">{t('conversations.detail.loadingMessages')}</p>
-              </div>
-            </div>
-          ) : messages && messages.length > 0 ? (
-            <div className="space-y-4">
-              {/* Loading indicator for fetching older messages */}
-              {isFetchingNextPage && (
-                <div className="flex justify-center py-4">
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
-                    <span>{t('conversations.detail.loadingOlderMessages', { defaultValue: 'Loading older messages...' })}</span>
-                  </div>
-                </div>
-              )}
-              {/* Show message if no more messages to load and we have loaded multiple pages */}
-              {!hasNextPage && messagesData && messagesData.pages.length > 1 && (
-                <div className="flex justify-center py-2">
-                  <p className="text-xs text-muted-foreground">{t('conversations.detail.noMoreMessages', { defaultValue: 'Beginning of conversation' })}</p>
-                </div>
-              )}
-              {messages.map((msg, index) => {
-                // Check if we need to show a date separator
-                const showDateSeparator = index === 0 || isDifferentDay(messages[index - 1].timestamp, msg.timestamp);
+        {/* Enhanced Messages Area */}
+        <main ref={messagesContainerRef} className="flex-grow overflow-y-auto p-6 bg-gradient-to-b from-slate-50/80 via-white to-slate-50/50 dark:from-slate-900/80 dark:via-slate-800 dark:to-slate-900/50 relative">
+          {/* Decorative background pattern */}
+          <div className="absolute inset-0 opacity-[0.02] dark:opacity-[0.05] pointer-events-none" style={{
+            backgroundImage: 'radial-gradient(circle at 1px 1px, currentColor 1px, transparent 0)',
+            backgroundSize: '24px 24px'
+          }} />
 
-                return (
-                  <div key={`${msg.id}-${index}`}>
-                    {/* Date Separator */}
-                    {showDateSeparator && (
-                      <div className="flex items-center justify-center my-6">
-                        <div className="relative">
-                          <div className="bg-white dark:bg-slate-800 px-4 py-1.5 rounded-md shadow-md border border-slate-200 dark:border-slate-700">
-                            <p className="text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wide">
-                              {formatDateSeparator(new Date(msg.timestamp))}
-                            </p>
-                          </div>
-                        </div>
+          <AnimatePresence mode="wait">
+            {isLoading ? (
+              <motion.div
+                key="loading"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="space-y-6 py-4"
+              >
+                {/* Skeleton loading */}
+                {[...Array(5)].map((_, i) => (
+                  <MessageSkeleton key={i} isUser={i % 2 === 0} />
+                ))}
+              </motion.div>
+            ) : messages && messages.length > 0 ? (
+              <motion.div
+                key="messages"
+                variants={containerVariants}
+                initial="hidden"
+                animate="visible"
+                className="space-y-4 relative z-10"
+              >
+                {/* Loading indicator for fetching older messages */}
+                <AnimatePresence>
+                  {isFetchingNextPage && (
+                    <motion.div
+                      initial={{ opacity: 0, y: -20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -20 }}
+                      className="flex justify-center py-4"
+                    >
+                      <div className="flex items-center gap-3 bg-white dark:bg-slate-800 px-4 py-2 rounded-full shadow-lg border border-slate-200 dark:border-slate-700">
+                        <Loader2 className="h-4 w-4 text-blue-500 animate-spin" />
+                        <span className="text-sm text-muted-foreground font-medium">
+                          {t('conversations.detail.loadingOlderMessages', { defaultValue: 'Loading older messages...' })}
+                        </span>
                       </div>
-                    )}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
 
-                    {msg.message_type === 'note' ? (
-                    /* Private Note */
-                    <div className="flex justify-center my-6">
-                      <div className="max-w-2xl w-full bg-gradient-to-r from-yellow-50 to-amber-50 dark:from-yellow-900/20 dark:to-amber-900/20 border-l-4 border-yellow-400 dark:border-yellow-600 rounded-lg p-4 card-shadow">
-                        <div className="flex items-start gap-3">
-                          <div className="h-8 w-8 rounded-full bg-yellow-400 dark:bg-yellow-600 flex items-center justify-center flex-shrink-0">
-                            <Book className="h-4 w-4 text-yellow-900 dark:text-yellow-100" />
-                          </div>
-                          <div className="flex-grow">
-                            <p className="text-sm font-semibold text-yellow-900 dark:text-yellow-400 mb-1">{t('conversations.detail.privateNote')}</p>
-                            <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">{msg.message}</p>
-                            <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
-                              {new Date(msg.timestamp).toLocaleString()}
-                            </p>
-                          </div>
-                        </div>
-                      </div>
+                {/* Beginning of conversation indicator */}
+                {!hasNextPage && messagesData && messagesData.pages.length > 1 && (
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    className="flex justify-center py-4"
+                  >
+                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                      <div className="h-px w-12 bg-gradient-to-r from-transparent to-slate-300 dark:to-slate-600" />
+                      <ChevronUp className="h-4 w-4" />
+                      <span className="font-medium">{t('conversations.detail.noMoreMessages', { defaultValue: 'Beginning of conversation' })}</span>
+                      <ChevronUp className="h-4 w-4" />
+                      <div className="h-px w-12 bg-gradient-to-l from-transparent to-slate-300 dark:to-slate-600" />
                     </div>
-                  ) : (
-                    /* Regular Message */
-                    <div className={`flex items-end gap-3 ${msg.sender === 'user' ? 'justify-start' : 'justify-end'}`}>
-                      {msg.sender === 'user' && (
-                        <Avatar className="h-10 w-10 flex-shrink-0 ring-2 ring-slate-200">
-                          <AvatarImage src={`https://avatar.vercel.sh/${contact?.email}.png`} alt={contact?.name || 'User'} />
-                          <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white font-semibold text-sm">
-                            {contact?.name?.charAt(0)?.toUpperCase() || contact?.email?.charAt(0)?.toUpperCase() || 'U'}
-                          </AvatarFallback>
-                        </Avatar>
-                      )}
-                      <div className={`flex flex-col ${msg.sender === 'user' ? 'items-start' : 'items-end'} max-w-[75%]`}>
-                        <div
-                          className={`px-4 py-3 rounded-2xl card-shadow ${
-                            msg.sender === 'user'
-                              ? `bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 ${isRTL ? 'rounded-br-sm' : 'rounded-bl-sm'} dark:text-white`
-                              : `bg-gradient-to-br from-blue-600 to-purple-600 text-white ${isRTL ? 'rounded-bl-sm' : 'rounded-br-sm'}`
-                          }`}
-                        >
-                          <div className="prose prose-sm dark:prose-invert max-w-full prose-p:my-1 prose-headings:my-2">
-                            <ReactMarkdown
-                              remarkPlugins={[remarkGfm]}
-                              components={{
-                                a: ({node, ...props}) => (
-                                  <a
-                                    {...props}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className={msg.sender === 'user' ? 'text-blue-600 hover:underline' : 'text-blue-200 hover:underline'}
-                                  />
-                                ),
-                                p: ({node, ...props}) => <p className="text-sm leading-relaxed break-words" {...props} />,
-                                strong: ({node, ...props}) => <strong className="font-bold" {...props} />,
-                                em: ({node, ...props}) => <em className="italic" {...props} />,
-                              }}
-                            >
-                              {typeof msg.message === 'string' ? msg.message : JSON.stringify(msg.message)}
-                            </ReactMarkdown>
-                          </div>
-                          {/* Render attachments with download links */}
-                          {msg.attachments && msg.attachments.length > 0 && (
-                            <AttachmentDisplay attachments={msg.attachments} sender={msg.sender} />
-                          )}
-                          {/* Render prompt options */}
-                          {msg.options && msg.options.length > 0 && (
-                            <div className="mt-2">
-                              <div className="flex flex-wrap gap-2">
-                                {msg.options.map((option, optionIndex) => {
-                                  let displayText: string;
-                                  if (option && typeof option === 'object' && 'key' in option && 'value' in option) {
-                                    displayText = String((option as {key: string; value: string}).value || (option as {key: string; value: string}).key || '');
-                                  } else {
-                                    displayText = String(option || '');
-                                  }
-                                  return (
-                                    <span
-                                      key={optionIndex}
-                                      className={`px-3 py-1 rounded-full text-xs font-medium ${
-                                        msg.sender === 'user'
-                                          ? 'bg-blue-100 text-blue-800 dark:bg-blue-900/50 dark:text-blue-300'
-                                          : 'bg-white/20 text-white'
-                                      }`}
-                                    >
-                                      {displayText}
-                                    </span>
-                                  );
-                                })}
+                  </motion.div>
+                )}
+
+                {messages.map((msg, index) => {
+                  const showDateSeparator = index === 0 || isDifferentDay(messages[index - 1].timestamp, msg.timestamp);
+
+                  return (
+                    <motion.div
+                      key={`${msg.id}-${index}`}
+                      variants={messageVariants}
+                    >
+                      {/* Enhanced Date Separator */}
+                      {showDateSeparator && (
+                        <div className="flex items-center justify-center my-8">
+                          <div className="flex items-center gap-4">
+                            <div className="h-px w-16 bg-gradient-to-r from-transparent via-slate-300 to-slate-300 dark:via-slate-600 dark:to-slate-600" />
+                            <div className="bg-white dark:bg-slate-800 px-5 py-2 rounded-full shadow-md border border-slate-200 dark:border-slate-700">
+                              <div className="flex items-center gap-2">
+                                <Clock className="h-3.5 w-3.5 text-slate-400" />
+                                <p className="text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider">
+                                  {formatDateSeparator(new Date(msg.timestamp))}
+                                </p>
                               </div>
                             </div>
+                            <div className="h-px w-16 bg-gradient-to-l from-transparent via-slate-300 to-slate-300 dark:via-slate-600 dark:to-slate-600" />
+                          </div>
+                        </div>
+                      )}
+
+                      {msg.message_type === 'note' ? (
+                        /* Enhanced Private Note */
+                        <motion.div
+                          initial={{ opacity: 0, scale: 0.95 }}
+                          animate={{ opacity: 1, scale: 1 }}
+                          className="flex justify-center my-6"
+                        >
+                          <div className="max-w-2xl w-full bg-gradient-to-r from-amber-50 via-yellow-50 to-amber-50 dark:from-amber-900/20 dark:via-yellow-900/20 dark:to-amber-900/20 border border-amber-200 dark:border-amber-700/50 rounded-2xl p-5 shadow-lg shadow-amber-500/10">
+                            <div className="flex items-start gap-4">
+                              <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-amber-400 to-yellow-500 flex items-center justify-center flex-shrink-0 shadow-md">
+                                <Book className="h-5 w-5 text-white" />
+                              </div>
+                              <div className="flex-grow">
+                                <div className="flex items-center gap-2 mb-2">
+                                  <span className="text-sm font-bold text-amber-700 dark:text-amber-400">{t('conversations.detail.privateNote')}</span>
+                                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-200/50 dark:bg-amber-800/30 text-amber-700 dark:text-amber-400 font-medium">Internal Only</span>
+                                </div>
+                                <p className="text-sm text-slate-700 dark:text-slate-300 leading-relaxed">{msg.message}</p>
+                                <p className="text-xs text-amber-600/70 dark:text-amber-400/70 mt-3 flex items-center gap-1.5">
+                                  <Clock className="h-3 w-3" />
+                                  {new Date(msg.timestamp).toLocaleString()}
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+                        </motion.div>
+                      ) : (
+                        /* Enhanced Regular Message */
+                        <div className={`flex items-end gap-3 ${msg.sender === 'user' ? 'justify-start' : 'justify-end'}`}>
+                          {msg.sender === 'user' && (
+                            <motion.div
+                              initial={{ scale: 0 }}
+                              animate={{ scale: 1 }}
+                              transition={{ type: "spring", stiffness: 300, damping: 20 }}
+                            >
+                              <Avatar className="h-10 w-10 flex-shrink-0 ring-2 ring-white dark:ring-slate-700 shadow-md">
+                                <AvatarImage src={`https://avatar.vercel.sh/${contact?.email}.png`} alt={contact?.name || 'User'} />
+                                <AvatarFallback className="bg-gradient-to-br from-slate-100 to-slate-200 dark:from-slate-600 dark:to-slate-700">
+                                  <UserIcon className="h-5 w-5 text-slate-500 dark:text-slate-300" />
+                                </AvatarFallback>
+                              </Avatar>
+                            </motion.div>
+                          )}
+                          <div className={`flex flex-col ${msg.sender === 'user' ? 'items-start' : 'items-end'} max-w-[70%]`}>
+                            <motion.div
+                              whileHover={{ scale: 1.01 }}
+                              className={`px-5 py-3.5 rounded-2xl shadow-md transition-shadow hover:shadow-lg ${
+                                msg.sender === 'user'
+                                  ? `bg-white dark:bg-slate-700/90 border border-slate-200/80 dark:border-slate-600/50 ${isRTL ? 'rounded-br-md' : 'rounded-bl-md'} dark:text-white`
+                                  : `bg-gradient-to-br from-blue-500 via-blue-600 to-indigo-600 text-white shadow-blue-500/20 ${isRTL ? 'rounded-bl-md' : 'rounded-br-md'}`
+                              }`}
+                            >
+                              <div className="prose prose-sm dark:prose-invert max-w-full prose-p:my-1 prose-headings:my-2">
+                                <ReactMarkdown
+                                  remarkPlugins={[remarkGfm]}
+                                  components={{
+                                    a: ({node, ...props}) => (
+                                      <a
+                                        {...props}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className={`${msg.sender === 'user' ? 'text-blue-600 hover:text-blue-700' : 'text-blue-200 hover:text-white'} underline underline-offset-2 transition-colors`}
+                                      />
+                                    ),
+                                    p: ({node, ...props}) => <p className="text-sm leading-relaxed break-words" {...props} />,
+                                    strong: ({node, ...props}) => <strong className="font-bold" {...props} />,
+                                    em: ({node, ...props}) => <em className="italic" {...props} />,
+                                  }}
+                                >
+                                  {typeof msg.message === 'string' ? msg.message : JSON.stringify(msg.message)}
+                                </ReactMarkdown>
+                              </div>
+                              {msg.attachments && msg.attachments.length > 0 && (
+                                <AttachmentDisplay attachments={msg.attachments} sender={msg.sender} />
+                              )}
+                              {msg.options && msg.options.length > 0 && (
+                                <div className="mt-3 pt-2 border-t border-white/10">
+                                  <div className="flex flex-wrap gap-2">
+                                    {msg.options.map((option, optionIndex) => {
+                                      let displayText: string;
+                                      if (option && typeof option === 'object' && 'key' in option && 'value' in option) {
+                                        displayText = String((option as {key: string; value: string}).value || (option as {key: string; value: string}).key || '');
+                                      } else {
+                                        displayText = String(option || '');
+                                      }
+                                      return (
+                                        <span
+                                          key={optionIndex}
+                                          className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
+                                            msg.sender === 'user'
+                                              ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300 hover:bg-blue-200'
+                                              : 'bg-white/20 text-white hover:bg-white/30'
+                                          }`}
+                                        >
+                                          {displayText}
+                                        </span>
+                                      );
+                                    })}
+                                  </div>
+                                </div>
+                              )}
+                            </motion.div>
+                            <p className={`text-[11px] mt-2 px-1 flex items-center gap-1.5 ${msg.sender === 'user' ? 'text-slate-400' : 'text-slate-500 dark:text-slate-400'}`}>
+                              <Clock className="h-3 w-3" />
+                              {new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                            </p>
+                          </div>
+                          {msg.sender !== 'user' && (
+                            <motion.div
+                              initial={{ scale: 0 }}
+                              animate={{ scale: 1 }}
+                              transition={{ type: "spring", stiffness: 300, damping: 20 }}
+                            >
+                              <div className="h-10 w-10 flex-shrink-0 rounded-full bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 flex items-center justify-center ring-2 ring-white dark:ring-slate-700 shadow-md">
+                                <Bot className="h-5 w-5 text-white" />
+                              </div>
+                            </motion.div>
                           )}
                         </div>
-                        <p className={`text-xs mt-1.5 px-1 ${msg.sender === 'user' ? 'text-gray-500 dark:text-gray-400' : 'text-gray-600 dark:text-gray-400'}`}>
-                          {new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                        </p>
-                      </div>
-                      {msg.sender !== 'user' && (
-                        <Avatar className="h-10 w-10 flex-shrink-0 ring-2 ring-purple-200">
-                          <AvatarFallback className="bg-gradient-to-br from-purple-500 to-pink-600 text-white font-semibold">
-                            AI
-                          </AvatarFallback>
-                        </Avatar>
                       )}
+                    </motion.div>
+                  );
+                })}
+                <div ref={messagesEndRef} />
+              </motion.div>
+            ) : (
+              /* Enhanced Empty State */
+              <motion.div
+                key="empty"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="flex items-center justify-center h-full"
+              >
+                <div className="text-center max-w-sm">
+                  <motion.div
+                    initial={{ scale: 0.8 }}
+                    animate={{ scale: 1 }}
+                    transition={{ type: "spring", stiffness: 200, damping: 15 }}
+                    className="relative inline-block mb-6"
+                  >
+                    <div className="w-24 h-24 rounded-3xl bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500 flex items-center justify-center shadow-2xl shadow-purple-500/30">
+                      <MessageSquare className="h-12 w-12 text-white" />
                     </div>
-                  )}
-                  </div>
-                );
-              })}
-              <div ref={messagesEndRef} />
-            </div>
-          ) : (
-            <div className="flex items-center justify-center h-full">
-              <div className="text-center">
-                <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-br from-blue-100 to-purple-100 mb-4">
-                  <MessageSquare className="h-8 w-8 text-blue-600" />
+                    <motion.div
+                      animate={{ rotate: 360 }}
+                      transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+                      className="absolute -inset-4 rounded-full border-2 border-dashed border-purple-200 dark:border-purple-800"
+                    />
+                  </motion.div>
+                  <motion.h3
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.2 }}
+                    className="text-xl font-bold bg-gradient-to-r from-slate-800 to-slate-600 dark:from-white dark:to-slate-300 bg-clip-text text-transparent mb-3"
+                  >
+                    {t('conversations.detail.noMessages')}
+                  </motion.h3>
+                  <motion.p
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.3 }}
+                    className="text-muted-foreground text-sm leading-relaxed"
+                  >
+                    {t('conversations.detail.noMessagesDesc')}
+                  </motion.p>
                 </div>
-                <h3 className="text-lg font-semibold mb-2">{t('conversations.detail.noMessages')}</h3>
-                <p className="text-muted-foreground text-sm">{t('conversations.detail.noMessagesDesc')}</p>
-              </div>
-            </div>
-          )}
+              </motion.div>
+            )}
+          </AnimatePresence>
         </main>
 
-        {/* Footer - hidden in read-only mode */}
+        {/* Compact Footer Input - WhatsApp/Instagram Style */}
         {!readOnly && (
-        <footer className="border-t border-slate-200 dark:border-slate-700 bg-gradient-to-r from-slate-50 to-slate-100 dark:from-slate-800 dark:to-slate-900 p-5 flex-shrink-0">
-          <Tabs defaultValue="reply" className="w-full">
-            <TabsList className="bg-white dark:bg-slate-900 rounded-lg p-1 shadow-sm border dark:border-slate-700">
-              <TabsTrigger value="reply" className="data-[state=active]:bg-blue-600 data-[state=active]:text-white rounded-md relative">
-                <CornerDownRight className="h-4 w-4 mr-2"/>
-                {t('conversations.detail.replyTab')}
-                {message.trim() && (
-                  <span className="absolute -top-1 -right-1 h-2 w-2 bg-blue-500 rounded-full" title={t('conversations.detail.draftSaved', { defaultValue: 'Draft saved' })} />
-                )}
-              </TabsTrigger>
-              <TabsTrigger value="note" className="data-[state=active]:bg-yellow-500 data-[state=active]:text-white rounded-md relative">
-                <Book className="h-4 w-4 mr-2"/>
-                {t('conversations.detail.privateNoteTab')}
-                {note.trim() && (
-                  <span className="absolute -top-1 -right-1 h-2 w-2 bg-yellow-500 rounded-full" title={t('conversations.detail.draftSaved', { defaultValue: 'Draft saved' })} />
-                )}
-              </TabsTrigger>
-            </TabsList>
+          <motion.footer
+            initial={{ y: 10, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ delay: 0.2, type: "spring", stiffness: 400, damping: 30 }}
+            className="flex-shrink-0 border-t border-slate-200 dark:border-slate-700/80 bg-white dark:bg-slate-900"
+          >
+            <Tabs defaultValue="reply" className="w-full">
+              {/* Minimal Tab Switcher */}
+              <div className="flex items-center gap-1 px-3 pt-2">
+                <TabsList className="h-auto p-0 bg-transparent gap-1">
+                  <TabsTrigger
+                    value="reply"
+                    className="relative text-xs px-3 py-1 rounded-full data-[state=active]:bg-blue-100 dark:data-[state=active]:bg-blue-900/30 data-[state=active]:text-blue-600 dark:data-[state=active]:text-blue-400 text-slate-500 dark:text-slate-400 transition-all duration-200 data-[state=active]:shadow-none"
+                  >
+                    {t('conversations.detail.replyTab')}
+                  </TabsTrigger>
+                  <TabsTrigger
+                    value="note"
+                    className="relative text-xs px-3 py-1 rounded-full data-[state=active]:bg-amber-100 dark:data-[state=active]:bg-amber-900/30 data-[state=active]:text-amber-600 dark:data-[state=active]:text-amber-400 text-slate-500 dark:text-slate-400 transition-all duration-200 data-[state=active]:shadow-none"
+                  >
+                    <span className="flex items-center gap-1">
+                      <Book className="h-3 w-3" />
+                      {t('conversations.detail.privateNoteTab')}
+                    </span>
+                  </TabsTrigger>
+                </TabsList>
 
-            {/* Draft indicator */}
-            {hasDraft && (
-              <div className="flex items-center gap-2 mt-2 text-xs text-muted-foreground">
-                <FileText className="h-3 w-3" />
-                <span>{t('conversations.detail.draftAutoSaved', { defaultValue: 'Draft auto-saved' })}</span>
-              </div>
-            )}
-
-            <TabsContent value="reply" className="mt-4">
-              <div className="bg-white dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-700 card-shadow overflow-hidden">
-                <RichTextEditor
-                  value={message}
-                  onChange={handleRichTextChange}
-                  placeholder={t('conversations.detail.messageInput')}
-                  onEnterKey={handleSendMessage}
-                />
-                {/* File Upload Preview (if files selected) */}
-                {selectedFiles.length > 0 && (
-                  <div className="px-3 pb-2">
-                    <FileUpload
-                      onFileSelect={handleFileSelect}
-                      onFileRemove={handleFileRemove}
-                      selectedFiles={selectedFiles}
-                      isUploading={isUploadingFiles}
-                    />
-                  </div>
-                )}
-
-                <div className={`flex items-center justify-between px-3 pb-2 pt-1 ${isRTL ? 'flex-row-reverse' : ''}`}>
-                  <div className="flex items-center gap-1">
-                    <FileUpload
-                      onFileSelect={handleFileSelect}
-                      onFileRemove={handleFileRemove}
-                      selectedFiles={[]}
-                      isUploading={isUploadingFiles}
-                      multiple={true}
-                    />
-                    <Button
-                      variant={isRecording ? "destructive" : "ghost"}
-                      size="icon"
-                      onClick={handleMicClick}
-                      className="h-8 w-8"
+                {/* Draft indicator - minimal */}
+                <AnimatePresence>
+                  {hasDraft && (
+                    <motion.span
+                      initial={{ opacity: 0, scale: 0.8 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={{ opacity: 0, scale: 0.8 }}
+                      className="ml-auto text-[10px] text-green-600 dark:text-green-400 flex items-center gap-1"
                     >
-                      <Mic className={`h-4 w-4 ${isRecording ? 'text-white' : 'text-gray-500'}`} />
-                    </Button>
-                  </div>
-                  <Button
-                    onClick={handleSendMessage}
-                    disabled={sendMessageMutation.isPending || (!message.trim() && selectedFiles.length === 0) || isUploadingFiles}
-                    size="sm"
-                    className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white btn-hover-lift"
-                  >
-                    <Send className={`h-4 w-4 ${isRTL ? 'ml-2 rotate-180' : 'mr-2'}`} />
-                    {t('conversations.detail.send')}
-                  </Button>
-                </div>
+                      <div className="w-1.5 h-1.5 bg-green-500 rounded-full" />
+                      Saved
+                    </motion.span>
+                  )}
+                </AnimatePresence>
               </div>
 
-              {suggestedReplies.length > 0 && (
-                <div className="mt-3 bg-white dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-700 p-3 card-shadow">
-                  <p className="text-xs font-semibold text-gray-700 mb-2 flex items-center gap-2">
-                    <Sparkles className="h-3 w-3 text-purple-600" />
-                    {t('conversations.detail.aiSuggestions')}
-                  </p>
-                  <div className="flex flex-wrap gap-2">
-                    {suggestedReplies.map((reply, index) => (
+              {/* Reply Tab - Compact Input */}
+              <TabsContent value="reply" className="mt-0 focus-visible:outline-none focus-visible:ring-0">
+                {/* AI Suggestions - Compact chips above input */}
+                <AnimatePresence>
+                  {suggestedReplies.length > 0 && (
+                    <motion.div
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: 'auto' }}
+                      exit={{ opacity: 0, height: 0 }}
+                      className="px-3 pt-2"
+                    >
+                      <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-hide">
+                        <Sparkles className="h-3 w-3 text-purple-500 flex-shrink-0" />
+                        {suggestedReplies.map((reply, index) => (
+                          <motion.button
+                            key={index}
+                            initial={{ opacity: 0, scale: 0.9 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            transition={{ delay: index * 0.03 }}
+                            whileTap={{ scale: 0.95 }}
+                            onClick={() => setMessage(reply)}
+                            className="flex-shrink-0 px-3 py-1 bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-700/50 rounded-full text-xs text-purple-700 dark:text-purple-300 hover:bg-purple-100 dark:hover:bg-purple-900/40 transition-colors"
+                          >
+                            {reply}
+                          </motion.button>
+                        ))}
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+
+                {/* File Preview - Above input */}
+                <AnimatePresence>
+                  {selectedFiles.length > 0 && (
+                    <motion.div
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: 'auto' }}
+                      exit={{ opacity: 0, height: 0 }}
+                      className="px-3 pt-2"
+                    >
+                      <div className="flex items-center gap-2 p-2 bg-slate-50 dark:bg-slate-800 rounded-lg">
+                        <Paperclip className="h-3.5 w-3.5 text-slate-400" />
+                        <span className="text-xs text-slate-600 dark:text-slate-300">
+                          {selectedFiles.length} file{selectedFiles.length > 1 ? 's' : ''}
+                        </span>
+                        <FileUpload
+                          onFileSelect={handleFileSelect}
+                          onFileRemove={handleFileRemove}
+                          selectedFiles={selectedFiles}
+                          isUploading={isUploadingFiles}
+                        />
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+
+                {/* Instagram-style Input Bar */}
+                <div className="px-3 py-2">
+                  <div className={`relative flex items-center gap-2 bg-slate-100 dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 focus-within:border-blue-400 dark:focus-within:border-blue-500 transition-all px-4 py-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                    {/* Input Field */}
+                    <div className="flex-1 min-w-0">
+                      <RichTextEditor
+                        value={message}
+                        onChange={handleRichTextChange}
+                        placeholder={t('conversations.detail.messageInput')}
+                        onEnterKey={handleSendMessage}
+                      />
+
+                      {/* Recording overlay */}
+                      <AnimatePresence>
+                        {isRecording && (
+                          <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            className="absolute inset-0 flex items-center justify-center bg-red-50 dark:bg-red-900/30 rounded-2xl"
+                          >
+                            <div className="flex items-center gap-2">
+                              <motion.div
+                                animate={{ opacity: [1, 0.3, 1] }}
+                                transition={{ duration: 1, repeat: Infinity }}
+                                className="w-2 h-2 bg-red-500 rounded-full"
+                              />
+                              <span className="text-sm text-red-600 dark:text-red-400">Recording...</span>
+                            </div>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    </div>
+
+                    {/* Right Icons - Attachment, Mic, Send */}
+                    <div className={`flex items-center gap-1 flex-shrink-0 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                      {/* Attachment */}
+                      <FileUpload
+                        onFileSelect={handleFileSelect}
+                        onFileRemove={handleFileRemove}
+                        selectedFiles={[]}
+                        isUploading={isUploadingFiles}
+                        multiple={true}
+                      />
+
+                      {/* Mic Button */}
                       <Button
-                        key={index}
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setMessage(reply)}
-                        className="text-xs hover:bg-blue-50 hover:border-blue-300 hover:text-blue-700"
+                        variant="ghost"
+                        size="icon"
+                        onClick={handleMicClick}
+                        className={`h-9 w-9 rounded-full transition-all ${
+                          isRecording
+                            ? 'bg-red-500 hover:bg-red-600 text-white'
+                            : 'text-slate-500 hover:text-slate-700 hover:bg-slate-200 dark:hover:bg-slate-700'
+                        }`}
                       >
-                        {reply}
+                        {isRecording ? (
+                          <motion.div animate={{ scale: [1, 1.2, 1] }} transition={{ duration: 0.5, repeat: Infinity }}>
+                            <Mic className="h-5 w-5" />
+                          </motion.div>
+                        ) : (
+                          <Mic className="h-5 w-5" />
+                        )}
                       </Button>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </TabsContent>
 
-            <TabsContent value="note" className="mt-4">
-              <div className="bg-gradient-to-r from-yellow-50 to-amber-50 dark:from-yellow-900/20 dark:to-amber-900/20 rounded-lg border-2 border-yellow-300 dark:border-yellow-600 card-shadow overflow-hidden">
-                <RichTextEditor
-                  value={note}
-                  onChange={(value) => setNote(value)}
-                  placeholder={t('conversations.detail.noteInput')}
-                  className="bg-transparent [&_.border-b]:border-yellow-300 dark:[&_.border-b]:border-yellow-600"
-                />
-                <div className={`flex items-center justify-between px-3 pb-2 pt-1 ${isRTL ? 'flex-row-reverse' : ''}`}>
-                  <div className="flex items-center gap-2 text-xs text-yellow-800 dark:text-yellow-300">
-                    <Book className="h-3 w-3" />
-                    <span className="font-medium">{t('conversations.detail.privateTeamOnly')}</span>
+                      {/* Send Button */}
+                      <motion.div whileTap={{ scale: 0.9 }}>
+                        <Button
+                          onClick={handleSendMessage}
+                          disabled={sendMessageMutation.isPending || (!message.trim() && selectedFiles.length === 0) || isUploadingFiles}
+                          size="icon"
+                          className={`h-9 w-9 rounded-full transition-all ${
+                            message.trim() || selectedFiles.length > 0
+                              ? 'bg-blue-500 hover:bg-blue-600 text-white'
+                              : 'text-slate-500 hover:text-slate-700 hover:bg-slate-200 dark:hover:bg-slate-700 bg-transparent'
+                          }`}
+                        >
+                          {sendMessageMutation.isPending || isUploadingFiles ? (
+                            <Loader2 className="h-5 w-5 animate-spin" />
+                          ) : (
+                            <Send className={`h-5 w-5 ${isRTL ? 'rotate-180' : ''}`} />
+                          )}
+                        </Button>
+                      </motion.div>
+                    </div>
                   </div>
-                  <Button
-                    onClick={handlePostNote}
-                    disabled={sendMessageMutation.isPending || !note.trim()}
-                    size="sm"
-                    className="bg-yellow-500 hover:bg-yellow-600 text-white btn-hover-lift"
-                  >
-                    <Book className={`h-4 w-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
-                    {t('conversations.detail.saveNote')}
-                  </Button>
                 </div>
-              </div>
-            </TabsContent>
-          </Tabs>
-        </footer>
+              </TabsContent>
+
+              {/* Private Note Tab - Instagram style */}
+              <TabsContent value="note" className="mt-0 focus-visible:outline-none focus-visible:ring-0">
+                <div className="px-3 py-2">
+                  <div className={`relative flex items-center gap-2 bg-amber-50 dark:bg-amber-900/20 rounded-2xl border border-amber-200 dark:border-amber-700/50 focus-within:border-amber-400 dark:focus-within:border-amber-500 transition-all px-4 py-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                    {/* Note Input */}
+                    <div className="flex-1 min-w-0">
+                      <RichTextEditor
+                        value={note}
+                        onChange={(value) => setNote(value)}
+                        placeholder={t('conversations.detail.noteInput')}
+                        className="bg-transparent"
+                      />
+                    </div>
+
+                    {/* Right side - indicator + save button */}
+                    <div className={`flex items-center gap-2 flex-shrink-0 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                      {/* Team only indicator */}
+                      <div className="flex items-center gap-1.5 px-2 py-1 bg-amber-100 dark:bg-amber-800/30 rounded-full">
+                        <div className="w-1.5 h-1.5 bg-amber-500 rounded-full animate-pulse" />
+                        <span className="text-[10px] text-amber-700 dark:text-amber-300 font-medium whitespace-nowrap">Team only</span>
+                      </div>
+
+                      {/* Save Note Button */}
+                      <motion.div whileTap={{ scale: 0.9 }}>
+                        <Button
+                          onClick={handlePostNote}
+                          disabled={sendMessageMutation.isPending || !note.trim()}
+                          size="icon"
+                          className={`h-9 w-9 rounded-full transition-all ${
+                            note.trim()
+                              ? 'bg-amber-500 hover:bg-amber-600 text-white'
+                              : 'text-amber-500 hover:text-amber-600 hover:bg-amber-100 dark:hover:bg-amber-900/40 bg-transparent'
+                          }`}
+                        >
+                          {sendMessageMutation.isPending ? (
+                            <Loader2 className="h-5 w-5 animate-spin" />
+                          ) : (
+                            <Book className="h-5 w-5" />
+                          )}
+                        </Button>
+                      </motion.div>
+                    </div>
+                  </div>
+                </div>
+              </TabsContent>
+            </Tabs>
+          </motion.footer>
         )}
       </div>
 
       {isCallModalOpen && (
-        <VideoCallModal 
-            sessionId={sessionId} 
-            userId="agent"
-            onClose={() => setCallModalOpen(false)} 
+        <VideoCallModal
+          sessionId={sessionId}
+          userId="agent"
+          onClose={() => setCallModalOpen(false)}
         />
       )}
-    </div>
+    </motion.div>
   );
 };

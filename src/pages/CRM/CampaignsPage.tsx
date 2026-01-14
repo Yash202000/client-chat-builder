@@ -26,6 +26,8 @@ import {
   ChevronLeft,
   ChevronRight,
   Clock,
+  RefreshCw,
+  Megaphone,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -282,36 +284,46 @@ export default function CampaignsPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500"></div>
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="text-center">
+          <div className="p-6 rounded-2xl bg-gradient-to-br from-orange-100 to-red-100 dark:from-orange-900/30 dark:to-red-900/30 inline-block mb-4">
+            <RefreshCw className="h-12 w-12 text-orange-500 dark:text-orange-400 animate-spin" />
+          </div>
+          <p className="text-lg font-medium text-slate-600 dark:text-slate-400">{t('crm.common.loading')}</p>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6 p-6 animate-fade-in">
+    <div className="space-y-8 p-6 animate-fade-in">
       {/* Header */}
-      <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
-        <div>
-          <h2 className="text-4xl font-bold bg-gradient-to-r from-orange-600 to-red-600 bg-clip-text text-transparent mb-2">
-            {t('crm.campaigns.title')}
-          </h2>
-          <p className="text-gray-600 dark:text-gray-400 text-lg">
-            {t('crm.campaigns.subtitle')}
-          </p>
+      <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6">
+        <div className="flex items-center gap-4">
+          <div className="p-4 rounded-2xl bg-gradient-to-br from-orange-500 to-red-600 shadow-xl shadow-orange-500/25">
+            <Megaphone className="h-8 w-8 text-white" />
+          </div>
+          <div>
+            <h2 className="text-3xl font-bold bg-gradient-to-r from-orange-600 to-red-600 bg-clip-text text-transparent">
+              {t('crm.campaigns.title')}
+            </h2>
+            <p className="text-slate-500 dark:text-slate-400 mt-1">
+              {t('crm.campaigns.subtitle')}
+            </p>
+          </div>
         </div>
         <div className="flex items-center gap-3">
           {/* View Mode Toggle */}
-          <div className="flex items-center bg-slate-100 dark:bg-slate-800 rounded-lg p-1">
+          <div className="flex items-center bg-slate-100 dark:bg-slate-800 rounded-xl p-1.5 shadow-inner">
             <Button
               variant="ghost"
               size="sm"
               onClick={() => setViewMode('list')}
               className={cn(
-                "h-8 px-3",
+                "rounded-lg transition-all",
                 viewMode === 'list'
-                  ? "bg-white dark:bg-slate-700 shadow-sm"
-                  : "hover:bg-transparent"
+                  ? "bg-gradient-to-r from-orange-500 to-red-600 text-white shadow-md"
+                  : "hover:bg-slate-200 dark:hover:bg-slate-700"
               )}
             >
               <List className="h-4 w-4 mr-1.5" />
@@ -322,10 +334,10 @@ export default function CampaignsPage() {
               size="sm"
               onClick={() => setViewMode('calendar')}
               className={cn(
-                "h-8 px-3",
+                "rounded-lg transition-all",
                 viewMode === 'calendar'
-                  ? "bg-white dark:bg-slate-700 shadow-sm"
-                  : "hover:bg-transparent"
+                  ? "bg-gradient-to-r from-orange-500 to-red-600 text-white shadow-md"
+                  : "hover:bg-slate-200 dark:hover:bg-slate-700"
               )}
             >
               <CalendarDays className="h-4 w-4 mr-1.5" />
@@ -334,7 +346,7 @@ export default function CampaignsPage() {
           </div>
           <Button
             onClick={() => navigate('/dashboard/crm/campaigns/new')}
-            className="bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-700 hover:to-red-700 text-white"
+            className="rounded-xl bg-gradient-to-r from-orange-500 to-red-600 hover:from-orange-600 hover:to-red-700 text-white shadow-lg shadow-orange-500/25 hover:shadow-xl hover:shadow-orange-500/30 hover:scale-[1.02] transition-all duration-200"
           >
             <Plus className="h-4 w-4 mr-2" />
             {t('crm.campaigns.addCampaign')}
@@ -343,112 +355,119 @@ export default function CampaignsPage() {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {metrics.map((metric) => {
           const IconComponent = metric.icon;
+          const colorMap = {
+            'text-blue-600 dark:text-blue-400': { bg: 'from-white to-blue-50 dark:from-slate-800 dark:to-blue-950/30', border: 'border-blue-200/80 dark:border-blue-800/60', shadow: 'shadow-blue-500/10 hover:shadow-blue-500/20', icon: 'from-blue-500 to-blue-600' },
+            'text-purple-600 dark:text-purple-400': { bg: 'from-white to-purple-50 dark:from-slate-800 dark:to-purple-950/30', border: 'border-purple-200/80 dark:border-purple-800/60', shadow: 'shadow-purple-500/10 hover:shadow-purple-500/20', icon: 'from-purple-500 to-indigo-600' },
+            'text-yellow-600 dark:text-yellow-400': { bg: 'from-white to-yellow-50 dark:from-slate-800 dark:to-yellow-950/30', border: 'border-yellow-200/80 dark:border-yellow-800/60', shadow: 'shadow-yellow-500/10 hover:shadow-yellow-500/20', icon: 'from-yellow-500 to-amber-600' },
+            'text-green-600 dark:text-green-400': { bg: 'from-white to-green-50 dark:from-slate-800 dark:to-green-950/30', border: 'border-green-200/80 dark:border-green-800/60', shadow: 'shadow-green-500/10 hover:shadow-green-500/20', icon: 'from-green-500 to-emerald-600' },
+          };
+          const colors = colorMap[metric.iconColor] || { bg: 'from-white to-slate-50 dark:from-slate-800 dark:to-slate-900', border: 'border-slate-200/80 dark:border-slate-700/60', shadow: 'shadow-slate-500/10', icon: 'from-slate-500 to-slate-600' };
+
           return (
-            <Card key={metric.title} className="card-shadow-lg border-slate-200 dark:border-slate-700 dark:bg-slate-800 hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
-              <CardContent className="p-5">
-                <div className="flex items-start justify-between mb-3">
-                  <div className={`h-12 w-12 rounded-xl bg-gradient-to-br ${metric.gradient} flex items-center justify-center shadow-sm`}>
-                    <IconComponent className={`h-6 w-6 ${metric.iconColor}`} />
-                  </div>
-                  <div className="flex items-center gap-1">
-                    {metric.trendUp ? (
-                      <TrendingUp className="h-3.5 w-3.5 text-green-500" />
-                    ) : (
-                      <TrendingDown className="h-3.5 w-3.5 text-red-500" />
-                    )}
-                    <span className={`text-xs font-medium ${metric.trendUp ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
-                      {metric.trend}
-                    </span>
-                  </div>
+            <div
+              key={metric.title}
+              className={`p-6 rounded-2xl border ${colors.border} bg-gradient-to-br ${colors.bg} shadow-xl ${colors.shadow} hover:shadow-2xl hover:scale-[1.02] transition-all duration-300`}
+            >
+              <div className="flex items-start justify-between mb-4">
+                <div className={`p-3 rounded-2xl bg-gradient-to-br ${colors.icon} shadow-lg`}>
+                  <IconComponent className="h-6 w-6 text-white" />
                 </div>
-                <div>
-                  <p className="text-xs font-medium text-gray-600 dark:text-gray-400 uppercase tracking-wider mb-1.5">
-                    {metric.title}
-                  </p>
-                  <p className="text-2xl font-bold dark:text-white mb-1">{metric.value}</p>
-                  <p className="text-xs text-gray-500 dark:text-gray-400">{metric.subtext}</p>
+                <div className={`flex items-center gap-1 px-2 py-1 rounded-lg ${metric.trendUp ? 'bg-green-100 dark:bg-green-900/30' : 'bg-red-100 dark:bg-red-900/30'}`}>
+                  {metric.trendUp ? (
+                    <TrendingUp className="h-3.5 w-3.5 text-green-600 dark:text-green-400" />
+                  ) : (
+                    <TrendingDown className="h-3.5 w-3.5 text-red-600 dark:text-red-400" />
+                  )}
+                  <span className={`text-xs font-bold ${metric.trendUp ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
+                    {metric.trend}
+                  </span>
                 </div>
-              </CardContent>
-            </Card>
+              </div>
+              <div>
+                <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">
+                  {metric.title}
+                </p>
+                <p className="text-3xl font-bold text-slate-800 dark:text-white mb-1">{metric.value}</p>
+                <p className="text-sm text-slate-500 dark:text-slate-400">{metric.subtext}</p>
+              </div>
+            </div>
           );
         })}
       </div>
 
       {/* Filters */}
-      <Card className="border-slate-200 dark:border-slate-700 dark:bg-slate-800">
-        <CardContent className="p-4">
-          <div className="flex flex-col md:flex-row items-center gap-4">
-            <div className="flex-1 relative w-full">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-              <Input
-                placeholder={t('crm.campaigns.searchPlaceholder')}
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10 dark:bg-slate-900 dark:border-slate-600"
-              />
-            </div>
-            <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="w-[180px] dark:bg-slate-900 dark:border-slate-600">
-                <SelectValue placeholder={t('crm.campaigns.filters.byStatus')} />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">{t('crm.campaigns.filters.all')}</SelectItem>
-                <SelectItem value="draft">{t('crm.campaigns.status.draft')}</SelectItem>
-                <SelectItem value="active">{t('crm.campaigns.status.active')}</SelectItem>
-                <SelectItem value="paused">{t('crm.campaigns.status.paused')}</SelectItem>
-                <SelectItem value="completed">{t('crm.campaigns.status.completed')}</SelectItem>
-                <SelectItem value="archived">{t('crm.campaigns.status.cancelled')}</SelectItem>
-              </SelectContent>
-            </Select>
-            <Select value={typeFilter} onValueChange={setTypeFilter}>
-              <SelectTrigger className="w-[180px] dark:bg-slate-900 dark:border-slate-600">
-                <SelectValue placeholder={t('crm.campaigns.filters.byType')} />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">{t('crm.campaigns.filters.all')}</SelectItem>
-                <SelectItem value="email">{t('crm.campaigns.types.email')}</SelectItem>
-                <SelectItem value="sms">{t('crm.campaigns.types.sms')}</SelectItem>
-                <SelectItem value="whatsapp">WhatsApp</SelectItem>
-                <SelectItem value="voice">{t('crm.leads.sources.phone')}</SelectItem>
-                <SelectItem value="multi_channel">{t('crm.campaigns.multiChannel')}</SelectItem>
-              </SelectContent>
-            </Select>
+      <div className="rounded-2xl border border-slate-200/80 dark:border-slate-700/60 bg-gradient-to-br from-white to-slate-50 dark:from-slate-800 dark:to-slate-900 shadow-lg p-5">
+        <div className="flex flex-col md:flex-row items-center gap-4">
+          <div className="flex-1 relative w-full">
+            <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 h-4 w-4 text-slate-400" />
+            <Input
+              placeholder={t('crm.campaigns.searchPlaceholder')}
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-11 rounded-xl border-slate-200/80 dark:border-slate-600/80 bg-white dark:bg-slate-800 focus:ring-2 focus:ring-orange-500/20 transition-all"
+            />
           </div>
-        </CardContent>
-      </Card>
+          <Select value={statusFilter} onValueChange={setStatusFilter}>
+            <SelectTrigger className="w-[180px] rounded-xl border-slate-200/80 dark:border-slate-600/80 bg-white dark:bg-slate-800">
+              <SelectValue placeholder={t('crm.campaigns.filters.byStatus')} />
+            </SelectTrigger>
+            <SelectContent className="rounded-xl">
+              <SelectItem value="all">{t('crm.campaigns.filters.all')}</SelectItem>
+              <SelectItem value="draft">{t('crm.campaigns.status.draft')}</SelectItem>
+              <SelectItem value="active">{t('crm.campaigns.status.active')}</SelectItem>
+              <SelectItem value="paused">{t('crm.campaigns.status.paused')}</SelectItem>
+              <SelectItem value="completed">{t('crm.campaigns.status.completed')}</SelectItem>
+              <SelectItem value="archived">{t('crm.campaigns.status.cancelled')}</SelectItem>
+            </SelectContent>
+          </Select>
+          <Select value={typeFilter} onValueChange={setTypeFilter}>
+            <SelectTrigger className="w-[180px] rounded-xl border-slate-200/80 dark:border-slate-600/80 bg-white dark:bg-slate-800">
+              <SelectValue placeholder={t('crm.campaigns.filters.byType')} />
+            </SelectTrigger>
+            <SelectContent className="rounded-xl">
+              <SelectItem value="all">{t('crm.campaigns.filters.all')}</SelectItem>
+              <SelectItem value="email">{t('crm.campaigns.types.email')}</SelectItem>
+              <SelectItem value="sms">{t('crm.campaigns.types.sms')}</SelectItem>
+              <SelectItem value="whatsapp">WhatsApp</SelectItem>
+              <SelectItem value="voice">{t('crm.leads.sources.phone')}</SelectItem>
+              <SelectItem value="multi_channel">{t('crm.campaigns.multiChannel')}</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
 
       {/* Campaigns Table / Calendar */}
       {viewMode === 'list' ? (
-      <Card className="border-slate-200 dark:border-slate-700 dark:bg-slate-800 overflow-hidden">
+      <div className="rounded-2xl border border-slate-200/80 dark:border-slate-700/60 bg-gradient-to-br from-white to-slate-50 dark:from-slate-800 dark:to-slate-900 shadow-xl overflow-hidden">
         <Table>
           <TableHeader>
-            <TableRow className="bg-slate-50 dark:bg-slate-900/50 border-slate-200 dark:border-slate-700">
-              <TableHead className="font-semibold">{t('crm.campaigns.fields.name')}</TableHead>
-              <TableHead className="font-semibold">{t('crm.campaigns.fields.type')}</TableHead>
-              <TableHead className="font-semibold">{t('crm.campaigns.fields.status')}</TableHead>
-              <TableHead className="font-semibold">{t('crm.campaigns.progress')}</TableHead>
-              <TableHead className="font-semibold">{t('crm.campaigns.metrics.engagement')}</TableHead>
-              <TableHead className="font-semibold">{t('crm.campaigns.metrics.conversionRate')}</TableHead>
-              <TableHead className="font-semibold">{t('crm.campaigns.metrics.revenue')}</TableHead>
-              <TableHead className="font-semibold">{t('crm.campaigns.metrics.roi')}</TableHead>
+            <TableRow className="bg-gradient-to-r from-slate-100 to-slate-50 dark:from-slate-800 dark:to-slate-900 border-slate-200/60 dark:border-slate-700/50">
+              <TableHead className="font-bold text-slate-700 dark:text-slate-300">{t('crm.campaigns.fields.name')}</TableHead>
+              <TableHead className="font-bold text-slate-700 dark:text-slate-300">{t('crm.campaigns.fields.type')}</TableHead>
+              <TableHead className="font-bold text-slate-700 dark:text-slate-300">{t('crm.campaigns.fields.status')}</TableHead>
+              <TableHead className="font-bold text-slate-700 dark:text-slate-300">{t('crm.campaigns.progress')}</TableHead>
+              <TableHead className="font-bold text-slate-700 dark:text-slate-300">{t('crm.campaigns.metrics.engagement')}</TableHead>
+              <TableHead className="font-bold text-slate-700 dark:text-slate-300">{t('crm.campaigns.metrics.conversionRate')}</TableHead>
+              <TableHead className="font-bold text-slate-700 dark:text-slate-300">{t('crm.campaigns.metrics.revenue')}</TableHead>
+              <TableHead className="font-bold text-slate-700 dark:text-slate-300">{t('crm.campaigns.metrics.roi')}</TableHead>
               <TableHead></TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {filteredCampaigns.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={9} className="text-center py-12">
+                <TableCell colSpan={9} className="text-center py-16">
                   <div className="flex flex-col items-center">
-                    <div className="h-16 w-16 rounded-full bg-slate-100 dark:bg-slate-700 flex items-center justify-center mb-4">
-                      <Send className="h-8 w-8 text-slate-400" />
+                    <div className="p-5 rounded-2xl bg-gradient-to-br from-orange-100 to-red-100 dark:from-orange-900/30 dark:to-red-900/30 mb-4">
+                      <Send className="h-10 w-10 text-orange-500 dark:text-orange-400" />
                     </div>
-                    <p className="text-slate-500 dark:text-slate-400">{t('crm.campaigns.noCampaigns')}</p>
+                    <p className="text-slate-500 dark:text-slate-400 font-medium">{t('crm.campaigns.noCampaigns')}</p>
                     <Button
                       variant="link"
-                      className="mt-2 text-orange-600"
+                      className="mt-2 text-orange-600 dark:text-orange-400"
                       onClick={() => navigate('/dashboard/crm/campaigns/new')}
                     >
                       {t('crm.campaigns.noCampaignsMessage')}
@@ -577,11 +596,10 @@ export default function CampaignsPage() {
             )}
           </TableBody>
         </Table>
-      </Card>
+      </div>
       ) : (
       /* Calendar View */
-      <Card className="border-slate-200 dark:border-slate-700 dark:bg-slate-800">
-        <CardContent className="p-6">
+      <div className="rounded-2xl border border-slate-200/80 dark:border-slate-700/60 bg-gradient-to-br from-white to-slate-50 dark:from-slate-800 dark:to-slate-900 shadow-xl p-6">
           {/* Calendar Header */}
           <div className="flex items-center justify-between mb-6">
             <h3 className="text-xl font-semibold dark:text-white">{monthName}</h3>
@@ -717,8 +735,7 @@ export default function CampaignsPage() {
               <span className="text-xs text-gray-600 dark:text-gray-400">{t('crm.campaigns.status.paused')}</span>
             </div>
           </div>
-        </CardContent>
-      </Card>
+      </div>
       )}
     </div>
   );

@@ -297,16 +297,21 @@ export default function SegmentsPage() {
   const totalReach = segments.reduce((sum, s) => sum + s.contact_count + s.lead_count, 0);
 
   return (
-    <div className="container mx-auto p-6 space-y-6">
+    <div className="p-6 space-y-6 animate-fade-in">
       {/* Header */}
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-2xl font-bold">{t('crm.segments.title', 'Segments')}</h1>
-          <p className="text-muted-foreground">
-            {t('crm.segments.description', 'Create and manage audience segments for targeted campaigns')}
-          </p>
+      <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
+        <div className="flex items-center gap-4">
+          <div className="p-4 rounded-2xl bg-gradient-to-br from-purple-500 to-indigo-600 shadow-xl shadow-purple-500/25">
+            <Layers className="h-8 w-8 text-white" />
+          </div>
+          <div>
+            <h1 className="text-3xl font-bold bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent">{t('crm.segments.title', 'Segments')}</h1>
+            <p className="text-slate-600 dark:text-slate-400">
+              {t('crm.segments.description', 'Create and manage audience segments for targeted campaigns')}
+            </p>
+          </div>
         </div>
-        <Button onClick={() => setIsCreateDialogOpen(true)}>
+        <Button onClick={() => setIsCreateDialogOpen(true)} className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white rounded-xl shadow-lg shadow-purple-500/25 hover:shadow-xl hover:shadow-purple-500/30 transition-all">
           <Plus className="h-4 w-4 mr-2" />
           {t('crm.segments.create', 'Create Segment')}
         </Button>
@@ -314,205 +319,207 @@ export default function SegmentsPage() {
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-primary/10">
-                <Layers className="h-5 w-5 text-primary" />
-              </div>
-              <div>
-                <p className="text-2xl font-bold">{totalSegments}</p>
-                <p className="text-sm text-muted-foreground">
-                  {t('crm.segments.totalSegments', 'Total Segments')}
-                </p>
-              </div>
+        <div className="p-5 rounded-2xl border border-purple-200/80 dark:border-purple-700/60 bg-gradient-to-br from-white to-purple-50 dark:from-slate-800 dark:to-slate-900 shadow-xl shadow-purple-500/10 hover:shadow-2xl hover:shadow-purple-500/20 hover:scale-[1.02] transition-all duration-300">
+          <div className="flex items-start justify-between">
+            <div>
+              <p className="text-xs font-medium text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1.5">
+                {t('crm.segments.totalSegments', 'Total Segments')}
+              </p>
+              <p className="text-2xl font-bold text-slate-900 dark:text-white">{totalSegments}</p>
             </div>
-          </CardContent>
-        </Card>
+            <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center shadow-lg shadow-purple-500/25">
+              <Layers className="h-6 w-6 text-white" />
+            </div>
+          </div>
+        </div>
 
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-blue-100">
-                <Filter className="h-5 w-5 text-blue-600" />
-              </div>
-              <div>
-                <p className="text-2xl font-bold">{dynamicSegments}</p>
-                <p className="text-sm text-muted-foreground">
-                  {t('crm.segments.dynamicSegments', 'Dynamic')}
-                </p>
-              </div>
+        <div className="p-5 rounded-2xl border border-blue-200/80 dark:border-blue-700/60 bg-gradient-to-br from-white to-blue-50 dark:from-slate-800 dark:to-slate-900 shadow-xl shadow-blue-500/10 hover:shadow-2xl hover:shadow-blue-500/20 hover:scale-[1.02] transition-all duration-300">
+          <div className="flex items-start justify-between">
+            <div>
+              <p className="text-xs font-medium text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1.5">
+                {t('crm.segments.dynamicSegments', 'Dynamic')}
+              </p>
+              <p className="text-2xl font-bold text-slate-900 dark:text-white">{dynamicSegments}</p>
             </div>
-          </CardContent>
-        </Card>
+            <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-blue-500 to-cyan-600 flex items-center justify-center shadow-lg shadow-blue-500/25">
+              <Filter className="h-6 w-6 text-white" />
+            </div>
+          </div>
+        </div>
 
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-green-100">
-                <Database className="h-5 w-5 text-green-600" />
-              </div>
-              <div>
-                <p className="text-2xl font-bold">{staticSegments}</p>
-                <p className="text-sm text-muted-foreground">
-                  {t('crm.segments.staticSegments', 'Static')}
-                </p>
-              </div>
+        <div className="p-5 rounded-2xl border border-green-200/80 dark:border-green-700/60 bg-gradient-to-br from-white to-green-50 dark:from-slate-800 dark:to-slate-900 shadow-xl shadow-green-500/10 hover:shadow-2xl hover:shadow-green-500/20 hover:scale-[1.02] transition-all duration-300">
+          <div className="flex items-start justify-between">
+            <div>
+              <p className="text-xs font-medium text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1.5">
+                {t('crm.segments.staticSegments', 'Static')}
+              </p>
+              <p className="text-2xl font-bold text-slate-900 dark:text-white">{staticSegments}</p>
             </div>
-          </CardContent>
-        </Card>
+            <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center shadow-lg shadow-green-500/25">
+              <Database className="h-6 w-6 text-white" />
+            </div>
+          </div>
+        </div>
 
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-purple-100">
-                <Users className="h-5 w-5 text-purple-600" />
-              </div>
-              <div>
-                <p className="text-2xl font-bold">{totalReach}</p>
-                <p className="text-sm text-muted-foreground">
-                  {t('crm.segments.totalReach', 'Total Reach')}
-                </p>
-              </div>
+        <div className="p-5 rounded-2xl border border-indigo-200/80 dark:border-indigo-700/60 bg-gradient-to-br from-white to-indigo-50 dark:from-slate-800 dark:to-slate-900 shadow-xl shadow-indigo-500/10 hover:shadow-2xl hover:shadow-indigo-500/20 hover:scale-[1.02] transition-all duration-300">
+          <div className="flex items-start justify-between">
+            <div>
+              <p className="text-xs font-medium text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1.5">
+                {t('crm.segments.totalReach', 'Total Reach')}
+              </p>
+              <p className="text-2xl font-bold text-slate-900 dark:text-white">{totalReach}</p>
             </div>
-          </CardContent>
-        </Card>
+            <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center shadow-lg shadow-indigo-500/25">
+              <Users className="h-6 w-6 text-white" />
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Filters */}
-      <Card>
-        <CardContent className="p-4">
-          <div className="flex gap-4 items-center">
-            <div className="relative flex-1 max-w-sm">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder={t('crm.segments.searchPlaceholder', 'Search segments...')}
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-9"
-              />
-            </div>
-            <Select value={typeFilter} onValueChange={setTypeFilter}>
-              <SelectTrigger className="w-40">
-                <SelectValue placeholder={t('crm.segments.filterByType', 'Filter by type')} />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">{t('common.all', 'All')}</SelectItem>
-                <SelectItem value="dynamic">{t('crm.segments.dynamic', 'Dynamic')}</SelectItem>
-                <SelectItem value="static">{t('crm.segments.static', 'Static')}</SelectItem>
-              </SelectContent>
-            </Select>
-            <Button variant="outline" onClick={fetchSegments}>
-              <RefreshCw className="h-4 w-4 mr-2" />
-              {t('common.refresh', 'Refresh')}
-            </Button>
+      <div className="p-4 rounded-2xl border border-slate-200/80 dark:border-slate-700/60 bg-gradient-to-br from-white to-slate-50 dark:from-slate-800 dark:to-slate-900 shadow-xl">
+        <div className="flex flex-col sm:flex-row gap-4 items-stretch sm:items-center">
+          <div className="relative flex-1 max-w-sm">
+            <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 h-4 w-4 text-slate-400" />
+            <Input
+              placeholder={t('crm.segments.searchPlaceholder', 'Search segments...')}
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-11 rounded-xl border-slate-200 dark:border-slate-600 dark:bg-slate-800/50 focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500"
+            />
           </div>
-        </CardContent>
-      </Card>
+          <Select value={typeFilter} onValueChange={setTypeFilter}>
+            <SelectTrigger className="w-40 rounded-xl border-slate-200 dark:border-slate-600 dark:bg-slate-800/50">
+              <SelectValue placeholder={t('crm.segments.filterByType', 'Filter by type')} />
+            </SelectTrigger>
+            <SelectContent className="rounded-xl">
+              <SelectItem value="all" className="rounded-lg">{t('common.all', 'All')}</SelectItem>
+              <SelectItem value="dynamic" className="rounded-lg">{t('crm.segments.dynamic', 'Dynamic')}</SelectItem>
+              <SelectItem value="static" className="rounded-lg">{t('crm.segments.static', 'Static')}</SelectItem>
+            </SelectContent>
+          </Select>
+          <Button variant="outline" onClick={fetchSegments} className="rounded-xl border-slate-200 dark:border-slate-600 hover:bg-purple-50 dark:hover:bg-purple-900/20 hover:border-purple-300">
+            <RefreshCw className="h-4 w-4 mr-2" />
+            {t('common.refresh', 'Refresh')}
+          </Button>
+        </div>
+      </div>
 
       {/* Segments Table */}
-      <Card>
-        <CardContent className="p-0">
-          <Table>
-            <TableHeader>
+      <div className="rounded-2xl border border-slate-200/80 dark:border-slate-700/60 bg-gradient-to-br from-white to-slate-50 dark:from-slate-800 dark:to-slate-900 shadow-xl overflow-hidden">
+        <Table>
+          <TableHeader>
+            <TableRow className="border-b border-slate-200/80 dark:border-slate-700/60 bg-slate-50/50 dark:bg-slate-800/50">
+              <TableHead className="text-slate-600 dark:text-slate-400 font-semibold">{t('crm.segments.name', 'Name')}</TableHead>
+              <TableHead className="text-slate-600 dark:text-slate-400 font-semibold">{t('crm.segments.type', 'Type')}</TableHead>
+              <TableHead className="text-center text-slate-600 dark:text-slate-400 font-semibold">{t('crm.contacts.title', 'Contacts')}</TableHead>
+              <TableHead className="text-center text-slate-600 dark:text-slate-400 font-semibold">{t('crm.leads.title', 'Leads')}</TableHead>
+              <TableHead className="text-slate-600 dark:text-slate-400 font-semibold">{t('crm.segments.lastRefreshed', 'Last Refreshed')}</TableHead>
+              <TableHead className="text-right text-slate-600 dark:text-slate-400 font-semibold">{t('common.actions', 'Actions')}</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {isLoading ? (
               <TableRow>
-                <TableHead>{t('crm.segments.name', 'Name')}</TableHead>
-                <TableHead>{t('crm.segments.type', 'Type')}</TableHead>
-                <TableHead className="text-center">{t('crm.contacts.title', 'Contacts')}</TableHead>
-                <TableHead className="text-center">{t('crm.leads.title', 'Leads')}</TableHead>
-                <TableHead>{t('crm.segments.lastRefreshed', 'Last Refreshed')}</TableHead>
-                <TableHead className="text-right">{t('common.actions', 'Actions')}</TableHead>
+                <TableCell colSpan={6} className="text-center py-12">
+                  <div className="flex flex-col items-center gap-3">
+                    <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center shadow-lg shadow-purple-500/25">
+                      <RefreshCw className="h-5 w-5 text-white animate-spin" />
+                    </div>
+                    <p className="text-sm text-slate-500 dark:text-slate-400">{t('common.loading', 'Loading...')}</p>
+                  </div>
+                </TableCell>
               </TableRow>
-            </TableHeader>
-            <TableBody>
-              {isLoading ? (
-                <TableRow>
-                  <TableCell colSpan={6} className="text-center py-8">
-                    {t('common.loading', 'Loading...')}
+            ) : filteredSegments.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={6} className="text-center py-12">
+                  <div className="flex flex-col items-center gap-3">
+                    <div className="h-14 w-14 rounded-2xl bg-gradient-to-br from-purple-100 to-indigo-100 dark:from-purple-900/30 dark:to-indigo-900/30 flex items-center justify-center">
+                      <Layers className="h-7 w-7 text-purple-500" />
+                    </div>
+                    <p className="text-slate-500 dark:text-slate-400">{t('crm.segments.noSegments', 'No segments found')}</p>
+                  </div>
+                </TableCell>
+              </TableRow>
+            ) : (
+              filteredSegments.map((segment) => (
+                <TableRow key={segment.id} className="border-b border-slate-200/60 dark:border-slate-700/40 hover:bg-slate-50/50 dark:hover:bg-slate-800/50 transition-colors">
+                  <TableCell>
+                    <div>
+                      <p className="font-medium text-slate-900 dark:text-white">{segment.name}</p>
+                      {segment.description && (
+                        <p className="text-sm text-slate-500 dark:text-slate-400 truncate max-w-xs">
+                          {segment.description}
+                        </p>
+                      )}
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <Badge variant="outline" className={`rounded-lg ${segment.segment_type === 'dynamic' ? 'bg-blue-50 text-blue-600 border-blue-200 dark:bg-blue-900/30 dark:text-blue-400 dark:border-blue-700' : 'bg-green-50 text-green-600 border-green-200 dark:bg-green-900/30 dark:text-green-400 dark:border-green-700'}`}>
+                      {segment.segment_type === 'dynamic' ? (
+                        <Filter className="h-3 w-3 mr-1" />
+                      ) : (
+                        <Database className="h-3 w-3 mr-1" />
+                      )}
+                      {segment.segment_type}
+                    </Badge>
+                  </TableCell>
+                  <TableCell className="text-center font-medium text-slate-700 dark:text-slate-300">{segment.contact_count}</TableCell>
+                  <TableCell className="text-center font-medium text-slate-700 dark:text-slate-300">{segment.lead_count}</TableCell>
+                  <TableCell className="text-slate-500 dark:text-slate-400">
+                    {segment.last_refreshed_at
+                      ? new Date(segment.last_refreshed_at).toLocaleDateString()
+                      : '-'}
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex justify-end gap-1">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => openViewDialog(segment)}
+                        title={t('common.view', 'View')}
+                        className="rounded-lg hover:bg-purple-50 dark:hover:bg-purple-900/20"
+                      >
+                        <Eye className="h-4 w-4 text-purple-500" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleRefreshSegment(segment)}
+                        title={t('common.refresh', 'Refresh')}
+                        className="rounded-lg hover:bg-blue-50 dark:hover:bg-blue-900/20"
+                      >
+                        <RefreshCw className="h-4 w-4 text-blue-500" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => openEditDialog(segment)}
+                        title={t('common.edit', 'Edit')}
+                        className="rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700"
+                      >
+                        <Edit className="h-4 w-4 text-slate-500" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => {
+                          setSelectedSegment(segment);
+                          setIsDeleteDialogOpen(true);
+                        }}
+                        title={t('common.delete', 'Delete')}
+                        className="rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20"
+                      >
+                        <Trash2 className="h-4 w-4 text-red-500" />
+                      </Button>
+                    </div>
                   </TableCell>
                 </TableRow>
-              ) : filteredSegments.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
-                    {t('crm.segments.noSegments', 'No segments found')}
-                  </TableCell>
-                </TableRow>
-              ) : (
-                filteredSegments.map((segment) => (
-                  <TableRow key={segment.id}>
-                    <TableCell>
-                      <div>
-                        <p className="font-medium">{segment.name}</p>
-                        {segment.description && (
-                          <p className="text-sm text-muted-foreground truncate max-w-xs">
-                            {segment.description}
-                          </p>
-                        )}
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant={segment.segment_type === 'dynamic' ? 'default' : 'secondary'}>
-                        {segment.segment_type === 'dynamic' ? (
-                          <Filter className="h-3 w-3 mr-1" />
-                        ) : (
-                          <Database className="h-3 w-3 mr-1" />
-                        )}
-                        {segment.segment_type}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-center">{segment.contact_count}</TableCell>
-                    <TableCell className="text-center">{segment.lead_count}</TableCell>
-                    <TableCell>
-                      {segment.last_refreshed_at
-                        ? new Date(segment.last_refreshed_at).toLocaleDateString()
-                        : '-'}
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex justify-end gap-2">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => openViewDialog(segment)}
-                          title={t('common.view', 'View')}
-                        >
-                          <Eye className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => handleRefreshSegment(segment)}
-                          title={t('common.refresh', 'Refresh')}
-                        >
-                          <RefreshCw className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => openEditDialog(segment)}
-                          title={t('common.edit', 'Edit')}
-                        >
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => {
-                            setSelectedSegment(segment);
-                            setIsDeleteDialogOpen(true);
-                          }}
-                          title={t('common.delete', 'Delete')}
-                        >
-                          <Trash2 className="h-4 w-4 text-destructive" />
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
+              ))
+            )}
+          </TableBody>
+        </Table>
+      </div>
 
       {/* Create/Edit Dialog */}
       <Dialog
@@ -525,14 +532,14 @@ export default function SegmentsPage() {
           }
         }}
       >
-        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto rounded-2xl border-slate-200/80 dark:border-slate-700/60 dark:bg-slate-800">
           <DialogHeader>
-            <DialogTitle>
+            <DialogTitle className="text-xl font-semibold text-slate-900 dark:text-white">
               {isEditDialogOpen
                 ? t('crm.segments.editSegment', 'Edit Segment')
                 : t('crm.segments.createSegment', 'Create Segment')}
             </DialogTitle>
-            <DialogDescription>
+            <DialogDescription className="text-slate-500 dark:text-slate-400">
               {t('crm.segments.dialogDescription', 'Define your audience segment criteria')}
             </DialogDescription>
           </DialogHeader>
@@ -541,46 +548,48 @@ export default function SegmentsPage() {
             {/* Basic Info */}
             <div className="space-y-4">
               <div className="space-y-2">
-                <Label>{t('crm.segments.name', 'Name')}</Label>
+                <Label className="text-slate-700 dark:text-slate-300">{t('crm.segments.name', 'Name')}</Label>
                 <Input
                   placeholder={t('crm.segments.namePlaceholder', 'e.g., High-value leads')}
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  className="rounded-xl border-slate-200 dark:border-slate-600 dark:bg-slate-900 focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500"
                 />
               </div>
 
               <div className="space-y-2">
-                <Label>{t('crm.segments.description', 'Description')}</Label>
+                <Label className="text-slate-700 dark:text-slate-300">{t('crm.segments.description', 'Description')}</Label>
                 <Textarea
                   placeholder={t('crm.segments.descriptionPlaceholder', 'Describe this segment...')}
                   value={formData.description}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                   rows={2}
+                  className="rounded-xl border-slate-200 dark:border-slate-600 dark:bg-slate-900 focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500"
                 />
               </div>
 
               <div className="space-y-2">
-                <Label>{t('crm.segments.type', 'Segment Type')}</Label>
+                <Label className="text-slate-700 dark:text-slate-300">{t('crm.segments.type', 'Segment Type')}</Label>
                 <Select
                   value={formData.segment_type}
                   onValueChange={(value: 'dynamic' | 'static') =>
                     setFormData({ ...formData, segment_type: value })
                   }
                 >
-                  <SelectTrigger>
+                  <SelectTrigger className="rounded-xl border-slate-200 dark:border-slate-600 dark:bg-slate-900">
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="dynamic">
+                  <SelectContent className="rounded-xl">
+                    <SelectItem value="dynamic" className="rounded-lg">
                       <div className="flex items-center gap-2">
-                        <Filter className="h-4 w-4" />
+                        <Filter className="h-4 w-4 text-blue-500" />
                         {t('crm.segments.dynamic', 'Dynamic')} -{' '}
                         {t('crm.segments.dynamicDescription', 'Auto-updates based on criteria')}
                       </div>
                     </SelectItem>
-                    <SelectItem value="static">
+                    <SelectItem value="static" className="rounded-lg">
                       <div className="flex items-center gap-2">
-                        <Database className="h-4 w-4" />
+                        <Database className="h-4 w-4 text-green-500" />
                         {t('crm.segments.static', 'Static')} -{' '}
                         {t('crm.segments.staticDescription', 'Fixed list of members')}
                       </div>
@@ -628,12 +637,14 @@ export default function SegmentsPage() {
                 setIsEditDialogOpen(false);
                 resetForm();
               }}
+              className="rounded-xl"
             >
               {t('common.cancel', 'Cancel')}
             </Button>
             <Button
               onClick={isEditDialogOpen ? handleUpdateSegment : handleCreateSegment}
               disabled={!formData.name.trim() || isSubmitting}
+              className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white rounded-xl shadow-lg shadow-purple-500/25"
             >
               {isSubmitting
                 ? t('common.saving', 'Saving...')
@@ -647,12 +658,12 @@ export default function SegmentsPage() {
 
       {/* View Members Dialog */}
       <Dialog open={isViewDialogOpen} onOpenChange={setIsViewDialogOpen}>
-        <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
+        <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto rounded-2xl border-slate-200/80 dark:border-slate-700/60 dark:bg-slate-800">
           <DialogHeader>
-            <DialogTitle>
+            <DialogTitle className="text-xl font-semibold text-slate-900 dark:text-white">
               {selectedSegment?.name} - {t('crm.segments.members', 'Members')}
             </DialogTitle>
-            <DialogDescription>
+            <DialogDescription className="text-slate-500 dark:text-slate-400">
               {selectedSegment?.contact_count} {t('crm.contacts.title', 'contacts')},{' '}
               {selectedSegment?.lead_count} {t('crm.leads.title', 'leads')}
             </DialogDescription>
@@ -703,12 +714,12 @@ export default function SegmentsPage() {
 
       {/* Delete Confirmation Dialog */}
       <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-        <AlertDialogContent>
+        <AlertDialogContent className="rounded-2xl">
           <AlertDialogHeader>
-            <AlertDialogTitle>
+            <AlertDialogTitle className="text-xl font-semibold text-slate-900 dark:text-white">
               {t('crm.segments.deleteTitle', 'Delete Segment')}
             </AlertDialogTitle>
-            <AlertDialogDescription>
+            <AlertDialogDescription className="text-slate-500 dark:text-slate-400">
               {t(
                 'crm.segments.deleteDescription',
                 'Are you sure you want to delete this segment? This action cannot be undone.'
@@ -716,10 +727,10 @@ export default function SegmentsPage() {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>{t('common.cancel', 'Cancel')}</AlertDialogCancel>
+            <AlertDialogCancel className="rounded-xl">{t('common.cancel', 'Cancel')}</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleDeleteSegment}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              className="bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white rounded-xl shadow-lg shadow-red-500/25"
             >
               {t('common.delete', 'Delete')}
             </AlertDialogAction>

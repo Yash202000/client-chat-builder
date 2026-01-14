@@ -610,54 +610,70 @@ export const AdvancedChatPreview = () => {
         {/* Right Column - Live Preview (1/3 width) */}
         <div className="xl:col-span-1">
           <div className="sticky top-6">
-            <div className="bg-white dark:bg-slate-800 rounded-lg p-6 border border-slate-200 dark:border-slate-700 card-shadow-lg">
-              <h3 className={`text-xl font-bold dark:text-white mb-2 flex items-center gap-2`}>
-                <span className="text-2xl">👁️</span>
-                {t('designer.livePreview')}
-              </h3>
-              <p className="text-sm text-muted-foreground dark:text-gray-400 mb-4">{t('designer.livePreviewDesc')}</p>
-
-              {/* Position Selector */}
-              <div className="mb-4">
-                <Label className="text-xs dark:text-gray-300 mb-2 block text-left">{t('designer.widgetPosition')}</Label>
-                <div className="grid grid-cols-2 gap-2">
-                  <Button
-                    variant={(customization.meta?.position || customization.position) === 'top-left' ? 'default' : 'outline'}
-                    size="sm"
-                    onClick={() => updateCustomization('meta', { ...customization.meta, position: 'top-left' })}
-                    className="flex items-center justify-start gap-2 text-xs"
-                  >
-                    <span>⬉</span> {t('designer.topLeft')}
-                  </Button>
-                  <Button
-                    variant={(customization.meta?.position || customization.position) === 'top-right' ? 'default' : 'outline'}
-                    size="sm"
-                    onClick={() => updateCustomization('meta', { ...customization.meta, position: 'top-right' })}
-                    className="flex items-center justify-end gap-2 text-xs"
-                  >
-                    {t('designer.topRight')} <span>⬈</span>
-                  </Button>
-                  <Button
-                    variant={(customization.meta?.position || customization.position) === 'bottom-left' ? 'default' : 'outline'}
-                    size="sm"
-                    onClick={() => updateCustomization('meta', { ...customization.meta, position: 'bottom-left' })}
-                    className="flex items-center justify-start gap-2 text-xs"
-                  >
-                    <span>⬋</span> {t('designer.bottomLeft')}
-                  </Button>
-                  <Button
-                    variant={(customization.meta?.position || customization.position) === 'bottom-right' ? 'default' : 'outline'}
-                    size="sm"
-                    onClick={() => updateCustomization('meta', { ...customization.meta, position: 'bottom-right' })}
-                    className="flex items-center justify-end gap-2 text-xs"
-                  >
-                    {t('designer.bottomRight')} <span>⬊</span>
-                  </Button>
+            <div className="bg-white dark:bg-slate-800 rounded-2xl overflow-hidden border-0 shadow-xl shadow-slate-200/50 dark:shadow-none">
+              {/* Preview Header */}
+              <div className="bg-gradient-to-r from-slate-50 to-white dark:from-slate-800 dark:to-slate-900 p-5 border-b border-slate-100 dark:border-slate-700">
+                <div className="flex items-center gap-3 mb-1">
+                  <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center shadow-md shadow-indigo-500/25">
+                    <svg className="h-5 w-5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z" />
+                      <circle cx="12" cy="12" r="3" />
+                    </svg>
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-semibold text-slate-900 dark:text-white">{t('designer.livePreview')}</h3>
+                    <p className="text-xs text-slate-500 dark:text-slate-400">{t('designer.livePreviewDesc')}</p>
+                  </div>
                 </div>
               </div>
 
-              <div className="flex justify-center">
-                <div className="bg-gradient-to-br from-gray-50 to-gray-200 dark:from-slate-900 dark:to-slate-800 p-4 rounded-xl relative overflow-hidden border-2 border-slate-300 dark:border-slate-600 shadow-xl" style={{ fontFamily: customization.font_family, width: width + 40, height: height + 80 }}>
+              <div className="p-5">
+                {/* Position Selector */}
+                <div className="mb-5">
+                  <Label className="text-xs font-medium text-slate-600 dark:text-slate-300 mb-2 block">{t('designer.widgetPosition')}</Label>
+                  <div className="grid grid-cols-2 gap-2">
+                    <Button
+                      variant={(customization.meta?.position || customization.position) === 'top-left' ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={() => updateCustomization('meta', { ...customization.meta, position: 'top-left' })}
+                      className={`flex items-center justify-start gap-2 text-xs h-9 ${(customization.meta?.position || customization.position) === 'top-left' ? 'bg-gradient-to-r from-indigo-500 to-purple-500 text-white border-0' : 'border-slate-200 dark:border-slate-700'}`}
+                    >
+                      <svg className="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M5 9l7-7 7 7M5 15l7 7 7-7" transform="rotate(-45 12 12)"/></svg>
+                      {t('designer.topLeft')}
+                    </Button>
+                    <Button
+                      variant={(customization.meta?.position || customization.position) === 'top-right' ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={() => updateCustomization('meta', { ...customization.meta, position: 'top-right' })}
+                      className={`flex items-center justify-end gap-2 text-xs h-9 ${(customization.meta?.position || customization.position) === 'top-right' ? 'bg-gradient-to-r from-indigo-500 to-purple-500 text-white border-0' : 'border-slate-200 dark:border-slate-700'}`}
+                    >
+                      {t('designer.topRight')}
+                      <svg className="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M5 9l7-7 7 7M5 15l7 7 7-7" transform="rotate(45 12 12)"/></svg>
+                    </Button>
+                    <Button
+                      variant={(customization.meta?.position || customization.position) === 'bottom-left' ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={() => updateCustomization('meta', { ...customization.meta, position: 'bottom-left' })}
+                      className={`flex items-center justify-start gap-2 text-xs h-9 ${(customization.meta?.position || customization.position) === 'bottom-left' ? 'bg-gradient-to-r from-indigo-500 to-purple-500 text-white border-0' : 'border-slate-200 dark:border-slate-700'}`}
+                    >
+                      <svg className="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M5 9l7-7 7 7M5 15l7 7 7-7" transform="rotate(-135 12 12)"/></svg>
+                      {t('designer.bottomLeft')}
+                    </Button>
+                    <Button
+                      variant={(customization.meta?.position || customization.position) === 'bottom-right' ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={() => updateCustomization('meta', { ...customization.meta, position: 'bottom-right' })}
+                      className={`flex items-center justify-end gap-2 text-xs h-9 ${(customization.meta?.position || customization.position) === 'bottom-right' ? 'bg-gradient-to-r from-indigo-500 to-purple-500 text-white border-0' : 'border-slate-200 dark:border-slate-700'}`}
+                    >
+                      {t('designer.bottomRight')}
+                      <svg className="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M5 9l7-7 7 7M5 15l7 7 7-7" transform="rotate(135 12 12)"/></svg>
+                    </Button>
+                  </div>
+                </div>
+
+                {/* Preview Container */}
+                <div className="flex justify-center">
+                  <div className="bg-gradient-to-br from-slate-100 via-slate-50 to-white dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 p-4 rounded-2xl relative overflow-hidden border border-slate-200 dark:border-slate-700 shadow-inner" style={{ fontFamily: customization.font_family, width: width + 40, height: height + 80 }}>
             {customization.client_website_url && (
               <iframe
                 src={customization.client_website_url}
@@ -797,6 +813,7 @@ export const AdvancedChatPreview = () => {
               {previewType === 'gmail' && <GmailPreview messages={messages} customization={customization} handleSendMessage={handleSendMessage} message={message} setMessage={setMessage} isRecording={isRecording} handleToggleRecording={handleToggleRecording} />}
               {previewType === 'telegram' && <TelegramPreview messages={messages} customization={customization} handleSendMessage={handleSendMessage} message={message} setMessage={setMessage} isRecording={isRecording} handleToggleRecording={handleToggleRecording} />}
               {previewType === 'voice' && customization.livekit_url && <VoiceAgentPreview liveKitToken={liveKitToken} shouldConnect={shouldConnect} setShouldConnect={setShouldConnect} livekitUrl={customization.livekit_url} customization={customization} backendUrl={BACKEND_URL}/>}
+                  </div>
                 </div>
               </div>
             </div>

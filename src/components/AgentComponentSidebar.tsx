@@ -27,17 +27,19 @@ const DraggableNode = ({ type, label, icon, resourceId, toolType, mcpServerUrl, 
 
   return (
     <div
-      className={`flex ${isCollapsed ? 'justify-center p-2' : 'flex-col items-center p-4'} m-2 border rounded-lg shadow-md transition-all ${
+      className={`flex ${isCollapsed ? 'justify-center p-2.5' : 'flex-col items-center p-4'} m-1.5 rounded-xl transition-all duration-200 ${
         isDisabled
-          ? 'cursor-not-allowed bg-gray-200 dark:bg-slate-700 text-gray-500 dark:text-gray-400 border-gray-300 dark:border-slate-600'
-          : 'cursor-grab bg-white dark:bg-slate-800 hover:shadow-lg hover:scale-105 border-slate-200 dark:border-slate-600'
+          ? 'cursor-not-allowed bg-slate-100 dark:bg-slate-700/50 text-slate-400 dark:text-slate-500 opacity-60'
+          : 'cursor-grab bg-white dark:bg-slate-800 hover:bg-gradient-to-br hover:from-purple-50 hover:to-pink-50 dark:hover:from-purple-900/20 dark:hover:to-pink-900/20 shadow-sm hover:shadow-lg hover:shadow-purple-500/10 border border-slate-200 dark:border-slate-700 hover:border-purple-300 dark:hover:border-purple-700 hover:scale-[1.02] active:scale-95'
       }`}
       onDragStart={(event) => onDragStart(event, type, resourceId, label, toolType, mcpServerUrl)}
       draggable={!isDisabled}
       title={isCollapsed ? label : undefined}
     >
-      {icon}
-      {!isCollapsed && <span className="mt-2 font-semibold text-sm dark:text-white">{label}</span>}
+      <div className={`${isCollapsed ? '' : 'p-2 rounded-lg bg-slate-50 dark:bg-slate-700/50'}`}>
+        {icon}
+      </div>
+      {!isCollapsed && <span className="mt-2 font-medium text-sm text-slate-700 dark:text-slate-200 text-center line-clamp-2">{label}</span>}
     </div>
   );
 };
@@ -98,26 +100,31 @@ export const AgentComponentSidebar = ({ agent, isCollapsed = false, onToggle }: 
   const attachedWorkflowIds = new Set(agent.workflows?.map(w => w.id) || []);
 
   return (
-    <aside className={`${isCollapsed ? 'w-14' : 'w-64'} p-4 bg-white dark:bg-slate-900 ${isRTL ? 'border-l' : 'border-r'} border-slate-200 dark:border-slate-700 overflow-y-auto transition-all duration-200 ease-in-out`}>
+    <aside className={`${isCollapsed ? 'w-16' : 'w-72'} bg-gradient-to-b from-slate-50 to-white dark:from-slate-900 dark:to-slate-900 ${isRTL ? 'border-l' : 'border-r'} border-slate-200 dark:border-slate-700 overflow-y-auto transition-all duration-300 ease-in-out scrollbar-thin scrollbar-thumb-slate-200 dark:scrollbar-thumb-slate-700`}>
       {/* Header with toggle button */}
-      <div className={`flex items-center ${isCollapsed ? 'justify-center' : 'justify-between'} mb-4`}>
+      <div className={`sticky top-0 z-10 flex items-center ${isCollapsed ? 'justify-center' : 'justify-between'} p-4 bg-gradient-to-b from-slate-50 via-slate-50 to-transparent dark:from-slate-900 dark:via-slate-900`}>
         {!isCollapsed && (
-          <h3 className="text-lg font-bold bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent dark:from-green-400 dark:to-emerald-400">
-            {t('builder.components')}
-          </h3>
+          <div>
+            <h3 className="text-base font-bold text-slate-800 dark:text-white">
+              {t('builder.components')}
+            </h3>
+            <p className="text-xs text-slate-500 dark:text-slate-400">Drag to canvas</p>
+          </div>
         )}
         {onToggle && (
           <Button
             variant="ghost"
             size="icon"
             onClick={onToggle}
-            className="h-7 w-7 flex-shrink-0"
+            className="h-8 w-8 flex-shrink-0 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-lg"
             title={isCollapsed ? t('common.expand', { defaultValue: 'Expand' }) : t('common.collapse', { defaultValue: 'Collapse' })}
           >
             {isCollapsed ? <PanelLeft className="h-4 w-4" /> : <PanelLeftClose className="h-4 w-4" />}
           </Button>
         )}
       </div>
+
+      <div className="px-2 pb-4">
 
       {isCollapsed ? (
         /* Collapsed view - show only icons */
@@ -178,9 +185,9 @@ export const AgentComponentSidebar = ({ agent, isCollapsed = false, onToggle }: 
         </div>
       ) : (
         /* Expanded view - full accordion */
-        <Accordion type="multiple" defaultValue={['item-1', 'item-2']}>
-        <AccordionItem value="item-1" className="border-slate-200 dark:border-slate-700">
-          <AccordionTrigger className="hover:no-underline dark:text-white">{t('builder.tools')}</AccordionTrigger>
+        <Accordion type="multiple" defaultValue={['item-1', 'item-2', 'item-3']} className="space-y-2">
+        <AccordionItem value="item-1" className="border border-slate-200 dark:border-slate-700 rounded-xl overflow-hidden bg-white dark:bg-slate-800/50">
+          <AccordionTrigger className="hover:no-underline px-4 py-3 text-sm font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800">{t('builder.tools')}</AccordionTrigger>
           <AccordionContent>
             {isLoadingTools ? (
               <div className="flex items-center justify-center py-4">
@@ -202,8 +209,8 @@ export const AgentComponentSidebar = ({ agent, isCollapsed = false, onToggle }: 
             )}
           </AccordionContent>
         </AccordionItem>
-        <AccordionItem value="item-2" className="border-slate-200 dark:border-slate-700">
-          <AccordionTrigger className="hover:no-underline dark:text-white">{t('builder.knowledgeBases')}</AccordionTrigger>
+        <AccordionItem value="item-2" className="border border-slate-200 dark:border-slate-700 rounded-xl overflow-hidden bg-white dark:bg-slate-800/50">
+          <AccordionTrigger className="hover:no-underline px-4 py-3 text-sm font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800">{t('builder.knowledgeBases')}</AccordionTrigger>
           <AccordionContent>
             {isLoadingKnowledgeBases ? (
               <div className="flex items-center justify-center py-4">
@@ -223,11 +230,11 @@ export const AgentComponentSidebar = ({ agent, isCollapsed = false, onToggle }: 
             )}
           </AccordionContent>
         </AccordionItem>
-        <AccordionItem value="item-3" className="border-slate-200 dark:border-slate-700">
-          <AccordionTrigger className="hover:no-underline dark:text-white">
+        <AccordionItem value="item-3" className="border border-slate-200 dark:border-slate-700 rounded-xl overflow-hidden bg-white dark:bg-slate-800/50">
+          <AccordionTrigger className="hover:no-underline px-4 py-3 text-sm font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800">
               <span className="flex items-center gap-2">
                 {t('builder.workflows', { defaultValue: 'Workflows' })}
-                <span className="text-xs text-green-600 dark:text-green-400 font-normal">(Active)</span>
+                <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 font-medium">Active</span>
               </span>
             </AccordionTrigger>
           <AccordionContent>
@@ -251,6 +258,7 @@ export const AgentComponentSidebar = ({ agent, isCollapsed = false, onToggle }: 
         </AccordionItem>
         </Accordion>
       )}
+      </div>
     </aside>
   );
 };

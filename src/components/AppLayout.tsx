@@ -427,119 +427,165 @@ const AppLayout = () => {
   return (
     <div className="h-screen w-screen flex flex-col bg-gray-50 dark:bg-slate-900 overflow-hidden transition-colors">
       {/* Header */}
-      <header className="flex-shrink-0 bg-white dark:bg-slate-800 border-b dark:border-slate-700 z-20">
-        <div className="px-6 py-3">
+      <header className="flex-shrink-0 bg-gradient-to-r from-white via-white to-slate-50 dark:from-slate-800 dark:via-slate-800 dark:to-slate-900 border-b border-slate-200/80 dark:border-slate-700/80 z-20 shadow-sm">
+        <div className="px-4 lg:px-6 py-2.5">
           <div className="flex items-center justify-between">
+            {/* Logo & Brand */}
             <div
-              className="flex items-center space-x-3 cursor-pointer lg:cursor-default"
+              className="flex items-center gap-3 cursor-pointer lg:cursor-default group"
               onClick={() => {
-                // Only toggle sidebar on mobile/tablet screens
                 if (window.innerWidth < 1024) {
                   setSidebarOpen(!sidebarOpen);
                 }
               }}
             >
               {branding.logoUrl ? (
-                <img
-                  src={branding.logoUrl}
-                  alt={branding.companyName}
-                  className="h-10 w-10 object-contain rounded-lg"
-                />
+                <div className="relative">
+                  <div className="absolute inset-0 bg-gradient-to-br from-blue-500/20 to-purple-500/20 rounded-xl blur-lg group-hover:blur-xl transition-all" />
+                  <img
+                    src={branding.logoUrl}
+                    alt={branding.companyName}
+                    className="relative h-11 w-11 object-contain rounded-xl shadow-lg ring-2 ring-white/50 dark:ring-slate-700/50"
+                  />
+                </div>
               ) : (
-                <div className="p-2 bg-gradient-to-br from-blue-600 via-purple-600 to-pink-600 rounded-lg shadow-md">
-                  <MessageSquare className="h-6 w-6 text-white" />
+                <div className="relative">
+                  <div className="absolute inset-0 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl blur-lg opacity-40 group-hover:opacity-60 transition-all" />
+                  <div className="relative p-2.5 bg-gradient-to-br from-blue-500 via-indigo-600 to-purple-600 rounded-xl shadow-lg shadow-blue-500/25">
+                    <MessageSquare className="h-6 w-6 text-white" />
+                  </div>
                 </div>
               )}
-              <h1 className="text-xl font-bold text-gray-800 dark:text-white">{branding.companyName}</h1>
+              <div className="hidden sm:block">
+                <h1 className="text-xl font-bold bg-gradient-to-r from-slate-800 to-slate-600 dark:from-white dark:to-slate-300 bg-clip-text text-transparent">
+                  {branding.companyName}
+                </h1>
+                <p className="text-[10px] font-medium text-slate-500 dark:text-slate-400 -mt-0.5 tracking-wide uppercase">
+                  AI Platform
+                </p>
+              </div>
             </div>
-            <div className="flex items-center gap-3">
+
+            {/* Right Side Actions */}
+            <div className="flex items-center gap-2 lg:gap-3">
               {/* Notification Bell */}
               <NotificationBell />
-              
+
               {/* Language Switcher */}
               <LanguageSwitcher />
 
               {/* Theme Toggle */}
               <Button
-                variant="outline"
+                variant="ghost"
                 size="icon"
                 onClick={toggleTheme}
-                className="rounded-full"
+                className="rounded-xl h-10 w-10 bg-slate-100/80 dark:bg-slate-700/50 hover:bg-slate-200 dark:hover:bg-slate-600 border border-slate-200/50 dark:border-slate-600/50 transition-all hover:scale-105"
                 title={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
               >
                 {theme === 'dark' ? (
-                  <Sun className="h-5 w-5 text-yellow-500" />
+                  <Sun className="h-5 w-5 text-amber-400" />
                 ) : (
-                  <Moon className="h-5 w-5 text-slate-700" />
+                  <Moon className="h-5 w-5 text-indigo-600" />
                 )}
               </Button>
 
               {/* User Info Card with Dropdown Menu */}
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <button className="hidden lg:flex items-center gap-3 px-4 py-2 rounded-lg bg-gradient-to-r from-slate-50 to-slate-100 dark:from-slate-800 dark:to-slate-900 border border-slate-200 dark:border-slate-700 shadow-sm hover:shadow-md hover:from-slate-100 hover:to-slate-200 dark:hover:from-slate-700 dark:hover:to-slate-800 transition-all duration-200 cursor-pointer">
+                  <button className="hidden lg:flex items-center gap-3 pl-4 pr-2 py-1.5 rounded-xl bg-gradient-to-r from-slate-100/80 to-slate-50 dark:from-slate-700/80 dark:to-slate-800 border border-slate-200/80 dark:border-slate-600/60 shadow-sm hover:shadow-lg hover:border-blue-300 dark:hover:border-blue-600 transition-all duration-300 cursor-pointer group">
                     <div className="flex flex-col items-end">
-                      <p className="text-sm font-semibold text-slate-900 dark:text-slate-100 leading-tight">
-                        {user?.email}
+                      <p className="text-sm font-semibold text-slate-800 dark:text-slate-100 leading-tight group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                        {user?.email?.split('@')[0] || 'User'}
                       </p>
-                      <p className="text-xs text-slate-600 dark:text-slate-400 leading-tight">
+                      <p className="text-[10px] text-slate-500 dark:text-slate-400 leading-tight font-medium">
                         {user?.company_name || 'AgentConnect'}
                       </p>
                     </div>
-                    <div className="w-9 h-9 rounded-full bg-gradient-to-br from-blue-600 to-purple-600 flex items-center justify-center text-white font-semibold text-sm shadow-md ring-2 ring-white dark:ring-slate-700">
-                      {user?.email?.charAt(0).toUpperCase() || 'U'}
+                    <div className="relative">
+                      <div className="absolute inset-0 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl blur opacity-40 group-hover:opacity-70 transition-all" />
+                      <div className="relative w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-bold text-sm shadow-lg ring-2 ring-white dark:ring-slate-700">
+                        {user?.email?.charAt(0).toUpperCase() || 'U'}
+                      </div>
+                      {/* Online Status Indicator */}
+                      <span className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 bg-emerald-500 border-2 border-white dark:border-slate-800 rounded-full shadow-sm" />
                     </div>
                   </button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-64">
-                  <DropdownMenuLabel>
-                    <div className="flex flex-col space-y-1">
-                      <p className="text-sm font-medium leading-none">{user?.email}</p>
-                      <p className="text-xs leading-none text-muted-foreground">
-                        {user?.company_name || 'AgentConnect'}
-                      </p>
+                <DropdownMenuContent align="end" className="w-72 rounded-xl p-2 shadow-xl border-slate-200/80 dark:border-slate-700/80">
+                  <div className="px-3 py-3 bg-gradient-to-r from-slate-50 to-slate-100 dark:from-slate-800 dark:to-slate-900 rounded-lg mb-2">
+                    <div className="flex items-center gap-3">
+                      <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-bold text-lg shadow-lg">
+                        {user?.email?.charAt(0).toUpperCase() || 'U'}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-semibold text-slate-800 dark:text-white truncate">{user?.email}</p>
+                        <p className="text-xs text-slate-500 dark:text-slate-400 truncate">
+                          {user?.company_name || 'AgentConnect'}
+                        </p>
+                      </div>
                     </div>
-                  </DropdownMenuLabel>
-                  <DropdownMenuSeparator />
+                  </div>
+                  <DropdownMenuSeparator className="my-2" />
                   <div className="px-2 py-2">
-                    <p className="text-xs font-medium text-muted-foreground mb-2 px-2">Status</p>
+                    <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 mb-2 px-2 uppercase tracking-wide">Status</p>
                     <PresenceSelector currentStatus={user?.presence_status} showLabel={true} />
                   </div>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem asChild>
-                    <NavLink to="/dashboard/profile">{t('navigation.profile')}</NavLink>
+                  <DropdownMenuSeparator className="my-2" />
+                  <DropdownMenuItem asChild className="rounded-lg cursor-pointer">
+                    <NavLink to="/dashboard/profile" className="flex items-center gap-2">
+                      <CircleUser className="h-4 w-4" />
+                      {t('navigation.profile')}
+                    </NavLink>
                   </DropdownMenuItem>
-                  <DropdownMenuItem onClick={logout}>{t('common.logout')}</DropdownMenuItem>
+                  <DropdownMenuItem onClick={logout} className="rounded-lg cursor-pointer text-red-600 dark:text-red-400 focus:text-red-600 focus:bg-red-50 dark:focus:bg-red-900/20">
+                    <svg className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                    </svg>
+                    {t('common.logout')}
+                  </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
 
-              {/* Mobile User Menu - Show icon on mobile only */}
+              {/* Mobile User Menu */}
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="secondary" size="icon" className="rounded-full lg:hidden">
+                  <Button variant="ghost" size="icon" className="rounded-xl lg:hidden h-10 w-10 bg-slate-100/80 dark:bg-slate-700/50 hover:bg-slate-200 dark:hover:bg-slate-600 border border-slate-200/50 dark:border-slate-600/50">
                     <CircleUser className="h-5 w-5" />
                     <span className="sr-only">Toggle user menu</span>
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-64">
-                  <DropdownMenuLabel>
-                    <div className="flex flex-col space-y-1">
-                      <p className="text-sm font-medium leading-none">{user?.email}</p>
-                      <p className="text-xs leading-none text-muted-foreground">
-                        {user?.company_name || 'AgentConnect'}
-                      </p>
+                <DropdownMenuContent align="end" className="w-72 rounded-xl p-2 shadow-xl">
+                  <div className="px-3 py-3 bg-gradient-to-r from-slate-50 to-slate-100 dark:from-slate-800 dark:to-slate-900 rounded-lg mb-2">
+                    <div className="flex items-center gap-3">
+                      <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-bold text-lg shadow-lg">
+                        {user?.email?.charAt(0).toUpperCase() || 'U'}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-semibold text-slate-800 dark:text-white truncate">{user?.email}</p>
+                        <p className="text-xs text-slate-500 dark:text-slate-400 truncate">
+                          {user?.company_name || 'AgentConnect'}
+                        </p>
+                      </div>
                     </div>
-                  </DropdownMenuLabel>
-                  <DropdownMenuSeparator />
+                  </div>
+                  <DropdownMenuSeparator className="my-2" />
                   <div className="px-2 py-2">
-                    <p className="text-xs font-medium text-muted-foreground mb-2 px-2">Status</p>
+                    <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 mb-2 px-2 uppercase tracking-wide">Status</p>
                     <PresenceSelector currentStatus={user?.presence_status} showLabel={true} />
                   </div>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem asChild>
-                    <NavLink to="/dashboard/profile">{t('navigation.profile')}</NavLink>
+                  <DropdownMenuSeparator className="my-2" />
+                  <DropdownMenuItem asChild className="rounded-lg cursor-pointer">
+                    <NavLink to="/dashboard/profile" className="flex items-center gap-2">
+                      <CircleUser className="h-4 w-4" />
+                      {t('navigation.profile')}
+                    </NavLink>
                   </DropdownMenuItem>
-                  <DropdownMenuItem onClick={logout}>{t('common.logout')}</DropdownMenuItem>
+                  <DropdownMenuItem onClick={logout} className="rounded-lg cursor-pointer text-red-600 dark:text-red-400 focus:text-red-600 focus:bg-red-50 dark:focus:bg-red-900/20">
+                    <svg className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                    </svg>
+                    {t('common.logout')}
+                  </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
             </div>
@@ -548,34 +594,37 @@ const AppLayout = () => {
       </header>
 
       <div className="flex flex-1 overflow-hidden">
-        {/* Enhanced Sidebar with Dark Mode */}
+        {/* Premium Sidebar */}
         <aside
-          className={`flex-shrink-0 bg-white dark:bg-slate-900 ${isRTL ? 'border-l' : 'border-r'} border-slate-200 dark:border-slate-700 transition-all duration-300 relative ${
+          className={`flex-shrink-0 bg-gradient-to-b from-slate-50 to-white dark:from-slate-900 dark:to-slate-800 ${isRTL ? 'border-l' : 'border-r'} border-slate-200/80 dark:border-slate-700/80 transition-all duration-300 relative ${
             sidebarOpen ? '' : '-ml-64 lg:ml-0'
-          } ${sidebarCollapsed ? 'w-16' : 'w-64'}`}
+          } ${sidebarCollapsed ? 'w-[72px]' : 'w-64'}`}
         >
-          {/* Collapse/Expand Button for Desktop */}
+          {/* Decorative gradient line */}
+          <div className={`absolute top-0 ${isRTL ? 'left-0' : 'right-0'} bottom-0 w-px bg-gradient-to-b from-blue-500/20 via-purple-500/20 to-pink-500/20`} />
+
+          {/* Collapse/Expand Button */}
           <button
             onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-            className={`hidden lg:flex absolute ${isRTL ? '-left-3' : '-right-3'} top-8 z-20 bg-gradient-to-br from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white rounded-full p-2 shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-110 group`}
+            className={`hidden lg:flex absolute ${isRTL ? '-left-3' : '-right-3'} top-6 z-20 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 hover:border-blue-400 dark:hover:border-blue-500 text-slate-500 hover:text-blue-600 dark:text-slate-400 dark:hover:text-blue-400 rounded-full p-1.5 shadow-md hover:shadow-lg transition-all duration-200 transform hover:scale-105`}
             title={sidebarCollapsed ? t("navigation.expandSidebar") : t("navigation.collapseSidebar")}
           >
             {sidebarCollapsed ? (
               isRTL ? (
-                <PanelLeftClose className="h-4 w-4 transition-transform duration-200 group-hover:-translate-x-0.5 scale-x-[-1]" />
+                <PanelLeftClose className="h-3.5 w-3.5 scale-x-[-1]" />
               ) : (
-                <PanelLeftOpen className="h-4 w-4 transition-transform duration-200 group-hover:translate-x-0.5" />
+                <PanelLeftOpen className="h-3.5 w-3.5" />
               )
             ) : (
               isRTL ? (
-                <PanelLeftOpen className="h-4 w-4 transition-transform duration-200 group-hover:translate-x-0.5 scale-x-[-1]" />
+                <PanelLeftOpen className="h-3.5 w-3.5 scale-x-[-1]" />
               ) : (
-                <PanelLeftClose className="h-4 w-4 transition-transform duration-200 group-hover:-translate-x-0.5" />
+                <PanelLeftClose className="h-3.5 w-3.5" />
               )
             )}
           </button>
 
-          <nav className={`p-3 space-y-1 h-full flex flex-col overflow-y-auto ${sidebarCollapsed ? 'items-center' : ''}`}>
+          <nav className={`p-3 h-full flex flex-col overflow-y-auto scrollbar-thin scrollbar-thumb-slate-300 dark:scrollbar-thumb-slate-600 ${sidebarCollapsed ? 'items-center' : ''}`}>
             <div className="flex-1 space-y-1">
               {sidebarItems.map((item) => {
                 // Only show admin items if user is super admin
@@ -586,24 +635,36 @@ const AppLayout = () => {
                     <NavLink
                       to={item.url}
                       className={({ isActive }) =>
-                        `flex items-center rounded-lg text-sm font-medium transition-all duration-200 group ${
-                          sidebarCollapsed ? 'justify-center p-2.5' : 'gap-3 px-3 py-2.5'
+                        `relative flex items-center rounded-lg text-[15px] font-medium transition-all duration-200 group ${
+                          sidebarCollapsed ? 'justify-center p-2 mx-auto' : 'gap-3 px-3 py-2'
                         } ${
                           isActive
-                            ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-md'
-                            : 'text-gray-700 dark:text-gray-300 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-gray-900 dark:hover:text-white'
+                            ? 'bg-gradient-to-r from-blue-500 to-indigo-600 text-white shadow-md shadow-blue-500/20'
+                            : 'text-slate-800 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800/80'
                         }`
                       }
                       title={sidebarCollapsed ? t(item.titleKey) : undefined}
                     >
                       {({ isActive }) => (
                         <>
+                          {/* Active indicator bar */}
+                          {isActive && !sidebarCollapsed && (
+                            <span className={`absolute ${isRTL ? 'right-0' : 'left-0'} top-1/2 -translate-y-1/2 w-1 h-5 bg-white rounded-full`} />
+                          )}
                           <item.icon
-                            className={`h-5 w-5 transition-transform duration-200 ${
-                              isActive ? '' : 'group-hover:scale-110'
-                            } ${sidebarCollapsed ? 'flex-shrink-0' : ''}`}
+                            className={`flex-shrink-0 transition-all duration-200 ${
+                              isActive ? 'h-4 w-4' : 'h-4 w-4 group-hover:scale-110'
+                            }`}
                           />
-                          {!sidebarCollapsed && <span className="truncate">{t(item.titleKey)}</span>}
+                          {!sidebarCollapsed && (
+                            <span className="truncate">{t(item.titleKey)}</span>
+                          )}
+                          {/* Hover tooltip for collapsed state */}
+                          {sidebarCollapsed && (
+                            <span className="absolute left-full ml-2 px-2 py-1 bg-slate-900 dark:bg-slate-700 text-white text-xs font-medium rounded-md opacity-0 group-hover:opacity-100 pointer-events-none whitespace-nowrap z-50 shadow-lg transition-opacity duration-200">
+                              {t(item.titleKey)}
+                            </span>
+                          )}
                         </>
                       )}
                     </NavLink>

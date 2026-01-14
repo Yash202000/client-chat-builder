@@ -390,7 +390,7 @@ export const AgentBuilder = ({ agent }: AgentBuilderProps) => {
   const contextValue = { handleInspect: () => {} }; // handleInspect is not used anymore
 
   return (
-    <div className="flex h-[80vh] w-full border-2 border-dashed border-slate-300 dark:border-slate-700 rounded-xl overflow-hidden card-shadow-lg bg-white dark:bg-slate-800">
+    <div className="flex h-[80vh] w-full rounded-2xl overflow-hidden shadow-2xl shadow-slate-200/50 dark:shadow-none border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800">
       <AgentBuilderContext.Provider value={contextValue}>
         <ReactFlowProvider>
           <AgentComponentSidebar
@@ -398,7 +398,9 @@ export const AgentBuilder = ({ agent }: AgentBuilderProps) => {
             isCollapsed={leftSidebarCollapsed}
             onToggle={() => setLeftSidebarCollapsed(!leftSidebarCollapsed)}
           />
-          <div className="flex-grow workflow-canvas bg-slate-50 dark:bg-slate-900">
+          <div className="flex-grow workflow-canvas relative">
+            {/* Gradient overlay at top */}
+            <div className="absolute top-0 left-0 right-0 h-16 bg-gradient-to-b from-slate-100/80 dark:from-slate-900/80 to-transparent pointer-events-none z-10" />
             <ReactFlow
               nodes={nodes}
               edges={edges}
@@ -415,17 +417,18 @@ export const AgentBuilder = ({ agent }: AgentBuilderProps) => {
               defaultEdgeOptions={{
                 type: 'smoothstep',
                 animated: true,
-                style: { stroke: '#10b981', strokeWidth: 2 },
+                style: { stroke: '#8b5cf6', strokeWidth: 2 },
               }}
+              className="bg-gradient-to-br from-slate-50 via-white to-slate-100 dark:from-slate-900 dark:via-slate-900 dark:to-slate-800"
             >
               <Background
                 variant="dots"
-                gap={20}
-                size={1}
-                color="#cbd5e1"
-                className="dark:opacity-30"
+                gap={24}
+                size={1.5}
+                color="#94a3b8"
+                className="dark:opacity-20"
               />
-              <Controls className="bg-white dark:bg-slate-800 rounded-lg shadow-lg border dark:border-slate-700" />
+              <Controls className="bg-white/90 dark:bg-slate-800/90 backdrop-blur-sm rounded-xl shadow-lg border border-slate-200 dark:border-slate-700 overflow-hidden" />
             </ReactFlow>
           </div>
           <AgentPropertiesPanel

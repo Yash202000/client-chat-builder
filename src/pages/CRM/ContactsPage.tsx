@@ -22,6 +22,8 @@ import {
   Edit,
   Trash2,
   Tag,
+  Contact,
+  RefreshCw,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -356,36 +358,46 @@ export default function ContactsPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500"></div>
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="text-center">
+          <div className="p-6 rounded-2xl bg-gradient-to-br from-blue-100 to-indigo-100 dark:from-blue-900/30 dark:to-indigo-900/30 inline-block mb-4">
+            <RefreshCw className="h-12 w-12 text-blue-500 dark:text-blue-400 animate-spin" />
+          </div>
+          <p className="text-lg font-medium text-slate-600 dark:text-slate-400">{t('crm.common.loading')}</p>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6 p-6 animate-fade-in">
+    <div className="space-y-8 p-6 animate-fade-in">
       {/* Header */}
-      <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
-        <div>
-          <h2 className="text-4xl font-bold bg-gradient-to-r from-orange-600 to-red-600 bg-clip-text text-transparent mb-2">
-            {t('crm.contacts.title')}
-          </h2>
-          <p className="text-gray-600 dark:text-gray-400 text-lg">
-            {t('crm.contacts.subtitle')}
-          </p>
+      <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6">
+        <div className="flex items-center gap-4">
+          <div className="p-4 rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 shadow-xl shadow-blue-500/25">
+            <Contact className="h-8 w-8 text-white" />
+          </div>
+          <div>
+            <h2 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+              {t('crm.contacts.title')}
+            </h2>
+            <p className="text-slate-500 dark:text-slate-400 mt-1">
+              {t('crm.contacts.subtitle')}
+            </p>
+          </div>
         </div>
-        <div className="flex flex-wrap gap-2">
-          <Button variant="outline" className="dark:bg-slate-800 dark:border-slate-600 dark:text-white dark:hover:bg-slate-700">
+        <div className="flex flex-wrap items-center gap-3">
+          <Button variant="outline" className="rounded-xl border-slate-200/80 dark:border-slate-600/80 hover:bg-slate-50 dark:hover:bg-slate-700 shadow-sm hover:shadow-md transition-all">
             <Upload className="h-4 w-4 mr-2" />
             {t('crm.common.import')}
           </Button>
-          <Button variant="outline" className="dark:bg-slate-800 dark:border-slate-600 dark:text-white dark:hover:bg-slate-700">
+          <Button variant="outline" className="rounded-xl border-slate-200/80 dark:border-slate-600/80 hover:bg-slate-50 dark:hover:bg-slate-700 shadow-sm hover:shadow-md transition-all">
             <Download className="h-4 w-4 mr-2" />
             {t('crm.common.export')}
           </Button>
           <Button
             onClick={() => setCreateDialogOpen(true)}
-            className="bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-700 hover:to-red-700 text-white"
+            className="rounded-xl bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white shadow-lg shadow-blue-500/25 hover:shadow-xl hover:shadow-blue-500/30 hover:scale-[1.02] transition-all duration-200"
           >
             <Plus className="h-4 w-4 mr-2" />
             {t('crm.contacts.addContact')}
@@ -394,206 +406,218 @@ export default function ContactsPage() {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {metrics.map((metric) => {
           const IconComponent = metric.icon;
+          const colorMap = {
+            'text-blue-600 dark:text-blue-400': { bg: 'from-white to-blue-50 dark:from-slate-800 dark:to-blue-950/30', border: 'border-blue-200/80 dark:border-blue-800/60', shadow: 'shadow-blue-500/10 hover:shadow-blue-500/20', icon: 'from-blue-500 to-blue-600' },
+            'text-green-600 dark:text-green-400': { bg: 'from-white to-green-50 dark:from-slate-800 dark:to-green-950/30', border: 'border-green-200/80 dark:border-green-800/60', shadow: 'shadow-green-500/10 hover:shadow-green-500/20', icon: 'from-green-500 to-emerald-600' },
+            'text-orange-600 dark:text-orange-400': { bg: 'from-white to-orange-50 dark:from-slate-800 dark:to-orange-950/30', border: 'border-orange-200/80 dark:border-orange-800/60', shadow: 'shadow-orange-500/10 hover:shadow-orange-500/20', icon: 'from-orange-500 to-red-600' },
+          };
+          const colors = colorMap[metric.iconColor] || { bg: 'from-white to-slate-50 dark:from-slate-800 dark:to-slate-900', border: 'border-slate-200/80 dark:border-slate-700/60', shadow: 'shadow-slate-500/10', icon: 'from-slate-500 to-slate-600' };
+
           return (
-            <Card key={metric.title} className="card-shadow-lg border-slate-200 dark:border-slate-700 dark:bg-slate-800 hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
-              <CardContent className="p-5">
-                <div className="flex items-start justify-between mb-3">
-                  <div className={`h-12 w-12 rounded-xl bg-gradient-to-br ${metric.gradient} flex items-center justify-center shadow-sm`}>
-                    <IconComponent className={`h-6 w-6 ${metric.iconColor}`} />
-                  </div>
-                  <div className="flex items-center gap-1">
-                    {metric.trendUp ? (
-                      <TrendingUp className="h-3.5 w-3.5 text-green-500" />
-                    ) : (
-                      <TrendingDown className="h-3.5 w-3.5 text-red-500" />
-                    )}
-                    <span className={`text-xs font-medium ${metric.trendUp ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
-                      {metric.trend}
-                    </span>
-                  </div>
+            <div
+              key={metric.title}
+              className={`p-6 rounded-2xl border ${colors.border} bg-gradient-to-br ${colors.bg} shadow-xl ${colors.shadow} hover:shadow-2xl hover:scale-[1.02] transition-all duration-300`}
+            >
+              <div className="flex items-start justify-between mb-4">
+                <div className={`p-3 rounded-2xl bg-gradient-to-br ${colors.icon} shadow-lg`}>
+                  <IconComponent className="h-6 w-6 text-white" />
                 </div>
-                <div>
-                  <p className="text-xs font-medium text-gray-600 dark:text-gray-400 uppercase tracking-wider mb-1.5">
-                    {metric.title}
-                  </p>
-                  <p className="text-2xl font-bold dark:text-white mb-1">{metric.value}</p>
-                  <p className="text-xs text-gray-500 dark:text-gray-400">{metric.subtext}</p>
+                <div className={`flex items-center gap-1 px-2 py-1 rounded-lg ${metric.trendUp ? 'bg-green-100 dark:bg-green-900/30' : 'bg-red-100 dark:bg-red-900/30'}`}>
+                  {metric.trendUp ? (
+                    <TrendingUp className="h-3.5 w-3.5 text-green-600 dark:text-green-400" />
+                  ) : (
+                    <TrendingDown className="h-3.5 w-3.5 text-red-600 dark:text-red-400" />
+                  )}
+                  <span className={`text-xs font-bold ${metric.trendUp ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
+                    {metric.trend}
+                  </span>
                 </div>
-              </CardContent>
-            </Card>
+              </div>
+              <div>
+                <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">
+                  {metric.title}
+                </p>
+                <p className="text-3xl font-bold text-slate-800 dark:text-white mb-1">{metric.value}</p>
+                <p className="text-sm text-slate-500 dark:text-slate-400">{metric.subtext}</p>
+              </div>
+            </div>
           );
         })}
       </div>
 
       {/* Filters and Actions */}
-      <Card className="border-slate-200 dark:border-slate-700 dark:bg-slate-800">
-        <CardContent className="p-4">
-          <div className="flex flex-col md:flex-row items-center gap-4">
-            <div className="flex-1 relative w-full">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-              <Input
-                placeholder={t('crm.contacts.searchPlaceholder')}
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10 dark:bg-slate-900 dark:border-slate-600"
-              />
-            </div>
-            <Select value={filterStatus} onValueChange={(v: any) => setFilterStatus(v)}>
-              <SelectTrigger className="w-[200px] dark:bg-slate-900 dark:border-slate-600">
-                <SelectValue placeholder={t('crm.contacts.filters.byStatus')} />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">{t('crm.contacts.filters.all')}</SelectItem>
-                <SelectItem value="without_lead">{t('crm.contacts.withoutLeads')}</SelectItem>
-                <SelectItem value="with_lead">{t('crm.contacts.withLeads')}</SelectItem>
-              </SelectContent>
-            </Select>
-            <div className="flex items-center gap-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-600 rounded-md px-3 py-1.5">
-              <Tag className="h-4 w-4 text-gray-400" />
-              <TagSelector
-                entityType="contact"
-                selectedTagIds={filterTagIds}
-                onTagsChange={setFilterTagIds}
-                showCreateOption={false}
-                maxDisplay={3}
-              />
-              {filterTagIds.length > 0 && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-6 px-2 text-xs"
-                  onClick={() => setFilterTagIds([])}
-                >
-                  {t('common.clear')}
-                </Button>
-              )}
-            </div>
-            {selectedContacts.length > 0 && (
+      <div className="rounded-2xl border border-slate-200/80 dark:border-slate-700/60 bg-gradient-to-br from-white to-slate-50 dark:from-slate-800 dark:to-slate-900 shadow-lg p-5">
+        <div className="flex flex-col md:flex-row items-center gap-4">
+          <div className="flex-1 relative w-full">
+            <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 h-4 w-4 text-slate-400" />
+            <Input
+              placeholder={t('crm.contacts.searchPlaceholder')}
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-11 rounded-xl border-slate-200/80 dark:border-slate-600/80 bg-white dark:bg-slate-800 focus:ring-2 focus:ring-blue-500/20 transition-all"
+            />
+          </div>
+          <Select value={filterStatus} onValueChange={(v: any) => setFilterStatus(v)}>
+            <SelectTrigger className="w-[200px] rounded-xl border-slate-200/80 dark:border-slate-600/80 bg-white dark:bg-slate-800">
+              <SelectValue placeholder={t('crm.contacts.filters.byStatus')} />
+            </SelectTrigger>
+            <SelectContent className="rounded-xl">
+              <SelectItem value="all">{t('crm.contacts.filters.all')}</SelectItem>
+              <SelectItem value="without_lead">{t('crm.contacts.withoutLeads')}</SelectItem>
+              <SelectItem value="with_lead">{t('crm.contacts.withLeads')}</SelectItem>
+            </SelectContent>
+          </Select>
+          <div className="flex items-center gap-2 bg-white dark:bg-slate-800 border border-slate-200/80 dark:border-slate-600/80 rounded-xl px-4 py-2">
+            <Tag className="h-4 w-4 text-slate-400" />
+            <TagSelector
+              entityType="contact"
+              selectedTagIds={filterTagIds}
+              onTagsChange={setFilterTagIds}
+              showCreateOption={false}
+              maxDisplay={3}
+            />
+            {filterTagIds.length > 0 && (
               <Button
-                onClick={() => toast({ title: 'Coming Soon', description: 'Bulk conversion will be available soon' })}
-                className="bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-700 hover:to-red-700 text-white"
+                variant="ghost"
+                size="sm"
+                className="h-6 px-2 text-xs rounded-lg"
+                onClick={() => setFilterTagIds([])}
               >
-                {t('crm.contacts.convertToLeads', { count: selectedContacts.length })}
+                {t('common.clear')}
               </Button>
             )}
           </div>
-        </CardContent>
-      </Card>
+          {selectedContacts.length > 0 && (
+            <Button
+              onClick={() => toast({ title: 'Coming Soon', description: 'Bulk conversion will be available soon' })}
+              className="rounded-xl bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white shadow-lg shadow-blue-500/25"
+            >
+              {t('crm.contacts.convertToLeads', { count: selectedContacts.length })}
+            </Button>
+          )}
+        </div>
+      </div>
 
       {/* Table */}
-      <Card className="border-slate-200 dark:border-slate-700 dark:bg-slate-800 overflow-hidden">
+      <div className="rounded-2xl border border-slate-200/80 dark:border-slate-700/60 bg-gradient-to-br from-white to-slate-50 dark:from-slate-800 dark:to-slate-900 shadow-xl overflow-hidden">
         <Table>
           <TableHeader>
-            <TableRow className="bg-slate-50 dark:bg-slate-900/50 border-slate-200 dark:border-slate-700">
+            <TableRow className="bg-gradient-to-r from-slate-100 to-slate-50 dark:from-slate-800 dark:to-slate-900 border-slate-200/60 dark:border-slate-700/50">
               <TableHead className="w-12">
                 <Checkbox
                   checked={selectedContacts.length === filteredContacts.length && filteredContacts.length > 0}
                   onCheckedChange={toggleSelectAll}
                 />
               </TableHead>
-              <TableHead className="font-semibold">{t('crm.contacts.fields.fullName')}</TableHead>
-              <TableHead className="font-semibold">{t('crm.contacts.fields.email')}</TableHead>
-              <TableHead className="font-semibold">{t('crm.contacts.fields.phone')}</TableHead>
-              <TableHead className="font-semibold">{t('crm.contacts.fields.company')}</TableHead>
-              <TableHead className="font-semibold">{t('crm.contacts.fields.status')}</TableHead>
+              <TableHead className="font-bold text-slate-700 dark:text-slate-300">{t('crm.contacts.fields.fullName')}</TableHead>
+              <TableHead className="font-bold text-slate-700 dark:text-slate-300">{t('crm.contacts.fields.email')}</TableHead>
+              <TableHead className="font-bold text-slate-700 dark:text-slate-300">{t('crm.contacts.fields.phone')}</TableHead>
+              <TableHead className="font-bold text-slate-700 dark:text-slate-300">{t('crm.contacts.fields.company')}</TableHead>
+              <TableHead className="font-bold text-slate-700 dark:text-slate-300">{t('crm.contacts.fields.status')}</TableHead>
               <TableHead></TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {filteredContacts.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={7} className="text-center py-12">
+                <TableCell colSpan={7} className="text-center py-16">
                   <div className="flex flex-col items-center">
-                    <div className="h-16 w-16 rounded-full bg-slate-100 dark:bg-slate-700 flex items-center justify-center mb-4">
-                      <Users className="h-8 w-8 text-slate-400" />
+                    <div className="p-5 rounded-2xl bg-gradient-to-br from-slate-100 to-slate-200 dark:from-slate-700 dark:to-slate-800 mb-4">
+                      <Users className="h-10 w-10 text-slate-400 dark:text-slate-500" />
                     </div>
-                    <p className="text-slate-500 dark:text-slate-400">{t('crm.contacts.noContacts')}</p>
+                    <p className="text-slate-500 dark:text-slate-400 font-medium">{t('crm.contacts.noContacts')}</p>
                   </div>
                 </TableCell>
               </TableRow>
             ) : (
               filteredContacts.map((contact) => (
-                <TableRow key={contact.id} className="hover:bg-slate-50 dark:hover:bg-slate-900/50 transition-colors">
+                <TableRow key={contact.id} className="hover:bg-blue-50/50 dark:hover:bg-blue-900/10 transition-colors border-slate-200/60 dark:border-slate-700/50">
                   <TableCell>
                     <Checkbox
                       checked={selectedContacts.includes(contact.id)}
                       onCheckedChange={() => toggleSelectContact(contact.id)}
                     />
                   </TableCell>
-                  <TableCell className="font-medium dark:text-white">{contact.name}</TableCell>
+                  <TableCell className="font-semibold text-slate-800 dark:text-white">{contact.name}</TableCell>
                   <TableCell>
-                    <div className="flex items-center gap-1.5 text-gray-600 dark:text-gray-300">
-                      <Mail className="h-3.5 w-3.5 text-gray-400" />
+                    <div className="flex items-center gap-2 text-slate-600 dark:text-slate-300">
+                      <div className="p-1.5 rounded-lg bg-blue-100 dark:bg-blue-900/30">
+                        <Mail className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
+                      </div>
                       {contact.email}
                     </div>
                   </TableCell>
                   <TableCell>
                     {contact.phone_number ? (
-                      <div className="flex items-center gap-1.5 text-gray-600 dark:text-gray-300">
-                        <Phone className="h-3.5 w-3.5 text-gray-400" />
+                      <div className="flex items-center gap-2 text-slate-600 dark:text-slate-300">
+                        <div className="p-1.5 rounded-lg bg-green-100 dark:bg-green-900/30">
+                          <Phone className="h-3.5 w-3.5 text-green-600 dark:text-green-400" />
+                        </div>
                         {contact.phone_number}
                       </div>
                     ) : (
-                      <span className="text-gray-400">-</span>
+                      <span className="text-slate-400">-</span>
                     )}
                   </TableCell>
                   <TableCell>
                     {contact.company ? (
-                      <div className="flex items-center gap-1.5 text-gray-600 dark:text-gray-300">
-                        <Building2 className="h-3.5 w-3.5 text-gray-400" />
+                      <div className="flex items-center gap-2 text-slate-600 dark:text-slate-300">
+                        <div className="p-1.5 rounded-lg bg-purple-100 dark:bg-purple-900/30">
+                          <Building2 className="h-3.5 w-3.5 text-purple-600 dark:text-purple-400" />
+                        </div>
                         {contact.company}
                       </div>
                     ) : (
-                      <span className="text-gray-400">-</span>
+                      <span className="text-slate-400">-</span>
                     )}
                   </TableCell>
                   <TableCell>
                     {contact.has_lead ? (
-                      <Badge className="bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 border-0">
-                        <CheckCircle2 className="h-3 w-3 mr-1" />
+                      <span className="inline-flex items-center px-3 py-1 rounded-full bg-gradient-to-r from-green-500 to-emerald-500 text-white text-xs font-semibold shadow-sm">
+                        <CheckCircle2 className="h-3 w-3 mr-1.5" />
                         {t('crm.contacts.hasLead')}
-                      </Badge>
+                      </span>
                     ) : (
-                      <Badge className="bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400 border-0">
-                        <UserPlus className="h-3 w-3 mr-1" />
+                      <span className="inline-flex items-center px-3 py-1 rounded-full bg-gradient-to-r from-orange-500 to-red-500 text-white text-xs font-semibold shadow-sm">
+                        <UserPlus className="h-3 w-3 mr-1.5" />
                         {t('crm.contacts.noLead')}
-                      </Badge>
+                      </span>
                     )}
                   </TableCell>
                   <TableCell>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                        <Button variant="ghost" size="sm" className="h-8 w-8 p-0 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700">
                           <MoreVertical className="h-4 w-4" />
                         </Button>
                       </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end" className="dark:bg-slate-800 dark:border-slate-700">
+                      <DropdownMenuContent align="end" className="rounded-xl dark:bg-slate-800 dark:border-slate-700">
                         <DropdownMenuLabel>{t('crm.common.actions')}</DropdownMenuLabel>
-                        <DropdownMenuItem onClick={() => handleViewDetails(contact)}>
+                        <DropdownMenuItem onClick={() => handleViewDetails(contact)} className="rounded-lg">
                           <Eye className="h-4 w-4 mr-2" />
                           {t('crm.common.view')}
                         </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => handleEditContact(contact)}>
+                        <DropdownMenuItem onClick={() => handleEditContact(contact)} className="rounded-lg">
                           <Edit className="h-4 w-4 mr-2" />
                           {t('crm.contacts.editContact')}
                         </DropdownMenuItem>
                         <DropdownMenuSeparator />
                         {!contact.has_lead ? (
-                          <DropdownMenuItem onClick={() => handleConvertToLead(contact)} className="text-orange-600 dark:text-orange-400">
+                          <DropdownMenuItem onClick={() => handleConvertToLead(contact)} className="text-blue-600 dark:text-blue-400 rounded-lg">
                             <ArrowRight className="h-4 w-4 mr-2" />
                             {t('crm.contacts.actions.createLead')}
                           </DropdownMenuItem>
                         ) : (
-                          <DropdownMenuItem onClick={() => navigate('/dashboard/crm/leads')}>
+                          <DropdownMenuItem onClick={() => navigate('/dashboard/crm/leads')} className="rounded-lg">
                             <ArrowRight className="h-4 w-4 mr-2" />
                             {t('crm.common.view')} {t('crm.leads.title')}
                           </DropdownMenuItem>
                         )}
                         <DropdownMenuSeparator />
-                        <DropdownMenuItem className="text-red-600 dark:text-red-400">
+                        <DropdownMenuItem className="text-red-600 dark:text-red-400 rounded-lg">
                           <Trash2 className="h-4 w-4 mr-2" />
                           {t('crm.contacts.deleteContact')}
                         </DropdownMenuItem>
@@ -605,52 +629,57 @@ export default function ContactsPage() {
             )}
           </TableBody>
         </Table>
-      </Card>
+      </div>
 
       {/* Create Contact Dialog */}
       <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
-        <DialogContent className="max-w-md dark:bg-slate-800 dark:border-slate-700">
+        <DialogContent className="max-w-md rounded-2xl dark:bg-slate-800 dark:border-slate-700">
           <DialogHeader>
-            <DialogTitle className="text-xl font-bold bg-gradient-to-r from-orange-600 to-red-600 bg-clip-text text-transparent">
-              {t('crm.contacts.addContact')}
-            </DialogTitle>
-            <DialogDescription className="dark:text-gray-400">
+            <div className="flex items-center gap-3 mb-2">
+              <div className="p-2.5 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 shadow-lg shadow-blue-500/25">
+                <UserPlus className="h-5 w-5 text-white" />
+              </div>
+              <DialogTitle className="text-xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+                {t('crm.contacts.addContact')}
+              </DialogTitle>
+            </div>
+            <DialogDescription className="text-slate-500 dark:text-slate-400">
               {t('crm.contacts.addContactDescription')}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <Label>{t('crm.contacts.fields.fullName')} <span className="text-red-500">*</span></Label>
+              <Label className="text-slate-700 dark:text-slate-300 font-medium">{t('crm.contacts.fields.fullName')} <span className="text-red-500">*</span></Label>
               <Input placeholder="John Doe" value={newContact.name}
                 onChange={(e) => setNewContact({ ...newContact, name: e.target.value })}
-                className="dark:bg-slate-900 dark:border-slate-600" />
+                className="rounded-xl border-slate-200/80 dark:border-slate-600/80 dark:bg-slate-900" />
             </div>
             <div className="space-y-2">
-              <Label>{t('crm.contacts.fields.email')} <span className="text-red-500">*</span></Label>
+              <Label className="text-slate-700 dark:text-slate-300 font-medium">{t('crm.contacts.fields.email')} <span className="text-red-500">*</span></Label>
               <Input type="email" placeholder="john@example.com" value={newContact.email}
                 onChange={(e) => setNewContact({ ...newContact, email: e.target.value })}
-                className="dark:bg-slate-900 dark:border-slate-600" />
+                className="rounded-xl border-slate-200/80 dark:border-slate-600/80 dark:bg-slate-900" />
             </div>
             <div className="space-y-2">
-              <Label>{t('crm.contacts.fields.phone')}</Label>
+              <Label className="text-slate-700 dark:text-slate-300 font-medium">{t('crm.contacts.fields.phone')}</Label>
               <Input placeholder="+1 234 567 8900" value={newContact.phone_number}
                 onChange={(e) => setNewContact({ ...newContact, phone_number: e.target.value })}
-                className="dark:bg-slate-900 dark:border-slate-600" />
+                className="rounded-xl border-slate-200/80 dark:border-slate-600/80 dark:bg-slate-900" />
             </div>
             <div className="space-y-2">
-              <Label>{t('crm.contacts.fields.company')}</Label>
+              <Label className="text-slate-700 dark:text-slate-300 font-medium">{t('crm.contacts.fields.company')}</Label>
               <Input placeholder="Acme Inc." value={newContact.company}
                 onChange={(e) => setNewContact({ ...newContact, company: e.target.value })}
-                className="dark:bg-slate-900 dark:border-slate-600" />
+                className="rounded-xl border-slate-200/80 dark:border-slate-600/80 dark:bg-slate-900" />
             </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => { setCreateDialogOpen(false); setNewContact({ name: '', email: '', phone_number: '', company: '' }); }}
-              className="dark:bg-slate-700 dark:border-slate-600">
+              className="rounded-xl dark:bg-slate-700 dark:border-slate-600">
               {t('crm.common.cancel')}
             </Button>
             <Button onClick={handleCreateContact}
-              className="bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-700 hover:to-red-700 text-white">
+              className="rounded-xl bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white shadow-lg shadow-blue-500/25">
               <Plus className="h-4 w-4 mr-2" />{t('crm.contacts.addContact')}
             </Button>
           </DialogFooter>

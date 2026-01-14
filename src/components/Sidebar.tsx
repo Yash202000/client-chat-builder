@@ -21,14 +21,16 @@ const DraggableNode = ({ type, label, icon, nodeData, isRTL, isCollapsed = false
 
   return (
     <div
-      className={`flex items-center ${isCollapsed ? 'justify-center p-2' : 'p-3'} mb-2 border border-slate-200 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-800 cursor-grab hover:scale-105 hover:shadow-lg transition-all duration-150 text-slate-800 dark:text-slate-200`}
+      className={`flex items-center ${isCollapsed ? 'justify-center p-2.5' : 'px-3 py-2.5'} mb-2 border border-slate-200/80 dark:border-slate-700/60 rounded-xl bg-gradient-to-r from-white to-slate-50 dark:from-slate-800 dark:to-slate-800/80 cursor-grab hover:scale-[1.02] hover:shadow-lg hover:shadow-slate-200/50 dark:hover:shadow-slate-900/50 hover:border-blue-300 dark:hover:border-blue-600 transition-all duration-200 text-slate-800 dark:text-slate-200 group`}
       onDragStart={(event) => onDragStart(event, type)}
       draggable
       title={isCollapsed ? label : undefined}
     >
-      <div className="text-slate-600 dark:text-slate-400">{icon}</div>
+      <div className="flex-shrink-0 p-1.5 rounded-lg bg-slate-100 dark:bg-slate-700/50 group-hover:bg-blue-50 dark:group-hover:bg-blue-900/30 transition-colors">
+        {icon}
+      </div>
       {!isCollapsed && (
-        <span className={`${isRTL ? 'mr-3' : 'ml-3'} text-sm font-medium`}>{label}</span>
+        <span className={`${isRTL ? 'mr-2.5' : 'ml-2.5'} text-sm font-medium truncate`}>{label}</span>
       )}
     </div>
   );
@@ -39,21 +41,26 @@ const AccordionSection = ({ title, children, isRTL, isCollapsed = false }) => {
 
     // When sidebar is collapsed, just show the children (icons only) without accordion header
     if (isCollapsed) {
-        return <div className="py-2 border-t border-slate-200 dark:border-slate-700 mt-2 pt-2">{children}</div>;
+        return <div className="py-2 border-t border-slate-200/60 dark:border-slate-700/50 mt-3 pt-3">{children}</div>;
     }
 
     return (
-        <div className="mt-4 pt-4 border-t border-slate-200 dark:border-slate-700">
+        <div className="mt-4 pt-4 border-t border-slate-200/60 dark:border-slate-700/50">
             <div
                 onClick={() => setIsOpen(!isOpen)}
-                className={`flex items-center justify-between py-2 cursor-pointer font-bold text-base text-slate-800 dark:text-slate-200 hover:text-blue-600 dark:hover:text-blue-400 transition-colors `}
+                className={`flex items-center justify-between py-2 px-3 -mx-1 rounded-lg cursor-pointer font-semibold text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800/50 hover:text-blue-600 dark:hover:text-blue-400 transition-all duration-150`}
             >
-                {title}
-                <div className="text-slate-600 dark:text-slate-400">
-                    {isOpen ? <ChevronDown size={20} /> : <ChevronRight size={20} />}
+                <span className="flex items-center gap-2">
+                    <span className="w-1.5 h-1.5 rounded-full bg-gradient-to-br from-blue-500 to-indigo-500"></span>
+                    {title}
+                </span>
+                <div className={`text-slate-400 dark:text-slate-500 transition-transform duration-200 ${isOpen ? 'rotate-0' : '-rotate-90'}`}>
+                    <ChevronDown size={18} />
                 </div>
             </div>
-            {isOpen && <div className="py-2">{children}</div>}
+            <div className={`overflow-hidden transition-all duration-200 ${isOpen ? 'max-h-[2000px] opacity-100 pt-2' : 'max-h-0 opacity-0'}`}>
+                {children}
+            </div>
         </div>
     );
 }
@@ -88,27 +95,34 @@ const Sidebar = () => {
 
   return (
     <aside
-      className={`${isCollapsed ? 'w-14' : 'w-64'} border-r border-slate-200 dark:border-slate-700 p-4 bg-slate-50 dark:bg-slate-900 overflow-y-auto transition-all duration-200 ease-in-out`}
+      className={`${isCollapsed ? 'w-16' : 'w-72'} border-r border-slate-200/60 dark:border-slate-700/50 bg-gradient-to-b from-white via-slate-50 to-slate-100 dark:from-slate-900 dark:via-slate-900 dark:to-slate-950 overflow-y-auto transition-all duration-300 ease-in-out shadow-sm`}
       dir={isRTL ? 'rtl' : 'ltr'}
     >
       {/* Sidebar Header with Toggle Button */}
-      <div className={`flex items-center ${isCollapsed ? 'justify-center' : 'justify-between'} mb-4`}>
+      <div className={`sticky top-0 z-10 flex items-center ${isCollapsed ? 'justify-center px-2' : 'justify-between px-4'} py-4 bg-gradient-to-r from-white to-slate-50 dark:from-slate-900 dark:to-slate-900 border-b border-slate-200/60 dark:border-slate-700/50 backdrop-blur-sm`}>
         {!isCollapsed && (
-          <span className="font-semibold text-slate-700 dark:text-slate-200">
-            {t("workflows.editor.sidebar.title") || "Nodes"}
-          </span>
+          <div className="flex items-center gap-2">
+            <div className="p-1.5 rounded-lg bg-gradient-to-br from-blue-500 to-indigo-600 shadow-md shadow-blue-500/20">
+              <Layers className="h-4 w-4 text-white" />
+            </div>
+            <span className="font-bold text-slate-800 dark:text-slate-100">
+              {t("workflows.editor.sidebar.title") || "Nodes"}
+            </span>
+          </div>
         )}
         <Button
           variant="ghost"
           size="icon"
           onClick={() => setIsCollapsed(!isCollapsed)}
-          className="h-7 w-7"
+          className="h-8 w-8 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
           title={isCollapsed ? t("workflows.editor.sidebar.expand") || "Expand sidebar" : t("workflows.editor.sidebar.collapse") || "Collapse sidebar"}
         >
           {isCollapsed ? <PanelLeft className="h-4 w-4" /> : <PanelLeftClose className="h-4 w-4" />}
           <span className="sr-only">{isCollapsed ? "Expand" : "Collapse"} Sidebar</span>
         </Button>
       </div>
+
+      <div className={`${isCollapsed ? 'px-2' : 'px-4'} pb-4`}>
 
       <AccordionSection title={t("workflows.editor.sidebar.triggers")} isRTL={isRTL} isCollapsed={isCollapsed}>
         <DraggableNode type="start" label={t("workflows.editor.sidebar.nodes.start") || "Start"} icon={<PlayCircle size={20} className="text-emerald-500" />} nodeData={{}} isRTL={isRTL} isCollapsed={isCollapsed} />
@@ -196,6 +210,7 @@ const Sidebar = () => {
           ))}
         </AccordionSection>
       )}
+      </div>
     </aside>
   );
 };

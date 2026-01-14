@@ -9,6 +9,7 @@ import {
   Tag as TagIcon,
   Users,
   Target,
+  RefreshCw,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -223,8 +224,13 @@ export default function TagsPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500"></div>
+      <div className="flex flex-col items-center justify-center h-64 gap-4">
+        <div className="relative">
+          <div className="h-12 w-12 rounded-2xl bg-gradient-to-br from-orange-500 to-red-600 flex items-center justify-center shadow-xl shadow-orange-500/25">
+            <RefreshCw className="h-6 w-6 text-white animate-spin" />
+          </div>
+        </div>
+        <p className="text-sm text-slate-500 dark:text-slate-400">{t('crm.common.loading')}</p>
       </div>
     );
   }
@@ -233,17 +239,22 @@ export default function TagsPage() {
     <div className="space-y-6 p-6 animate-fade-in">
       {/* Header */}
       <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
-        <div>
-          <h2 className="text-4xl font-bold bg-gradient-to-r from-orange-600 to-red-600 bg-clip-text text-transparent mb-2">
-            {t('crm.tags.title')}
-          </h2>
-          <p className="text-gray-600 dark:text-gray-400 text-lg">
-            {t('crm.tags.subtitle')}
-          </p>
+        <div className="flex items-center gap-4">
+          <div className="p-4 rounded-2xl bg-gradient-to-br from-orange-500 to-red-600 shadow-xl shadow-orange-500/25">
+            <TagIcon className="h-8 w-8 text-white" />
+          </div>
+          <div>
+            <h2 className="text-3xl font-bold bg-gradient-to-r from-orange-600 to-red-600 bg-clip-text text-transparent">
+              {t('crm.tags.title')}
+            </h2>
+            <p className="text-slate-600 dark:text-slate-400">
+              {t('crm.tags.subtitle')}
+            </p>
+          </div>
         </div>
         <Button
           onClick={openCreateDialog}
-          className="bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-700 hover:to-red-700 text-white"
+          className="bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-700 hover:to-red-700 text-white rounded-xl shadow-lg shadow-orange-500/25 hover:shadow-xl hover:shadow-orange-500/30 transition-all"
         >
           <Plus className="h-4 w-4 mr-2" />
           {t('crm.tags.addTag')}
@@ -252,190 +263,180 @@ export default function TagsPage() {
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-        <Card className="border-slate-200 dark:border-slate-700 dark:bg-slate-800">
-          <CardContent className="p-5">
-            <div className="flex items-start justify-between">
-              <div>
-                <p className="text-xs font-medium text-gray-600 dark:text-gray-400 uppercase tracking-wider mb-1.5">
-                  {t('crm.tags.stats.total')}
-                </p>
-                <p className="text-2xl font-bold dark:text-white">{tags.length}</p>
-              </div>
-              <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-orange-100 to-orange-200 dark:from-orange-900/50 dark:to-orange-800/50 flex items-center justify-center">
-                <TagIcon className="h-6 w-6 text-orange-600 dark:text-orange-400" />
-              </div>
+        <div className="p-5 rounded-2xl border border-orange-200/80 dark:border-orange-700/60 bg-gradient-to-br from-white to-orange-50 dark:from-slate-800 dark:to-slate-900 shadow-xl shadow-orange-500/10 hover:shadow-2xl hover:shadow-orange-500/20 hover:scale-[1.02] transition-all duration-300">
+          <div className="flex items-start justify-between">
+            <div>
+              <p className="text-xs font-medium text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1.5">
+                {t('crm.tags.stats.total')}
+              </p>
+              <p className="text-2xl font-bold text-slate-900 dark:text-white">{tags.length}</p>
             </div>
-          </CardContent>
-        </Card>
+            <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-orange-500 to-red-600 flex items-center justify-center shadow-lg shadow-orange-500/25">
+              <TagIcon className="h-6 w-6 text-white" />
+            </div>
+          </div>
+        </div>
 
-        <Card className="border-slate-200 dark:border-slate-700 dark:bg-slate-800">
-          <CardContent className="p-5">
-            <div className="flex items-start justify-between">
-              <div>
-                <p className="text-xs font-medium text-gray-600 dark:text-gray-400 uppercase tracking-wider mb-1.5">
-                  {t('crm.tags.stats.taggedLeads')}
-                </p>
-                <p className="text-2xl font-bold dark:text-white">{totalLeads}</p>
-              </div>
-              <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-purple-100 to-purple-200 dark:from-purple-900/50 dark:to-purple-800/50 flex items-center justify-center">
-                <Target className="h-6 w-6 text-purple-600 dark:text-purple-400" />
-              </div>
+        <div className="p-5 rounded-2xl border border-purple-200/80 dark:border-purple-700/60 bg-gradient-to-br from-white to-purple-50 dark:from-slate-800 dark:to-slate-900 shadow-xl shadow-purple-500/10 hover:shadow-2xl hover:shadow-purple-500/20 hover:scale-[1.02] transition-all duration-300">
+          <div className="flex items-start justify-between">
+            <div>
+              <p className="text-xs font-medium text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1.5">
+                {t('crm.tags.stats.taggedLeads')}
+              </p>
+              <p className="text-2xl font-bold text-slate-900 dark:text-white">{totalLeads}</p>
             </div>
-          </CardContent>
-        </Card>
+            <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center shadow-lg shadow-purple-500/25">
+              <Target className="h-6 w-6 text-white" />
+            </div>
+          </div>
+        </div>
 
-        <Card className="border-slate-200 dark:border-slate-700 dark:bg-slate-800">
-          <CardContent className="p-5">
-            <div className="flex items-start justify-between">
-              <div>
-                <p className="text-xs font-medium text-gray-600 dark:text-gray-400 uppercase tracking-wider mb-1.5">
-                  {t('crm.tags.stats.taggedContacts')}
-                </p>
-                <p className="text-2xl font-bold dark:text-white">{totalContacts}</p>
-              </div>
-              <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-blue-100 to-blue-200 dark:from-blue-900/50 dark:to-blue-800/50 flex items-center justify-center">
-                <Users className="h-6 w-6 text-blue-600 dark:text-blue-400" />
-              </div>
+        <div className="p-5 rounded-2xl border border-blue-200/80 dark:border-blue-700/60 bg-gradient-to-br from-white to-blue-50 dark:from-slate-800 dark:to-slate-900 shadow-xl shadow-blue-500/10 hover:shadow-2xl hover:shadow-blue-500/20 hover:scale-[1.02] transition-all duration-300">
+          <div className="flex items-start justify-between">
+            <div>
+              <p className="text-xs font-medium text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1.5">
+                {t('crm.tags.stats.taggedContacts')}
+              </p>
+              <p className="text-2xl font-bold text-slate-900 dark:text-white">{totalContacts}</p>
             </div>
-          </CardContent>
-        </Card>
+            <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-blue-500 to-cyan-600 flex items-center justify-center shadow-lg shadow-blue-500/25">
+              <Users className="h-6 w-6 text-white" />
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Search */}
-      <Card className="border-slate-200 dark:border-slate-700 dark:bg-slate-800">
-        <CardContent className="p-4">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-            <Input
-              placeholder={t('crm.tags.searchPlaceholder')}
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10 dark:bg-slate-900 dark:border-slate-600"
-            />
-          </div>
-        </CardContent>
-      </Card>
+      <div className="p-4 rounded-2xl border border-slate-200/80 dark:border-slate-700/60 bg-gradient-to-br from-white to-slate-50 dark:from-slate-800 dark:to-slate-900 shadow-xl">
+        <div className="relative">
+          <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 h-4 w-4 text-slate-400" />
+          <Input
+            placeholder={t('crm.tags.searchPlaceholder')}
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-11 rounded-xl border-slate-200 dark:border-slate-600 dark:bg-slate-800/50 focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500"
+          />
+        </div>
+      </div>
 
       {/* Tags Grid */}
       {filteredTags.length === 0 ? (
-        <Card className="border-slate-200 dark:border-slate-700 dark:bg-slate-800">
-          <CardContent className="py-12">
+        <div className="rounded-2xl border border-slate-200/80 dark:border-slate-700/60 bg-gradient-to-br from-white to-slate-50 dark:from-slate-800 dark:to-slate-900 shadow-xl">
+          <div className="py-12">
             <div className="flex flex-col items-center">
-              <div className="h-16 w-16 rounded-full bg-slate-100 dark:bg-slate-700 flex items-center justify-center mb-4">
-                <TagIcon className="h-8 w-8 text-slate-400" />
+              <div className="h-16 w-16 rounded-2xl bg-gradient-to-br from-orange-100 to-red-100 dark:from-orange-900/30 dark:to-red-900/30 flex items-center justify-center mb-4">
+                <TagIcon className="h-8 w-8 text-orange-500" />
               </div>
-              <p className="text-slate-500 dark:text-slate-400">{t('crm.tags.noTags')}</p>
+              <p className="text-slate-500 dark:text-slate-400 mb-2">{t('crm.tags.noTags')}</p>
               <Button
                 variant="link"
-                className="mt-2 text-orange-600"
+                className="text-orange-600 hover:text-orange-700"
                 onClick={openCreateDialog}
               >
                 {t('crm.tags.createFirst')}
               </Button>
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
           {filteredTags.map((tag) => (
-            <Card
+            <div
               key={tag.id}
-              className="border-slate-200 dark:border-slate-700 dark:bg-slate-800 hover:shadow-lg transition-all duration-200"
+              className="p-4 rounded-2xl border border-slate-200/80 dark:border-slate-700/60 bg-gradient-to-br from-white to-slate-50 dark:from-slate-800 dark:to-slate-900 shadow-lg hover:shadow-xl hover:scale-[1.02] transition-all duration-300"
             >
-              <CardContent className="p-4">
-                <div className="flex items-start justify-between mb-3">
-                  <div className="flex items-center gap-2">
-                    <div
-                      className="h-4 w-4 rounded-full"
-                      style={{ backgroundColor: tag.color }}
-                    />
-                    <h3 className="font-semibold dark:text-white">{tag.name}</h3>
-                  </div>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                        <MoreVertical className="h-4 w-4" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuItem onClick={() => openEditDialog(tag)}>
-                        <Edit className="h-4 w-4 mr-2" />
-                        {t('crm.common.edit')}
-                      </DropdownMenuItem>
-                      <DropdownMenuItem
-                        onClick={() => {
-                          setDeletingTag(tag);
-                          setDeleteDialogOpen(true);
-                        }}
-                        className="text-red-600 dark:text-red-400"
-                      >
-                        <Trash2 className="h-4 w-4 mr-2" />
-                        {t('crm.common.delete')}
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
+              <div className="flex items-start justify-between mb-3">
+                <div className="flex items-center gap-3">
+                  <div
+                    className="h-5 w-5 rounded-lg shadow-sm"
+                    style={{ backgroundColor: tag.color }}
+                  />
+                  <h3 className="font-semibold text-slate-900 dark:text-white">{tag.name}</h3>
                 </div>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="sm" className="h-8 w-8 p-0 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700">
+                      <MoreVertical className="h-4 w-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="rounded-xl">
+                    <DropdownMenuItem onClick={() => openEditDialog(tag)} className="rounded-lg">
+                      <Edit className="h-4 w-4 mr-2" />
+                      {t('crm.common.edit')}
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      onClick={() => {
+                        setDeletingTag(tag);
+                        setDeleteDialogOpen(true);
+                      }}
+                      className="text-red-600 dark:text-red-400 rounded-lg"
+                    >
+                      <Trash2 className="h-4 w-4 mr-2" />
+                      {t('crm.common.delete')}
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
 
-                {tag.description && (
-                  <p className="text-sm text-gray-500 dark:text-gray-400 mb-3 line-clamp-2">
-                    {tag.description}
-                  </p>
-                )}
+              {tag.description && (
+                <p className="text-sm text-slate-500 dark:text-slate-400 mb-3 line-clamp-2">
+                  {tag.description}
+                </p>
+              )}
 
-                <div className="flex items-center gap-2 text-xs">
-                  <Badge variant="outline" className="dark:border-slate-600">
-                    {t(`crm.tags.entityTypes.${tag.entity_type}`)}
-                  </Badge>
+              <div className="flex items-center gap-2 text-xs">
+                <Badge variant="outline" className="rounded-lg border-slate-200 dark:border-slate-600">
+                  {t(`crm.tags.entityTypes.${tag.entity_type}`)}
+                </Badge>
+              </div>
+
+              <div className="flex items-center gap-4 mt-3 pt-3 border-t border-slate-200/80 dark:border-slate-700/60">
+                <div className="flex items-center gap-1.5 text-sm text-slate-500 dark:text-slate-400">
+                  <Target className="h-3.5 w-3.5 text-purple-500" />
+                  <span>{tag.lead_count} {t('crm.tags.leads')}</span>
                 </div>
-
-                <div className="flex items-center gap-4 mt-3 pt-3 border-t border-slate-200 dark:border-slate-700">
-                  <div className="flex items-center gap-1 text-sm text-gray-500 dark:text-gray-400">
-                    <Target className="h-3.5 w-3.5" />
-                    <span>{tag.lead_count} {t('crm.tags.leads')}</span>
-                  </div>
-                  <div className="flex items-center gap-1 text-sm text-gray-500 dark:text-gray-400">
-                    <Users className="h-3.5 w-3.5" />
-                    <span>{tag.contact_count} {t('crm.tags.contacts')}</span>
-                  </div>
+                <div className="flex items-center gap-1.5 text-sm text-slate-500 dark:text-slate-400">
+                  <Users className="h-3.5 w-3.5 text-blue-500" />
+                  <span>{tag.contact_count} {t('crm.tags.contacts')}</span>
                 </div>
-              </CardContent>
-            </Card>
+              </div>
+            </div>
           ))}
         </div>
       )}
 
       {/* Create/Edit Dialog */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="dark:bg-slate-800">
+        <DialogContent className="rounded-2xl dark:bg-slate-800 border-slate-200/80 dark:border-slate-700/60">
           <DialogHeader>
-            <DialogTitle className="dark:text-white">
+            <DialogTitle className="text-xl font-semibold text-slate-900 dark:text-white">
               {editingTag ? t('crm.tags.editTag') : t('crm.tags.addTag')}
             </DialogTitle>
           </DialogHeader>
 
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <Label htmlFor="name">{t('crm.tags.fields.name')} *</Label>
+              <Label htmlFor="name" className="text-slate-700 dark:text-slate-300">{t('crm.tags.fields.name')} *</Label>
               <Input
                 id="name"
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                 placeholder={t('crm.tags.namePlaceholder')}
-                className="dark:bg-slate-900 dark:border-slate-600"
+                className="rounded-xl dark:bg-slate-900 dark:border-slate-600 focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500"
               />
             </div>
 
             <div className="space-y-2">
-              <Label>{t('crm.tags.fields.color')}</Label>
-              <div className="flex flex-wrap gap-2">
+              <Label className="text-slate-700 dark:text-slate-300">{t('crm.tags.fields.color')}</Label>
+              <div className="flex flex-wrap gap-2 p-3 rounded-xl bg-slate-50 dark:bg-slate-900/50 border border-slate-200/80 dark:border-slate-700/60">
                 {COLOR_OPTIONS.map((color) => (
                   <button
                     key={color.value}
                     type="button"
                     onClick={() => setFormData({ ...formData, color: color.value })}
-                    className={`h-8 w-8 rounded-full border-2 transition-all ${
+                    className={`h-8 w-8 rounded-lg border-2 transition-all shadow-sm ${
                       formData.color === color.value
-                        ? 'border-gray-900 dark:border-white scale-110'
+                        ? 'border-slate-900 dark:border-white scale-110 ring-2 ring-offset-2 ring-slate-400'
                         : 'border-transparent hover:scale-105'
                     }`}
                     style={{ backgroundColor: color.value }}
@@ -446,43 +447,43 @@ export default function TagsPage() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="description">{t('crm.tags.fields.description')}</Label>
+              <Label htmlFor="description" className="text-slate-700 dark:text-slate-300">{t('crm.tags.fields.description')}</Label>
               <Textarea
                 id="description"
                 value={formData.description}
                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                 placeholder={t('crm.tags.descriptionPlaceholder')}
                 rows={2}
-                className="dark:bg-slate-900 dark:border-slate-600"
+                className="rounded-xl dark:bg-slate-900 dark:border-slate-600 focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500"
               />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="entity_type">{t('crm.tags.fields.entityType')}</Label>
+              <Label htmlFor="entity_type" className="text-slate-700 dark:text-slate-300">{t('crm.tags.fields.entityType')}</Label>
               <Select
                 value={formData.entity_type}
                 onValueChange={(value) => setFormData({ ...formData, entity_type: value })}
               >
-                <SelectTrigger className="dark:bg-slate-900 dark:border-slate-600">
+                <SelectTrigger className="rounded-xl dark:bg-slate-900 dark:border-slate-600">
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="both">{t('crm.tags.entityTypes.both')}</SelectItem>
-                  <SelectItem value="lead">{t('crm.tags.entityTypes.lead')}</SelectItem>
-                  <SelectItem value="contact">{t('crm.tags.entityTypes.contact')}</SelectItem>
+                <SelectContent className="rounded-xl">
+                  <SelectItem value="both" className="rounded-lg">{t('crm.tags.entityTypes.both')}</SelectItem>
+                  <SelectItem value="lead" className="rounded-lg">{t('crm.tags.entityTypes.lead')}</SelectItem>
+                  <SelectItem value="contact" className="rounded-lg">{t('crm.tags.entityTypes.contact')}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
           </div>
 
           <DialogFooter>
-            <Button variant="outline" onClick={() => setDialogOpen(false)}>
+            <Button variant="outline" onClick={() => setDialogOpen(false)} className="rounded-xl">
               {t('crm.common.cancel')}
             </Button>
             <Button
               onClick={handleSubmit}
               disabled={saving}
-              className="bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-700 hover:to-red-700 text-white"
+              className="bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-700 hover:to-red-700 text-white rounded-xl shadow-lg shadow-orange-500/25"
             >
               {saving ? t('crm.common.saving') : (editingTag ? t('crm.common.save') : t('crm.common.create'))}
             </Button>
@@ -492,18 +493,18 @@ export default function TagsPage() {
 
       {/* Delete Confirmation Dialog */}
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-        <AlertDialogContent>
+        <AlertDialogContent className="rounded-2xl">
           <AlertDialogHeader>
-            <AlertDialogTitle>{t('crm.tags.deleteConfirmTitle')}</AlertDialogTitle>
-            <AlertDialogDescription>
+            <AlertDialogTitle className="text-xl font-semibold text-slate-900 dark:text-white">{t('crm.tags.deleteConfirmTitle')}</AlertDialogTitle>
+            <AlertDialogDescription className="text-slate-500 dark:text-slate-400">
               {t('crm.tags.deleteConfirmDesc', { name: deletingTag?.name })}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>{t('crm.common.cancel')}</AlertDialogCancel>
+            <AlertDialogCancel className="rounded-xl">{t('crm.common.cancel')}</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleDelete}
-              className="bg-red-600 hover:bg-red-700"
+              className="bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 rounded-xl shadow-lg shadow-red-500/25"
             >
               {t('crm.common.delete')}
             </AlertDialogAction>

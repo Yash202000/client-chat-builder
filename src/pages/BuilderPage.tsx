@@ -8,7 +8,7 @@ import { AgentBuilder } from "@/components/AgentBuilder";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Agent } from "@/types";
 import { toast } from "@/hooks/use-toast";
-import { History, PlusCircle } from "lucide-react";
+import { History, PlusCircle, Workflow } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Comments } from "@/components/Comments";
@@ -135,13 +135,18 @@ const BuilderPage = () => {
 
   return (
     <div className="space-y-6 p-6 animate-fade-in">
-      {/* Enhanced Header */}
-      <div className={`flex justify-between items-start `}>
-        <div>
-          <h2 className="text-4xl font-bold bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent mb-2">
-            {t('builder.title')}
-          </h2>
-          <p className="text-muted-foreground text-lg">{t('builder.subtitle')}</p>
+      {/* Modern Header */}
+      <div className={`flex justify-between items-center`}>
+        <div className="flex items-center gap-4">
+          <div className="h-14 w-14 rounded-2xl bg-gradient-to-br from-emerald-500 via-green-500 to-teal-500 flex items-center justify-center shadow-lg shadow-emerald-500/25">
+            <Workflow className="h-7 w-7 text-white" />
+          </div>
+          <div>
+            <h2 className="text-3xl font-bold text-slate-900 dark:text-white">
+              {t('builder.title')}
+            </h2>
+            <p className="text-slate-500 dark:text-slate-400">{t('builder.subtitle')}</p>
+          </div>
         </div>
         <div className={`flex gap-2`}>
           {agentId && agent && (
@@ -149,7 +154,7 @@ const BuilderPage = () => {
               variant="outline"
               onClick={() => createNewVersionMutation.mutate(agent.id)}
               disabled={createNewVersionMutation.isPending}
-              className="btn-hover-lift"
+              className="border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800"
             >
               <PlusCircle className={`h-4 w-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
               {createNewVersionMutation.isPending ? t('builder.creating') : t('builder.newVersion')}
@@ -159,7 +164,7 @@ const BuilderPage = () => {
             <Button
               variant="outline"
               onClick={() => setIsHistoryDialogOpen(true)}
-              className="btn-hover-lift"
+              className="border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800"
             >
               <History className={`h-4 w-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
               {t('builder.history')}
@@ -168,7 +173,7 @@ const BuilderPage = () => {
           {!agentId && (
             <Button
               onClick={() => setIsCreateAgentDialogOpen(true)}
-              className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white btn-hover-lift"
+              className="bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-700 hover:to-green-700 text-white shadow-lg shadow-emerald-500/25 hover:shadow-emerald-500/40 transition-all duration-200"
             >
               <PlusCircle className={`h-4 w-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
               {t('builder.createNewAgent')}
@@ -186,21 +191,21 @@ const BuilderPage = () => {
           />
         </>
       ) : !agentId && (
-        <div className="flex flex-col items-center justify-center h-[60vh] border-2 border-dashed border-slate-300 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-800 card-shadow">
-          <div className="text-center p-8">
-            <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-gradient-to-br from-green-100 to-emerald-100 dark:from-green-900/30 dark:to-emerald-900/30 mb-6">
-              <span className="text-4xl">🤖</span>
+        <div className="flex flex-col items-center justify-center h-[60vh] rounded-2xl bg-gradient-to-br from-slate-50 to-white dark:from-slate-800 dark:to-slate-900 border border-slate-200 dark:border-slate-700 shadow-lg shadow-slate-200/50 dark:shadow-none">
+          <div className="text-center p-8 max-w-md">
+            <div className="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-gradient-to-br from-emerald-500 to-green-500 mb-6 shadow-lg shadow-emerald-500/30">
+              <Workflow className="h-10 w-10 text-white" />
             </div>
-            <h3 className="text-2xl font-bold mb-2 dark:text-white">{t('builder.selectAgent')}</h3>
-            <p className="mb-6 text-lg text-muted-foreground">{t('builder.selectAgentDesc')}</p>
+            <h3 className="text-2xl font-bold mb-2 text-slate-900 dark:text-white">{t('builder.selectAgent')}</h3>
+            <p className="mb-6 text-slate-500 dark:text-slate-400">{t('builder.selectAgentDesc')}</p>
             {isLoadingAgents ? (
               <div className={`flex items-center justify-center ${isRTL ? 'flex-row-reverse' : ''}`}>
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600"></div>
-                <p className={`text-muted-foreground ${isRTL ? 'mr-3' : 'ml-3'}`}>{t('builder.loadingAgents')}</p>
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-600"></div>
+                <p className={`text-slate-500 ${isRTL ? 'mr-3' : 'ml-3'}`}>{t('builder.loadingAgents')}</p>
               </div>
             ) : (
               <Select onValueChange={(value) => navigate(`/dashboard/builder/${value}`)}>
-                <SelectTrigger className="w-[320px] h-12">
+                <SelectTrigger className="w-[320px] h-12 bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 shadow-sm">
                   <SelectValue placeholder={t('builder.selectAnAgent')} />
                 </SelectTrigger>
                 <SelectContent>

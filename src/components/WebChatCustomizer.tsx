@@ -99,32 +99,37 @@ export const WebChatCustomizer: React.FC<WebChatCustomizerPropsExtended> = ({
     setShowGradientEditor(true);
   };
   return (
-    <Card className="card-shadow-lg bg-white dark:bg-slate-800 h-fit flex flex-col">
-      <CardHeader className="border-b border-slate-200 dark:border-slate-700 bg-gradient-to-r from-slate-50 to-slate-100 dark:from-slate-800 dark:to-slate-900 flex-shrink-0">
-        <div className={`flex items-center justify-between mb-4 `}>
-          <CardTitle className="dark:text-white text-2xl">{t('designer.webChatCustomization')}</CardTitle>
-          <div className={`flex items-center gap-2 `}>
+    <Card className="border-0 shadow-xl shadow-slate-200/50 dark:shadow-none bg-white dark:bg-slate-800 h-fit flex flex-col rounded-2xl overflow-hidden">
+      <CardHeader className="border-b border-slate-100 dark:border-slate-700 bg-gradient-to-r from-slate-50 to-white dark:from-slate-800 dark:to-slate-900 flex-shrink-0 py-5">
+        <div className={`flex items-center justify-between mb-4`}>
+          <div className="flex items-center gap-3">
+            <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-pink-500 to-rose-500 flex items-center justify-center shadow-md shadow-pink-500/25">
+              <Palette className="h-5 w-5 text-white" />
+            </div>
+            <CardTitle className="text-slate-900 dark:text-white text-xl font-semibold">{t('designer.webChatCustomization')}</CardTitle>
+          </div>
+          <div className={`flex items-center gap-2`}>
             {/* Publish Status Badge */}
             {publishStatus?.is_published && (
-              <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+              <span className={`px-3 py-1.5 rounded-full text-xs font-semibold ${
                 publishStatus.is_active
-                  ? 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300'
-                  : 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900 dark:text-yellow-300'
+                  ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400'
+                  : 'bg-amber-50 text-amber-700 dark:bg-amber-500/10 dark:text-amber-400'
               }`}>
                 {publishStatus.is_active ? 'Published' : 'Unpublished'}
               </span>
             )}
-            <Button onClick={handleSaveChanges} disabled={!selectedAgentId} className="bg-gradient-to-r from-pink-600 to-red-600 hover:from-pink-700 hover:to-red-700 text-white btn-hover-lift">
+            <Button onClick={handleSaveChanges} disabled={!selectedAgentId} className="bg-gradient-to-r from-pink-500 to-rose-500 hover:from-pink-600 hover:to-rose-600 text-white shadow-md shadow-pink-500/25 hover:shadow-pink-500/40 transition-all duration-200">
               <Save className={`h-4 w-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
               {t('designer.save')}
             </Button>
-            <Button onClick={handlePublish} disabled={!selectedAgentId} variant="outline" className="btn-hover-lift">
+            <Button onClick={handlePublish} disabled={!selectedAgentId} variant="outline" className="border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 transition-all duration-200">
               <Send className={`h-4 w-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
               {publishStatus?.is_published && publishStatus?.is_active ? 'Update' : t('designer.publish')}
             </Button>
             {/* Unpublish Button - only show when published and active */}
             {publishStatus?.is_published && publishStatus?.is_active && handleUnpublish && (
-              <Button onClick={handleUnpublish} variant="outline" className="btn-hover-lift text-red-600 hover:text-red-700 hover:bg-red-50">
+              <Button onClick={handleUnpublish} variant="outline" className="border-red-200 dark:border-red-800 text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20 transition-all duration-200">
                 Unpublish
               </Button>
             )}
@@ -133,12 +138,12 @@ export const WebChatCustomizer: React.FC<WebChatCustomizerPropsExtended> = ({
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
           <div>
-            <Label htmlFor="agent-selector" className="text-sm font-medium dark:text-gray-300 mb-2 block">{t('designer.selectAgent')}</Label>
+            <Label htmlFor="agent-selector" className="text-xs font-medium text-slate-600 dark:text-slate-300 mb-2 block">{t('designer.selectAgent')}</Label>
             <select
               id="agent-selector"
               value={selectedAgentId ?? ""}
               onChange={(e) => onAgentChange?.(parseInt(e.target.value))}
-              className="w-full p-2.5 border-2 rounded-lg bg-white dark:bg-slate-800 dark:border-slate-600 dark:text-white focus:ring-2 focus:ring-pink-500 focus:border-pink-500 transition-all"
+              className="w-full p-2.5 border border-slate-200 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-800 dark:text-white focus:ring-2 focus:ring-pink-500/20 focus:border-pink-500 transition-all text-sm"
             >
               <option value="" disabled>{t('designer.selectAnAgent')}</option>
               {agents?.map(agent => (
@@ -148,12 +153,12 @@ export const WebChatCustomizer: React.FC<WebChatCustomizerPropsExtended> = ({
           </div>
 
           <div>
-            <Label htmlFor="preview-type-selector" className="text-sm font-medium dark:text-gray-300 mb-2 block">{t('designer.previewType')}</Label>
+            <Label htmlFor="preview-type-selector" className="text-xs font-medium text-slate-600 dark:text-slate-300 mb-2 block">{t('designer.previewType')}</Label>
             <select
               id="preview-type-selector"
               value={previewType}
               onChange={(e) => onPreviewTypeChange?.(e.target.value)}
-              className="w-full p-2.5 border-2 rounded-lg bg-white dark:bg-slate-800 dark:border-slate-600 dark:text-white focus:ring-2 focus:ring-pink-500 focus:border-pink-500 transition-all"
+              className="w-full p-2.5 border border-slate-200 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-800 dark:text-white focus:ring-2 focus:ring-pink-500/20 focus:border-pink-500 transition-all text-sm"
             >
               <option value="web">{t('designer.webChat')}</option>
               <option value="whatsapp">{t('designer.whatsapp')}</option>
@@ -165,27 +170,32 @@ export const WebChatCustomizer: React.FC<WebChatCustomizerPropsExtended> = ({
           </div>
         </div>
 
-        <CardDescription className="dark:text-gray-400 mt-4">
+        <CardDescription className="text-slate-500 dark:text-slate-400 mt-4 text-sm">
           {t('designer.customizeDesc')}
         </CardDescription>
       </CardHeader>
-      <CardContent className="p-6 max-h-[calc(100vh-400px)] overflow-y-auto">
+      <CardContent className="p-6 max-h-[calc(100vh-400px)] overflow-y-auto scrollbar-thin scrollbar-thumb-slate-200 dark:scrollbar-thumb-slate-700">
         <Tabs defaultValue="appearance" className="w-full">
-          <TabsList className="grid w-full grid-cols-2 bg-slate-100 dark:bg-slate-900 sticky top-0 z-10">
-            <TabsTrigger value="appearance" className="data-[state=active]:bg-white dark:data-[state=active]:bg-slate-800 dark:text-gray-300">{t('designer.appearance')}</TabsTrigger>
-            <TabsTrigger value="behavior" className="data-[state=active]:bg-white dark:data-[state=active]:bg-slate-800 dark:text-gray-300">{t('designer.behaviorEmbed')}</TabsTrigger>
+          <TabsList className="grid w-full grid-cols-2 bg-slate-100/80 dark:bg-slate-900/50 sticky top-0 z-10 p-1 rounded-xl">
+            <TabsTrigger value="appearance" className="data-[state=active]:bg-white dark:data-[state=active]:bg-slate-800 data-[state=active]:shadow-sm dark:text-slate-300 rounded-lg text-sm font-medium transition-all">{t('designer.appearance')}</TabsTrigger>
+            <TabsTrigger value="behavior" className="data-[state=active]:bg-white dark:data-[state=active]:bg-slate-800 data-[state=active]:shadow-sm dark:text-slate-300 rounded-lg text-sm font-medium transition-all">{t('designer.behaviorEmbed')}</TabsTrigger>
           </TabsList>
 
           <TabsContent value="appearance" className="space-y-5 pt-4">
             {/* Colors Section - Compact Grid */}
-            <div className="bg-slate-50 dark:bg-slate-900/50 rounded-lg p-4 border border-slate-200 dark:border-slate-700">
-              <div className={`flex items-center justify-between mb-3 ${isRTL ? 'flex-row-reverse' : ''}`}>
-                <h4 className="font-semibold dark:text-white text-sm uppercase tracking-wider text-gray-700 dark:text-gray-300">{t('designer.colors')}</h4>
+            <div className="bg-gradient-to-br from-slate-50 to-white dark:from-slate-900/50 dark:to-slate-800/50 rounded-xl p-5 border border-slate-200/80 dark:border-slate-700/80">
+              <div className={`flex items-center justify-between mb-4 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                <div className="flex items-center gap-2">
+                  <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-pink-500 to-rose-500 flex items-center justify-center">
+                    <Palette className="h-4 w-4 text-white" />
+                  </div>
+                  <h4 className="font-semibold text-slate-800 dark:text-white text-sm">{t('designer.colors')}</h4>
+                </div>
                 <Button
                   onClick={handleResetColors}
                   variant="outline"
                   size="sm"
-                  className="h-8 text-xs"
+                  className="h-8 text-xs border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800"
                 >
                   <RotateCcw className={`h-3 w-3 ${isRTL ? 'ml-1' : 'mr-1'}`} />
                   {t('designer.reset')}
@@ -423,8 +433,16 @@ export const WebChatCustomizer: React.FC<WebChatCustomizerPropsExtended> = ({
             </div>
 
             {/* Style & Settings Section */}
-            <div className="bg-slate-50 dark:bg-slate-900/50 rounded-lg p-4 border border-slate-200 dark:border-slate-700">
-              <h4 className={`font-semibold dark:text-white text-sm uppercase tracking-wider text-gray-700 dark:text-gray-300 mb-3 text-left`}>{t('designer.styleSettings')}</h4>
+            <div className="bg-gradient-to-br from-slate-50 to-white dark:from-slate-900/50 dark:to-slate-800/50 rounded-xl p-5 border border-slate-200/80 dark:border-slate-700/80">
+              <div className="flex items-center gap-2 mb-4">
+                <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center">
+                  <svg className="h-4 w-4 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/>
+                    <circle cx="12" cy="12" r="3"/>
+                  </svg>
+                </div>
+                <h4 className="font-semibold text-slate-800 dark:text-white text-sm">{t('designer.styleSettings')}</h4>
+              </div>
               <div className="grid grid-cols-2 gap-3">
                 {/* Widget Size - Presets + Sliders */}
                 <div className="col-span-2">
@@ -569,8 +587,16 @@ export const WebChatCustomizer: React.FC<WebChatCustomizerPropsExtended> = ({
             />
 
             {/* URLs Section */}
-            <div className="bg-slate-50 dark:bg-slate-900/50 rounded-lg p-4 border border-slate-200 dark:border-slate-700">
-              <h4 className={`font-semibold dark:text-white text-sm uppercase tracking-wider text-gray-700 dark:text-gray-300 mb-3 text-left`}>{t('designer.urls')}</h4>
+            <div className="bg-gradient-to-br from-slate-50 to-white dark:from-slate-900/50 dark:to-slate-800/50 rounded-xl p-5 border border-slate-200/80 dark:border-slate-700/80">
+              <div className="flex items-center gap-2 mb-4">
+                <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center">
+                  <svg className="h-4 w-4 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
+                    <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
+                  </svg>
+                </div>
+                <h4 className="font-semibold text-slate-800 dark:text-white text-sm">{t('designer.urls')}</h4>
+              </div>
               <div className="space-y-3">
                 <div>
                   <Label htmlFor="agent_avatar_url" className="text-xs dark:text-gray-300 mb-1.5 block text-left">{t('designer.agentAvatarUrl')}</Label>
@@ -584,8 +610,16 @@ export const WebChatCustomizer: React.FC<WebChatCustomizerPropsExtended> = ({
             </div>
 
             {/* Toggles Section */}
-            <div className="bg-slate-50 dark:bg-slate-900/50 rounded-lg p-4 border border-slate-200 dark:border-slate-700">
-              <h4 className={` flex items-center justify-between font-semibold dark:text-white text-sm uppercase tracking-wider text-gray-700 dark:text-gray-300 mb-3 text-left`}>{t('designer.toggles')}</h4>
+            <div className="bg-gradient-to-br from-slate-50 to-white dark:from-slate-900/50 dark:to-slate-800/50 rounded-xl p-5 border border-slate-200/80 dark:border-slate-700/80">
+              <div className="flex items-center gap-2 mb-4">
+                <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-emerald-500 to-teal-500 flex items-center justify-center">
+                  <svg className="h-4 w-4 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <rect x="1" y="5" width="22" height="14" rx="7" ry="7"/>
+                    <circle cx="16" cy="12" r="3"/>
+                  </svg>
+                </div>
+                <h4 className="font-semibold text-slate-800 dark:text-white text-sm">{t('designer.toggles')}</h4>
+              </div>
               <div className="space-y-2">
                 <div className={`flex items-center justify-between p-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 ${isRTL ? 'flex-row-reverse' : ''}`}>
                   <div className={isRTL ? 'text-right' : 'text-left'}>
@@ -612,11 +646,18 @@ export const WebChatCustomizer: React.FC<WebChatCustomizerPropsExtended> = ({
             </div>
 
             {/* Proactive Message Section */}
-            <div className="bg-slate-50 dark:bg-slate-900/50 rounded-lg p-4 border border-slate-200 dark:border-slate-700">
-              <div className={`flex items-center justify-between mb-3 ${isRTL ? 'flex-row-reverse' : ''}`}>
-                <div className={isRTL ? 'text-right' : 'text-left'}>
-                  <h4 className="font-semibold dark:text-white text-sm">{t('designer.proactiveMessage')}</h4>
-                  <p className="text-xs text-muted-foreground dark:text-gray-400">{t('designer.autoEngageUsers')}</p>
+            <div className="bg-gradient-to-br from-slate-50 to-white dark:from-slate-900/50 dark:to-slate-800/50 rounded-xl p-5 border border-slate-200/80 dark:border-slate-700/80">
+              <div className={`flex items-center justify-between mb-4 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                <div className="flex items-center gap-2">
+                  <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-amber-500 to-orange-500 flex items-center justify-center">
+                    <svg className="h-4 w-4 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                    </svg>
+                  </div>
+                  <div className={isRTL ? 'text-right' : 'text-left'}>
+                    <h4 className="font-semibold text-slate-800 dark:text-white text-sm">{t('designer.proactiveMessage')}</h4>
+                    <p className="text-xs text-slate-500 dark:text-slate-400">{t('designer.autoEngageUsers')}</p>
+                  </div>
                 </div>
                 <Switch
                   checked={customization.proactive_message_enabled}
@@ -638,12 +679,17 @@ export const WebChatCustomizer: React.FC<WebChatCustomizerPropsExtended> = ({
             </div>
 
             {/* Embed Code Section */}
-            <div className="bg-slate-50 dark:bg-slate-900/50 rounded-lg p-4 border border-slate-200 dark:border-slate-700">
-              <h4 className={`font-semibold dark:text-white text-sm uppercase tracking-wider text-gray-700 dark:text-gray-300 mb-3 text-left`}>{t('designer.embedCode')}</h4>
-              <div className={`p-3 bg-gray-900 dark:bg-slate-950 text-green-400 dark:text-green-300 rounded-lg font-mono text-xs overflow-x-auto border border-gray-700 dark:border-slate-800 max-h-32 text-left`}>
+            <div className="bg-gradient-to-br from-slate-50 to-white dark:from-slate-900/50 dark:to-slate-800/50 rounded-xl p-5 border border-slate-200/80 dark:border-slate-700/80">
+              <div className="flex items-center gap-2 mb-4">
+                <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-violet-500 to-purple-500 flex items-center justify-center">
+                  <Code className="h-4 w-4 text-white" />
+                </div>
+                <h4 className="font-semibold text-slate-800 dark:text-white text-sm">{t('designer.embedCode')}</h4>
+              </div>
+              <div className={`p-4 bg-slate-900 dark:bg-slate-950 text-emerald-400 dark:text-emerald-300 rounded-xl font-mono text-xs overflow-x-auto border border-slate-700 dark:border-slate-800 max-h-32`}>
                 <pre>{generateEmbedCode()}</pre>
               </div>
-              <Button className={`mt-3 w-full bg-gradient-to-r from-pink-600 to-red-600 hover:from-pink-700 hover:to-red-700 text-white btn-hover-lift flex items-center justify-center ${isRTL ? 'flex-row-reverse' : ''}`} onClick={() => {
+              <Button className={`mt-4 w-full bg-gradient-to-r from-violet-500 to-purple-500 hover:from-violet-600 hover:to-purple-600 text-white shadow-md shadow-violet-500/25 hover:shadow-violet-500/40 transition-all duration-200 flex items-center justify-center ${isRTL ? 'flex-row-reverse' : ''}`} onClick={() => {
                 navigator.clipboard.writeText(generateEmbedCode());
                 toast({ title: t('designer.copiedClipboard') });
               }} disabled={!selectedAgentId}>

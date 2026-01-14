@@ -9,32 +9,38 @@ import {
 } from 'lucide-react';
 
 export const LlmNode = ({ data }) => (
-  <div className="px-4 py-3 border-2 border-blue-200 dark:border-blue-700 rounded-xl bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-950/50 dark:to-indigo-950/50 shadow-lg hover:shadow-xl transition-shadow backdrop-blur-sm">
-    <Handle type="target" position={Position.Top} className="w-3 h-3 !bg-blue-500 dark:!bg-blue-400 border-2 border-white dark:border-slate-800" />
-    <div className="flex items-center gap-2 mb-2">
-      <div className="p-1.5 rounded-lg bg-blue-500 dark:bg-blue-600">
+  <div className="px-4 py-3 border border-blue-200/80 dark:border-blue-700/60 rounded-2xl bg-gradient-to-br from-white to-blue-50 dark:from-slate-800 dark:to-blue-950/30 shadow-lg shadow-blue-500/10 hover:shadow-xl hover:shadow-blue-500/20 hover:scale-[1.02] transition-all duration-200 backdrop-blur-sm min-w-[160px]">
+    <Handle type="target" position={Position.Top} className="w-3 h-3 !bg-gradient-to-br !from-blue-400 !to-indigo-500 border-2 border-white dark:border-slate-800 shadow-md" />
+    <div className="flex items-center gap-2.5 mb-2">
+      <div className="p-2 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 shadow-md shadow-blue-500/30">
         <Bot size={16} className="text-white" />
       </div>
-      <strong className="text-sm font-semibold text-slate-900 dark:text-white">{data.label}</strong>
+      <strong className="text-sm font-semibold text-slate-800 dark:text-white">{data.label}</strong>
     </div>
-    <div className="text-xs text-slate-600 dark:text-slate-400 font-medium">LLM Prompt</div>
-    <Handle type="source" position={Position.Bottom} id="output" className="w-3 h-3 !bg-slate-600 dark:!bg-slate-400 border-2 border-white dark:border-slate-800" />
-    <Handle type="source" position={Position.Right} id="error" className="w-3 h-3 !bg-red-500 dark:!bg-red-400 border-2 border-white dark:border-slate-800" />
+    <div className="text-xs text-slate-500 dark:text-slate-400 font-medium flex items-center gap-1">
+      <span className="w-1.5 h-1.5 rounded-full bg-blue-500"></span>
+      LLM Prompt
+    </div>
+    <Handle type="source" position={Position.Bottom} id="output" className="w-3 h-3 !bg-slate-500 dark:!bg-slate-400 border-2 border-white dark:border-slate-800 shadow-md" />
+    <Handle type="source" position={Position.Right} id="error" className="w-3 h-3 !bg-gradient-to-br !from-red-400 !to-rose-500 border-2 border-white dark:border-slate-800 shadow-md" />
   </div>
 );
 
 export const ToolNode = ({ data }) => (
-  <div className="px-4 py-3 border-2 border-green-200 dark:border-green-700 rounded-xl bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-950/50 dark:to-emerald-950/50 shadow-lg hover:shadow-xl transition-shadow backdrop-blur-sm">
-    <Handle type="target" position={Position.Top} className="w-3 h-3 !bg-green-500 dark:!bg-green-400 border-2 border-white dark:border-slate-800" />
-    <div className="flex items-center gap-2 mb-2">
-      <div className="p-1.5 rounded-lg bg-green-500 dark:bg-green-600">
+  <div className="px-4 py-3 border border-emerald-200/80 dark:border-emerald-700/60 rounded-2xl bg-gradient-to-br from-white to-emerald-50 dark:from-slate-800 dark:to-emerald-950/30 shadow-lg shadow-emerald-500/10 hover:shadow-xl hover:shadow-emerald-500/20 hover:scale-[1.02] transition-all duration-200 backdrop-blur-sm min-w-[160px]">
+    <Handle type="target" position={Position.Top} className="w-3 h-3 !bg-gradient-to-br !from-emerald-400 !to-green-500 border-2 border-white dark:border-slate-800 shadow-md" />
+    <div className="flex items-center gap-2.5 mb-2">
+      <div className="p-2 rounded-xl bg-gradient-to-br from-emerald-500 to-green-600 shadow-md shadow-emerald-500/30">
         <Cog size={16} className="text-white" />
       </div>
-      <strong className="text-sm font-semibold text-slate-900 dark:text-white">{data.label}</strong>
+      <strong className="text-sm font-semibold text-slate-800 dark:text-white">{data.label}</strong>
     </div>
-    <div className="text-xs text-slate-600 dark:text-slate-400 font-medium">Tool Execution</div>
-    <Handle type="source" position={Position.Bottom} id="error" className="w-3 h-3 !bg-slate-600 dark:!bg-slate-400 border-2 border-white dark:border-slate-800" />
-    <Handle type="source" position={Position.Right} id="output" className="w-3 h-3 !bg-red-500 dark:!bg-red-400 border-2 border-white dark:border-slate-800" />
+    <div className="text-xs text-slate-500 dark:text-slate-400 font-medium flex items-center gap-1">
+      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+      Tool Execution
+    </div>
+    <Handle type="source" position={Position.Bottom} id="output" className="w-3 h-3 !bg-slate-500 dark:!bg-slate-400 border-2 border-white dark:border-slate-800 shadow-md" />
+    <Handle type="source" position={Position.Right} id="error" className="w-3 h-3 !bg-gradient-to-br !from-red-400 !to-rose-500 border-2 border-white dark:border-slate-800 shadow-md" />
   </div>
 );
 
@@ -60,16 +66,17 @@ export const ConditionNode = ({ data }) => {
   };
 
   return (
-    <div className={`px-4 py-3 border-2 border-amber-200 dark:border-amber-700 rounded-xl bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-950/50 dark:to-orange-950/50 shadow-lg hover:shadow-xl transition-shadow backdrop-blur-sm ${isMultiCondition ? 'min-w-[180px]' : ''}`}
+    <div className={`px-4 py-3 border border-amber-200/80 dark:border-amber-700/60 rounded-2xl bg-gradient-to-br from-white to-amber-50 dark:from-slate-800 dark:to-amber-950/30 shadow-lg shadow-amber-500/10 hover:shadow-xl hover:shadow-amber-500/20 hover:scale-[1.02] transition-all duration-200 backdrop-blur-sm ${isMultiCondition ? 'min-w-[180px]' : 'min-w-[160px]'}`}
          style={{ minWidth: isMultiCondition ? `${Math.max(180, totalHandles * 50)}px` : undefined }}>
-      <Handle type="target" position={Position.Top} className="w-3 h-3 !bg-amber-500 dark:!bg-amber-400 border-2 border-white dark:border-slate-800" />
-      <div className="flex items-center gap-2 mb-2">
-        <div className="p-1.5 rounded-lg bg-amber-500 dark:bg-amber-600">
+      <Handle type="target" position={Position.Top} className="w-3 h-3 !bg-gradient-to-br !from-amber-400 !to-orange-500 border-2 border-white dark:border-slate-800 shadow-md" />
+      <div className="flex items-center gap-2.5 mb-2">
+        <div className="p-2 rounded-xl bg-gradient-to-br from-amber-500 to-orange-600 shadow-md shadow-amber-500/30">
           <GitBranch size={16} className="text-white" />
         </div>
-        <strong className="text-sm font-semibold text-slate-900 dark:text-white">{data.label}</strong>
+        <strong className="text-sm font-semibold text-slate-800 dark:text-white">{data.label}</strong>
       </div>
-      <div className="text-xs text-slate-600 dark:text-slate-400 font-medium">
+      <div className="text-xs text-slate-500 dark:text-slate-400 font-medium flex items-center gap-1">
+        <span className="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
         {isMultiCondition ? `Multi-Condition (${conditions.length})` : 'Conditional Logic'}
       </div>
 
@@ -122,129 +129,156 @@ export const ConditionNode = ({ data }) => {
 };
 
 export const OutputNode = ({ data }) => (
-  <div className="px-4 py-3 border-2 border-indigo-200 dark:border-indigo-700 rounded-xl bg-gradient-to-br from-indigo-50 to-blue-50 dark:from-indigo-950/50 dark:to-blue-950/50 shadow-lg hover:shadow-xl transition-shadow backdrop-blur-sm">
-    <Handle type="target" position={Position.Top} className="w-3 h-3 !bg-indigo-500 dark:!bg-indigo-400 border-2 border-white dark:border-slate-800" />
-    <div className="flex items-center gap-2 mb-2">
-      <div className="p-1.5 rounded-lg bg-indigo-500 dark:bg-indigo-600">
+  <div className="px-4 py-3 border border-indigo-200/80 dark:border-indigo-700/60 rounded-2xl bg-gradient-to-br from-white to-indigo-50 dark:from-slate-800 dark:to-indigo-950/30 shadow-lg shadow-indigo-500/10 hover:shadow-xl hover:shadow-indigo-500/20 hover:scale-[1.02] transition-all duration-200 backdrop-blur-sm min-w-[160px]">
+    <Handle type="target" position={Position.Top} className="w-3 h-3 !bg-gradient-to-br !from-indigo-400 !to-violet-500 border-2 border-white dark:border-slate-800 shadow-md" />
+    <div className="flex items-center gap-2.5 mb-2">
+      <div className="p-2 rounded-xl bg-gradient-to-br from-indigo-500 to-violet-600 shadow-md shadow-indigo-500/30">
         <MessageSquare size={16} className="text-white" />
       </div>
-      <strong className="text-sm font-semibold text-slate-900 dark:text-white">{data.label}</strong>
+      <strong className="text-sm font-semibold text-slate-800 dark:text-white">{data.label}</strong>
     </div>
-    <div className="text-xs text-slate-600 dark:text-slate-400 font-medium">Workflow Output</div>
-    <Handle type="source" position={Position.Bottom} id="output" className="w-3 h-3 !bg-slate-600 dark:!bg-slate-400 border-2 border-white dark:border-slate-800" />
+    <div className="text-xs text-slate-500 dark:text-slate-400 font-medium flex items-center gap-1">
+      <span className="w-1.5 h-1.5 rounded-full bg-indigo-500"></span>
+      Workflow Output
+    </div>
+    <Handle type="source" position={Position.Bottom} id="output" className="w-3 h-3 !bg-slate-500 dark:!bg-slate-400 border-2 border-white dark:border-slate-800 shadow-md" />
   </div>
 );
 
 export const StartNode = ({ data }) => (
-    <div className="px-6 py-3 border-2 border-dashed border-emerald-300 dark:border-emerald-600 rounded-full bg-gradient-to-br from-emerald-50 to-teal-50 dark:from-emerald-950/50 dark:to-teal-950/50 shadow-lg hover:shadow-xl transition-shadow backdrop-blur-sm">
-      <div className="flex flex-col items-center gap-1">
-        <strong className="text-sm font-bold text-emerald-700 dark:text-emerald-300">{data.label}</strong>
-        <div className="text-xs text-slate-600 dark:text-slate-400 font-medium">Workflow Start</div>
+  <div className="px-6 py-4 border-2 border-dashed border-emerald-300/80 dark:border-emerald-600/60 rounded-full bg-gradient-to-br from-emerald-50 via-white to-teal-50 dark:from-emerald-950/50 dark:via-slate-800 dark:to-teal-950/50 shadow-lg shadow-emerald-500/15 hover:shadow-xl hover:shadow-emerald-500/25 hover:scale-[1.03] transition-all duration-200 backdrop-blur-sm ring-4 ring-emerald-100/50 dark:ring-emerald-900/30">
+    <div className="flex flex-col items-center gap-1.5">
+      <div className="flex items-center gap-2">
+        <span className="w-2 h-2 rounded-full bg-gradient-to-br from-emerald-400 to-teal-500 animate-pulse"></span>
+        <strong className="text-sm font-bold bg-gradient-to-r from-emerald-600 to-teal-600 dark:from-emerald-400 dark:to-teal-400 bg-clip-text text-transparent">{data.label}</strong>
       </div>
-      <Handle type="source" position={Position.Bottom} id="output" className="w-3 h-3 !bg-emerald-500 dark:!bg-emerald-400 border-2 border-white dark:border-slate-800" />
+      <div className="text-xs text-slate-500 dark:text-slate-400 font-medium">Workflow Start</div>
     </div>
+    <Handle type="source" position={Position.Bottom} id="output" className="w-3.5 h-3.5 !bg-gradient-to-br !from-emerald-400 !to-teal-500 border-2 border-white dark:border-slate-800 shadow-md" />
+  </div>
 );
 
 export const ListenNode = ({ data }) => (
-  <div className="px-4 py-3 border-2 border-cyan-200 dark:border-cyan-700 rounded-xl bg-gradient-to-br from-cyan-50 to-sky-50 dark:from-cyan-950/50 dark:to-sky-950/50 shadow-lg hover:shadow-xl transition-shadow backdrop-blur-sm">
-    <Handle type="target" position={Position.Top} className="w-3 h-3 !bg-cyan-500 dark:!bg-cyan-400 border-2 border-white dark:border-slate-800" />
-    <div className="flex items-center gap-2 mb-2">
-      <div className="p-1.5 rounded-lg bg-cyan-500 dark:bg-cyan-600">
+  <div className="px-4 py-3 border border-cyan-200/80 dark:border-cyan-700/60 rounded-2xl bg-gradient-to-br from-white to-cyan-50 dark:from-slate-800 dark:to-cyan-950/30 shadow-lg shadow-cyan-500/10 hover:shadow-xl hover:shadow-cyan-500/20 hover:scale-[1.02] transition-all duration-200 backdrop-blur-sm min-w-[160px]">
+    <Handle type="target" position={Position.Top} className="w-3 h-3 !bg-gradient-to-br !from-cyan-400 !to-sky-500 border-2 border-white dark:border-slate-800 shadow-md" />
+    <div className="flex items-center gap-2.5 mb-2">
+      <div className="p-2 rounded-xl bg-gradient-to-br from-cyan-500 to-sky-600 shadow-md shadow-cyan-500/30">
         <Ear size={16} className="text-white" />
       </div>
-      <strong className="text-sm font-semibold text-slate-900 dark:text-white">{data.label || 'Listen for Input'}</strong>
+      <strong className="text-sm font-semibold text-slate-800 dark:text-white">{data.label || 'Listen for Input'}</strong>
     </div>
-    <div className="text-xs text-slate-600 dark:text-slate-400 font-medium">Pauses for user input</div>
-    <Handle type="source" position={Position.Bottom} id="error" className="w-3 h-3 !bg-slate-600 dark:!bg-slate-400 border-2 border-white dark:border-slate-800" />
-    <Handle type="source" position={Position.Right} id="output" className="w-3 h-3 !bg-red-500 dark:!bg-red-400 border-2 border-white dark:border-slate-800" />
+    <div className="text-xs text-slate-500 dark:text-slate-400 font-medium flex items-center gap-1">
+      <span className="w-1.5 h-1.5 rounded-full bg-cyan-500"></span>
+      Pauses for user input
+    </div>
+    <Handle type="source" position={Position.Bottom} id="output" className="w-3 h-3 !bg-slate-500 dark:!bg-slate-400 border-2 border-white dark:border-slate-800 shadow-md" />
+    <Handle type="source" position={Position.Right} id="error" className="w-3 h-3 !bg-gradient-to-br !from-red-400 !to-rose-500 border-2 border-white dark:border-slate-800 shadow-md" />
   </div>
 );
 
 export const PromptNode = ({ data }) => (
-  <div className="px-4 py-3 border-2 border-amber-200 dark:border-amber-700 rounded-xl bg-gradient-to-br from-amber-50 to-yellow-50 dark:from-amber-950/50 dark:to-yellow-950/50 shadow-lg hover:shadow-xl transition-shadow backdrop-blur-sm">
-    <Handle type="target" position={Position.Top} className="w-3 h-3 !bg-amber-500 dark:!bg-amber-400 border-2 border-white dark:border-slate-800" />
-    <div className="flex items-center gap-2 mb-2">
-      <div className="p-1.5 rounded-lg bg-amber-500 dark:bg-amber-600">
+  <div className="px-4 py-3 border border-yellow-200/80 dark:border-yellow-700/60 rounded-2xl bg-gradient-to-br from-white to-yellow-50 dark:from-slate-800 dark:to-yellow-950/30 shadow-lg shadow-yellow-500/10 hover:shadow-xl hover:shadow-yellow-500/20 hover:scale-[1.02] transition-all duration-200 backdrop-blur-sm min-w-[160px]">
+    <Handle type="target" position={Position.Top} className="w-3 h-3 !bg-gradient-to-br !from-yellow-400 !to-amber-500 border-2 border-white dark:border-slate-800 shadow-md" />
+    <div className="flex items-center gap-2.5 mb-2">
+      <div className="p-2 rounded-xl bg-gradient-to-br from-yellow-500 to-amber-600 shadow-md shadow-yellow-500/30">
         <HelpCircle size={16} className="text-white" />
       </div>
-      <strong className="text-sm font-semibold text-slate-900 dark:text-white">{data.label || 'Prompt for Input'}</strong>
+      <strong className="text-sm font-semibold text-slate-800 dark:text-white">{data.label || 'Prompt for Input'}</strong>
     </div>
-    <div className="text-xs text-slate-600 dark:text-slate-400 font-medium">Asks user a question</div>
-    <Handle type="source" position={Position.Bottom} id="output" className="w-3 h-3 !bg-slate-600 dark:!bg-slate-400 border-2 border-white dark:border-slate-800" />
+    <div className="text-xs text-slate-500 dark:text-slate-400 font-medium flex items-center gap-1">
+      <span className="w-1.5 h-1.5 rounded-full bg-yellow-500"></span>
+      Asks user a question
+    </div>
+    <Handle type="source" position={Position.Bottom} id="output" className="w-3 h-3 !bg-slate-500 dark:!bg-slate-400 border-2 border-white dark:border-slate-800 shadow-md" />
   </div>
 );
 
 export const KnowledgeNode = ({ data }) => (
-  <div className="px-4 py-3 border-2 border-indigo-200 dark:border-indigo-700 rounded-xl bg-gradient-to-br from-indigo-50 to-violet-50 dark:from-indigo-950/50 dark:to-violet-950/50 shadow-lg hover:shadow-xl transition-shadow backdrop-blur-sm">
-    <Handle type="target" position={Position.Top} className="w-3 h-3 !bg-indigo-500 dark:!bg-indigo-400 border-2 border-white dark:border-slate-800" />
-    <div className="flex items-center gap-2 mb-2">
-      <div className="p-1.5 rounded-lg bg-indigo-500 dark:bg-indigo-600">
+  <div className="px-4 py-3 border border-violet-200/80 dark:border-violet-700/60 rounded-2xl bg-gradient-to-br from-white to-violet-50 dark:from-slate-800 dark:to-violet-950/30 shadow-lg shadow-violet-500/10 hover:shadow-xl hover:shadow-violet-500/20 hover:scale-[1.02] transition-all duration-200 backdrop-blur-sm min-w-[160px]">
+    <Handle type="target" position={Position.Top} className="w-3 h-3 !bg-gradient-to-br !from-violet-400 !to-purple-500 border-2 border-white dark:border-slate-800 shadow-md" />
+    <div className="flex items-center gap-2.5 mb-2">
+      <div className="p-2 rounded-xl bg-gradient-to-br from-violet-500 to-purple-600 shadow-md shadow-violet-500/30">
         <BookOpen size={16} className="text-white" />
       </div>
-      <strong className="text-sm font-semibold text-slate-900 dark:text-white">{data.label || 'Knowledge Search'}</strong>
+      <strong className="text-sm font-semibold text-slate-800 dark:text-white">{data.label || 'Knowledge Search'}</strong>
     </div>
-    <div className="text-xs text-slate-600 dark:text-slate-400 font-medium">Searches knowledge base</div>
-    <Handle type="source" position={Position.Bottom} id="output" className="w-3 h-3 !bg-slate-600 dark:!bg-slate-400 border-2 border-white dark:border-slate-800" />
-    <Handle type="source" position={Position.Right} id="error" className="w-3 h-3 !bg-red-500 dark:!bg-red-400 border-2 border-white dark:border-slate-800" />
+    <div className="text-xs text-slate-500 dark:text-slate-400 font-medium flex items-center gap-1">
+      <span className="w-1.5 h-1.5 rounded-full bg-violet-500"></span>
+      Searches knowledge base
+    </div>
+    <Handle type="source" position={Position.Bottom} id="output" className="w-3 h-3 !bg-slate-500 dark:!bg-slate-400 border-2 border-white dark:border-slate-800 shadow-md" />
+    <Handle type="source" position={Position.Right} id="error" className="w-3 h-3 !bg-gradient-to-br !from-red-400 !to-rose-500 border-2 border-white dark:border-slate-800 shadow-md" />
   </div>
 );
 
 export const CodeNode = ({ data }) => (
-  <div className="px-4 py-3 border-2 border-slate-300 dark:border-slate-600 rounded-xl bg-gradient-to-br from-slate-50 to-gray-50 dark:from-slate-900/50 dark:to-gray-900/50 shadow-lg hover:shadow-xl transition-shadow backdrop-blur-sm">
-    <Handle type="target" position={Position.Top} className="w-3 h-3 !bg-slate-500 dark:!bg-slate-400 border-2 border-white dark:border-slate-800" />
-    <div className="flex items-center gap-2 mb-2">
-      <div className="p-1.5 rounded-lg bg-slate-600 dark:bg-slate-700">
+  <div className="px-4 py-3 border border-slate-300/80 dark:border-slate-600/60 rounded-2xl bg-gradient-to-br from-white to-slate-100 dark:from-slate-800 dark:to-slate-900/50 shadow-lg shadow-slate-500/10 hover:shadow-xl hover:shadow-slate-500/20 hover:scale-[1.02] transition-all duration-200 backdrop-blur-sm min-w-[160px]">
+    <Handle type="target" position={Position.Top} className="w-3 h-3 !bg-gradient-to-br !from-slate-400 !to-gray-500 border-2 border-white dark:border-slate-800 shadow-md" />
+    <div className="flex items-center gap-2.5 mb-2">
+      <div className="p-2 rounded-xl bg-gradient-to-br from-slate-600 to-gray-700 shadow-md shadow-slate-500/30">
         <Code size={16} className="text-white" />
       </div>
-      <strong className="text-sm font-semibold text-slate-900 dark:text-white">{data.label || 'Code Execution'}</strong>
+      <strong className="text-sm font-semibold text-slate-800 dark:text-white">{data.label || 'Code Execution'}</strong>
     </div>
-    <div className="text-xs text-slate-600 dark:text-slate-400 font-medium">Executes Python code</div>
-    <Handle type="source" position={Position.Bottom} id="error" className="w-3 h-3 !bg-slate-600 dark:!bg-slate-400 border-2 border-white dark:border-slate-800" />
-    <Handle type="source" position={Position.Right} id="output" className="w-3 h-3 !bg-red-500 dark:!bg-red-400 border-2 border-white dark:border-slate-800" />
+    <div className="text-xs text-slate-500 dark:text-slate-400 font-medium flex items-center gap-1">
+      <span className="w-1.5 h-1.5 rounded-full bg-slate-500"></span>
+      Executes Python code
+    </div>
+    <Handle type="source" position={Position.Bottom} id="output" className="w-3 h-3 !bg-slate-500 dark:!bg-slate-400 border-2 border-white dark:border-slate-800 shadow-md" />
+    <Handle type="source" position={Position.Right} id="error" className="w-3 h-3 !bg-gradient-to-br !from-red-400 !to-rose-500 border-2 border-white dark:border-slate-800 shadow-md" />
   </div>
 );
 
 export const DataManipulationNode = ({ data }) => (
-  <div className="px-4 py-3 border-2 border-sky-200 dark:border-sky-700 rounded-xl bg-gradient-to-br from-sky-50 to-blue-50 dark:from-sky-950/50 dark:to-blue-950/50 shadow-lg hover:shadow-xl transition-shadow backdrop-blur-sm">
-    <Handle type="target" position={Position.Top} className="w-3 h-3 !bg-sky-500 dark:!bg-sky-400 border-2 border-white dark:border-slate-800" />
-    <div className="flex items-center gap-2 mb-2">
-      <div className="p-1.5 rounded-lg bg-sky-500 dark:bg-sky-600">
+  <div className="px-4 py-3 border border-sky-200/80 dark:border-sky-700/60 rounded-2xl bg-gradient-to-br from-white to-sky-50 dark:from-slate-800 dark:to-sky-950/30 shadow-lg shadow-sky-500/10 hover:shadow-xl hover:shadow-sky-500/20 hover:scale-[1.02] transition-all duration-200 backdrop-blur-sm min-w-[160px]">
+    <Handle type="target" position={Position.Top} className="w-3 h-3 !bg-gradient-to-br !from-sky-400 !to-blue-500 border-2 border-white dark:border-slate-800 shadow-md" />
+    <div className="flex items-center gap-2.5 mb-2">
+      <div className="p-2 rounded-xl bg-gradient-to-br from-sky-500 to-blue-600 shadow-md shadow-sky-500/30">
         <SquareStack size={16} className="text-white" />
       </div>
-      <strong className="text-sm font-semibold text-slate-900 dark:text-white">{data.label || 'Data Manipulation'}</strong>
+      <strong className="text-sm font-semibold text-slate-800 dark:text-white">{data.label || 'Data Manipulation'}</strong>
     </div>
-    <div className="text-xs text-slate-600 dark:text-slate-400 font-medium">Transforms data</div>
-    <Handle type="source" position={Position.Bottom} id="output" className="w-3 h-3 !bg-slate-600 dark:!bg-slate-400 border-2 border-white dark:border-slate-800" />
-    <Handle type="source" position={Position.Right} id="error" className="w-3 h-3 !bg-red-500 dark:!bg-red-400 border-2 border-white dark:border-slate-800" />
+    <div className="text-xs text-slate-500 dark:text-slate-400 font-medium flex items-center gap-1">
+      <span className="w-1.5 h-1.5 rounded-full bg-sky-500"></span>
+      Transforms data
+    </div>
+    <Handle type="source" position={Position.Bottom} id="output" className="w-3 h-3 !bg-slate-500 dark:!bg-slate-400 border-2 border-white dark:border-slate-800 shadow-md" />
+    <Handle type="source" position={Position.Right} id="error" className="w-3 h-3 !bg-gradient-to-br !from-red-400 !to-rose-500 border-2 border-white dark:border-slate-800 shadow-md" />
   </div>
 );
 
 export const HttpRequestNode = ({ data }) => (
-  <div className="px-4 py-3 border-2 border-teal-200 dark:border-teal-700 rounded-xl bg-gradient-to-br from-teal-50 to-emerald-50 dark:from-teal-950/50 dark:to-emerald-950/50 shadow-lg hover:shadow-xl transition-shadow backdrop-blur-sm">
-    <Handle type="target" position={Position.Top} className="w-3 h-3 !bg-teal-500 dark:!bg-teal-400 border-2 border-white dark:border-slate-800" />
-    <div className="flex items-center gap-2 mb-2">
-      <div className="p-1.5 rounded-lg bg-teal-500 dark:bg-teal-600">
+  <div className="px-4 py-3 border border-teal-200/80 dark:border-teal-700/60 rounded-2xl bg-gradient-to-br from-white to-teal-50 dark:from-slate-800 dark:to-teal-950/30 shadow-lg shadow-teal-500/10 hover:shadow-xl hover:shadow-teal-500/20 hover:scale-[1.02] transition-all duration-200 backdrop-blur-sm min-w-[160px]">
+    <Handle type="target" position={Position.Top} className="w-3 h-3 !bg-gradient-to-br !from-teal-400 !to-emerald-500 border-2 border-white dark:border-slate-800 shadow-md" />
+    <div className="flex items-center gap-2.5 mb-2">
+      <div className="p-2 rounded-xl bg-gradient-to-br from-teal-500 to-emerald-600 shadow-md shadow-teal-500/30">
         <Globe size={16} className="text-white" />
       </div>
-      <strong className="text-sm font-semibold text-slate-900 dark:text-white">{data.label || 'HTTP Request'}</strong>
+      <strong className="text-sm font-semibold text-slate-800 dark:text-white">{data.label || 'HTTP Request'}</strong>
     </div>
-    <div className="text-xs text-slate-600 dark:text-slate-400 font-medium">Makes HTTP request</div>
-    <Handle type="source" position={Position.Bottom} id="error" className="w-3 h-3 !bg-slate-600 dark:!bg-slate-400 border-2 border-white dark:border-slate-800" />
-    <Handle type="source" position={Position.Right} id="output" className="w-3 h-3 !bg-red-500 dark:!bg-red-400 border-2 border-white dark:border-slate-800" />
+    <div className="text-xs text-slate-500 dark:text-slate-400 font-medium flex items-center gap-1">
+      <span className="w-1.5 h-1.5 rounded-full bg-teal-500"></span>
+      Makes HTTP request
+    </div>
+    <Handle type="source" position={Position.Bottom} id="output" className="w-3 h-3 !bg-slate-500 dark:!bg-slate-400 border-2 border-white dark:border-slate-800 shadow-md" />
+    <Handle type="source" position={Position.Right} id="error" className="w-3 h-3 !bg-gradient-to-br !from-red-400 !to-rose-500 border-2 border-white dark:border-slate-800 shadow-md" />
   </div>
 );
 
 export const FormNode = ({ data }) => (
-  <div className="px-4 py-3 border-2 border-purple-200 dark:border-purple-700 rounded-xl bg-gradient-to-br from-purple-50 to-fuchsia-50 dark:from-purple-950/50 dark:to-fuchsia-950/50 shadow-lg hover:shadow-xl transition-shadow backdrop-blur-sm">
-    <Handle type="target" position={Position.Top} className="w-3 h-3 !bg-purple-500 dark:!bg-purple-400 border-2 border-white dark:border-slate-800" />
-    <div className="flex items-center gap-2 mb-2">
-      <div className="p-1.5 rounded-lg bg-purple-500 dark:bg-purple-600">
+  <div className="px-4 py-3 border border-purple-200/80 dark:border-purple-700/60 rounded-2xl bg-gradient-to-br from-white to-purple-50 dark:from-slate-800 dark:to-purple-950/30 shadow-lg shadow-purple-500/10 hover:shadow-xl hover:shadow-purple-500/20 hover:scale-[1.02] transition-all duration-200 backdrop-blur-sm min-w-[160px]">
+    <Handle type="target" position={Position.Top} className="w-3 h-3 !bg-gradient-to-br !from-purple-400 !to-fuchsia-500 border-2 border-white dark:border-slate-800 shadow-md" />
+    <div className="flex items-center gap-2.5 mb-2">
+      <div className="p-2 rounded-xl bg-gradient-to-br from-purple-500 to-fuchsia-600 shadow-md shadow-purple-500/30">
         <ClipboardList size={16} className="text-white" />
       </div>
-      <strong className="text-sm font-semibold text-slate-900 dark:text-white">{data.label || 'Display Form'}</strong>
+      <strong className="text-sm font-semibold text-slate-800 dark:text-white">{data.label || 'Display Form'}</strong>
     </div>
-    <div className="text-xs text-slate-600 dark:text-slate-400 font-medium">Pauses for form input</div>
-    <Handle type="source" position={Position.Bottom} id="output" className="w-3 h-3 !bg-slate-600 dark:!bg-slate-400 border-2 border-white dark:border-slate-800" />
+    <div className="text-xs text-slate-500 dark:text-slate-400 font-medium flex items-center gap-1">
+      <span className="w-1.5 h-1.5 rounded-full bg-purple-500"></span>
+      Pauses for form input
+    </div>
+    <Handle type="source" position={Position.Bottom} id="output" className="w-3 h-3 !bg-slate-500 dark:!bg-slate-400 border-2 border-white dark:border-slate-800 shadow-md" />
   </div>
 );
 
@@ -253,122 +287,144 @@ export const FormNode = ({ data }) => (
 // ============================================================
 
 export const IntentRouterNode = ({ data }) => (
-  <div className="px-4 py-3 border-2 border-violet-200 dark:border-violet-700 rounded-xl bg-gradient-to-br from-violet-50 to-purple-50 dark:from-violet-950/50 dark:to-purple-950/50 shadow-lg hover:shadow-xl transition-shadow backdrop-blur-sm">
-    <Handle type="target" position={Position.Top} className="w-3 h-3 !bg-violet-500 dark:!bg-violet-400 border-2 border-white dark:border-slate-800" />
-    <div className="flex items-center gap-2 mb-2">
-      <div className="p-1.5 rounded-lg bg-violet-500 dark:bg-violet-600">
+  <div className="px-4 py-3 border border-violet-200/80 dark:border-violet-700/60 rounded-2xl bg-gradient-to-br from-white to-violet-50 dark:from-slate-800 dark:to-violet-950/30 shadow-lg shadow-violet-500/10 hover:shadow-xl hover:shadow-violet-500/20 hover:scale-[1.02] transition-all duration-200 backdrop-blur-sm min-w-[160px]">
+    <Handle type="target" position={Position.Top} className="w-3 h-3 !bg-gradient-to-br !from-violet-400 !to-purple-500 border-2 border-white dark:border-slate-800 shadow-md" />
+    <div className="flex items-center gap-2.5 mb-2">
+      <div className="p-2 rounded-xl bg-gradient-to-br from-violet-500 to-purple-600 shadow-md shadow-violet-500/30">
         <Target size={16} className="text-white" />
       </div>
-      <strong className="text-sm font-semibold text-slate-900 dark:text-white">{data.label || 'Intent Router'}</strong>
+      <strong className="text-sm font-semibold text-slate-800 dark:text-white">{data.label || 'Intent Router'}</strong>
     </div>
-    <div className="text-xs text-slate-600 dark:text-slate-400 font-medium">Routes by detected intent</div>
+    <div className="text-xs text-slate-500 dark:text-slate-400 font-medium flex items-center gap-1">
+      <span className="w-1.5 h-1.5 rounded-full bg-violet-500"></span>
+      Routes by detected intent
+    </div>
     {/* Multiple output handles for different intent routes */}
-    <Handle type="source" position={Position.Bottom} id="default" className="w-3 h-3 !bg-slate-600 dark:!bg-slate-400 border-2 border-white dark:border-slate-800" />
-    <Handle type="source" position={Position.Right} id="route1" style={{ top: '40%' }} className="w-3 h-3 !bg-violet-500 dark:!bg-violet-400 border-2 border-white dark:border-slate-800" />
-    <Handle type="source" position={Position.Right} id="route2" style={{ top: '60%' }} className="w-3 h-3 !bg-purple-500 dark:!bg-purple-400 border-2 border-white dark:border-slate-800" />
+    <Handle type="source" position={Position.Bottom} id="default" className="w-3 h-3 !bg-slate-500 dark:!bg-slate-400 border-2 border-white dark:border-slate-800 shadow-md" />
+    <Handle type="source" position={Position.Right} id="route1" style={{ top: '40%' }} className="w-3 h-3 !bg-gradient-to-br !from-violet-400 !to-purple-500 border-2 border-white dark:border-slate-800 shadow-md" />
+    <Handle type="source" position={Position.Right} id="route2" style={{ top: '60%' }} className="w-3 h-3 !bg-gradient-to-br !from-purple-400 !to-fuchsia-500 border-2 border-white dark:border-slate-800 shadow-md" />
   </div>
 );
 
 export const EntityCollectorNode = ({ data }) => (
-  <div className="px-4 py-3 border-2 border-rose-200 dark:border-rose-700 rounded-xl bg-gradient-to-br from-rose-50 to-pink-50 dark:from-rose-950/50 dark:to-pink-950/50 shadow-lg hover:shadow-xl transition-shadow backdrop-blur-sm">
-    <Handle type="target" position={Position.Top} className="w-3 h-3 !bg-rose-500 dark:!bg-rose-400 border-2 border-white dark:border-slate-800" />
-    <div className="flex items-center gap-2 mb-2">
-      <div className="p-1.5 rounded-lg bg-rose-500 dark:bg-rose-600">
+  <div className="px-4 py-3 border border-rose-200/80 dark:border-rose-700/60 rounded-2xl bg-gradient-to-br from-white to-rose-50 dark:from-slate-800 dark:to-rose-950/30 shadow-lg shadow-rose-500/10 hover:shadow-xl hover:shadow-rose-500/20 hover:scale-[1.02] transition-all duration-200 backdrop-blur-sm min-w-[160px]">
+    <Handle type="target" position={Position.Top} className="w-3 h-3 !bg-gradient-to-br !from-rose-400 !to-pink-500 border-2 border-white dark:border-slate-800 shadow-md" />
+    <div className="flex items-center gap-2.5 mb-2">
+      <div className="p-2 rounded-xl bg-gradient-to-br from-rose-500 to-pink-600 shadow-md shadow-rose-500/30">
         <Notebook size={16} className="text-white" />
       </div>
-      <strong className="text-sm font-semibold text-slate-900 dark:text-white">{data.label || 'Collect Entities'}</strong>
+      <strong className="text-sm font-semibold text-slate-800 dark:text-white">{data.label || 'Collect Entities'}</strong>
     </div>
-    <div className="text-xs text-slate-600 dark:text-slate-400 font-medium">Gathers required information</div>
-    <Handle type="source" position={Position.Bottom} id="complete" className="w-3 h-3 !bg-green-500 dark:!bg-green-400 border-2 border-white dark:border-slate-800" />
-    <Handle type="source" position={Position.Right} id="partial" className="w-3 h-3 !bg-amber-500 dark:!bg-amber-400 border-2 border-white dark:border-slate-800" />
+    <div className="text-xs text-slate-500 dark:text-slate-400 font-medium flex items-center gap-1">
+      <span className="w-1.5 h-1.5 rounded-full bg-rose-500"></span>
+      Gathers required information
+    </div>
+    <Handle type="source" position={Position.Bottom} id="complete" className="w-3 h-3 !bg-gradient-to-br !from-green-400 !to-emerald-500 border-2 border-white dark:border-slate-800 shadow-md" />
+    <Handle type="source" position={Position.Right} id="partial" className="w-3 h-3 !bg-gradient-to-br !from-amber-400 !to-orange-500 border-2 border-white dark:border-slate-800 shadow-md" />
   </div>
 );
 
 export const CheckEntityNode = ({ data }) => (
-  <div className="px-4 py-3 border-2 border-emerald-200 dark:border-emerald-700 rounded-xl bg-gradient-to-br from-emerald-50 to-teal-50 dark:from-emerald-950/50 dark:to-teal-950/50 shadow-lg hover:shadow-xl transition-shadow backdrop-blur-sm">
-    <Handle type="target" position={Position.Top} className="w-3 h-3 !bg-emerald-500 dark:!bg-emerald-400 border-2 border-white dark:border-slate-800" />
-    <div className="flex items-center gap-2 mb-2">
-      <div className="p-1.5 rounded-lg bg-emerald-500 dark:bg-emerald-600">
+  <div className="px-4 py-3 border border-emerald-200/80 dark:border-emerald-700/60 rounded-2xl bg-gradient-to-br from-white to-emerald-50 dark:from-slate-800 dark:to-emerald-950/30 shadow-lg shadow-emerald-500/10 hover:shadow-xl hover:shadow-emerald-500/20 hover:scale-[1.02] transition-all duration-200 backdrop-blur-sm min-w-[160px]">
+    <Handle type="target" position={Position.Top} className="w-3 h-3 !bg-gradient-to-br !from-emerald-400 !to-teal-500 border-2 border-white dark:border-slate-800 shadow-md" />
+    <div className="flex items-center gap-2.5 mb-2">
+      <div className="p-2 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 shadow-md shadow-emerald-500/30">
         <CheckCircle size={16} className="text-white" />
       </div>
-      <strong className="text-sm font-semibold text-slate-900 dark:text-white">{data.label || 'Check Entity'}</strong>
+      <strong className="text-sm font-semibold text-slate-800 dark:text-white">{data.label || 'Check Entity'}</strong>
     </div>
-    <div className="text-xs text-slate-600 dark:text-slate-400 font-medium">Validates entity exists</div>
-    <Handle type="source" position={Position.Bottom} id="true" style={{ left: '30%' }} className="w-3 h-3 !bg-green-500 dark:!bg-green-400 border-2 border-white dark:border-slate-800" />
-    <Handle type="source" position={Position.Bottom} id="false" style={{ left: '70%' }} className="w-3 h-3 !bg-red-500 dark:!bg-red-400 border-2 border-white dark:border-slate-800" />
+    <div className="text-xs text-slate-500 dark:text-slate-400 font-medium flex items-center gap-1">
+      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+      Validates entity exists
+    </div>
+    <Handle type="source" position={Position.Bottom} id="true" style={{ left: '30%' }} className="w-3 h-3 !bg-gradient-to-br !from-green-400 !to-emerald-500 border-2 border-white dark:border-slate-800 shadow-md" />
+    <Handle type="source" position={Position.Bottom} id="false" style={{ left: '70%' }} className="w-3 h-3 !bg-gradient-to-br !from-red-400 !to-rose-500 border-2 border-white dark:border-slate-800 shadow-md" />
   </div>
 );
 
 export const UpdateContextNode = ({ data }) => (
-  <div className="px-4 py-3 border-2 border-blue-200 dark:border-blue-700 rounded-xl bg-gradient-to-br from-blue-50 to-cyan-50 dark:from-blue-950/50 dark:to-cyan-950/50 shadow-lg hover:shadow-xl transition-shadow backdrop-blur-sm">
-    <Handle type="target" position={Position.Top} className="w-3 h-3 !bg-blue-500 dark:!bg-blue-400 border-2 border-white dark:border-slate-800" />
-    <div className="flex items-center gap-2 mb-2">
-      <div className="p-1.5 rounded-lg bg-blue-500 dark:bg-blue-600">
+  <div className="px-4 py-3 border border-blue-200/80 dark:border-blue-700/60 rounded-2xl bg-gradient-to-br from-white to-blue-50 dark:from-slate-800 dark:to-blue-950/30 shadow-lg shadow-blue-500/10 hover:shadow-xl hover:shadow-blue-500/20 hover:scale-[1.02] transition-all duration-200 backdrop-blur-sm min-w-[160px]">
+    <Handle type="target" position={Position.Top} className="w-3 h-3 !bg-gradient-to-br !from-blue-400 !to-cyan-500 border-2 border-white dark:border-slate-800 shadow-md" />
+    <div className="flex items-center gap-2.5 mb-2">
+      <div className="p-2 rounded-xl bg-gradient-to-br from-blue-500 to-cyan-600 shadow-md shadow-blue-500/30">
         <Database size={16} className="text-white" />
       </div>
-      <strong className="text-sm font-semibold text-slate-900 dark:text-white">{data.label || 'Update Context'}</strong>
+      <strong className="text-sm font-semibold text-slate-800 dark:text-white">{data.label || 'Update Context'}</strong>
     </div>
-    <div className="text-xs text-slate-600 dark:text-slate-400 font-medium">Sets context variables</div>
-    <Handle type="source" position={Position.Bottom} id="output" className="w-3 h-3 !bg-slate-600 dark:!bg-slate-400 border-2 border-white dark:border-slate-800" />
+    <div className="text-xs text-slate-500 dark:text-slate-400 font-medium flex items-center gap-1">
+      <span className="w-1.5 h-1.5 rounded-full bg-blue-500"></span>
+      Sets context variables
+    </div>
+    <Handle type="source" position={Position.Bottom} id="output" className="w-3 h-3 !bg-slate-500 dark:!bg-slate-400 border-2 border-white dark:border-slate-800 shadow-md" />
   </div>
 );
 
 export const TagConversationNode = ({ data }) => (
-  <div className="px-4 py-3 border-2 border-fuchsia-200 dark:border-fuchsia-700 rounded-xl bg-gradient-to-br from-fuchsia-50 to-pink-50 dark:from-fuchsia-950/50 dark:to-pink-950/50 shadow-lg hover:shadow-xl transition-shadow backdrop-blur-sm">
-    <Handle type="target" position={Position.Top} className="w-3 h-3 !bg-fuchsia-500 dark:!bg-fuchsia-400 border-2 border-white dark:border-slate-800" />
-    <div className="flex items-center gap-2 mb-2">
-      <div className="p-1.5 rounded-lg bg-fuchsia-500 dark:bg-fuchsia-600">
+  <div className="px-4 py-3 border border-fuchsia-200/80 dark:border-fuchsia-700/60 rounded-2xl bg-gradient-to-br from-white to-fuchsia-50 dark:from-slate-800 dark:to-fuchsia-950/30 shadow-lg shadow-fuchsia-500/10 hover:shadow-xl hover:shadow-fuchsia-500/20 hover:scale-[1.02] transition-all duration-200 backdrop-blur-sm min-w-[160px]">
+    <Handle type="target" position={Position.Top} className="w-3 h-3 !bg-gradient-to-br !from-fuchsia-400 !to-pink-500 border-2 border-white dark:border-slate-800 shadow-md" />
+    <div className="flex items-center gap-2.5 mb-2">
+      <div className="p-2 rounded-xl bg-gradient-to-br from-fuchsia-500 to-pink-600 shadow-md shadow-fuchsia-500/30">
         <Tag size={16} className="text-white" />
       </div>
-      <strong className="text-sm font-semibold text-slate-900 dark:text-white">{data.label || 'Tag Conversation'}</strong>
+      <strong className="text-sm font-semibold text-slate-800 dark:text-white">{data.label || 'Tag Conversation'}</strong>
     </div>
-    <div className="text-xs text-slate-600 dark:text-slate-400 font-medium">Adds organizational tags</div>
-    <Handle type="source" position={Position.Bottom} id="output" className="w-3 h-3 !bg-slate-600 dark:!bg-slate-400 border-2 border-white dark:border-slate-800" />
+    <div className="text-xs text-slate-500 dark:text-slate-400 font-medium flex items-center gap-1">
+      <span className="w-1.5 h-1.5 rounded-full bg-fuchsia-500"></span>
+      Adds organizational tags
+    </div>
+    <Handle type="source" position={Position.Bottom} id="output" className="w-3 h-3 !bg-slate-500 dark:!bg-slate-400 border-2 border-white dark:border-slate-800 shadow-md" />
   </div>
 );
 
 export const AssignToAgentNode = ({ data }) => (
-  <div className="px-4 py-3 border-2 border-orange-200 dark:border-orange-700 rounded-xl bg-gradient-to-br from-orange-50 to-amber-50 dark:from-orange-950/50 dark:to-amber-950/50 shadow-lg hover:shadow-xl transition-shadow backdrop-blur-sm">
-    <Handle type="target" position={Position.Top} className="w-3 h-3 !bg-orange-500 dark:!bg-orange-400 border-2 border-white dark:border-slate-800" />
-    <div className="flex items-center gap-2 mb-2">
-      <div className="p-1.5 rounded-lg bg-orange-500 dark:bg-orange-600">
+  <div className="px-4 py-3 border border-orange-200/80 dark:border-orange-700/60 rounded-2xl bg-gradient-to-br from-white to-orange-50 dark:from-slate-800 dark:to-orange-950/30 shadow-lg shadow-orange-500/10 hover:shadow-xl hover:shadow-orange-500/20 hover:scale-[1.02] transition-all duration-200 backdrop-blur-sm min-w-[160px]">
+    <Handle type="target" position={Position.Top} className="w-3 h-3 !bg-gradient-to-br !from-orange-400 !to-amber-500 border-2 border-white dark:border-slate-800 shadow-md" />
+    <div className="flex items-center gap-2.5 mb-2">
+      <div className="p-2 rounded-xl bg-gradient-to-br from-orange-500 to-amber-600 shadow-md shadow-orange-500/30">
         <UserPlus size={16} className="text-white" />
       </div>
-      <strong className="text-sm font-semibold text-slate-900 dark:text-white">{data.label || 'Assign to Agent'}</strong>
+      <strong className="text-sm font-semibold text-slate-800 dark:text-white">{data.label || 'Assign to Agent'}</strong>
     </div>
-    <div className="text-xs text-slate-600 dark:text-slate-400 font-medium">Transfers to human agent</div>
-    <Handle type="source" position={Position.Bottom} id="output" className="w-3 h-3 !bg-slate-600 dark:!bg-slate-400 border-2 border-white dark:border-slate-800" />
+    <div className="text-xs text-slate-500 dark:text-slate-400 font-medium flex items-center gap-1">
+      <span className="w-1.5 h-1.5 rounded-full bg-orange-500"></span>
+      Transfers to human agent
+    </div>
+    <Handle type="source" position={Position.Bottom} id="output" className="w-3 h-3 !bg-slate-500 dark:!bg-slate-400 border-2 border-white dark:border-slate-800 shadow-md" />
   </div>
 );
 
 export const SetStatusNode = ({ data }) => (
-  <div className="px-4 py-3 border-2 border-lime-200 dark:border-lime-700 rounded-xl bg-gradient-to-br from-lime-50 to-green-50 dark:from-lime-950/50 dark:to-green-950/50 shadow-lg hover:shadow-xl transition-shadow backdrop-blur-sm">
-    <Handle type="target" position={Position.Top} className="w-3 h-3 !bg-lime-500 dark:!bg-lime-400 border-2 border-white dark:border-slate-800" />
-    <div className="flex items-center gap-2 mb-2">
-      <div className="p-1.5 rounded-lg bg-lime-500 dark:bg-lime-600">
+  <div className="px-4 py-3 border border-lime-200/80 dark:border-lime-700/60 rounded-2xl bg-gradient-to-br from-white to-lime-50 dark:from-slate-800 dark:to-lime-950/30 shadow-lg shadow-lime-500/10 hover:shadow-xl hover:shadow-lime-500/20 hover:scale-[1.02] transition-all duration-200 backdrop-blur-sm min-w-[160px]">
+    <Handle type="target" position={Position.Top} className="w-3 h-3 !bg-gradient-to-br !from-lime-400 !to-green-500 border-2 border-white dark:border-slate-800 shadow-md" />
+    <div className="flex items-center gap-2.5 mb-2">
+      <div className="p-2 rounded-xl bg-gradient-to-br from-lime-500 to-green-600 shadow-md shadow-lime-500/30">
         <Activity size={16} className="text-white" />
       </div>
-      <strong className="text-sm font-semibold text-slate-900 dark:text-white">{data.label || 'Set Status'}</strong>
+      <strong className="text-sm font-semibold text-slate-800 dark:text-white">{data.label || 'Set Status'}</strong>
     </div>
-    <div className="text-xs text-slate-600 dark:text-slate-400 font-medium">Changes conversation status</div>
-    <Handle type="source" position={Position.Bottom} id="output" className="w-3 h-3 !bg-slate-600 dark:!bg-slate-400 border-2 border-white dark:border-slate-800" />
+    <div className="text-xs text-slate-500 dark:text-slate-400 font-medium flex items-center gap-1">
+      <span className="w-1.5 h-1.5 rounded-full bg-lime-500"></span>
+      Changes conversation status
+    </div>
+    <Handle type="source" position={Position.Bottom} id="output" className="w-3 h-3 !bg-slate-500 dark:!bg-slate-400 border-2 border-white dark:border-slate-800 shadow-md" />
   </div>
 );
 
 export const ChannelRedirectNode = ({ data }) => (
-  <div className="px-4 py-3 border-2 border-rose-200 dark:border-rose-700 rounded-xl bg-gradient-to-br from-rose-50 to-pink-50 dark:from-rose-950/50 dark:to-pink-950/50 shadow-lg hover:shadow-xl transition-shadow backdrop-blur-sm">
-    <Handle type="target" position={Position.Top} className="w-3 h-3 !bg-rose-500 dark:!bg-rose-400 border-2 border-white dark:border-slate-800" />
-    <div className="flex items-center gap-2 mb-2">
-      <div className="p-1.5 rounded-lg bg-rose-500 dark:bg-rose-600">
+  <div className="px-4 py-3 border border-rose-200/80 dark:border-rose-700/60 rounded-2xl bg-gradient-to-br from-white to-rose-50 dark:from-slate-800 dark:to-rose-950/30 shadow-lg shadow-rose-500/10 hover:shadow-xl hover:shadow-rose-500/20 hover:scale-[1.02] transition-all duration-200 backdrop-blur-sm min-w-[160px]">
+    <Handle type="target" position={Position.Top} className="w-3 h-3 !bg-gradient-to-br !from-rose-400 !to-pink-500 border-2 border-white dark:border-slate-800 shadow-md" />
+    <div className="flex items-center gap-2.5 mb-2">
+      <div className="p-2 rounded-xl bg-gradient-to-br from-rose-500 to-pink-600 shadow-md shadow-rose-500/30">
         <ArrowRightLeft size={16} className="text-white" />
       </div>
-      <strong className="text-sm font-semibold text-slate-900 dark:text-white">{data.label || 'Channel Redirect'}</strong>
+      <strong className="text-sm font-semibold text-slate-800 dark:text-white">{data.label || 'Channel Redirect'}</strong>
     </div>
-    <div className="text-xs text-slate-600 dark:text-slate-400 font-medium">
+    <div className="text-xs text-slate-500 dark:text-slate-400 font-medium flex items-center gap-1">
+      <span className="w-1.5 h-1.5 rounded-full bg-rose-500"></span>
       {data.target_channel ? `Redirect to ${data.target_channel}` : 'Redirects to another channel'}
     </div>
-    <Handle type="source" position={Position.Bottom} id="output" className="w-3 h-3 !bg-slate-600 dark:!bg-slate-400 border-2 border-white dark:border-slate-800" />
-    <Handle type="source" position={Position.Right} id="error" className="w-3 h-3 !bg-red-500 dark:!bg-red-400 border-2 border-white dark:border-slate-800" />
+    <Handle type="source" position={Position.Bottom} id="output" className="w-3 h-3 !bg-slate-500 dark:!bg-slate-400 border-2 border-white dark:border-slate-800 shadow-md" />
+    <Handle type="source" position={Position.Right} id="error" className="w-3 h-3 !bg-gradient-to-br !from-red-400 !to-rose-500 border-2 border-white dark:border-slate-800 shadow-md" />
   </div>
 );
 
@@ -394,16 +450,17 @@ export const QuestionClassifierNode = ({ data }) => {
   };
 
   return (
-    <div className={`px-4 py-3 border-2 border-amber-200 dark:border-amber-700 rounded-xl bg-gradient-to-br from-amber-50 to-yellow-50 dark:from-amber-950/50 dark:to-yellow-950/50 shadow-lg hover:shadow-xl transition-shadow backdrop-blur-sm ${hasClasses ? 'min-w-[180px]' : ''}`}
+    <div className={`px-4 py-3 border border-amber-200/80 dark:border-amber-700/60 rounded-2xl bg-gradient-to-br from-white to-amber-50 dark:from-slate-800 dark:to-amber-950/30 shadow-lg shadow-amber-500/10 hover:shadow-xl hover:shadow-amber-500/20 hover:scale-[1.02] transition-all duration-200 backdrop-blur-sm ${hasClasses ? 'min-w-[180px]' : 'min-w-[160px]'}`}
          style={{ minWidth: hasClasses ? `${Math.max(180, totalHandles * 60)}px` : undefined }}>
-      <Handle type="target" position={Position.Top} className="w-3 h-3 !bg-amber-500 dark:!bg-amber-400 border-2 border-white dark:border-slate-800" />
-      <div className="flex items-center gap-2 mb-2">
-        <div className="p-1.5 rounded-lg bg-amber-500 dark:bg-amber-600">
+      <Handle type="target" position={Position.Top} className="w-3 h-3 !bg-gradient-to-br !from-amber-400 !to-yellow-500 border-2 border-white dark:border-slate-800 shadow-md" />
+      <div className="flex items-center gap-2.5 mb-2">
+        <div className="p-2 rounded-xl bg-gradient-to-br from-amber-500 to-yellow-600 shadow-md shadow-amber-500/30">
           <HelpCircle size={16} className="text-white" />
         </div>
-        <strong className="text-sm font-semibold text-slate-900 dark:text-white">{data.label || 'Question Classifier'}</strong>
+        <strong className="text-sm font-semibold text-slate-800 dark:text-white">{data.label || 'Question Classifier'}</strong>
       </div>
-      <div className="text-xs text-slate-600 dark:text-slate-400 font-medium">
+      <div className="text-xs text-slate-500 dark:text-slate-400 font-medium flex items-center gap-1">
+        <span className="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
         {hasClasses ? `Classifies into ${classes.length} classes` : 'Classifies using LLM'}
       </div>
 
@@ -417,7 +474,7 @@ export const QuestionClassifierNode = ({ data }) => {
               position={Position.Bottom}
               id={cls.name}
               style={{ left: getHandlePosition(index) }}
-              className={`w-3 h-3 ${CLASSIFIER_COLORS[index % CLASSIFIER_COLORS.length].bg} border-2 border-white dark:border-slate-800`}
+              className={`w-3 h-3 ${CLASSIFIER_COLORS[index % CLASSIFIER_COLORS.length].bg} border-2 border-white dark:border-slate-800 shadow-md`}
               title={cls.description || cls.name}
             />
           ))}
@@ -427,7 +484,7 @@ export const QuestionClassifierNode = ({ data }) => {
             position={Position.Bottom}
             id="default"
             style={{ left: getHandlePosition(classes.length) }}
-            className="w-3 h-3 !bg-slate-500 dark:!bg-slate-400 border-2 border-white dark:border-slate-800"
+            className="w-3 h-3 !bg-slate-500 dark:!bg-slate-400 border-2 border-white dark:border-slate-800 shadow-md"
             title="Default (no class matched)"
           />
           {/* Handle labels */}
@@ -443,7 +500,7 @@ export const QuestionClassifierNode = ({ data }) => {
       ) : (
         <>
           {/* Default output handle when no classes configured */}
-          <Handle type="source" position={Position.Bottom} id="default" className="w-3 h-3 !bg-slate-600 dark:!bg-slate-400 border-2 border-white dark:border-slate-800" />
+          <Handle type="source" position={Position.Bottom} id="default" className="w-3 h-3 !bg-slate-500 dark:!bg-slate-400 border-2 border-white dark:border-slate-800 shadow-md" />
         </>
       )}
     </div>
@@ -455,19 +512,20 @@ export const ExtractEntitiesNode = ({ data }) => {
   const hasEntities = entities.length > 0;
 
   return (
-    <div className="px-4 py-3 border-2 border-purple-200 dark:border-purple-700 rounded-xl bg-gradient-to-br from-purple-50 to-fuchsia-50 dark:from-purple-950/50 dark:to-fuchsia-950/50 shadow-lg hover:shadow-xl transition-shadow backdrop-blur-sm">
-      <Handle type="target" position={Position.Top} className="w-3 h-3 !bg-purple-500 dark:!bg-purple-400 border-2 border-white dark:border-slate-800" />
-      <div className="flex items-center gap-2 mb-2">
-        <div className="p-1.5 rounded-lg bg-purple-500 dark:bg-purple-600">
+    <div className="px-4 py-3 border border-purple-200/80 dark:border-purple-700/60 rounded-2xl bg-gradient-to-br from-white to-purple-50 dark:from-slate-800 dark:to-purple-950/30 shadow-lg shadow-purple-500/10 hover:shadow-xl hover:shadow-purple-500/20 hover:scale-[1.02] transition-all duration-200 backdrop-blur-sm min-w-[160px]">
+      <Handle type="target" position={Position.Top} className="w-3 h-3 !bg-gradient-to-br !from-purple-400 !to-fuchsia-500 border-2 border-white dark:border-slate-800 shadow-md" />
+      <div className="flex items-center gap-2.5 mb-2">
+        <div className="p-2 rounded-xl bg-gradient-to-br from-purple-500 to-fuchsia-600 shadow-md shadow-purple-500/30">
           <Target size={16} className="text-white" />
         </div>
-        <strong className="text-sm font-semibold text-slate-900 dark:text-white">{data.label || 'Extract Entities'}</strong>
+        <strong className="text-sm font-semibold text-slate-800 dark:text-white">{data.label || 'Extract Entities'}</strong>
       </div>
-      <div className="text-xs text-slate-600 dark:text-slate-400 font-medium">
+      <div className="text-xs text-slate-500 dark:text-slate-400 font-medium flex items-center gap-1">
+        <span className="w-1.5 h-1.5 rounded-full bg-purple-500"></span>
         {hasEntities ? `Extract ${entities.length} ${entities.length === 1 ? 'entity' : 'entities'}` : 'LLM-powered extraction'}
       </div>
-      <Handle type="source" position={Position.Bottom} id="output" className="w-3 h-3 !bg-slate-600 dark:!bg-slate-400 border-2 border-white dark:border-slate-800" />
-      <Handle type="source" position={Position.Right} id="error" className="w-3 h-3 !bg-red-500 dark:!bg-red-400 border-2 border-white dark:border-slate-800" />
+      <Handle type="source" position={Position.Bottom} id="output" className="w-3 h-3 !bg-slate-500 dark:!bg-slate-400 border-2 border-white dark:border-slate-800 shadow-md" />
+      <Handle type="source" position={Position.Right} id="error" className="w-3 h-3 !bg-gradient-to-br !from-red-400 !to-rose-500 border-2 border-white dark:border-slate-800 shadow-md" />
     </div>
   );
 };
@@ -478,19 +536,20 @@ export const SubworkflowNode = ({ data }) => {
   const workflowName = data.subworkflow_name || 'Select Workflow';
 
   return (
-    <div className="px-4 py-3 border-2 border-violet-200 dark:border-violet-700 rounded-xl bg-gradient-to-br from-violet-50 to-purple-50 dark:from-violet-950/50 dark:to-purple-950/50 shadow-lg hover:shadow-xl transition-shadow backdrop-blur-sm min-w-[160px]">
-      <Handle type="target" position={Position.Top} className="w-3 h-3 !bg-violet-500 dark:!bg-violet-400 border-2 border-white dark:border-slate-800" />
-      <div className="flex items-center gap-2 mb-2">
-        <div className="p-1.5 rounded-lg bg-violet-500 dark:bg-violet-600">
+    <div className="px-4 py-3 border border-violet-200/80 dark:border-violet-700/60 rounded-2xl bg-gradient-to-br from-white to-violet-50 dark:from-slate-800 dark:to-violet-950/30 shadow-lg shadow-violet-500/10 hover:shadow-xl hover:shadow-violet-500/20 hover:scale-[1.02] transition-all duration-200 backdrop-blur-sm min-w-[160px]">
+      <Handle type="target" position={Position.Top} className="w-3 h-3 !bg-gradient-to-br !from-violet-400 !to-purple-500 border-2 border-white dark:border-slate-800 shadow-md" />
+      <div className="flex items-center gap-2.5 mb-2">
+        <div className="p-2 rounded-xl bg-gradient-to-br from-violet-500 to-purple-600 shadow-md shadow-violet-500/30">
           <Layers size={16} className="text-white" />
         </div>
-        <strong className="text-sm font-semibold text-slate-900 dark:text-white">{data.label || 'Subworkflow'}</strong>
+        <strong className="text-sm font-semibold text-slate-800 dark:text-white">{data.label || 'Subworkflow'}</strong>
       </div>
-      <div className="text-xs text-slate-600 dark:text-slate-400 font-medium truncate max-w-[140px]" title={workflowName}>
+      <div className="text-xs text-slate-500 dark:text-slate-400 font-medium truncate max-w-[140px] flex items-center gap-1" title={workflowName}>
+        <span className="w-1.5 h-1.5 rounded-full bg-violet-500"></span>
         {workflowName}
       </div>
-      <Handle type="source" position={Position.Bottom} id="output" className="w-3 h-3 !bg-slate-600 dark:!bg-slate-400 border-2 border-white dark:border-slate-800" />
-      <Handle type="source" position={Position.Right} id="error" className="w-3 h-3 !bg-red-500 dark:!bg-red-400 border-2 border-white dark:border-slate-800" />
+      <Handle type="source" position={Position.Bottom} id="output" className="w-3 h-3 !bg-slate-500 dark:!bg-slate-400 border-2 border-white dark:border-slate-800 shadow-md" />
+      <Handle type="source" position={Position.Right} id="error" className="w-3 h-3 !bg-gradient-to-br !from-red-400 !to-rose-500 border-2 border-white dark:border-slate-800 shadow-md" />
     </div>
   );
 };
@@ -498,151 +557,172 @@ export const SubworkflowNode = ({ data }) => {
 // ========== TRIGGER NODES ==========
 
 export const TriggerWebSocketNode = ({ data }) => (
-  <div className="px-5 py-4 border-3 border-cyan-300 dark:border-cyan-600 rounded-xl bg-gradient-to-br from-cyan-100 to-blue-100 dark:from-cyan-900/60 dark:to-blue-900/60 shadow-xl hover:shadow-2xl transition-shadow backdrop-blur-sm ring-2 ring-cyan-200 dark:ring-cyan-700">
-    <div className="flex items-center gap-2 mb-2">
-      <div className="p-2 rounded-lg bg-gradient-to-br from-cyan-500 to-blue-500 shadow-md">
+  <div className="px-5 py-4 border-2 border-cyan-300/80 dark:border-cyan-600/60 rounded-2xl bg-gradient-to-br from-cyan-50 via-white to-blue-50 dark:from-cyan-950/40 dark:via-slate-800 dark:to-blue-950/40 shadow-xl shadow-cyan-500/15 hover:shadow-2xl hover:shadow-cyan-500/25 hover:scale-[1.02] transition-all duration-200 backdrop-blur-sm ring-2 ring-cyan-200/50 dark:ring-cyan-700/30">
+    <div className="flex items-center gap-2.5 mb-2">
+      <div className="p-2.5 rounded-xl bg-gradient-to-br from-cyan-500 to-blue-600 shadow-lg shadow-cyan-500/30">
         <Wifi size={18} className="text-white" />
       </div>
       <div>
-        <strong className="text-sm font-bold text-slate-900 dark:text-white">{data.label || 'WebSocket Trigger'}</strong>
-        <div className="flex items-center gap-1 mt-0.5">
-          <Zap size={10} className="text-cyan-600 dark:text-cyan-400" />
-          <span className="text-[10px] font-semibold text-cyan-700 dark:text-cyan-300">TRIGGER</span>
+        <strong className="text-sm font-bold text-slate-800 dark:text-white">{data.label || 'WebSocket Trigger'}</strong>
+        <div className="flex items-center gap-1.5 mt-0.5">
+          <Zap size={10} className="text-cyan-500 dark:text-cyan-400" />
+          <span className="text-[10px] font-bold uppercase tracking-wider text-cyan-600 dark:text-cyan-300">Trigger</span>
         </div>
       </div>
     </div>
-    <div className="text-xs text-slate-600 dark:text-slate-400 font-medium mb-1">Real-time conversations</div>
+    <div className="text-xs text-slate-500 dark:text-slate-400 font-medium mb-1 flex items-center gap-1">
+      <span className="w-1.5 h-1.5 rounded-full bg-cyan-500 animate-pulse"></span>
+      Real-time conversations
+    </div>
     {data.agent_id && (
-      <div className="text-[10px] text-cyan-700 dark:text-cyan-300 font-medium">Agent: {data.agent_name || `#${data.agent_id}`}</div>
+      <div className="text-[10px] text-cyan-600 dark:text-cyan-300 font-medium mt-1 bg-cyan-100/50 dark:bg-cyan-900/30 px-2 py-0.5 rounded-md inline-block">Agent: {data.agent_name || `#${data.agent_id}`}</div>
     )}
-    <Handle type="source" position={Position.Bottom} id="message" className="w-4 h-4 !bg-cyan-500 dark:!bg-cyan-400 border-2 border-white dark:border-slate-800" />
+    <Handle type="source" position={Position.Bottom} id="message" className="w-4 h-4 !bg-gradient-to-br !from-cyan-400 !to-blue-500 border-2 border-white dark:border-slate-800 shadow-lg" />
   </div>
 );
 
 export const TriggerWhatsAppNode = ({ data }) => (
-  <div className="px-5 py-4 border-3 border-green-300 dark:border-green-600 rounded-xl bg-gradient-to-br from-green-100 to-emerald-100 dark:from-green-900/60 dark:to-emerald-900/60 shadow-xl hover:shadow-2xl transition-shadow backdrop-blur-sm ring-2 ring-green-200 dark:ring-green-700">
-    <div className="flex items-center gap-2 mb-2">
-      <div className="p-2 rounded-lg bg-gradient-to-br from-green-500 to-emerald-500 shadow-md">
+  <div className="px-5 py-4 border-2 border-green-300/80 dark:border-green-600/60 rounded-2xl bg-gradient-to-br from-green-50 via-white to-emerald-50 dark:from-green-950/40 dark:via-slate-800 dark:to-emerald-950/40 shadow-xl shadow-green-500/15 hover:shadow-2xl hover:shadow-green-500/25 hover:scale-[1.02] transition-all duration-200 backdrop-blur-sm ring-2 ring-green-200/50 dark:ring-green-700/30">
+    <div className="flex items-center gap-2.5 mb-2">
+      <div className="p-2.5 rounded-xl bg-gradient-to-br from-green-500 to-emerald-600 shadow-lg shadow-green-500/30">
         <Phone size={18} className="text-white" />
       </div>
       <div>
-        <strong className="text-sm font-bold text-slate-900 dark:text-white">{data.label || 'WhatsApp Trigger'}</strong>
-        <div className="flex items-center gap-1 mt-0.5">
-          <Zap size={10} className="text-green-600 dark:text-green-400" />
-          <span className="text-[10px] font-semibold text-green-700 dark:text-green-300">TRIGGER</span>
+        <strong className="text-sm font-bold text-slate-800 dark:text-white">{data.label || 'WhatsApp Trigger'}</strong>
+        <div className="flex items-center gap-1.5 mt-0.5">
+          <Zap size={10} className="text-green-500 dark:text-green-400" />
+          <span className="text-[10px] font-bold uppercase tracking-wider text-green-600 dark:text-green-300">Trigger</span>
         </div>
       </div>
     </div>
-    <div className="text-xs text-slate-600 dark:text-slate-400 font-medium mb-1">WhatsApp messages</div>
+    <div className="text-xs text-slate-500 dark:text-slate-400 font-medium mb-1 flex items-center gap-1">
+      <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></span>
+      WhatsApp messages
+    </div>
     {data.agent_id && (
-      <div className="text-[10px] text-green-700 dark:text-green-300 font-medium">Agent: {data.agent_name || `#${data.agent_id}`}</div>
+      <div className="text-[10px] text-green-600 dark:text-green-300 font-medium mt-1 bg-green-100/50 dark:bg-green-900/30 px-2 py-0.5 rounded-md inline-block">Agent: {data.agent_name || `#${data.agent_id}`}</div>
     )}
-    <Handle type="source" position={Position.Bottom} id="message" className="w-4 h-4 !bg-green-500 dark:!bg-green-400 border-2 border-white dark:border-slate-800" />
+    <Handle type="source" position={Position.Bottom} id="message" className="w-4 h-4 !bg-gradient-to-br !from-green-400 !to-emerald-500 border-2 border-white dark:border-slate-800 shadow-lg" />
   </div>
 );
 
 export const TriggerTelegramNode = ({ data }) => (
-  <div className="px-5 py-4 border-3 border-sky-300 dark:border-sky-600 rounded-xl bg-gradient-to-br from-sky-100 to-blue-100 dark:from-sky-900/60 dark:to-blue-900/60 shadow-xl hover:shadow-2xl transition-shadow backdrop-blur-sm ring-2 ring-sky-200 dark:ring-sky-700">
-    <div className="flex items-center gap-2 mb-2">
-      <div className="p-2 rounded-lg bg-gradient-to-br from-sky-500 to-blue-500 shadow-md">
+  <div className="px-5 py-4 border-2 border-sky-300/80 dark:border-sky-600/60 rounded-2xl bg-gradient-to-br from-sky-50 via-white to-blue-50 dark:from-sky-950/40 dark:via-slate-800 dark:to-blue-950/40 shadow-xl shadow-sky-500/15 hover:shadow-2xl hover:shadow-sky-500/25 hover:scale-[1.02] transition-all duration-200 backdrop-blur-sm ring-2 ring-sky-200/50 dark:ring-sky-700/30">
+    <div className="flex items-center gap-2.5 mb-2">
+      <div className="p-2.5 rounded-xl bg-gradient-to-br from-sky-500 to-blue-600 shadow-lg shadow-sky-500/30">
         <Send size={18} className="text-white" />
       </div>
       <div>
-        <strong className="text-sm font-bold text-slate-900 dark:text-white">{data.label || 'Telegram Trigger'}</strong>
-        <div className="flex items-center gap-1 mt-0.5">
-          <Zap size={10} className="text-sky-600 dark:text-sky-400" />
-          <span className="text-[10px] font-semibold text-sky-700 dark:text-sky-300">TRIGGER</span>
+        <strong className="text-sm font-bold text-slate-800 dark:text-white">{data.label || 'Telegram Trigger'}</strong>
+        <div className="flex items-center gap-1.5 mt-0.5">
+          <Zap size={10} className="text-sky-500 dark:text-sky-400" />
+          <span className="text-[10px] font-bold uppercase tracking-wider text-sky-600 dark:text-sky-300">Trigger</span>
         </div>
       </div>
     </div>
-    <div className="text-xs text-slate-600 dark:text-slate-400 font-medium mb-1">Telegram messages</div>
+    <div className="text-xs text-slate-500 dark:text-slate-400 font-medium mb-1 flex items-center gap-1">
+      <span className="w-1.5 h-1.5 rounded-full bg-sky-500 animate-pulse"></span>
+      Telegram messages
+    </div>
     {data.agent_id && (
-      <div className="text-[10px] text-sky-700 dark:text-sky-300 font-medium">Agent: {data.agent_name || `#${data.agent_id}`}</div>
+      <div className="text-[10px] text-sky-600 dark:text-sky-300 font-medium mt-1 bg-sky-100/50 dark:bg-sky-900/30 px-2 py-0.5 rounded-md inline-block">Agent: {data.agent_name || `#${data.agent_id}`}</div>
     )}
-    <Handle type="source" position={Position.Bottom} id="message" className="w-4 h-4 !bg-sky-500 dark:!bg-sky-400 border-2 border-white dark:border-slate-800" />
+    <Handle type="source" position={Position.Bottom} id="message" className="w-4 h-4 !bg-gradient-to-br !from-sky-400 !to-blue-500 border-2 border-white dark:border-slate-800 shadow-lg" />
   </div>
 );
 
 export const TriggerInstagramNode = ({ data }) => (
-  <div className="px-5 py-4 border-3 border-pink-300 dark:border-pink-600 rounded-xl bg-gradient-to-br from-pink-100 to-fuchsia-100 dark:from-pink-900/60 dark:to-fuchsia-900/60 shadow-xl hover:shadow-2xl transition-shadow backdrop-blur-sm ring-2 ring-pink-200 dark:ring-pink-700">
-    <div className="flex items-center gap-2 mb-2">
-      <div className="p-2 rounded-lg bg-gradient-to-br from-pink-500 to-fuchsia-500 shadow-md">
+  <div className="px-5 py-4 border-2 border-pink-300/80 dark:border-pink-600/60 rounded-2xl bg-gradient-to-br from-pink-50 via-white to-fuchsia-50 dark:from-pink-950/40 dark:via-slate-800 dark:to-fuchsia-950/40 shadow-xl shadow-pink-500/15 hover:shadow-2xl hover:shadow-pink-500/25 hover:scale-[1.02] transition-all duration-200 backdrop-blur-sm ring-2 ring-pink-200/50 dark:ring-pink-700/30">
+    <div className="flex items-center gap-2.5 mb-2">
+      <div className="p-2.5 rounded-xl bg-gradient-to-br from-pink-500 to-fuchsia-600 shadow-lg shadow-pink-500/30">
         <Instagram size={18} className="text-white" />
       </div>
       <div>
-        <strong className="text-sm font-bold text-slate-900 dark:text-white">{data.label || 'Instagram Trigger'}</strong>
-        <div className="flex items-center gap-1 mt-0.5">
-          <Zap size={10} className="text-pink-600 dark:text-pink-400" />
-          <span className="text-[10px] font-semibold text-pink-700 dark:text-pink-300">TRIGGER</span>
+        <strong className="text-sm font-bold text-slate-800 dark:text-white">{data.label || 'Instagram Trigger'}</strong>
+        <div className="flex items-center gap-1.5 mt-0.5">
+          <Zap size={10} className="text-pink-500 dark:text-pink-400" />
+          <span className="text-[10px] font-bold uppercase tracking-wider text-pink-600 dark:text-pink-300">Trigger</span>
         </div>
       </div>
     </div>
-    <div className="text-xs text-slate-600 dark:text-slate-400 font-medium mb-1">Instagram DMs</div>
+    <div className="text-xs text-slate-500 dark:text-slate-400 font-medium mb-1 flex items-center gap-1">
+      <span className="w-1.5 h-1.5 rounded-full bg-pink-500 animate-pulse"></span>
+      Instagram DMs
+    </div>
     {data.agent_id && (
-      <div className="text-[10px] text-pink-700 dark:text-pink-300 font-medium">Agent: {data.agent_name || `#${data.agent_id}`}</div>
+      <div className="text-[10px] text-pink-600 dark:text-pink-300 font-medium mt-1 bg-pink-100/50 dark:bg-pink-900/30 px-2 py-0.5 rounded-md inline-block">Agent: {data.agent_name || `#${data.agent_id}`}</div>
     )}
-    <Handle type="source" position={Position.Bottom} id="message" className="w-4 h-4 !bg-pink-500 dark:!bg-pink-400 border-2 border-white dark:border-slate-800" />
+    <Handle type="source" position={Position.Bottom} id="message" className="w-4 h-4 !bg-gradient-to-br !from-pink-400 !to-fuchsia-500 border-2 border-white dark:border-slate-800 shadow-lg" />
   </div>
 );
 
 export const TriggerTwilioVoiceNode = ({ data }) => (
-  <div className="px-5 py-4 border-3 border-red-300 dark:border-red-600 rounded-xl bg-gradient-to-br from-red-100 to-orange-100 dark:from-red-900/60 dark:to-orange-900/60 shadow-xl hover:shadow-2xl transition-shadow backdrop-blur-sm ring-2 ring-red-200 dark:ring-red-700">
-    <div className="flex items-center gap-2 mb-2">
-      <div className="p-2 rounded-lg bg-gradient-to-br from-red-500 to-orange-500 shadow-md">
+  <div className="px-5 py-4 border-2 border-red-300/80 dark:border-red-600/60 rounded-2xl bg-gradient-to-br from-red-50 via-white to-orange-50 dark:from-red-950/40 dark:via-slate-800 dark:to-orange-950/40 shadow-xl shadow-red-500/15 hover:shadow-2xl hover:shadow-red-500/25 hover:scale-[1.02] transition-all duration-200 backdrop-blur-sm ring-2 ring-red-200/50 dark:ring-red-700/30">
+    <div className="flex items-center gap-2.5 mb-2">
+      <div className="p-2.5 rounded-xl bg-gradient-to-br from-red-500 to-orange-600 shadow-lg shadow-red-500/30">
         <PhoneCall size={18} className="text-white" />
       </div>
       <div>
-        <strong className="text-sm font-bold text-slate-900 dark:text-white">{data.label || 'Twilio Voice Trigger'}</strong>
-        <div className="flex items-center gap-1 mt-0.5">
-          <Zap size={10} className="text-red-600 dark:text-red-400" />
-          <span className="text-[10px] font-semibold text-red-700 dark:text-red-300">TRIGGER</span>
+        <strong className="text-sm font-bold text-slate-800 dark:text-white">{data.label || 'Twilio Voice Trigger'}</strong>
+        <div className="flex items-center gap-1.5 mt-0.5">
+          <Zap size={10} className="text-red-500 dark:text-red-400" />
+          <span className="text-[10px] font-bold uppercase tracking-wider text-red-600 dark:text-red-300">Trigger</span>
         </div>
       </div>
     </div>
-    <div className="text-xs text-slate-600 dark:text-slate-400 font-medium mb-1">Voice calls via Twilio</div>
+    <div className="text-xs text-slate-500 dark:text-slate-400 font-medium mb-1 flex items-center gap-1">
+      <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse"></span>
+      Voice calls via Twilio
+    </div>
     {data.agent_id && (
-      <div className="text-[10px] text-red-700 dark:text-red-300 font-medium">Agent: {data.agent_name || `#${data.agent_id}`}</div>
+      <div className="text-[10px] text-red-600 dark:text-red-300 font-medium mt-1 bg-red-100/50 dark:bg-red-900/30 px-2 py-0.5 rounded-md inline-block">Agent: {data.agent_name || `#${data.agent_id}`}</div>
     )}
-    <Handle type="source" position={Position.Bottom} id="message" className="w-4 h-4 !bg-red-500 dark:!bg-red-400 border-2 border-white dark:border-slate-800" />
+    <Handle type="source" position={Position.Bottom} id="message" className="w-4 h-4 !bg-gradient-to-br !from-red-400 !to-orange-500 border-2 border-white dark:border-slate-800 shadow-lg" />
   </div>
 );
 
 export const TriggerFreeSwitchNode = ({ data }) => (
-  <div className="px-5 py-4 border-3 border-teal-300 dark:border-teal-600 rounded-xl bg-gradient-to-br from-teal-100 to-cyan-100 dark:from-teal-900/60 dark:to-cyan-900/60 shadow-xl hover:shadow-2xl transition-shadow backdrop-blur-sm ring-2 ring-teal-200 dark:ring-teal-700">
-    <div className="flex items-center gap-2 mb-2">
-      <div className="p-2 rounded-lg bg-gradient-to-br from-teal-500 to-cyan-500 shadow-md">
+  <div className="px-5 py-4 border-2 border-teal-300/80 dark:border-teal-600/60 rounded-2xl bg-gradient-to-br from-teal-50 via-white to-cyan-50 dark:from-teal-950/40 dark:via-slate-800 dark:to-cyan-950/40 shadow-xl shadow-teal-500/15 hover:shadow-2xl hover:shadow-teal-500/25 hover:scale-[1.02] transition-all duration-200 backdrop-blur-sm ring-2 ring-teal-200/50 dark:ring-teal-700/30">
+    <div className="flex items-center gap-2.5 mb-2">
+      <div className="p-2.5 rounded-xl bg-gradient-to-br from-teal-500 to-cyan-600 shadow-lg shadow-teal-500/30">
         <Server size={18} className="text-white" />
       </div>
       <div>
-        <strong className="text-sm font-bold text-slate-900 dark:text-white">{data.label || 'FreeSWITCH Trigger'}</strong>
-        <div className="flex items-center gap-1 mt-0.5">
-          <Zap size={10} className="text-teal-600 dark:text-teal-400" />
-          <span className="text-[10px] font-semibold text-teal-700 dark:text-teal-300">TRIGGER</span>
+        <strong className="text-sm font-bold text-slate-800 dark:text-white">{data.label || 'FreeSWITCH Trigger'}</strong>
+        <div className="flex items-center gap-1.5 mt-0.5">
+          <Zap size={10} className="text-teal-500 dark:text-teal-400" />
+          <span className="text-[10px] font-bold uppercase tracking-wider text-teal-600 dark:text-teal-300">Trigger</span>
         </div>
       </div>
     </div>
-    <div className="text-xs text-slate-600 dark:text-slate-400 font-medium mb-1">Voice calls via FreeSWITCH</div>
+    <div className="text-xs text-slate-500 dark:text-slate-400 font-medium mb-1 flex items-center gap-1">
+      <span className="w-1.5 h-1.5 rounded-full bg-teal-500 animate-pulse"></span>
+      Voice calls via FreeSWITCH
+    </div>
     {data.agent_id && (
-      <div className="text-[10px] text-teal-700 dark:text-teal-300 font-medium">Agent: {data.agent_name || `#${data.agent_id}`}</div>
+      <div className="text-[10px] text-teal-600 dark:text-teal-300 font-medium mt-1 bg-teal-100/50 dark:bg-teal-900/30 px-2 py-0.5 rounded-md inline-block">Agent: {data.agent_name || `#${data.agent_id}`}</div>
     )}
-    <Handle type="source" position={Position.Bottom} id="message" className="w-4 h-4 !bg-teal-500 dark:!bg-teal-400 border-2 border-white dark:border-slate-800" />
+    <Handle type="source" position={Position.Bottom} id="message" className="w-4 h-4 !bg-gradient-to-br !from-teal-400 !to-cyan-500 border-2 border-white dark:border-slate-800 shadow-lg" />
   </div>
 );
 
 // ========== LOOP NODES ==========
 
 export const ForEachLoopNode = ({ data }) => (
-  <div className="px-4 py-3 border-2 border-teal-200 dark:border-teal-700 rounded-xl bg-gradient-to-br from-teal-50 to-cyan-50 dark:from-teal-950/50 dark:to-cyan-950/50 shadow-lg hover:shadow-xl transition-shadow backdrop-blur-sm min-w-[160px]">
-    <Handle type="target" position={Position.Top} className="w-3 h-3 !bg-teal-500 dark:!bg-teal-400 border-2 border-white dark:border-slate-800" />
-    <div className="flex items-center gap-2 mb-2">
-      <div className="p-1.5 rounded-lg bg-teal-500 dark:bg-teal-600">
+  <div className="px-4 py-3 border border-teal-200/80 dark:border-teal-700/60 rounded-2xl bg-gradient-to-br from-white to-teal-50 dark:from-slate-800 dark:to-teal-950/30 shadow-lg shadow-teal-500/10 hover:shadow-xl hover:shadow-teal-500/20 hover:scale-[1.02] transition-all duration-200 backdrop-blur-sm min-w-[160px]">
+    <Handle type="target" position={Position.Top} className="w-3 h-3 !bg-gradient-to-br !from-teal-400 !to-cyan-500 border-2 border-white dark:border-slate-800 shadow-md" />
+    <div className="flex items-center gap-2.5 mb-2">
+      <div className="p-2 rounded-xl bg-gradient-to-br from-teal-500 to-cyan-600 shadow-md shadow-teal-500/30">
         <Repeat size={16} className="text-white" />
       </div>
-      <strong className="text-sm font-semibold text-slate-900 dark:text-white">{data.label || 'For Each'}</strong>
+      <strong className="text-sm font-semibold text-slate-800 dark:text-white">{data.label || 'For Each'}</strong>
     </div>
-    <div className="text-xs text-slate-600 dark:text-slate-400 font-medium">Iterate over array</div>
+    <div className="text-xs text-slate-500 dark:text-slate-400 font-medium flex items-center gap-1">
+      <span className="w-1.5 h-1.5 rounded-full bg-teal-500"></span>
+      Iterate over array
+    </div>
     {data.item_variable && (
-      <div className="text-[10px] text-teal-700 dark:text-teal-300 mt-1 truncate">
+      <div className="text-[10px] text-teal-600 dark:text-teal-300 mt-1 truncate bg-teal-100/50 dark:bg-teal-900/30 px-2 py-0.5 rounded-md inline-block">
         item: {data.item_variable}
       </div>
     )}
@@ -652,7 +732,7 @@ export const ForEachLoopNode = ({ data }) => (
       position={Position.Bottom}
       id="loop"
       style={{ left: '25%' }}
-      className="w-3 h-3 !bg-teal-500 dark:!bg-teal-400 border-2 border-white dark:border-slate-800"
+      className="w-3 h-3 !bg-gradient-to-br !from-teal-400 !to-cyan-500 border-2 border-white dark:border-slate-800 shadow-md"
     />
     {/* Exit handle - bottom right */}
     <Handle
@@ -660,10 +740,10 @@ export const ForEachLoopNode = ({ data }) => (
       position={Position.Bottom}
       id="exit"
       style={{ left: '75%' }}
-      className="w-3 h-3 !bg-slate-500 dark:!bg-slate-400 border-2 border-white dark:border-slate-800"
+      className="w-3 h-3 !bg-slate-500 dark:!bg-slate-400 border-2 border-white dark:border-slate-800 shadow-md"
     />
     {/* Handle labels */}
-    <div className="flex justify-between mt-2 px-4 text-[10px] font-medium">
+    <div className="flex justify-between mt-2 px-4 text-[10px] font-semibold">
       <span className="text-teal-600 dark:text-teal-400">loop</span>
       <span className="text-slate-500 dark:text-slate-400">exit</span>
     </div>
@@ -671,17 +751,20 @@ export const ForEachLoopNode = ({ data }) => (
 );
 
 export const WhileLoopNode = ({ data }) => (
-  <div className="px-4 py-3 border-2 border-violet-200 dark:border-violet-700 rounded-xl bg-gradient-to-br from-violet-50 to-purple-50 dark:from-violet-950/50 dark:to-purple-950/50 shadow-lg hover:shadow-xl transition-shadow backdrop-blur-sm min-w-[160px]">
-    <Handle type="target" position={Position.Top} className="w-3 h-3 !bg-violet-500 dark:!bg-violet-400 border-2 border-white dark:border-slate-800" />
-    <div className="flex items-center gap-2 mb-2">
-      <div className="p-1.5 rounded-lg bg-violet-500 dark:bg-violet-600">
+  <div className="px-4 py-3 border border-violet-200/80 dark:border-violet-700/60 rounded-2xl bg-gradient-to-br from-white to-violet-50 dark:from-slate-800 dark:to-violet-950/30 shadow-lg shadow-violet-500/10 hover:shadow-xl hover:shadow-violet-500/20 hover:scale-[1.02] transition-all duration-200 backdrop-blur-sm min-w-[160px]">
+    <Handle type="target" position={Position.Top} className="w-3 h-3 !bg-gradient-to-br !from-violet-400 !to-purple-500 border-2 border-white dark:border-slate-800 shadow-md" />
+    <div className="flex items-center gap-2.5 mb-2">
+      <div className="p-2 rounded-xl bg-gradient-to-br from-violet-500 to-purple-600 shadow-md shadow-violet-500/30">
         <RefreshCw size={16} className="text-white" />
       </div>
-      <strong className="text-sm font-semibold text-slate-900 dark:text-white">{data.label || 'While Loop'}</strong>
+      <strong className="text-sm font-semibold text-slate-800 dark:text-white">{data.label || 'While Loop'}</strong>
     </div>
-    <div className="text-xs text-slate-600 dark:text-slate-400 font-medium">Repeat while true</div>
+    <div className="text-xs text-slate-500 dark:text-slate-400 font-medium flex items-center gap-1">
+      <span className="w-1.5 h-1.5 rounded-full bg-violet-500"></span>
+      Repeat while true
+    </div>
     {data.conditions && data.conditions.length > 0 && (
-      <div className="text-[10px] text-violet-700 dark:text-violet-300 mt-1">
+      <div className="text-[10px] text-violet-600 dark:text-violet-300 mt-1 bg-violet-100/50 dark:bg-violet-900/30 px-2 py-0.5 rounded-md inline-block">
         {data.conditions.length} condition{data.conditions.length > 1 ? 's' : ''}
       </div>
     )}
@@ -691,7 +774,7 @@ export const WhileLoopNode = ({ data }) => (
       position={Position.Bottom}
       id="loop"
       style={{ left: '25%' }}
-      className="w-3 h-3 !bg-violet-500 dark:!bg-violet-400 border-2 border-white dark:border-slate-800"
+      className="w-3 h-3 !bg-gradient-to-br !from-violet-400 !to-purple-500 border-2 border-white dark:border-slate-800 shadow-md"
     />
     {/* Exit handle - bottom right */}
     <Handle
@@ -699,10 +782,10 @@ export const WhileLoopNode = ({ data }) => (
       position={Position.Bottom}
       id="exit"
       style={{ left: '75%' }}
-      className="w-3 h-3 !bg-slate-500 dark:!bg-slate-400 border-2 border-white dark:border-slate-800"
+      className="w-3 h-3 !bg-slate-500 dark:!bg-slate-400 border-2 border-white dark:border-slate-800 shadow-md"
     />
     {/* Handle labels */}
-    <div className="flex justify-between mt-2 px-4 text-[10px] font-medium">
+    <div className="flex justify-between mt-2 px-4 text-[10px] font-semibold">
       <span className="text-violet-600 dark:text-violet-400">loop</span>
       <span className="text-slate-500 dark:text-slate-400">exit</span>
     </div>

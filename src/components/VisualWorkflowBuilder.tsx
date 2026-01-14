@@ -368,26 +368,26 @@ const VisualWorkflowBuilder = () => {
           workflowName={workflow.name || ''}
         />
       )}
-      <div className="dndflow h-screen flex flex-col bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-950">
-        {/* Enhanced Toolbar */}
-        <div className="flex-shrink-0 px-6 py-4 border-b border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-sm" dir={isRTL ? 'rtl' : 'ltr'}>
-          <div className={`flex items-center gap-4 flex-wrap `}>
-            <Button onClick={() => navigate('/dashboard/workflows')} variant="outline" size="sm" className="btn-hover-lift">
+      <div className="dndflow h-screen flex flex-col bg-gradient-to-br from-slate-100 via-slate-50 to-white dark:from-slate-950 dark:via-slate-900 dark:to-slate-900">
+        {/* Modern Toolbar */}
+        <div className="flex-shrink-0 px-6 py-4 border-b border-slate-200/80 dark:border-slate-700 bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm shadow-sm" dir={isRTL ? 'rtl' : 'ltr'}>
+          <div className={`flex items-center gap-4 flex-wrap`}>
+            <Button onClick={() => navigate('/dashboard/workflows')} variant="outline" size="sm" className="border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 transition-all duration-200">
               <ArrowLeft className={`h-4 w-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
               {t("workflows.editor.backButton")}
             </Button>
             <div className="flex-grow min-w-0">
-              <div className={`flex items-center gap-3 `}>
-                <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center flex-shrink-0">
-                  <WorkflowIcon className="h-4 w-4 text-white" />
+              <div className={`flex items-center gap-3`}>
+                <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center flex-shrink-0 shadow-md shadow-blue-500/20">
+                  <WorkflowIcon className="h-5 w-5 text-white" />
                 </div>
                 <div className="min-w-0">
-                  <h2 className="text-lg font-bold truncate dark:text-white">{workflow.name}</h2>
-                  <div className={`flex items-center gap-2 `}>
-                    <Badge variant="outline" className="text-xs dark:border-slate-600 dark:text-slate-300">{t("workflows.editor.versionBadge", { version: workflow.version })}</Badge>
+                  <h2 className="text-lg font-bold truncate text-slate-900 dark:text-white">{workflow.name}</h2>
+                  <div className={`flex items-center gap-2`}>
+                    <Badge variant="outline" className="text-xs border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300">{t("workflows.editor.versionBadge", { version: workflow.version })}</Badge>
                     {workflow.is_active && (
-                      <Badge className="bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-400 border-green-200 dark:border-green-800 text-xs">
-                        <Sparkles className={`h-3 w-3 ${isRTL ? 'ml-1' : 'mr-1'}`} />
+                      <Badge className="bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-0 text-xs flex items-center gap-1">
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
                         {t("workflows.editor.activebadge")}
                       </Badge>
                     )}
@@ -395,12 +395,12 @@ const VisualWorkflowBuilder = () => {
                 </div>
               </div>
             </div>
-            <div className={`flex items-center gap-2 `}>
-              <Button onClick={() => setDetailsDialogOpen(true)} variant="outline" size="sm" className="btn-hover-lift">
+            <div className={`flex items-center gap-2`}>
+              <Button onClick={() => setDetailsDialogOpen(true)} variant="outline" size="sm" className="border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 transition-all duration-200">
                 <Edit className={`h-4 w-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
                 {t("workflows.editor.editDetailsButton")}
               </Button>
-              <Button onClick={() => setShowSettings(true)} variant="outline" size="sm" className="btn-hover-lift">
+              <Button onClick={() => setShowSettings(true)} variant="outline" size="sm" className="border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 transition-all duration-200">
                 <Settings className={`h-4 w-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
                 {t("workflows.editor.settingsButton")}
               </Button>
@@ -409,7 +409,7 @@ const VisualWorkflowBuilder = () => {
                   onClick={() => setSaveAsTemplateOpen(true)}
                   variant="outline"
                   size="sm"
-                  className="border-purple-300 dark:border-purple-600 text-purple-700 dark:text-purple-400 hover:bg-purple-50 dark:hover:bg-purple-900/20 btn-hover-lift"
+                  className="border-purple-200 dark:border-purple-800 text-purple-600 dark:text-purple-400 hover:bg-purple-50 dark:hover:bg-purple-900/20 transition-all duration-200"
                 >
                   <LayoutTemplate className={`h-4 w-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
                   {t("workflowTemplates.saveAsTemplate")}
@@ -418,7 +418,7 @@ const VisualWorkflowBuilder = () => {
               <Button
                 onClick={() => saveWorkflow()}
                 size="sm"
-                className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 btn-hover-lift"
+                className="bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white shadow-md shadow-blue-500/25 hover:shadow-blue-500/40 transition-all duration-200"
               >
                 {t("workflows.editor.saveButton")}
               </Button>
@@ -428,17 +428,22 @@ const VisualWorkflowBuilder = () => {
 
         {/* Subworkflow Usage Banner */}
         {usedByWorkflows.length > 0 && (
-          <div className="mx-4 mb-2 p-3 bg-violet-50 dark:bg-violet-900/20 border border-violet-200 dark:border-violet-700 rounded-lg flex items-center gap-3">
-            <Layers className="h-5 w-5 text-violet-600 dark:text-violet-400 flex-shrink-0" />
+          <div className="mx-4 mt-2 p-4 bg-gradient-to-r from-violet-50 to-purple-50 dark:from-violet-900/20 dark:to-purple-900/20 border border-violet-200 dark:border-violet-700 rounded-xl flex items-center gap-3 shadow-sm">
+            <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-violet-500 to-purple-500 flex items-center justify-center shadow-md shadow-violet-500/25 flex-shrink-0">
+              <Layers className="h-5 w-5 text-white" />
+            </div>
             <div className="flex-1">
-              <span className="text-sm font-medium text-violet-800 dark:text-violet-200">
+              <span className="text-sm font-semibold text-violet-800 dark:text-violet-200">
                 {t("workflows.editor.usedAsSubworkflow") || "This workflow is used as a subworkflow by"}:
               </span>
               <span className="text-sm text-violet-600 dark:text-violet-300 ml-1">
                 {usedByWorkflows.map(w => w.name).join(', ')}
               </span>
             </div>
-            <AlertTriangle className="h-4 w-4 text-amber-500 dark:text-amber-400 flex-shrink-0" title={t("workflows.editor.subworkflowWarning") || "Changes to this workflow will affect all parent workflows"} />
+            <div className="flex items-center gap-1 text-amber-600 dark:text-amber-400 flex-shrink-0">
+              <AlertTriangle className="h-4 w-4" />
+              <span className="text-xs font-medium hidden sm:inline">{t("workflows.editor.subworkflowWarning") || "Changes affect parent workflows"}</span>
+            </div>
           </div>
         )}
 
@@ -472,9 +477,9 @@ const VisualWorkflowBuilder = () => {
                     }}
                     className="dark:bg-slate-900"
                   >
-                    <Controls className="bg-white dark:bg-slate-800 rounded-lg shadow-lg border border-slate-200 dark:border-slate-700 [&_button]:dark:text-white [&_button]:dark:hover:bg-slate-700" />
+                    <Controls className="bg-white/90 dark:bg-slate-800/90 backdrop-blur-sm rounded-xl shadow-lg border border-slate-200 dark:border-slate-700 overflow-hidden [&_button]:dark:text-white [&_button]:dark:hover:bg-slate-700 [&_button]:transition-colors" />
                     <MiniMap
-                      className="bg-white dark:bg-slate-800 rounded-lg shadow-lg border border-slate-200 dark:border-slate-700"
+                      className="bg-white/90 dark:bg-slate-800/90 backdrop-blur-sm rounded-xl shadow-lg border border-slate-200 dark:border-slate-700 overflow-hidden"
                       nodeColor={(node) => {
                         if (node.type === 'start') return '#10b981';
                         if (node.type === 'response') return '#ef4444';
@@ -483,9 +488,9 @@ const VisualWorkflowBuilder = () => {
                         if (node.type === 'condition') return '#f59e0b';
                         return '#8b5cf6';
                       }}
-                      maskColor="rgb(15, 23, 42, 0.7)"
+                      maskColor="rgb(15, 23, 42, 0.6)"
                     />
-                    <Background variant="dots" gap={20} size={1} color="#94a3b8" className="dark:opacity-30" />
+                    <Background variant="dots" gap={24} size={1.5} color="#94a3b8" className="dark:opacity-20" />
                   </ReactFlow>
                 </div>
               </ResizablePanel>
@@ -511,9 +516,9 @@ const VisualWorkflowBuilder = () => {
                   localStorage.setItem('workflowBuilder.propertiesPanel.collapsed', 'false');
                 }}
               >
-                <div className="h-full border-l border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-lg overflow-hidden flex flex-col">
+                <div className="h-full border-l border-slate-200/80 dark:border-slate-700 bg-gradient-to-b from-white to-slate-50 dark:from-slate-800 dark:to-slate-900 shadow-xl overflow-hidden flex flex-col">
                   {/* Panel Content */}
-                  <div className="flex-1 overflow-y-auto">
+                  <div className="flex-1 overflow-y-auto scrollbar-thin scrollbar-thumb-slate-200 dark:scrollbar-thumb-slate-700">
                     <PropertiesPanel selectedNode={selectedNode} nodes={nodes} setNodes={setNodes} deleteNode={deleteNode} workflowId={workflowId} />
                     {workflow && workflow.id && (
                       <Comments workflowId={workflow.id} />
