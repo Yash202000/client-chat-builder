@@ -207,6 +207,25 @@ All colors MUST be HSL.
     background-size: 20px 20px;
   }
 
+  /* Ensure ReactFlow nodes don't clip their children (for add node buttons) */
+  .react-flow__node {
+    overflow: visible !important;
+  }
+
+  /* Ensure the node wrapper group allows overflow for add buttons */
+  .react-flow__node > div {
+    overflow: visible !important;
+  }
+
+  /* Style for the add node button wrapper */
+  .add-node-btn-wrapper {
+    pointer-events: auto !important;
+  }
+
+  .add-node-btn-wrapper button {
+    pointer-events: auto !important;
+  }
+
   /* Improved button hover states */
   .btn-hover-lift {
     transition: transform 0.2s ease, box-shadow 0.2s ease;

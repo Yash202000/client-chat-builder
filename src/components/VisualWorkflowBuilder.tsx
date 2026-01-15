@@ -35,6 +35,7 @@ import {
 import { useAuth } from "@/hooks/useAuth";
 import { Comments } from './Comments';
 import { useI18n } from '@/hooks/useI18n';
+import { WorkflowBuilderContext } from './workflow/WorkflowBuilderContext';
 
 const initialNodes = [
   { id: 'start-node', type: 'start', data: { label: 'Start' }, position: { x: 250, y: 5 } },
@@ -307,23 +308,77 @@ const VisualWorkflowBuilder = () => {
   const onDrop = useCallback((event) => {
     event.preventDefault();
     if (!reactFlowInstance) return;
-    
+
     const type = event.dataTransfer.getData('application/reactflow');
     const dataString = event.dataTransfer.getData('application/reactflow-data');
     const data = dataString ? JSON.parse(dataString) : { label: `${type} node` };
 
     if (typeof type === 'undefined' || !type) return;
-    
+
     const position = reactFlowInstance.screenToFlowPosition({ x: event.clientX, y: event.clientY });
-    const newNode = { 
-      id: `${type}-${+new Date()}`, 
-      type, 
-      position, 
+    const newNode = {
+      id: `${type}-${+new Date()}`,
+      type,
+      position,
       data
     };
-    
+
     setNodes((nds) => nds.concat(newNode));
   }, [reactFlowInstance, setNodes]);
+
+  // Add node with automatic connection from a source handle
+  const addNodeWithConnection = useCallback((
+    sourceId: string,
+    sourceHandle: string,
+    nodeType: string,
+    nodeData: Record<string, any>,
+    handlePosition: 'bottom' | 'right'
+  ): string | null => {
+    const sourceNode = nodes.find(n => n.id === sourceId);
+    if (!sourceNode) return null;
+
+    // Calculate position based on handle position
+    let position;
+    if (handlePosition === 'bottom') {
+      position = {
+        x: sourceNode.position.x,
+        y: sourceNode.position.y + 150
+      };
+    } else {
+      position = {
+        x: sourceNode.position.x + 250,
+        y: sourceNode.position.y
+      };
+    }
+
+    const newNodeId = `${nodeType}-${Date.now()}`;
+    const newNode = {
+      id: newNodeId,
+      type: nodeType,
+      position,
+      data: nodeData.label ? nodeData : { ...nodeData, label: `${nodeType} node` }
+    };
+
+    // Add the new node
+    setNodes((nds) => [...nds, newNode]);
+
+    // Create edge connecting source to new node
+    const newEdge = {
+      id: `e-${sourceId}-${newNodeId}-${Date.now()}`,
+      source: sourceId,
+      sourceHandle,
+      target: newNodeId,
+      type: 'smoothstep',
+      animated: true,
+      style: { stroke: '#8b5cf6', strokeWidth: 2.5 }
+    };
+    setEdges((eds) => addEdge(newEdge, eds));
+
+    // Select the new node
+    setSelectedNode(newNode);
+
+    return newNodeId;
+  }, [nodes, setNodes, setEdges]);
   const onNodeClick = useCallback((_, node) => {
     setSelectedNode(node);
     // Auto-expand properties panel if collapsed
@@ -450,6 +505,7 @@ const VisualWorkflowBuilder = () => {
         {/* Main Workflow Canvas */}
         <div className="flex-grow flex overflow-hidden relative">
           <ReactFlowProvider>
+            <WorkflowBuilderContext.Provider value={{ addNodeWithConnection, nodes, edges }}>
             <Sidebar />
             <ResizablePanelGroup direction="horizontal" className="flex-grow">
 
@@ -541,6 +597,7 @@ const VisualWorkflowBuilder = () => {
                 : (isPropertiesPanelCollapsed ? <PanelRightOpen className="h-4 w-4" /> : <PanelRightClose className="h-4 w-4" />)
               }
             </Button>
+            </WorkflowBuilderContext.Provider>
           </ReactFlowProvider>
         </div>
       </div>
