@@ -450,60 +450,71 @@ export const TeamManagement = () => {
   return (
     <div className="space-y-6" dir={isRTL ? 'rtl' : 'ltr'}>
       {/* Stats Overview Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card className="bg-gradient-to-br from-blue-50 to-cyan-50 dark:from-blue-950/30 dark:to-cyan-950/30 border-blue-200 dark:border-blue-800 card-shadow">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+        <Card className="bg-gradient-to-br from-blue-50 to-cyan-50 dark:from-blue-950/30 dark:to-cyan-950/30 border-blue-200/80 dark:border-blue-800/60 rounded-2xl shadow-lg shadow-blue-500/10 hover:shadow-xl hover:shadow-blue-500/20 transition-all duration-300 hover:scale-[1.02]">
           <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
+            <div className={`flex items-center justify-between ${isRTL ? 'flex-row-reverse' : ''}`}>
               <div>
                 <p className="text-sm font-medium text-muted-foreground dark:text-gray-400">{t('teamManagement.stats.totalUsers')}</p>
                 <h3 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-cyan-600 bg-clip-text text-transparent">
                   {users?.length || 0}
                 </h3>
               </div>
-              <div className="h-12 w-12 rounded-full bg-gradient-to-br from-blue-600 to-cyan-600 flex items-center justify-center">
-                <span className="text-2xl">👥</span>
+              <div className="relative">
+                <div className="absolute inset-0 bg-gradient-to-br from-blue-600 to-cyan-600 rounded-xl blur-md opacity-40" />
+                <div className="relative h-12 w-12 rounded-xl bg-gradient-to-br from-blue-600 to-cyan-600 flex items-center justify-center shadow-lg shadow-blue-500/30">
+                  <Users className="h-6 w-6 text-white" />
+                </div>
               </div>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-950/30 dark:to-pink-950/30 border-purple-200 dark:border-purple-800 card-shadow">
+        <Card className="bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-950/30 dark:to-pink-950/30 border-purple-200/80 dark:border-purple-800/60 rounded-2xl shadow-lg shadow-purple-500/10 hover:shadow-xl hover:shadow-purple-500/20 transition-all duration-300 hover:scale-[1.02]">
           <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
+            <div className={`flex items-center justify-between ${isRTL ? 'flex-row-reverse' : ''}`}>
               <div>
                 <p className="text-sm font-medium text-muted-foreground dark:text-gray-400">{t('teamManagement.stats.teams')}</p>
                 <h3 className="text-3xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
                   {teams?.length || 0}
                 </h3>
               </div>
-              <div className="h-12 w-12 rounded-full bg-gradient-to-br from-purple-600 to-pink-600 flex items-center justify-center">
-                <span className="text-2xl">🏢</span>
+              <div className="relative">
+                <div className="absolute inset-0 bg-gradient-to-br from-purple-600 to-pink-600 rounded-xl blur-md opacity-40" />
+                <div className="relative h-12 w-12 rounded-xl bg-gradient-to-br from-purple-600 to-pink-600 flex items-center justify-center shadow-lg shadow-purple-500/30">
+                  <Users className="h-6 w-6 text-white" />
+                </div>
               </div>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="bg-gradient-to-br from-orange-50 to-amber-50 dark:from-orange-950/30 dark:to-amber-950/30 border-orange-200 dark:border-orange-800 card-shadow">
+        <Card className="bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-950/30 dark:to-orange-950/30 border-amber-200/80 dark:border-amber-800/60 rounded-2xl shadow-lg shadow-amber-500/10 hover:shadow-xl hover:shadow-amber-500/20 transition-all duration-300 hover:scale-[1.02]">
           <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
+            <div className={`flex items-center justify-between ${isRTL ? 'flex-row-reverse' : ''}`}>
               <div>
                 <p className="text-sm font-medium text-muted-foreground dark:text-gray-400">{t('teamManagement.stats.roles')}</p>
-                <h3 className="text-3xl font-bold bg-gradient-to-r from-orange-600 to-amber-600 bg-clip-text text-transparent">
+                <h3 className="text-3xl font-bold bg-gradient-to-r from-amber-600 to-orange-600 bg-clip-text text-transparent">
                   {roles?.length || 0}
                 </h3>
               </div>
-              <div className="h-12 w-12 rounded-full bg-gradient-to-br from-orange-600 to-amber-600 flex items-center justify-center">
-                <span className="text-2xl">🔒</span>
+              <div className="relative">
+                <div className="absolute inset-0 bg-gradient-to-br from-amber-600 to-orange-600 rounded-xl blur-md opacity-40" />
+                <div className="relative h-12 w-12 rounded-xl bg-gradient-to-br from-amber-600 to-orange-600 flex items-center justify-center shadow-lg shadow-amber-500/30">
+                  <Shield className="h-6 w-6 text-white" />
+                </div>
               </div>
             </div>
           </CardContent>
         </Card>
       </div>
 
-      <Card className="card-shadow-lg bg-white dark:bg-slate-800 overflow-visible">
-        <CardHeader className="border-b border-slate-200 dark:border-slate-700 bg-gradient-to-r from-slate-50 to-slate-100 dark:from-slate-800 dark:to-slate-900">
-          <CardTitle className={`flex items-center gap-2 text-2xl dark:text-white`}>
-            <Users className="h-7 w-7 text-blue-600 dark:text-blue-400" />
+      <Card className="rounded-2xl shadow-xl shadow-slate-200/50 dark:shadow-slate-900/50 bg-white dark:bg-slate-800 overflow-visible border-slate-200/80 dark:border-slate-700/60">
+        <CardHeader className="border-b border-slate-200/80 dark:border-slate-700/60 bg-gradient-to-r from-slate-50 via-white to-slate-50 dark:from-slate-800 dark:via-slate-800 dark:to-slate-900 rounded-t-2xl">
+          <CardTitle className={`flex items-center gap-3 text-2xl dark:text-white ${isRTL ? 'flex-row-reverse' : ''}`}>
+            <div className="p-2.5 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 shadow-lg shadow-blue-500/25">
+              <Users className="h-6 w-6 text-white" />
+            </div>
             {t('teamManagement.title')}
           </CardTitle>
           <CardDescription className="dark:text-gray-400 text-base">
@@ -512,43 +523,57 @@ export const TeamManagement = () => {
         </CardHeader>
         <CardContent className="pt-6">
           <Tabs defaultValue="users" className="w-full" dir={isRTL ? 'rtl' : 'ltr'}>
-            <TabsList className="grid w-full grid-cols-3 bg-slate-100 dark:bg-slate-900 p-1">
-              <TabsTrigger value="users" className="data-[state=active]:bg-white dark:data-[state=active]:bg-slate-800 data-[state=active]:text-blue-600 dark:data-[state=active]:text-blue-400">👥 {t('teamManagement.tabs.users')}</TabsTrigger>
-              <TabsTrigger value="teams" className="data-[state=active]:bg-white dark:data-[state=active]:bg-slate-800 data-[state=active]:text-blue-600 dark:data-[state=active]:text-blue-400">🏢 {t('teamManagement.tabs.teams')}</TabsTrigger>
-              <TabsTrigger value="permissions" className="data-[state=active]:bg-white dark:data-[state=active]:bg-slate-800 data-[state=active]:text-blue-600 dark:data-[state=active]:text-blue-400">🔒 {t('teamManagement.tabs.rolesPermissions')}</TabsTrigger>
+            <TabsList className="grid w-full grid-cols-3 bg-slate-100/80 dark:bg-slate-900/80 p-1.5 rounded-xl h-auto gap-1">
+              <TabsTrigger value="users" className="rounded-lg py-2.5 px-4 data-[state=active]:bg-white dark:data-[state=active]:bg-slate-800 data-[state=active]:text-blue-600 dark:data-[state=active]:text-blue-400 data-[state=active]:shadow-md transition-all duration-200 flex items-center gap-2">
+                <Users className="h-4 w-4" />
+                {t('teamManagement.tabs.users')}
+              </TabsTrigger>
+              <TabsTrigger value="teams" className="rounded-lg py-2.5 px-4 data-[state=active]:bg-white dark:data-[state=active]:bg-slate-800 data-[state=active]:text-purple-600 dark:data-[state=active]:text-purple-400 data-[state=active]:shadow-md transition-all duration-200 flex items-center gap-2">
+                <Users className="h-4 w-4" />
+                {t('teamManagement.tabs.teams')}
+              </TabsTrigger>
+              <TabsTrigger value="permissions" className="rounded-lg py-2.5 px-4 data-[state=active]:bg-white dark:data-[state=active]:bg-slate-800 data-[state=active]:text-amber-600 dark:data-[state=active]:text-amber-400 data-[state=active]:shadow-md transition-all duration-200 flex items-center gap-2">
+                <Shield className="h-4 w-4" />
+                {t('teamManagement.tabs.rolesPermissions')}
+              </TabsTrigger>
             </TabsList>
 
             {/* USERS TAB */}
             <TabsContent value="users" className="space-y-5 pt-5">
-              <div className={`flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4`}>
+              <div className={`flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 ${isRTL ? 'flex-row-reverse' : ''}`}>
                 <div className="relative flex-1 max-w-md w-full">
-                  <Search className={`absolute ${isRTL ? 'right-3' : 'left-3'} top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500 h-4 w-4`} />
+                  <Search className={`absolute ${isRTL ? 'right-4' : 'left-4'} top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500 h-4 w-4`} />
                   <Input
                     placeholder={t('teamManagement.searchPlaceholder')}
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className={`${isRTL ? 'pr-10' : 'pl-10'} dark:bg-slate-900 dark:border-slate-600 dark:text-white dark:placeholder-gray-500`}
+                    className={`${isRTL ? 'pr-11' : 'pl-11'} rounded-xl h-11 dark:bg-slate-900 dark:border-slate-600 dark:text-white dark:placeholder-gray-500 border-slate-200/80 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500`}
                   />
                 </div>
                 <Permission permission="user:create">
-                  <div className="flex items-center gap-2">
+                  <div className={`flex items-center gap-3 ${isRTL ? 'flex-row-reverse' : ''}`}>
                     <Button
                       onClick={() => setInviteUserModalOpen(true)}
-                      className={`flex items-center gap-2 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white btn-hover-lift`}
+                      className={`flex items-center gap-2 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white rounded-xl shadow-lg shadow-purple-500/25 hover:shadow-xl hover:shadow-purple-500/30 transition-all duration-200 hover:scale-[1.02]`}
                     >
                       <Send className="h-4 w-4" />
                       {t('teamManagement.inviteUser')}
                     </Button>
                     <Dialog open={isAddUserModalOpen} onOpenChange={setAddUserModalOpen}>
                       <DialogTrigger asChild>
-                        <Button className={`flex items-center gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white btn-hover-lift`}>
+                        <Button className={`flex items-center gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-xl shadow-lg shadow-blue-500/25 hover:shadow-xl hover:shadow-blue-500/30 transition-all duration-200 hover:scale-[1.02]`}>
                           <UserPlus className="h-4 w-4" />
                           {t('teamManagement.addUser')}
                         </Button>
                       </DialogTrigger>
-                  <DialogContent className="dark:bg-slate-800 dark:border-slate-700" dir={isRTL ? 'rtl' : 'ltr'}>
-                    <DialogHeader>
-                      <DialogTitle className="dark:text-white">{t('teamManagement.dialogs.addUser.title')}</DialogTitle>
+                  <DialogContent className="dark:bg-slate-800 dark:border-slate-700 rounded-2xl sm:rounded-2xl" dir={isRTL ? 'rtl' : 'ltr'}>
+                    <DialogHeader className="pb-4 border-b border-slate-200/80 dark:border-slate-700/60">
+                      <DialogTitle className={`dark:text-white flex items-center gap-3 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                        <div className="p-2 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 shadow-lg shadow-blue-500/25">
+                          <UserPlus className="h-5 w-5 text-white" />
+                        </div>
+                        {t('teamManagement.dialogs.addUser.title')}
+                      </DialogTitle>
                     </DialogHeader>
                     <div className="space-y-4 py-4">
                       <div>
@@ -559,7 +584,7 @@ export const TeamManagement = () => {
                           type="email"
                           value={newUserEmail}
                           onChange={(e) => setNewUserEmail(e.target.value)}
-                          className="dark:bg-slate-900 dark:border-slate-600 dark:text-white"
+                          className="dark:bg-slate-900 dark:border-slate-600 dark:text-white rounded-xl h-11"
                         />
                       </div>
                       <div>
@@ -570,18 +595,18 @@ export const TeamManagement = () => {
                           type="password"
                           value={newUserPassword}
                           onChange={(e) => setNewUserPassword(e.target.value)}
-                          className="dark:bg-slate-900 dark:border-slate-600 dark:text-white"
+                          className="dark:bg-slate-900 dark:border-slate-600 dark:text-white rounded-xl h-11"
                         />
                       </div>
                     </div>
-                    <DialogFooter>
-                      <Button variant="outline" onClick={() => setAddUserModalOpen(false)} className="dark:border-slate-600 dark:text-white dark:hover:bg-slate-700">
+                    <DialogFooter className="pt-4 border-t border-slate-200/80 dark:border-slate-700/60">
+                      <Button variant="outline" onClick={() => setAddUserModalOpen(false)} className="dark:border-slate-600 dark:text-white dark:hover:bg-slate-700 rounded-xl">
                         {t('common.cancel')}
                       </Button>
                       <Button
                         onClick={handleCreateUser}
                         disabled={createUserMutation.isPending}
-                        className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white"
+                        className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-xl shadow-lg shadow-blue-500/25"
                       >
                         {createUserMutation.isPending ? t('teamManagement.dialogs.addUser.adding') : t('teamManagement.dialogs.addUser.button')}
                       </Button>
@@ -591,16 +616,16 @@ export const TeamManagement = () => {
                   </div>
               </Permission>
               </div>
-              <Card className="border border-slate-200 dark:border-slate-700 dark:bg-slate-900/50">
+              <Card className="border border-slate-200/80 dark:border-slate-700/60 dark:bg-slate-900/50 rounded-xl overflow-hidden">
                 <CardContent className="p-0">
                   <div className="overflow-x-auto">
                     <Table>
                       <TableHeader>
-                        <TableRow className="border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/80 hover:bg-slate-50 dark:hover:bg-slate-900/80">
-                          <TableHead className="dark:text-gray-300 font-semibold">{t('teamManagement.table.user')}</TableHead>
-                          <TableHead className="dark:text-gray-300 font-semibold">{t('teamManagement.table.role')}</TableHead>
-                          <TableHead className="dark:text-gray-300 font-semibold">{t('teamManagement.table.status')}</TableHead>
-                          <TableHead className={`${isRTL ? 'text-left' : 'text-right'} dark:text-gray-300 font-semibold`}>{t('teamManagement.table.actions')}</TableHead>
+                        <TableRow className="border-b border-slate-200/80 dark:border-slate-700/60 bg-gradient-to-r from-slate-50 to-slate-100/80 dark:from-slate-900/80 dark:to-slate-800/80 hover:bg-slate-50 dark:hover:bg-slate-900/80">
+                          <TableHead className="dark:text-gray-300 font-semibold text-slate-700">{t('teamManagement.table.user')}</TableHead>
+                          <TableHead className="dark:text-gray-300 font-semibold text-slate-700">{t('teamManagement.table.role')}</TableHead>
+                          <TableHead className="dark:text-gray-300 font-semibold text-slate-700">{t('teamManagement.table.status')}</TableHead>
+                          <TableHead className={`${isRTL ? 'text-left' : 'text-right'} dark:text-gray-300 font-semibold text-slate-700`}>{t('teamManagement.table.actions')}</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
@@ -728,7 +753,7 @@ export const TeamManagement = () => {
 
             {/* TEAMS TAB */}
             <TabsContent value="teams" className="space-y-5 pt-5">
-              <div className={`flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4`}>
+              <div className={`flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 ${isRTL ? 'flex-row-reverse' : ''}`}>
                 <div>
                   <h3 className="text-lg font-semibold dark:text-white">{t('teamManagement.manageTeams')}</h3>
                   <p className="text-sm text-muted-foreground dark:text-gray-400">{t('teamManagement.manageTeamsDesc')}</p>
@@ -736,14 +761,19 @@ export const TeamManagement = () => {
                 <Permission permission="team:create">
                   <Dialog open={isCreateTeamModalOpen} onOpenChange={setCreateTeamModalOpen}>
                     <DialogTrigger asChild>
-                      <Button className={`flex items-center gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white btn-hover-lift `}>
+                      <Button className={`flex items-center gap-2 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white rounded-xl shadow-lg shadow-purple-500/25 hover:shadow-xl hover:shadow-purple-500/30 transition-all duration-200 hover:scale-[1.02]`}>
                         <Plus className="h-4 w-4" />
                         {t('teamManagement.createTeam')}
                       </Button>
                     </DialogTrigger>
-                  <DialogContent className="dark:bg-slate-800 dark:border-slate-700" dir={isRTL ? 'rtl' : 'ltr'}>
-                    <DialogHeader>
-                      <DialogTitle className="dark:text-white">{t('teamManagement.dialogs.createTeam.title')}</DialogTitle>
+                  <DialogContent className="dark:bg-slate-800 dark:border-slate-700 rounded-2xl sm:rounded-2xl" dir={isRTL ? 'rtl' : 'ltr'}>
+                    <DialogHeader className="pb-4 border-b border-slate-200/80 dark:border-slate-700/60">
+                      <DialogTitle className={`dark:text-white flex items-center gap-3 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                        <div className="p-2 rounded-xl bg-gradient-to-br from-purple-500 to-pink-600 shadow-lg shadow-purple-500/25">
+                          <Plus className="h-5 w-5 text-white" />
+                        </div>
+                        {t('teamManagement.dialogs.createTeam.title')}
+                      </DialogTitle>
                     </DialogHeader>
                     <div className="py-4">
                       <Label htmlFor="new-team-name" className="text-sm dark:text-gray-300 mb-1.5 block">{t('teamManagement.dialogs.createTeam.label')}</Label>
@@ -752,17 +782,17 @@ export const TeamManagement = () => {
                         placeholder={t('teamManagement.dialogs.createTeam.placeholder')}
                         value={newTeamName}
                         onChange={(e) => setNewTeamName(e.target.value)}
-                        className="dark:bg-slate-900 dark:border-slate-600 dark:text-white"
+                        className="dark:bg-slate-900 dark:border-slate-600 dark:text-white rounded-xl h-11"
                       />
                     </div>
-                    <DialogFooter>
-                      <Button variant="outline" onClick={() => setCreateTeamModalOpen(false)} className="dark:border-slate-600 dark:text-white dark:hover:bg-slate-700">
+                    <DialogFooter className="pt-4 border-t border-slate-200/80 dark:border-slate-700/60">
+                      <Button variant="outline" onClick={() => setCreateTeamModalOpen(false)} className="dark:border-slate-600 dark:text-white dark:hover:bg-slate-700 rounded-xl">
                         {t('common.cancel')}
                       </Button>
                       <Button
                         onClick={handleCreateTeam}
                         disabled={createTeamMutation.isPending}
-                        className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white"
+                        className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white rounded-xl shadow-lg shadow-purple-500/25"
                       >
                         {createTeamMutation.isPending ? t('teamManagement.dialogs.createTeam.creating') : t('teamManagement.dialogs.createTeam.button')}
                       </Button>
@@ -775,25 +805,28 @@ export const TeamManagement = () => {
                 {isLoadingTeams ? (
                   <div className="col-span-full flex items-center justify-center py-12">
                     <div className="flex items-center gap-2 text-muted-foreground dark:text-gray-400">
-                      <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-600 dark:border-blue-400"></div>
+                      <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-purple-600 dark:border-purple-400"></div>
                       <span>{t('teamManagement.loading.teams')}</span>
                     </div>
                   </div>
                 ) : teams.length === 0 ? (
                   <div className="col-span-full text-center py-12">
-                    <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-slate-100 dark:bg-slate-800 mb-4">
-                      <Users className="h-8 w-8 text-slate-400 dark:text-slate-600" />
+                    <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-purple-100 to-pink-100 dark:from-purple-900/30 dark:to-pink-900/30 mb-4 shadow-lg shadow-purple-500/20">
+                      <Users className="h-8 w-8 text-purple-600 dark:text-purple-400" />
                     </div>
                     <p className="text-muted-foreground dark:text-gray-400">{t('teamManagement.noTeamsYet')}</p>
                   </div>
                 ) : (
                   teams.map((team) => (
-                    <Card key={team.id} className="flex flex-col card-shadow-lg border-slate-200 dark:border-slate-700 dark:bg-slate-900/50 hover:shadow-xl transition-shadow">
-                      <CardHeader className="border-b border-slate-200 dark:border-slate-700 bg-gradient-to-r from-slate-50 to-slate-100 dark:from-slate-800/50 dark:to-slate-900/50">
-                        <div className="flex items-center justify-between">
-                          <CardTitle className="dark:text-white flex items-center gap-2">
-                            <div className="h-8 w-8 rounded-full bg-gradient-to-br from-blue-100 to-indigo-100 dark:from-blue-900/50 dark:to-indigo-900/50 flex items-center justify-center">
-                              <Users className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                    <Card key={team.id} className="flex flex-col rounded-2xl border-slate-200/80 dark:border-slate-700/60 dark:bg-slate-900/50 shadow-lg shadow-purple-500/5 hover:shadow-xl hover:shadow-purple-500/10 transition-all duration-300 hover:scale-[1.01]">
+                      <CardHeader className="border-b border-slate-200/80 dark:border-slate-700/60 bg-gradient-to-r from-purple-50/50 to-pink-50/50 dark:from-purple-900/20 dark:to-pink-900/20 rounded-t-2xl">
+                        <div className={`flex items-center justify-between ${isRTL ? 'flex-row-reverse' : ''}`}>
+                          <CardTitle className={`dark:text-white flex items-center gap-3 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                            <div className="relative">
+                              <div className="absolute inset-0 bg-gradient-to-br from-purple-600 to-pink-600 rounded-xl blur-md opacity-40" />
+                              <div className="relative h-10 w-10 rounded-xl bg-gradient-to-br from-purple-600 to-pink-600 flex items-center justify-center shadow-lg shadow-purple-500/30">
+                                <Users className="h-5 w-5 text-white" />
+                              </div>
                             </div>
                             {team.name}
                           </CardTitle>
@@ -872,11 +905,11 @@ export const TeamManagement = () => {
                         <Permission permission="team:update">
                           <Button
                             variant="outline"
-                            className={`w-full dark:border-slate-600 dark:text-white dark:hover:bg-slate-700 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors flex items-center gap-2 `}
+                            className={`w-full dark:border-slate-600 dark:text-white dark:hover:bg-slate-700 hover:bg-purple-50 dark:hover:bg-purple-900/20 transition-colors flex items-center gap-2 rounded-xl border-purple-200 dark:border-purple-800/50 hover:border-purple-300 dark:hover:border-purple-700 justify-center`}
                             onClick={() => openAddMemberModal(team)}
                           >
-                            <UserPlus className="h-4 w-4" />
-                            {t('teamManagement.addMember')}
+                            <UserPlus className="h-4 w-4 text-purple-600 dark:text-purple-400" />
+                            <span className="text-purple-700 dark:text-purple-300">{t('teamManagement.addMember')}</span>
                           </Button>
                         </Permission>
                       </CardContent>
@@ -888,14 +921,14 @@ export const TeamManagement = () => {
 
             {/* PERMISSIONS TAB */}
             <TabsContent value="permissions" className="space-y-5 pt-5">
-              <div className={`flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4`}>
+              <div className={`flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 ${isRTL ? 'flex-row-reverse' : ''}`}>
                 <div>
                   <h3 className="text-lg font-semibold dark:text-white">{t('teamManagement.manageRoles')}</h3>
                   <p className="text-sm text-muted-foreground dark:text-gray-400">{t('teamManagement.manageRolesDesc')}</p>
                 </div>
                 <Permission permission="role:create">
                   <Button
-                    className={`flex items-center gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white btn-hover-lift `}
+                    className={`flex items-center gap-2 bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white rounded-xl shadow-lg shadow-amber-500/25 hover:shadow-xl hover:shadow-amber-500/30 transition-all duration-200 hover:scale-[1.02]`}
                     onClick={() => openRoleModal(null)}
                   >
                     <Plus className="h-4 w-4" />
@@ -907,24 +940,27 @@ export const TeamManagement = () => {
                 {isLoadingRoles ? (
                   <div className="flex items-center justify-center py-12">
                     <div className="flex items-center gap-2 text-muted-foreground dark:text-gray-400">
-                      <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-600 dark:border-blue-400"></div>
+                      <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-amber-600 dark:border-amber-400"></div>
                       <span>{t('teamManagement.loading.roles')}</span>
                     </div>
                   </div>
                 ) : roles.length === 0 ? (
                   <div className="text-center py-12">
-                    <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-slate-100 dark:bg-slate-800 mb-4">
-                      <Shield className="h-8 w-8 text-slate-400 dark:text-slate-600" />
+                    <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-amber-100 to-orange-100 dark:from-amber-900/30 dark:to-orange-900/30 mb-4 shadow-lg shadow-amber-500/20">
+                      <Shield className="h-8 w-8 text-amber-600 dark:text-amber-400" />
                     </div>
                     <p className="text-muted-foreground dark:text-gray-400">{t('teamManagement.noRolesYet')}</p>
                   </div>
                 ) : (
                   roles.map((role) => (
-                    <Card key={role.id} className="card-shadow-lg border-slate-200 dark:border-slate-700 dark:bg-slate-900/50">
-                      <CardHeader className="flex flex-row items-start justify-between border-b border-slate-200 dark:border-slate-700 bg-gradient-to-r from-slate-50 to-slate-100 dark:from-slate-800/50 dark:to-slate-900/50">
-                        <div className="flex items-start gap-3 flex-1">
-                          <div className="h-10 w-10 rounded-full bg-gradient-to-br from-blue-100 to-indigo-100 dark:from-blue-900/50 dark:to-indigo-900/50 flex items-center justify-center flex-shrink-0">
-                            <Shield className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                    <Card key={role.id} className="rounded-2xl border-slate-200/80 dark:border-slate-700/60 dark:bg-slate-900/50 shadow-lg shadow-amber-500/5 hover:shadow-xl hover:shadow-amber-500/10 transition-all duration-300">
+                      <CardHeader className={`flex flex-row items-start justify-between border-b border-slate-200/80 dark:border-slate-700/60 bg-gradient-to-r from-amber-50/50 to-orange-50/50 dark:from-amber-900/20 dark:to-orange-900/20 rounded-t-2xl ${isRTL ? 'flex-row-reverse' : ''}`}>
+                        <div className={`flex items-start gap-3 flex-1 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                          <div className="relative flex-shrink-0">
+                            <div className="absolute inset-0 bg-gradient-to-br from-amber-500 to-orange-600 rounded-xl blur-md opacity-40" />
+                            <div className="relative h-10 w-10 rounded-xl bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center shadow-lg shadow-amber-500/30">
+                              <Shield className="h-5 w-5 text-white" />
+                            </div>
                           </div>
                           <div className="flex-1">
                             <CardTitle className="text-base dark:text-white">{role.name}</CardTitle>
@@ -994,10 +1030,12 @@ export const TeamManagement = () => {
 
       {/* Add Member Modal */}
       <Dialog open={isAddMemberModalOpen} onOpenChange={setAddMemberModalOpen}>
-        <DialogContent className="dark:bg-slate-800 dark:border-slate-700" dir={isRTL ? 'rtl' : 'ltr'}>
-          <DialogHeader>
-            <DialogTitle className={`dark:text-white flex items-center gap-2 `}>
-              <UserPlus className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+        <DialogContent className="dark:bg-slate-800 dark:border-slate-700 rounded-2xl sm:rounded-2xl" dir={isRTL ? 'rtl' : 'ltr'}>
+          <DialogHeader className="pb-4 border-b border-slate-200/80 dark:border-slate-700/60">
+            <DialogTitle className={`dark:text-white flex items-center gap-3 ${isRTL ? 'flex-row-reverse' : ''}`}>
+              <div className="p-2 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 shadow-lg shadow-blue-500/25">
+                <UserPlus className="h-5 w-5 text-white" />
+              </div>
               {t('teamManagement.dialogs.addMember.title', { teamName: selectedTeamForMember?.name })}
             </DialogTitle>
           </DialogHeader>
@@ -1092,18 +1130,18 @@ export const TeamManagement = () => {
               </Select>
             </div>
           </div>
-          <DialogFooter>
+          <DialogFooter className="pt-4 border-t border-slate-200/80 dark:border-slate-700/60">
             <Button
               variant="outline"
               onClick={() => setAddMemberModalOpen(false)}
-              className="dark:border-slate-600 dark:text-white dark:hover:bg-slate-700"
+              className="dark:border-slate-600 dark:text-white dark:hover:bg-slate-700 rounded-xl"
             >
               {t('common.cancel')}
             </Button>
             <Button
               onClick={handleAddMember}
               disabled={addMemberMutation.isPending || selectedUserIds.length === 0}
-              className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white"
+              className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-xl shadow-lg shadow-blue-500/25"
             >
               {addMemberMutation.isPending ? (
                 <>
@@ -1123,9 +1161,14 @@ export const TeamManagement = () => {
 
       {/* Edit Team Modal */}
       <Dialog open={isEditTeamModalOpen} onOpenChange={setEditTeamModalOpen}>
-        <DialogContent className="dark:bg-slate-800 dark:border-slate-700" dir={isRTL ? 'rtl' : 'ltr'}>
-          <DialogHeader>
-            <DialogTitle className="dark:text-white">{t('teamManagement.dialogs.editTeam.title')}</DialogTitle>
+        <DialogContent className="dark:bg-slate-800 dark:border-slate-700 rounded-2xl sm:rounded-2xl" dir={isRTL ? 'rtl' : 'ltr'}>
+          <DialogHeader className="pb-4 border-b border-slate-200/80 dark:border-slate-700/60">
+            <DialogTitle className={`dark:text-white flex items-center gap-3 ${isRTL ? 'flex-row-reverse' : ''}`}>
+              <div className="p-2 rounded-xl bg-gradient-to-br from-purple-500 to-pink-600 shadow-lg shadow-purple-500/25">
+                <Edit className="h-5 w-5 text-white" />
+              </div>
+              {t('teamManagement.dialogs.editTeam.title')}
+            </DialogTitle>
           </DialogHeader>
           <div className="py-4">
             <Label htmlFor="edit-team-name" className="text-sm dark:text-gray-300 mb-1.5 block">{t('teamManagement.dialogs.editTeam.label')}</Label>
@@ -1134,17 +1177,17 @@ export const TeamManagement = () => {
               placeholder={t('teamManagement.dialogs.editTeam.placeholder')}
               value={editTeamName}
               onChange={(e) => setEditTeamName(e.target.value)}
-              className="dark:bg-slate-900 dark:border-slate-600 dark:text-white"
+              className="dark:bg-slate-900 dark:border-slate-600 dark:text-white rounded-xl h-11"
             />
           </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setEditTeamModalOpen(false)} className="dark:border-slate-600 dark:text-white dark:hover:bg-slate-700">
+          <DialogFooter className="pt-4 border-t border-slate-200/80 dark:border-slate-700/60">
+            <Button variant="outline" onClick={() => setEditTeamModalOpen(false)} className="dark:border-slate-600 dark:text-white dark:hover:bg-slate-700 rounded-xl">
               {t('common.cancel')}
             </Button>
             <Button
               onClick={handleUpdateTeam}
               disabled={updateTeamMutation.isPending}
-              className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white"
+              className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white rounded-xl shadow-lg shadow-purple-500/25"
             >
               {updateTeamMutation.isPending ? t('teamManagement.dialogs.editTeam.updating') : t('teamManagement.dialogs.editTeam.button')}
             </Button>
@@ -1154,9 +1197,14 @@ export const TeamManagement = () => {
 
       {/* Edit User Modal */}
       <Dialog open={isEditUserModalOpen} onOpenChange={setEditUserModalOpen}>
-        <DialogContent className="dark:bg-slate-800 dark:border-slate-700" dir={isRTL ? 'rtl' : 'ltr'}>
-          <DialogHeader>
-            <DialogTitle className="dark:text-white">{t('teamManagement.dialogs.editUser.title')}</DialogTitle>
+        <DialogContent className="dark:bg-slate-800 dark:border-slate-700 rounded-2xl sm:rounded-2xl" dir={isRTL ? 'rtl' : 'ltr'}>
+          <DialogHeader className="pb-4 border-b border-slate-200/80 dark:border-slate-700/60">
+            <DialogTitle className={`dark:text-white flex items-center gap-3 ${isRTL ? 'flex-row-reverse' : ''}`}>
+              <div className="p-2 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 shadow-lg shadow-blue-500/25">
+                <Edit className="h-5 w-5 text-white" />
+              </div>
+              {t('teamManagement.dialogs.editUser.title')}
+            </DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div>
@@ -1167,28 +1215,30 @@ export const TeamManagement = () => {
                 type="email"
                 value={editUserEmail}
                 onChange={(e) => setEditUserEmail(e.target.value)}
-                className="dark:bg-slate-900 dark:border-slate-600 dark:text-white"
+                className="dark:bg-slate-900 dark:border-slate-600 dark:text-white rounded-xl h-11"
               />
             </div>
-            <div>
-              <Label htmlFor="edit-user-first-name" className="text-sm dark:text-gray-300 mb-1.5 block">{t('teamManagement.dialogs.editUser.firstNameLabel')}</Label>
-              <Input
-                id="edit-user-first-name"
-                placeholder={t('teamManagement.dialogs.editUser.firstNamePlaceholder')}
-                value={editUserFirstName}
-                onChange={(e) => setEditUserFirstName(e.target.value)}
-                className="dark:bg-slate-900 dark:border-slate-600 dark:text-white"
-              />
-            </div>
-            <div>
-              <Label htmlFor="edit-user-last-name" className="text-sm dark:text-gray-300 mb-1.5 block">{t('teamManagement.dialogs.editUser.lastNameLabel')}</Label>
-              <Input
-                id="edit-user-last-name"
-                placeholder={t('teamManagement.dialogs.editUser.lastNamePlaceholder')}
-                value={editUserLastName}
-                onChange={(e) => setEditUserLastName(e.target.value)}
-                className="dark:bg-slate-900 dark:border-slate-600 dark:text-white"
-              />
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="edit-user-first-name" className="text-sm dark:text-gray-300 mb-1.5 block">{t('teamManagement.dialogs.editUser.firstNameLabel')}</Label>
+                <Input
+                  id="edit-user-first-name"
+                  placeholder={t('teamManagement.dialogs.editUser.firstNamePlaceholder')}
+                  value={editUserFirstName}
+                  onChange={(e) => setEditUserFirstName(e.target.value)}
+                  className="dark:bg-slate-900 dark:border-slate-600 dark:text-white rounded-xl h-11"
+                />
+              </div>
+              <div>
+                <Label htmlFor="edit-user-last-name" className="text-sm dark:text-gray-300 mb-1.5 block">{t('teamManagement.dialogs.editUser.lastNameLabel')}</Label>
+                <Input
+                  id="edit-user-last-name"
+                  placeholder={t('teamManagement.dialogs.editUser.lastNamePlaceholder')}
+                  value={editUserLastName}
+                  onChange={(e) => setEditUserLastName(e.target.value)}
+                  className="dark:bg-slate-900 dark:border-slate-600 dark:text-white rounded-xl h-11"
+                />
+              </div>
             </div>
             <div>
               <Label htmlFor="edit-user-password" className="text-sm dark:text-gray-300 mb-1.5 block">{t('teamManagement.dialogs.editUser.passwordLabel')}</Label>
@@ -1198,19 +1248,19 @@ export const TeamManagement = () => {
                 type="password"
                 value={editUserPassword}
                 onChange={(e) => setEditUserPassword(e.target.value)}
-                className="dark:bg-slate-900 dark:border-slate-600 dark:text-white"
+                className="dark:bg-slate-900 dark:border-slate-600 dark:text-white rounded-xl h-11"
               />
               <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{t('teamManagement.dialogs.editUser.passwordHint')}</p>
             </div>
           </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setEditUserModalOpen(false)} className="dark:border-slate-600 dark:text-white dark:hover:bg-slate-700">
+          <DialogFooter className="pt-4 border-t border-slate-200/80 dark:border-slate-700/60">
+            <Button variant="outline" onClick={() => setEditUserModalOpen(false)} className="dark:border-slate-600 dark:text-white dark:hover:bg-slate-700 rounded-xl">
               {t('common.cancel')}
             </Button>
             <Button
               onClick={handleUpdateUser}
               disabled={updateUserMutation.isPending}
-              className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white"
+              className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-xl shadow-lg shadow-blue-500/25"
             >
               {updateUserMutation.isPending ? t('teamManagement.dialogs.editUser.updating') : t('teamManagement.dialogs.editUser.button')}
             </Button>
@@ -1220,37 +1270,41 @@ export const TeamManagement = () => {
 
       {/* Create/Edit Role Modal */}
       <Dialog open={isRoleModalOpen} onOpenChange={setRoleModalOpen}>
-        <DialogContent className="max-w-2xl dark:bg-slate-800 dark:border-slate-700" dir={isRTL ? 'rtl' : 'ltr'}>
-          <DialogHeader>
-            <DialogTitle className={`dark:text-white flex items-center gap-2 `}>
-              <Shield className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+        <DialogContent className="max-w-2xl dark:bg-slate-800 dark:border-slate-700 rounded-2xl sm:rounded-2xl" dir={isRTL ? 'rtl' : 'ltr'}>
+          <DialogHeader className="pb-4 border-b border-slate-200/80 dark:border-slate-700/60">
+            <DialogTitle className={`dark:text-white flex items-center gap-3 ${isRTL ? 'flex-row-reverse' : ''}`}>
+              <div className="p-2 rounded-xl bg-gradient-to-br from-amber-500 to-orange-600 shadow-lg shadow-amber-500/25">
+                <Shield className="h-5 w-5 text-white" />
+              </div>
               {selectedRole ? t('teamManagement.dialogs.role.titleEdit') : t('teamManagement.dialogs.role.titleCreate')}
             </DialogTitle>
           </DialogHeader>
           <div className="space-y-5 py-4">
-            <div>
-              <Label htmlFor="role-name" className="text-sm dark:text-gray-300 mb-1.5 block">
-                {t('teamManagement.dialogs.role.nameLabel')}
-              </Label>
-              <Input
-                id="role-name"
-                placeholder={t('teamManagement.dialogs.role.namePlaceholder')}
-                value={roleName}
-                onChange={(e) => setRoleName(e.target.value)}
-                className="dark:bg-slate-900 dark:border-slate-600 dark:text-white"
-              />
-            </div>
-            <div>
-              <Label htmlFor="role-description" className="text-sm dark:text-gray-300 mb-1.5 block">
-                {t('teamManagement.dialogs.role.descriptionLabel')}
-              </Label>
-              <Input
-                id="role-description"
-                placeholder={t('teamManagement.dialogs.role.descriptionPlaceholder')}
-                value={roleDescription}
-                onChange={(e) => setRoleDescription(e.target.value)}
-                className="dark:bg-slate-900 dark:border-slate-600 dark:text-white"
-              />
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="role-name" className="text-sm dark:text-gray-300 mb-1.5 block">
+                  {t('teamManagement.dialogs.role.nameLabel')}
+                </Label>
+                <Input
+                  id="role-name"
+                  placeholder={t('teamManagement.dialogs.role.namePlaceholder')}
+                  value={roleName}
+                  onChange={(e) => setRoleName(e.target.value)}
+                  className="dark:bg-slate-900 dark:border-slate-600 dark:text-white rounded-xl h-11"
+                />
+              </div>
+              <div>
+                <Label htmlFor="role-description" className="text-sm dark:text-gray-300 mb-1.5 block">
+                  {t('teamManagement.dialogs.role.descriptionLabel')}
+                </Label>
+                <Input
+                  id="role-description"
+                  placeholder={t('teamManagement.dialogs.role.descriptionPlaceholder')}
+                  value={roleDescription}
+                  onChange={(e) => setRoleDescription(e.target.value)}
+                  className="dark:bg-slate-900 dark:border-slate-600 dark:text-white rounded-xl h-11"
+                />
+              </div>
             </div>
             <div>
               <div className="flex items-center justify-between mb-3">
@@ -1343,18 +1397,18 @@ export const TeamManagement = () => {
               )}
             </div>
           </div>
-          <DialogFooter>
+          <DialogFooter className="pt-4 border-t border-slate-200/80 dark:border-slate-700/60">
             <Button
               variant="outline"
               onClick={() => setRoleModalOpen(false)}
-              className="dark:border-slate-600 dark:text-white dark:hover:bg-slate-700"
+              className="dark:border-slate-600 dark:text-white dark:hover:bg-slate-700 rounded-xl"
             >
               {t('common.cancel')}
             </Button>
             <Button
               onClick={handleSaveRole}
               disabled={roleMutation.isPending}
-              className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white"
+              className="bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white rounded-xl shadow-lg shadow-amber-500/25"
             >
               {roleMutation.isPending ? (
                 <>

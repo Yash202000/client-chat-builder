@@ -1009,31 +1009,45 @@ const InternalChatPage: React.FC = () => {
 
   if (isLoadingChannels)
     return (
-      <div className="flex justify-center items-center h-screen">
-        <Loader2 className="h-8 w-8 animate-spin" />
+      <div className="flex justify-center items-center h-screen bg-gradient-to-br from-slate-50 via-purple-50/30 to-indigo-50/30 dark:from-slate-900 dark:via-purple-950/20 dark:to-indigo-950/20">
+        <div className="flex flex-col items-center gap-4">
+          <div className="relative">
+            <div className="absolute inset-0 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-2xl blur-xl opacity-40 animate-pulse" />
+            <div className="relative h-16 w-16 rounded-2xl bg-gradient-to-br from-purple-100 to-indigo-100 dark:from-purple-900/30 dark:to-indigo-900/30 flex items-center justify-center shadow-xl">
+              <Loader2 className="h-8 w-8 animate-spin text-purple-600 dark:text-purple-400" />
+            </div>
+          </div>
+          <p className="text-sm font-medium text-slate-500 dark:text-slate-400">Loading channels...</p>
+        </div>
       </div>
     );
   if (channelsError)
     return (
-      <div className="text-red-500 text-center p-4" dir={isRTL ? 'rtl' : 'ltr'}>
-        {t('teamChat.error')}: {channelsError.message}
+      <div className="flex justify-center items-center h-screen bg-gradient-to-br from-slate-50 via-red-50/30 to-rose-50/30 dark:from-slate-900 dark:via-red-950/20 dark:to-rose-950/20" dir={isRTL ? 'rtl' : 'ltr'}>
+        <div className="text-center p-8 bg-white/80 dark:bg-slate-800/80 rounded-2xl border border-red-200/80 dark:border-red-800/60 shadow-xl shadow-red-500/10 max-w-md">
+          <div className="h-14 w-14 rounded-xl bg-red-100 dark:bg-red-900/30 flex items-center justify-center mx-auto mb-4">
+            <MessageSquare className="h-7 w-7 text-red-500 dark:text-red-400" />
+          </div>
+          <p className="text-red-600 dark:text-red-400 font-semibold text-lg">{t('teamChat.error')}</p>
+          <p className="text-sm text-red-500 dark:text-red-400 mt-2">{channelsError.message}</p>
+        </div>
       </div>
     );
 
   return (
     <TooltipProvider>
-      <div className="flex h-[calc(100vh-4rem)] bg-slate-50 dark:bg-slate-900 text-gray-800 dark:text-gray-200 font-sans overflow-hidden" dir={isRTL ? 'rtl' : 'ltr'}>
+      <div className="flex h-[calc(100vh-4rem)] bg-gradient-to-br from-slate-50 via-purple-50/30 to-indigo-50/30 dark:from-slate-900 dark:via-purple-950/20 dark:to-indigo-950/20 text-gray-800 dark:text-gray-200 font-sans overflow-hidden" dir={isRTL ? 'rtl' : 'ltr'}>
         {/* Left Sidebar: Channel List */}
         <Card className={cn(
-          "flex-shrink-0 border-r dark:border-slate-700 rounded-none bg-white dark:bg-slate-800 shadow-lg flex flex-col h-full relative transition-all duration-300",
+          "flex-shrink-0 border-r border-slate-200/80 dark:border-slate-700/60 rounded-none bg-white/80 dark:bg-slate-800/90 backdrop-blur-xl shadow-xl shadow-purple-500/5 flex flex-col h-full relative transition-all duration-300",
           channelSidebarCollapsed ? "w-20" : "w-80"
         )}>
           {/* Collapse/Expand Button */}
           <button
             onClick={() => setChannelSidebarCollapsed(!channelSidebarCollapsed)}
             className={cn(
-              "absolute -right-3 top-8 z-20 bg-gradient-to-br from-purple-500 to-indigo-600 hover:from-purple-600 hover:to-indigo-700 text-white rounded-full p-2 shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-110 group",
-              isRTL && "-left-3 -right-auto"
+              "absolute -right-3.5 top-8 z-20 bg-gradient-to-br from-purple-500 to-indigo-600 hover:from-purple-600 hover:to-indigo-700 text-white rounded-full p-2 shadow-lg shadow-purple-500/30 hover:shadow-xl hover:shadow-purple-500/40 transition-all duration-200 transform hover:scale-110 group ring-4 ring-white dark:ring-slate-800",
+              isRTL && "-left-3.5 -right-auto"
             )}
             title={channelSidebarCollapsed ? t("navigation.expandSidebar") : t("navigation.collapseSidebar")}
           >
@@ -1053,15 +1067,18 @@ const InternalChatPage: React.FC = () => {
           </button>
 
           <CardHeader className={cn(
-            "flex flex-row items-center justify-between p-5 pb-3 border-b border-slate-200 dark:border-slate-700 bg-gradient-to-r from-slate-50 to-slate-100 dark:from-slate-800 dark:to-slate-900 flex-shrink-0",
+            "flex flex-row items-center justify-between p-5 pb-4 border-b border-slate-200/80 dark:border-slate-700/60 bg-gradient-to-r from-purple-50/80 via-indigo-50/50 to-slate-50/80 dark:from-purple-900/30 dark:via-indigo-900/20 dark:to-slate-800/50 flex-shrink-0",
             channelSidebarCollapsed && "justify-center p-3"
           )}>
             {!channelSidebarCollapsed && (
-              <CardTitle className="text-xl font-bold dark:text-white flex items-center gap-2">
-                <div className="h-8 w-8 rounded-full bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center">
-                  <Users className="h-4 w-4 text-white" />
+              <CardTitle className="text-xl font-bold dark:text-white flex items-center gap-3">
+                <div className="relative">
+                  <div className="absolute inset-0 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-xl blur-md opacity-40" />
+                  <div className="relative h-10 w-10 rounded-xl bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center shadow-lg shadow-purple-500/30">
+                    <MessageSquare className="h-5 w-5 text-white" />
+                  </div>
                 </div>
-                {t('teamChat.channels')}
+                <span className="bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent">{t('teamChat.channels')}</span>
               </CardTitle>
             )}
             {channelSidebarCollapsed ? (
@@ -1071,7 +1088,7 @@ const InternalChatPage: React.FC = () => {
                     variant="ghost"
                     size="icon"
                     onClick={() => setCreateChannelModalOpen(true)}
-                    className="hover:bg-purple-50 dark:hover:bg-purple-900/20 rounded-full"
+                    className="hover:bg-purple-100 dark:hover:bg-purple-900/30 rounded-xl transition-colors"
                   >
                     <Plus className="h-5 w-5 text-purple-600 dark:text-purple-400" />
                   </Button>
@@ -1087,7 +1104,7 @@ const InternalChatPage: React.FC = () => {
                     variant="ghost"
                     size="icon"
                     onClick={() => setCreateChannelModalOpen(true)}
-                    className="hover:bg-purple-50 dark:hover:bg-purple-900/20 rounded-full"
+                    className="hover:bg-purple-100 dark:hover:bg-purple-900/30 rounded-xl transition-colors"
                   >
                     <Plus className="h-5 w-5 text-purple-600 dark:text-purple-400" />
                   </Button>
@@ -1098,134 +1115,156 @@ const InternalChatPage: React.FC = () => {
               </Tooltip>
             )}
           </CardHeader>
-          <CardContent className="p-0 flex-1 overflow-hidden">
+          <CardContent className="p-2 flex-1 overflow-hidden">
             <ScrollArea className="h-full">
               {channels?.length === 0 ? (
                 <div className={cn(
                   "flex flex-col items-center justify-center py-12",
                   channelSidebarCollapsed ? "px-2" : "px-4"
                 )}>
-                  <div className="h-16 w-16 rounded-full bg-slate-100 dark:bg-slate-700 flex items-center justify-center mb-4">
-                    <Users className="h-8 w-8 text-slate-400 dark:text-slate-500" />
+                  <div className="relative mb-4">
+                    <div className="absolute inset-0 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-2xl blur-lg opacity-30" />
+                    <div className="relative h-16 w-16 rounded-2xl bg-gradient-to-br from-purple-100 to-indigo-100 dark:from-purple-900/30 dark:to-indigo-900/30 flex items-center justify-center shadow-lg">
+                      <MessageSquare className="h-8 w-8 text-purple-500 dark:text-purple-400" />
+                    </div>
                   </div>
                   {!channelSidebarCollapsed && (
-                    <p className="text-sm text-slate-500 dark:text-slate-400 text-center">{t('teamChat.noChannels')}</p>
+                    <>
+                      <p className="text-sm font-medium text-slate-600 dark:text-slate-300 text-center">{t('teamChat.noChannels')}</p>
+                      <p className="text-xs text-slate-400 dark:text-slate-500 text-center mt-1">Create a channel to start chatting</p>
+                    </>
                   )}
                 </div>
               ) : (
-                channels?.map((channel) => {
-                  const displayName = getChannelDisplayName(channel, user?.id);
-                  const avatar = getChannelAvatar(channel, user?.id);
-                  const description = getChannelDescription(channel, user?.id);
+                <div className="space-y-1">
+                  {channels?.map((channel) => {
+                    const displayName = getChannelDisplayName(channel, user?.id);
+                    const avatar = getChannelAvatar(channel, user?.id);
+                    const description = getChannelDescription(channel, user?.id);
 
-                  return (
-                    <Tooltip key={channel.id}>
-                      <TooltipTrigger asChild>
-                        <div
-                          dir={isRTL ? 'rtl' : 'ltr'}
-                          className={cn(
-                            'flex items-center cursor-pointer border-b border-slate-100 dark:border-slate-700 transition-all duration-200',
-                            channelSidebarCollapsed ? 'p-2 justify-center' : 'p-4',
-                            selectedChannel?.id === channel.id
-                              ? 'bg-gradient-to-r from-purple-50 to-indigo-50 dark:from-purple-900/30 dark:to-indigo-900/30 border-l-4 border-l-purple-600 dark:border-l-purple-400'
-                              : 'hover:bg-slate-50 dark:hover:bg-slate-700/50 border-l-4 border-l-transparent'
-                          )}
-                          onClick={() => handleChannelSelect(channel)}
-                        >
-                          <Avatar className={cn(
-                            "ring-2 ring-slate-200 dark:ring-slate-600",
-                            channelSidebarCollapsed ? "h-10 w-10" : "h-11 w-11 mr-3"
-                          )}>
-                            {avatar.url && <AvatarImage src={avatar.url} />}
-                            <AvatarFallback className={cn(
-                              "font-bold text-lg text-white",
-                              avatar.isUser ? "bg-gradient-to-br from-blue-400 to-purple-500" : "bg-gradient-to-br from-purple-500 to-indigo-600"
-                            )}>
-                              {avatar.fallback}
-                            </AvatarFallback>
-                          </Avatar>
-                          {!channelSidebarCollapsed && (
-                            <div className="flex-1 min-w-0">
-                              <p className="font-semibold text-sm dark:text-white truncate">{displayName}</p>
-                              <p className="text-xs text-slate-500 dark:text-slate-400 truncate">
-                                {description}
-                              </p>
+                    return (
+                      <Tooltip key={channel.id}>
+                        <TooltipTrigger asChild>
+                          <div
+                            dir={isRTL ? 'rtl' : 'ltr'}
+                            className={cn(
+                              'flex items-center cursor-pointer transition-all duration-200 rounded-xl mx-1',
+                              channelSidebarCollapsed ? 'p-2 justify-center' : 'p-3',
+                              selectedChannel?.id === channel.id
+                                ? 'bg-gradient-to-r from-purple-100 to-indigo-100 dark:from-purple-900/40 dark:to-indigo-900/40 shadow-md shadow-purple-500/10 ring-1 ring-purple-200 dark:ring-purple-700'
+                                : 'hover:bg-slate-100/80 dark:hover:bg-slate-700/50'
+                            )}
+                            onClick={() => handleChannelSelect(channel)}
+                          >
+                            <div className="relative">
+                              <Avatar className={cn(
+                                "ring-2 ring-white dark:ring-slate-700 shadow-sm",
+                                channelSidebarCollapsed ? "h-10 w-10" : "h-11 w-11",
+                                !channelSidebarCollapsed && (isRTL ? "ml-3" : "mr-3")
+                              )}>
+                                {avatar.url && <AvatarImage src={avatar.url} />}
+                                <AvatarFallback className={cn(
+                                  "font-bold text-lg text-white",
+                                  avatar.isUser ? "bg-gradient-to-br from-blue-400 to-purple-500" : "bg-gradient-to-br from-purple-500 to-indigo-600"
+                                )}>
+                                  {avatar.fallback}
+                                </AvatarFallback>
+                              </Avatar>
+                              {selectedChannel?.id === channel.id && (
+                                <div className="absolute -bottom-0.5 -right-0.5 h-3 w-3 bg-green-500 rounded-full ring-2 ring-white dark:ring-slate-800" />
+                              )}
                             </div>
-                          )}
-                        </div>
-                      </TooltipTrigger>
-                      {channelSidebarCollapsed && (
-                        <TooltipContent side="right">
-                          <div>
-                            <p className="font-semibold">{displayName}</p>
-                            <p className="text-xs text-slate-400">{description}</p>
+                            {!channelSidebarCollapsed && (
+                              <div className="flex-1 min-w-0">
+                                <p className={cn(
+                                  "font-semibold text-sm truncate",
+                                  selectedChannel?.id === channel.id
+                                    ? "text-purple-700 dark:text-purple-300"
+                                    : "text-slate-700 dark:text-white"
+                                )}>{displayName}</p>
+                                <p className="text-xs text-slate-500 dark:text-slate-400 truncate mt-0.5">
+                                  {description}
+                                </p>
+                              </div>
+                            )}
                           </div>
-                        </TooltipContent>
-                      )}
-                    </Tooltip>
-                  );
-                })
+                        </TooltipTrigger>
+                        {channelSidebarCollapsed && (
+                          <TooltipContent side="right" className="rounded-xl">
+                            <div>
+                              <p className="font-semibold">{displayName}</p>
+                              <p className="text-xs text-slate-400">{description}</p>
+                            </div>
+                          </TooltipContent>
+                        )}
+                      </Tooltip>
+                    );
+                  })}
+                </div>
               )}
             </ScrollArea>
           </CardContent>
         </Card>
 
         {/* Main Chat Area */}
-        <div className="flex-1 flex flex-col bg-white dark:bg-slate-800 h-full overflow-hidden">
+        <div className="flex-1 flex flex-col bg-white/80 dark:bg-slate-800/90 backdrop-blur-xl h-full overflow-hidden">
           {selectedChannel ? (
             <>
-              <CardHeader className="flex flex-row items-center justify-between p-5 border-b border-slate-200 dark:border-slate-700 bg-gradient-to-r from-white to-slate-50 dark:from-slate-800 dark:to-slate-900 shadow-sm flex-shrink-0">
+              <CardHeader className="flex flex-row items-center justify-between p-5 border-b border-slate-200/80 dark:border-slate-700/60 bg-gradient-to-r from-white via-purple-50/30 to-indigo-50/30 dark:from-slate-800 dark:via-purple-900/20 dark:to-indigo-900/20 shadow-sm flex-shrink-0">
                 <div className="flex-1">
-                  <div className="flex items-center gap-3">
+                  <div className={`flex items-center gap-4 ${isRTL ? 'flex-row-reverse' : ''}`}>
                     {(() => {
                       const avatar = getChannelAvatar(selectedChannel, user?.id);
                       return (
-                        <Avatar className="h-12 w-12 ring-2 ring-purple-200 dark:ring-purple-800">
-                          {avatar.url && <AvatarImage src={avatar.url} />}
-                          <AvatarFallback className={cn(
-                            "font-bold text-lg text-white",
-                            avatar.isUser ? "bg-gradient-to-br from-blue-400 to-purple-500" : "bg-gradient-to-br from-purple-500 to-indigo-600"
-                          )}>
-                            {avatar.fallback}
-                          </AvatarFallback>
-                        </Avatar>
+                        <div className="relative">
+                          <div className="absolute inset-0 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-xl blur-md opacity-30" />
+                          <Avatar className="relative h-14 w-14 ring-3 ring-white dark:ring-slate-700 shadow-lg">
+                            {avatar.url && <AvatarImage src={avatar.url} />}
+                            <AvatarFallback className={cn(
+                              "font-bold text-xl text-white",
+                              avatar.isUser ? "bg-gradient-to-br from-blue-400 to-purple-500" : "bg-gradient-to-br from-purple-500 to-indigo-600"
+                            )}>
+                              {avatar.fallback}
+                            </AvatarFallback>
+                          </Avatar>
+                        </div>
                       );
                     })()}
                     <div>
-                      <CardTitle className="text-xl font-bold dark:text-white">
+                      <CardTitle className="text-xl font-bold bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent">
                         {getChannelDisplayName(selectedChannel, user?.id)}
                       </CardTitle>
-                      <div className="flex items-center mt-1 gap-2">
-                        <div className="flex -space-x-2 overflow-hidden">
+                      <div className={`flex items-center mt-2 gap-3 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                        <div className={`flex ${isRTL ? 'space-x-reverse' : ''} -space-x-2 overflow-hidden`}>
                           {channelMembers?.slice(0, 5).map((member: any, index: number) => (
-                            <Avatar key={member?.id || `member-${index}`} className="inline-block h-6 w-6 rounded-full ring-2 ring-white dark:ring-slate-800">
+                            <Avatar key={member?.id || `member-${index}`} className="inline-block h-7 w-7 rounded-full ring-2 ring-white dark:ring-slate-800 shadow-sm">
                               <AvatarImage src={member?.profile_picture_url} />
-                              <AvatarFallback className="text-xs bg-gradient-to-br from-blue-400 to-purple-500 text-white">
+                              <AvatarFallback className="text-xs bg-gradient-to-br from-blue-400 to-purple-500 text-white font-medium">
                                 {member?.first_name?.[0] || 'U'}
                               </AvatarFallback>
                             </Avatar>
                           ))}
                         </div>
-                        <span className="text-xs px-2 py-1 rounded-full bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400 font-medium">
+                        <span className="text-xs px-3 py-1.5 rounded-full bg-gradient-to-r from-purple-100 to-indigo-100 dark:from-purple-900/40 dark:to-indigo-900/40 text-purple-700 dark:text-purple-300 font-semibold shadow-sm">
                           {channelMembers?.length} {channelMembers?.length === 1 ? t('teamChat.member') : t('teamChat.members')}
                         </span>
                       </div>
                     </div>
                   </div>
                 </div>
-                <div className="flex items-center space-x-2">
+                <div className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <Button
                         variant="outline"
                         size="icon"
                         onClick={() => setIsSearchModalOpen(true)}
-                        className="hover:bg-purple-50 dark:hover:bg-purple-900/20 dark:border-slate-600 dark:text-white rounded-full"
+                        className="hover:bg-purple-100 dark:hover:bg-purple-900/30 dark:border-slate-600 dark:text-white rounded-xl h-10 w-10 border-slate-200/80 transition-colors"
                       >
                         <Search className="h-5 w-5 text-purple-600 dark:text-purple-400" />
                       </Button>
                     </TooltipTrigger>
-                    <TooltipContent>
+                    <TooltipContent className="rounded-xl">
                       <p>Search Messages</p>
                     </TooltipContent>
                   </Tooltip>
@@ -1235,12 +1274,12 @@ const InternalChatPage: React.FC = () => {
                         variant="outline"
                         size="icon"
                         onClick={() => setIsCallHistoryOpen(true)}
-                        className="hover:bg-purple-50 dark:hover:bg-purple-900/20 dark:border-slate-600 dark:text-white rounded-full"
+                        className="hover:bg-purple-100 dark:hover:bg-purple-900/30 dark:border-slate-600 dark:text-white rounded-xl h-10 w-10 border-slate-200/80 transition-colors"
                       >
                         <History className="h-5 w-5 text-purple-600 dark:text-purple-400" />
                       </Button>
                     </TooltipTrigger>
-                    <TooltipContent>
+                    <TooltipContent className="rounded-xl">
                       <p>Call History</p>
                     </TooltipContent>
                   </Tooltip>
@@ -1250,12 +1289,12 @@ const InternalChatPage: React.FC = () => {
                         variant="outline"
                         size="icon"
                         onClick={() => setManageMembersModalOpen(true)}
-                        className="hover:bg-purple-50 dark:hover:bg-purple-900/20 dark:border-slate-600 dark:text-white rounded-full"
+                        className="hover:bg-purple-100 dark:hover:bg-purple-900/30 dark:border-slate-600 dark:text-white rounded-xl h-10 w-10 border-slate-200/80 transition-colors"
                       >
                         <Users className="h-5 w-5 text-purple-600 dark:text-purple-400" />
                       </Button>
                     </TooltipTrigger>
-                    <TooltipContent>
+                    <TooltipContent className="rounded-xl">
                       <p>{t('teamChat.manageMembers')}</p>
                     </TooltipContent>
                   </Tooltip>
@@ -1265,7 +1304,7 @@ const InternalChatPage: React.FC = () => {
                         size="icon"
                         onClick={handleVideoCallAction}
                         disabled={initiateVideoCallMutation.isLoading || joinVideoCallMutation.isLoading}
-                        className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white rounded-full w-11 h-11 shadow-md hover:shadow-lg transition-all"
+                        className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white rounded-xl w-11 h-11 shadow-lg shadow-green-500/25 hover:shadow-xl hover:shadow-green-500/30 transition-all"
                       >
                         {(initiateVideoCallMutation.isLoading || joinVideoCallMutation.isLoading) ? (
                           <Loader2 className="h-5 w-5 animate-spin" />
@@ -1274,7 +1313,7 @@ const InternalChatPage: React.FC = () => {
                         )}
                       </Button>
                     </TooltipTrigger>
-                    <TooltipContent>
+                    <TooltipContent className="rounded-xl">
                       <p>
                         {(() => {
                           const text = activeCallExists === true ? t('teamChat.joinCall') : t('teamChat.startCall');
@@ -1286,30 +1325,42 @@ const InternalChatPage: React.FC = () => {
                   </Tooltip>
                 </div>
               </CardHeader>
-              <CardContent className="flex-1 p-6 flex flex-col overflow-hidden bg-slate-50 dark:bg-slate-900/50 min-h-0">
+              <CardContent className="flex-1 p-6 flex flex-col overflow-hidden bg-gradient-to-b from-slate-50 to-white dark:from-slate-900/50 dark:to-slate-800/50 min-h-0">
                 <ScrollArea className="flex-1 pr-4 h-full">
                   <div className="space-y-4">
                     {isLoadingMessages ? (
-                      <div className="flex justify-center items-center h-full">
-                        <div className="flex flex-col items-center gap-3">
-                          <Loader2 className="h-10 w-10 animate-spin text-purple-600 dark:text-purple-400" />
-                          <p className="text-sm text-slate-500 dark:text-slate-400">{t('teamChat.loadingMessages')}</p>
+                      <div className="flex justify-center items-center h-full py-20">
+                        <div className="flex flex-col items-center gap-4">
+                          <div className="relative">
+                            <div className="absolute inset-0 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-full blur-lg opacity-30 animate-pulse" />
+                            <div className="relative h-14 w-14 rounded-full bg-gradient-to-br from-purple-100 to-indigo-100 dark:from-purple-900/30 dark:to-indigo-900/30 flex items-center justify-center">
+                              <Loader2 className="h-7 w-7 animate-spin text-purple-600 dark:text-purple-400" />
+                            </div>
+                          </div>
+                          <p className="text-sm font-medium text-slate-500 dark:text-slate-400">{t('teamChat.loadingMessages')}</p>
                         </div>
                       </div>
                     ) : messagesError ? (
-                      <div className="flex justify-center items-center h-full">
-                        <div className="text-center p-6 bg-red-50 dark:bg-red-900/20 rounded-lg border border-red-200 dark:border-red-800">
-                          <p className="text-red-600 dark:text-red-400 font-medium">{t('teamChat.errorMessages')}</p>
+                      <div className="flex justify-center items-center h-full py-20">
+                        <div className="text-center p-6 bg-gradient-to-br from-red-50 to-rose-50 dark:from-red-900/20 dark:to-rose-900/20 rounded-2xl border border-red-200/80 dark:border-red-800/60 shadow-lg shadow-red-500/10">
+                          <div className="h-12 w-12 rounded-xl bg-red-100 dark:bg-red-900/30 flex items-center justify-center mx-auto mb-3">
+                            <MessageSquare className="h-6 w-6 text-red-500 dark:text-red-400" />
+                          </div>
+                          <p className="text-red-600 dark:text-red-400 font-semibold">{t('teamChat.errorMessages')}</p>
                           <p className="text-sm text-red-500 dark:text-red-400 mt-1">{messagesError.message}</p>
                         </div>
                       </div>
                     ) : messages?.length === 0 ? (
-                      <div className="flex justify-center items-center h-full">
-                        <div className="text-center py-12">
-                          <div className="h-16 w-16 rounded-full bg-slate-100 dark:bg-slate-700 flex items-center justify-center mx-auto mb-4">
-                            <Send className="h-8 w-8 text-slate-400 dark:text-slate-500" />
+                      <div className="flex justify-center items-center h-full py-20">
+                        <div className="text-center">
+                          <div className="relative mb-5 mx-auto w-fit">
+                            <div className="absolute inset-0 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-2xl blur-lg opacity-30" />
+                            <div className="relative h-20 w-20 rounded-2xl bg-gradient-to-br from-purple-100 to-indigo-100 dark:from-purple-900/30 dark:to-indigo-900/30 flex items-center justify-center shadow-lg">
+                              <Send className="h-10 w-10 text-purple-500 dark:text-purple-400" />
+                            </div>
                           </div>
-                          <p className="text-slate-500 dark:text-slate-400">{t('teamChat.noMessages')}</p>
+                          <p className="text-lg font-semibold text-slate-600 dark:text-slate-300">{t('teamChat.noMessages')}</p>
+                          <p className="text-sm text-slate-400 dark:text-slate-500 mt-1">Start the conversation!</p>
                         </div>
                       </div>
                     ) : (
@@ -1484,11 +1535,11 @@ const InternalChatPage: React.FC = () => {
                   </div>
                 </ScrollArea>
               </CardContent>
-              <div className="p-4 border-t border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 flex-shrink-0">
+              <div className="p-4 border-t border-slate-200/80 dark:border-slate-700/60 bg-gradient-to-r from-white via-purple-50/20 to-indigo-50/20 dark:from-slate-800 dark:via-purple-900/10 dark:to-indigo-900/10 flex-shrink-0">
                 <div className="flex flex-col gap-3">
                   {/* File Upload Component */}
                   {selectedFiles.length > 0 && (
-                    <div className="px-2">
+                    <div className="px-2 py-2 bg-slate-100/80 dark:bg-slate-900/50 rounded-xl">
                       <FileUpload
                         onFileSelect={handleFileSelect}
                         onFileRemove={handleFileRemove}
@@ -1498,7 +1549,7 @@ const InternalChatPage: React.FC = () => {
                     </div>
                   )}
 
-                  <div className="flex items-center gap-3">
+                  <div className={`flex items-center gap-3 ${isRTL ? 'flex-row-reverse' : ''}`}>
                     {/* File Attach Button */}
                     <FileUpload
                       onFileSelect={handleFileSelect}
@@ -1508,18 +1559,20 @@ const InternalChatPage: React.FC = () => {
                       multiple={true}
                     />
 
-                    <SlashCommandInput
-                      placeholder={t('teamChat.typeMessage')}
-                      value={inputValue}
-                      onChange={setInputValue}
-                      onKeyPress={(e) => e.key === 'Enter' && !e.shiftKey && handleSendMessage()}
-                      className="flex-1 px-5 py-3 rounded-full bg-slate-100 dark:bg-slate-900 border-slate-200 dark:border-slate-700 focus:border-purple-500 dark:focus:border-purple-400 focus:ring-2 focus:ring-purple-500/20 dark:focus:ring-purple-400/20 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500"
-                      disabled={isUploadingFiles}
-                    />
+                    <div className="flex-1 relative">
+                      <SlashCommandInput
+                        placeholder={t('teamChat.typeMessage')}
+                        value={inputValue}
+                        onChange={setInputValue}
+                        onKeyPress={(e) => e.key === 'Enter' && !e.shiftKey && handleSendMessage()}
+                        className="w-full px-5 py-3.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-700/60 focus:border-purple-500 dark:focus:border-purple-400 focus:ring-2 focus:ring-purple-500/20 dark:focus:ring-purple-400/20 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 shadow-sm hover:shadow-md transition-shadow"
+                        disabled={isUploadingFiles}
+                      />
+                    </div>
                     <Button
                       onClick={handleSendMessage}
                       disabled={(!inputValue.trim() && selectedFiles.length === 0) || isUploadingFiles}
-                      className="rounded-full w-12 h-12 bg-gradient-to-r from-purple-500 to-indigo-600 hover:from-purple-600 hover:to-indigo-700 text-white shadow-lg hover:shadow-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="rounded-xl w-12 h-12 bg-gradient-to-r from-purple-500 to-indigo-600 hover:from-purple-600 hover:to-indigo-700 text-white shadow-lg shadow-purple-500/25 hover:shadow-xl hover:shadow-purple-500/30 transition-all disabled:opacity-50 disabled:cursor-not-allowed hover:scale-105"
                     >
                       {isUploadingFiles ? (
                         <Loader2 className="h-5 w-5 animate-spin" />
@@ -1532,13 +1585,27 @@ const InternalChatPage: React.FC = () => {
               </div>
             </>
           ) : (
-            <div className="flex-1 flex items-center justify-center bg-slate-50 dark:bg-slate-900/50">
+            <div className="flex-1 flex items-center justify-center bg-gradient-to-br from-slate-50 via-purple-50/30 to-indigo-50/30 dark:from-slate-900/50 dark:via-purple-950/20 dark:to-indigo-950/20">
               <div className="text-center py-12">
-                <div className="h-20 w-20 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center mx-auto mb-4">
-                  <Users className="h-10 w-10 text-slate-400 dark:text-slate-500" />
+                <div className="relative mb-6 mx-auto w-fit">
+                  <div className="absolute inset-0 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-3xl blur-xl opacity-30 animate-pulse" />
+                  <div className="relative h-24 w-24 rounded-3xl bg-gradient-to-br from-purple-100 to-indigo-100 dark:from-purple-900/30 dark:to-indigo-900/30 flex items-center justify-center shadow-xl shadow-purple-500/20">
+                    <MessageSquare className="h-12 w-12 text-purple-500 dark:text-purple-400" />
+                  </div>
                 </div>
-                <p className="text-slate-500 dark:text-slate-400 text-lg">{t('teamChat.selectChannel')}</p>
-                <p className="text-slate-400 dark:text-slate-500 text-sm mt-2">{t('teamChat.selectChannelDesc')}</p>
+                <h3 className="text-xl font-bold bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent mb-2">
+                  {t('teamChat.selectChannel')}
+                </h3>
+                <p className="text-slate-500 dark:text-slate-400 text-sm max-w-xs mx-auto">
+                  {t('teamChat.selectChannelDesc')}
+                </p>
+                <Button
+                  onClick={() => setCreateChannelModalOpen(true)}
+                  className="mt-6 bg-gradient-to-r from-purple-500 to-indigo-600 hover:from-purple-600 hover:to-indigo-700 text-white rounded-xl shadow-lg shadow-purple-500/25 hover:shadow-xl hover:shadow-purple-500/30 transition-all px-6"
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Create Channel
+                </Button>
               </div>
             </div>
           )}
@@ -1601,11 +1668,15 @@ const InternalChatPage: React.FC = () => {
 
       {/* Call History Sheet */}
       <Sheet open={isCallHistoryOpen} onOpenChange={setIsCallHistoryOpen}>
-        <SheetContent className="w-[400px] sm:w-[540px] flex flex-col">
-          <SheetHeader>
-            <SheetTitle className="flex items-center gap-2">
-              <History className="h-5 w-5 text-purple-600 dark:text-purple-400" />
-              Call History
+        <SheetContent className="w-[400px] sm:w-[540px] flex flex-col bg-gradient-to-br from-white to-purple-50/30 dark:from-slate-800 dark:to-purple-950/20 border-l border-slate-200/80 dark:border-slate-700/60">
+          <SheetHeader className="pb-4 border-b border-slate-200/80 dark:border-slate-700/60">
+            <SheetTitle className={`flex items-center gap-3 ${isRTL ? 'flex-row-reverse' : ''}`}>
+              <div className="p-2.5 rounded-xl bg-gradient-to-br from-purple-500 to-indigo-600 shadow-lg shadow-purple-500/25">
+                <History className="h-5 w-5 text-white" />
+              </div>
+              <span className="bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent font-bold">
+                Call History
+              </span>
             </SheetTitle>
           </SheetHeader>
           <div className="flex-1 mt-4 overflow-hidden">

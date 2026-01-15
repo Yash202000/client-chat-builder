@@ -4,10 +4,10 @@ import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "@/componen
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Trash2, Edit, PlusCircle, Copy } from "lucide-react";
+import { Trash2, Edit, PlusCircle, Copy, Shield, Loader2, Calendar, Key, Check, Vault } from "lucide-react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { useI18n } from '@/hooks/useI18n';
 
@@ -146,41 +146,52 @@ export const VaultSettings = () => {
   };
 
   if (isLoading) return (
-    <div className="flex items-center justify-center py-12">
-      <div className="flex items-center gap-2 text-muted-foreground dark:text-gray-400">
-        <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-cyan-600 dark:border-cyan-400"></div>
-        <span>{t('vault.loading')}</span>
+    <div className="flex items-center justify-center py-16">
+      <div className="flex flex-col items-center gap-4">
+        <div className="relative">
+          <div className="absolute inset-0 bg-gradient-to-br from-violet-500 to-purple-600 rounded-full blur-xl opacity-30 animate-pulse" />
+          <div className="relative w-16 h-16 bg-gradient-to-br from-violet-500 to-purple-600 rounded-full flex items-center justify-center shadow-xl shadow-violet-500/25">
+            <Loader2 className="h-8 w-8 text-white animate-spin" />
+          </div>
+        </div>
+        <span className="text-gray-600 dark:text-gray-400 font-medium">{t('vault.loading')}</span>
       </div>
     </div>
   );
   if (isError) return (
-    <div className="text-center py-12">
-      <div className="text-red-600 dark:text-red-400">{t('vault.errorLoading')}</div>
+    <div className="flex flex-col items-center justify-center py-16">
+      <div className="relative mb-4">
+        <div className="absolute inset-0 bg-gradient-to-br from-red-500 to-rose-600 rounded-full blur-xl opacity-30" />
+        <div className="relative w-16 h-16 bg-gradient-to-br from-red-500 to-rose-600 rounded-full flex items-center justify-center shadow-xl shadow-red-500/25">
+          <Shield className="h-8 w-8 text-white" />
+        </div>
+      </div>
+      <div className="text-red-600 dark:text-red-400 font-medium">{t('vault.errorLoading')}</div>
     </div>
   );
 
   const renderDialogContent = () => (
-    <form onSubmit={handleSubmit} className="space-y-5 p-2" dir={isRTL ? 'rtl' : 'ltr'}>
+    <form onSubmit={handleSubmit} className="space-y-5" dir={isRTL ? 'rtl' : 'ltr'}>
       <div className="space-y-2">
-        <Label htmlFor="name" className="dark:text-gray-300">{t('vault.nameLabel')}</Label>
+        <Label htmlFor="name" className="text-sm font-medium dark:text-gray-300">{t('vault.nameLabel')}</Label>
         <Input
           id="name"
           value={formData.name}
           onChange={(e) => setFormData({ ...formData, name: e.target.value })}
           placeholder={t('vault.namePlaceholder')}
           required
-          className="dark:bg-slate-900 dark:border-slate-600 dark:text-white"
+          className="rounded-xl h-11 dark:bg-slate-900 dark:border-slate-600 dark:text-white"
         />
         <p className="text-xs text-gray-500 dark:text-gray-400">{t('vault.nameDesc')}</p>
       </div>
       <div className="space-y-2">
-        <Label htmlFor="service" className="dark:text-gray-300">{t('vault.serviceLabel')}</Label>
+        <Label htmlFor="service" className="text-sm font-medium dark:text-gray-300">{t('vault.serviceLabel')}</Label>
         <select
           id="service"
           value={formData.service}
           onChange={(e) => setFormData({ ...formData, service: e.target.value })}
           required
-          className="w-full p-2 border rounded-md dark:bg-slate-900 dark:border-slate-600 dark:text-white focus:ring-2 focus:ring-blue-500 transition-all"
+          className="w-full h-11 px-3 border rounded-xl dark:bg-slate-900 dark:border-slate-600 dark:text-white focus:ring-2 focus:ring-violet-500 focus:border-violet-500 transition-all"
         >
           <option value="">{t('vault.servicePlaceholder')}</option>
           <option value="deepgram">{t('vault.services.deepgram')}</option>
@@ -192,7 +203,7 @@ export const VaultSettings = () => {
         <p className="text-xs text-gray-500 dark:text-gray-400">{t('vault.serviceDesc')}</p>
       </div>
       <div className="space-y-2">
-        <Label htmlFor="credentials" className="dark:text-gray-300">
+        <Label htmlFor="credentials" className="text-sm font-medium dark:text-gray-300">
           {currentCredential ? t('vault.newApiKeyLabel') : t('vault.apiKeyLabel')}
         </Label>
         <Input
@@ -201,17 +212,33 @@ export const VaultSettings = () => {
           value={formData.credentials}
           onChange={(e) => setFormData({ ...formData, credentials: e.target.value })}
           required={!currentCredential}
-          className="dark:bg-slate-900 dark:border-slate-600 dark:text-white font-mono"
+          className="rounded-xl h-11 dark:bg-slate-900 dark:border-slate-600 dark:text-white font-mono"
           placeholder={t('vault.apiKeyPlaceholder')}
         />
         <p className="text-xs text-gray-500 dark:text-gray-400">{t('vault.apiKeyDesc')}</p>
       </div>
-      <DialogFooter className={`pt-4 ${isRTL ? 'flex-row-reverse' : ''}`}>
-        <Button type="button" variant="outline" onClick={() => currentCredential ? setIsEditDialogOpen(false) : setIsCreateDialogOpen(false)} className="dark:border-slate-600 dark:text-white dark:hover:bg-slate-700">
+      <DialogFooter className={`pt-4 border-t border-slate-200/80 dark:border-slate-700/60 ${isRTL ? 'flex-row-reverse' : ''}`}>
+        <Button type="button" variant="outline" onClick={() => currentCredential ? setIsEditDialogOpen(false) : setIsCreateDialogOpen(false)} className="rounded-xl dark:border-slate-600 dark:text-white dark:hover:bg-slate-700">
           {t('common.cancel')}
         </Button>
-        <Button type="submit" disabled={createCredentialMutation.isPending || updateCredentialMutation.isPending} className="bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-700 hover:to-blue-700 text-white">
-          {currentCredential ? (updateCredentialMutation.isPending ? t('vault.saving') : t('vault.saveChanges')) : (createCredentialMutation.isPending ? t('vault.adding') : t('vault.addKey'))}
+        <Button type="submit" disabled={createCredentialMutation.isPending || updateCredentialMutation.isPending} className="rounded-xl bg-gradient-to-r from-violet-500 to-purple-600 hover:from-violet-600 hover:to-purple-700 text-white shadow-lg shadow-violet-500/25">
+          {createCredentialMutation.isPending || updateCredentialMutation.isPending ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : (
+            <>
+              {currentCredential ? (
+                <>
+                  <Check className={`h-4 w-4 ${isRTL ? 'ml-1.5' : 'mr-1.5'}`} />
+                  {t('vault.saveChanges')}
+                </>
+              ) : (
+                <>
+                  <Key className={`h-4 w-4 ${isRTL ? 'ml-1.5' : 'mr-1.5'}`} />
+                  {t('vault.addKey')}
+                </>
+              )}
+            </>
+          )}
         </Button>
       </DialogFooter>
     </form>
@@ -219,14 +246,22 @@ export const VaultSettings = () => {
 
   return (
     <div className="w-full max-w-7xl mx-auto" dir={isRTL ? 'rtl' : 'ltr'}>
-      <div className={`flex flex-col sm:flex-row items-start sm:items-center justify-between mb-8 gap-4`}>
-        <div>
-          <h2 className="text-4xl font-bold bg-gradient-to-r from-cyan-600 to-blue-600 bg-clip-text text-transparent mb-2">
-            🔐 {t('vault.title')}
-          </h2>
-          <p className="text-gray-600 dark:text-gray-400">{t('vault.subtitle')}</p>
+      <div className={`flex flex-col sm:flex-row items-start sm:items-center justify-between mb-8 gap-4 ${isRTL ? 'sm:flex-row-reverse' : ''}`}>
+        <div className={`flex items-center gap-4 ${isRTL ? 'flex-row-reverse' : ''}`}>
+          <div className="relative group">
+            <div className="absolute inset-0 bg-gradient-to-br from-violet-500 to-purple-600 rounded-2xl blur-lg opacity-40 group-hover:opacity-60 transition-all" />
+            <div className="relative p-4 rounded-2xl bg-gradient-to-br from-violet-500 to-purple-600 shadow-xl shadow-violet-500/25">
+              <Vault className="h-8 w-8 text-white" />
+            </div>
+          </div>
+          <div>
+            <h2 className="text-3xl font-bold bg-gradient-to-r from-violet-600 to-purple-600 bg-clip-text text-transparent">
+              {t('vault.title')}
+            </h2>
+            <p className="text-gray-600 dark:text-gray-400">{t('vault.subtitle')}</p>
+          </div>
         </div>
-        <Button onClick={handleOpenCreate} className="bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-700 hover:to-blue-700 text-white shadow-lg hover:shadow-xl transition-all">
+        <Button onClick={handleOpenCreate} className="rounded-xl bg-gradient-to-r from-violet-500 to-purple-600 hover:from-violet-600 hover:to-purple-700 text-white shadow-lg shadow-violet-500/25 hover:shadow-xl hover:shadow-violet-500/30 transition-all">
           <PlusCircle className={`${isRTL ? 'ml-2' : 'mr-2'} h-4 w-4`} /> {t('vault.addNewKey')}
         </Button>
       </div>
@@ -234,51 +269,59 @@ export const VaultSettings = () => {
       {credentials && credentials.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {credentials.map((credential) => (
-            <Card key={credential.id} className="card-shadow-lg border-slate-200 dark:border-slate-700 dark:bg-slate-800 hover:shadow-xl transition-all duration-300 flex flex-col justify-between">
-              <CardHeader className="border-b border-slate-200 dark:border-slate-700 bg-gradient-to-r from-slate-50 to-slate-100 dark:from-slate-800 dark:to-slate-900">
-                <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 bg-gradient-to-br from-cyan-100 to-blue-100 dark:from-cyan-900/50 dark:to-blue-900/50 rounded-lg flex items-center justify-center shadow-sm">
-                    <svg className="w-6 h-6 text-cyan-600 dark:text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
-                    </svg>
+            <Card key={credential.id} className="group rounded-2xl border-slate-200/80 dark:border-slate-700/60 dark:bg-slate-800/90 hover:shadow-xl hover:shadow-violet-500/10 hover:border-violet-200 dark:hover:border-violet-700/50 transition-all duration-300 flex flex-col justify-between overflow-hidden">
+              <CardHeader className="border-b border-slate-200/80 dark:border-slate-700/60 bg-gradient-to-r from-slate-50 to-slate-100/80 dark:from-slate-800 dark:to-slate-900/80">
+                <div className={`flex items-center gap-3 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                  <div className="relative">
+                    <div className="absolute inset-0 bg-gradient-to-br from-violet-500 to-purple-600 rounded-xl blur-md opacity-30 group-hover:opacity-50 transition-all" />
+                    <div className="relative w-12 h-12 bg-gradient-to-br from-violet-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg shadow-violet-500/25">
+                      <Key className="w-6 h-6 text-white" />
+                    </div>
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="font-semibold dark:text-white truncate">{credential.name}</p>
-                    <p className="text-xs text-gray-500 dark:text-gray-400">
-                      <span className="font-mono bg-slate-100 dark:bg-slate-900 px-2 py-0.5 rounded text-cyan-600 dark:text-cyan-400">{credential.service}</span>
-                    </p>
+                    <p className="font-semibold dark:text-white truncate group-hover:text-violet-700 dark:group-hover:text-violet-300 transition-colors">{credential.name}</p>
+                    <span className="inline-flex items-center text-xs bg-violet-100 dark:bg-violet-900/40 text-violet-700 dark:text-violet-300 px-2 py-0.5 rounded-full mt-1 font-medium">
+                      {credential.service}
+                    </span>
                   </div>
                 </div>
               </CardHeader>
               <CardContent className="pt-4">
-                <Button variant="ghost" size="sm" onClick={() => handleCopy(credential.id.toString())} className={`w-full ${isRTL ? 'justify-end' : 'justify-start'} dark:hover:bg-slate-700 dark:text-white`}>
+                <Button variant="ghost" size="sm" onClick={() => handleCopy(credential.id.toString())} className={`w-full ${isRTL ? 'justify-end' : 'justify-start'} rounded-lg dark:hover:bg-slate-700 dark:text-white hover:bg-violet-50 dark:hover:bg-violet-900/30 transition-colors`}>
                   <Copy className={`${isRTL ? 'ml-2' : 'mr-2'} h-4 w-4`} />
                   {t('vault.copyKeyId')}
                 </Button>
-                <div className="mt-3 text-xs text-gray-500 dark:text-gray-400">
-                  <p>{t('vault.created')}: {new Date(credential.created_at).toLocaleDateString()}</p>
+                <div className="mt-3 text-xs text-gray-500 dark:text-gray-400 flex items-center gap-1.5">
+                  <Calendar className="h-3.5 w-3.5" />
+                  {t('vault.created')}: {new Date(credential.created_at).toLocaleDateString()}
                 </div>
               </CardContent>
-              <CardFooter className={`flex ${isRTL ? 'flex-row-reverse justify-start' : 'justify-end'} gap-2 border-t border-slate-200 dark:border-slate-700 pt-4`}>
-                <Button variant="outline" size="sm" onClick={() => handleOpenEdit(credential)} className="dark:border-slate-600 dark:text-white dark:hover:bg-slate-700">
+              <CardFooter className={`flex ${isRTL ? 'flex-row-reverse justify-start' : 'justify-end'} gap-2 border-t border-slate-200/80 dark:border-slate-700/60 pt-4 bg-slate-50/50 dark:bg-slate-900/30`}>
+                <Button variant="outline" size="sm" onClick={() => handleOpenEdit(credential)} className="rounded-lg dark:border-slate-600 dark:text-white dark:hover:bg-slate-700 hover:border-violet-300 hover:bg-violet-50 dark:hover:border-violet-700 dark:hover:bg-violet-900/30 transition-colors">
                   <Edit className={`h-4 w-4 ${isRTL ? 'ml-1' : 'mr-1'}`} /> {t('vault.edit')}
                 </Button>
                 <AlertDialog>
                   <AlertDialogTrigger asChild>
-                    <Button variant="destructive" size="sm" className="bg-red-600 hover:bg-red-700">
+                    <Button variant="ghost" size="sm" className="rounded-lg hover:bg-red-100 dark:hover:bg-red-900/30 hover:text-red-600 dark:hover:text-red-400 transition-colors">
                       <Trash2 className={`h-4 w-4 ${isRTL ? 'ml-1' : 'mr-1'}`} /> {t('vault.delete')}
                     </Button>
                   </AlertDialogTrigger>
-                  <AlertDialogContent className="dark:bg-slate-800 dark:border-slate-700" dir={isRTL ? 'rtl' : 'ltr'}>
+                  <AlertDialogContent className="dark:bg-slate-800 dark:border-slate-700 rounded-2xl" dir={isRTL ? 'rtl' : 'ltr'}>
                     <AlertDialogHeader>
-                      <AlertDialogTitle className="dark:text-white">{t('vault.deleteConfirmTitle')}</AlertDialogTitle>
+                      <AlertDialogTitle className={`dark:text-white flex items-center gap-3 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                        <div className="p-2 rounded-lg bg-red-100 dark:bg-red-900/30">
+                          <Trash2 className="h-5 w-5 text-red-600 dark:text-red-400" />
+                        </div>
+                        {t('vault.deleteConfirmTitle')}
+                      </AlertDialogTitle>
                       <AlertDialogDescription className="dark:text-gray-400">
-                        {t('vault.deleteConfirmDesc1')} <span className="font-bold text-white">{credential.name}</span> {t('vault.deleteConfirmDesc2')}
+                        {t('vault.deleteConfirmDesc1')} <span className="font-bold text-violet-600 dark:text-violet-400">{credential.name}</span> {t('vault.deleteConfirmDesc2')}
                       </AlertDialogDescription>
                     </AlertDialogHeader>
-                    <AlertDialogFooter className={isRTL ? 'flex-row-reverse' : ''}>
-                      <AlertDialogCancel className="dark:border-slate-600 dark:text-white dark:hover:bg-slate-700">{t('common.cancel')}</AlertDialogCancel>
-                      <AlertDialogAction onClick={() => deleteCredentialMutation.mutate(credential.id)} className="bg-red-600 hover:bg-red-700">
+                    <AlertDialogFooter className={`pt-4 border-t border-slate-200/80 dark:border-slate-700/60 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                      <AlertDialogCancel className="rounded-xl dark:border-slate-600 dark:text-white dark:hover:bg-slate-700">{t('common.cancel')}</AlertDialogCancel>
+                      <AlertDialogAction onClick={() => deleteCredentialMutation.mutate(credential.id)} className="rounded-xl bg-red-600 hover:bg-red-700 text-white">
+                        <Trash2 className={`h-4 w-4 ${isRTL ? 'ml-1.5' : 'mr-1.5'}`} />
                         {t('vault.delete')}
                       </AlertDialogAction>
                     </AlertDialogFooter>
@@ -289,35 +332,60 @@ export const VaultSettings = () => {
           ))}
         </div>
       ) : (
-        <div className="text-center py-16 border-2 border-dashed border-slate-300 dark:border-slate-700 rounded-lg bg-slate-50 dark:bg-slate-900/50">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-slate-100 dark:bg-slate-800 mb-4">
-            <svg className="w-8 h-8 text-slate-400 dark:text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
-            </svg>
+        <div className="flex flex-col items-center justify-center py-16 border-2 border-dashed border-slate-300 dark:border-slate-700 rounded-2xl bg-slate-50/50 dark:bg-slate-900/30">
+          <div className="relative mb-6">
+            <div className="absolute inset-0 bg-gradient-to-br from-violet-500 to-purple-600 rounded-full blur-xl opacity-30" />
+            <div className="relative w-24 h-24 bg-gradient-to-br from-violet-500 to-purple-600 rounded-full flex items-center justify-center shadow-xl shadow-violet-500/25">
+              <Vault className="h-12 w-12 text-white" />
+            </div>
           </div>
-          <h3 className="text-xl font-semibold text-gray-800 dark:text-white">{t('vault.noKeysFound')}</h3>
-          <p className="text-gray-500 dark:text-gray-400 mt-2">{t('vault.noKeysDesc')}</p>
-          <Button onClick={handleOpenCreate} className="mt-6 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-700 hover:to-blue-700 text-white btn-hover-lift">
+          <h3 className="text-xl font-bold text-gray-800 dark:text-white mb-2">{t('vault.noKeysFound')}</h3>
+          <p className="text-gray-500 dark:text-gray-400 max-w-md text-center mb-6">{t('vault.noKeysDesc')}</p>
+          <Button onClick={handleOpenCreate} className="rounded-xl bg-gradient-to-r from-violet-500 to-purple-600 hover:from-violet-600 hover:to-purple-700 text-white shadow-lg shadow-violet-500/25">
             <PlusCircle className={`${isRTL ? 'ml-2' : 'mr-2'} h-4 w-4`} /> {t('vault.addFirstKey')}
           </Button>
         </div>
       )}
 
       <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-        <DialogContent className="dark:bg-slate-800 dark:border-slate-700" dir={isRTL ? 'rtl' : 'ltr'}>
-          <DialogHeader>
-            <DialogTitle className="dark:text-white">{t('vault.addNewApiKey')}</DialogTitle>
+        <DialogContent className="dark:bg-slate-800 dark:border-slate-700 rounded-2xl sm:rounded-2xl sm:max-w-md" dir={isRTL ? 'rtl' : 'ltr'}>
+          <DialogHeader className="pb-4 border-b border-slate-200/80 dark:border-slate-700/60">
+            <DialogTitle className={`dark:text-white flex items-center gap-3 text-xl ${isRTL ? 'flex-row-reverse' : ''}`}>
+              <div className="p-2.5 rounded-xl bg-gradient-to-br from-violet-500 to-purple-600 shadow-lg shadow-violet-500/25">
+                <PlusCircle className="h-5 w-5 text-white" />
+              </div>
+              <span className="bg-gradient-to-r from-violet-600 to-purple-600 bg-clip-text text-transparent">
+                {t('vault.addNewApiKey')}
+              </span>
+            </DialogTitle>
+            <DialogDescription className="dark:text-gray-400 mt-2">
+              {t('vault.addNewApiKeyDesc') || 'Securely store your API credentials for external services.'}
+            </DialogDescription>
           </DialogHeader>
-          {renderDialogContent()}
+          <div className="py-4">
+            {renderDialogContent()}
+          </div>
         </DialogContent>
       </Dialog>
 
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent className="dark:bg-slate-800 dark:border-slate-700" dir={isRTL ? 'rtl' : 'ltr'}>
-          <DialogHeader>
-            <DialogTitle className="dark:text-white">{t('vault.editApiKey')}</DialogTitle>
+        <DialogContent className="dark:bg-slate-800 dark:border-slate-700 rounded-2xl sm:rounded-2xl sm:max-w-md" dir={isRTL ? 'rtl' : 'ltr'}>
+          <DialogHeader className="pb-4 border-b border-slate-200/80 dark:border-slate-700/60">
+            <DialogTitle className={`dark:text-white flex items-center gap-3 text-xl ${isRTL ? 'flex-row-reverse' : ''}`}>
+              <div className="p-2.5 rounded-xl bg-gradient-to-br from-violet-500 to-purple-600 shadow-lg shadow-violet-500/25">
+                <Edit className="h-5 w-5 text-white" />
+              </div>
+              <span className="bg-gradient-to-r from-violet-600 to-purple-600 bg-clip-text text-transparent">
+                {t('vault.editApiKey')}
+              </span>
+            </DialogTitle>
+            <DialogDescription className="dark:text-gray-400 mt-2">
+              {t('vault.editApiKeyDesc') || 'Update your API credential details.'}
+            </DialogDescription>
           </DialogHeader>
-          {renderDialogContent()}
+          <div className="py-4">
+            {renderDialogContent()}
+          </div>
         </DialogContent>
       </Dialog>
     </div>

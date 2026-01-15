@@ -475,7 +475,7 @@ const VisualWorkflowBuilder = () => {
                       animated: true,
                       style: { stroke: '#8b5cf6', strokeWidth: 2.5 },
                     }}
-                    className="dark:bg-slate-900"
+                    className="bg-gradient-to-br from-slate-50 via-white to-slate-100 dark:from-slate-900 dark:via-slate-900 dark:to-slate-800"
                   >
                     <Controls className="bg-white/90 dark:bg-slate-800/90 backdrop-blur-sm rounded-xl shadow-lg border border-slate-200 dark:border-slate-700 overflow-hidden [&_button]:dark:text-white [&_button]:dark:hover:bg-slate-700 [&_button]:transition-colors" />
                     <MiniMap

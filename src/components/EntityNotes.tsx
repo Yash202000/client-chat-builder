@@ -35,6 +35,8 @@ import {
   CheckSquare,
   Clock,
   User,
+  Loader2,
+  StickyNote,
 } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { cn } from '@/lib/utils';
@@ -161,39 +163,59 @@ export const EntityNotes: React.FC<EntityNotesProps> = ({ contactId, leadId, com
 
   return (
     <>
-      <Card className={cn('h-full flex flex-col', compact ? 'border-0 shadow-none' : '')}>
-        <CardHeader className={cn('flex flex-row items-center justify-between pb-2', compact ? 'px-0 pt-0' : '')}>
-          <CardTitle className="text-sm font-semibold flex items-center gap-2">
-            <FileText className="h-4 w-4" />
-            {t('notes.title')}
+      <Card className={cn('h-full flex flex-col rounded-xl', compact ? 'border-0 shadow-none bg-transparent' : 'shadow-lg shadow-slate-200/50 dark:shadow-slate-900/50 border-slate-200/80 dark:border-slate-700/60 dark:bg-slate-800/90')}>
+        <CardHeader className={cn('flex flex-row items-center justify-between pb-3', compact ? 'px-0 pt-2' : 'border-b border-slate-200/80 dark:border-slate-700/60')}>
+          <CardTitle className="text-sm font-semibold flex items-center gap-2.5 dark:text-white">
+            <div className="p-1.5 rounded-lg bg-gradient-to-br from-amber-100 to-orange-100 dark:from-amber-900/40 dark:to-orange-900/40">
+              <StickyNote className="h-4 w-4 text-amber-600 dark:text-amber-400" />
+            </div>
+            <span className="bg-gradient-to-r from-amber-700 to-orange-600 dark:from-amber-400 dark:to-orange-400 bg-clip-text text-transparent font-bold">
+              {t('notes.title')}
+            </span>
             {data?.total ? (
-              <span className="text-xs bg-gray-100 dark:bg-gray-800 px-2 py-0.5 rounded-full">
+              <span className="text-xs bg-gradient-to-r from-amber-100 to-orange-100 dark:from-amber-900/40 dark:to-orange-900/40 text-amber-700 dark:text-amber-300 px-2.5 py-0.5 rounded-full font-medium">
                 {data.total}
               </span>
             ) : null}
           </CardTitle>
-          <Button variant="outline" size="sm" onClick={handleAddNote}>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleAddNote}
+            className="rounded-lg dark:border-slate-600 dark:text-white dark:hover:bg-slate-700 hover:border-amber-300 hover:bg-amber-50 dark:hover:border-amber-700 dark:hover:bg-amber-900/30 transition-colors"
+          >
             <Plus className="h-4 w-4 mr-1" />
             {t('notes.add')}
           </Button>
         </CardHeader>
 
-        <CardContent className={cn('flex-1 overflow-y-auto', compact ? 'px-0 pb-0' : '')}>
+        <CardContent className={cn('flex-1 overflow-y-auto pt-4', compact ? 'px-0 pb-0' : '')}>
           {isLoading ? (
-            <div className="flex items-center justify-center py-8">
-              <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
+            <div className="flex flex-col items-center justify-center py-8 gap-3">
+              <div className="relative">
+                <div className="absolute inset-0 bg-gradient-to-br from-amber-500 to-orange-600 rounded-full blur-lg opacity-30 animate-pulse" />
+                <div className="relative w-12 h-12 bg-gradient-to-br from-amber-500 to-orange-600 rounded-full flex items-center justify-center shadow-lg shadow-amber-500/25">
+                  <Loader2 className="h-6 w-6 text-white animate-spin" />
+                </div>
+              </div>
             </div>
           ) : notes.length === 0 ? (
-            <div className="text-center py-8 text-muted-foreground">
-              <FileText className="h-8 w-8 mx-auto mb-2 opacity-50" />
-              <p className="text-sm">{t('notes.empty')}</p>
-              <p className="text-xs mt-1">{t('notes.emptySubtitle')}</p>
+            <div className="flex flex-col items-center justify-center py-8 text-center border-2 border-dashed border-slate-200 dark:border-slate-700 rounded-xl bg-slate-50/50 dark:bg-slate-900/30">
+              <div className="relative mb-4">
+                <div className="absolute inset-0 bg-gradient-to-br from-amber-500 to-orange-600 rounded-full blur-lg opacity-30" />
+                <div className="relative w-14 h-14 bg-gradient-to-br from-amber-500 to-orange-600 rounded-full flex items-center justify-center shadow-lg shadow-amber-500/25">
+                  <StickyNote className="h-7 w-7 text-white" />
+                </div>
+              </div>
+              <p className="text-sm font-medium text-gray-800 dark:text-white">{t('notes.empty')}</p>
+              <p className="text-xs text-muted-foreground mt-1">{t('notes.emptySubtitle')}</p>
             </div>
           ) : (
             <div className="space-y-4">
               {Object.entries(groupedNotes).map(([date, dateNotes]) => (
                 <div key={date}>
-                  <h4 className="text-xs font-medium text-muted-foreground mb-2 uppercase tracking-wide">
+                  <h4 className="text-xs font-semibold text-amber-700 dark:text-amber-400 mb-3 uppercase tracking-wide flex items-center gap-2">
+                    <div className="h-1 w-1 rounded-full bg-amber-500" />
                     {date}
                   </h4>
                   <div className="space-y-2">
@@ -203,15 +225,15 @@ export const EntityNotes: React.FC<EntityNotesProps> = ({ contactId, leadId, com
                         <div
                           key={note.id}
                           className={cn(
-                            'border rounded-lg p-3 transition-all hover:shadow-sm',
-                            'bg-white dark:bg-slate-900'
+                            'border border-slate-200/80 dark:border-slate-700/60 rounded-xl p-3.5 transition-all hover:shadow-md hover:border-amber-200 dark:hover:border-amber-800/50',
+                            'bg-white dark:bg-slate-900/50'
                           )}
                         >
                           <div className="flex items-start justify-between gap-2">
-                            <div className="flex items-center gap-2 flex-1 min-w-0">
+                            <div className="flex items-center gap-2.5 flex-1 min-w-0">
                               <div
                                 className={cn(
-                                  'p-1.5 rounded',
+                                  'p-1.5 rounded-lg',
                                   config.bgColor
                                 )}
                               >
@@ -222,11 +244,11 @@ export const EntityNotes: React.FC<EntityNotesProps> = ({ contactId, leadId, com
                               </div>
                               <div className="flex-1 min-w-0">
                                 <div className="flex items-center gap-2">
-                                  <span className={cn('text-xs font-medium', config.color)}>
+                                  <span className={cn('text-xs font-semibold', config.color)}>
                                     {t(`notes.types.${note.note_type}`)}
                                   </span>
                                   {note.title && (
-                                    <span className="text-sm font-medium truncate">
+                                    <span className="text-sm font-medium truncate dark:text-white">
                                       {note.title}
                                     </span>
                                   )}
@@ -236,18 +258,18 @@ export const EntityNotes: React.FC<EntityNotesProps> = ({ contactId, leadId, com
 
                             <DropdownMenu>
                               <DropdownMenuTrigger asChild>
-                                <Button variant="ghost" size="sm" className="h-6 w-6 p-0">
+                                <Button variant="ghost" size="sm" className="h-7 w-7 p-0 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800">
                                   <MoreVertical className="h-3.5 w-3.5" />
                                 </Button>
                               </DropdownMenuTrigger>
-                              <DropdownMenuContent align="end">
-                                <DropdownMenuItem onClick={() => handleEditNote(note)}>
+                              <DropdownMenuContent align="end" className="rounded-xl dark:bg-slate-800 dark:border-slate-700">
+                                <DropdownMenuItem onClick={() => handleEditNote(note)} className="rounded-lg">
                                   <Edit className="h-4 w-4 mr-2" />
                                   {t('notes.edit')}
                                 </DropdownMenuItem>
                                 <DropdownMenuItem
                                   onClick={() => handleDeleteNote(note.id)}
-                                  className="text-red-600"
+                                  className="text-red-600 dark:text-red-400 rounded-lg"
                                 >
                                   <Trash2 className="h-4 w-4 mr-2" />
                                   {t('notes.delete')}
@@ -256,36 +278,36 @@ export const EntityNotes: React.FC<EntityNotesProps> = ({ contactId, leadId, com
                             </DropdownMenu>
                           </div>
 
-                          <p className="text-sm mt-2 whitespace-pre-wrap line-clamp-3">
+                          <p className="text-sm mt-2.5 whitespace-pre-wrap line-clamp-3 dark:text-gray-300">
                             {note.content}
                           </p>
 
                           {/* Activity metadata for calls/meetings */}
                           {(note.note_type === 'call' || note.note_type === 'meeting') && (
-                            <div className="flex flex-wrap gap-x-4 gap-y-1 mt-2 text-xs text-muted-foreground">
+                            <div className="flex flex-wrap gap-x-4 gap-y-1 mt-2.5 text-xs text-muted-foreground bg-slate-50 dark:bg-slate-800/50 rounded-lg p-2">
                               {note.duration_minutes && (
                                 <span className="flex items-center gap-1">
-                                  <Clock className="h-3 w-3" />
+                                  <Clock className="h-3 w-3 text-blue-500" />
                                   {note.duration_minutes} {t('notes.minutes')}
                                 </span>
                               )}
                               {note.participants && note.participants.length > 0 && (
                                 <span className="flex items-center gap-1">
-                                  <User className="h-3 w-3" />
+                                  <User className="h-3 w-3 text-green-500" />
                                   {note.participants.join(', ')}
                                 </span>
                               )}
                               {note.outcome && (
-                                <span className="italic">{note.outcome}</span>
+                                <span className="italic text-purple-600 dark:text-purple-400">{note.outcome}</span>
                               )}
                             </div>
                           )}
 
-                          <div className="flex items-center gap-2 mt-2 text-xs text-muted-foreground">
-                            <span>
+                          <div className="flex items-center gap-2 mt-2.5 text-xs text-muted-foreground pt-2 border-t border-slate-100 dark:border-slate-700/50">
+                            <span className="font-medium">
                               {note.creator_email || t('notes.unknownUser')}
                             </span>
-                            <span>•</span>
+                            <span className="text-slate-300 dark:text-slate-600">•</span>
                             <span>
                               {formatDistanceToNow(new Date(note.created_at), { addSuffix: true })}
                             </span>
@@ -317,19 +339,25 @@ export const EntityNotes: React.FC<EntityNotesProps> = ({ contactId, leadId, com
 
       {/* Delete Confirmation Dialog */}
       <AlertDialog open={!!deleteNoteId} onOpenChange={() => setDeleteNoteId(null)}>
-        <AlertDialogContent>
+        <AlertDialogContent className="dark:bg-slate-800 dark:border-slate-700 rounded-2xl">
           <AlertDialogHeader>
-            <AlertDialogTitle>{t('notes.deleteConfirmTitle')}</AlertDialogTitle>
-            <AlertDialogDescription>
+            <AlertDialogTitle className="dark:text-white flex items-center gap-3">
+              <div className="p-2 rounded-lg bg-red-100 dark:bg-red-900/30">
+                <Trash2 className="h-5 w-5 text-red-600 dark:text-red-400" />
+              </div>
+              {t('notes.deleteConfirmTitle')}
+            </AlertDialogTitle>
+            <AlertDialogDescription className="dark:text-gray-400">
               {t('notes.deleteConfirmDescription')}
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>{t('common.cancel')}</AlertDialogCancel>
+          <AlertDialogFooter className="pt-4 border-t border-slate-200/80 dark:border-slate-700/60">
+            <AlertDialogCancel className="rounded-xl dark:border-slate-600 dark:text-white dark:hover:bg-slate-700">{t('common.cancel')}</AlertDialogCancel>
             <AlertDialogAction
               onClick={confirmDelete}
-              className="bg-red-600 hover:bg-red-700"
+              className="rounded-xl bg-red-600 hover:bg-red-700 text-white"
             >
+              <Trash2 className="h-4 w-4 mr-1.5" />
               {t('common.delete')}
             </AlertDialogAction>
           </AlertDialogFooter>

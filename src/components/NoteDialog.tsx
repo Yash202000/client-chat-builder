@@ -22,7 +22,7 @@ import {
 import { useAuth } from '@/hooks/useAuth';
 import { useTranslation } from 'react-i18next';
 import { toast } from '@/hooks/use-toast';
-import { FileText, Phone, Calendar, Mail, CheckSquare, Loader2 } from 'lucide-react';
+import { FileText, Phone, Calendar, Mail, CheckSquare, Loader2, StickyNote, Save } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface NoteDialogProps {
@@ -198,30 +198,35 @@ export const NoteDialog: React.FC<NoteDialogProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px]">
-        <DialogHeader>
-          <DialogTitle>
-            {isEditing ? t('notes.editTitle') : t('notes.addTitle')}
+      <DialogContent className="sm:max-w-[500px] dark:bg-slate-800 dark:border-slate-700 rounded-2xl sm:rounded-2xl">
+        <DialogHeader className="pb-4 border-b border-slate-200/80 dark:border-slate-700/60">
+          <DialogTitle className="dark:text-white flex items-center gap-3 text-xl">
+            <div className="p-2.5 rounded-xl bg-gradient-to-br from-amber-500 to-orange-600 shadow-lg shadow-amber-500/25">
+              <StickyNote className="h-5 w-5 text-white" />
+            </div>
+            <span className="bg-gradient-to-r from-amber-600 to-orange-600 bg-clip-text text-transparent">
+              {isEditing ? t('notes.editTitle') : t('notes.addTitle')}
+            </span>
           </DialogTitle>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-4 pt-2">
           {/* Note Type Selector */}
           <div>
-            <Label className="text-sm font-medium mb-2 block">{t('notes.type')}</Label>
+            <Label className="text-sm font-medium mb-2 block dark:text-gray-300">{t('notes.type')}</Label>
             <Tabs
               value={noteType}
               onValueChange={(value) => setNoteType(value as NoteType)}
               className="w-full"
             >
-              <TabsList className="grid grid-cols-5 w-full">
+              <TabsList className="grid grid-cols-5 w-full h-auto p-1 rounded-xl bg-slate-100 dark:bg-slate-900">
                 {(Object.keys(NOTE_TYPE_CONFIG) as NoteType[]).map((type) => {
                   const config = NOTE_TYPE_CONFIG[type];
                   return (
                     <TabsTrigger
                       key={type}
                       value={type}
-                      className="flex items-center gap-1 text-xs"
+                      className="flex items-center gap-1 text-xs py-2 rounded-lg data-[state=active]:bg-white dark:data-[state=active]:bg-slate-700 data-[state=active]:shadow-sm transition-all"
                     >
                       <NoteTypeIcon type={type} className="h-3.5 w-3.5" />
                       <span className="hidden sm:inline">{t(`notes.types.${type}`)}</span>
@@ -234,7 +239,7 @@ export const NoteDialog: React.FC<NoteDialogProps> = ({
 
           {/* Title (optional) */}
           <div>
-            <Label htmlFor="title" className="text-sm font-medium">
+            <Label htmlFor="title" className="text-sm font-medium dark:text-gray-300">
               {t('notes.titleField')} <span className="text-muted-foreground">({t('common.optional')})</span>
             </Label>
             <Input
@@ -242,13 +247,13 @@ export const NoteDialog: React.FC<NoteDialogProps> = ({
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder={t('notes.titlePlaceholder')}
-              className="mt-1"
+              className="mt-1.5 rounded-xl dark:bg-slate-900 dark:border-slate-600 dark:text-white"
             />
           </div>
 
           {/* Content */}
           <div>
-            <Label htmlFor="content" className="text-sm font-medium">
+            <Label htmlFor="content" className="text-sm font-medium dark:text-gray-300">
               {t('notes.content')} <span className="text-red-500">*</span>
             </Label>
             <Textarea
@@ -256,21 +261,22 @@ export const NoteDialog: React.FC<NoteDialogProps> = ({
               value={content}
               onChange={(e) => setContent(e.target.value)}
               placeholder={t('notes.contentPlaceholder')}
-              className="mt-1 min-h-[100px]"
+              className="mt-1.5 min-h-[100px] rounded-xl dark:bg-slate-900 dark:border-slate-600 dark:text-white resize-none"
               required
             />
           </div>
 
           {/* Activity Fields for Calls/Meetings */}
           {showActivityFields && (
-            <div className="border-t pt-4 space-y-4">
-              <h4 className="text-sm font-medium text-muted-foreground">
+            <div className="border-t border-slate-200/80 dark:border-slate-700/60 pt-4 space-y-4">
+              <h4 className="text-sm font-semibold text-amber-700 dark:text-amber-400 flex items-center gap-2">
+                <div className="h-1.5 w-1.5 rounded-full bg-amber-500" />
                 {t('notes.activityDetails')}
               </h4>
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor="activityDate" className="text-sm">
+                  <Label htmlFor="activityDate" className="text-sm dark:text-gray-300">
                     {t('notes.activityDate')}
                   </Label>
                   <Input
@@ -278,12 +284,12 @@ export const NoteDialog: React.FC<NoteDialogProps> = ({
                     type="datetime-local"
                     value={activityDate}
                     onChange={(e) => setActivityDate(e.target.value)}
-                    className="mt-1"
+                    className="mt-1.5 rounded-xl dark:bg-slate-900 dark:border-slate-600 dark:text-white"
                   />
                 </div>
 
                 <div>
-                  <Label htmlFor="duration" className="text-sm">
+                  <Label htmlFor="duration" className="text-sm dark:text-gray-300">
                     {t('notes.duration')}
                   </Label>
                   <Input
@@ -292,14 +298,14 @@ export const NoteDialog: React.FC<NoteDialogProps> = ({
                     value={durationMinutes}
                     onChange={(e) => setDurationMinutes(e.target.value)}
                     placeholder={t('notes.durationPlaceholder')}
-                    className="mt-1"
+                    className="mt-1.5 rounded-xl dark:bg-slate-900 dark:border-slate-600 dark:text-white"
                     min="0"
                   />
                 </div>
               </div>
 
               <div>
-                <Label htmlFor="participants" className="text-sm">
+                <Label htmlFor="participants" className="text-sm dark:text-gray-300">
                   {t('notes.participants')}
                 </Label>
                 <Input
@@ -307,12 +313,12 @@ export const NoteDialog: React.FC<NoteDialogProps> = ({
                   value={participants}
                   onChange={(e) => setParticipants(e.target.value)}
                   placeholder={t('notes.participantsPlaceholder')}
-                  className="mt-1"
+                  className="mt-1.5 rounded-xl dark:bg-slate-900 dark:border-slate-600 dark:text-white"
                 />
               </div>
 
               <div>
-                <Label htmlFor="outcome" className="text-sm">
+                <Label htmlFor="outcome" className="text-sm dark:text-gray-300">
                   {t('notes.outcome')}
                 </Label>
                 <Input
@@ -320,31 +326,42 @@ export const NoteDialog: React.FC<NoteDialogProps> = ({
                   value={outcome}
                   onChange={(e) => setOutcome(e.target.value)}
                   placeholder={t('notes.outcomePlaceholder')}
-                  className="mt-1"
+                  className="mt-1.5 rounded-xl dark:bg-slate-900 dark:border-slate-600 dark:text-white"
                 />
               </div>
             </div>
           )}
 
-          <DialogFooter>
+          <DialogFooter className="pt-4 border-t border-slate-200/80 dark:border-slate-700/60">
             <Button
               type="button"
               variant="outline"
               onClick={() => onOpenChange(false)}
               disabled={isPending}
+              className="rounded-xl dark:border-slate-600 dark:text-white dark:hover:bg-slate-700"
             >
               {t('common.cancel')}
             </Button>
-            <Button type="submit" disabled={isPending}>
+            <Button
+              type="submit"
+              disabled={isPending}
+              className="rounded-xl bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white shadow-lg shadow-amber-500/25"
+            >
               {isPending ? (
                 <>
                   <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                   {t('common.saving')}
                 </>
               ) : isEditing ? (
-                t('notes.saveChanges')
+                <>
+                  <Save className="h-4 w-4 mr-2" />
+                  {t('notes.saveChanges')}
+                </>
               ) : (
-                t('notes.addNote')
+                <>
+                  <StickyNote className="h-4 w-4 mr-2" />
+                  {t('notes.addNote')}
+                </>
               )}
             </Button>
           </DialogFooter>

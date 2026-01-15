@@ -5,8 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Plus, Trash2, Edit, Search, Play, ChevronDown, ChevronRight, MessageSquare } from "lucide-react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from "@/components/ui/dialog";
+import { Plus, Trash2, Edit, Search, Play, ChevronDown, ChevronRight, MessageSquare, Wrench, Code, Link2, Loader2 } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { useAuth } from "@/hooks/useAuth";
@@ -116,14 +116,22 @@ const ToolManagementPage = () => {
 
   return (
     <div className={`space-y-6 p-6 animate-fade-in text-left`}>
-      <div className={`flex justify-between items-start`}>
-        <div>
-          <h2 className="text-4xl font-bold bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent mb-2">
-            {t("tools.title")}
-          </h2>
-          <p className="text-gray-600 dark:text-gray-400 text-lg">{t("tools.subtitle")}</p>
+      <div className={`flex justify-between items-start ${isRTL ? 'flex-row-reverse' : ''}`}>
+        <div className={`flex items-center gap-4 ${isRTL ? 'flex-row-reverse' : ''}`}>
+          <div className="relative group">
+            <div className="absolute inset-0 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-2xl blur-lg opacity-40 group-hover:opacity-60 transition-all" />
+            <div className="relative p-4 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 shadow-xl shadow-emerald-500/25">
+              <Wrench className="h-8 w-8 text-white" />
+            </div>
+          </div>
+          <div>
+            <h2 className="text-4xl font-bold bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent mb-1">
+              {t("tools.title")}
+            </h2>
+            <p className="text-gray-600 dark:text-gray-400 text-lg">{t("tools.subtitle")}</p>
+          </div>
         </div>
-        <div className={`flex gap-2`}>
+        <div className={`flex gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
           <Dialog open={isCreateDialogOpen} onOpenChange={(isOpen) => {
             setIsCreateDialogOpen(isOpen);
             if (!isOpen) {
@@ -131,26 +139,33 @@ const ToolManagementPage = () => {
             }
           }}>
             <DialogTrigger asChild>
-              <Button className={`bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white shadow-lg hover:shadow-xl transition-all flex items-center ${isRTL ? 'flex-row-reverse' : ''}`}>
+              <Button className={`bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white shadow-lg shadow-emerald-500/25 hover:shadow-xl hover:shadow-emerald-500/30 transition-all rounded-xl flex items-center ${isRTL ? 'flex-row-reverse' : ''}`}>
                 <Plus className={`h-4 w-4 ${isRTL ? 'ml-2' : 'mr-2'}`} /> {t("tools.createTool")}
               </Button>
             </DialogTrigger>
-            <DialogContent className="sm:max-w-lg dark:bg-slate-800 dark:border-slate-700">
-              <DialogHeader>
-                <DialogTitle className={`dark:text-white text-left`}>{t("tools.createDialog.title")}</DialogTitle>
-                <DialogDescription className={`dark:text-gray-400 text-left`}>
+            <DialogContent className="sm:max-w-lg dark:bg-slate-800 dark:border-slate-700 rounded-2xl sm:rounded-2xl">
+              <DialogHeader className="pb-4 border-b border-slate-200/80 dark:border-slate-700/60">
+                <DialogTitle className={`dark:text-white flex items-center gap-3 text-xl ${isRTL ? 'flex-row-reverse' : ''}`}>
+                  <div className="p-2.5 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 shadow-lg shadow-emerald-500/25">
+                    <Plus className="h-5 w-5 text-white" />
+                  </div>
+                  <span className="bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent">
+                    {t("tools.createDialog.title")}
+                  </span>
+                </DialogTitle>
+                <DialogDescription className={`dark:text-gray-400 ${isRTL ? 'text-right' : 'text-left'} mt-2`}>
                   {t("tools.createDialog.description")}
                 </DialogDescription>
               </DialogHeader>
               {creationStep === 'initial' && (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 py-4">
                   <div
-                    className="group relative p-6 border border-slate-200 dark:border-slate-700 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-all cursor-pointer"
+                    className="group relative p-6 border border-slate-200 dark:border-slate-700 rounded-2xl hover:bg-gradient-to-br hover:from-emerald-50 hover:to-teal-50 dark:hover:from-emerald-900/20 dark:hover:to-teal-900/20 hover:border-emerald-300 dark:hover:border-emerald-700 transition-all cursor-pointer hover:shadow-lg hover:shadow-emerald-500/10"
                     onClick={() => setCreationStep('custom')}
                   >
                     <div className={`flex flex-col gap-3 ${isRTL ? 'items-end' : 'items-start'}`}>
-                      <div className="bg-gradient-to-br from-emerald-100 to-teal-100 dark:from-emerald-900/50 dark:to-teal-900/50 p-3 rounded-lg">
-                        <Edit className="h-6 w-6 text-emerald-600 dark:text-emerald-400" />
+                      <div className="bg-gradient-to-br from-emerald-500 to-teal-600 p-3 rounded-xl shadow-lg shadow-emerald-500/25 group-hover:shadow-emerald-500/40 transition-all">
+                        <Code className="h-6 w-6 text-white" />
                       </div>
                       <h3 className="text-lg font-semibold dark:text-white">{t("tools.createDialog.customTool")}</h3>
                       <p className="text-sm text-gray-600 dark:text-gray-400">
@@ -159,12 +174,12 @@ const ToolManagementPage = () => {
                     </div>
                   </div>
                   <div
-                    className="group relative p-6 border border-slate-200 dark:border-slate-700 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-all cursor-pointer"
+                    className="group relative p-6 border border-slate-200 dark:border-slate-700 rounded-2xl hover:bg-gradient-to-br hover:from-cyan-50 hover:to-blue-50 dark:hover:from-cyan-900/20 dark:hover:to-blue-900/20 hover:border-cyan-300 dark:hover:border-cyan-700 transition-all cursor-pointer hover:shadow-lg hover:shadow-cyan-500/10"
                     onClick={() => setCreationStep('mcp')}
                   >
                     <div className={`flex flex-col gap-3 ${isRTL ? 'items-end' : 'items-start'}`}>
-                      <div className="bg-gradient-to-br from-teal-100 to-cyan-100 dark:from-teal-900/50 dark:to-cyan-900/50 p-3 rounded-lg">
-                        <Search className="h-6 w-6 text-teal-600 dark:text-teal-400" />
+                      <div className="bg-gradient-to-br from-cyan-500 to-blue-600 p-3 rounded-xl shadow-lg shadow-cyan-500/25 group-hover:shadow-cyan-500/40 transition-all">
+                        <Link2 className="h-6 w-6 text-white" />
                       </div>
                       <h3 className="text-lg font-semibold dark:text-white">{t("tools.createDialog.mcpConnection")}</h3>
                       <p className="text-sm text-gray-600 dark:text-gray-400">
@@ -185,64 +200,80 @@ const ToolManagementPage = () => {
         </div>
       </div>
 
-      <Card className="card-shadow-lg border-slate-200 dark:border-slate-700 dark:bg-slate-800">
-        <CardHeader className="border-b border-slate-200 dark:border-slate-700 bg-gradient-to-r from-slate-50 to-slate-100 dark:from-slate-800 dark:to-slate-900">
-          <CardTitle className={`flex items-center gap-2 dark:text-white`}>
-            <Search className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
-            {t("tools.existingTools")}
+      <Card className="shadow-xl shadow-slate-200/50 dark:shadow-slate-900/50 border-slate-200/80 dark:border-slate-700/60 dark:bg-slate-800/90 rounded-2xl overflow-hidden">
+        <CardHeader className="border-b border-slate-200/80 dark:border-slate-700/60 bg-gradient-to-r from-slate-50 to-slate-100/80 dark:from-slate-800 dark:to-slate-900/80">
+          <CardTitle className={`flex items-center gap-3 dark:text-white ${isRTL ? 'flex-row-reverse' : ''}`}>
+            <div className="p-2 rounded-lg bg-gradient-to-br from-emerald-500 to-teal-600 shadow-md shadow-emerald-500/20">
+              <Wrench className="h-4 w-4 text-white" />
+            </div>
+            <span className="text-lg">{t("tools.existingTools")}</span>
+            <span className="text-xs px-2.5 py-1 rounded-full bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 font-medium">
+              {filteredTools?.length || 0}
+            </span>
           </CardTitle>
         </CardHeader>
         <CardContent className="pt-6 space-y-4">
-          <Input
-            placeholder={t("tools.searchPlaceholder")}
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className={`dark:bg-slate-900 dark:border-slate-600 dark:text-white text-left`}
-          />
+          <div className="relative">
+            <Search className={`absolute ${isRTL ? 'right-3' : 'left-3'} top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400`} />
+            <Input
+              placeholder={t("tools.searchPlaceholder")}
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className={`${isRTL ? 'pr-10' : 'pl-10'} rounded-xl h-11 dark:bg-slate-900 dark:border-slate-600 dark:text-white`}
+            />
+          </div>
           {isLoadingTools ? (
-            <div className="flex items-center justify-center py-8">
-              <div className={`flex items-center gap-2 text-muted-foreground dark:text-gray-400 ${isRTL ? 'flex-row-reverse' : ''}`}>
-                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-emerald-600 dark:border-emerald-400"></div>
-                <span>{t("tools.loading")}</span>
+            <div className="flex items-center justify-center py-12">
+              <div className={`flex flex-col items-center gap-3 text-muted-foreground dark:text-gray-400`}>
+                <Loader2 className="h-8 w-8 animate-spin text-emerald-500" />
+                <span className="text-sm">{t("tools.loading")}</span>
               </div>
             </div>
           ) : filteredTools && filteredTools.length > 0 ? (
-            filteredTools.map((tool) => (
-              <div key={tool.id} className="flex items-center justify-between p-4 border border-slate-200 dark:border-slate-700 rounded-lg bg-slate-50 dark:bg-slate-900/50 hover:shadow-md transition-shadow">
-                <div className="flex-1">
-                  <h4 className="font-semibold flex items-center gap-2 dark:text-white">
-                    {tool.name}
-                    <span className={`text-xs font-normal py-0.5 px-2 rounded-full border ${
-                      tool.tool_type === 'builtin'
-                        ? 'bg-gradient-to-r from-purple-100 to-violet-100 dark:from-purple-900/50 dark:to-violet-900/50 text-purple-700 dark:text-purple-400 border-purple-200 dark:border-purple-800'
-                        : 'bg-gradient-to-r from-emerald-100 to-teal-100 dark:from-emerald-900/50 dark:to-teal-900/50 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800'
-                    }`}>
-                      {tool.tool_type === 'mcp' ? t("tools.toolTypes.mcpConnection") : tool.tool_type === 'builtin' ? t("tools.toolTypes.builtin") : t("tools.toolTypes.custom")}
-                    </span>
-                  </h4>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">{tool.description}</p>
-                  {tool.tool_type === 'mcp' && (
-                    <p className="text-xs text-gray-500 dark:text-gray-500 mt-1 font-mono">{tool.mcp_server_url}</p>
-                  )}
-                </div>
-                <div className="flex items-center gap-2">
-                  {/* Show edit for non-builtin tools OR for super admins editing builtin tools */}
-                  {(tool.tool_type !== 'builtin' || isSuperAdmin) && (
-                    <Dialog open={isEditDialogOpen && selectedTool?.id === tool.id} onOpenChange={(isOpen) => {
-                        if (!isOpen) setSelectedTool(null);
-                        setIsEditDialogOpen(isOpen);
-                      }}>
-                        <DialogTrigger asChild>
-                          <Button variant="outline" size="sm" onClick={() => setSelectedTool(tool)} className={`dark:border-slate-600 dark:text-white dark:hover:bg-slate-700 flex items-center ${isRTL ? 'flex-row-reverse' : ''}`}>
-                            <Edit className={`h-4 w-4 ${isRTL ? 'ml-1' : 'mr-1'}`} /> {t("tools.edit")}
-                          </Button>
-                        </DialogTrigger>
-                        <DialogContent className="dark:bg-slate-800 dark:border-slate-700 sm:max-w-lg">
-                          <DialogHeader>
-                            <DialogTitle className="dark:text-white">
-                              Edit {tool.tool_type === 'mcp' ? 'Connection' : tool.tool_type === 'builtin' ? 'Built-in Tool' : 'Tool'}
-                            </DialogTitle>
-                          </DialogHeader>
+            <div className="space-y-3">
+              {filteredTools.map((tool) => (
+                <div key={tool.id} className={`group flex items-center justify-between p-4 border border-slate-200/80 dark:border-slate-700/60 rounded-xl bg-white dark:bg-slate-900/50 hover:shadow-lg hover:shadow-emerald-500/5 hover:border-emerald-200 dark:hover:border-emerald-800/50 transition-all ${isRTL ? 'flex-row-reverse' : ''}`}>
+                  <div className={`flex-1 ${isRTL ? 'text-right' : ''}`}>
+                    <h4 className={`font-semibold flex items-center gap-2 dark:text-white ${isRTL ? 'flex-row-reverse justify-end' : ''}`}>
+                      {tool.name}
+                      <span className={`text-xs font-medium py-0.5 px-2.5 rounded-full border ${
+                        tool.tool_type === 'builtin'
+                          ? 'bg-gradient-to-r from-purple-50 to-violet-50 dark:from-purple-900/30 dark:to-violet-900/30 text-purple-700 dark:text-purple-400 border-purple-200 dark:border-purple-700/50'
+                          : tool.tool_type === 'mcp'
+                          ? 'bg-gradient-to-r from-cyan-50 to-blue-50 dark:from-cyan-900/30 dark:to-blue-900/30 text-cyan-700 dark:text-cyan-400 border-cyan-200 dark:border-cyan-700/50'
+                          : 'bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-emerald-900/30 dark:to-teal-900/30 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-700/50'
+                      }`}>
+                        {tool.tool_type === 'mcp' ? t("tools.toolTypes.mcpConnection") : tool.tool_type === 'builtin' ? t("tools.toolTypes.builtin") : t("tools.toolTypes.custom")}
+                      </span>
+                    </h4>
+                    <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">{tool.description}</p>
+                    {tool.tool_type === 'mcp' && (
+                      <p className="text-xs text-gray-500 dark:text-gray-500 mt-1.5 font-mono bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded-md inline-block">{tool.mcp_server_url}</p>
+                    )}
+                  </div>
+                  <div className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                    {/* Show edit for non-builtin tools OR for super admins editing builtin tools */}
+                    {(tool.tool_type !== 'builtin' || isSuperAdmin) && (
+                      <Dialog open={isEditDialogOpen && selectedTool?.id === tool.id} onOpenChange={(isOpen) => {
+                          if (!isOpen) setSelectedTool(null);
+                          setIsEditDialogOpen(isOpen);
+                        }}>
+                          <DialogTrigger asChild>
+                            <Button variant="outline" size="sm" onClick={() => setSelectedTool(tool)} className={`rounded-lg dark:border-slate-600 dark:text-white dark:hover:bg-slate-700 hover:border-emerald-300 hover:bg-emerald-50 dark:hover:border-emerald-700 dark:hover:bg-emerald-900/20 flex items-center transition-all ${isRTL ? 'flex-row-reverse' : ''}`}>
+                              <Edit className={`h-4 w-4 ${isRTL ? 'ml-1' : 'mr-1'}`} /> {t("tools.edit")}
+                            </Button>
+                          </DialogTrigger>
+                          <DialogContent className="dark:bg-slate-800 dark:border-slate-700 sm:max-w-lg rounded-2xl sm:rounded-2xl">
+                            <DialogHeader className="pb-4 border-b border-slate-200/80 dark:border-slate-700/60">
+                              <DialogTitle className={`dark:text-white flex items-center gap-3 text-xl ${isRTL ? 'flex-row-reverse' : ''}`}>
+                                <div className="p-2.5 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 shadow-lg shadow-emerald-500/25">
+                                  <Edit className="h-5 w-5 text-white" />
+                                </div>
+                                <span className="bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent">
+                                  Edit {tool.tool_type === 'mcp' ? 'Connection' : tool.tool_type === 'builtin' ? 'Built-in Tool' : 'Tool'}
+                                </span>
+                              </DialogTitle>
+                            </DialogHeader>
                           {tool.tool_type === 'builtin' ? (
                             <BuiltinToolForm tool={tool} onSubmit={(values) => handleUpdate({ ...tool, ...values })} onBack={() => setIsEditDialogOpen(false)} />
                           ) : tool.tool_type === 'custom' ? (
@@ -253,41 +284,53 @@ const ToolManagementPage = () => {
                         </DialogContent>
                       </Dialog>
                   )}
-                  {/* Test button only for custom tools */}
-                  {tool.tool_type === 'custom' && (
-                      <Dialog open={isTestDialogOpen && selectedTool?.id === tool.id} onOpenChange={(isOpen) => {
-                        if (!isOpen) setSelectedTool(null);
-                        setIsTestDialogOpen(isOpen);
-                      }}>
-                        <DialogTrigger asChild>
-                          <Button variant="outline" size="sm" onClick={() => setSelectedTool(tool)} className={`dark:border-slate-600 dark:text-white dark:hover:bg-slate-700 flex items-center ${isRTL ? 'flex-row-reverse' : ''}`}>
-                            <Play className={`h-4 w-4 ${isRTL ? 'ml-1' : 'mr-1'}`} /> {t("tools.test")}
-                          </Button>
-                        </DialogTrigger>
-                        <DialogContent className="dark:bg-slate-800 dark:border-slate-700">
-                          <DialogHeader>
-                            <DialogTitle className="dark:text-white">Test {tool.name}</DialogTitle>
-                          </DialogHeader>
-                          <TestToolDialog tool={tool} companyId={companyId} />
-                        </DialogContent>
-                      </Dialog>
-                  )}
-                  {/* Delete button only for non-builtin tools */}
-                  {tool.tool_type !== 'builtin' && (
-                    <Button variant="destructive" size="sm" onClick={() => deleteToolMutation.mutate(tool.id)} className="bg-red-600 hover:bg-red-700">
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  )}
+                    {/* Test button only for custom tools */}
+                    {tool.tool_type === 'custom' && (
+                        <Dialog open={isTestDialogOpen && selectedTool?.id === tool.id} onOpenChange={(isOpen) => {
+                          if (!isOpen) setSelectedTool(null);
+                          setIsTestDialogOpen(isOpen);
+                        }}>
+                          <DialogTrigger asChild>
+                            <Button variant="outline" size="sm" onClick={() => setSelectedTool(tool)} className={`rounded-lg dark:border-slate-600 dark:text-white dark:hover:bg-slate-700 hover:border-blue-300 hover:bg-blue-50 dark:hover:border-blue-700 dark:hover:bg-blue-900/20 flex items-center transition-all ${isRTL ? 'flex-row-reverse' : ''}`}>
+                              <Play className={`h-4 w-4 ${isRTL ? 'ml-1' : 'mr-1'}`} /> {t("tools.test")}
+                            </Button>
+                          </DialogTrigger>
+                          <DialogContent className="dark:bg-slate-800 dark:border-slate-700 rounded-2xl sm:rounded-2xl">
+                            <DialogHeader className="pb-4 border-b border-slate-200/80 dark:border-slate-700/60">
+                              <DialogTitle className={`dark:text-white flex items-center gap-3 text-xl ${isRTL ? 'flex-row-reverse' : ''}`}>
+                                <div className="p-2.5 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 shadow-lg shadow-blue-500/25">
+                                  <Play className="h-5 w-5 text-white" />
+                                </div>
+                                <span className="bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+                                  Test {tool.name}
+                                </span>
+                              </DialogTitle>
+                            </DialogHeader>
+                            <TestToolDialog tool={tool} companyId={companyId} />
+                          </DialogContent>
+                        </Dialog>
+                    )}
+                    {/* Delete button only for non-builtin tools */}
+                    {tool.tool_type !== 'builtin' && (
+                      <Button variant="destructive" size="sm" onClick={() => deleteToolMutation.mutate(tool.id)} className="rounded-lg bg-gradient-to-r from-red-500 to-rose-600 hover:from-red-600 hover:to-rose-700 shadow-md shadow-red-500/20 hover:shadow-red-500/30 transition-all">
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    )}
+                  </div>
                 </div>
-              </div>
-            ))
+              ))}
+            </div>
           ) : (
-            <div className="text-center py-12 border-2 border-dashed border-slate-300 dark:border-slate-700 rounded-lg bg-slate-50 dark:bg-slate-900/50">
-              <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-slate-100 dark:bg-slate-800 mb-4">
-                <Search className="w-8 h-8 text-slate-400 dark:text-slate-500" />
+            <div className="text-center py-16 border-2 border-dashed border-slate-200 dark:border-slate-700 rounded-2xl bg-gradient-to-br from-slate-50 to-slate-100/50 dark:from-slate-900/50 dark:to-slate-800/30">
+              <div className="relative inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 shadow-xl shadow-emerald-500/25 mb-5">
+                <Wrench className="w-10 h-10 text-white" />
               </div>
-              <h3 className="text-lg font-semibold text-gray-800 dark:text-white">{t("tools.noToolsFound")}</h3>
-              <p className="text-gray-500 dark:text-gray-400 mt-2">{t("tools.createFirstTool")}</p>
+              <h3 className="text-xl font-semibold text-gray-800 dark:text-white">{t("tools.noToolsFound")}</h3>
+              <p className="text-gray-500 dark:text-gray-400 mt-2 mb-6">{t("tools.createFirstTool")}</p>
+              <Button onClick={() => setIsCreateDialogOpen(true)} className="bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white rounded-xl shadow-lg shadow-emerald-500/25">
+                <Plus className="h-4 w-4 mr-2" />
+                {t("tools.createTool")}
+              </Button>
             </div>
           )}
         </CardContent>
@@ -382,50 +425,52 @@ const ToolForm = ({ tool, onSubmit, onBack }: { tool?: Tool, onSubmit: (values: 
   };
 
   return (
-    <form onSubmit={handleSubmit} className={`space-y-4 pt-4 text-left}`}>
-      <div>
-        <Label htmlFor="tool-name" className="dark:text-gray-300">{t("tools.forms.toolName")}</Label>
+    <form onSubmit={handleSubmit} className={`space-y-4 py-4`}>
+      <div className="space-y-2">
+        <Label htmlFor="tool-name" className="dark:text-gray-300 text-sm font-medium">{t("tools.forms.toolName")}</Label>
         <Input
           id="tool-name"
           placeholder={t("tools.forms.toolNamePlaceholder")}
           value={values.name}
           onChange={(e) => setValues({ ...values, name: e.target.value })}
           required
-          className={`dark:bg-slate-900 dark:border-slate-600 dark:text-white text-left}`}
+          className="rounded-xl h-11 dark:bg-slate-900 dark:border-slate-600 dark:text-white"
         />
       </div>
-      <div>
-        <Label htmlFor="tool-description" className="dark:text-gray-300">{t("tools.forms.description")}</Label>
+      <div className="space-y-2">
+        <Label htmlFor="tool-description" className="dark:text-gray-300 text-sm font-medium">{t("tools.forms.description")}</Label>
         <Textarea
           id="tool-description"
           placeholder={t("tools.forms.descriptionPlaceholder")}
           value={values.description}
           onChange={(e) => setValues({ ...values, description: e.target.value })}
-          className={`dark:bg-slate-900 dark:border-slate-600 dark:text-white text-left}`}
+          className="rounded-xl dark:bg-slate-900 dark:border-slate-600 dark:text-white resize-none"
           rows={2}
         />
       </div>
-      <div>
-        <Label htmlFor="tool-code" className="dark:text-gray-300">{t("tools.forms.pythonCode")}</Label>
+      <div className="space-y-2">
+        <Label htmlFor="tool-code" className="dark:text-gray-300 text-sm font-medium">{t("tools.forms.pythonCode")}</Label>
         <Textarea
           id="tool-code"
           placeholder={t("tools.forms.pythonCodePlaceholder")}
           value={values.code}
           onChange={(e) => setValues({ ...values, code: e.target.value })}
           rows={10}
-          className={`font-mono text-sm dark:bg-slate-900 dark:border-slate-600 dark:text-white ${isRTL ? 'text-right' : 'text-left'}`}
+          className={`font-mono text-sm rounded-xl dark:bg-slate-900 dark:border-slate-600 dark:text-white resize-none ${isRTL ? 'text-right' : 'text-left'}`}
         />
       </div>
 
       {/* Follow-up Questions Configuration */}
-      <div className="border border-slate-200 dark:border-slate-700 rounded-lg overflow-hidden">
+      <div className="border border-slate-200 dark:border-slate-700 rounded-xl overflow-hidden">
         <button
           type="button"
           onClick={() => setShowFollowUp(!showFollowUp)}
-          className="w-full flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
+          className="w-full flex items-center justify-between p-4 bg-gradient-to-r from-slate-50 to-slate-100/50 dark:from-slate-800 dark:to-slate-800/50 hover:from-slate-100 hover:to-slate-100 dark:hover:from-slate-700 dark:hover:to-slate-700 transition-all"
         >
-          <div className="flex items-center gap-2">
-            <MessageSquare className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+          <div className="flex items-center gap-3">
+            <div className="p-2 rounded-lg bg-gradient-to-br from-emerald-500 to-teal-600 shadow-sm">
+              <MessageSquare className="h-4 w-4 text-white" />
+            </div>
             <span className="font-medium dark:text-white">{t("tools.followUp.title")}</span>
           </div>
           {showFollowUp ? (
@@ -534,12 +579,12 @@ const ToolForm = ({ tool, onSubmit, onBack }: { tool?: Tool, onSubmit: (values: 
         )}
       </div>
 
-      <div className={`flex justify-between pt-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
-        <Button type="button" variant="ghost" onClick={onBack} className="dark:text-white dark:hover:bg-slate-700">{t("tools.forms.back")}</Button>
-        <Button type="submit" className="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white">
+      <DialogFooter className={`pt-4 border-t border-slate-200/80 dark:border-slate-700/60 ${isRTL ? 'flex-row-reverse' : ''}`}>
+        <Button type="button" variant="outline" onClick={onBack} className="rounded-xl dark:border-slate-600 dark:text-white dark:hover:bg-slate-700">{t("tools.forms.back")}</Button>
+        <Button type="submit" className="rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white shadow-lg shadow-emerald-500/25">
           {tool ? t("tools.forms.updateTool") : t("tools.forms.createTool")}
         </Button>
-      </div>
+      </DialogFooter>
     </form>
   );
 };
@@ -626,40 +671,42 @@ const BuiltinToolForm = ({ tool, onSubmit, onBack }: { tool: Tool, onSubmit: (va
   };
 
   return (
-    <form onSubmit={handleSubmit} className={`space-y-4 pt-4 text-left`}>
+    <form onSubmit={handleSubmit} className={`space-y-4 py-4`}>
       {/* Name - Read only for builtin tools */}
-      <div>
-        <Label className="dark:text-gray-300">{t("tools.forms.toolName")}</Label>
+      <div className="space-y-2">
+        <Label className="dark:text-gray-300 text-sm font-medium">{t("tools.forms.toolName")}</Label>
         <Input
           value={tool.name}
           disabled
-          className="dark:bg-slate-900 dark:border-slate-600 dark:text-gray-400 text-left bg-slate-100"
+          className="rounded-xl h-11 dark:bg-slate-900 dark:border-slate-600 dark:text-gray-400 bg-slate-100 cursor-not-allowed"
         />
-        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{t("tools.forms.builtinNameReadonly")}</p>
+        <p className="text-xs text-gray-500 dark:text-gray-400">{t("tools.forms.builtinNameReadonly")}</p>
       </div>
 
       {/* Description - Editable */}
-      <div>
-        <Label htmlFor="builtin-description" className="dark:text-gray-300">{t("tools.forms.description")}</Label>
+      <div className="space-y-2">
+        <Label htmlFor="builtin-description" className="dark:text-gray-300 text-sm font-medium">{t("tools.forms.description")}</Label>
         <Textarea
           id="builtin-description"
           placeholder={t("tools.forms.descriptionPlaceholder")}
           value={values.description}
           onChange={(e) => setValues({ ...values, description: e.target.value })}
-          className="dark:bg-slate-900 dark:border-slate-600 dark:text-white text-left"
+          className="rounded-xl dark:bg-slate-900 dark:border-slate-600 dark:text-white resize-none"
           rows={2}
         />
       </div>
 
       {/* Follow-up Questions Configuration */}
-      <div className="border border-slate-200 dark:border-slate-700 rounded-lg overflow-hidden">
+      <div className="border border-slate-200 dark:border-slate-700 rounded-xl overflow-hidden">
         <button
           type="button"
           onClick={() => setShowFollowUp(!showFollowUp)}
-          className="w-full flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
+          className="w-full flex items-center justify-between p-4 bg-gradient-to-r from-slate-50 to-slate-100/50 dark:from-slate-800 dark:to-slate-800/50 hover:from-slate-100 hover:to-slate-100 dark:hover:from-slate-700 dark:hover:to-slate-700 transition-all"
         >
-          <div className="flex items-center gap-2">
-            <MessageSquare className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+          <div className="flex items-center gap-3">
+            <div className="p-2 rounded-lg bg-gradient-to-br from-emerald-500 to-teal-600 shadow-sm">
+              <MessageSquare className="h-4 w-4 text-white" />
+            </div>
             <span className="font-medium dark:text-white">{t("tools.followUp.title")}</span>
           </div>
           {showFollowUp ? (
@@ -768,12 +815,12 @@ const BuiltinToolForm = ({ tool, onSubmit, onBack }: { tool: Tool, onSubmit: (va
         )}
       </div>
 
-      <div className={`flex justify-between pt-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
-        <Button type="button" variant="ghost" onClick={onBack} className="dark:text-white dark:hover:bg-slate-700">{t("tools.forms.back")}</Button>
-        <Button type="submit" className="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white">
+      <DialogFooter className={`pt-4 border-t border-slate-200/80 dark:border-slate-700/60 ${isRTL ? 'flex-row-reverse' : ''}`}>
+        <Button type="button" variant="outline" onClick={onBack} className="rounded-xl dark:border-slate-600 dark:text-white dark:hover:bg-slate-700">{t("tools.forms.back")}</Button>
+        <Button type="submit" className="rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white shadow-lg shadow-emerald-500/25">
           {t("tools.forms.updateTool")}
         </Button>
-      </div>
+      </DialogFooter>
     </form>
   );
 };
@@ -838,31 +885,31 @@ const McpToolForm = ({ tool, onSubmit, onBack }: { tool?: Tool, onSubmit: (value
   };
 
   return (
-    <form onSubmit={handleSubmit} className={`space-y-4 pt-4 text-left}`}>
-      <div>
-        <Label htmlFor="mcp-name" className="dark:text-gray-300">{t("tools.forms.connectionName")}</Label>
+    <form onSubmit={handleSubmit} className={`space-y-4 py-4`}>
+      <div className="space-y-2">
+        <Label htmlFor="mcp-name" className="dark:text-gray-300 text-sm font-medium">{t("tools.forms.connectionName")}</Label>
         <Input
           id="mcp-name"
           placeholder={t("tools.forms.connectionNamePlaceholder")}
           value={name}
           onChange={(e) => setName(e.target.value)}
           required
-          className={`dark:bg-slate-900 dark:border-slate-600 dark:text-white text-left}`}
+          className="rounded-xl h-11 dark:bg-slate-900 dark:border-slate-600 dark:text-white"
         />
       </div>
-      <div>
-        <Label htmlFor="mcp-description" className="dark:text-gray-300">{t("tools.forms.description")}</Label>
+      <div className="space-y-2">
+        <Label htmlFor="mcp-description" className="dark:text-gray-300 text-sm font-medium">{t("tools.forms.description")}</Label>
         <Textarea
           id="mcp-description"
           placeholder={t("tools.forms.mcpDescriptionPlaceholder")}
           value={description}
           onChange={(e) => setDescription(e.target.value)}
-          className={`dark:bg-slate-900 dark:border-slate-600 dark:text-white text-left}`}
+          className="rounded-xl dark:bg-slate-900 dark:border-slate-600 dark:text-white resize-none"
           rows={2}
         />
       </div>
-      <div>
-        <Label htmlFor="mcp-url" className="dark:text-gray-300">{t("tools.forms.mcpServerUrl")}</Label>
+      <div className="space-y-2">
+        <Label htmlFor="mcp-url" className="dark:text-gray-300 text-sm font-medium">{t("tools.forms.mcpServerUrl")}</Label>
         <div className={`flex items-start gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
           <Input
             id="mcp-url"
@@ -876,44 +923,44 @@ const McpToolForm = ({ tool, onSubmit, onBack }: { tool?: Tool, onSubmit: (value
             }}
             required
             type="url"
-            className={`dark:bg-slate-900 dark:border-slate-600 dark:text-white text-left}`}
+            className="rounded-xl h-11 dark:bg-slate-900 dark:border-slate-600 dark:text-white"
           />
-          <Button type="button" onClick={() => inspect(url)} disabled={isInspecting || !url} variant="outline" className="dark:border-slate-600 dark:text-white dark:hover:bg-slate-700 whitespace-nowrap">
-            {isInspecting ? t("tools.forms.inspecting") : t("tools.forms.testInspect")}
+          <Button type="button" onClick={() => inspect(url)} disabled={isInspecting || !url} variant="outline" className="rounded-xl h-11 dark:border-slate-600 dark:text-white dark:hover:bg-slate-700 hover:border-cyan-300 hover:bg-cyan-50 dark:hover:border-cyan-700 dark:hover:bg-cyan-900/20 whitespace-nowrap transition-all">
+            {isInspecting ? <><Loader2 className="h-4 w-4 animate-spin mr-2" />{t("tools.forms.inspecting")}</> : t("tools.forms.testInspect")}
           </Button>
         </div>
       </div>
 
       {authRequired && (
-        <div className={`p-4 border bg-yellow-50 dark:bg-yellow-900/20 border-yellow-200 dark:border-yellow-800 rounded-lg text-center text-left}`}>
-          <h4 className="font-semibold text-yellow-800 dark:text-yellow-300">{t("tools.forms.authRequired")}</h4>
-          <p className="text-sm text-yellow-700 dark:text-yellow-400 mb-4">{t("tools.forms.authRequiredMessage")}</p>
-          <Button type="button" onClick={handleAuthenticate} className="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white">
+        <div className="p-4 border bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-700/50 rounded-xl text-center">
+          <h4 className="font-semibold text-amber-800 dark:text-amber-300">{t("tools.forms.authRequired")}</h4>
+          <p className="text-sm text-amber-700 dark:text-amber-400 mb-4">{t("tools.forms.authRequiredMessage")}</p>
+          <Button type="button" onClick={handleAuthenticate} className="rounded-xl bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white shadow-lg shadow-amber-500/25">
             {t("tools.forms.connectToGoogle")}
           </Button>
         </div>
       )}
 
       {inspectData && inspected && !authRequired && (
-        <div className={`p-4 border bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800 rounded-lg text-left}`}>
-          <h4 className="font-semibold text-green-800 dark:text-green-300">{t("tools.forms.inspectionSuccess")}</h4>
-          <p className="text-sm text-green-700 dark:text-green-400">{t("tools.forms.foundTools", { count: inspectData.tools.length })}</p>
+        <div className="p-4 border bg-emerald-50 dark:bg-emerald-900/20 border-emerald-200 dark:border-emerald-700/50 rounded-xl">
+          <h4 className="font-semibold text-emerald-800 dark:text-emerald-300">{t("tools.forms.inspectionSuccess")}</h4>
+          <p className="text-sm text-emerald-700 dark:text-emerald-400">{t("tools.forms.foundTools", { count: inspectData.tools.length })}</p>
         </div>
       )}
 
       {inspectError && (
-         <div className={`p-4 border bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800 rounded-lg text-left}`}>
+        <div className="p-4 border bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-700/50 rounded-xl">
           <h4 className="font-semibold text-red-800 dark:text-red-300">{t("tools.forms.inspectionFailed")}</h4>
           <p className="text-sm text-red-700 dark:text-red-400">{inspectError.message}</p>
         </div>
       )}
 
-      <div className={`flex justify-between pt-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
-        <Button type="button" variant="ghost" onClick={onBack} className="dark:text-white dark:hover:bg-slate-700">{t("tools.forms.back")}</Button>
-        <Button type="submit" disabled={!inspected && !tool} className="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white">
+      <DialogFooter className={`pt-4 border-t border-slate-200/80 dark:border-slate-700/60 ${isRTL ? 'flex-row-reverse' : ''}`}>
+        <Button type="button" variant="outline" onClick={onBack} className="rounded-xl dark:border-slate-600 dark:text-white dark:hover:bg-slate-700">{t("tools.forms.back")}</Button>
+        <Button type="submit" disabled={!inspected && !tool} className="rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white shadow-lg shadow-cyan-500/25 disabled:opacity-50">
           {tool ? t("tools.forms.updateConnection") : t("tools.forms.createConnection")}
         </Button>
-      </div>
+      </DialogFooter>
     </form>
   );
 };
@@ -957,28 +1004,28 @@ const TestToolDialog = ({ tool, companyId }: { tool: Tool, companyId: number }) 
   };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 py-4">
       <form onSubmit={handleSubmit} className="space-y-4">
         {tool.parameters && Object.keys(tool.parameters).map((paramName) => (
-          <div key={paramName}>
-            <Label htmlFor={paramName} className="dark:text-gray-300">{tool.parameters[paramName].description}</Label>
+          <div key={paramName} className="space-y-2">
+            <Label htmlFor={paramName} className="dark:text-gray-300 text-sm font-medium">{tool.parameters[paramName].description}</Label>
             <Input
               id={paramName}
               type={tool.parameters[paramName].type === "integer" ? "number" : "text"}
               value={parameters[paramName] || ""}
               onChange={(e) => setParameters({ ...parameters, [paramName]: e.target.value })}
-              className="dark:bg-slate-900 dark:border-slate-600 dark:text-white"
+              className="rounded-xl h-11 dark:bg-slate-900 dark:border-slate-600 dark:text-white"
             />
           </div>
         ))}
-        <Button type="submit" disabled={isLoading} className="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white w-full">
-          {isLoading ? "Executing..." : "▶ Run Test"}
+        <Button type="submit" disabled={isLoading} className="rounded-xl bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white w-full shadow-lg shadow-blue-500/25 h-11">
+          {isLoading ? <><Loader2 className="h-4 w-4 animate-spin mr-2" />Executing...</> : <><Play className="h-4 w-4 mr-2" />Run Test</>}
         </Button>
       </form>
       {result && (
-        <div className="pt-4 border-t border-slate-200 dark:border-slate-700">
-          <h4 className="font-semibold mb-2 dark:text-white">Result:</h4>
-          <pre className="bg-slate-100 dark:bg-slate-900 p-4 rounded-md overflow-x-auto text-sm dark:text-gray-300 border border-slate-200 dark:border-slate-700">
+        <div className="pt-4 border-t border-slate-200/80 dark:border-slate-700/60">
+          <h4 className="font-semibold mb-3 dark:text-white text-sm uppercase tracking-wide">Result:</h4>
+          <pre className="bg-slate-50 dark:bg-slate-900 p-4 rounded-xl overflow-x-auto text-sm dark:text-gray-300 border border-slate-200/80 dark:border-slate-700/60 max-h-64">
             {JSON.stringify(result, null, 2)}
           </pre>
         </div>

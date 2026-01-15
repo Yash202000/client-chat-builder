@@ -63,8 +63,8 @@ const fadeInVariants = {
 const MessageSkeleton = ({ isUser = false }: { isUser?: boolean }) => (
   <div className={`flex items-end gap-3 ${isUser ? 'justify-start' : 'justify-end'}`}>
     {isUser && (
-      <div className="w-10 h-10 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center">
-        <UserIcon className="h-5 w-5 text-slate-400 dark:text-slate-500" />
+      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-green-400 to-emerald-500 flex items-center justify-center ring-2 ring-white dark:ring-slate-700 shadow-md opacity-60">
+        <UserIcon className="h-5 w-5 text-white" />
       </div>
     )}
     <div className={`flex flex-col ${isUser ? 'items-start' : 'items-end'} max-w-[60%]`}>
@@ -75,7 +75,7 @@ const MessageSkeleton = ({ isUser = false }: { isUser?: boolean }) => (
       <div className="h-3 w-16 rounded skeleton mt-1.5" />
     </div>
     {!isUser && (
-      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-400 via-purple-400 to-pink-400 flex items-center justify-center opacity-60">
+      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-400 via-purple-400 to-pink-400 flex items-center justify-center ring-2 ring-white dark:ring-slate-700 shadow-md opacity-60">
         <Bot className="h-5 w-5 text-white" />
       </div>
     )}
@@ -956,12 +956,9 @@ export const ConversationDetail: React.FC<ConversationDetailProps> = ({ sessionI
                   animate={{ scale: 1 }}
                   transition={{ type: "spring", stiffness: 200, damping: 15 }}
                 >
-                  <Avatar className="h-12 w-12 border-2 border-white dark:border-slate-700 shadow-lg">
-                    <AvatarImage src={`https://avatar.vercel.sh/${contact?.email}.png`} alt={contact?.name || 'User'} />
-                    <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white font-bold">
-                      {contact?.name?.charAt(0)?.toUpperCase() || 'U'}
-                    </AvatarFallback>
-                  </Avatar>
+                  <div className="h-12 w-12 rounded-full bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center border-2 border-white dark:border-slate-700 shadow-lg">
+                    <UserIcon className="h-6 w-6 text-white" />
+                  </div>
                 </motion.div>
                 {/* Online indicator */}
                 <motion.div
@@ -1286,12 +1283,9 @@ export const ConversationDetail: React.FC<ConversationDetailProps> = ({ sessionI
                               animate={{ scale: 1 }}
                               transition={{ type: "spring", stiffness: 300, damping: 20 }}
                             >
-                              <Avatar className="h-10 w-10 flex-shrink-0 ring-2 ring-white dark:ring-slate-700 shadow-md">
-                                <AvatarImage src={`https://avatar.vercel.sh/${contact?.email}.png`} alt={contact?.name || 'User'} />
-                                <AvatarFallback className="bg-gradient-to-br from-slate-100 to-slate-200 dark:from-slate-600 dark:to-slate-700">
-                                  <UserIcon className="h-5 w-5 text-slate-500 dark:text-slate-300" />
-                                </AvatarFallback>
-                              </Avatar>
+                              <div className="h-10 w-10 flex-shrink-0 rounded-full bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center ring-2 ring-white dark:ring-slate-700 shadow-md">
+                                <UserIcon className="h-5 w-5 text-white" />
+                              </div>
                             </motion.div>
                           )}
                           <div className={`flex flex-col ${msg.sender === 'user' ? 'items-start' : 'items-end'} max-w-[70%]`}>
