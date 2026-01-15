@@ -326,6 +326,85 @@ const VisualWorkflowBuilder = () => {
     setNodes((nds) => nds.concat(newNode));
   }, [reactFlowInstance, setNodes]);
 
+  // Estimated node dimensions for collision detection
+  const getNodeDimensions = useCallback((nodeType: string) => {
+    // Approximate dimensions based on node type
+    const dimensions: Record<string, { width: number; height: number }> = {
+      start: { width: 180, height: 60 },
+      response: { width: 200, height: 80 },
+      llm: { width: 220, height: 100 },
+      condition: { width: 200, height: 120 },
+      tool: { width: 200, height: 80 },
+      knowledge: { width: 200, height: 80 },
+      code: { width: 200, height: 80 },
+      form: { width: 200, height: 100 },
+      listen: { width: 180, height: 70 },
+      prompt: { width: 200, height: 80 },
+      question_classifier: { width: 220, height: 120 },
+    };
+    return dimensions[nodeType] || { width: 200, height: 80 };
+  }, []);
+
+  // Check if a position overlaps with existing nodes
+  const checkOverlap = useCallback((
+    position: { x: number; y: number },
+    nodeWidth: number,
+    nodeHeight: number,
+    excludeNodeId?: string
+  ) => {
+    const padding = 20; // Minimum gap between nodes
+    return nodes.some(node => {
+      if (excludeNodeId && node.id === excludeNodeId) return false;
+      const existingDim = getNodeDimensions(node.type);
+      const overlapX = Math.abs(position.x - node.position.x) < (nodeWidth + existingDim.width) / 2 + padding;
+      const overlapY = Math.abs(position.y - node.position.y) < (nodeHeight + existingDim.height) / 2 + padding;
+      return overlapX && overlapY;
+    });
+  }, [nodes, getNodeDimensions]);
+
+  // Find a free position near the ideal position
+  const findFreePosition = useCallback((
+    idealPosition: { x: number; y: number },
+    nodeWidth: number,
+    nodeHeight: number,
+    direction: 'vertical' | 'horizontal'
+  ) => {
+    const step = direction === 'vertical' ? 100 : 120;
+    const maxAttempts = 10;
+
+    // Try ideal position first
+    if (!checkOverlap(idealPosition, nodeWidth, nodeHeight)) {
+      return idealPosition;
+    }
+
+    // Try positions in alternating directions
+    for (let i = 1; i <= maxAttempts; i++) {
+      // Try positive direction
+      const posOffset = direction === 'vertical'
+        ? { x: idealPosition.x + (i * step), y: idealPosition.y }
+        : { x: idealPosition.x, y: idealPosition.y + (i * step) };
+
+      if (!checkOverlap(posOffset, nodeWidth, nodeHeight)) {
+        return posOffset;
+      }
+
+      // Try negative direction
+      const negOffset = direction === 'vertical'
+        ? { x: idealPosition.x - (i * step), y: idealPosition.y }
+        : { x: idealPosition.x, y: idealPosition.y - (i * step) };
+
+      if (!checkOverlap(negOffset, nodeWidth, nodeHeight)) {
+        return negOffset;
+      }
+    }
+
+    // Fallback: return ideal position with additional offset
+    return {
+      x: idealPosition.x + (direction === 'vertical' ? 150 : 0),
+      y: idealPosition.y + (direction === 'horizontal' ? 150 : 0)
+    };
+  }, [checkOverlap]);
+
   // Add node with automatic connection from a source handle
   const addNodeWithConnection = useCallback((
     sourceId: string,
@@ -337,19 +416,37 @@ const VisualWorkflowBuilder = () => {
     const sourceNode = nodes.find(n => n.id === sourceId);
     if (!sourceNode) return null;
 
-    // Calculate position based on handle position
-    let position;
+    const sourceDim = getNodeDimensions(sourceNode.type);
+    const newNodeDim = getNodeDimensions(nodeType);
+
+    // Vertical spacing between nodes
+    const verticalGap = 80;
+    // Horizontal spacing for right-positioned nodes
+    const horizontalGap = 100;
+
+    // Calculate ideal position based on handle position
+    let idealPosition;
     if (handlePosition === 'bottom') {
-      position = {
-        x: sourceNode.position.x,
-        y: sourceNode.position.y + 150
+      // Center the new node below the source node
+      idealPosition = {
+        x: sourceNode.position.x + (sourceDim.width - newNodeDim.width) / 2,
+        y: sourceNode.position.y + sourceDim.height + verticalGap
       };
     } else {
-      position = {
-        x: sourceNode.position.x + 250,
-        y: sourceNode.position.y
+      // Position to the right, vertically centered
+      idealPosition = {
+        x: sourceNode.position.x + sourceDim.width + horizontalGap,
+        y: sourceNode.position.y + (sourceDim.height - newNodeDim.height) / 2
       };
     }
+
+    // Find a free position that doesn't overlap with existing nodes
+    const position = findFreePosition(
+      idealPosition,
+      newNodeDim.width,
+      newNodeDim.height,
+      handlePosition === 'bottom' ? 'vertical' : 'horizontal'
+    );
 
     const newNodeId = `${nodeType}-${Date.now()}`;
     const newNode = {
@@ -378,7 +475,7 @@ const VisualWorkflowBuilder = () => {
     setSelectedNode(newNode);
 
     return newNodeId;
-  }, [nodes, setNodes, setEdges]);
+  }, [nodes, setNodes, setEdges, getNodeDimensions, findFreePosition]);
   const onNodeClick = useCallback((_, node) => {
     setSelectedNode(node);
     // Auto-expand properties panel if collapsed

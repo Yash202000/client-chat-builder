@@ -23,19 +23,31 @@ interface AgentBuilderProps {
   agent: Agent;
 }
 
+// Layout constants for better organization
+const LAYOUT = {
+  centerX: 400,
+  chatMessageY: 50,
+  agentNodeY: 180,
+  toolsY: 350,
+  knowledgeY: 350,
+  workflowY: 500,
+  nodeSpacingX: 220,
+  nodeSpacingY: 80,
+};
+
 const initialNodes = (agentName) => [
-  {
-    id: 'agent-node',
-    type: 'agent',
-    data: { label: agentName },
-    position: { x: 250, y: 80 },
-    deletable: false,
-  },
   {
     id: 'chat-message-node',
     type: 'chat_message',
     data: { label: 'Chat Message' },
-    position: { x: 250, y: 0 },
+    position: { x: LAYOUT.centerX, y: LAYOUT.chatMessageY },
+    deletable: false,
+  },
+  {
+    id: 'agent-node',
+    type: 'agent',
+    data: { label: agentName },
+    position: { x: LAYOUT.centerX, y: LAYOUT.agentNodeY },
     deletable: false,
   },
 ];
@@ -60,39 +72,58 @@ export const AgentBuilder = ({ agent }: AgentBuilderProps) => {
       { id: 'chat-agent-edge', source: 'chat-message-node', target: 'agent-node', animated: true }
     ];
 
-    if (agent.knowledge_bases?.length > 0) {
-        agent.knowledge_bases.forEach((kb, index) => {
-            const kbNode = {
-                id: `knowledge-${kb.id}`,
-                type: 'knowledge',
-                data: { label: kb.name, id: kb.id },
-                position: { x: 450 + index * 200, y: 250 },
-            };
-            nodesToAdd.push(kbNode);
-            edgesToAdd.push({ id: `agent-kb-edge-${kb.id}`, source: 'agent-node', target: kbNode.id, animated: true });
-        });
-    }
+    const toolCount = agent.tools?.length || 0;
+    const kbCount = agent.knowledge_bases?.length || 0;
+    const workflowCount = agent.workflows?.length || 0;
 
-    if (agent.tools?.length > 0) {
+    // Position tools on the LEFT side of the agent node
+    if (toolCount > 0) {
+        const toolsStartX = LAYOUT.centerX - ((toolCount - 1) * LAYOUT.nodeSpacingX) / 2 - 150;
         agent.tools.forEach((tool, index) => {
             const toolNode = {
                 id: `tools-${tool.id}`,
                 type: 'tools',
                 data: { label: tool.name, id: tool.id, tool_type: tool.tool_type, mcp_server_url: tool.mcp_server_url },
-                position: { x: 50 + index * 250, y: 200 },
+                position: {
+                  x: toolsStartX + index * LAYOUT.nodeSpacingX,
+                  y: LAYOUT.toolsY
+                },
             };
             nodesToAdd.push(toolNode);
             edgesToAdd.push({ id: `agent-tool-edge-${tool.id}`, source: 'agent-node', target: toolNode.id, animated: true });
         });
     }
 
-    if (agent.workflows?.length > 0) {
+    // Position knowledge bases on the RIGHT side of the agent node
+    if (kbCount > 0) {
+        const kbStartX = LAYOUT.centerX - ((kbCount - 1) * LAYOUT.nodeSpacingX) / 2 + 150;
+        agent.knowledge_bases.forEach((kb, index) => {
+            const kbNode = {
+                id: `knowledge-${kb.id}`,
+                type: 'knowledge',
+                data: { label: kb.name, id: kb.id },
+                position: {
+                  x: kbStartX + index * LAYOUT.nodeSpacingX,
+                  y: LAYOUT.knowledgeY
+                },
+            };
+            nodesToAdd.push(kbNode);
+            edgesToAdd.push({ id: `agent-kb-edge-${kb.id}`, source: 'agent-node', target: kbNode.id, animated: true });
+        });
+    }
+
+    // Position workflows BELOW the agent node, centered
+    if (workflowCount > 0) {
+        const workflowStartX = LAYOUT.centerX - ((workflowCount - 1) * LAYOUT.nodeSpacingX) / 2;
         agent.workflows.forEach((workflow, index) => {
             const workflowNode = {
                 id: `workflow-${workflow.id}`,
                 type: 'workflow',
                 data: { label: workflow.name, id: workflow.id },
-                position: { x: 450 + index * 200, y: 400 },
+                position: {
+                  x: workflowStartX + index * LAYOUT.nodeSpacingX,
+                  y: LAYOUT.workflowY
+                },
             };
             nodesToAdd.push(workflowNode);
             edgesToAdd.push({ id: `agent-workflow-edge-${workflow.id}`, source: 'agent-node', target: workflowNode.id, animated: true });
@@ -302,11 +333,19 @@ export const AgentBuilder = ({ agent }: AgentBuilderProps) => {
 
         const mcpToolsData = await response.json();
 
+        // Position MCP sub-tools in a fan pattern below the parent tool
+        const subToolCount = mcpToolsData.tools.length;
+        const subToolSpacing = 180;
+        const subToolStartX = mcpToolNode.position.x - ((subToolCount - 1) * subToolSpacing) / 2;
+
         const newNodes = mcpToolsData.tools.map((subTool, index) => ({
           id: `mcp-sub-tool-${tool.id}-${subTool.name}`,
           type: 'mcp_sub_tool',
           data: { label: subTool.name },
-          position: { x: mcpToolNode.position.x + 300, y: mcpToolNode.position.y + index * 70 },
+          position: {
+            x: subToolStartX + index * subToolSpacing,
+            y: mcpToolNode.position.y + 120
+          },
         }));
 
         const newEdges = mcpToolsData.tools.map(subTool => ({
