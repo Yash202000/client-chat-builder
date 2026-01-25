@@ -87,7 +87,6 @@
     "aiImageGallery": "AI Image Gallery",
     "aiChat": "AI Chat",
     "aiTools": "AI Tools",
-    "objectDetection": "Object Detection",
     "visionAI": "Vision AI",
     "internalChat": "Internal Chat",
     "teamChat": "Team Chat",
@@ -1067,8 +1066,7 @@
     "createNew": "Create New Tool",
     "noTools": "No AI tools available",
     "imageGenerator": "Image Generator",
-    "chat": "Chat",
-    "objectDetection": "Object Detection"
+    "chat": "Chat"
   },
   "voiceLab": {
     "title": "Voice Lab",

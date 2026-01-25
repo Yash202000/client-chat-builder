@@ -52,6 +52,29 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       throw new Error('Unauthorized');
     }
 
+    // Handle license errors (403 with error_type: "license_error")
+    if (response.status === 403) {
+      try {
+        const clonedResponse = response.clone();
+        const errorData = await clonedResponse.json();
+        if (errorData.error_type === 'license_error') {
+          // Store error info and redirect to license error page
+          sessionStorage.setItem('licenseError', JSON.stringify({
+            status: errorData.license_status,
+            message: errorData.detail,
+            contact: errorData.contact,
+          }));
+          navigate('/license-error');
+          throw new Error('License error');
+        }
+      } catch (e) {
+        // If parsing fails, it's not a license error - continue normally
+        if ((e as Error).message === 'License error') {
+          throw e;
+        }
+      }
+    }
+
     return response;
   }, [navigate]);
 
@@ -72,6 +95,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           throw new Error('Invalid token');
         }
       } catch (error) {
+        // Don't clear token for license errors - user stays logged in but blocked
+        if ((error as Error).message === 'License error') {
+          console.warn("License error - user blocked but still authenticated");
+          setIsLoading(false);
+          return;
+        }
         console.error("Failed to fetch user", error);
         setToken(null);
         setUser(null);

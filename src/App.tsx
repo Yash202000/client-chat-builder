@@ -30,6 +30,7 @@ import { SubscriptionManagementPage } from "./pages/SubscriptionManagementPage";
 import ClientBillingPage from "./pages/ClientBillingPage";
 import ClientPortalPage from "./pages/ClientPortalPage";
 import NotFound from "./pages/NotFound";
+import LicenseErrorPage from "./pages/LicenseErrorPage";
 import UserVideoCallPage from "./pages/UserVideoCallPage";
 import InternalVideoCallPage from "./pages/InternalVideoCallPage";
 import InternalChatPage from "./pages/InternalChatPage";
@@ -63,7 +64,6 @@ import {
   KBContentItemCreatePage,
   KBContentItemEditPage,
 } from "./pages/KnowledgeBaseCMS";
-import { ObjectDetectionPage } from "./pages/ObjectDetectionPage";
 import ErrorBoundary from "./components/ErrorBoundary";
 // CRM Pages
 import CRMDashboard from "./pages/CRM/CRMDashboard";
@@ -123,6 +123,7 @@ const AppRoutes = () => {
       <Route path="/" element={<Index />} />
       <Route path="/login" element={<LoginPage />} />
       <Route path="/signup" element={<SignupPage />} />
+      <Route path="/license-error" element={<LicenseErrorPage />} />
       <Route path="/privacy-policy" element={<PrivacyPolicy />} />
       <Route path="/accept-invite" element={<AcceptInvitationPage />} />
       <Route path="/preview/:publishId" element={<PublishedPreviewPage mode="widget" />} />
@@ -174,7 +175,6 @@ const AppRoutes = () => {
           <Route path="ai-tools/new" element={<AIToolCreatePage />} />
           <Route path="ai-tools/:id" element={<AIToolDetailPage />} />
           <Route path="ai-tools/:id/edit" element={<AIToolEditPage />} />
-          <Route path="object-detection" element={<ObjectDetectionPage />} />
           {/* CRM Routes */}
           <Route path="crm" element={<CRMDashboard />} />
           <Route path="crm/leads" element={<LeadsPage />} />
