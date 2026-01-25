@@ -1,4 +1,3 @@
-
 import axios from 'axios';
 import { API_BASE_URL } from '@/config/api';
 
@@ -12,8 +11,16 @@ const getAuthHeaders = () => {
   };
 };
 
-export const generateImage = async (prompt: string, params: any) => {
-  const response = await axios.post(`${API_URL}/api/v1/ai-images/`, { prompt, generation_params: params }, {
+export interface ImageGenerationParams {
+  prompt: string;
+  provider: 'openai' | 'gemini';
+  size?: string;
+  quality?: string;
+  style?: string;
+}
+
+export const generateImage = async (params: ImageGenerationParams) => {
+  const response = await axios.post(`${API_URL}/api/v1/ai-images/`, params, {
     headers: getAuthHeaders(),
   });
   return response.data;

@@ -1,12 +1,12 @@
-
 import React, { useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { generateImage } from '@/services/aiImageService';
+import { generateImage, ImageGenerationParams } from '@/services/aiImageService';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/components/ui/use-toast';
 import { Sparkles, Loader2, Download, Image as ImageIcon } from 'lucide-react';
 import { useI18n } from '@/hooks/useI18n';
@@ -14,17 +14,32 @@ import { useI18n } from '@/hooks/useI18n';
 const AIImageGeneratorPage: React.FC = () => {
   const { t, isRTL } = useI18n();
   const [prompt, setPrompt] = useState('');
+  const [provider, setProvider] = useState<'openai' | 'gemini'>('openai');
+  const [size, setSize] = useState('1024x1024');
+  const [quality, setQuality] = useState('standard');
+  const [style, setStyle] = useState('vivid');
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
   const mutation = useMutation({
-    mutationFn: () => generateImage(prompt, {}),
+    mutationFn: () => {
+      const params: ImageGenerationParams = {
+        prompt,
+        provider,
+        ...(provider === 'openai' && { size, quality, style }),
+      };
+      return generateImage(params);
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['ai-images'] });
       toast({ title: t('aiImageGenerator.toasts.imageGeneratedSuccess') });
     },
-    onError: () => {
-      toast({ title: t('aiImageGenerator.toasts.imageGeneratedError'), variant: 'destructive' });
+    onError: (error: any) => {
+      toast({
+        title: t('aiImageGenerator.toasts.imageGeneratedError'),
+        description: error?.response?.data?.detail || 'Failed to generate image',
+        variant: 'destructive'
+      });
     },
   });
 
@@ -77,6 +92,73 @@ const AIImageGeneratorPage: React.FC = () => {
           </CardHeader>
           <CardContent className="pt-6">
             <form onSubmit={handleSubmit} className="space-y-4">
+              {/* Provider Selection */}
+              <div className="space-y-2">
+                <Label className="text-sm font-medium dark:text-gray-300">AI Provider</Label>
+                <Select value={provider} onValueChange={(v: 'openai' | 'gemini') => setProvider(v)}>
+                  <SelectTrigger className="rounded-xl dark:bg-slate-900 dark:border-slate-600">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="openai">
+                      <div className="flex items-center gap-2">
+                        <span className="font-medium">OpenAI DALL-E 3</span>
+                        <span className="text-xs text-gray-500">(Recommended)</span>
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="gemini">
+                      <div className="flex items-center gap-2">
+                        <span className="font-medium">Google Imagen 3</span>
+                      </div>
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* OpenAI Options */}
+              {provider === 'openai' && (
+                <div className="grid grid-cols-3 gap-3">
+                  <div className="space-y-2">
+                    <Label className="text-sm font-medium dark:text-gray-300">Size</Label>
+                    <Select value={size} onValueChange={setSize}>
+                      <SelectTrigger className="rounded-xl dark:bg-slate-900 dark:border-slate-600">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="1024x1024">Square (1024x1024)</SelectItem>
+                        <SelectItem value="1792x1024">Landscape (1792x1024)</SelectItem>
+                        <SelectItem value="1024x1792">Portrait (1024x1792)</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-sm font-medium dark:text-gray-300">Quality</Label>
+                    <Select value={quality} onValueChange={setQuality}>
+                      <SelectTrigger className="rounded-xl dark:bg-slate-900 dark:border-slate-600">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="standard">Standard</SelectItem>
+                        <SelectItem value="hd">HD</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-sm font-medium dark:text-gray-300">Style</Label>
+                    <Select value={style} onValueChange={setStyle}>
+                      <SelectTrigger className="rounded-xl dark:bg-slate-900 dark:border-slate-600">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="vivid">Vivid</SelectItem>
+                        <SelectItem value="natural">Natural</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+              )}
+
+              {/* Prompt Input */}
               <div className="space-y-2">
                 <Label htmlFor="prompt" className="text-sm font-medium dark:text-gray-300">{t('aiImageGenerator.yourPrompt')}</Label>
                 <Textarea

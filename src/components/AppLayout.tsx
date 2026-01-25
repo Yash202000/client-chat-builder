@@ -414,7 +414,6 @@ const AppLayout = () => {
     { titleKey: "navigation.aiTools", url: "/dashboard/ai-tools", icon: Sparkles, permission: "page:ai_tools" },
     { titleKey: "navigation.aiImageGenerator", url: "/dashboard/ai-image-generator", icon: Sparkles, permission: "page:ai_image_generator" },
     { titleKey: "navigation.aiImageGallery", url: "/dashboard/ai-image-gallery", icon: FileText, permission: "page:ai_image_gallery" },
-    { titleKey: "navigation.visionAI", url: "/dashboard/object-detection", icon: Sparkles, permission: "page:vision_ai" },
 
     // System & Administration
     { titleKey: "navigation.settings", url: "/dashboard/settings", icon: FileText, permission: "page:settings" },
