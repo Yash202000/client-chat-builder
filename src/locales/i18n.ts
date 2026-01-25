@@ -3,18 +3,46 @@ import { initReactI18next } from 'react-i18next';
 import LanguageDetector from 'i18next-browser-languagedetector';
 
 import enTranslation from './en/translation.json';
-import arTranslation from './ar/translation.json';
+import zhTranslation from './zh/translation.json';
 import hiTranslation from './hi/translation.json';
+import esTranslation from './es/translation.json';
+import arTranslation from './ar/translation.json';
+import frTranslation from './fr/translation.json';
+import bnTranslation from './bn/translation.json';
+import ptTranslation from './pt/translation.json';
+import ruTranslation from './ru/translation.json';
+import idTranslation from './id/translation.json';
 
 const resources = {
   en: {
     translation: enTranslation,
   },
-  ar: {
-    translation: arTranslation,
+  zh: {
+    translation: zhTranslation,
   },
   hi: {
     translation: hiTranslation,
+  },
+  es: {
+    translation: esTranslation,
+  },
+  ar: {
+    translation: arTranslation,
+  },
+  fr: {
+    translation: frTranslation,
+  },
+  bn: {
+    translation: bnTranslation,
+  },
+  pt: {
+    translation: ptTranslation,
+  },
+  ru: {
+    translation: ruTranslation,
+  },
+  id: {
+    translation: idTranslation,
   },
 };
 
