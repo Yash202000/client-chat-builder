@@ -12,6 +12,14 @@ import bnTranslation from './bn/translation.json';
 import ptTranslation from './pt/translation.json';
 import ruTranslation from './ru/translation.json';
 import idTranslation from './id/translation.json';
+import urTranslation from './ur/translation.json';
+import deTranslation from './de/translation.json';
+import jaTranslation from './ja/translation.json';
+import pcmTranslation from './pcm/translation.json';
+import mrTranslation from './mr/translation.json';
+import teTranslation from './te/translation.json';
+import trTranslation from './tr/translation.json';
+import taTranslation from './ta/translation.json';
 
 const resources = {
   en: {
@@ -43,6 +51,30 @@ const resources = {
   },
   id: {
     translation: idTranslation,
+  },
+  ur: {
+    translation: urTranslation,
+  },
+  de: {
+    translation: deTranslation,
+  },
+  ja: {
+    translation: jaTranslation,
+  },
+  pcm: {
+    translation: pcmTranslation,
+  },
+  mr: {
+    translation: mrTranslation,
+  },
+  te: {
+    translation: teTranslation,
+  },
+  tr: {
+    translation: trTranslation,
+  },
+  ta: {
+    translation: taTranslation,
   },
 };
 

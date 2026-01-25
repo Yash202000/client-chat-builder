@@ -19,6 +19,14 @@ const languages = [
   { code: 'pt', name: 'Portuguese', nativeName: 'Português' },
   { code: 'ru', name: 'Russian', nativeName: 'Русский' },
   { code: 'id', name: 'Indonesian', nativeName: 'Bahasa Indonesia' },
+  { code: 'ur', name: 'Urdu', nativeName: 'اردو' },
+  { code: 'de', name: 'German', nativeName: 'Deutsch' },
+  { code: 'ja', name: 'Japanese', nativeName: '日本語' },
+  { code: 'pcm', name: 'Nigerian Pidgin', nativeName: 'Naija' },
+  { code: 'mr', name: 'Marathi', nativeName: 'मराठी' },
+  { code: 'te', name: 'Telugu', nativeName: 'తెలుగు' },
+  { code: 'tr', name: 'Turkish', nativeName: 'Türkçe' },
+  { code: 'ta', name: 'Tamil', nativeName: 'தமிழ்' },
 ];
 
 export const LanguageSwitcher = () => {
