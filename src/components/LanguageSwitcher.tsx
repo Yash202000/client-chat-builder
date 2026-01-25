@@ -10,6 +10,7 @@ import {
 
 const languages = [
   { code: 'en', name: 'English', nativeName: 'English' },
+  { code: 'hi', name: 'Hindi', nativeName: 'हिन्दी' },
   { code: 'ar', name: 'Arabic', nativeName: 'العربية' },
 ];
 
