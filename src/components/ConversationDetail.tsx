@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { ChatMessage, User, Contact, PRIORITY_CONFIG, MessageAttachment } from '@/types';
-import { Paperclip, Send, CornerDownRight, Book, CheckCircle, Users, Video, Bot, Mic, MessageSquare, Sparkles, ArrowLeft, AlertTriangle, ArrowUp, Minus, ArrowDown, Flag, FileText, Download, MapPin, Image, File, Clock, Loader2, ChevronUp, User as UserIcon } from 'lucide-react';
+import { Paperclip, Send, CornerDownRight, Book, CheckCircle, Users, Video, Bot, Mic, MessageSquare, Sparkles, ArrowLeft, AlertTriangle, ArrowUp, Minus, ArrowDown, Flag, FileText, Download, MapPin, Image, File, Clock, Loader2, ChevronUp, User as UserIcon, Phone } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from '@/hooks/use-toast';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -13,6 +13,7 @@ import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
 
 import { VideoCallModal } from './VideoCallModal';
+import { useTwilioCall } from '@/contexts/TwilioCallContext';
 import { ConversationSidebar } from './ConversationSidebar';
 import { useAuth } from "@/hooks/useAuth";
 import { useNotifications } from "@/hooks/useNotifications";
@@ -26,6 +27,8 @@ import { uploadConversationFile } from '@/services/chatService';
 import RichTextEditor from './RichTextEditor';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
+import { oneDark } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import { replaceTemplateVariables } from '@/services/messageTemplateService';
 
 // Animation variants for Framer Motion
@@ -63,7 +66,7 @@ const fadeInVariants = {
 const MessageSkeleton = ({ isUser = false }: { isUser?: boolean }) => (
   <div className={`flex items-end gap-3 ${isUser ? 'justify-start' : 'justify-end'}`}>
     {isUser && (
-      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-green-400 to-emerald-500 flex items-center justify-center ring-2 ring-white dark:ring-slate-700 shadow-md opacity-60">
+      <div className="w-10 h-10 rounded-full bg-green-600 flex items-center justify-center opacity-60">
         <UserIcon className="h-5 w-5 text-white" />
       </div>
     )}
@@ -75,7 +78,7 @@ const MessageSkeleton = ({ isUser = false }: { isUser?: boolean }) => (
       <div className="h-3 w-16 rounded skeleton mt-1.5" />
     </div>
     {!isUser && (
-      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-400 via-purple-400 to-pink-400 flex items-center justify-center ring-2 ring-white dark:ring-slate-700 shadow-md opacity-60">
+      <div className="w-10 h-10 rounded-full bg-slate-600 flex items-center justify-center opacity-60">
         <Bot className="h-5 w-5 text-white" />
       </div>
     )}
@@ -311,6 +314,7 @@ export const ConversationDetail: React.FC<ConversationDetailProps> = ({ sessionI
   const previousScrollHeight = useRef<number>(0);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const { authFetch, token } = useAuth();
+  const { makeCall, callState } = useTwilioCall();
   const { isRecording, startRecording, stopRecording } = useVoiceConnection(agentId, sessionId);
 
   // Load drafts from localStorage when session changes
@@ -920,7 +924,7 @@ export const ConversationDetail: React.FC<ConversationDetailProps> = ({ sessionI
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.3 }}
-      className="flex h-full bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm card-shadow-lg rounded-xl overflow-hidden border border-slate-200/50 dark:border-slate-700/50"
+      className="flex h-full bg-white dark:bg-slate-900 rounded-xl overflow-hidden border border-slate-200 dark:border-slate-800"
     >
       <div className="flex flex-col flex-grow">
         {/* Enhanced Header */}
@@ -928,10 +932,8 @@ export const ConversationDetail: React.FC<ConversationDetailProps> = ({ sessionI
           initial={{ y: -20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ duration: 0.4, ease: "easeOut" }}
-          className="flex-shrink-0 border-b border-slate-200/50 dark:border-slate-700/50 bg-gradient-to-r from-white via-slate-50/50 to-white dark:from-slate-800 dark:via-slate-900/50 dark:to-slate-800 relative overflow-hidden"
+          className="flex-shrink-0 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 relative overflow-hidden"
         >
-          {/* Decorative gradient accent */}
-          <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500" />
 
           {/* Top Row - Title and Quick Actions */}
           <div className={`flex items-center justify-between px-6 py-4 ${!readOnly ? 'border-b border-slate-100 dark:border-slate-700/50' : ''}`}>
@@ -956,16 +958,18 @@ export const ConversationDetail: React.FC<ConversationDetailProps> = ({ sessionI
                   animate={{ scale: 1 }}
                   transition={{ type: "spring", stiffness: 200, damping: 15 }}
                 >
-                  <div className="h-12 w-12 rounded-full bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center border-2 border-white dark:border-slate-700 shadow-lg">
-                    <UserIcon className="h-6 w-6 text-white" />
+                  <div className="h-12 w-12 rounded-full bg-green-50 dark:bg-green-900/20 flex items-center justify-center border border-slate-200 dark:border-slate-700">
+                    <UserIcon className="h-6 w-6 text-green-600 dark:text-green-400" />
                   </div>
                 </motion.div>
                 {/* Online indicator */}
-                <motion.div
-                  initial={{ scale: 0 }}
-                  animate={{ scale: 1 }}
-                  className="absolute -bottom-0.5 -right-0.5 h-3.5 w-3.5 bg-green-500 rounded-full border-2 border-white dark:border-slate-800"
-                />
+                {sessionDetails?.is_client_connected && (
+                  <motion.div
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    className="absolute -bottom-0.5 -right-0.5 h-3.5 w-3.5 bg-green-500 rounded-full border-2 border-white dark:border-slate-800"
+                  />
+                )}
               </div>
 
               {/* Contact Info */}
@@ -990,75 +994,79 @@ export const ConversationDetail: React.FC<ConversationDetailProps> = ({ sessionI
               </div>
             </div>
 
-            <div className="flex items-center gap-3">
-              {/* Enhanced Status Badge */}
-              <motion.div
-                initial={{ scale: 0.9, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                transition={{ delay: 0.2 }}
-                className={`px-4 py-2 rounded-xl text-xs font-semibold flex items-center gap-2 shadow-sm ${
-                  conversationStatus === 'resolved'
-                    ? 'bg-gradient-to-r from-green-100 to-emerald-100 text-green-700 dark:from-green-900/30 dark:to-emerald-900/30 dark:text-green-400'
-                    : conversationStatus === 'active'
-                    ? 'bg-gradient-to-r from-blue-100 to-indigo-100 text-blue-700 dark:from-blue-900/30 dark:to-indigo-900/30 dark:text-blue-400'
-                    : conversationStatus === 'assigned'
-                    ? 'bg-gradient-to-r from-purple-100 to-pink-100 text-purple-700 dark:from-purple-900/30 dark:to-pink-900/30 dark:text-purple-400'
-                    : 'bg-gradient-to-r from-slate-100 to-gray-100 text-slate-700 dark:from-slate-700 dark:to-gray-700 dark:text-slate-300'
-                }`}
-              >
-                <span className={`w-2 h-2 rounded-full ${
+            <div className="flex items-center gap-2">
+              {/* Status Badge */}
+              <span className={`px-2.5 py-1 rounded-lg text-xs font-semibold flex items-center gap-1.5 ${
+                conversationStatus === 'resolved'
+                  ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
+                  : conversationStatus === 'active'
+                  ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400'
+                  : conversationStatus === 'assigned'
+                  ? 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400'
+                  : 'bg-slate-100 text-slate-700 dark:bg-slate-700 dark:text-slate-300'
+              }`}>
+                <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${
                   conversationStatus === 'resolved' ? 'bg-green-500' :
                   conversationStatus === 'active' ? 'bg-blue-500 animate-pulse' :
                   conversationStatus === 'assigned' ? 'bg-purple-500' : 'bg-slate-400'
                 }`} />
                 {conversationStatus.charAt(0).toUpperCase() + conversationStatus.slice(1)}
-              </motion.div>
+              </span>
 
               {/* AI Summary Button */}
               {onSummaryClick && (
-                <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-                  <Button
-                    size="sm"
-                    onClick={onSummaryClick}
-                    className="relative bg-gradient-to-r from-purple-500 via-indigo-500 to-blue-500 hover:from-purple-600 hover:via-indigo-600 hover:to-blue-600 text-white shadow-lg shadow-purple-500/25 group overflow-hidden rounded-xl h-9 px-4"
-                  >
-                    <span className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700" />
-                    <Sparkles className={`h-4 w-4 ${isRTL ? 'ml-2' : 'mr-2'} relative z-10`} />
-                    <span className="relative z-10 font-medium text-sm">{t('conversations.detail.summary', { defaultValue: 'AI Summary' })}</span>
-                  </Button>
-                </motion.div>
+                <Button
+                  size="sm"
+                  onClick={onSummaryClick}
+                  className="bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg h-7 px-2.5 text-xs"
+                >
+                  <Sparkles className={`h-3.5 w-3.5 ${isRTL ? 'ml-1.5' : 'mr-1.5'}`} />
+                  {t('conversations.detail.summary', { defaultValue: 'AI Summary' })}
+                </Button>
               )}
 
               {/* Action buttons - hidden in read-only mode */}
               {!readOnly && (
                 <>
-                  <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+                  {/* Twilio Voice outbound call button */}
+                  {sessionDetails?.channel === 'twilio_voice' && (contact?.phone_number || sessionDetails?.contact_phone) && (
                     <Button
                       size="sm"
                       variant="outline"
-                      onClick={() => startCallMutation.mutate()}
-                      disabled={startCallMutation.isPending}
-                      className="rounded-xl h-10 border-slate-200 dark:border-slate-600"
+                      onClick={() => {
+                        const phone = contact?.phone_number || sessionDetails?.contact_phone || '';
+                        makeCall(phone, contact?.id);
+                      }}
+                      disabled={callState !== 'idle'}
+                      className="rounded-lg h-7 px-2.5 text-xs border-green-200 text-green-700 hover:bg-green-50 dark:border-green-800 dark:text-green-400 dark:hover:bg-green-900/20"
                     >
-                      <Video className={`h-4 w-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
-                      {t('conversations.detail.videoCall')}
+                      <Phone className={`h-3.5 w-3.5 ${isRTL ? 'ml-1.5' : 'mr-1.5'}`} />
+                      {callState === 'idle' ? 'Call' : 'Calling…'}
                     </Button>
-                  </motion.div>
-                  <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-                    <Button
-                      size="sm"
-                      onClick={() => statusMutation.mutate('resolved')}
-                      disabled={statusMutation.isPending || conversationStatus === 'resolved'}
-                      className={`rounded-xl h-10 ${
-                        conversationStatus === 'resolved'
-                          ? 'bg-green-100 text-green-700 hover:bg-green-200 border border-green-200'
-                          : 'bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-lg shadow-blue-500/20'
-                      }`}
-                    >
-                      <CheckCircle className={`h-4 w-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
-                      {conversationStatus === 'resolved' ? t('conversations.detail.resolved') : t('conversations.detail.resolve')}
-                    </Button>
-                  </motion.div>
+                  )}
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => startCallMutation.mutate()}
+                    disabled={startCallMutation.isPending}
+                    className="rounded-lg h-7 px-2.5 text-xs border-slate-200 dark:border-slate-600"
+                  >
+                    <Video className={`h-3.5 w-3.5 ${isRTL ? 'ml-1.5' : 'mr-1.5'}`} />
+                    {t('conversations.detail.videoCall')}
+                  </Button>
+                  <Button
+                    size="sm"
+                    onClick={() => statusMutation.mutate('resolved')}
+                    disabled={statusMutation.isPending || conversationStatus === 'resolved'}
+                    className={`rounded-lg h-7 px-2.5 text-xs ${
+                      conversationStatus === 'resolved'
+                        ? 'bg-green-100 text-green-700 hover:bg-green-200 border border-green-200'
+                        : 'bg-blue-600 hover:bg-blue-700 text-white'
+                    }`}
+                  >
+                    <CheckCircle className={`h-3.5 w-3.5 ${isRTL ? 'ml-1.5' : 'mr-1.5'}`} />
+                    {conversationStatus === 'resolved' ? t('conversations.detail.resolved') : t('conversations.detail.resolve')}
+                  </Button>
                 </>
               )}
             </div>
@@ -1070,14 +1078,12 @@ export const ConversationDetail: React.FC<ConversationDetailProps> = ({ sessionI
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.2 }}
-              className="flex items-center gap-3 px-6 py-3 bg-gradient-to-r from-slate-50/50 to-white/50 dark:from-slate-900/30 dark:to-slate-800/30"
+              className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-slate-900 border-t border-slate-100 dark:border-slate-800"
             >
-              {/* AI Toggle - Enhanced */}
-              <div className="flex items-center gap-2 bg-white dark:bg-slate-800/80 rounded-xl px-4 py-2.5 border border-slate-200 dark:border-slate-700 shadow-sm transition-all hover:shadow-md">
-                <div className={`p-1.5 rounded-lg ${isAiEnabled ? 'bg-blue-100 dark:bg-blue-900/30' : 'bg-slate-100 dark:bg-slate-700'}`}>
-                  <Bot className={`h-4 w-4 transition-colors ${isAiEnabled ? 'text-blue-600 dark:text-blue-400' : 'text-slate-400'}`} />
-                </div>
-                <Label htmlFor="ai-toggle" className="text-sm font-medium cursor-pointer">
+              {/* AI Toggle */}
+              <div className="flex items-center gap-1.5 bg-slate-50 dark:bg-slate-800 rounded-lg px-2.5 py-1.5 border border-slate-200 dark:border-slate-700">
+                <Bot className={`h-3.5 w-3.5 transition-colors flex-shrink-0 ${isAiEnabled ? 'text-blue-600 dark:text-blue-400' : 'text-slate-400'}`} />
+                <Label htmlFor="ai-toggle" className="text-xs font-medium cursor-pointer text-slate-600 dark:text-slate-300 whitespace-nowrap">
                   {t('conversations.detail.aiReplies')}
                 </Label>
                 <Switch
@@ -1085,31 +1091,38 @@ export const ConversationDetail: React.FC<ConversationDetailProps> = ({ sessionI
                   id="ai-toggle"
                   checked={isAiEnabled}
                   onCheckedChange={toggleAiMutation.mutate}
-                  className="data-[state=checked]:bg-gradient-to-r data-[state=checked]:from-blue-500 data-[state=checked]:to-indigo-500"
+                  className="scale-75 data-[state=checked]:bg-blue-500"
                 />
               </div>
 
-              {/* Assign To - Enhanced */}
-              <div className="flex items-center gap-2 bg-white dark:bg-slate-800/80 rounded-xl px-4 py-2.5 border border-slate-200 dark:border-slate-700 shadow-sm transition-all hover:shadow-md">
-                <div className="p-1.5 rounded-lg bg-purple-100 dark:bg-purple-900/30">
-                  <Users className="h-4 w-4 text-purple-600 dark:text-purple-400" />
-                </div>
+              {/* Assign To */}
+              <div className="flex items-center gap-1.5 bg-slate-50 dark:bg-slate-800 rounded-lg px-2.5 py-1.5 border border-slate-200 dark:border-slate-700">
+                <Users className="h-3.5 w-3.5 text-slate-500 dark:text-slate-400 flex-shrink-0" />
                 <Select
                   key={`assignee-${sessionId}`}
                   value={sessionDetails?.assignee_id?.toString() || undefined}
                   onValueChange={(value) => assigneeMutation.mutate(parseInt(value))}
                 >
-                  <SelectTrigger className="border-0 h-auto p-0 focus:ring-0 w-[180px] font-medium">
+                  <SelectTrigger className="border-0 h-auto p-0 focus:ring-0 w-[130px] text-xs font-medium text-slate-600 dark:text-slate-300">
                     <SelectValue placeholder={t('conversations.detail.assignTo')} />
                   </SelectTrigger>
                   <SelectContent className="rounded-xl">
                     {Array.isArray(users) && users.map(user => (
                       <SelectItem key={user.id} value={user.id.toString()} className="rounded-lg">
                         <div className="flex items-center gap-2">
-                          <div className="h-7 w-7 rounded-lg bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center shadow-sm">
-                            <span className="text-xs font-bold text-white">
-                              {user.email.charAt(0).toUpperCase()}
-                            </span>
+                          <div className="relative h-7 w-7 flex-shrink-0">
+                            <div className="h-7 w-7 rounded-lg bg-slate-100 dark:bg-slate-700 flex items-center justify-center">
+                              <span className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                                {user.email.charAt(0).toUpperCase()}
+                              </span>
+                            </div>
+                            <span className={`absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full border border-white dark:border-slate-800 ${
+                              user.presence_status === 'online' ? 'bg-emerald-500' :
+                              user.presence_status === 'away' ? 'bg-yellow-400' :
+                              user.presence_status === 'busy' || user.presence_status === 'do_not_disturb' ? 'bg-red-500' :
+                              user.presence_status === 'in_call' ? 'bg-blue-500' :
+                              'bg-slate-400'
+                            }`} />
                           </div>
                           <span className="text-sm font-medium">{user.email}</span>
                         </div>
@@ -1119,17 +1132,15 @@ export const ConversationDetail: React.FC<ConversationDetailProps> = ({ sessionI
                 </Select>
               </div>
 
-              {/* Priority Selector - Enhanced */}
-              <div className="flex items-center gap-2 bg-white dark:bg-slate-800/80 rounded-xl px-4 py-2.5 border border-slate-200 dark:border-slate-700 shadow-sm transition-all hover:shadow-md">
-                <div className={`p-1.5 rounded-lg ${conversationPriority > 0 ? PRIORITY_CONFIG[conversationPriority]?.bgColor : 'bg-slate-100 dark:bg-slate-700'}`}>
-                  <Flag className={`h-4 w-4 ${conversationPriority > 0 ? PRIORITY_CONFIG[conversationPriority]?.color : 'text-slate-400'}`} />
-                </div>
+              {/* Priority Selector */}
+              <div className="flex items-center gap-1.5 bg-slate-50 dark:bg-slate-800 rounded-lg px-2.5 py-1.5 border border-slate-200 dark:border-slate-700">
+                <Flag className={`h-3.5 w-3.5 flex-shrink-0 ${conversationPriority > 0 ? PRIORITY_CONFIG[conversationPriority]?.color : 'text-slate-400'}`} />
                 <Select
                   key={`priority-${sessionId}-${conversationPriority}`}
                   value={conversationPriority.toString()}
                   onValueChange={(value) => priorityMutation.mutate(parseInt(value))}
                 >
-                  <SelectTrigger className="border-0 h-auto p-0 focus:ring-0 w-[120px] font-medium">
+                  <SelectTrigger className="border-0 h-auto p-0 focus:ring-0 w-[90px] text-xs font-medium text-slate-600 dark:text-slate-300">
                     <SelectValue placeholder={t('conversations.priority.label', { defaultValue: 'Priority' })} />
                   </SelectTrigger>
                   <SelectContent className="rounded-xl">
@@ -1157,12 +1168,7 @@ export const ConversationDetail: React.FC<ConversationDetailProps> = ({ sessionI
         </motion.header>
 
         {/* Enhanced Messages Area */}
-        <main ref={messagesContainerRef} className="flex-grow overflow-y-auto p-6 bg-gradient-to-b from-slate-50/80 via-white to-slate-50/50 dark:from-slate-900/80 dark:via-slate-800 dark:to-slate-900/50 relative">
-          {/* Decorative background pattern */}
-          <div className="absolute inset-0 opacity-[0.02] dark:opacity-[0.05] pointer-events-none" style={{
-            backgroundImage: 'radial-gradient(circle at 1px 1px, currentColor 1px, transparent 0)',
-            backgroundSize: '24px 24px'
-          }} />
+        <main ref={messagesContainerRef} className="flex-grow overflow-y-auto p-4 bg-slate-50 dark:bg-slate-900 relative">
 
           <AnimatePresence mode="wait">
             {isLoading ? (
@@ -1184,7 +1190,7 @@ export const ConversationDetail: React.FC<ConversationDetailProps> = ({ sessionI
                 variants={containerVariants}
                 initial="hidden"
                 animate="visible"
-                className="space-y-4 relative z-10"
+                className="space-y-2 relative z-10"
               >
                 {/* Loading indicator for fetching older messages */}
                 <AnimatePresence>
@@ -1195,7 +1201,7 @@ export const ConversationDetail: React.FC<ConversationDetailProps> = ({ sessionI
                       exit={{ opacity: 0, y: -20 }}
                       className="flex justify-center py-4"
                     >
-                      <div className="flex items-center gap-3 bg-white dark:bg-slate-800 px-4 py-2 rounded-full shadow-lg border border-slate-200 dark:border-slate-700">
+                      <div className="flex items-center gap-3 bg-white dark:bg-slate-800 px-4 py-2 rounded-full shadow-sm border border-slate-200 dark:border-slate-700">
                         <Loader2 className="h-4 w-4 text-blue-500 animate-spin" />
                         <span className="text-sm text-muted-foreground font-medium">
                           {t('conversations.detail.loadingOlderMessages', { defaultValue: 'Loading older messages...' })}
@@ -1235,7 +1241,7 @@ export const ConversationDetail: React.FC<ConversationDetailProps> = ({ sessionI
                         <div className="flex items-center justify-center my-8">
                           <div className="flex items-center gap-4">
                             <div className="h-px w-16 bg-gradient-to-r from-transparent via-slate-300 to-slate-300 dark:via-slate-600 dark:to-slate-600" />
-                            <div className="bg-white dark:bg-slate-800 px-5 py-2 rounded-full shadow-md border border-slate-200 dark:border-slate-700">
+                            <div className="bg-white dark:bg-slate-800 px-5 py-2 rounded-full shadow-sm border border-slate-200 dark:border-slate-700">
                               <div className="flex items-center gap-2">
                                 <Clock className="h-3.5 w-3.5 text-slate-400" />
                                 <p className="text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider">
@@ -1255,9 +1261,9 @@ export const ConversationDetail: React.FC<ConversationDetailProps> = ({ sessionI
                           animate={{ opacity: 1, scale: 1 }}
                           className="flex justify-center my-6"
                         >
-                          <div className="max-w-2xl w-full bg-gradient-to-r from-amber-50 via-yellow-50 to-amber-50 dark:from-amber-900/20 dark:via-yellow-900/20 dark:to-amber-900/20 border border-amber-200 dark:border-amber-700/50 rounded-2xl p-5 shadow-lg shadow-amber-500/10">
+                          <div className="max-w-2xl w-full bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700/50 rounded-xl p-5">
                             <div className="flex items-start gap-4">
-                              <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-amber-400 to-yellow-500 flex items-center justify-center flex-shrink-0 shadow-md">
+                              <div className="h-10 w-10 rounded-xl bg-amber-100 dark:bg-amber-800/30 flex items-center justify-center flex-shrink-0">
                                 <Book className="h-5 w-5 text-white" />
                               </div>
                               <div className="flex-grow">
@@ -1276,25 +1282,18 @@ export const ConversationDetail: React.FC<ConversationDetailProps> = ({ sessionI
                         </motion.div>
                       ) : (
                         /* Enhanced Regular Message */
-                        <div className={`flex items-end gap-3 ${msg.sender === 'user' ? 'justify-start' : 'justify-end'}`}>
+                        <div className={`flex items-end gap-2 ${msg.sender === 'user' ? 'justify-start' : 'justify-end'}`}>
                           {msg.sender === 'user' && (
-                            <motion.div
-                              initial={{ scale: 0 }}
-                              animate={{ scale: 1 }}
-                              transition={{ type: "spring", stiffness: 300, damping: 20 }}
-                            >
-                              <div className="h-10 w-10 flex-shrink-0 rounded-full bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center ring-2 ring-white dark:ring-slate-700 shadow-md">
-                                <UserIcon className="h-5 w-5 text-white" />
-                              </div>
-                            </motion.div>
+                            <div className="h-7 w-7 flex-shrink-0 rounded-full bg-green-600 flex items-center justify-center">
+                              <UserIcon className="h-3.5 w-3.5 text-white" />
+                            </div>
                           )}
-                          <div className={`flex flex-col ${msg.sender === 'user' ? 'items-start' : 'items-end'} max-w-[70%]`}>
-                            <motion.div
-                              whileHover={{ scale: 1.01 }}
-                              className={`px-5 py-3.5 rounded-2xl shadow-md transition-shadow hover:shadow-lg ${
+                          <div className={`flex flex-col ${msg.sender === 'user' ? 'items-start' : 'items-end'} max-w-[65%]`}>
+                            <div
+                              className={`px-3.5 py-2 rounded-xl ${
                                 msg.sender === 'user'
-                                  ? `bg-white dark:bg-slate-700/90 border border-slate-200/80 dark:border-slate-600/50 ${isRTL ? 'rounded-br-md' : 'rounded-bl-md'} dark:text-white`
-                                  : `bg-gradient-to-br from-blue-500 via-blue-600 to-indigo-600 text-white shadow-blue-500/20 ${isRTL ? 'rounded-bl-md' : 'rounded-br-md'}`
+                                  ? `bg-white dark:bg-slate-700/90 border border-slate-200 dark:border-slate-600/50 ${isRTL ? 'rounded-br-sm' : 'rounded-bl-sm'} dark:text-white`
+                                  : `bg-blue-600 text-white ${isRTL ? 'rounded-bl-sm' : 'rounded-br-sm'}`
                               }`}
                             >
                               <div className="prose prose-sm dark:prose-invert max-w-full prose-p:my-1 prose-headings:my-2">
@@ -1309,9 +1308,27 @@ export const ConversationDetail: React.FC<ConversationDetailProps> = ({ sessionI
                                         className={`${msg.sender === 'user' ? 'text-blue-600 hover:text-blue-700' : 'text-blue-200 hover:text-white'} underline underline-offset-2 transition-colors`}
                                       />
                                     ),
-                                    p: ({node, ...props}) => <p className="text-sm leading-relaxed break-words" {...props} />,
+                                    p: ({node, ...props}) => <p className="text-[13px] leading-snug break-words" {...props} />,
                                     strong: ({node, ...props}) => <strong className="font-bold" {...props} />,
                                     em: ({node, ...props}) => <em className="italic" {...props} />,
+                                    code({ node, className, children, ...props }: any) {
+                                      const match = /language-(\w+)/.exec(className || '');
+                                      const isBlock = !props.inline;
+                                      return isBlock && match ? (
+                                        <SyntaxHighlighter
+                                          style={oneDark}
+                                          language={match[1]}
+                                          PreTag="div"
+                                          className="rounded-lg text-xs !my-2"
+                                        >
+                                          {String(children).replace(/\n$/, '')}
+                                        </SyntaxHighlighter>
+                                      ) : (
+                                        <code className={`text-xs px-1 py-0.5 rounded ${msg.sender === 'user' ? 'bg-slate-100 dark:bg-slate-600 text-pink-600 dark:text-pink-400' : 'bg-blue-700/50 text-blue-100'}`} {...props}>
+                                          {children}
+                                        </code>
+                                      );
+                                    },
                                   }}
                                 >
                                   {typeof msg.message === 'string' ? msg.message : JSON.stringify(msg.message)}
@@ -1346,22 +1363,16 @@ export const ConversationDetail: React.FC<ConversationDetailProps> = ({ sessionI
                                   </div>
                                 </div>
                               )}
-                            </motion.div>
-                            <p className={`text-[11px] mt-2 px-1 flex items-center gap-1.5 ${msg.sender === 'user' ? 'text-slate-400' : 'text-slate-500 dark:text-slate-400'}`}>
-                              <Clock className="h-3 w-3" />
+                            </div>
+                            <p className={`text-[10px] mt-1 px-1 flex items-center gap-1 ${msg.sender === 'user' ? 'text-slate-400' : 'text-slate-500 dark:text-slate-400'}`}>
+                              <Clock className="h-2.5 w-2.5" />
                               {new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                             </p>
                           </div>
                           {msg.sender !== 'user' && (
-                            <motion.div
-                              initial={{ scale: 0 }}
-                              animate={{ scale: 1 }}
-                              transition={{ type: "spring", stiffness: 300, damping: 20 }}
-                            >
-                              <div className="h-10 w-10 flex-shrink-0 rounded-full bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 flex items-center justify-center ring-2 ring-white dark:ring-slate-700 shadow-md">
-                                <Bot className="h-5 w-5 text-white" />
-                              </div>
-                            </motion.div>
+                            <div className="h-7 w-7 flex-shrink-0 rounded-full bg-slate-600 flex items-center justify-center">
+                              <Bot className="h-3.5 w-3.5 text-white" />
+                            </div>
                           )}
                         </div>
                       )}
@@ -1385,20 +1396,15 @@ export const ConversationDetail: React.FC<ConversationDetailProps> = ({ sessionI
                     transition={{ type: "spring", stiffness: 200, damping: 15 }}
                     className="relative inline-block mb-6"
                   >
-                    <div className="w-24 h-24 rounded-3xl bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500 flex items-center justify-center shadow-2xl shadow-purple-500/30">
-                      <MessageSquare className="h-12 w-12 text-white" />
+                    <div className="w-24 h-24 rounded-2xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
+                      <MessageSquare className="h-12 w-12 text-slate-400" />
                     </div>
-                    <motion.div
-                      animate={{ rotate: 360 }}
-                      transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
-                      className="absolute -inset-4 rounded-full border-2 border-dashed border-purple-200 dark:border-purple-800"
-                    />
                   </motion.div>
                   <motion.h3
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.2 }}
-                    className="text-xl font-bold bg-gradient-to-r from-slate-800 to-slate-600 dark:from-white dark:to-slate-300 bg-clip-text text-transparent mb-3"
+                    className="text-xl font-bold text-slate-800 dark:text-white mb-3"
                   >
                     {t('conversations.detail.noMessages')}
                   </motion.h3>
@@ -1426,7 +1432,7 @@ export const ConversationDetail: React.FC<ConversationDetailProps> = ({ sessionI
           >
             <Tabs defaultValue="reply" className="w-full">
               {/* Minimal Tab Switcher */}
-              <div className="flex items-center gap-1 px-3 pt-2">
+              <div className="flex items-center gap-1 px-3 pt-1.5">
                 <TabsList className="h-auto p-0 bg-transparent gap-1">
                   <TabsTrigger
                     value="reply"
@@ -1518,8 +1524,8 @@ export const ConversationDetail: React.FC<ConversationDetailProps> = ({ sessionI
                 </AnimatePresence>
 
                 {/* Instagram-style Input Bar */}
-                <div className="px-3 py-2">
-                  <div className={`relative flex items-center gap-2 bg-slate-100 dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 focus-within:border-blue-400 dark:focus-within:border-blue-500 transition-all px-4 py-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                <div className="px-3 pb-2 pt-1">
+                  <div className={`relative flex items-center gap-2 bg-slate-100 dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 focus-within:border-blue-400 dark:focus-within:border-blue-500 transition-all px-3 py-1 ${isRTL ? 'flex-row-reverse' : ''}`}>
                     {/* Input Field */}
                     <div className="flex-1 min-w-0">
                       <RichTextEditor
@@ -1536,7 +1542,7 @@ export const ConversationDetail: React.FC<ConversationDetailProps> = ({ sessionI
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
                             exit={{ opacity: 0 }}
-                            className="absolute inset-0 flex items-center justify-center bg-red-50 dark:bg-red-900/30 rounded-2xl"
+                            className="absolute inset-0 flex items-center justify-center bg-red-50 dark:bg-red-900/30 rounded-xl"
                           >
                             <div className="flex items-center gap-2">
                               <motion.div
@@ -1608,8 +1614,8 @@ export const ConversationDetail: React.FC<ConversationDetailProps> = ({ sessionI
 
               {/* Private Note Tab - Instagram style */}
               <TabsContent value="note" className="mt-0 focus-visible:outline-none focus-visible:ring-0">
-                <div className="px-3 py-2">
-                  <div className={`relative flex items-center gap-2 bg-amber-50 dark:bg-amber-900/20 rounded-2xl border border-amber-200 dark:border-amber-700/50 focus-within:border-amber-400 dark:focus-within:border-amber-500 transition-all px-4 py-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                <div className="px-3 pb-2 pt-1">
+                  <div className={`relative flex items-center gap-2 bg-amber-50 dark:bg-amber-900/20 rounded-xl border border-amber-200 dark:border-amber-700/50 focus-within:border-amber-400 dark:focus-within:border-amber-500 transition-all px-3 py-1 ${isRTL ? 'flex-row-reverse' : ''}`}>
                     {/* Note Input */}
                     <div className="flex-1 min-w-0">
                       <RichTextEditor

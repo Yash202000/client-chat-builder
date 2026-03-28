@@ -30,6 +30,7 @@ import { Agent, Session } from "@/types";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { useAuth } from "@/hooks/useAuth";
 import { ConversationDetail } from "./ConversationDetail";
+import { CreateAgentDialog } from "@/components/CreateAgentDialog";
 import { API_BASE_URL } from "@/config/api";
 import { useTranslation } from 'react-i18next';
 import { useI18n } from '@/hooks/useI18n';
@@ -41,6 +42,7 @@ export const AgentList = () => {
   const navigate = useNavigate();
   const [selectedAgent, setSelectedAgent] = useState<Agent | null>(null);
   const [selectedSessionId, setSelectedSessionId] = useState<string | null>(null);
+  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const { authFetch, user } = useAuth();
   const companyId = user?.company_id;
 
@@ -227,12 +229,12 @@ export const AgentList = () => {
     const backendUrl = API_BASE_URL;
     const embedCode = `<script
     src="${backendUrl}/widget/widget.js"
-    id="agent-connect-widget-script"
+    id="heygenally-widget-script"
     data-agent-id="${agentId}"
     data-company-id="${companyId}"
     data-backend-url="${backendUrl}">
 </script>
-<div id="agentconnect-widget"></div>`;
+<div id="heygenally-widget"></div>`;
     navigator.clipboard.writeText(embedCode);
     toast({ title: t('agents.embedCodeCopied') });
   };
@@ -434,6 +436,7 @@ export const AgentList = () => {
 
   return (
     <>
+      <CreateAgentDialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen} />
       {/* Stats Overview Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mb-6">
         <Card className="relative overflow-hidden bg-white dark:bg-slate-800 border-0 shadow-lg shadow-purple-500/10 hover:shadow-xl hover:shadow-purple-500/20 transition-all duration-300 group">
@@ -522,7 +525,7 @@ export const AgentList = () => {
             </div>
             <Permission permission="agent:create">
               <Button
-                onClick={() => navigate('/dashboard/builder')}
+                onClick={() => setIsCreateDialogOpen(true)}
                 className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white shadow-lg shadow-purple-500/25 hover:shadow-purple-500/40 transition-all duration-200 hover:scale-[1.02]"
               >
                 <PlusCircle className={`h-4 w-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
@@ -545,7 +548,7 @@ export const AgentList = () => {
               </TableHeader>
               <TableBody>
                 {agents?.map((agent) => (
-                  <TableRow key={agent.id} className="group hover:bg-slate-50/80 dark:hover:bg-slate-700/30 transition-colors border-b border-slate-100 dark:border-slate-700/50">
+                  <TableRow key={agent.id} onClick={() => navigate(`/dashboard/builder/${agent.id}`)} className="group hover:bg-slate-50/80 dark:hover:bg-slate-700/30 transition-colors border-b border-slate-100 dark:border-slate-700/50 cursor-pointer">
                     <TableCell className="py-4">
                       <div className={`flex items-center gap-3`}>
                         <div className="relative">
@@ -585,7 +588,7 @@ export const AgentList = () => {
                         </span>
                       )}
                     </TableCell>
-                    <TableCell className={isRTL ? 'text-left' : 'text-right'}>
+                    <TableCell className={isRTL ? 'text-left' : 'text-right'} onClick={(e) => e.stopPropagation()}>
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                           <Button variant="ghost" size="icon" className="hover:bg-slate-100 dark:hover:bg-slate-700">

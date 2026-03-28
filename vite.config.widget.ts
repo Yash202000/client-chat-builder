@@ -25,7 +25,7 @@ export default defineConfig({
         format: 'iife',
         // The name of the global variable the IIFE will expose, if needed.
         // Not strictly necessary for this widget but good practice.
-        name: 'AgentConnectWidget',
+        name: 'HeyGenAllyWidget',
         // The output file name.
         entryFileNames: 'widget.js',
         // We don't want hashes in the asset names for the widget bundle.

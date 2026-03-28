@@ -9,7 +9,7 @@ import {
   Tag as TagIcon,
   Users,
   Target,
-  RefreshCw,
+  Loader2,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -224,46 +224,44 @@ export default function TagsPage() {
 
   if (loading) {
     return (
-      <div className="flex flex-col items-center justify-center h-64 gap-4">
-        <div className="relative">
-          <div className="h-12 w-12 rounded-2xl bg-gradient-to-br from-orange-500 to-red-600 flex items-center justify-center shadow-xl shadow-orange-500/25">
-            <RefreshCw className="h-6 w-6 text-white animate-spin" />
-          </div>
-        </div>
-        <p className="text-sm text-slate-500 dark:text-slate-400">{t('crm.common.loading')}</p>
+      <div className="flex items-center justify-center min-h-64">
+        <Loader2 className="h-6 w-6 animate-spin text-slate-400" />
       </div>
     );
   }
 
   return (
-    <div className="space-y-6 p-6 animate-fade-in">
+    <div className="min-h-full bg-slate-50 dark:bg-slate-950">
       {/* Header */}
-      <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
-        <div className="flex items-center gap-4">
-          <div className="p-4 rounded-2xl bg-gradient-to-br from-orange-500 to-red-600 shadow-xl shadow-orange-500/25">
-            <TagIcon className="h-8 w-8 text-white" />
+      <div className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 px-6 py-6">
+        <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-orange-500 to-red-600 flex items-center justify-center flex-shrink-0">
+              <TagIcon className="h-6 w-6 text-white" />
+            </div>
+            <div>
+              <h1 className="text-2xl font-bold text-slate-900 dark:text-white leading-tight">
+                {t('crm.tags.title')}
+              </h1>
+              <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">
+                {t('crm.tags.subtitle')}
+              </p>
+            </div>
           </div>
-          <div>
-            <h2 className="text-3xl font-bold bg-gradient-to-r from-orange-600 to-red-600 bg-clip-text text-transparent">
-              {t('crm.tags.title')}
-            </h2>
-            <p className="text-slate-600 dark:text-slate-400">
-              {t('crm.tags.subtitle')}
-            </p>
-          </div>
+          <Button
+            onClick={openCreateDialog}
+            className="bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-700 hover:to-red-700 text-white rounded-xl h-9 px-4 text-sm"
+          >
+            <Plus className="h-4 w-4 mr-2" />
+            {t('crm.tags.addTag')}
+          </Button>
         </div>
-        <Button
-          onClick={openCreateDialog}
-          className="bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-700 hover:to-red-700 text-white rounded-xl shadow-lg shadow-orange-500/25 hover:shadow-xl hover:shadow-orange-500/30 transition-all"
-        >
-          <Plus className="h-4 w-4 mr-2" />
-          {t('crm.tags.addTag')}
-        </Button>
       </div>
+      <div className="px-6 py-6 space-y-6">
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-        <div className="p-5 rounded-2xl border border-orange-200/80 dark:border-orange-700/60 bg-gradient-to-br from-white to-orange-50 dark:from-slate-800 dark:to-slate-900 shadow-xl shadow-orange-500/10 hover:shadow-2xl hover:shadow-orange-500/20 hover:scale-[1.02] transition-all duration-300">
+        <div className="p-5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm hover:shadow-md transition-all duration-300">
           <div className="flex items-start justify-between">
             <div>
               <p className="text-xs font-medium text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1.5">
@@ -271,13 +269,13 @@ export default function TagsPage() {
               </p>
               <p className="text-2xl font-bold text-slate-900 dark:text-white">{tags.length}</p>
             </div>
-            <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-orange-500 to-red-600 flex items-center justify-center shadow-lg shadow-orange-500/25">
-              <TagIcon className="h-6 w-6 text-white" />
+            <div className="h-10 w-10 rounded-lg bg-gradient-to-br from-orange-500 to-red-600 flex items-center justify-center">
+              <TagIcon className="h-5 w-5 text-white" />
             </div>
           </div>
         </div>
 
-        <div className="p-5 rounded-2xl border border-purple-200/80 dark:border-purple-700/60 bg-gradient-to-br from-white to-purple-50 dark:from-slate-800 dark:to-slate-900 shadow-xl shadow-purple-500/10 hover:shadow-2xl hover:shadow-purple-500/20 hover:scale-[1.02] transition-all duration-300">
+        <div className="p-5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm hover:shadow-md transition-all duration-300">
           <div className="flex items-start justify-between">
             <div>
               <p className="text-xs font-medium text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1.5">
@@ -285,13 +283,13 @@ export default function TagsPage() {
               </p>
               <p className="text-2xl font-bold text-slate-900 dark:text-white">{totalLeads}</p>
             </div>
-            <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center shadow-lg shadow-purple-500/25">
-              <Target className="h-6 w-6 text-white" />
+            <div className="h-10 w-10 rounded-lg bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center">
+              <Target className="h-5 w-5 text-white" />
             </div>
           </div>
         </div>
 
-        <div className="p-5 rounded-2xl border border-blue-200/80 dark:border-blue-700/60 bg-gradient-to-br from-white to-blue-50 dark:from-slate-800 dark:to-slate-900 shadow-xl shadow-blue-500/10 hover:shadow-2xl hover:shadow-blue-500/20 hover:scale-[1.02] transition-all duration-300">
+        <div className="p-5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm hover:shadow-md transition-all duration-300">
           <div className="flex items-start justify-between">
             <div>
               <p className="text-xs font-medium text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1.5">
@@ -299,32 +297,32 @@ export default function TagsPage() {
               </p>
               <p className="text-2xl font-bold text-slate-900 dark:text-white">{totalContacts}</p>
             </div>
-            <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-blue-500 to-cyan-600 flex items-center justify-center shadow-lg shadow-blue-500/25">
-              <Users className="h-6 w-6 text-white" />
+            <div className="h-10 w-10 rounded-lg bg-gradient-to-br from-blue-500 to-cyan-600 flex items-center justify-center">
+              <Users className="h-5 w-5 text-white" />
             </div>
           </div>
         </div>
       </div>
 
       {/* Search */}
-      <div className="p-4 rounded-2xl border border-slate-200/80 dark:border-slate-700/60 bg-gradient-to-br from-white to-slate-50 dark:from-slate-800 dark:to-slate-900 shadow-xl">
+      <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm p-3">
         <div className="relative">
-          <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 h-4 w-4 text-slate-400" />
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-slate-400" />
           <Input
             placeholder={t('crm.tags.searchPlaceholder')}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-11 rounded-xl border-slate-200 dark:border-slate-600 dark:bg-slate-800/50 focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500"
+            className="pl-9 h-9 rounded-lg border-slate-200 dark:border-slate-700 dark:bg-slate-800 focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500"
           />
         </div>
       </div>
 
       {/* Tags Grid */}
       {filteredTags.length === 0 ? (
-        <div className="rounded-2xl border border-slate-200/80 dark:border-slate-700/60 bg-gradient-to-br from-white to-slate-50 dark:from-slate-800 dark:to-slate-900 shadow-xl">
+        <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm">
           <div className="py-12">
             <div className="flex flex-col items-center">
-              <div className="h-16 w-16 rounded-2xl bg-gradient-to-br from-orange-100 to-red-100 dark:from-orange-900/30 dark:to-red-900/30 flex items-center justify-center mb-4">
+              <div className="h-16 w-16 rounded-xl bg-orange-50 dark:bg-orange-900/20 flex items-center justify-center mb-4">
                 <TagIcon className="h-8 w-8 text-orange-500" />
               </div>
               <p className="text-slate-500 dark:text-slate-400 mb-2">{t('crm.tags.noTags')}</p>
@@ -343,7 +341,7 @@ export default function TagsPage() {
           {filteredTags.map((tag) => (
             <div
               key={tag.id}
-              className="p-4 rounded-2xl border border-slate-200/80 dark:border-slate-700/60 bg-gradient-to-br from-white to-slate-50 dark:from-slate-800 dark:to-slate-900 shadow-lg hover:shadow-xl hover:scale-[1.02] transition-all duration-300"
+              className="p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm hover:shadow-md transition-all duration-300"
             >
               <div className="flex items-start justify-between mb-3">
                 <div className="flex items-center gap-3">
@@ -390,7 +388,7 @@ export default function TagsPage() {
                 </Badge>
               </div>
 
-              <div className="flex items-center gap-4 mt-3 pt-3 border-t border-slate-200/80 dark:border-slate-700/60">
+              <div className="flex items-center gap-4 mt-3 pt-3 border-t border-slate-200 dark:border-slate-800">
                 <div className="flex items-center gap-1.5 text-sm text-slate-500 dark:text-slate-400">
                   <Target className="h-3.5 w-3.5 text-purple-500" />
                   <span>{tag.lead_count} {t('crm.tags.leads')}</span>
@@ -405,9 +403,11 @@ export default function TagsPage() {
         </div>
       )}
 
+      </div>
+
       {/* Create/Edit Dialog */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="rounded-2xl dark:bg-slate-800 border-slate-200/80 dark:border-slate-700/60">
+        <DialogContent className="rounded-xl dark:bg-slate-900 border-slate-200 dark:border-slate-800">
           <DialogHeader>
             <DialogTitle className="text-xl font-semibold text-slate-900 dark:text-white">
               {editingTag ? t('crm.tags.editTag') : t('crm.tags.addTag')}
@@ -437,7 +437,7 @@ export default function TagsPage() {
                     className={`h-8 w-8 rounded-lg border-2 transition-all shadow-sm ${
                       formData.color === color.value
                         ? 'border-slate-900 dark:border-white scale-110 ring-2 ring-offset-2 ring-slate-400'
-                        : 'border-transparent hover:scale-105'
+                        : 'border-transparent'
                     }`}
                     style={{ backgroundColor: color.value }}
                     title={color.label}
@@ -483,7 +483,7 @@ export default function TagsPage() {
             <Button
               onClick={handleSubmit}
               disabled={saving}
-              className="bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-700 hover:to-red-700 text-white rounded-xl shadow-lg shadow-orange-500/25"
+              className="bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-700 hover:to-red-700 text-white rounded-xl shadow-lg"
             >
               {saving ? t('crm.common.saving') : (editingTag ? t('crm.common.save') : t('crm.common.create'))}
             </Button>
@@ -493,7 +493,7 @@ export default function TagsPage() {
 
       {/* Delete Confirmation Dialog */}
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-        <AlertDialogContent className="rounded-2xl">
+        <AlertDialogContent className="rounded-xl">
           <AlertDialogHeader>
             <AlertDialogTitle className="text-xl font-semibold text-slate-900 dark:text-white">{t('crm.tags.deleteConfirmTitle')}</AlertDialogTitle>
             <AlertDialogDescription className="text-slate-500 dark:text-slate-400">
@@ -504,7 +504,7 @@ export default function TagsPage() {
             <AlertDialogCancel className="rounded-xl">{t('crm.common.cancel')}</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleDelete}
-              className="bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 rounded-xl shadow-lg shadow-red-500/25"
+              className="bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 rounded-xl shadow-lg"
             >
               {t('crm.common.delete')}
             </AlertDialogAction>

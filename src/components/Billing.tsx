@@ -1,13 +1,20 @@
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { useQuery, useMutation } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
-import { CheckCircle2, CreditCard, Loader2, Crown, Zap, Users, AlertTriangle, Clock, ExternalLink, Shield, Key, Building2 } from "lucide-react";
+import { CheckCircle2, CreditCard, Loader2, Crown, Zap, Users, AlertTriangle, Clock, Shield, Key, Building2, XCircle } from "lucide-react";
 import { useI18n } from '@/hooks/useI18n';
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { useEffect } from "react";
+
+// Declare Razorpay on window
+declare global {
+  interface Window {
+    Razorpay: any;
+  }
+}
 
 interface SubscriptionStatus {
   plan_name: string | null;
@@ -21,7 +28,7 @@ interface SubscriptionStatus {
   current_user_count: number;
   users_remaining: number;
   cancel_at_period_end: boolean;
-  stripe_customer_id: string | null;
+  razorpay_customer_id: string | null;
 }
 
 interface SubscriptionPlan {
@@ -50,9 +57,31 @@ interface LicenseStatus {
   activated_at: string | null;
 }
 
+interface SubscriptionCreateResponse {
+  subscription_id: string;
+  razorpay_key_id: string;
+  plan_id: string;
+  plan_name: string;
+  amount: number;
+  currency: string;
+  customer_id: string | null;
+}
+
 export const Billing = () => {
   const { t, isRTL } = useI18n();
-  const { authFetch, companyId } = useAuth();
+  const { authFetch, companyId, user } = useAuth();
+  const queryClient = useQueryClient();
+
+  // Load Razorpay script
+  useEffect(() => {
+    const script = document.createElement('script');
+    script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+    script.async = true;
+    document.body.appendChild(script);
+    return () => {
+      document.body.removeChild(script);
+    };
+  }, []);
 
   // 1. Fetch license status (works for both cloud and on-premise)
   const { data: licenseStatus, isLoading: isLoadingLicense } = useQuery<LicenseStatus>({
@@ -89,58 +118,122 @@ export const Billing = () => {
     enabled: !!companyId && !isOnPremise,
   });
 
-  // 3. Mutation to create a checkout session
-  const { mutate: createCheckout, isPending: isCreatingCheckout } = useMutation({
+  // 4. Mutation to create a Razorpay subscription
+  const { mutate: createSubscription, isPending: isCreatingSubscription } = useMutation({
     mutationFn: async (planId: number) => {
-      const response = await authFetch(`/api/v1/billing/create-checkout-session`, {
+      const response = await authFetch(`/api/v1/billing/create-subscription`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ plan_id: planId }),
       });
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.detail || "Failed to create checkout session");
+        throw new Error(errorData.detail || "Failed to create subscription");
       }
-      return response.json();
+      return response.json() as Promise<SubscriptionCreateResponse>;
     },
     onSuccess: (data) => {
-      // Redirect to Stripe checkout
-      window.location.href = data.url;
+      // Open Razorpay checkout
+      openRazorpayCheckout(data);
     },
     onError: (error: Error) => {
       toast.error(error.message);
     },
   });
 
-  // 4. Mutation to create a portal session
-  const { mutate: createPortalSession, isPending: isCreatingPortal } = useMutation({
+  // 5. Mutation to verify payment
+  const { mutate: verifyPayment } = useMutation({
+    mutationFn: async (paymentData: {
+      razorpay_payment_id: string;
+      razorpay_subscription_id: string;
+      razorpay_signature: string;
+      plan_id: number;
+    }) => {
+      const response = await authFetch(`/api/v1/billing/verify-payment`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(paymentData),
+      });
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.detail || "Failed to verify payment");
+      }
+      return response.json();
+    },
+    onSuccess: () => {
+      toast.success("Subscription activated successfully!");
+      queryClient.invalidateQueries({ queryKey: ['billingStatus'] });
+    },
+    onError: (error: Error) => {
+      toast.error(error.message);
+    },
+  });
+
+  // 6. Mutation to cancel subscription
+  const { mutate: cancelSubscription, isPending: isCancelling } = useMutation({
     mutationFn: async () => {
-      const response = await authFetch(`/api/v1/billing/create-portal-session`, {
+      const response = await authFetch(`/api/v1/billing/cancel-subscription`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
       });
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.detail || "Failed to create portal session");
+        throw new Error(errorData.detail || "Failed to cancel subscription");
       }
       return response.json();
     },
-    onSuccess: (data) => {
-      // Redirect to Stripe portal
-      window.location.href = data.url;
+    onSuccess: () => {
+      toast.success("Subscription will be cancelled at the end of the billing period");
+      queryClient.invalidateQueries({ queryKey: ['billingStatus'] });
     },
     onError: (error: Error) => {
       toast.error(error.message);
     },
   });
 
+  // Open Razorpay checkout popup
+  const openRazorpayCheckout = (subscriptionData: SubscriptionCreateResponse) => {
+    if (!window.Razorpay) {
+      toast.error("Razorpay SDK not loaded. Please refresh the page.");
+      return;
+    }
+
+    const options = {
+      key: subscriptionData.razorpay_key_id,
+      subscription_id: subscriptionData.subscription_id,
+      name: "HeyGenAlly",
+      description: `${subscriptionData.plan_name} Subscription`,
+      handler: function (response: any) {
+        // Verify payment on backend
+        verifyPayment({
+          razorpay_payment_id: response.razorpay_payment_id,
+          razorpay_subscription_id: response.razorpay_subscription_id,
+          razorpay_signature: response.razorpay_signature,
+          plan_id: parseInt(subscriptionData.plan_id.split('_').pop() || '0'), // Extract plan_id
+        });
+      },
+      prefill: {
+        name: user?.first_name ? `${user.first_name} ${user.last_name || ''}`.trim() : user?.email || '',
+        email: user?.email || '',
+      },
+      theme: {
+        color: "#3b82f6", // Blue color matching the app theme
+      },
+      modal: {
+        ondismiss: function () {
+          toast.info("Payment cancelled");
+        }
+      }
+    };
+
+    const razorpay = new window.Razorpay(options);
+    razorpay.open();
+  };
+
   if (isLoadingLicense || (!isOnPremise && (isLoadingPlans || isLoadingStatus))) {
     return (
-      <div className="flex items-center justify-center py-16">
-        <div className="flex items-center gap-2 text-muted-foreground dark:text-gray-400">
-          <Loader2 className="h-5 w-5 animate-spin text-amber-600 dark:text-amber-400" />
-          <span>{t('billing.loading')}</span>
-        </div>
+      <div className="flex items-center justify-center min-h-64">
+        <Loader2 className="h-6 w-6 animate-spin text-slate-400" />
       </div>
     );
   }
@@ -161,13 +254,20 @@ export const Billing = () => {
   const isLicenseNotActivated = licenseStatus?.status === "not_activated";
 
   return (
-    <div className="w-full max-w-7xl mx-auto p-4 md:p-8 space-y-8" dir={isRTL ? 'rtl' : 'ltr'}>
-      <header>
-        <h1 className="text-4xl font-bold bg-gradient-to-r from-amber-600 to-yellow-600 bg-clip-text text-transparent mb-2">
-          {t('billing.title')}
-        </h1>
-        <p className="text-gray-600 dark:text-gray-400 text-lg">{t('billing.subtitle')}</p>
-      </header>
+    <div className="min-h-full bg-slate-50 dark:bg-slate-950" dir={isRTL ? 'rtl' : 'ltr'}>
+      {/* Header */}
+      <div className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 px-6 py-6">
+        <div className="flex items-center gap-3">
+          <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center flex-shrink-0">
+            <CreditCard className="h-6 w-6 text-white" />
+          </div>
+          <div>
+            <h1 className="text-2xl font-bold text-slate-900 dark:text-white leading-tight">{t('billing.title')}</h1>
+            <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">{t('billing.subtitle')}</p>
+          </div>
+        </div>
+      </div>
+      <div className="px-6 py-6 space-y-6">
 
       {/* On-Premise Alerts */}
       {isOnPremise && isLicenseExpired && (
@@ -211,7 +311,7 @@ export const Billing = () => {
       )}
 
       {isOnPremise && isLicenseAtUserLimit && (
-        <Alert variant="destructive" className="border-amber-500 bg-amber-50 dark:bg-amber-950/50">
+        <Alert variant="destructive" className="border-blue-500 bg-blue-50 dark:bg-blue-950/50">
           <Users className="h-4 w-4" />
           <AlertTitle>User Limit Reached</AlertTitle>
           <AlertDescription>
@@ -244,7 +344,7 @@ export const Billing = () => {
       )}
 
       {!isOnPremise && isAtUserLimit && (
-        <Alert variant="destructive" className="border-amber-500 bg-amber-50 dark:bg-amber-950/50">
+        <Alert variant="destructive" className="border-blue-500 bg-blue-50 dark:bg-blue-950/50">
           <Users className="h-4 w-4" />
           <AlertTitle>{t('billing.userLimitReached')}</AlertTitle>
           <AlertDescription>
@@ -255,15 +355,15 @@ export const Billing = () => {
 
       {/* On-Premise License Section */}
       {isOnPremise && (
-        <Card className="border-slate-200 dark:border-slate-700 dark:bg-slate-800">
-          <CardHeader className="border-b border-slate-200 dark:border-slate-700 bg-gradient-to-r from-slate-50 to-slate-100 dark:from-slate-800 dark:to-slate-900">
+        <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm overflow-hidden">
+          <div className="p-6 border-b border-slate-200 dark:border-slate-800">
             <div className="flex items-center justify-between">
               <div>
-                <CardTitle className="dark:text-white flex items-center gap-2">
-                  <Shield className="h-5 w-5 text-amber-600 dark:text-amber-400" />
+                <h3 className="text-base font-semibold text-slate-900 dark:text-white flex items-center gap-2">
+                  <Shield className="h-5 w-5 text-blue-600 dark:text-blue-400" />
                   On-Premise License
-                </CardTitle>
-                <CardDescription className="dark:text-gray-400">Enterprise license for self-hosted deployment</CardDescription>
+                </h3>
+                <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">Enterprise license for self-hosted deployment</p>
               </div>
               {licenseStatus?.status === "active" && licenseStatus?.days_until_expiry !== null && (
                 <Badge variant="outline" className={`${
@@ -276,14 +376,14 @@ export const Billing = () => {
                 </Badge>
               )}
             </div>
-          </CardHeader>
-          <CardContent className="pt-6 space-y-6">
+          </div>
+          <div className="p-6 space-y-6">
             {licenseStatus && licenseStatus.status !== "not_activated" ? (
               <>
                 <div className={`flex flex-col md:flex-row md:items-center ${isRTL ? 'md:flex-row-reverse' : ''} md:justify-between gap-4`}>
                   <div className={`flex items-center gap-4 ${isRTL ? 'flex-row-reverse' : ''}`}>
-                    <div className="w-16 h-16 bg-gradient-to-br from-amber-100 to-yellow-100 dark:from-amber-900/50 dark:to-yellow-900/50 rounded-xl flex items-center justify-center shadow-sm">
-                      <Building2 className="h-8 w-8 text-amber-600 dark:text-amber-400" />
+                    <div className="w-16 h-16 bg-gradient-to-br from-blue-100 to-indigo-100 dark:from-blue-900/50 dark:to-indigo-900/50 rounded-xl flex items-center justify-center shadow-sm">
+                      <Building2 className="h-8 w-8 text-blue-600 dark:text-blue-400" />
                     </div>
                     <div>
                       <p className="text-2xl font-bold dark:text-white">
@@ -310,7 +410,7 @@ export const Billing = () => {
                   <div className="space-y-2">
                     <div className="flex justify-between items-center">
                       <span className="text-sm font-medium dark:text-white flex items-center gap-2">
-                        <Users className="h-4 w-4 text-amber-600 dark:text-amber-400" />
+                        <Users className="h-4 w-4 text-blue-600 dark:text-blue-400" />
                         Instance User Limit
                       </span>
                       <span className={`text-sm font-medium ${isLicenseAtUserLimit ? 'text-red-600 dark:text-red-400' : 'dark:text-gray-400'}`}>
@@ -319,7 +419,7 @@ export const Billing = () => {
                     </div>
                     <Progress
                       value={licenseUserLimitPercentage}
-                      className={`h-2 ${isLicenseAtUserLimit ? '[&>div]:bg-red-500' : '[&>div]:bg-amber-500'}`}
+                      className={`h-2 ${isLicenseAtUserLimit ? '[&>div]:bg-red-500' : '[&>div]:bg-blue-500'}`}
                     />
                     {!isLicenseAtUserLimit && licenseStatus.users_remaining !== null && (
                       <p className="text-xs text-gray-500 dark:text-gray-400">
@@ -334,7 +434,7 @@ export const Billing = () => {
                   <div className="space-y-2">
                     <div className="flex justify-between items-center">
                       <span className="text-sm font-medium dark:text-white flex items-center gap-2">
-                        <Building2 className="h-4 w-4 text-amber-600 dark:text-amber-400" />
+                        <Building2 className="h-4 w-4 text-blue-600 dark:text-blue-400" />
                         Company Limit
                       </span>
                       <span className="text-sm font-medium dark:text-gray-400">
@@ -345,7 +445,7 @@ export const Billing = () => {
                       value={licenseStatus.current_company_count && licenseStatus.max_companies
                         ? (licenseStatus.current_company_count / licenseStatus.max_companies) * 100
                         : 0}
-                      className="h-2 [&>div]:bg-amber-500"
+                      className="h-2 [&>div]:bg-blue-500"
                     />
                   </div>
                 )}
@@ -378,27 +478,29 @@ export const Billing = () => {
                 )}
               </>
             ) : (
-              <div className="text-center py-8 border-2 border-dashed border-slate-300 dark:border-slate-700 rounded-lg bg-slate-50 dark:bg-slate-900/50">
-                <Key className="h-12 w-12 mx-auto text-gray-400 mb-4" />
-                <p className="text-gray-600 dark:text-gray-400 mb-2">No license activated</p>
-                <p className="text-sm text-gray-500 dark:text-gray-500">Contact your administrator to activate a license.</p>
+              <div className="text-center py-8">
+                <div className="h-14 w-14 rounded-xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center mx-auto mb-4">
+                  <Key className="h-7 w-7 text-slate-400" />
+                </div>
+                <p className="text-slate-600 dark:text-slate-400 mb-1">No license activated</p>
+                <p className="text-sm text-slate-500 dark:text-slate-500">Contact your administrator to activate a license.</p>
               </div>
             )}
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       )}
 
       {/* Cloud Mode - Current Plan Section */}
       {!isOnPremise && (
-      <Card className="border-slate-200 dark:border-slate-700 dark:bg-slate-800">
-        <CardHeader className="border-b border-slate-200 dark:border-slate-700 bg-gradient-to-r from-slate-50 to-slate-100 dark:from-slate-800 dark:to-slate-900">
+      <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm overflow-hidden">
+        <div className="p-6 border-b border-slate-200 dark:border-slate-800">
           <div className="flex items-center justify-between">
             <div>
-              <CardTitle className="dark:text-white flex items-center gap-2">
-                <CreditCard className="h-5 w-5 text-amber-600 dark:text-amber-400" />
+              <h3 className="text-base font-semibold text-slate-900 dark:text-white flex items-center gap-2">
+                <CreditCard className="h-5 w-5 text-blue-600 dark:text-blue-400" />
                 {t('billing.currentPlan')}
-              </CardTitle>
-              <CardDescription className="dark:text-gray-400">{t('billing.activeSubscription')}</CardDescription>
+              </h3>
+              <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">{t('billing.activeSubscription')}</p>
             </div>
             {status?.is_trial && status?.trial_days_remaining !== null && (
               <Badge variant="outline" className="bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300 border-blue-300">
@@ -407,14 +509,14 @@ export const Billing = () => {
               </Badge>
             )}
           </div>
-        </CardHeader>
-        <CardContent className="pt-6 space-y-6">
+        </div>
+        <div className="p-6 space-y-6">
           {status ? (
             <>
               <div className={`flex flex-col md:flex-row md:items-center ${isRTL ? 'md:flex-row-reverse' : ''} md:justify-between gap-4`}>
                 <div className={`flex items-center gap-4 ${isRTL ? 'flex-row-reverse' : ''}`}>
-                  <div className="w-16 h-16 bg-gradient-to-br from-amber-100 to-yellow-100 dark:from-amber-900/50 dark:to-yellow-900/50 rounded-xl flex items-center justify-center shadow-sm">
-                    <Crown className="h-8 w-8 text-amber-600 dark:text-amber-400" />
+                  <div className="w-16 h-16 bg-gradient-to-br from-blue-100 to-indigo-100 dark:from-blue-900/50 dark:to-indigo-900/50 rounded-xl flex items-center justify-center shadow-sm">
+                    <Crown className="h-8 w-8 text-blue-600 dark:text-blue-400" />
                   </div>
                   <div>
                     <p className="text-2xl font-bold dark:text-white">
@@ -432,19 +534,19 @@ export const Billing = () => {
                   </div>
                 </div>
                 <div className="flex gap-2">
-                  {status.stripe_customer_id && (
+                  {status.razorpay_customer_id && status.status === 'active' && !status.cancel_at_period_end && (
                     <Button
                       variant="outline"
-                      className="dark:border-slate-600 dark:text-white dark:hover:bg-slate-700"
-                      onClick={() => createPortalSession()}
-                      disabled={isCreatingPortal}
+                      className="dark:border-slate-600 dark:text-white dark:hover:bg-slate-700 text-red-600 border-red-300 hover:bg-red-50"
+                      onClick={() => cancelSubscription()}
+                      disabled={isCancelling}
                     >
-                      {isCreatingPortal ? (
+                      {isCancelling ? (
                         <Loader2 className="h-4 w-4 animate-spin" />
                       ) : (
                         <>
-                          <ExternalLink className={`h-4 w-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
-                          {t('billing.manageSubscription')}
+                          <XCircle className={`h-4 w-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
+                          Cancel Subscription
                         </>
                       )}
                     </Button>
@@ -456,7 +558,7 @@ export const Billing = () => {
               <div className="space-y-2">
                 <div className="flex justify-between items-center">
                   <span className="text-sm font-medium dark:text-white flex items-center gap-2">
-                    <Users className="h-4 w-4 text-amber-600 dark:text-amber-400" />
+                    <Users className="h-4 w-4 text-blue-600 dark:text-blue-400" />
                     {t('billing.userLimit')}
                   </span>
                   <span className={`text-sm font-medium ${isAtUserLimit ? 'text-red-600 dark:text-red-400' : 'dark:text-gray-400'}`}>
@@ -465,7 +567,7 @@ export const Billing = () => {
                 </div>
                 <Progress
                   value={userLimitPercentage}
-                  className={`h-2 ${isAtUserLimit ? '[&>div]:bg-red-500' : '[&>div]:bg-amber-500'}`}
+                  className={`h-2 ${isAtUserLimit ? '[&>div]:bg-red-500' : '[&>div]:bg-blue-500'}`}
                 />
                 {!isAtUserLimit && (
                   <p className="text-xs text-gray-500 dark:text-gray-400">
@@ -482,23 +584,23 @@ export const Billing = () => {
               )}
             </>
           ) : (
-            <div className="text-center py-8 border-2 border-dashed border-slate-300 dark:border-slate-700 rounded-lg bg-slate-50 dark:bg-slate-900/50">
-              <p className="text-gray-600 dark:text-gray-400">{t('billing.couldNotLoadStatus')}</p>
+            <div className="text-center py-8">
+              <p className="text-slate-500 dark:text-slate-400">{t('billing.couldNotLoadStatus')}</p>
             </div>
           )}
-        </CardContent>
-      </Card>
+        </div>
+      </div>
       )}
 
       {/* Available Plans Section (Cloud Mode Only) */}
       {!isOnPremise && (
       <div>
         <div className="mb-6">
-          <h2 className={`text-2xl font-bold dark:text-white flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
-            <Zap className="h-6 w-6 text-amber-600 dark:text-amber-400" />
+          <h2 className={`text-lg font-semibold text-slate-900 dark:text-white flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
+            <Zap className="h-5 w-5 text-blue-600 dark:text-blue-400" />
             {t('billing.availablePlans')}
           </h2>
-          <p className="text-gray-600 dark:text-gray-400 mt-1">{t('billing.choosePlan')}</p>
+          <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">{t('billing.choosePlan')}</p>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {plans?.map((plan, index) => {
@@ -506,14 +608,14 @@ export const Billing = () => {
             const isPremium = index === plans.length - 1 && plans.length > 1;
 
             return (
-              <Card
+              <div
                 key={plan.id}
-                className={`flex flex-col relative overflow-hidden border-slate-200 dark:border-slate-700 dark:bg-slate-800 transition-all duration-300 hover:shadow-xl ${
-                  isPremium ? 'ring-2 ring-amber-500 dark:ring-amber-400' : ''
+                className={`flex flex-col relative overflow-hidden rounded-xl border bg-white dark:bg-slate-900 shadow-sm hover:shadow-md transition-all duration-300 ${
+                  isPremium ? 'border-blue-300 dark:border-blue-700 ring-1 ring-blue-200 dark:ring-blue-800' : 'border-slate-200 dark:border-slate-800'
                 }`}
               >
                 {isPremium && (
-                  <div className={`absolute top-0 ${isRTL ? 'left-0 rounded-br-lg' : 'right-0 rounded-bl-lg'} bg-gradient-to-r from-amber-600 to-yellow-600 text-white text-xs font-semibold px-3 py-1`}>
+                  <div className={`absolute top-0 ${isRTL ? 'left-0 rounded-br-lg' : 'right-0 rounded-bl-lg'} bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-xs font-semibold px-3 py-1`}>
                     {t('billing.popular')}
                   </div>
                 )}
@@ -522,23 +624,23 @@ export const Billing = () => {
                     {t('billing.current')}
                   </div>
                 )}
-                <CardHeader className="border-b border-slate-200 dark:border-slate-700 bg-gradient-to-r from-slate-50 to-slate-100 dark:from-slate-800 dark:to-slate-900">
+                <div className="p-6 border-b border-slate-200 dark:border-slate-800">
                   <div className="flex items-center gap-3 mb-2">
-                    <div className="w-12 h-12 bg-gradient-to-br from-amber-100 to-yellow-100 dark:from-amber-900/50 dark:to-yellow-900/50 rounded-lg flex items-center justify-center shadow-sm">
+                    <div className="w-10 h-10 bg-blue-50 dark:bg-blue-900/20 rounded-lg flex items-center justify-center">
                       {isPremium ? (
-                        <Crown className="h-6 w-6 text-amber-600 dark:text-amber-400" />
+                        <Crown className="h-5 w-5 text-blue-600 dark:text-blue-400" />
                       ) : (
-                        <Zap className="h-6 w-6 text-amber-600 dark:text-amber-400" />
+                        <Zap className="h-5 w-5 text-blue-600 dark:text-blue-400" />
                       )}
                     </div>
-                    <CardTitle className="dark:text-white">{plan.name}</CardTitle>
+                    <h3 className="font-semibold text-slate-900 dark:text-white">{plan.name}</h3>
                   </div>
-                  <CardDescription className="dark:text-gray-400">{plan.description}</CardDescription>
-                </CardHeader>
-                <CardContent className="flex-grow pt-6">
+                  <p className="text-sm text-slate-500 dark:text-slate-400">{plan.description}</p>
+                </div>
+                <div className="flex-grow p-6">
                   <div className="mb-4">
-                    <p className="text-5xl font-bold dark:text-white">
-                      ${plan.price}
+                    <p className="text-4xl font-bold text-slate-900 dark:text-white">
+                      {plan.currency === 'INR' ? '₹' : '$'}{plan.price}
                     </p>
                     <span className="text-sm font-normal text-gray-500 dark:text-gray-400">
                       /{plan.billing_interval === 'year' ? t('billing.perYear') : t('billing.perMonth')}
@@ -558,18 +660,18 @@ export const Billing = () => {
                         ))
                       : null}
                   </ul>
-                </CardContent>
-                <div className="p-6 pt-0 border-t border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/50">
+                </div>
+                <div className="p-6 pt-0 border-t border-slate-200 dark:border-slate-800">
                   <Button
-                    className={`w-full ${
+                    className={`w-full rounded-lg ${
                       isPremium
-                        ? 'bg-gradient-to-r from-amber-600 to-yellow-600 hover:from-amber-700 hover:to-yellow-700 text-white shadow-lg hover:shadow-xl'
-                        : 'dark:bg-slate-700 dark:text-white dark:hover:bg-slate-600'
+                        ? 'bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white'
+                        : 'dark:bg-slate-800 dark:text-white dark:hover:bg-slate-700'
                     }`}
-                    onClick={() => createCheckout(plan.id)}
-                    disabled={isCreatingCheckout || isCurrentPlan}
+                    onClick={() => createSubscription(plan.id)}
+                    disabled={isCreatingSubscription || isCurrentPlan}
                   >
-                    {isCreatingCheckout ? (
+                    {isCreatingSubscription ? (
                       <>
                         <Loader2 className={`h-4 w-4 ${isRTL ? 'ml-2' : 'mr-2'} animate-spin`} />
                         {t('billing.redirecting')}
@@ -586,12 +688,13 @@ export const Billing = () => {
                     )}
                   </Button>
                 </div>
-              </Card>
+              </div>
             );
           })}
         </div>
       </div>
       )}
+      </div>
     </div>
   );
 };

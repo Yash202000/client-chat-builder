@@ -15,7 +15,7 @@ const defaultBranding: BrandingContextType = {
   primaryColor: '#3B82F6',
   secondaryColor: '#8B5CF6',
   logoUrl: null,
-  companyName: 'AgentConnect',
+  companyName: 'HeyGenAlly',
   isLoading: true,
 };
 

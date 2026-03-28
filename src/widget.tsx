@@ -5,19 +5,19 @@ import tailwindStyles from './index.css?inline';
 
 // A self-invoking function to encapsulate our code and avoid global scope pollution
 (function() {
-  const SCRIPT_ID = 'agent-connect-widget-script';
-  const WIDGET_ROOT_ID = 'agentconnect-widget';
+  const SCRIPT_ID = 'heygenally-widget-script';
+  const WIDGET_ROOT_ID = 'heygenally-widget';
 
   const scriptTag = document.currentScript || document.getElementById(SCRIPT_ID);
   const widgetRoot = document.getElementById(WIDGET_ROOT_ID);
 
   if (!scriptTag) {
-    console.error('AgentConnect Widget: Could not find the script tag. Please add id="agent-connect-widget-script" to your script tag.');
+    console.error('HeyGenAlly Widget: Could not find the script tag. Please add id="heygenally-widget-script" to your script tag.');
     return;
   }
 
   if (!widgetRoot) {
-    console.error(`AgentConnect Widget: Root element with id "${WIDGET_ROOT_ID}" not found.`);
+    console.error(`HeyGenAlly Widget: Root element with id "${WIDGET_ROOT_ID}" not found.`);
     return;
   }
 
@@ -33,7 +33,7 @@ import tailwindStyles from './index.css?inline';
   const position = scriptTag.getAttribute('data-position') || null; // e.g., 'bottom-right', 'top-left', etc.
 
   if (!agentId || !companyId) {
-    console.error('AgentConnect Widget: data-agent-id and data-company-id attributes are required on the script tag.');
+    console.error('HeyGenAlly Widget: data-agent-id and data-company-id attributes are required on the script tag.');
     return;
   }
 

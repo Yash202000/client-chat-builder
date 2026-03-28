@@ -2,14 +2,14 @@
 import { useAuth } from "@/hooks/useAuth";
 import { useTheme } from "@/hooks/useTheme";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { CircleUser, Moon, Sun, ChevronsLeft, ChevronsRight, PanelLeftClose, PanelLeftOpen } from "lucide-react";
+import { CircleUser, Moon, Sun, PanelLeftClose, PanelLeftOpen, ChevronDown, ChevronRight } from "lucide-react";
 import { useState, useEffect } from "react";
-import { Outlet, NavLink, useNavigate } from "react-router-dom";
+import { Outlet, NavLink, useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
 import { useNotifications } from "@/hooks/useNotifications";
 import { useWebSocket } from "@/hooks/use-websocket";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
 import IncomingCallModal from "@/components/IncomingCallModal";
 import { BACKEND_URL } from "@/config/env";
@@ -40,10 +40,17 @@ import {
   Tag,
   Layers,
   LayoutTemplate,
-  Database
+  Wand2,
+  Images,
+  Mail,
+  Phone,
+  Globe,
 } from "lucide-react";
 import { CreateAgentDialog } from "@/components/CreateAgentDialog";
 import { Permission } from "./Permission";
+import { TwilioIcon, ApiIcon } from "@/components/ChannelIcons";
+import { TwilioCallProvider } from "@/contexts/TwilioCallContext";
+import { CallWidget } from "@/components/CallWidget";
 import { PresenceSelector } from "@/components/PresenceSelector";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import NotificationBell from "@/components/NotificationBell";
@@ -51,11 +58,43 @@ import { useTranslation } from "react-i18next";
 import { useI18n } from "@/hooks/useI18n";
 import { useBranding } from "@/hooks/BrandingProvider";
 
+const WhatsAppIcon = ({ className }: { className?: string }) => (
+  <svg viewBox="0 0 24 24" className={className} fill="currentColor">
+    <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
+  </svg>
+);
+
+const MessengerIcon = ({ className }: { className?: string }) => (
+  <svg viewBox="0 0 24 24" className={className} fill="currentColor">
+    <path d="M12 0C5.373 0 0 4.974 0 11.111c0 3.498 1.744 6.614 4.469 8.654V24l4.088-2.242c1.092.301 2.246.464 3.443.464 6.627 0 12-4.974 12-11.111S18.627 0 12 0zm1.191 14.963l-3.055-3.26-5.963 3.26L10.732 8l3.131 3.259L19.752 8l-6.561 6.963z"/>
+  </svg>
+);
+
+const InstagramIcon = ({ className }: { className?: string }) => (
+  <svg viewBox="0 0 24 24" className={className} fill="currentColor">
+    <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>
+  </svg>
+);
+
+const TelegramIcon = ({ className }: { className?: string }) => (
+  <svg viewBox="0 0 24 24" className={className} fill="currentColor">
+    <path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/>
+  </svg>
+);
+
 const AppLayout = () => {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
-  const { user, logout, refetchUser } = useAuth();
+  const location = useLocation();
+  const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({
+    inbox: true,
+    agents: true,
+    admin: true,
+    crm: false,
+    ai: false,
+  });
+  const { user, logout, refetchUser, authFetch } = useAuth();
   const { theme, toggleTheme } = useTheme();
   const { t } = useTranslation();
   const { isRTL } = useI18n();
@@ -65,6 +104,32 @@ const AppLayout = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   console.log("Logged in user:", user);
+
+  const { data: integrations = [] } = useQuery<{ type: string }[]>({
+    queryKey: ['integrations', user?.company_id],
+    queryFn: async () => {
+      const response = await authFetch('/api/v1/integrations/');
+      if (!response.ok) return [];
+      return response.json();
+    },
+    enabled: !!user?.company_id,
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const integrationTypes = new Set(integrations.map(i => i.type));
+
+  const { data: apiIntegrations = [] } = useQuery<{ id: number }[]>({
+    queryKey: ['apiIntegrations', user?.company_id],
+    queryFn: async () => {
+      const response = await authFetch('/api/v1/api-integrations/');
+      if (!response.ok) return [];
+      return response.json();
+    },
+    enabled: !!user?.company_id,
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const hasApiIntegration = apiIntegrations.length > 0;
 
   // Global incoming call state
   const [incomingCall, setIncomingCall] = useState<{
@@ -345,7 +410,7 @@ const AppLayout = () => {
     if (!soundEnabled && soundPromptDismissed !== 'true') {
       // Delay the toast slightly so it doesn't appear immediately on page load
       const timer = setTimeout(() => {
-        toast({
+        const { dismiss } = toast({
           title: "Enable Notification Sounds?",
           description: "Get audio alerts for mentions, replies, reactions, and calls",
           action: (
@@ -354,9 +419,10 @@ const AppLayout = () => {
                 onClick={() => {
                   console.log('[AppLayout] Enable sound button clicked');
                   enableSound();
-                  // Auto-dismiss after enabling
+                  localStorage.setItem('notificationSoundPromptDismissed', 'true');
+                  dismiss();
                 }}
-                className="px-3 py-1.5 bg-purple-600 text-white text-sm rounded-md hover:bg-purple-700"
+                className="px-3 py-1.5 bg-blue-600 text-white text-sm rounded-md hover:bg-blue-700"
               >
                 Enable
               </button>
@@ -364,6 +430,7 @@ const AppLayout = () => {
                 onClick={() => {
                   console.log('[AppLayout] Dismiss sound prompt button clicked');
                   localStorage.setItem('notificationSoundPromptDismissed', 'true');
+                  dismiss();
                 }}
                 className="px-3 py-1.5 bg-slate-200 text-slate-700 text-sm rounded-md hover:bg-slate-300 dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-600"
               >
@@ -379,49 +446,126 @@ const AppLayout = () => {
     }
   }, [soundEnabled]);
 
-  const sidebarItems = [
-    // Core Operations
-    { titleKey: "navigation.activeClients", url: "/dashboard/conversations", icon: Inbox, permission: "page:conversations" },
-    { titleKey: "navigation.agents", url: "/dashboard/agents", icon: Bot, permission: "page:agents" },
-    { titleKey: "navigation.agentBuilder", url: "/dashboard/builder", icon: Settings, permission: "page:agent_builder" },
-    { titleKey: "navigation.widgetDesigner", url: "/dashboard/designer", icon: Palette, permission: "page:widget_designer" },
+  type SidebarItem = {
+    titleKey: string;
+    url: string;
+    icon: React.ElementType;
+    permission?: string;
+    admin?: boolean;
+  };
 
-    // Analytics & Monitoring
-    { titleKey: "navigation.reports", url: "/dashboard/reports", icon: BarChart3, permission: "page:reports" },
+  type SidebarGroup = {
+    id: string;
+    label: string;
+    labelKey: string;
+    icon: React.ElementType;
+    collapsible: boolean;
+    items: SidebarItem[];
+  };
 
-    // CRM - Individual permissions for each section
-    { titleKey: "navigation.crm", url: "/dashboard/crm", icon: TrendingUp, permission: "page:crm_dashboard" },
-    { titleKey: "navigation.contacts", url: "/dashboard/crm/contacts", icon: Users, permission: "page:contacts" },
-    { titleKey: "navigation.leads", url: "/dashboard/crm/leads", icon: Target, permission: "page:leads" },
-    { titleKey: "navigation.campaigns", url: "/dashboard/crm/campaigns", icon: Send, permission: "page:campaigns" },
-    { titleKey: "navigation.tags", url: "/dashboard/crm/tags", icon: Tag, permission: "page:tags" },
-    { titleKey: "navigation.segments", url: "/dashboard/crm/segments", icon: Layers, permission: "page:segments" },
-    { titleKey: "navigation.templates", url: "/dashboard/crm/templates", icon: LayoutTemplate, permission: "page:crm_templates" },
-
-    // Knowledge & Content (CMS is now inside Knowledge Bases)
-    { titleKey: "navigation.knowledgeBases", url: "/dashboard/knowledge-base/manage", icon: BookOpen, permission: "page:knowledge_base" },
-    { titleKey: "navigation.customTools", url: "/dashboard/tools", icon: Zap, permission: "page:tools" },
-    { titleKey: "navigation.customWorkflows", url: "/dashboard/workflows", icon: WorkflowIcon, permission: "page:workflows" },
-    { titleKey: "navigation.voiceLab", url: "/dashboard/voice-lab", icon: Mic, permission: "page:voice_lab" },
-
-    // Team & Communication
-    { titleKey: "navigation.teamManagement", url: "/dashboard/team", icon: Users, permission: "page:team_management" },
-    { titleKey: "navigation.teamChat", url: "/dashboard/team-chat", icon: MessageSquare, permission: "page:team_chat" },
-    { titleKey: "navigation.messageTemplates", url: "/dashboard/message-templates", icon: Sparkles, permission: "page:message_templates" },
-
-    // AI Features - Individual permissions
-    { titleKey: "navigation.aiChat", url: "/dashboard/ai-chat", icon: MessageSquare, permission: "page:ai_chat" },
-    { titleKey: "navigation.aiTools", url: "/dashboard/ai-tools", icon: Sparkles, permission: "page:ai_tools" },
-    { titleKey: "navigation.aiImageGenerator", url: "/dashboard/ai-image-generator", icon: Sparkles, permission: "page:ai_image_generator" },
-    { titleKey: "navigation.aiImageGallery", url: "/dashboard/ai-image-gallery", icon: FileText, permission: "page:ai_image_gallery" },
-
-    // System & Administration
-    { titleKey: "navigation.settings", url: "/dashboard/settings", icon: FileText, permission: "page:settings" },
-    { titleKey: "navigation.apiVault", url: "/dashboard/vault", icon: Key, permission: "page:api_vault" },
-    { titleKey: "navigation.billing", url: "/dashboard/billing", icon: CreditCard, permission: "page:billing" },
-    { titleKey: "navigation.managePlans", url: "/dashboard/admin/subscriptions", icon: Sparkles, admin: true },
-    { titleKey: "navigation.companies", url: "/dashboard/companies", icon: Building, admin: true },
+  const channelInboxItems: SidebarItem[] = [
+    ...(integrationTypes.has('whatsapp') ? [{ titleKey: "navigation.whatsappInbox", url: "/dashboard/inbox/whatsapp", icon: WhatsAppIcon }] : []),
+    ...(integrationTypes.has('instagram') ? [{ titleKey: "navigation.instagramInbox", url: "/dashboard/inbox/instagram", icon: InstagramIcon }] : []),
+    ...(integrationTypes.has('messenger') ? [{ titleKey: "navigation.messengerInbox", url: "/dashboard/inbox/messenger", icon: MessengerIcon }] : []),
+    ...(integrationTypes.has('telegram') ? [{ titleKey: "navigation.telegramInbox", url: "/dashboard/inbox/telegram", icon: TelegramIcon }] : []),
+    ...(integrationTypes.has('twilio_voice') ? [{ titleKey: "navigation.twilioInbox", url: "/dashboard/inbox/twilio", icon: TwilioIcon }] : []),
+    ...(hasApiIntegration ? [{ titleKey: "navigation.apiInbox", url: "/dashboard/inbox/api", icon: ApiIcon }] : []),
   ];
+
+  const sidebarGroups: SidebarGroup[] = [
+    {
+      id: 'inbox',
+      label: 'Inbox',
+      labelKey: 'navigation.inbox',
+      icon: Inbox,
+      collapsible: true,
+      items: [
+        { titleKey: "navigation.activeClients", url: "/dashboard/conversations", icon: Globe, permission: "page:conversations" },
+        ...channelInboxItems,
+        { titleKey: "navigation.emailInbox", url: "/dashboard/inbox/email", icon: Mail },
+        { titleKey: "navigation.smsInbox", url: "/dashboard/inbox/sms", icon: MessageSquare },
+        { titleKey: "navigation.teamChat", url: "/dashboard/team-chat", icon: MessageSquare, permission: "page:team_chat" },
+        { titleKey: "navigation.contactHub", url: "/dashboard/contacts", icon: Users },
+        { titleKey: "navigation.aiChat", url: "/dashboard/ai-chat", icon: MessageSquare, permission: "page:ai_chat" },
+        { titleKey: "navigation.messageTemplates", url: "/dashboard/message-templates", icon: Sparkles, permission: "page:message_templates" },
+      ],
+    },
+    {
+      id: 'agents',
+      label: 'Builder',
+      labelKey: 'navigation.builderGroup',
+      icon: Bot,
+      collapsible: true,
+      items: [
+        { titleKey: "navigation.agents", url: "/dashboard/agents", icon: Bot, permission: "page:agents" },
+        { titleKey: "navigation.widget", url: "/dashboard/designer", icon: Palette, permission: "page:widget_designer" },
+        { titleKey: "navigation.content", url: "/dashboard/knowledge-base/manage", icon: BookOpen, permission: "page:knowledge_base" },
+        { titleKey: "navigation.tools", url: "/dashboard/tools", icon: Zap, permission: "page:tools" },
+        { titleKey: "navigation.workflows", url: "/dashboard/workflows", icon: WorkflowIcon, permission: "page:workflows" },
+      ],
+    },
+    {
+      id: 'admin',
+      label: 'Admin',
+      labelKey: 'navigation.adminGroup',
+      icon: Settings,
+      collapsible: true,
+      items: [
+        { titleKey: "navigation.teamManagement", url: "/dashboard/team", icon: Users, permission: "page:team_management" },
+        { titleKey: "navigation.reports", url: "/dashboard/reports", icon: BarChart3, permission: "page:reports" },
+        { titleKey: "navigation.settings", url: "/dashboard/settings", icon: Settings, permission: "page:settings" },
+        { titleKey: "navigation.apiVault", url: "/dashboard/vault", icon: Key, permission: "page:api_vault" },
+        { titleKey: "navigation.billing", url: "/dashboard/billing", icon: CreditCard, permission: "page:billing" },
+        { titleKey: "navigation.voices", url: "/dashboard/voices", icon: Mic, permission: "page:voices" },
+        { titleKey: "navigation.managePlans", url: "/dashboard/admin/subscriptions", icon: Sparkles, admin: true },
+        { titleKey: "navigation.companies", url: "/dashboard/companies", icon: Building, admin: true },
+      ],
+    },
+    {
+      id: 'crm',
+      label: 'CRM',
+      labelKey: 'navigation.crmGroup',
+      icon: TrendingUp,
+      collapsible: true,
+      items: [
+        { titleKey: "navigation.crm", url: "/dashboard/crm", icon: TrendingUp, permission: "page:crm_dashboard" },
+        { titleKey: "navigation.contacts", url: "/dashboard/crm/contacts", icon: Users, permission: "page:contacts" },
+        { titleKey: "navigation.leads", url: "/dashboard/crm/leads", icon: Target, permission: "page:leads" },
+        { titleKey: "navigation.campaigns", url: "/dashboard/crm/campaigns", icon: Send, permission: "page:campaigns" },
+        { titleKey: "navigation.tags", url: "/dashboard/crm/tags", icon: Tag, permission: "page:tags" },
+        { titleKey: "navigation.segments", url: "/dashboard/crm/segments", icon: Layers, permission: "page:segments" },
+        { titleKey: "navigation.templates", url: "/dashboard/crm/templates", icon: LayoutTemplate, permission: "page:crm_templates" },
+      ],
+    },
+    {
+      id: 'ai',
+      label: 'AI',
+      labelKey: 'navigation.aiGroup',
+      icon: Sparkles,
+      collapsible: true,
+      items: [
+        { titleKey: "navigation.aiTools", url: "/dashboard/ai-tools", icon: Zap, permission: "page:ai_tools" },
+        { titleKey: "navigation.aiImageGenerator", url: "/dashboard/ai-image-generator", icon: Wand2, permission: "page:ai_image_generator" },
+        { titleKey: "navigation.aiImageGallery", url: "/dashboard/ai-image-gallery", icon: Images, permission: "page:ai_image_gallery" },
+      ],
+    },
+  ];
+
+  const toggleGroup = (groupId: string) => {
+    setOpenGroups(prev => ({ ...prev, [groupId]: !prev[groupId] }));
+  };
+
+  // Auto-open the group that contains the current route
+  useEffect(() => {
+    sidebarGroups.forEach(group => {
+      if (group.collapsible) {
+        const isActive = group.items.some(item => location.pathname.startsWith(item.url));
+        if (isActive) {
+          setOpenGroups(prev => ({ ...prev, [group.id]: true }));
+        }
+      }
+    });
+  }, [location.pathname]);
 
   return (
     <div className="h-screen w-screen flex flex-col bg-gray-50 dark:bg-slate-900 overflow-hidden transition-colors">
@@ -440,7 +584,6 @@ const AppLayout = () => {
             >
               {branding.logoUrl ? (
                 <div className="relative">
-                  <div className="absolute inset-0 bg-gradient-to-br from-blue-500/20 to-purple-500/20 rounded-xl blur-lg group-hover:blur-xl transition-all" />
                   <img
                     src={branding.logoUrl}
                     alt={branding.companyName}
@@ -449,7 +592,6 @@ const AppLayout = () => {
                 </div>
               ) : (
                 <div className="relative">
-                  <div className="absolute inset-0 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl blur-lg opacity-40 group-hover:opacity-60 transition-all" />
                   <div className="relative p-2.5 bg-gradient-to-br from-blue-500 via-indigo-600 to-purple-600 rounded-xl shadow-lg shadow-blue-500/25">
                     <MessageSquare className="h-6 w-6 text-white" />
                   </div>
@@ -460,7 +602,7 @@ const AppLayout = () => {
                   {branding.companyName}
                 </h1>
                 <p className="text-[10px] font-medium text-slate-500 dark:text-slate-400 -mt-0.5 tracking-wide uppercase">
-                  AI Platform
+                  Connect Smarter
                 </p>
               </div>
             </div>
@@ -497,29 +639,35 @@ const AppLayout = () => {
                         {user?.email?.split('@')[0] || 'User'}
                       </p>
                       <p className="text-[10px] text-slate-500 dark:text-slate-400 leading-tight font-medium">
-                        {user?.company_name || 'AgentConnect'}
+                        {user?.company_name || 'HeyGenAlly'}
                       </p>
                     </div>
                     <div className="relative">
-                      <div className="absolute inset-0 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl blur opacity-40 group-hover:opacity-70 transition-all" />
-                      <div className="relative w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-bold text-sm shadow-lg ring-2 ring-white dark:ring-slate-700">
+                      <div className="relative w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-bold text-sm shadow-lg ring-2 ring-white dark:ring-slate-700">
                         {user?.email?.charAt(0).toUpperCase() || 'U'}
                       </div>
                       {/* Online Status Indicator */}
-                      <span className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 bg-emerald-500 border-2 border-white dark:border-slate-800 rounded-full shadow-sm" />
+                      <span className={`absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 border-2 border-white dark:border-slate-800 rounded-full shadow-sm ${
+                        user?.presence_status === 'online' ? 'bg-emerald-500' :
+                        user?.presence_status === 'away' ? 'bg-yellow-400' :
+                        user?.presence_status === 'busy' ? 'bg-red-500' :
+                        user?.presence_status === 'do_not_disturb' ? 'bg-red-600' :
+                        user?.presence_status === 'in_call' ? 'bg-blue-500' :
+                        'bg-slate-400'
+                      }`} />
                     </div>
                   </button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-72 rounded-xl p-2 shadow-xl border-slate-200/80 dark:border-slate-700/80">
                   <div className="px-3 py-3 bg-gradient-to-r from-slate-50 to-slate-100 dark:from-slate-800 dark:to-slate-900 rounded-lg mb-2">
                     <div className="flex items-center gap-3">
-                      <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-bold text-lg shadow-lg">
+                      <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-bold text-lg shadow-lg">
                         {user?.email?.charAt(0).toUpperCase() || 'U'}
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-semibold text-slate-800 dark:text-white truncate">{user?.email}</p>
                         <p className="text-xs text-slate-500 dark:text-slate-400 truncate">
-                          {user?.company_name || 'AgentConnect'}
+                          {user?.company_name || 'HeyGenAlly'}
                         </p>
                       </div>
                     </div>
@@ -556,13 +704,13 @@ const AppLayout = () => {
                 <DropdownMenuContent align="end" className="w-72 rounded-xl p-2 shadow-xl">
                   <div className="px-3 py-3 bg-gradient-to-r from-slate-50 to-slate-100 dark:from-slate-800 dark:to-slate-900 rounded-lg mb-2">
                     <div className="flex items-center gap-3">
-                      <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-bold text-lg shadow-lg">
+                      <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-bold text-lg shadow-lg">
                         {user?.email?.charAt(0).toUpperCase() || 'U'}
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-semibold text-slate-800 dark:text-white truncate">{user?.email}</p>
                         <p className="text-xs text-slate-500 dark:text-slate-400 truncate">
-                          {user?.company_name || 'AgentConnect'}
+                          {user?.company_name || 'HeyGenAlly'}
                         </p>
                       </div>
                     </div>
@@ -595,12 +743,12 @@ const AppLayout = () => {
       <div className="flex flex-1 overflow-hidden">
         {/* Premium Sidebar */}
         <aside
-          className={`flex-shrink-0 bg-gradient-to-b from-slate-50 to-white dark:from-slate-900 dark:to-slate-800 ${isRTL ? 'border-l' : 'border-r'} border-slate-200/80 dark:border-slate-700/80 transition-all duration-300 relative ${
+          className={`flex-shrink-0 bg-white dark:bg-slate-800 ${isRTL ? 'border-l' : 'border-r'} border-slate-200 dark:border-slate-700 shadow-[4px_0_16px_-4px_rgba(0,0,0,0.08)] dark:shadow-[4px_0_16px_-4px_rgba(0,0,0,0.4)] transition-all duration-300 relative ${
             sidebarOpen ? '' : '-ml-64 lg:ml-0'
           } ${sidebarCollapsed ? 'w-[72px]' : 'w-64'}`}
         >
           {/* Decorative gradient line */}
-          <div className={`absolute top-0 ${isRTL ? 'left-0' : 'right-0'} bottom-0 w-px bg-gradient-to-b from-blue-500/20 via-purple-500/20 to-pink-500/20`} />
+          <div className={`absolute top-0 ${isRTL ? 'left-0' : 'right-0'} bottom-0 w-px bg-gradient-to-b from-blue-500/20 via-indigo-500/20 to-blue-500/20`} />
 
           {/* Collapse/Expand Button */}
           <button
@@ -625,49 +773,94 @@ const AppLayout = () => {
 
           <nav className={`p-3 h-full flex flex-col overflow-y-auto scrollbar-thin scrollbar-thumb-slate-300 dark:scrollbar-thumb-slate-600 ${sidebarCollapsed ? 'items-center' : ''}`}>
             <div className="flex-1 space-y-1">
-              {sidebarItems.map((item) => {
-                // Only show admin items if user is super admin
-                if (item.admin && !user?.is_super_admin) return null;
+              {sidebarGroups.map((group, groupIndex) => {
+                const userPermissions = user?.role?.permissions?.map((p: any) => p.name) || [];
+                const visibleItems = group.items.filter(item => {
+                  if (item.admin && !user?.is_super_admin) return false;
+                  if (item.permission && !user?.is_super_admin && !userPermissions.includes(item.permission)) return false;
+                  return true;
+                });
+                if (visibleItems.length === 0) return null;
+
+                const isGroupOpen = !group.collapsible || !!openGroups[group.id];
 
                 return (
-                  <Permission key={item.url} permission={item.permission}>
-                    <NavLink
-                      to={item.url}
-                      className={({ isActive }) =>
-                        `relative flex items-center rounded-lg text-[15px] font-medium transition-all duration-200 group ${
-                          sidebarCollapsed ? 'justify-center p-2 mx-auto' : 'gap-3 px-3 py-2'
-                        } ${
-                          isActive
-                            ? 'bg-gradient-to-r from-blue-500 to-indigo-600 text-white shadow-md shadow-blue-500/20'
-                            : 'text-slate-800 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800/80'
-                        }`
-                      }
-                      title={sidebarCollapsed ? t(item.titleKey) : undefined}
-                    >
-                      {({ isActive }) => (
-                        <>
-                          {/* Active indicator bar */}
-                          {isActive && !sidebarCollapsed && (
-                            <span className={`absolute ${isRTL ? 'right-0' : 'left-0'} top-1/2 -translate-y-1/2 w-1 h-5 bg-white rounded-full`} />
-                          )}
-                          <item.icon
-                            className={`flex-shrink-0 transition-all duration-200 ${
-                              isActive ? 'h-4 w-4' : 'h-4 w-4 group-hover:scale-110'
-                            }`}
-                          />
-                          {!sidebarCollapsed && (
-                            <span className="truncate">{t(item.titleKey)}</span>
-                          )}
-                          {/* Hover tooltip for collapsed state */}
-                          {sidebarCollapsed && (
-                            <span className="absolute left-full ml-2 px-2 py-1 bg-slate-900 dark:bg-slate-700 text-white text-xs font-medium rounded-md opacity-0 group-hover:opacity-100 pointer-events-none whitespace-nowrap z-50 shadow-lg transition-opacity duration-200">
-                              {t(item.titleKey)}
-                            </span>
-                          )}
-                        </>
-                      )}
-                    </NavLink>
-                  </Permission>
+                  <div key={group.id}>
+                    {/* Section header — hidden when sidebar is icon-only */}
+                    {!sidebarCollapsed && (
+                      group.collapsible ? (
+                        <button
+                          onClick={() => toggleGroup(group.id)}
+                          // group header styles change when open vs closed 14
+                          className={`w-full flex items-center justify-between px-3 py-2 mt-2 text-[16px] font-semibold transition-colors rounded-md ${
+                            isGroupOpen
+                              ? 'text-slate-800 dark:text-slate-100 bg-slate-100 dark:bg-slate-800/70'
+                              : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100/60 dark:hover:bg-slate-800/40'
+                          }`}
+                        >
+                          <span className="flex items-center gap-3">
+                            <group.icon className="h-4 w-4 flex-shrink-0" />
+                            {t(group.labelKey, { defaultValue: group.label })}
+                          </span>
+                          {isGroupOpen
+                            ? <ChevronDown className="h-3.5 w-3.5 flex-shrink-0" />
+                            : <ChevronRight className="h-3.5 w-3.5 flex-shrink-0" />
+                          }
+                        </button>
+                      ) : (
+                        // Non-collapsible group header 14
+                        <div className="flex items-center gap-3 px-3 py-2 mt-2 text-[16px] font-semibold text-slate-800 dark:text-slate-100">
+                          <group.icon className="h-4 w-4 flex-shrink-0" />
+                          {t(group.labelKey, { defaultValue: group.label })}
+                        </div>
+                      )
+                    )}
+
+                    {/* Items — always visible when sidebar is collapsed (icon-only), otherwise respect open state */}
+                    {(isGroupOpen || sidebarCollapsed) && (
+                      <div className={`space-y-0.5 ${!sidebarCollapsed ? 'mt-1 mx-1 p-1' : ''}`}>
+                        {visibleItems.map((item) => (
+                          <NavLink
+                            key={item.url}
+                            to={item.url}
+                            className={({ isActive }) =>
+                              // Active item has a highlighted background and text, with a vertical indicator bar. In collapsed mode, only icons are shown and the active state is indicated by a subtle background change and the indicator bar. 13
+                              `relative flex items-center rounded-lg text-[15px] font-medium transition-all duration-200 group ${
+                                sidebarCollapsed ? 'justify-center p-2 mx-auto' : `gap-3 py-1.5 ${isActive ? 'pl-4 pr-3' : 'px-3'}`
+                              } ${
+                                isActive
+                                  ? 'bg-gradient-to-r from-blue-500 to-indigo-600 text-white shadow-md shadow-blue-500/20'
+                                  : 'text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-slate-900 dark:hover:text-white'
+                              }`
+                            }
+                            title={sidebarCollapsed ? t(item.titleKey) : undefined}
+                          >
+                            {({ isActive }) => (
+                              <>
+                                {isActive && !sidebarCollapsed && (
+                                  <span className={`absolute ${isRTL ? 'right-0' : 'left-0'} top-1/2 -translate-y-1/2 w-1 h-5 bg-white rounded-full`} />
+                                )}
+                                <item.icon className="flex-shrink-0 h-4 w-4 transition-transform duration-200 group-hover:scale-110" />
+                                {!sidebarCollapsed && (
+                                  <span className="truncate">{t(item.titleKey)}</span>
+                                )}
+                                {sidebarCollapsed && (
+                                  <span className="absolute left-full ml-2 px-2 py-1 bg-slate-900 dark:bg-slate-700 text-white text-xs font-medium rounded-md opacity-0 group-hover:opacity-100 pointer-events-none whitespace-nowrap z-50 shadow-lg transition-opacity duration-200">
+                                    {t(item.titleKey)}
+                                  </span>
+                                )}
+                              </>
+                            )}
+                          </NavLink>
+                        ))}
+                      </div>
+                    )}
+
+                    {/* Divider between groups (only in expanded mode) */}
+                    {!sidebarCollapsed && groupIndex < sidebarGroups.length - 1 && (
+                      <div className="mt-2 h-px bg-slate-200/60 dark:bg-slate-700/40" />
+                    )}
+                  </div>
                 );
               })}
             </div>
@@ -708,8 +901,17 @@ const AppLayout = () => {
           callType="audio"
         />
       )}
+
+      {/* Twilio Outbound Call Widget */}
+      <CallWidget />
     </div>
   );
 };
 
-export default AppLayout;
+const AppLayoutWithProviders = () => (
+  <TwilioCallProvider>
+    <AppLayout />
+  </TwilioCallProvider>
+);
+
+export default AppLayoutWithProviders;

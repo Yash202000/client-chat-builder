@@ -94,7 +94,6 @@ export const ApiKeys = () => {
         <CardHeader className={`flex flex-row items-center justify-between border-b border-slate-200/80 dark:border-slate-700/60 bg-gradient-to-r from-slate-50 to-slate-100/80 dark:from-slate-800 dark:to-slate-900/80 ${isRTL ? 'flex-row-reverse' : ''}`}>
           <div className={`flex items-center gap-4 ${isRTL ? 'flex-row-reverse' : ''}`}>
             <div className="relative group">
-              <div className="absolute inset-0 bg-gradient-to-br from-cyan-500 to-blue-600 rounded-xl blur-md opacity-40 group-hover:opacity-60 transition-all" />
               <div className="relative p-3 rounded-xl bg-gradient-to-br from-cyan-500 to-blue-600 shadow-lg shadow-cyan-500/25">
                 <Key className="h-6 w-6 text-white" />
               </div>
@@ -161,7 +160,6 @@ export const ApiKeys = () => {
           {apiKeys.length === 0 && (
             <div className="flex flex-col items-center justify-center text-center py-12">
               <div className="relative mb-4">
-                <div className="absolute inset-0 bg-gradient-to-br from-cyan-500 to-blue-600 rounded-full blur-xl opacity-30" />
                 <div className="relative w-20 h-20 bg-gradient-to-br from-cyan-500 to-blue-600 rounded-full flex items-center justify-center shadow-xl shadow-cyan-500/25">
                   <Key className="h-10 w-10 text-white" />
                 </div>

@@ -69,7 +69,7 @@ export const SignupPage = () => {
             Create Account
           </CardTitle>
           <CardDescription className="text-base dark:text-gray-400">
-            Join AgentConnect and start building intelligent AI agents
+            Join HeyGenAlly and start building intelligent AI agents
           </CardDescription>
         </CardHeader>
         <CardContent>

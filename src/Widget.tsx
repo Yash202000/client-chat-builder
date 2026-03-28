@@ -165,7 +165,7 @@ const getLanguageTexts = (settings: WidgetSettings, lang: string) => {
 
 // Helper functions for session persistence
 const getStorageKey = (agentId: string, companyId: string) =>
-  `agentconnect_session_${companyId}_${agentId}`;
+  `heygenally_session_${companyId}_${agentId}`;
 
 const getStoredSession = (agentId: string, companyId: string): { sessionId: string; timestamp: number } | null => {
   try {
@@ -291,12 +291,12 @@ const Widget = ({ agentId, companyId, backendUrl, rtlOverride, languageOverride,
         const response = await fetch(`${backendUrl}/api/v1/agents/${agentId}/widget-settings`);
         if (!response.ok) throw new Error('Failed to fetch settings');
         const data = await response.json();
-        console.log('AgentConnect Widget: Fetched settings:', data);
-        console.log('AgentConnect Widget: Avatar URL:', data.agent_avatar_url);
-        console.log('AgentConnect Widget: Header Title:', data.header_title);
+        console.log('HeyGenAlly Widget: Fetched settings:', data);
+        console.log('HeyGenAlly Widget: Avatar URL:', data.agent_avatar_url);
+        console.log('HeyGenAlly Widget: Header Title:', data.header_title);
         setSettings(data);
       } catch (error) {
-        console.error('AgentConnect: Error fetching settings:', error);
+        console.error('HeyGenAlly: Error fetching settings:', error);
       } finally {
         setIsLoading(false);
       }
@@ -464,7 +464,7 @@ const Widget = ({ agentId, companyId, backendUrl, rtlOverride, languageOverride,
 
         const callWindow = window.open(
           callUrl,
-          'AgentConnect Voice Call',
+          'HeyGenAlly Voice Call',
           'width=800,height=600,resizable=yes,scrollbars=yes'
         );
 

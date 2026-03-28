@@ -60,14 +60,14 @@ All colors MUST be HSL.
     /* Border radius - More modern */
     --radius: 0.75rem;
 
-    /* Sidebar - Professional dark sidebar */
-    --sidebar-background: 222.2 47.4% 11.2%;
-    --sidebar-foreground: 210 40% 98%;
+    /* Sidebar - Light mode: white background, dark text */
+    --sidebar-background: 0 0% 100%;
+    --sidebar-foreground: 222.2 47.4% 11.2%;
     --sidebar-primary: 221.2 83.2% 53.3%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 217.2 32.6% 17.5%;
-    --sidebar-accent-foreground: 210 40% 98%;
-    --sidebar-border: 217.2 32.6% 17.5%;
+    --sidebar-accent: 210 40% 96.1%;
+    --sidebar-accent-foreground: 222.2 47.4% 11.2%;
+    --sidebar-border: 214.3 31.8% 91.4%;
     --sidebar-ring: 221.2 83.2% 53.3%;
 
     /* Workflow specific colors */
@@ -604,11 +604,6 @@ All colors MUST be HSL.
   /* Group header styling */
   .group-header {
     @apply sticky top-0 z-10 backdrop-blur-sm;
-    background: linear-gradient(180deg, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0.85) 100%);
-  }
-
-  .dark .group-header {
-    background: linear-gradient(180deg, rgba(30, 41, 59, 0.95) 0%, rgba(30, 41, 59, 0.85) 100%);
   }
 
   /* Priority border styles */
@@ -636,6 +631,34 @@ All colors MUST be HSL.
 
   .dark .channel-icon-container {
     background: linear-gradient(135deg, rgba(51, 65, 85, 1) 0%, rgba(71, 85, 105, 1) 100%);
+  }
+
+  /* Workflow Node Entry Animation - Smooth and Human-like */
+  @keyframes nodePopIn {
+    0% {
+      opacity: 0;
+      transform: scale(0.92);
+      filter: blur(2px);
+    }
+    40% {
+      opacity: 0.6;
+    }
+    100% {
+      opacity: 1;
+      transform: scale(1);
+      filter: blur(0px);
+    }
+  }
+
+  /* Disable React Flow's default transition for newly added nodes */
+  .react-flow__node.workflow-node-enter {
+    transition: none !important;
+    transform-origin: center center;
+  }
+
+  .react-flow__node.workflow-node-enter > div {
+    animation: nodePopIn 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+    transform-origin: center center;
   }
 
   /* Stagger animation delays */

@@ -20,8 +20,15 @@ export const getChannels = async () => {
   return response.data;
 };
 
-export const createChannel = async (channelData: { name: string; description?: string; channel_type: string; team_id?: number }) => {
+export const createChannel = async (channelData: { name?: string | null; description?: string; channel_type: string; team_id?: number; member_ids?: number[] }) => {
   const response = await axios.post(`${API_URL}/api/v1/chat/channels/`, channelData, {
+    headers: getAuthHeaders(),
+  });
+  return response.data;
+};
+
+export const renameChannel = async (channelId: number, name: string) => {
+  const response = await axios.patch(`${API_URL}/api/v1/chat/channels/${channelId}`, { name }, {
     headers: getAuthHeaders(),
   });
   return response.data;

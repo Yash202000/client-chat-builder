@@ -14,7 +14,7 @@ import {
   Trash2,
   Eye,
   Filter,
-  RefreshCw,
+  Loader2,
   FileText,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -194,47 +194,49 @@ export default function TemplatesPage() {
   };
 
   return (
-    <div className="p-6 space-y-6 animate-fade-in">
+    <div className="min-h-full bg-slate-50 dark:bg-slate-950">
       {/* Header */}
-      <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
-        <div className="flex items-center gap-4">
-          <div className="p-4 rounded-2xl bg-gradient-to-br from-purple-500 to-indigo-600 shadow-xl shadow-purple-500/25">
-            <FileText className="h-8 w-8 text-white" />
+      <div className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 px-6 py-6">
+        <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center flex-shrink-0">
+              <FileText className="h-6 w-6 text-white" />
+            </div>
+            <div>
+              <h1 className="text-2xl font-bold text-slate-900 dark:text-white leading-tight">
+                {t('crm.templates.title', 'Templates')}
+              </h1>
+              <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">
+                {t('crm.templates.description', 'Create and manage reusable message templates')}
+              </p>
+            </div>
           </div>
-          <div>
-            <h1 className="text-3xl font-bold bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent">
-              {t('crm.templates.title', 'Templates')}
-            </h1>
-            <p className="text-slate-600 dark:text-slate-400">
-              {t('crm.templates.description', 'Create and manage reusable message templates')}
-            </p>
-          </div>
+          <Button
+            onClick={() => navigate('/dashboard/crm/templates/new')}
+            className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white rounded-xl h-9 px-4 text-sm"
+          >
+            <Plus className="h-4 w-4 mr-2" />
+            {t('crm.templates.create', 'Create Template')}
+          </Button>
         </div>
-        <Button
-          onClick={() => navigate('/dashboard/crm/templates/new')}
-          className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white rounded-xl shadow-lg shadow-purple-500/25 hover:shadow-xl hover:shadow-purple-500/30 transition-all"
-        >
-          <Plus className="h-4 w-4 mr-2" />
-          {t('crm.templates.create', 'Create Template')}
-        </Button>
       </div>
+      <div className="px-6 py-6 space-y-6">
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         {['email', 'sms', 'whatsapp', 'voice'].map((type) => {
           const count = templates.filter((t) => t.template_type === type).length;
           const Icon = TYPE_ICONS[type];
-          const cardColors: Record<string, { border: string; bg: string; shadow: string; iconBg: string }> = {
-            email: { border: 'border-blue-200/80 dark:border-blue-700/60', bg: 'from-white to-blue-50 dark:from-slate-800 dark:to-slate-900', shadow: 'shadow-blue-500/10 hover:shadow-blue-500/20', iconBg: 'from-blue-500 to-blue-600' },
-            sms: { border: 'border-green-200/80 dark:border-green-700/60', bg: 'from-white to-green-50 dark:from-slate-800 dark:to-slate-900', shadow: 'shadow-green-500/10 hover:shadow-green-500/20', iconBg: 'from-green-500 to-green-600' },
-            whatsapp: { border: 'border-emerald-200/80 dark:border-emerald-700/60', bg: 'from-white to-emerald-50 dark:from-slate-800 dark:to-slate-900', shadow: 'shadow-emerald-500/10 hover:shadow-emerald-500/20', iconBg: 'from-emerald-500 to-teal-600' },
-            voice: { border: 'border-purple-200/80 dark:border-purple-700/60', bg: 'from-white to-purple-50 dark:from-slate-800 dark:to-slate-900', shadow: 'shadow-purple-500/10 hover:shadow-purple-500/20', iconBg: 'from-purple-500 to-indigo-600' },
+          const iconBgMap: Record<string, string> = {
+            email: 'from-blue-500 to-blue-600',
+            sms: 'from-green-500 to-green-600',
+            whatsapp: 'from-emerald-500 to-teal-600',
+            voice: 'from-purple-500 to-indigo-600',
           };
-          const colors = cardColors[type];
           return (
             <div
               key={type}
-              className={`p-5 rounded-2xl border ${colors.border} bg-gradient-to-br ${colors.bg} shadow-xl ${colors.shadow} hover:shadow-2xl hover:scale-[1.02] cursor-pointer transition-all duration-300`}
+              className="p-5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm hover:shadow-md cursor-pointer transition-all duration-300"
               onClick={() => setTypeFilter(type)}
             >
               <div className="flex items-start justify-between">
@@ -244,8 +246,8 @@ export default function TemplatesPage() {
                   </p>
                   <p className="text-2xl font-bold text-slate-900 dark:text-white">{count}</p>
                 </div>
-                <div className={`h-12 w-12 rounded-xl bg-gradient-to-br ${colors.iconBg} flex items-center justify-center shadow-lg`}>
-                  <Icon className="h-6 w-6 text-white" />
+                <div className={`h-10 w-10 rounded-lg bg-gradient-to-br ${iconBgMap[type]} flex items-center justify-center`}>
+                  <Icon className="h-5 w-5 text-white" />
                 </div>
               </div>
             </div>
@@ -254,19 +256,19 @@ export default function TemplatesPage() {
       </div>
 
       {/* Filters */}
-      <div className="p-4 rounded-2xl border border-slate-200/80 dark:border-slate-700/60 bg-gradient-to-br from-white to-slate-50 dark:from-slate-800 dark:to-slate-900 shadow-xl">
-        <div className="flex flex-col sm:flex-row gap-4">
+      <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm p-3">
+        <div className="flex flex-col sm:flex-row gap-3">
           <div className="relative flex-1">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
             <Input
               placeholder={t('crm.templates.searchPlaceholder', 'Search templates...')}
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="pl-11 rounded-xl border-slate-200 dark:border-slate-600 dark:bg-slate-800/50 focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500"
+              className="pl-9 h-9 rounded-lg border-slate-200 dark:border-slate-700 dark:bg-slate-800 focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500"
             />
           </div>
           <Select value={typeFilter} onValueChange={setTypeFilter}>
-            <SelectTrigger className="w-[180px] rounded-xl border-slate-200 dark:border-slate-600 dark:bg-slate-800/50">
+            <SelectTrigger className="w-[180px] h-9 rounded-lg border-slate-200 dark:border-slate-700 dark:bg-slate-800">
               <Filter className="h-4 w-4 mr-2 text-slate-400" />
               <SelectValue placeholder={t('crm.templates.filterByType', 'Filter by type')} />
             </SelectTrigger>
@@ -283,16 +285,13 @@ export default function TemplatesPage() {
 
       {/* Templates Grid */}
       {loading ? (
-        <div className="flex flex-col items-center justify-center py-16 gap-4">
-          <div className="h-12 w-12 rounded-2xl bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center shadow-xl shadow-purple-500/25">
-            <RefreshCw className="h-6 w-6 text-white animate-spin" />
-          </div>
-          <p className="text-sm text-slate-500 dark:text-slate-400">{t('crm.common.loading', 'Loading...')}</p>
+        <div className="flex items-center justify-center py-16">
+          <Loader2 className="h-6 w-6 animate-spin text-slate-400" />
         </div>
       ) : templates.length === 0 ? (
-        <div className="rounded-2xl border border-slate-200/80 dark:border-slate-700/60 bg-gradient-to-br from-white to-slate-50 dark:from-slate-800 dark:to-slate-900 shadow-xl">
+        <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm">
           <div className="p-12 text-center">
-            <div className="h-16 w-16 rounded-2xl bg-gradient-to-br from-purple-100 to-indigo-100 dark:from-purple-900/30 dark:to-indigo-900/30 flex items-center justify-center mx-auto mb-4">
+            <div className="h-16 w-16 rounded-xl bg-purple-50 dark:bg-purple-900/20 flex items-center justify-center mx-auto mb-4">
               <Mail className="h-8 w-8 text-purple-500" />
             </div>
             <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-2">
@@ -303,7 +302,7 @@ export default function TemplatesPage() {
             </p>
             <Button
               onClick={() => navigate('/dashboard/crm/templates/new')}
-              className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white rounded-xl shadow-lg shadow-purple-500/25"
+              className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white rounded-xl shadow-lg"
             >
               <Plus className="h-4 w-4 mr-2" />
               {t('crm.templates.create', 'Create Template')}
@@ -329,7 +328,7 @@ export default function TemplatesPage() {
             return (
               <div
                 key={template.id}
-                className={`rounded-2xl border ${cardColorMap[template.template_type] || 'border-slate-200/80 dark:border-slate-700/60'} bg-gradient-to-br from-white to-slate-50 dark:from-slate-800 dark:to-slate-900 shadow-lg hover:shadow-xl hover:scale-[1.01] transition-all duration-300 overflow-hidden group`}
+                className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden group"
               >
                 <div className="p-4 pb-3">
                   <div className="flex items-start justify-between">
@@ -440,9 +439,11 @@ export default function TemplatesPage() {
         </div>
       )}
 
+      </div>
+
       {/* Preview Dialog */}
       <Dialog open={previewDialogOpen} onOpenChange={setPreviewDialogOpen}>
-        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto rounded-2xl border-slate-200/80 dark:border-slate-700/60 dark:bg-slate-800">
+        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto rounded-xl border-slate-200 dark:border-slate-800 dark:bg-slate-900">
           <DialogHeader>
             <DialogTitle className="text-xl font-semibold text-slate-900 dark:text-white">{selectedTemplate?.name}</DialogTitle>
             <DialogDescription className="text-slate-500 dark:text-slate-400">
@@ -516,7 +517,7 @@ export default function TemplatesPage() {
                 setPreviewDialogOpen(false);
                 navigate(`/dashboard/crm/templates/${selectedTemplate?.id}`);
               }}
-              className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white rounded-xl shadow-lg shadow-purple-500/25"
+              className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white rounded-xl shadow-lg"
             >
               <Edit className="h-4 w-4 mr-2" />
               {t('crm.common.edit', 'Edit')}
@@ -527,7 +528,7 @@ export default function TemplatesPage() {
 
       {/* Duplicate Dialog */}
       <Dialog open={duplicateDialogOpen} onOpenChange={setDuplicateDialogOpen}>
-        <DialogContent className="rounded-2xl border-slate-200/80 dark:border-slate-700/60 dark:bg-slate-800">
+        <DialogContent className="rounded-xl border-slate-200 dark:border-slate-800 dark:bg-slate-900">
           <DialogHeader>
             <DialogTitle className="text-xl font-semibold text-slate-900 dark:text-white">{t('crm.templates.duplicateTemplate', 'Duplicate Template')}</DialogTitle>
             <DialogDescription className="text-slate-500 dark:text-slate-400">
@@ -544,7 +545,7 @@ export default function TemplatesPage() {
             <Button variant="outline" onClick={() => setDuplicateDialogOpen(false)} className="rounded-xl">
               {t('crm.common.cancel', 'Cancel')}
             </Button>
-            <Button onClick={handleDuplicate} disabled={!duplicateName} className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white rounded-xl shadow-lg shadow-blue-500/25">
+            <Button onClick={handleDuplicate} disabled={!duplicateName} className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white rounded-xl shadow-lg">
               <Copy className="h-4 w-4 mr-2" />
               {t('crm.templates.duplicate', 'Duplicate')}
             </Button>
@@ -554,7 +555,7 @@ export default function TemplatesPage() {
 
       {/* Delete Confirmation Dialog */}
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-        <AlertDialogContent className="rounded-2xl">
+        <AlertDialogContent className="rounded-xl">
           <AlertDialogHeader>
             <AlertDialogTitle className="text-xl font-semibold text-slate-900 dark:text-white">{t('crm.templates.deleteTitle', 'Delete Template')}</AlertDialogTitle>
             <AlertDialogDescription className="text-slate-500 dark:text-slate-400">
@@ -565,7 +566,7 @@ export default function TemplatesPage() {
             <AlertDialogCancel className="rounded-xl">{t('crm.common.cancel', 'Cancel')}</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleDelete}
-              className="bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white rounded-xl shadow-lg shadow-red-500/25"
+              className="bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white rounded-xl shadow-lg"
             >
               {t('crm.common.delete', 'Delete')}
             </AlertDialogAction>

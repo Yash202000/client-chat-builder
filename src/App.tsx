@@ -35,7 +35,6 @@ import UserVideoCallPage from "./pages/UserVideoCallPage";
 import InternalVideoCallPage from "./pages/InternalVideoCallPage";
 import InternalChatPage from "./pages/InternalChatPage";
 import VoicesPage from "./pages/VoicesPage";
-import VoiceLabPage from "./pages/VoiceLabPage";
 import { CompaniesPage } from "./pages/CompaniesPage";
 import { useAuth } from "./hooks/useAuth";
 import WorkflowBuilderPage from "./pages/WorkflowBuilderPage";
@@ -65,6 +64,7 @@ import {
   KBContentItemEditPage,
 } from "./pages/KnowledgeBaseCMS";
 import ErrorBoundary from "./components/ErrorBoundary";
+import ContactHubPage from "./pages/ContactHubPage";
 // CRM Pages
 import CRMDashboard from "./pages/CRM/CRMDashboard";
 import LeadsPage from "./pages/CRM/LeadsPage";
@@ -80,6 +80,8 @@ import SegmentsPage from "./pages/CRM/SegmentsPage";
 import TemplatesPage from "./pages/CRM/TemplatesPage";
 import TemplateEditorPage from "./pages/CRM/TemplateEditorPage";
 import MessageTemplatesPage from "./pages/MessageTemplatesPage";
+import EmailInboxPage from "./pages/EmailInboxPage";
+import SMSInboxPage from "./pages/SMSInboxPage";
 import { AcceptInvitationPage } from "./pages/AcceptInvitationPage";
 // CMS Pages
 import {
@@ -132,8 +134,13 @@ const AppRoutes = () => {
       <Route path="/dashboard" element={<ProtectedRoute />}>
         <Route element={<AppLayout />}>
           <Route index element={<Navigate to="/dashboard/conversations" replace />} />
-          <Route path="conversations" element={<ConversationsPage />} />
-          <Route path="internal-chat" element={<InternalChatPage />} />
+          <Route path="conversations" element={<ConversationsPage channel="web_chat" />} />
+          <Route path="inbox/whatsapp" element={<ConversationsPage channel="whatsapp" />} />
+          <Route path="inbox/instagram" element={<ConversationsPage channel="instagram" />} />
+          <Route path="inbox/messenger" element={<ConversationsPage channel="messenger" />} />
+          <Route path="inbox/telegram" element={<ConversationsPage channel="telegram" />} />
+          <Route path="inbox/twilio" element={<ConversationsPage channel="twilio_voice" />} />
+          <Route path="inbox/api" element={<ConversationsPage channel="api" />} />
           <Route path="agents" element={<AgentsPage />} />
           <Route path="builder" element={<BuilderPage />} />
           <Route path="builder/:agentId" element={<BuilderPage />} />
@@ -148,7 +155,7 @@ const AppRoutes = () => {
           <Route path="reports" element={<ReportsPage />} />
           <Route path="settings" element={<SettingsPage />} />
           <Route path="vault" element={<VaultPage />} />
-          <Route path="knowledge-base" element={<KnowledgeBaseListPage />} />
+          <Route path="knowledge-base" element={<Navigate to="/dashboard/knowledge-base/manage" replace />} />
           <Route path="tools" element={<ToolManagementPage />} />
           <Route path="knowledge-base/manage" element={<KnowledgeBaseManagementPage />} />
           <Route path="knowledge-base/processing" element={<KnowledgeBaseProcessing />} />
@@ -162,10 +169,9 @@ const AppRoutes = () => {
           <Route path="workflows" element={<WorkflowManagementPage />} />
           <Route path="workflows/:workflowId" element={<WorkflowBuilderPage />} />
           <Route path="voices" element={<VoicesPage />} />
-          <Route path="voice-lab" element={<VoiceLabPage />} />
           <Route path="profile" element={<ProfilePage />} />
           <Route path="billing" element={<ClientBillingPage />} />
-          <Route path="users" element={<TeamPage />} />
+          <Route path="users" element={<Navigate to="/dashboard/team" replace />} />
           {user?.is_super_admin && <Route path="companies" element={<CompaniesPage />} />}
           <Route path="admin/subscriptions" element={<SubscriptionManagementPage />} />
           <Route path="ai-image-generator" element={<AIImageGeneratorPage />} />
@@ -175,6 +181,7 @@ const AppRoutes = () => {
           <Route path="ai-tools/new" element={<AIToolCreatePage />} />
           <Route path="ai-tools/:id" element={<AIToolDetailPage />} />
           <Route path="ai-tools/:id/edit" element={<AIToolEditPage />} />
+          <Route path="contacts" element={<ContactHubPage />} />
           {/* CRM Routes */}
           <Route path="crm" element={<CRMDashboard />} />
           <Route path="crm/leads" element={<LeadsPage />} />
@@ -189,6 +196,8 @@ const AppRoutes = () => {
           <Route path="crm/templates" element={<TemplatesPage />} />
           <Route path="crm/templates/:id" element={<TemplateEditorPage />} />
           <Route path="message-templates" element={<MessageTemplatesPage />} />
+          <Route path="inbox/email" element={<EmailInboxPage />} />
+          <Route path="inbox/sms" element={<SMSInboxPage />} />
           <Route path="crm/analytics" element={<AnalyticsPage />} />
           {/* CMS Routes */}
           <Route path="cms" element={<CMSDashboardPage />} />

@@ -3,7 +3,7 @@ import { Settings } from "@/components/Settings";
 
 const SettingsPage = () => {
   return (
-    <div className="space-y-6 animate-fade-in">
+    <div className="min-h-full">
       <Settings />
     </div>
   );

@@ -21,7 +21,7 @@ import { useTranslation } from 'react-i18next';
 import { useI18n } from '@/hooks/useI18n';
 
 const initialCustomizationState = {
-  primary_color: "linear-gradient(135deg, #3B82F6 0%, #8B5CF6 50%, #EC4899 100%)", // AgentConnect gradient
+  primary_color: "linear-gradient(135deg, #3B82F6 0%, #8B5CF6 50%, #EC4899 100%)", // HeyGenAlly gradient
   header_title: "Customer Support",
   welcome_message: "Hi! How can I help you today?",
   position: "bottom-right",
@@ -80,11 +80,11 @@ interface ChatMessage {
 
 const generateSessionId = () => `preview_session_${Math.random().toString(36).substring(2, 15)}`;
 
-export const AdvancedChatPreview = () => {
+export const AdvancedChatPreview = ({ selectedAgentId: initialAgentId }: { selectedAgentId?: number }) => {
   const { t } = useTranslation();
   const { isRTL: isUserRTL } = useI18n();
   const { toast } = useToast();
-  const [selectedAgentId, setSelectedAgentId] = useState<number | null>(null);
+  const [selectedAgentId, setSelectedAgentId] = useState<number | null>(initialAgentId ?? null);
   const [isTyping, setIsTyping] = useState(false);
   const [activeForm, setActiveForm] = useState<any[] | null>(null);
   const [previewType, setPreviewType] = useState('web');
@@ -300,7 +300,7 @@ export const AdvancedChatPreview = () => {
   }, []);
 
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
   }, [messages, isTyping]);
 
   const handleSendMessage = (text?: string, payload?: any) => {
@@ -364,7 +364,7 @@ export const AdvancedChatPreview = () => {
         if (response.ok) {
           const data = await response.json();
           setAgents(data);
-          if (data.length > 0) {
+          if (data.length > 0 && !initialAgentId) {
             setSelectedAgentId(data[0].id);
           }
         }
@@ -538,12 +538,12 @@ export const AdvancedChatPreview = () => {
     const positionAttribute = defaultPosition !== 'bottom-right' ? `\n  data-position="${defaultPosition}"` : '';
     const availableLanguages = Object.keys(customization.meta?.languages || {}).join(', ');
 
-    return `<!-- AgentConnect Widget Container -->
-<div id="agentconnect-widget"></div>
+    return `<!-- HeyGenAlly Widget Container -->
+<div id="heygenally-widget"></div>
 
-<!-- AgentConnect Widget Script -->
+<!-- HeyGenAlly Widget Script -->
 <script
-  id="agent-connect-widget-script"
+  id="heygenally-widget-script"
   src="${scriptSrc}"
   data-agent-id="${selectedAgentId}"
   data-company-id="${companyId}"
@@ -585,9 +585,9 @@ export const AdvancedChatPreview = () => {
 
   return (
     <>
-      <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-        {/* Left Column - Customization (2/3 width) */}
-        <div className="xl:col-span-2">
+      <div className="flex h-full">
+        {/* Left Column - Customization */}
+        <div className="w-2/3 pr-4 overflow-y-auto">
           {previewType === 'web' && (
             <WebChatCustomizer
               customization={customization}
@@ -607,13 +607,12 @@ export const AdvancedChatPreview = () => {
           )}
         </div>
 
-        {/* Right Column - Live Preview (1/3 width) */}
-        <div className="xl:col-span-1">
-          <div className="sticky top-6">
-            <div className="bg-white dark:bg-slate-800 rounded-2xl overflow-hidden border-0 shadow-xl shadow-slate-200/50 dark:shadow-none">
-              {/* Preview Header */}
-              <div className="bg-gradient-to-r from-slate-50 to-white dark:from-slate-800 dark:to-slate-900 p-5 border-b border-slate-100 dark:border-slate-700">
-                <div className="flex items-center gap-3 mb-1">
+        {/* Right Column - Live Preview */}
+        <div className="w-1/3 sticky top-6">
+          <div className="bg-white dark:bg-slate-800 rounded-2xl overflow-hidden border-0 shadow-xl shadow-slate-200/50 dark:shadow-none">
+            <div className="bg-gradient-to-r from-slate-50 to-white dark:from-slate-800 dark:to-slate-900 p-4 border-b border-slate-100 dark:border-slate-700">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
                   <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center shadow-md shadow-indigo-500/25">
                     <svg className="h-5 w-5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                       <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z" />
@@ -625,18 +624,14 @@ export const AdvancedChatPreview = () => {
                     <p className="text-xs text-slate-500 dark:text-slate-400">{t('designer.livePreviewDesc')}</p>
                   </div>
                 </div>
-              </div>
-
-              <div className="p-5">
-                {/* Position Selector */}
-                <div className="mb-5">
+                <div>
                   <Label className="text-xs font-medium text-slate-600 dark:text-slate-300 mb-2 block">{t('designer.widgetPosition')}</Label>
-                  <div className="grid grid-cols-2 gap-2">
+                  <div className="grid grid-cols-2 gap-1">
                     <Button
                       variant={(customization.meta?.position || customization.position) === 'top-left' ? 'default' : 'outline'}
                       size="sm"
                       onClick={() => updateCustomization('meta', { ...customization.meta, position: 'top-left' })}
-                      className={`flex items-center justify-start gap-2 text-xs h-9 ${(customization.meta?.position || customization.position) === 'top-left' ? 'bg-gradient-to-r from-indigo-500 to-purple-500 text-white border-0' : 'border-slate-200 dark:border-slate-700'}`}
+                      className={`flex items-center justify-start gap-2 text-xs h-8 ${(customization.meta?.position || customization.position) === 'top-left' ? 'bg-gradient-to-r from-indigo-500 to-purple-500 text-white border-0' : 'border-slate-200 dark:border-slate-700'}`}
                     >
                       <svg className="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M5 9l7-7 7 7M5 15l7 7 7-7" transform="rotate(-45 12 12)"/></svg>
                       {t('designer.topLeft')}
@@ -645,7 +640,7 @@ export const AdvancedChatPreview = () => {
                       variant={(customization.meta?.position || customization.position) === 'top-right' ? 'default' : 'outline'}
                       size="sm"
                       onClick={() => updateCustomization('meta', { ...customization.meta, position: 'top-right' })}
-                      className={`flex items-center justify-end gap-2 text-xs h-9 ${(customization.meta?.position || customization.position) === 'top-right' ? 'bg-gradient-to-r from-indigo-500 to-purple-500 text-white border-0' : 'border-slate-200 dark:border-slate-700'}`}
+                      className={`flex items-center justify-end gap-2 text-xs h-8 ${(customization.meta?.position || customization.position) === 'top-right' ? 'bg-gradient-to-r from-indigo-500 to-purple-500 text-white border-0' : 'border-slate-200 dark:border-slate-700'}`}
                     >
                       {t('designer.topRight')}
                       <svg className="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M5 9l7-7 7 7M5 15l7 7 7-7" transform="rotate(45 12 12)"/></svg>
@@ -654,7 +649,7 @@ export const AdvancedChatPreview = () => {
                       variant={(customization.meta?.position || customization.position) === 'bottom-left' ? 'default' : 'outline'}
                       size="sm"
                       onClick={() => updateCustomization('meta', { ...customization.meta, position: 'bottom-left' })}
-                      className={`flex items-center justify-start gap-2 text-xs h-9 ${(customization.meta?.position || customization.position) === 'bottom-left' ? 'bg-gradient-to-r from-indigo-500 to-purple-500 text-white border-0' : 'border-slate-200 dark:border-slate-700'}`}
+                      className={`flex items-center justify-start gap-2 text-xs h-8 ${(customization.meta?.position || customization.position) === 'bottom-left' ? 'bg-gradient-to-r from-indigo-500 to-purple-500 text-white border-0' : 'border-slate-200 dark:border-slate-700'}`}
                     >
                       <svg className="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M5 9l7-7 7 7M5 15l7 7 7-7" transform="rotate(-135 12 12)"/></svg>
                       {t('designer.bottomLeft')}
@@ -663,157 +658,159 @@ export const AdvancedChatPreview = () => {
                       variant={(customization.meta?.position || customization.position) === 'bottom-right' ? 'default' : 'outline'}
                       size="sm"
                       onClick={() => updateCustomization('meta', { ...customization.meta, position: 'bottom-right' })}
-                      className={`flex items-center justify-end gap-2 text-xs h-9 ${(customization.meta?.position || customization.position) === 'bottom-right' ? 'bg-gradient-to-r from-indigo-500 to-purple-500 text-white border-0' : 'border-slate-200 dark:border-slate-700'}`}
+                      className={`flex items-center justify-end gap-2 text-xs h-8 ${(customization.meta?.position || customization.position) === 'bottom-right' ? 'bg-gradient-to-r from-indigo-500 to-purple-500 text-white border-0' : 'border-slate-200 dark:border-slate-700'}`}
                     >
                       {t('designer.bottomRight')}
                       <svg className="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M5 9l7-7 7 7M5 15l7 7 7-7" transform="rotate(135 12 12)"/></svg>
                     </Button>
                   </div>
                 </div>
+              </div>
+            </div>
 
-                {/* Preview Container */}
-                <div className="flex justify-center">
-                  <div className="bg-gradient-to-br from-slate-100 via-slate-50 to-white dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 p-4 rounded-2xl relative overflow-hidden border border-slate-200 dark:border-slate-700 shadow-inner" style={{ fontFamily: customization.font_family, width: width + 40, height: height + 80 }}>
-            {customization.client_website_url && (
-              <iframe
-                src={customization.client_website_url}
-                className="absolute top-0 left-0 w-full h-full border-0"
-                title="Client Website Preview"
-              />
-            )}
-              {previewType === 'web' && (
-                <div className={`absolute`} style={{ [widgetPosition.split('-')[0]]: '20px', [widgetPosition.split('-')[1]]: '20px' }}>
-                  {isExpanded ? (
-                    <div dir={isWidgetRTL ? 'rtl' : 'ltr'} className="bg-white rounded-lg shadow-2xl flex flex-col animate-scale-in" style={{ width, height, borderRadius: `${customization.border_radius}px`, backgroundColor: customization.dark_mode ? '#1a1a1a' : '#fff' }}>
-                      {customization.show_header && (
-                        <div className="text-white p-3 flex items-center justify-between" style={{ background: customization.primary_color, borderTopLeftRadius: `${customization.border_radius}px`, borderTopRightRadius: `${customization.border_radius}px` }}>
-                          <div className="flex items-center space-x-3">
-                            <Avatar className="h-8 w-8">
-                              <AvatarImage key={customization.agent_avatar_url} src={`${BACKEND_URL}/api/v1/proxy/image-proxy?url=${encodeURIComponent(customization.agent_avatar_url)}`} alt="Agent" />
-                              <AvatarFallback style={{ background: customization.primary_color.includes('gradient') ? customization.primary_color : `${customization.primary_color}20` }}>
-                                {customization.header_title.charAt(0)}
-                              </AvatarFallback>
-                            </Avatar>
-                            <div>
-                              <div className="font-medium text-sm">{customization.header_title}</div>
-                            </div>
+            <div className="p-3">
+              {/* Preview Container */}
+              <div className="flex justify-center">
+                <div className="bg-gradient-to-br from-slate-100 via-slate-50 to-white dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 p-4 rounded-2xl relative overflow-hidden border border-slate-200 dark:border-slate-700 shadow-inner" style={{ fontFamily: customization.font_family, width: width + 40, height: height + 80 }}>
+          {customization.client_website_url && (
+            <iframe
+              src={customization.client_website_url}
+              className="absolute top-0 left-0 w-full h-full border-0"
+              title="Client Website Preview"
+            />
+          )}
+            {previewType === 'web' && (
+              <div className={`absolute`} style={{ [widgetPosition.split('-')[0]]: '20px', [widgetPosition.split('-')[1]]: '20px' }}>
+                {isExpanded ? (
+                  <div dir={isWidgetRTL ? 'rtl' : 'ltr'} className="bg-white rounded-lg shadow-2xl flex flex-col animate-scale-in" style={{ width, height, borderRadius: `${customization.border_radius}px`, backgroundColor: customization.dark_mode ? '#1a1a1a' : '#fff' }}>
+                    {customization.show_header && (
+                      <div className="text-white p-3 flex items-center justify-between" style={{ background: customization.primary_color, borderTopLeftRadius: `${customization.border_radius}px`, borderTopRightRadius: `${customization.border_radius}px` }}>
+                        <div className="flex items-center space-x-3">
+                          <Avatar className="h-8 w-8">
+                            <AvatarImage key={customization.agent_avatar_url} src={`${BACKEND_URL}/api/v1/proxy/image-proxy?url=${encodeURIComponent(customization.agent_avatar_url)}`} alt="Agent" />
+                            <AvatarFallback style={{ background: customization.primary_color.includes('gradient') ? customization.primary_color : `${customization.primary_color}20` }}>
+                              {customization.header_title.charAt(0)}
+                            </AvatarFallback>
+                          </Avatar>
+                          <div>
+                            <div className="font-medium text-sm">{customization.header_title}</div>
                           </div>
-                          <Button size="sm" variant="ghost" className="text-white hover:bg-white/20 p-1 h-6 w-6" onClick={() => setIsExpanded(false)}><X className="h-4 w-4" /></Button>
                         </div>
-                      )}
-
-                      <div className="flex-1 p-4 overflow-y-auto space-y-4">
-                        {messages.map((msg) => (
-                           <div key={msg.id} className={cn('flex w-full', msg.sender === 'user' ? 'justify-end' : 'justify-start')}>
-                            <div className={cn('max-w-[85%] p-3 flex flex-col')} style={{ background: msg.sender === 'user' ? customization.user_message_color : customization.bot_message_color, color: msg.sender === 'user' ? customization.user_message_text_color : customization.bot_message_text_color, borderRadius: `${customization.border_radius}px` }}>
-                              <div className="flex items-center justify-between gap-2 mb-2">
-                                <div className="flex items-center gap-2">
-                                  <Avatar className="h-5 w-5">
-                                    <AvatarFallback className="bg-transparent text-xs">
-                                      {msg.sender === 'agent' ? <Bot size={14} /> : <User size={14} />}
-                                    </AvatarFallback>
-                                  </Avatar>
-                                  <span className="text-xs font-semibold">{msg.sender === 'agent' ? 'Agent' : 'You'}</span>
-                                </div>
-                                <span className="text-xs" style={{ color: customization.time_color || (customization.dark_mode ? '#9CA3AF' : '#6B7280') }}>
-                                  {new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                                </span>
-                              </div>
-                              <p className="text-sm break-words">{msg.text}</p>
-                            </div>
-                          </div>
-                        ))}
-                        <div ref={messagesEndRef} />
+                        <Button size="sm" variant="ghost" className="text-white hover:bg-white/20 p-1 h-6 w-6" onClick={() => setIsExpanded(false)}><X className="h-4 w-4" /></Button>
                       </div>
+                    )}
 
-                      <div className="p-2 border-t" style={{borderColor: customization.dark_mode ? '#333' : '#eee'}}>
-                        <div className="flex items-center gap-2">
-                          {/* Input container with icons inside - Instagram style */}
-                          <div className={cn(
-                            'flex-grow flex items-center gap-1 px-3 py-2 border rounded-full transition-all',
-                            customization.dark_mode ? 'bg-gray-800 border-gray-700' : 'bg-gray-100 border-gray-200'
-                          )}>
-                            {/* Text input */}
-                            <input
-                              type="text"
-                              value={message}
-                              onChange={(e) => setMessage(e.target.value)}
-                              onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
-                              placeholder={customization.input_placeholder}
-                              className={cn(
-                                'flex-grow bg-transparent outline-none text-sm min-w-0',
-                                customization.dark_mode ? 'text-white placeholder-gray-500' : 'text-gray-900 placeholder-gray-400'
-                              )}
-                            />
-                            {/* Right icons - hide when typing, show send when has content */}
-                            {message ? (
-                              <button
-                                onClick={() => handleSendMessage()}
-                                className="p-1.5 rounded-full transition-colors"
-                                style={{ color: customization.primary_color }}
-                              >
-                                <Send size={20} />
-                              </button>
-                            ) : (
-                              <>
-                                <button
-                                  className={cn(
-                                    'p-1.5 rounded-full transition-colors',
-                                    customization.dark_mode ? 'hover:bg-gray-700 text-gray-400' : 'hover:bg-gray-200 text-gray-500'
-                                  )}
-                                  title="Attach image"
-                                >
-                                  <ImagePlus size={20} />
-                                </button>
-                                <button
-                                  className={cn(
-                                    'p-1.5 rounded-full transition-colors',
-                                    customization.dark_mode ? 'hover:bg-gray-700 text-gray-400' : 'hover:bg-gray-200 text-gray-500'
-                                  )}
-                                  title="Share location"
-                                >
-                                  <MapPin size={20} />
-                                </button>
-                              </>
-                            )}
+                    <div className="flex-1 p-4 overflow-y-auto space-y-4">
+                      {messages.map((msg) => (
+                         <div key={msg.id} className={cn('flex w-full', msg.sender === 'user' ? 'justify-end' : 'justify-start')}>
+                          <div className={cn('max-w-[85%] p-3 flex flex-col')} style={{ background: msg.sender === 'user' ? customization.user_message_color : customization.bot_message_color, color: msg.sender === 'user' ? customization.user_message_text_color : customization.bot_message_text_color, borderRadius: `${customization.border_radius}px` }}>
+                            <div className="flex items-center justify-between gap-2 mb-2">
+                              <div className="flex items-center gap-2">
+                                <Avatar className="h-5 w-5">
+                                  <AvatarFallback className="bg-transparent text-xs">
+                                    {msg.sender === 'agent' ? <Bot size={14} /> : <User size={14} />}
+                                  </AvatarFallback>
+                                </Avatar>
+                                <span className="text-xs font-semibold">{msg.sender === 'agent' ? 'Agent' : 'You'}</span>
+                              </div>
+                              <span className="text-xs" style={{ color: customization.time_color || (customization.dark_mode ? '#9CA3AF' : '#6B7280') }}>
+                                {new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                              </span>
+                            </div>
+                            <p className="text-sm break-words">{msg.text}</p>
                           </div>
-                          {/* Mic button - always outside */}
-                          <button
-                            onClick={handleToggleRecording}
-                            className={cn(
-                              'p-2 rounded-full transition-colors flex-shrink-0',
-                              isRecording ? 'bg-red-500 text-white' : (customization.dark_mode ? 'bg-gray-800 text-gray-400 hover:bg-gray-700' : 'bg-gray-100 text-gray-500 hover:bg-gray-200')
-                            )}
-                          >
-                            {isRecording ? <Loader2 className="animate-spin" size={20} /> : <Mic size={20} />}
-                          </button>
                         </div>
+                      ))}
+                      <div ref={messagesEndRef} />
+                    </div>
+
+                    <div className="p-2 border-t" style={{borderColor: customization.dark_mode ? '#333' : '#eee'}}>
+                      <div className="flex items-center gap-2">
+                        {/* Input container with icons inside - Instagram style */}
+                        <div className={cn(
+                          'flex-grow flex items-center gap-1 px-3 py-2 border rounded-full transition-all',
+                          customization.dark_mode ? 'bg-gray-800 border-gray-700' : 'bg-gray-100 border-gray-200'
+                        )}>
+                          {/* Text input */}
+                          <input
+                            type="text"
+                            value={message}
+                            onChange={(e) => setMessage(e.target.value)}
+                            onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
+                            placeholder={customization.input_placeholder}
+                            className={cn(
+                              'flex-grow bg-transparent outline-none text-sm min-w-0',
+                              customization.dark_mode ? 'text-white placeholder-gray-500' : 'text-gray-900 placeholder-gray-400'
+                            )}
+                          />
+                          {/* Right icons - hide when typing, show send when has content */}
+                          {message ? (
+                            <button
+                              onClick={() => handleSendMessage()}
+                              className="p-1.5 rounded-full transition-colors"
+                              style={{ color: customization.primary_color }}
+                            >
+                              <Send size={20} />
+                            </button>
+                          ) : (
+                            <>
+                              <button
+                                className={cn(
+                                  'p-1.5 rounded-full transition-colors',
+                                  customization.dark_mode ? 'hover:bg-gray-700 text-gray-400' : 'hover:bg-gray-200 text-gray-500'
+                                )}
+                                title="Attach image"
+                              >
+                                <ImagePlus size={20} />
+                              </button>
+                              <button
+                                className={cn(
+                                  'p-1.5 rounded-full transition-colors',
+                                  customization.dark_mode ? 'hover:bg-gray-700 text-gray-400' : 'hover:bg-gray-200 text-gray-500'
+                                )}
+                                title="Share location"
+                              >
+                                <MapPin size={20} />
+                              </button>
+                            </>
+                          )}
+                        </div>
+                        {/* Mic button - always outside */}
+                        <button
+                          onClick={handleToggleRecording}
+                          className={cn(
+                            'p-2 rounded-full transition-colors flex-shrink-0',
+                            isRecording ? 'bg-red-500 text-white' : (customization.dark_mode ? 'bg-gray-800 text-gray-400 hover:bg-gray-700' : 'bg-gray-100 text-gray-500 hover:bg-gray-200')
+                          )}
+                        >
+                          {isRecording ? <Loader2 className="animate-spin" size={20} /> : <Mic size={20} />}
+                        </button>
                       </div>
                     </div>
-                  ) : (
-                    <Button
-                      className="flex items-center justify-center"
-                      style={{
-                        width: '60px',
-                        height: '60px',
-                        borderRadius: '50%',
-                        background: customization.primary_color,
-                        boxShadow: '0 4px 12px rgba(0,0,0,0.15)'
-                      }}
-                      onClick={() => setIsExpanded(true)}
-                    >
-                      {customization.agent_avatar_url ? <img src={`${BACKEND_URL}/api/v1/proxy/image-proxy?url=${encodeURIComponent(customization.agent_avatar_url)}`} className="h-full w-full rounded-full object-cover"  /> : <MessageSquare className="h-8 w-8 text-white" />}
-                    </Button>
-                  )}
-                </div>
-              )}
-              {previewType === 'whatsapp' && <WhatsappPreview messages={messages} customization={customization} handleSendMessage={handleSendMessage} message={message} setMessage={setMessage} isRecording={isRecording} handleToggleRecording={handleToggleRecording} />}
-              {previewType === 'messenger' && <MessengerPreview messages={messages} customization={customization} handleSendMessage={handleSendMessage} message={message} setMessage={setMessage} isRecording={isRecording} handleToggleRecording={handleToggleRecording} />}
-              {previewType === 'instagram' && <InstagramPreview messages={messages} customization={customization} handleSendMessage={handleSendMessage} message={message} setMessage={setMessage} isRecording={isRecording} handleToggleRecording={handleToggleRecording} />}
-              {previewType === 'gmail' && <GmailPreview messages={messages} customization={customization} handleSendMessage={handleSendMessage} message={message} setMessage={setMessage} isRecording={isRecording} handleToggleRecording={handleToggleRecording} />}
-              {previewType === 'telegram' && <TelegramPreview messages={messages} customization={customization} handleSendMessage={handleSendMessage} message={message} setMessage={setMessage} isRecording={isRecording} handleToggleRecording={handleToggleRecording} />}
-              {previewType === 'voice' && customization.livekit_url && <VoiceAgentPreview liveKitToken={liveKitToken} shouldConnect={shouldConnect} setShouldConnect={setShouldConnect} livekitUrl={customization.livekit_url} customization={customization} backendUrl={BACKEND_URL}/>}
                   </div>
+                ) : (
+                  <Button
+                    className="flex items-center justify-center"
+                    style={{
+                      width: '60px',
+                      height: '60px',
+                      borderRadius: '50%',
+                      background: customization.primary_color,
+                      boxShadow: '0 4px 12px rgba(0,0,0,0.15)'
+                    }}
+                    onClick={() => setIsExpanded(true)}
+                  >
+                    {customization.agent_avatar_url ? <img src={`${BACKEND_URL}/api/v1/proxy/image-proxy?url=${encodeURIComponent(customization.agent_avatar_url)}`} className="h-full w-full rounded-full object-cover"  /> : <MessageSquare className="h-8 w-8 text-white" />}
+                  </Button>
+                )}
+              </div>
+            )}
+            {previewType === 'whatsapp' && <WhatsappPreview messages={messages} customization={customization} handleSendMessage={handleSendMessage} message={message} setMessage={setMessage} isRecording={isRecording} handleToggleRecording={handleToggleRecording} />}
+            {previewType === 'messenger' && <MessengerPreview messages={messages} customization={customization} handleSendMessage={handleSendMessage} message={message} setMessage={setMessage} isRecording={isRecording} handleToggleRecording={handleToggleRecording} />}
+            {previewType === 'instagram' && <InstagramPreview messages={messages} customization={customization} handleSendMessage={handleSendMessage} message={message} setMessage={setMessage} isRecording={isRecording} handleToggleRecording={handleToggleRecording} />}
+            {previewType === 'gmail' && <GmailPreview messages={messages} customization={customization} handleSendMessage={handleSendMessage} message={message} setMessage={setMessage} isRecording={isRecording} handleToggleRecording={handleToggleRecording} />}
+            {previewType === 'telegram' && <TelegramPreview messages={messages} customization={customization} handleSendMessage={handleSendMessage} message={message} setMessage={setMessage} isRecording={isRecording} handleToggleRecording={handleToggleRecording} />}
+            {previewType === 'voice' && customization.livekit_url && <VoiceAgentPreview liveKitToken={liveKitToken} shouldConnect={shouldConnect} setShouldConnect={setShouldConnect} livekitUrl={customization.livekit_url} customization={customization} backendUrl={BACKEND_URL}/>}
                 </div>
               </div>
             </div>

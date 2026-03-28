@@ -15,7 +15,7 @@ import {
   Zap,
   CircleDollarSign,
   Percent,
-  RefreshCw,
+  Loader2,
   LayoutDashboard,
 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -96,13 +96,8 @@ export default function CRMDashboard() {
 
   if (loading || !data) {
     return (
-      <div className="flex flex-col items-center justify-center h-64 gap-4">
-        <div className="relative">
-          <div className="h-12 w-12 rounded-2xl bg-gradient-to-br from-orange-500 to-red-600 flex items-center justify-center shadow-xl shadow-orange-500/25">
-            <RefreshCw className="h-6 w-6 text-white animate-spin" />
-          </div>
-        </div>
-        <p className="text-sm text-slate-500 dark:text-slate-400">{t('crm.common.loading')}</p>
+      <div className="flex items-center justify-center min-h-64">
+        <Loader2 className="h-6 w-6 animate-spin text-slate-400" />
       </div>
     );
   }
@@ -196,37 +191,40 @@ export default function CRMDashboard() {
   ];
 
   return (
-    <div className="space-y-6 p-6 animate-fade-in">
+    <div className="min-h-full bg-slate-50 dark:bg-slate-950">
       {/* Header */}
-      <div className="flex items-center gap-4">
-        <div className="p-4 rounded-2xl bg-gradient-to-br from-orange-500 to-red-600 shadow-xl shadow-orange-500/25">
-          <LayoutDashboard className="h-8 w-8 text-white" />
-        </div>
-        <div>
-          <h2 className="text-3xl font-bold bg-gradient-to-r from-orange-600 to-red-600 bg-clip-text text-transparent">
-            {t('crm.dashboard.title')}
-          </h2>
-          <p className="text-slate-600 dark:text-slate-400">
-            {t('crm.dashboard.subtitle')}
-          </p>
+      <div className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 px-6 py-6">
+        <div className="flex items-center gap-3">
+          <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-orange-500 to-red-600 flex items-center justify-center flex-shrink-0">
+            <LayoutDashboard className="h-6 w-6 text-white" />
+          </div>
+          <div>
+            <h1 className="text-2xl font-bold text-slate-900 dark:text-white leading-tight">
+              {t('crm.dashboard.title')}
+            </h1>
+            <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">
+              {t('crm.dashboard.subtitle')}
+            </p>
+          </div>
         </div>
       </div>
+      <div className="px-6 py-6 space-y-6">
 
       {/* Key Metrics */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
         {metrics.map((metric) => {
           const IconComponent = metric.icon;
           const colorMap: Record<string, { border: string; shadow: string; iconBg: string }> = {
-            'text-blue-600 dark:text-blue-400': { border: 'border-blue-200/80 dark:border-blue-700/60', shadow: 'shadow-blue-500/10 hover:shadow-blue-500/20', iconBg: 'from-blue-500 to-blue-600' },
-            'text-green-600 dark:text-green-400': { border: 'border-green-200/80 dark:border-green-700/60', shadow: 'shadow-green-500/10 hover:shadow-green-500/20', iconBg: 'from-green-500 to-green-600' },
-            'text-purple-600 dark:text-purple-400': { border: 'border-purple-200/80 dark:border-purple-700/60', shadow: 'shadow-purple-500/10 hover:shadow-purple-500/20', iconBg: 'from-purple-500 to-purple-600' },
-            'text-yellow-600 dark:text-yellow-400': { border: 'border-yellow-200/80 dark:border-yellow-700/60', shadow: 'shadow-yellow-500/10 hover:shadow-yellow-500/20', iconBg: 'from-yellow-500 to-yellow-600' },
+            'text-blue-600 dark:text-blue-400': { border: 'border-blue-200/80 dark:border-blue-700/60', iconBg: 'from-blue-500 to-blue-600' },
+            'text-green-600 dark:text-green-400': { border: 'border-green-200/80 dark:border-green-700/60', iconBg: 'from-green-500 to-green-600' },
+            'text-purple-600 dark:text-purple-400': { border: 'border-purple-200/80 dark:border-purple-700/60', iconBg: 'from-purple-500 to-purple-600' },
+            'text-yellow-600 dark:text-yellow-400': { border: 'border-yellow-200/80 dark:border-yellow-700/60', iconBg: 'from-yellow-500 to-yellow-600' },
           };
           const colors = colorMap[metric.iconColor] || colorMap['text-blue-600 dark:text-blue-400'];
           return (
-            <div key={metric.title} className={`p-5 rounded-2xl border ${colors.border} bg-gradient-to-br from-white to-slate-50 dark:from-slate-800 dark:to-slate-900 shadow-xl ${colors.shadow} hover:shadow-2xl hover:scale-[1.02] transition-all duration-300`}>
+            <div key={metric.title} className="p-5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm hover:shadow-md transition-all duration-300">
               <div className="flex items-start justify-between mb-3">
-                <div className={`h-12 w-12 rounded-xl bg-gradient-to-br ${colors.iconBg} flex items-center justify-center shadow-lg`}>
+                <div className={`h-10 w-10 rounded-lg bg-gradient-to-br ${colors.iconBg} flex items-center justify-center`}>
                   <IconComponent className="h-6 w-6 text-white" />
                 </div>
                 <div className={`flex items-center gap-1 px-2 py-1 rounded-full ${metric.trendUp ? 'bg-green-100 dark:bg-green-900/30' : 'bg-red-100 dark:bg-red-900/30'}`}>
@@ -253,8 +251,8 @@ export default function CRMDashboard() {
       </div>
 
       {/* Sales Pipeline */}
-      <div className="rounded-2xl border border-slate-200/80 dark:border-slate-700/60 bg-gradient-to-br from-white to-slate-50 dark:from-slate-800 dark:to-slate-900 shadow-xl overflow-hidden">
-        <div className="p-6 border-b border-slate-200/80 dark:border-slate-700/60">
+      <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm overflow-hidden">
+        <div className="p-6 border-b border-slate-200 dark:border-slate-800">
           <h3 className="text-lg font-semibold text-slate-900 dark:text-white">{t('crm.dashboard.pipelineOverview')}</h3>
           <p className="text-sm text-slate-500 dark:text-slate-400">{t('crm.dashboard.pipelineDescription')}</p>
         </div>
@@ -263,10 +261,10 @@ export default function CRMDashboard() {
             {pipelineStages.map((item) => (
               <div
                 key={item.stage}
-                className="text-center p-4 rounded-xl bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-800 dark:to-slate-900 border border-slate-200/80 dark:border-slate-700/60 hover:shadow-lg transition-all duration-200 cursor-pointer hover:scale-[1.02]"
+                className="text-center p-4 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:shadow-sm transition-all duration-200 cursor-pointer"
                 onClick={() => navigate(`/dashboard/crm/leads?stage=${item.stage}`)}
               >
-                <div className="text-3xl font-bold text-slate-900 dark:text-white mb-1">{item.count}</div>
+                <div className="text-2xl font-bold text-slate-900 dark:text-white mb-1">{item.count}</div>
                 <div className="text-sm text-slate-600 dark:text-slate-400 mb-3">{item.label}</div>
                 <div className={`h-2 rounded-full bg-gradient-to-r ${STAGE_COLORS[item.stage]} shadow-sm`} />
               </div>
@@ -278,8 +276,8 @@ export default function CRMDashboard() {
       {/* Main Content Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Recent Leads */}
-        <div className="rounded-2xl border border-slate-200/80 dark:border-slate-700/60 bg-gradient-to-br from-white to-slate-50 dark:from-slate-800 dark:to-slate-900 shadow-xl overflow-hidden">
-          <div className="p-6 border-b border-slate-200/80 dark:border-slate-700/60">
+        <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm overflow-hidden">
+          <div className="p-6 border-b border-slate-200 dark:border-slate-800">
             <div className="flex items-center justify-between">
               <div>
                 <h3 className="text-lg font-semibold text-slate-900 dark:text-white">{t('crm.dashboard.recentLeads')}</h3>
@@ -305,8 +303,8 @@ export default function CRMDashboard() {
                   onClick={() => navigate(`/dashboard/crm/leads/${lead.id}`)}
                 >
                   <div className="flex items-center gap-3">
-                    <div className="h-10 w-10 rounded-full bg-gradient-to-br from-orange-100 to-red-100 dark:from-orange-900/50 dark:to-red-900/50 flex items-center justify-center">
-                      <span className="text-sm font-bold text-orange-600 dark:text-orange-400">
+                    <div className="h-10 w-10 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
+                      <span className="text-sm font-semibold text-slate-600 dark:text-slate-300">
                         {lead.contact?.name?.charAt(0).toUpperCase() || '?'}
                       </span>
                     </div>
@@ -328,7 +326,7 @@ export default function CRMDashboard() {
               ))}
               {data.recentLeads.length === 0 && (
                 <div className="text-center py-8">
-                  <div className="h-14 w-14 rounded-2xl bg-gradient-to-br from-orange-100 to-red-100 dark:from-orange-900/30 dark:to-red-900/30 flex items-center justify-center mx-auto mb-4">
+                  <div className="h-14 w-14 rounded-xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center mx-auto mb-4">
                     <Users className="h-7 w-7 text-orange-500" />
                   </div>
                   <p className="text-slate-500 dark:text-slate-400 mb-2">{t('crm.leads.noLeads')}</p>
@@ -346,8 +344,8 @@ export default function CRMDashboard() {
         </div>
 
         {/* Active Campaigns */}
-        <div className="rounded-2xl border border-slate-200/80 dark:border-slate-700/60 bg-gradient-to-br from-white to-slate-50 dark:from-slate-800 dark:to-slate-900 shadow-xl overflow-hidden">
-          <div className="p-6 border-b border-slate-200/80 dark:border-slate-700/60">
+        <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm overflow-hidden">
+          <div className="p-6 border-b border-slate-200 dark:border-slate-800">
             <div className="flex items-center justify-between">
               <div>
                 <h3 className="text-lg font-semibold text-slate-900 dark:text-white">{t('crm.dashboard.activeCampaigns')}</h3>
@@ -416,7 +414,7 @@ export default function CRMDashboard() {
               })}
               {data.activeCampaigns.length === 0 && (
                 <div className="text-center py-8">
-                  <div className="h-14 w-14 rounded-2xl bg-gradient-to-br from-orange-100 to-red-100 dark:from-orange-900/30 dark:to-red-900/30 flex items-center justify-center mx-auto mb-4">
+                  <div className="h-14 w-14 rounded-xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center mx-auto mb-4">
                     <Send className="h-7 w-7 text-orange-500" />
                   </div>
                   <p className="text-slate-500 dark:text-slate-400 mb-2">{t('crm.dashboard.noActiveCampaigns')}</p>
@@ -437,21 +435,15 @@ export default function CRMDashboard() {
       {/* Quick Actions */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         {quickActions.map((action) => {
+
           const IconComponent = action.icon;
-          const shadowMap: Record<string, string> = {
-            'from-blue-500 to-blue-600': 'shadow-blue-500/25',
-            'from-purple-500 to-purple-600': 'shadow-purple-500/25',
-            'from-orange-500 to-orange-600': 'shadow-orange-500/25',
-            'from-green-500 to-green-600': 'shadow-green-500/25',
-          };
-          const shadow = shadowMap[action.gradient] || 'shadow-slate-500/25';
           return (
             <div
               key={action.title}
-              className="p-5 rounded-2xl border border-slate-200/80 dark:border-slate-700/60 bg-gradient-to-br from-white to-slate-50 dark:from-slate-800 dark:to-slate-900 shadow-xl cursor-pointer hover:shadow-2xl transition-all duration-300 hover:scale-[1.02] group"
+              className="p-5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm cursor-pointer hover:shadow-md transition-all duration-300 group"
               onClick={() => navigate(action.path)}
             >
-              <div className={`h-12 w-12 rounded-xl bg-gradient-to-r ${action.gradient} flex items-center justify-center shadow-lg ${shadow} mb-4 group-hover:scale-110 transition-transform`}>
+              <div className={`h-10 w-10 rounded-lg bg-gradient-to-r ${action.gradient} flex items-center justify-center mb-4`}>
                 <IconComponent className="h-6 w-6 text-white" />
               </div>
               <h3 className="font-semibold text-slate-900 dark:text-white mb-1">{action.title}</h3>
@@ -459,6 +451,7 @@ export default function CRMDashboard() {
             </div>
           );
         })}
+      </div>
       </div>
     </div>
   );

@@ -73,7 +73,7 @@ export const LoginPage = () => {
             Welcome Back
           </CardTitle>
           <CardDescription className="text-base dark:text-gray-400">
-            Sign in to access your AgentConnect dashboard
+            Sign in to access your HeyGenAlly dashboard
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -95,18 +95,10 @@ export const LoginPage = () => {
               />
             </div>
             <div className="grid gap-2">
-              <div className="flex items-center justify-between">
-                <Label htmlFor="password" className="dark:text-gray-300 flex items-center gap-2">
-                  <Lock className="h-4 w-4" />
-                  Password
-                </Label>
-                <Link
-                  to="#"
-                  className="text-sm text-blue-600 dark:text-blue-400 hover:underline"
-                >
-                  Forgot?
-                </Link>
-              </div>
+              <Label htmlFor="password" className="dark:text-gray-300 flex items-center gap-2">
+                <Lock className="h-4 w-4" />
+                Password
+              </Label>
               <Input
                 id="password"
                 type="password"
@@ -116,6 +108,14 @@ export const LoginPage = () => {
                 disabled={isLoading}
                 className="dark:bg-slate-900 dark:border-slate-600 dark:text-white h-11"
               />
+              <div className="flex justify-end">
+                <Link
+                  to="#"
+                  className="text-sm text-blue-600 dark:text-blue-400 hover:underline"
+                >
+                  Forgot password?
+                </Link>
+              </div>
             </div>
             <Button
               type="submit"

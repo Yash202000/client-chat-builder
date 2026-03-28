@@ -32,7 +32,7 @@ export const PrivacyPolicy = () => {
                 1. Information We Collect
               </h2>
               <p>
-                AgentConnect collects information necessary to provide our conversational AI services, including:
+                HeyGenAlly collects information necessary to provide our conversational AI services, including:
               </p>
               <ul className="list-disc ml-6 mt-2 space-y-1">
                 <li>Messages sent through connected platforms (Instagram, WhatsApp, Messenger, etc.)</li>
@@ -70,7 +70,7 @@ export const PrivacyPolicy = () => {
                 4. Third-Party Services
               </h2>
               <p>
-                AgentConnect integrates with third-party platforms including Meta (Instagram,
+                HeyGenAlly integrates with third-party platforms including Meta (Instagram,
                 Facebook Messenger), WhatsApp, Telegram, and others. Your use of these
                 platforms is subject to their respective privacy policies.
               </p>
@@ -92,7 +92,7 @@ export const PrivacyPolicy = () => {
               </h2>
               <p>
                 For questions about this privacy policy, please contact us through the
-                AgentConnect platform.
+                HeyGenAlly platform.
               </p>
             </section>
           </div>

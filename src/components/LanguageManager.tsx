@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -106,177 +105,118 @@ export const LanguageManager: React.FC<LanguageManagerProps> = ({
   };
 
   return (
-    <Card className="card-shadow-lg bg-white dark:bg-slate-800">
-      <CardHeader className="border-b border-slate-200 dark:border-slate-700">
-        <div className={`flex items-center justify-between ${isRTL ? 'flex-row-reverse' : ''}`}>
-          <CardTitle className="dark:text-white text-lg flex items-center gap-2">
-            <Globe className="h-5 w-5" />
-            {t('designer.multiLanguageSupport')}
-          </CardTitle>
+    <div className="bg-gradient-to-br from-slate-50 to-white dark:from-slate-900/50 dark:to-slate-800/50 rounded-xl p-2.5 border border-slate-200/80 dark:border-slate-700/80">
+      {/* Header */}
+      <div className={`flex items-center justify-between mb-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
+        <div className="flex items-center gap-1.5">
+          <div className="h-5 w-5 rounded bg-gradient-to-br from-indigo-500 to-blue-500 flex items-center justify-center">
+            <Globe className="h-3 w-3 text-white" />
+          </div>
+          <h4 className="font-semibold text-slate-800 dark:text-white text-xs">{t('designer.multiLanguageSupport')}</h4>
+        </div>
+        <div className="flex items-center gap-1.5">
+          {showAddLanguage && availableToAdd.length > 0 && (
+            <select
+              className="text-xs h-6 px-1.5 border border-slate-200 dark:border-slate-600 rounded bg-white dark:bg-slate-800 dark:text-white"
+              defaultValue=""
+              onChange={(e) => { if (e.target.value) handleAddLanguage(e.target.value); }}
+            >
+              <option value="" disabled>{t('designer.selectLanguageToAdd')}</option>
+              {availableToAdd.map((lang) => (
+                <option key={lang.code} value={lang.code}>{lang.code} — {lang.name}</option>
+              ))}
+            </select>
+          )}
           <Button
             onClick={() => setShowAddLanguage(!showAddLanguage)}
             size="sm"
             variant="outline"
-            className="btn-hover-lift"
+            className="h-6 px-2 text-xs"
           >
-            <Plus className={`h-4 w-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
+            <Plus className="h-3 w-3 mr-1" />
             {t('designer.addLanguage')}
           </Button>
         </div>
-      </CardHeader>
+      </div>
 
-      <CardContent className="p-4">
-        {showAddLanguage && availableToAdd.length > 0 && (
-          <div className="mb-4 p-4 bg-slate-50 dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-700">
-            <h4 className="text-sm font-semibold mb-2 dark:text-white">{t('designer.selectLanguageToAdd')}</h4>
-            <div className="grid grid-cols-2 gap-2 max-h-60 overflow-y-auto">
-              {availableToAdd.map((lang) => (
-                <Button
-                  key={lang.code}
-                  onClick={() => handleAddLanguage(lang.code)}
-                  variant="outline"
-                  size="sm"
-                  className="justify-start text-xs"
-                >
-                  <span className="font-mono mr-2">{lang.code}</span>
-                  {lang.name}
-                  {lang.rtl && <span className="ml-auto text-xs text-muted-foreground">RTL</span>}
-                </Button>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {activeLanguages.length > 0 && (
-          <Tabs value={selectedLanguage} onValueChange={setSelectedLanguage}>
-            <TabsList className="w-full flex-wrap h-auto bg-slate-100 dark:bg-slate-900 mb-4">
-              {activeLanguages.map((langCode) => {
-                const langInfo = getLanguageInfo(langCode);
-                return (
-                  <TabsTrigger
-                    key={langCode}
-                    value={langCode}
-                    className="data-[state=active]:bg-white dark:data-[state=active]:bg-slate-800 relative"
-                  >
-                    <span className="font-mono mr-2">{langCode}</span>
-                    {langInfo.name.split('(')[0].trim()}
-                    {langCode === defaultLanguage && (
-                      <Check className="h-3 w-3 ml-1 text-green-600" />
-                    )}
-                    {langInfo.rtl && (
-                      <span className="ml-1 text-xs bg-blue-100 dark:bg-blue-900 px-1 rounded">RTL</span>
-                    )}
-                  </TabsTrigger>
-                );
-              })}
-            </TabsList>
-
+      {activeLanguages.length > 0 && (
+        <Tabs value={selectedLanguage} onValueChange={setSelectedLanguage}>
+          <TabsList className="w-full flex-wrap h-auto bg-slate-100 dark:bg-slate-900 mb-2 p-0.5 gap-0.5">
             {activeLanguages.map((langCode) => {
               const langInfo = getLanguageInfo(langCode);
-              const texts = languages[langCode];
-
               return (
-                <TabsContent key={langCode} value={langCode} className="space-y-4">
-                  <div className={`flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-900 rounded-lg ${isRTL ? 'flex-row-reverse' : ''}`}>
-                    <div>
-                      <h4 className="font-semibold dark:text-white">
-                        {langInfo.name} {langInfo.rtl && <span className="text-xs text-muted-foreground">(RTL)</span>}
-                      </h4>
-                      <p className="text-xs text-muted-foreground dark:text-gray-400">
-                        {langCode === defaultLanguage ? t('designer.defaultLanguage') : t('designer.clickToSetDefault')}
-                      </p>
-                    </div>
-                    <div className="flex gap-2">
-                      {langCode !== defaultLanguage && (
-                        <Button
-                          onClick={() => onDefaultLanguageChange(langCode)}
-                          size="sm"
-                          variant="outline"
-                        >
-                          {t('designer.setAsDefault')}
-                        </Button>
-                      )}
-                      {activeLanguages.length > 1 && (
-                        <Button
-                          onClick={() => handleRemoveLanguage(langCode)}
-                          size="sm"
-                          variant="destructive"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      )}
-                    </div>
-                  </div>
-
-                  <div className="space-y-3">
-                    <div>
-                      <Label htmlFor={`${langCode}-header`} className="text-xs dark:text-gray-300 mb-1.5 block">
-                        {t('designer.headerTitle')}
-                      </Label>
-                      <Input
-                        id={`${langCode}-header`}
-                        value={texts.header_title}
-                        onChange={(e) => handleTextChange(langCode, 'header_title', e.target.value)}
-                        className="text-sm dark:bg-slate-800 dark:border-slate-600 dark:text-white"
-                        dir={langInfo.rtl ? 'rtl' : 'ltr'}
-                      />
-                    </div>
-
-                    <div>
-                      <Label htmlFor={`${langCode}-welcome`} className="text-xs dark:text-gray-300 mb-1.5 block">
-                        {t('designer.welcomeMessage')}
-                      </Label>
-                      <Input
-                        id={`${langCode}-welcome`}
-                        value={texts.welcome_message}
-                        onChange={(e) => handleTextChange(langCode, 'welcome_message', e.target.value)}
-                        className="text-sm dark:bg-slate-800 dark:border-slate-600 dark:text-white"
-                        dir={langInfo.rtl ? 'rtl' : 'ltr'}
-                      />
-                    </div>
-
-                    <div>
-                      <Label htmlFor={`${langCode}-placeholder`} className="text-xs dark:text-gray-300 mb-1.5 block">
-                        {t('designer.inputPlaceholder')}
-                      </Label>
-                      <Input
-                        id={`${langCode}-placeholder`}
-                        value={texts.input_placeholder}
-                        onChange={(e) => handleTextChange(langCode, 'input_placeholder', e.target.value)}
-                        className="text-sm dark:bg-slate-800 dark:border-slate-600 dark:text-white"
-                        dir={langInfo.rtl ? 'rtl' : 'ltr'}
-                      />
-                    </div>
-
-                    <div>
-                      <Label htmlFor={`${langCode}-proactive`} className="text-xs dark:text-gray-300 mb-1.5 block">
-                        {t('designer.proactiveMessage')}
-                      </Label>
-                      <Input
-                        id={`${langCode}-proactive`}
-                        value={texts.proactive_message}
-                        onChange={(e) => handleTextChange(langCode, 'proactive_message', e.target.value)}
-                        className="text-sm dark:bg-slate-800 dark:border-slate-600 dark:text-white"
-                        dir={langInfo.rtl ? 'rtl' : 'ltr'}
-                      />
-                    </div>
-                  </div>
-                </TabsContent>
+                <TabsTrigger
+                  key={langCode}
+                  value={langCode}
+                  className="h-6 px-2 text-xs data-[state=active]:bg-white dark:data-[state=active]:bg-slate-800"
+                >
+                  <span className="font-mono">{langCode}</span>
+                  {langCode === defaultLanguage && <Check className="h-2.5 w-2.5 ml-1 text-green-600" />}
+                  {langInfo.rtl && <span className="ml-1 text-xs opacity-60">RTL</span>}
+                </TabsTrigger>
               );
             })}
-          </Tabs>
-        )}
+          </TabsList>
 
-        {activeLanguages.length === 0 && (
-          <div className="text-center py-8 text-muted-foreground">
-            <Globe className="h-12 w-12 mx-auto mb-2 opacity-50" />
-            <p>{t('designer.noLanguagesAdded')}</p>
-            <Button onClick={() => setShowAddLanguage(true)} className="mt-4">
-              {t('designer.addFirstLanguage')}
-            </Button>
-          </div>
-        )}
-      </CardContent>
-    </Card>
+          {activeLanguages.map((langCode) => {
+            const langInfo = getLanguageInfo(langCode);
+            const texts = languages[langCode];
+            return (
+              <TabsContent key={langCode} value={langCode} className="mt-0 space-y-1.5">
+                {/* Lang actions bar */}
+                <div className={`flex items-center justify-between ${isRTL ? 'flex-row-reverse' : ''}`}>
+                  <span className="text-xs text-slate-500 dark:text-slate-400">
+                    {langCode === defaultLanguage ? `✓ ${t('designer.defaultLanguage')}` : langInfo.name.split('(')[0].trim()}
+                    {langInfo.rtl && <span className="ml-1 opacity-60">(RTL)</span>}
+                  </span>
+                  <div className="flex gap-1">
+                    {langCode !== defaultLanguage && (
+                      <Button onClick={() => onDefaultLanguageChange(langCode)} size="sm" variant="outline" className="h-5 px-1.5 text-xs">
+                        {t('designer.setAsDefault')}
+                      </Button>
+                    )}
+                    {activeLanguages.length > 1 && (
+                      <Button onClick={() => handleRemoveLanguage(langCode)} size="sm" variant="destructive" className="h-5 w-5 p-0">
+                        <Trash2 className="h-3 w-3" />
+                      </Button>
+                    )}
+                  </div>
+                </div>
+
+                {/* Fields in 2-column grid */}
+                <div className="grid grid-cols-2 gap-1.5">
+                  <div>
+                    <Label className="text-xs dark:text-gray-300 mb-0.5 block">{t('designer.headerTitle')}</Label>
+                    <Input value={texts.header_title} onChange={(e) => handleTextChange(langCode, 'header_title', e.target.value)} className="text-xs h-7 dark:bg-slate-800 dark:border-slate-600 dark:text-white" dir={langInfo.rtl ? 'rtl' : 'ltr'} />
+                  </div>
+                  <div>
+                    <Label className="text-xs dark:text-gray-300 mb-0.5 block">{t('designer.inputPlaceholder')}</Label>
+                    <Input value={texts.input_placeholder} onChange={(e) => handleTextChange(langCode, 'input_placeholder', e.target.value)} className="text-xs h-7 dark:bg-slate-800 dark:border-slate-600 dark:text-white" dir={langInfo.rtl ? 'rtl' : 'ltr'} />
+                  </div>
+                  <div>
+                    <Label className="text-xs dark:text-gray-300 mb-0.5 block">{t('designer.welcomeMessage')}</Label>
+                    <Input value={texts.welcome_message} onChange={(e) => handleTextChange(langCode, 'welcome_message', e.target.value)} className="text-xs h-7 dark:bg-slate-800 dark:border-slate-600 dark:text-white" dir={langInfo.rtl ? 'rtl' : 'ltr'} />
+                  </div>
+                  <div>
+                    <Label className="text-xs dark:text-gray-300 mb-0.5 block">{t('designer.proactiveMessage')}</Label>
+                    <Input value={texts.proactive_message} onChange={(e) => handleTextChange(langCode, 'proactive_message', e.target.value)} className="text-xs h-7 dark:bg-slate-800 dark:border-slate-600 dark:text-white" dir={langInfo.rtl ? 'rtl' : 'ltr'} />
+                  </div>
+                </div>
+              </TabsContent>
+            );
+          })}
+        </Tabs>
+      )}
+
+      {activeLanguages.length === 0 && (
+        <div className="text-center py-4 text-muted-foreground">
+          <Globe className="h-8 w-8 mx-auto mb-1 opacity-50" />
+          <p className="text-xs">{t('designer.noLanguagesAdded')}</p>
+          <Button onClick={() => setShowAddLanguage(true)} size="sm" className="mt-2 h-7 text-xs">
+            {t('designer.addFirstLanguage')}
+          </Button>
+        </div>
+      )}
+    </div>
   );
 };

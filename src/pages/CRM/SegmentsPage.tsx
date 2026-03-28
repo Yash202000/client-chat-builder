@@ -10,6 +10,7 @@ import {
   Edit,
   Eye,
   RefreshCw,
+  Loader2,
   Layers,
   Database,
 } from 'lucide-react';
@@ -297,43 +298,51 @@ export default function SegmentsPage() {
   const totalReach = segments.reduce((sum, s) => sum + s.contact_count + s.lead_count, 0);
 
   return (
-    <div className="p-6 space-y-6 animate-fade-in">
-      {/* Header */}
-      <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
-        <div className="flex items-center gap-4">
-          <div className="p-4 rounded-2xl bg-gradient-to-br from-purple-500 to-indigo-600 shadow-xl shadow-purple-500/25">
-            <Layers className="h-8 w-8 text-white" />
-          </div>
-          <div>
-            <h1 className="text-3xl font-bold bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent">{t('crm.segments.title', 'Segments')}</h1>
-            <p className="text-slate-600 dark:text-slate-400">
-              {t('crm.segments.description', 'Create and manage audience segments for targeted campaigns')}
-            </p>
+    <div className="min-h-full bg-slate-50 dark:bg-slate-950">
+      {/* Header bar */}
+      <div className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800">
+        <div className="px-6 py-6">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center flex-shrink-0">
+                <Layers className="h-6 w-6 text-white" />
+              </div>
+              <div>
+                <h1 className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent leading-tight">
+                  {t('crm.segments.title', 'Segments')}
+                </h1>
+                <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">
+                  {t('crm.segments.description', 'Create and manage audience segments for targeted campaigns')}
+                </p>
+              </div>
+            </div>
+            <Button size="sm" onClick={() => setIsCreateDialogOpen(true)} className="h-9 px-4 text-sm bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white">
+              <Plus className="h-4 w-4 mr-2" />
+              {t('crm.segments.create', 'Create Segment')}
+            </Button>
           </div>
         </div>
-        <Button onClick={() => setIsCreateDialogOpen(true)} className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white rounded-xl shadow-lg shadow-purple-500/25 hover:shadow-xl hover:shadow-purple-500/30 transition-all">
-          <Plus className="h-4 w-4 mr-2" />
-          {t('crm.segments.create', 'Create Segment')}
-        </Button>
       </div>
+
+      <div className="px-6 py-6 space-y-6">
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div className="p-5 rounded-2xl border border-purple-200/80 dark:border-purple-700/60 bg-gradient-to-br from-white to-purple-50 dark:from-slate-800 dark:to-slate-900 shadow-xl shadow-purple-500/10 hover:shadow-2xl hover:shadow-purple-500/20 hover:scale-[1.02] transition-all duration-300">
+        <div className="p-5 rounded-2xl border border-purple-200/80 dark:border-purple-700/60 bg-white dark:bg-slate-800 shadow-sm hover:shadow-md transition-all duration-200">
           <div className="flex items-start justify-between">
             <div>
               <p className="text-xs font-medium text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1.5">
                 {t('crm.segments.totalSegments', 'Total Segments')}
               </p>
-              <p className="text-2xl font-bold text-slate-900 dark:text-white">{totalSegments}</p>
+              <p className="text-2xl font-bold text-slate-800 dark:text-white">{totalSegments}</p>
             </div>
-            <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center shadow-lg shadow-purple-500/25">
+            <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center shadow-lg">
               <Layers className="h-6 w-6 text-white" />
             </div>
           </div>
         </div>
 
-        <div className="p-5 rounded-2xl border border-blue-200/80 dark:border-blue-700/60 bg-gradient-to-br from-white to-blue-50 dark:from-slate-800 dark:to-slate-900 shadow-xl shadow-blue-500/10 hover:shadow-2xl hover:shadow-blue-500/20 hover:scale-[1.02] transition-all duration-300">
+        <div className="p-5 rounded-2xl border border-blue-200/80 dark:border-blue-700/60 bg-white dark:bg-slate-800 shadow-sm hover:shadow-md transition-all duration-200">
           <div className="flex items-start justify-between">
             <div>
               <p className="text-xs font-medium text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1.5">
@@ -341,13 +350,13 @@ export default function SegmentsPage() {
               </p>
               <p className="text-2xl font-bold text-slate-900 dark:text-white">{dynamicSegments}</p>
             </div>
-            <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-blue-500 to-cyan-600 flex items-center justify-center shadow-lg shadow-blue-500/25">
+            <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-blue-500 to-cyan-600 flex items-center justify-center shadow-lg">
               <Filter className="h-6 w-6 text-white" />
             </div>
           </div>
         </div>
 
-        <div className="p-5 rounded-2xl border border-green-200/80 dark:border-green-700/60 bg-gradient-to-br from-white to-green-50 dark:from-slate-800 dark:to-slate-900 shadow-xl shadow-green-500/10 hover:shadow-2xl hover:shadow-green-500/20 hover:scale-[1.02] transition-all duration-300">
+        <div className="p-5 rounded-2xl border border-green-200/80 dark:border-green-700/60 bg-white dark:bg-slate-800 shadow-sm hover:shadow-md transition-all duration-200">
           <div className="flex items-start justify-between">
             <div>
               <p className="text-xs font-medium text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1.5">
@@ -355,13 +364,13 @@ export default function SegmentsPage() {
               </p>
               <p className="text-2xl font-bold text-slate-900 dark:text-white">{staticSegments}</p>
             </div>
-            <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center shadow-lg shadow-green-500/25">
+            <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center shadow-lg">
               <Database className="h-6 w-6 text-white" />
             </div>
           </div>
         </div>
 
-        <div className="p-5 rounded-2xl border border-indigo-200/80 dark:border-indigo-700/60 bg-gradient-to-br from-white to-indigo-50 dark:from-slate-800 dark:to-slate-900 shadow-xl shadow-indigo-500/10 hover:shadow-2xl hover:shadow-indigo-500/20 hover:scale-[1.02] transition-all duration-300">
+        <div className="p-5 rounded-2xl border border-indigo-200/80 dark:border-indigo-700/60 bg-white dark:bg-slate-800 shadow-sm hover:shadow-md transition-all duration-200">
           <div className="flex items-start justify-between">
             <div>
               <p className="text-xs font-medium text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1.5">
@@ -369,7 +378,7 @@ export default function SegmentsPage() {
               </p>
               <p className="text-2xl font-bold text-slate-900 dark:text-white">{totalReach}</p>
             </div>
-            <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center shadow-lg shadow-indigo-500/25">
+            <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center shadow-lg">
               <Users className="h-6 w-6 text-white" />
             </div>
           </div>
@@ -377,15 +386,15 @@ export default function SegmentsPage() {
       </div>
 
       {/* Filters */}
-      <div className="p-4 rounded-2xl border border-slate-200/80 dark:border-slate-700/60 bg-gradient-to-br from-white to-slate-50 dark:from-slate-800 dark:to-slate-900 shadow-xl">
+      <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4">
         <div className="flex flex-col sm:flex-row gap-4 items-stretch sm:items-center">
-          <div className="relative flex-1 max-w-sm">
-            <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 h-4 w-4 text-slate-400" />
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-slate-400" />
             <Input
               placeholder={t('crm.segments.searchPlaceholder', 'Search segments...')}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-11 rounded-xl border-slate-200 dark:border-slate-600 dark:bg-slate-800/50 focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500"
+              className="pl-9 h-9 dark:bg-slate-900 dark:border-slate-800"
             />
           </div>
           <Select value={typeFilter} onValueChange={setTypeFilter}>
@@ -406,7 +415,7 @@ export default function SegmentsPage() {
       </div>
 
       {/* Segments Table */}
-      <div className="rounded-2xl border border-slate-200/80 dark:border-slate-700/60 bg-gradient-to-br from-white to-slate-50 dark:from-slate-800 dark:to-slate-900 shadow-xl overflow-hidden">
+      <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm overflow-hidden">
         <Table>
           <TableHeader>
             <TableRow className="border-b border-slate-200/80 dark:border-slate-700/60 bg-slate-50/50 dark:bg-slate-800/50">
@@ -422,12 +431,7 @@ export default function SegmentsPage() {
             {isLoading ? (
               <TableRow>
                 <TableCell colSpan={6} className="text-center py-12">
-                  <div className="flex flex-col items-center gap-3">
-                    <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center shadow-lg shadow-purple-500/25">
-                      <RefreshCw className="h-5 w-5 text-white animate-spin" />
-                    </div>
-                    <p className="text-sm text-slate-500 dark:text-slate-400">{t('common.loading', 'Loading...')}</p>
-                  </div>
+                  <Loader2 className="h-6 w-6 animate-spin text-slate-400 mx-auto" />
                 </TableCell>
               </TableRow>
             ) : filteredSegments.length === 0 ? (
@@ -519,6 +523,8 @@ export default function SegmentsPage() {
             )}
           </TableBody>
         </Table>
+      </div>
+
       </div>
 
       {/* Create/Edit Dialog */}
@@ -644,7 +650,7 @@ export default function SegmentsPage() {
             <Button
               onClick={isEditDialogOpen ? handleUpdateSegment : handleCreateSegment}
               disabled={!formData.name.trim() || isSubmitting}
-              className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white rounded-xl shadow-lg shadow-purple-500/25"
+              className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white rounded-xl shadow-lg"
             >
               {isSubmitting
                 ? t('common.saving', 'Saving...')
@@ -730,7 +736,7 @@ export default function SegmentsPage() {
             <AlertDialogCancel className="rounded-xl">{t('common.cancel', 'Cancel')}</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleDeleteSegment}
-              className="bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white rounded-xl shadow-lg shadow-red-500/25"
+              className="bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white rounded-xl shadow-lg"
             >
               {t('common.delete', 'Delete')}
             </AlertDialogAction>

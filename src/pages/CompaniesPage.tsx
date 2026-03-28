@@ -2,14 +2,13 @@ import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
 import { Company } from "@/types";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger, DialogDescription } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { toast } from "@/hooks/use-toast";
-import { Building2, PlusCircle } from "lucide-react";
+import { Building2, PlusCircle, Loader2 } from "lucide-react";
 import { useI18n } from '@/hooks/useI18n';
 
 export const CompaniesPage = () => {
@@ -49,100 +48,106 @@ export const CompaniesPage = () => {
   };
 
   return (
-    <div className="w-full max-w-7xl mx-auto space-y-8" dir={isRTL ? 'rtl' : 'ltr'}>
-      <header>
-        <h1 className="text-4xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent mb-2">
-          🏢 {t('companies.title')}
-        </h1>
-        <p className="text-gray-600 dark:text-gray-400 text-lg">{t('companies.subtitle')}</p>
-      </header>
-
-      <Card className="card-shadow-lg border-slate-200 dark:border-slate-700 dark:bg-slate-800">
-        <CardHeader className={`flex flex-row items-center ${isRTL ? 'flex-row-reverse' : ''} justify-between space-y-0 pb-4 border-b border-slate-200 dark:border-slate-700 bg-gradient-to-r from-slate-50 to-slate-100 dark:from-slate-800 dark:to-slate-900`}>
-          <div>
-            <CardTitle className="text-2xl font-bold dark:text-white">{t('companies.allCompanies')}</CardTitle>
-            <CardDescription className="dark:text-gray-400">{t('companies.viewAndManage')}</CardDescription>
+    <div className="min-h-full bg-slate-50 dark:bg-slate-950" dir={isRTL ? 'rtl' : 'ltr'}>
+      {/* Header */}
+      <div className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 px-6 py-6">
+        <div className={`flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 ${isRTL ? 'lg:flex-row-reverse' : ''}`}>
+          <div className="flex items-center gap-3">
+            <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center flex-shrink-0">
+              <Building2 className="h-6 w-6 text-white" />
+            </div>
+            <div>
+              <h1 className="text-2xl font-bold text-slate-900 dark:text-white leading-tight">{t('companies.title')}</h1>
+              <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">{t('companies.subtitle')}</p>
+            </div>
           </div>
-          <Dialog open={isCreateModalOpen} onOpenChange={setCreateModalOpen}>
-            <DialogTrigger asChild>
-              <Button className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white shadow-lg hover:shadow-xl transition-all">
-                <PlusCircle className={`${isRTL ? 'ml-2' : 'mr-2'} h-4 w-4`} /> {t('companies.createCompany')}
-              </Button>
-            </DialogTrigger>
-            <DialogContent dir={isRTL ? 'rtl' : 'ltr'} className="dark:bg-slate-800 dark:border-slate-700">
-              <DialogHeader>
-                <DialogTitle className="dark:text-white">{t('companies.createDialogTitle')}</DialogTitle>
-                <DialogDescription className="dark:text-gray-400">
-                  {t('companies.createDialogDesc')}
-                </DialogDescription>
-              </DialogHeader>
-              <div className="py-4">
-                <Label htmlFor="company-name" className="dark:text-gray-300">{t('companies.companyName')}</Label>
-                <Input
-                  id="company-name"
-                  placeholder={t('companies.companyNamePlaceholder')}
-                  value={newCompanyName}
-                  onChange={(e) => setNewCompanyName(e.target.value)}
-                  className="dark:bg-slate-900 dark:border-slate-600 dark:text-white mt-2"
-                />
+          <Button
+            onClick={() => setCreateModalOpen(true)}
+            className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white rounded-xl h-9 px-4 text-sm"
+          >
+            <PlusCircle className={`${isRTL ? 'ml-2' : 'mr-2'} h-4 w-4`} /> {t('companies.createCompany')}
+          </Button>
+        </div>
+      </div>
+      <div className="px-6 py-6">
+        <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm overflow-hidden">
+          <div className="p-6 border-b border-slate-200 dark:border-slate-800">
+            <h3 className="text-base font-semibold text-slate-900 dark:text-white">{t('companies.allCompanies')}</h3>
+            <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">{t('companies.viewAndManage')}</p>
+          </div>
+          <div className="p-6">
+            {isLoading ? (
+              <div className="flex items-center justify-center py-8">
+                <Loader2 className="h-6 w-6 animate-spin text-slate-400" />
               </div>
-              <DialogFooter className={isRTL ? 'flex-row-reverse' : ''}>
-                <Button variant="outline" onClick={() => setCreateModalOpen(false)} className="dark:border-slate-600 dark:text-white dark:hover:bg-slate-700">
-                  {t('common.cancel')}
-                </Button>
-                <Button onClick={handleCreateCompany} disabled={createCompanyMutation.isPending} className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white">
-                  {createCompanyMutation.isPending ? t('companies.creating') : t('companies.createCompany')}
-                </Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
-        </CardHeader>
-        <CardContent className="pt-6">
-          {isLoading ? (
-            <div className="flex items-center justify-center py-12">
-              <div className="flex items-center gap-2 text-muted-foreground dark:text-gray-400">
-                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-indigo-600 dark:border-indigo-400"></div>
-                <span>{t('companies.loadingCompanies')}</span>
-              </div>
-            </div>
-          ) : companies && companies.length > 0 ? (
-            <Table>
-              <TableHeader>
-                <TableRow className="border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700/50">
-                  <TableHead className="dark:text-gray-300">{t('companies.id')}</TableHead>
-                  <TableHead className="dark:text-gray-300">{t('companies.companyName')}</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {companies.map((company) => (
-                  <TableRow key={company.id} className="border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700/50">
-                    <TableCell className="font-mono text-sm text-gray-600 dark:text-gray-400">{company.id}</TableCell>
-                    <TableCell className="font-medium dark:text-white">
-                      <div className="flex items-center gap-2">
-                        <div className="w-8 h-8 bg-gradient-to-br from-indigo-100 to-purple-100 dark:from-indigo-900/50 dark:to-purple-900/50 rounded-full flex items-center justify-center">
-                          <Building2 className="h-4 w-4 text-indigo-600 dark:text-indigo-400" />
-                        </div>
-                        {company.name}
-                      </div>
-                    </TableCell>
+            ) : companies && companies.length > 0 ? (
+              <Table>
+                <TableHeader>
+                  <TableRow className="border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50">
+                    <TableHead className="text-slate-600 dark:text-slate-400">{t('companies.id')}</TableHead>
+                    <TableHead className="text-slate-600 dark:text-slate-400">{t('companies.companyName')}</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          ) : (
-            <div className="text-center py-16 border-2 border-dashed border-slate-300 dark:border-slate-700 rounded-lg bg-slate-50 dark:bg-slate-900/50">
-              <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-br from-indigo-100 to-purple-100 dark:from-indigo-900/50 dark:to-purple-900/50 mb-4">
-                <Building2 className="w-8 h-8 text-indigo-600 dark:text-indigo-400" />
+                </TableHeader>
+                <TableBody>
+                  {companies.map((company) => (
+                    <TableRow key={company.id} className="border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/50">
+                      <TableCell className="font-mono text-sm text-slate-500 dark:text-slate-400">{company.id}</TableCell>
+                      <TableCell className="font-medium text-slate-900 dark:text-white">
+                        <div className="flex items-center gap-2">
+                          <div className="w-8 h-8 bg-indigo-50 dark:bg-indigo-900/20 rounded-lg flex items-center justify-center">
+                            <Building2 className="h-4 w-4 text-indigo-600 dark:text-indigo-400" />
+                          </div>
+                          {company.name}
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            ) : (
+              <div className="text-center py-12">
+                <div className="h-14 w-14 rounded-xl bg-indigo-50 dark:bg-indigo-900/20 flex items-center justify-center mx-auto mb-4">
+                  <Building2 className="w-7 h-7 text-indigo-600 dark:text-indigo-400" />
+                </div>
+                <h3 className="text-base font-semibold text-slate-900 dark:text-white">{t('companies.noCompaniesFound')}</h3>
+                <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">{t('companies.createFirstCompany')}</p>
+                <Button onClick={() => setCreateModalOpen(true)} className="mt-4 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white rounded-xl h-9 px-4 text-sm">
+                  <PlusCircle className={`${isRTL ? 'ml-2' : 'mr-2'} h-4 w-4`} /> {t('companies.createCompany')}
+                </Button>
               </div>
-              <h3 className="text-lg font-semibold text-gray-800 dark:text-white">{t('companies.noCompaniesFound')}</h3>
-              <p className="text-gray-500 dark:text-gray-400 mt-2">{t('companies.createFirstCompany')}</p>
-              <Button onClick={() => setCreateModalOpen(true)} className="mt-6 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white">
-                <PlusCircle className={`${isRTL ? 'ml-2' : 'mr-2'} h-4 w-4`} /> {t('companies.createCompany')}
-              </Button>
-            </div>
-          )}
-        </CardContent>
-      </Card>
+            )}
+          </div>
+        </div>
+      </div>
+
+      <Dialog open={isCreateModalOpen} onOpenChange={setCreateModalOpen}>
+        <DialogContent dir={isRTL ? 'rtl' : 'ltr'} className="rounded-xl dark:bg-slate-900 dark:border-slate-800">
+          <DialogHeader>
+            <DialogTitle className="dark:text-white">{t('companies.createDialogTitle')}</DialogTitle>
+            <DialogDescription className="dark:text-slate-400">
+              {t('companies.createDialogDesc')}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-4">
+            <Label htmlFor="company-name" className="dark:text-slate-300">{t('companies.companyName')}</Label>
+            <Input
+              id="company-name"
+              placeholder={t('companies.companyNamePlaceholder')}
+              value={newCompanyName}
+              onChange={(e) => setNewCompanyName(e.target.value)}
+              className="dark:bg-slate-800 dark:border-slate-700 dark:text-white mt-2"
+            />
+          </div>
+          <DialogFooter className={isRTL ? 'flex-row-reverse' : ''}>
+            <Button variant="outline" onClick={() => setCreateModalOpen(false)} className="dark:border-slate-700 dark:text-white dark:hover:bg-slate-800">
+              {t('common.cancel')}
+            </Button>
+            <Button onClick={handleCreateCompany} disabled={createCompanyMutation.isPending} className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white rounded-xl">
+              {createCompanyMutation.isPending ? t('companies.creating') : t('companies.createCompany')}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

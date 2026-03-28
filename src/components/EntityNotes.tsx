@@ -193,7 +193,6 @@ export const EntityNotes: React.FC<EntityNotesProps> = ({ contactId, leadId, com
           {isLoading ? (
             <div className="flex flex-col items-center justify-center py-8 gap-3">
               <div className="relative">
-                <div className="absolute inset-0 bg-gradient-to-br from-amber-500 to-orange-600 rounded-full blur-lg opacity-30 animate-pulse" />
                 <div className="relative w-12 h-12 bg-gradient-to-br from-amber-500 to-orange-600 rounded-full flex items-center justify-center shadow-lg shadow-amber-500/25">
                   <Loader2 className="h-6 w-6 text-white animate-spin" />
                 </div>
@@ -202,7 +201,6 @@ export const EntityNotes: React.FC<EntityNotesProps> = ({ contactId, leadId, com
           ) : notes.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-8 text-center border-2 border-dashed border-slate-200 dark:border-slate-700 rounded-xl bg-slate-50/50 dark:bg-slate-900/30">
               <div className="relative mb-4">
-                <div className="absolute inset-0 bg-gradient-to-br from-amber-500 to-orange-600 rounded-full blur-lg opacity-30" />
                 <div className="relative w-14 h-14 bg-gradient-to-br from-amber-500 to-orange-600 rounded-full flex items-center justify-center shadow-lg shadow-amber-500/25">
                   <StickyNote className="h-7 w-7 text-white" />
                 </div>

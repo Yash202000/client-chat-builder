@@ -149,14 +149,11 @@ export default function MessageTemplatesPage() {
   };
 
   return (
-    <div className="p-6 max-w-7xl mx-auto space-y-6">
+    <div className="p-6 space-y-6">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <div className="relative group">
-            <div className="absolute inset-0 bg-gradient-to-br from-purple-500 to-pink-600 rounded-2xl blur-lg opacity-40 group-hover:opacity-60 transition-all" />
-            <div className="relative p-4 rounded-2xl bg-gradient-to-br from-purple-500 to-pink-600 shadow-xl shadow-purple-500/25">
-              <MessageSquare className="h-8 w-8 text-white" />
-            </div>
+          <div className="p-4 rounded-2xl bg-gradient-to-br from-purple-500 to-pink-600 shadow-xl shadow-purple-500/25">
+            <MessageSquare className="h-8 w-8 text-white" />
           </div>
           <div>
             <h1 className="text-4xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent mb-1">

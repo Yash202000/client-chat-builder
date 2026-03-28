@@ -4,6 +4,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import {
   getChannels,
   createChannel,
+  renameChannel,
   getChannelMessages,
   getChannelMembers,
   createChannelMessage,
@@ -23,7 +24,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Bot, User, Send, Loader2, Video, Plus, Users, MessageSquare, Search, History, PanelLeftClose, PanelLeftOpen } from 'lucide-react';
+import { Bot, User, Send, Loader2, Video, Plus, Users, MessageSquare, Search, History, PanelLeftClose, Clock, X, Pencil, Check } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -31,6 +32,7 @@ import { useAuth } from '@/hooks/useAuth';
 import axios from 'axios';
 import { useToast } from '@/components/ui/use-toast';
 import CreateChannelModal from '@/components/CreateChannelModal';
+import NewChatModal from '@/components/NewChatModal';
 import ManageChannelMembersModal from '@/components/ManageChannelMembersModal';
 import FileUpload from '@/components/FileUpload';
 import FileAttachment from '@/components/FileAttachment';
@@ -43,7 +45,6 @@ import SearchModal from '@/components/SearchModal';
 import IncomingCallModal from '@/components/IncomingCallModal';
 import CallingModal from '@/components/CallingModal';
 import CallHistory from '@/components/CallHistory';
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { convertMentionsToApiFormat } from '@/utils/mentions';
 import { getChannelDisplayName, getChannelAvatar, getChannelDescription } from '@/utils/channelUtils';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
@@ -52,6 +53,52 @@ import { useNotifications } from '@/hooks/useNotifications';
 import { BACKEND_URL } from '@/config/env';
 import { API_BASE_URL } from '@/config/api';
 import { useI18n } from '@/hooks/useI18n';
+import { motion, AnimatePresence } from 'framer-motion';
+
+// Card animation variants (matching ConversationsPage styling)
+const channelCardVariants = {
+  hidden: { opacity: 0, scale: 0.95 },
+  visible: {
+    opacity: 1,
+    scale: 1,
+    transition: {
+      type: "spring",
+      stiffness: 400,
+      damping: 25
+    }
+  },
+  hover: {
+    scale: 1.02,
+    transition: {
+      type: "spring",
+      stiffness: 400,
+      damping: 10
+    }
+  },
+  tap: {
+    scale: 0.98
+  }
+};
+
+// Message animation variants
+const messageVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: { duration: 0.15 }
+  }
+};
+
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.01,
+      delayChildren: 0,
+    }
+  }
+};
 
 // Define types for chat data
 interface ChatChannel {
@@ -62,7 +109,16 @@ interface ChatChannel {
   team_id: number | null;
   creator_id: number | null;
   created_at: string;
-  participants: { user_id: number }[];
+  participants: {
+    user_id: number;
+    user?: {
+      id: number;
+      email: string;
+      first_name?: string;
+      last_name?: string;
+      profile_picture_url?: string;
+    };
+  }[];
   messages: ChatMessage[];
 }
 
@@ -122,12 +178,17 @@ const InternalChatPage: React.FC = () => {
   const [inputValue, setInputValue] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [isCreateChannelModalOpen, setCreateChannelModalOpen] = useState(false);
+  const [isNewChatModalOpen, setNewChatModalOpen] = useState(false);
+  const [isRenamingChannel, setIsRenamingChannel] = useState(false);
+  const [renameValue, setRenameValue] = useState('');
   const [isManageMembersModalOpen, setManageMembersModalOpen] = useState(false);
   const [userPresences, setUserPresences] = useState<UserPresence>({});
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [isUploadingFiles, setIsUploadingFiles] = useState(false);
   const [threadParentMessage, setThreadParentMessage] = useState<ChatMessage | null>(null);
   const [isThreadModalOpen, setIsThreadModalOpen] = useState(false);
+  const [replyingTo, setReplyingTo] = useState<ChatMessage | null>(null);
+  const chatInputAreaRef = useRef<HTMLDivElement>(null);
   const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
   const [incomingCall, setIncomingCall] = useState<{
     callId: number;
@@ -564,6 +625,39 @@ const InternalChatPage: React.FC = () => {
     },
   });
 
+  // New chat / DM creation mutation
+  const newChatMutation = useMutation({
+    mutationFn: (channelData: { name?: string | null; channel_type: string; member_ids: number[] }) =>
+      createChannel(channelData),
+    onSuccess: (newChannel) => {
+      queryClient.invalidateQueries({ queryKey: ['chatChannels'] });
+      return newChannel;
+    },
+    onError: (err) => {
+      console.error('Failed to create chat:', err);
+      toast({
+        title: t('common.error'),
+        description: 'Failed to start chat',
+        variant: 'destructive',
+      });
+    },
+  });
+
+  // Rename channel mutation
+  const renameChannelMutation = useMutation({
+    mutationFn: ({ channelId, name }: { channelId: number; name: string }) =>
+      renameChannel(channelId, name),
+    onSuccess: (updated) => {
+      queryClient.invalidateQueries({ queryKey: ['chatChannels'] });
+      setSelectedChannel((prev) => prev ? { ...prev, name: updated.name } : prev);
+      setIsRenamingChannel(false);
+      toast({ title: 'Channel renamed' });
+    },
+    onError: () => {
+      toast({ title: t('common.error'), description: 'Failed to rename channel', variant: 'destructive' });
+    },
+  });
+
   const createMessageMutation = useMutation({
     mutationFn: ({ channelId, content }: { channelId: number; content: string }) =>
       createChannelMessage(channelId, content),
@@ -716,8 +810,10 @@ const InternalChatPage: React.FC = () => {
     }
 
     try {
-      // First, create the message
-      const newMessage = await createChannelMessage(selectedChannel.id, messageContent);
+      // Create message or reply
+      const newMessage = replyingTo
+        ? await createMessageReply(replyingTo.id, messageContent, selectedChannel.id)
+        : await createChannelMessage(selectedChannel.id, messageContent);
 
       // If there are files, upload them and attach to the message
       if (selectedFiles.length > 0) {
@@ -740,8 +836,9 @@ const InternalChatPage: React.FC = () => {
         setSelectedFiles([]);
       }
 
-      // Clear input and refresh messages
+      // Clear input and reply context, refresh messages
       setInputValue('');
+      setReplyingTo(null);
       queryClient.invalidateQueries({ queryKey: ['channelMessages', selectedChannel.id] });
 
     } catch (error) {
@@ -987,6 +1084,7 @@ const InternalChatPage: React.FC = () => {
   const handleChannelSelect = (channel: ChatChannel) => {
     console.log('[Channel Select] Changing to channel:', channel.id);
     setSelectedChannel(channel);
+    setIsRenamingChannel(false);
     // Update URL parameter to keep it in sync
     setSearchParams({ channelId: channel.id.toString() });
   };
@@ -1009,12 +1107,11 @@ const InternalChatPage: React.FC = () => {
 
   if (isLoadingChannels)
     return (
-      <div className="flex justify-center items-center h-screen bg-gradient-to-br from-slate-50 via-purple-50/30 to-indigo-50/30 dark:from-slate-900 dark:via-purple-950/20 dark:to-indigo-950/20">
+      <div className="flex justify-center items-center h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/30 dark:from-slate-900 dark:via-blue-950/20 dark:to-indigo-950/20">
         <div className="flex flex-col items-center gap-4">
           <div className="relative">
-            <div className="absolute inset-0 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-2xl blur-xl opacity-40 animate-pulse" />
-            <div className="relative h-16 w-16 rounded-2xl bg-gradient-to-br from-purple-100 to-indigo-100 dark:from-purple-900/30 dark:to-indigo-900/30 flex items-center justify-center shadow-xl">
-              <Loader2 className="h-8 w-8 animate-spin text-purple-600 dark:text-purple-400" />
+            <div className="relative h-16 w-16 rounded-2xl bg-gradient-to-br from-blue-100 to-indigo-100 dark:from-blue-900/30 dark:to-indigo-900/30 flex items-center justify-center shadow-xl">
+              <Loader2 className="h-8 w-8 animate-spin text-blue-600 dark:text-blue-400" />
             </div>
           </div>
           <p className="text-sm font-medium text-slate-500 dark:text-slate-400">Loading channels...</p>
@@ -1036,86 +1133,61 @@ const InternalChatPage: React.FC = () => {
 
   return (
     <TooltipProvider>
-      <div className="flex h-[calc(100vh-4rem)] bg-gradient-to-br from-slate-50 via-purple-50/30 to-indigo-50/30 dark:from-slate-900 dark:via-purple-950/20 dark:to-indigo-950/20 text-gray-800 dark:text-gray-200 font-sans overflow-hidden" dir={isRTL ? 'rtl' : 'ltr'}>
+      <div className="flex h-full bg-slate-50 dark:bg-slate-950 overflow-hidden" dir={isRTL ? 'rtl' : 'ltr'}>
         {/* Left Sidebar: Channel List */}
         <Card className={cn(
-          "flex-shrink-0 border-r border-slate-200/80 dark:border-slate-700/60 rounded-none bg-white/80 dark:bg-slate-800/90 backdrop-blur-xl shadow-xl shadow-purple-500/5 flex flex-col h-full relative transition-all duration-300",
-          channelSidebarCollapsed ? "w-20" : "w-80"
+          "flex-shrink-0 rounded-none flex flex-col h-full relative transition-all duration-300 bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 shadow-sm",
+          channelSidebarCollapsed ? "w-16" : "w-72"
         )}>
           {/* Collapse/Expand Button */}
-          <button
+          <motion.button
+            whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.95 }}
             onClick={() => setChannelSidebarCollapsed(!channelSidebarCollapsed)}
-            className={cn(
-              "absolute -right-3.5 top-8 z-20 bg-gradient-to-br from-purple-500 to-indigo-600 hover:from-purple-600 hover:to-indigo-700 text-white rounded-full p-2 shadow-lg shadow-purple-500/30 hover:shadow-xl hover:shadow-purple-500/40 transition-all duration-200 transform hover:scale-110 group ring-4 ring-white dark:ring-slate-800",
-              isRTL && "-left-3.5 -right-auto"
-            )}
-            title={channelSidebarCollapsed ? t("navigation.expandSidebar") : t("navigation.collapseSidebar")}
+            className={`absolute ${isRTL ? '-left-3' : '-right-3'} top-1/2 -translate-y-1/2 z-10 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 rounded-full p-2 shadow-sm border border-slate-200 dark:border-slate-700 transition-all duration-300`}
           >
-            {channelSidebarCollapsed ? (
-              isRTL ? (
-                <PanelLeftClose className="h-4 w-4 transition-transform duration-200 group-hover:-translate-x-0.5 scale-x-[-1]" />
-              ) : (
-                <PanelLeftOpen className="h-4 w-4 transition-transform duration-200 group-hover:translate-x-0.5" />
-              )
-            ) : (
-              isRTL ? (
-                <PanelLeftOpen className="h-4 w-4 transition-transform duration-200 group-hover:translate-x-0.5 scale-x-[-1]" />
-              ) : (
-                <PanelLeftClose className="h-4 w-4 transition-transform duration-200 group-hover:-translate-x-0.5" />
-              )
-            )}
-          </button>
+            <motion.div animate={{ rotate: channelSidebarCollapsed ? 180 : 0 }} transition={{ duration: 0.3 }}>
+              <PanelLeftClose className="h-4 w-4" />
+            </motion.div>
+          </motion.button>
 
-          <CardHeader className={cn(
-            "flex flex-row items-center justify-between p-5 pb-4 border-b border-slate-200/80 dark:border-slate-700/60 bg-gradient-to-r from-purple-50/80 via-indigo-50/50 to-slate-50/80 dark:from-purple-900/30 dark:via-indigo-900/20 dark:to-slate-800/50 flex-shrink-0",
-            channelSidebarCollapsed && "justify-center p-3"
-          )}>
-            {!channelSidebarCollapsed && (
-              <CardTitle className="text-xl font-bold dark:text-white flex items-center gap-3">
-                <div className="relative">
-                  <div className="absolute inset-0 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-xl blur-md opacity-40" />
-                  <div className="relative h-10 w-10 rounded-xl bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center shadow-lg shadow-purple-500/30">
-                    <MessageSquare className="h-5 w-5 text-white" />
+          <CardHeader className={`border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 flex-shrink-0 py-4 ${channelSidebarCollapsed ? 'px-2' : ''}`}>
+            {!channelSidebarCollapsed ? (
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="h-9 w-9 rounded-lg bg-violet-50 dark:bg-violet-900/20 flex items-center justify-center">
+                    <MessageSquare className="w-5 h-5 text-violet-500 dark:text-violet-400" />
+                  </div>
+                  <div>
+                    <CardTitle className="text-lg font-bold dark:text-white">{t('teamChat.channels')}</CardTitle>
+                    <p className="text-xs text-muted-foreground">Team conversations</p>
                   </div>
                 </div>
-                <span className="bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent">{t('teamChat.channels')}</span>
-              </CardTitle>
-            )}
-            {channelSidebarCollapsed ? (
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => setCreateChannelModalOpen(true)}
-                    className="hover:bg-purple-100 dark:hover:bg-purple-900/30 rounded-xl transition-colors"
-                  >
-                    <Plus className="h-5 w-5 text-purple-600 dark:text-purple-400" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent side="right">
-                  <p>{t('teamChat.createChannel')}</p>
-                </TooltipContent>
-              </Tooltip>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button variant="ghost" size="icon" className="h-8 w-8 rounded-lg hover:bg-violet-50 dark:hover:bg-violet-900/30" onClick={() => setNewChatModalOpen(true)}>
+                      <Pencil className="h-3.5 w-3.5 text-violet-600 dark:text-violet-400" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent><p>New chat</p></TooltipContent>
+                </Tooltip>
+              </div>
             ) : (
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => setCreateChannelModalOpen(true)}
-                    className="hover:bg-purple-100 dark:hover:bg-purple-900/30 rounded-xl transition-colors"
-                  >
-                    <Plus className="h-5 w-5 text-purple-600 dark:text-purple-400" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>{t('teamChat.createChannel')}</p>
-                </TooltipContent>
-              </Tooltip>
+              <div className="flex flex-col gap-3 items-center py-2">
+                <div className="h-8 w-8 rounded-lg bg-violet-50 dark:bg-violet-900/20 flex items-center justify-center">
+                  <MessageSquare className="w-4 h-4 text-violet-500 dark:text-violet-400" />
+                </div>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button variant="ghost" size="icon" onClick={() => setNewChatModalOpen(true)} className="h-8 w-8 rounded-lg hover:bg-violet-50 dark:hover:bg-violet-900/30">
+                      <Pencil className="h-4 w-4 text-violet-600 dark:text-violet-400" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent side="right"><p>New chat</p></TooltipContent>
+                </Tooltip>
+              </div>
             )}
           </CardHeader>
-          <CardContent className="p-2 flex-1 overflow-hidden">
+          <CardContent className={`flex-1 overflow-y-auto bg-gradient-to-b from-slate-50/50 to-white dark:from-slate-900/50 dark:to-slate-800 ${channelSidebarCollapsed ? 'p-0' : 'p-3'}`}>
             <ScrollArea className="h-full">
               {channels?.length === 0 ? (
                 <div className={cn(
@@ -1123,9 +1195,8 @@ const InternalChatPage: React.FC = () => {
                   channelSidebarCollapsed ? "px-2" : "px-4"
                 )}>
                   <div className="relative mb-4">
-                    <div className="absolute inset-0 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-2xl blur-lg opacity-30" />
-                    <div className="relative h-16 w-16 rounded-2xl bg-gradient-to-br from-purple-100 to-indigo-100 dark:from-purple-900/30 dark:to-indigo-900/30 flex items-center justify-center shadow-lg">
-                      <MessageSquare className="h-8 w-8 text-purple-500 dark:text-purple-400" />
+                    <div className="relative h-16 w-16 rounded-2xl bg-violet-50 dark:bg-violet-900/20 flex items-center justify-center">
+                      <MessageSquare className="h-8 w-8 text-violet-400 dark:text-violet-500" />
                     </div>
                   </div>
                   {!channelSidebarCollapsed && (
@@ -1136,58 +1207,70 @@ const InternalChatPage: React.FC = () => {
                   )}
                 </div>
               ) : (
-                <div className="space-y-1">
-                  {channels?.map((channel) => {
+                <div className="space-y-1.5">
+                  {channels?.map((channel, index) => {
                     const displayName = getChannelDisplayName(channel, user?.id);
                     const avatar = getChannelAvatar(channel, user?.id);
                     const description = getChannelDescription(channel, user?.id);
+                    const isSelected = selectedChannel?.id === channel.id;
 
                     return (
                       <Tooltip key={channel.id}>
                         <TooltipTrigger asChild>
-                          <div
+                          <motion.div
+                            variants={channelCardVariants}
+                            initial="hidden"
+                            animate="visible"
+                            whileHover="hover"
+                            whileTap="tap"
                             dir={isRTL ? 'rtl' : 'ltr'}
+                            style={{ animationDelay: `${index * 0.05}s` }}
                             className={cn(
-                              'flex items-center cursor-pointer transition-all duration-200 rounded-xl mx-1',
+                              'flex items-center cursor-pointer rounded-xl border transition-all duration-200',
                               channelSidebarCollapsed ? 'p-2 justify-center' : 'p-3',
-                              selectedChannel?.id === channel.id
-                                ? 'bg-gradient-to-r from-purple-100 to-indigo-100 dark:from-purple-900/40 dark:to-indigo-900/40 shadow-md shadow-purple-500/10 ring-1 ring-purple-200 dark:ring-purple-700'
-                                : 'hover:bg-slate-100/80 dark:hover:bg-slate-700/50'
+                              isSelected
+                                ? 'bg-violet-50 dark:bg-violet-900/20 border-violet-200 dark:border-violet-800 shadow-sm ring-1 ring-violet-500/20'
+                                : 'bg-white dark:bg-slate-800/50 border-slate-100 dark:border-slate-700/50 hover:bg-slate-50 dark:hover:bg-slate-800 hover:border-slate-200 dark:hover:border-slate-600'
                             )}
                             onClick={() => handleChannelSelect(channel)}
                           >
-                            <div className="relative">
+                            <div className="channel-icon-container flex-shrink-0 relative">
                               <Avatar className={cn(
-                                "ring-2 ring-white dark:ring-slate-700 shadow-sm",
                                 channelSidebarCollapsed ? "h-10 w-10" : "h-11 w-11",
                                 !channelSidebarCollapsed && (isRTL ? "ml-3" : "mr-3")
                               )}>
                                 {avatar.url && <AvatarImage src={avatar.url} />}
-                                <AvatarFallback className={cn(
-                                  "font-bold text-lg text-white",
-                                  avatar.isUser ? "bg-gradient-to-br from-blue-400 to-purple-500" : "bg-gradient-to-br from-purple-500 to-indigo-600"
-                                )}>
+                                <AvatarFallback className="font-bold text-lg bg-violet-100 dark:bg-violet-900/40 text-violet-700 dark:text-violet-300">
                                   {avatar.fallback}
                                 </AvatarFallback>
                               </Avatar>
-                              {selectedChannel?.id === channel.id && (
-                                <div className="absolute -bottom-0.5 -right-0.5 h-3 w-3 bg-green-500 rounded-full ring-2 ring-white dark:ring-slate-800" />
-                              )}
+                              {/* Status indicator - matching conversation cards */}
+                              <AnimatePresence>
+                                {isSelected && (
+                                  <motion.span
+                                    initial={{ scale: 0 }}
+                                    animate={{ scale: 1 }}
+                                    exit={{ scale: 0 }}
+                                    className={`absolute -top-1 ${isRTL ? '-left-1' : '-right-1'} h-3 w-3 bg-green-500 rounded-full status-dot status-dot-online border-2 border-white dark:border-slate-800`}
+                                    title="Active channel"
+                                  />
+                                )}
+                              </AnimatePresence>
                             </div>
                             {!channelSidebarCollapsed && (
                               <div className="flex-1 min-w-0">
                                 <p className={cn(
                                   "font-semibold text-sm truncate",
-                                  selectedChannel?.id === channel.id
-                                    ? "text-purple-700 dark:text-purple-300"
-                                    : "text-slate-700 dark:text-white"
+                                  isSelected
+                                    ? "text-violet-900 dark:text-violet-100"
+                                    : "text-slate-800 dark:text-slate-100"
                                 )}>{displayName}</p>
                                 <p className="text-xs text-slate-500 dark:text-slate-400 truncate mt-0.5">
                                   {description}
                                 </p>
                               </div>
                             )}
-                          </div>
+                          </motion.div>
                         </TooltipTrigger>
                         {channelSidebarCollapsed && (
                           <TooltipContent side="right" className="rounded-xl">
@@ -1207,23 +1290,19 @@ const InternalChatPage: React.FC = () => {
         </Card>
 
         {/* Main Chat Area */}
-        <div className="flex-1 flex flex-col bg-white/80 dark:bg-slate-800/90 backdrop-blur-xl h-full overflow-hidden">
+        <div className="flex-1 flex flex-col h-full overflow-hidden bg-white dark:bg-slate-900">
           {selectedChannel ? (
             <>
-              <CardHeader className="flex flex-row items-center justify-between p-5 border-b border-slate-200/80 dark:border-slate-700/60 bg-gradient-to-r from-white via-purple-50/30 to-indigo-50/30 dark:from-slate-800 dark:via-purple-900/20 dark:to-indigo-900/20 shadow-sm flex-shrink-0">
+              <CardHeader className="flex flex-row items-center justify-between p-4 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 flex-shrink-0">
                 <div className="flex-1">
                   <div className={`flex items-center gap-4 ${isRTL ? 'flex-row-reverse' : ''}`}>
                     {(() => {
                       const avatar = getChannelAvatar(selectedChannel, user?.id);
                       return (
-                        <div className="relative">
-                          <div className="absolute inset-0 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-xl blur-md opacity-30" />
-                          <Avatar className="relative h-14 w-14 ring-3 ring-white dark:ring-slate-700 shadow-lg">
+                        <div>
+                          <Avatar className="h-11 w-11">
                             {avatar.url && <AvatarImage src={avatar.url} />}
-                            <AvatarFallback className={cn(
-                              "font-bold text-xl text-white",
-                              avatar.isUser ? "bg-gradient-to-br from-blue-400 to-purple-500" : "bg-gradient-to-br from-purple-500 to-indigo-600"
-                            )}>
+                            <AvatarFallback className="font-bold text-xl bg-violet-100 dark:bg-violet-900/40 text-violet-700 dark:text-violet-300">
                               {avatar.fallback}
                             </AvatarFallback>
                           </Avatar>
@@ -1231,23 +1310,83 @@ const InternalChatPage: React.FC = () => {
                       );
                     })()}
                     <div>
-                      <CardTitle className="text-xl font-bold bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent">
-                        {getChannelDisplayName(selectedChannel, user?.id)}
-                      </CardTitle>
+                      <div className="flex items-center gap-1.5">
+                        {isRenamingChannel && selectedChannel.channel_type?.toUpperCase() !== 'DM' ? (
+                          <>
+                            <input
+                              autoFocus
+                              value={renameValue}
+                              onChange={(e) => setRenameValue(e.target.value)}
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter' && renameValue.trim()) {
+                                  renameChannelMutation.mutate({ channelId: selectedChannel.id, name: renameValue.trim() });
+                                } else if (e.key === 'Escape') {
+                                  setIsRenamingChannel(false);
+                                }
+                              }}
+                              className="text-base font-semibold text-slate-900 dark:text-white bg-slate-100 dark:bg-slate-700 border border-violet-300 dark:border-violet-600 rounded-lg px-2 py-0.5 outline-none w-48"
+                            />
+                            <Button
+                              size="icon"
+                              variant="ghost"
+                              disabled={!renameValue.trim() || renameChannelMutation.isLoading}
+                              onClick={() => renameChannelMutation.mutate({ channelId: selectedChannel.id, name: renameValue.trim() })}
+                              className="h-7 w-7 rounded-lg text-green-600 hover:bg-green-50 dark:hover:bg-green-900/20"
+                            >
+                              {renameChannelMutation.isLoading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Check className="h-3.5 w-3.5" />}
+                            </Button>
+                            <Button
+                              size="icon"
+                              variant="ghost"
+                              onClick={() => setIsRenamingChannel(false)}
+                              className="h-7 w-7 rounded-lg text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-700"
+                            >
+                              <X className="h-3.5 w-3.5" />
+                            </Button>
+                          </>
+                        ) : (
+                          <>
+                            <CardTitle className="text-base font-semibold text-slate-900 dark:text-white">
+                              {getChannelDisplayName(selectedChannel, user?.id)}
+                            </CardTitle>
+                            {selectedChannel.channel_type?.toUpperCase() !== 'DM' && (
+                              <button
+                                onClick={() => { setRenameValue(selectedChannel.name || ''); setIsRenamingChannel(true); }}
+                                className="text-slate-300 hover:text-slate-500 dark:text-slate-600 dark:hover:text-slate-400 transition-colors"
+                                title="Rename channel"
+                              >
+                                <Pencil className="h-3.5 w-3.5" />
+                              </button>
+                            )}
+                          </>
+                        )}
+                      </div>
                       <div className={`flex items-center mt-2 gap-3 ${isRTL ? 'flex-row-reverse' : ''}`}>
                         <div className={`flex ${isRTL ? 'space-x-reverse' : ''} -space-x-2 overflow-hidden`}>
                           {channelMembers?.slice(0, 5).map((member: any, index: number) => (
                             <Avatar key={member?.id || `member-${index}`} className="inline-block h-7 w-7 rounded-full ring-2 ring-white dark:ring-slate-800 shadow-sm">
                               <AvatarImage src={member?.profile_picture_url} />
-                              <AvatarFallback className="text-xs bg-gradient-to-br from-blue-400 to-purple-500 text-white font-medium">
+                              <AvatarFallback className="text-xs bg-violet-100 dark:bg-violet-900/40 text-violet-700 dark:text-violet-300 font-medium">
                                 {member?.first_name?.[0] || 'U'}
                               </AvatarFallback>
                             </Avatar>
                           ))}
                         </div>
-                        <span className="text-xs px-3 py-1.5 rounded-full bg-gradient-to-r from-purple-100 to-indigo-100 dark:from-purple-900/40 dark:to-indigo-900/40 text-purple-700 dark:text-purple-300 font-semibold shadow-sm">
+                        <span className="text-xs px-3 py-1 rounded-full bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 font-semibold">
                           {channelMembers?.length} {channelMembers?.length === 1 ? t('teamChat.member') : t('teamChat.members')}
                         </span>
+                        {/* Active/Online Members Indicator */}
+                        {(() => {
+                          const onlineCount = channelMembers?.filter((member: any) =>
+                            userPresences[member?.id] === 'online'
+                          ).length || 0;
+                          return onlineCount > 0 ? (
+                            <span className="flex items-center gap-1.5 text-xs font-medium text-green-600 dark:text-green-400">
+                              <span className="w-2 h-2 rounded-full bg-green-500 status-dot status-dot-online" />
+                              {onlineCount} {t('teamChat.online')}
+                            </span>
+                          ) : null;
+                        })()}
                       </div>
                     </div>
                   </div>
@@ -1256,12 +1395,12 @@ const InternalChatPage: React.FC = () => {
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <Button
-                        variant="outline"
+                        variant="ghost"
                         size="icon"
                         onClick={() => setIsSearchModalOpen(true)}
-                        className="hover:bg-purple-100 dark:hover:bg-purple-900/30 dark:border-slate-600 dark:text-white rounded-xl h-10 w-10 border-slate-200/80 transition-colors"
+                        className="h-8 w-8 rounded-lg text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
                       >
-                        <Search className="h-5 w-5 text-purple-600 dark:text-purple-400" />
+                        <Search className="h-4 w-4" />
                       </Button>
                     </TooltipTrigger>
                     <TooltipContent className="rounded-xl">
@@ -1271,12 +1410,12 @@ const InternalChatPage: React.FC = () => {
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <Button
-                        variant="outline"
+                        variant="ghost"
                         size="icon"
                         onClick={() => setIsCallHistoryOpen(true)}
-                        className="hover:bg-purple-100 dark:hover:bg-purple-900/30 dark:border-slate-600 dark:text-white rounded-xl h-10 w-10 border-slate-200/80 transition-colors"
+                        className="h-8 w-8 rounded-lg text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
                       >
-                        <History className="h-5 w-5 text-purple-600 dark:text-purple-400" />
+                        <History className="h-4 w-4" />
                       </Button>
                     </TooltipTrigger>
                     <TooltipContent className="rounded-xl">
@@ -1286,12 +1425,12 @@ const InternalChatPage: React.FC = () => {
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <Button
-                        variant="outline"
+                        variant="ghost"
                         size="icon"
                         onClick={() => setManageMembersModalOpen(true)}
-                        className="hover:bg-purple-100 dark:hover:bg-purple-900/30 dark:border-slate-600 dark:text-white rounded-xl h-10 w-10 border-slate-200/80 transition-colors"
+                        className="h-8 w-8 rounded-lg text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
                       >
-                        <Users className="h-5 w-5 text-purple-600 dark:text-purple-400" />
+                        <Users className="h-4 w-4" />
                       </Button>
                     </TooltipTrigger>
                     <TooltipContent className="rounded-xl">
@@ -1332,9 +1471,8 @@ const InternalChatPage: React.FC = () => {
                       <div className="flex justify-center items-center h-full py-20">
                         <div className="flex flex-col items-center gap-4">
                           <div className="relative">
-                            <div className="absolute inset-0 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-full blur-lg opacity-30 animate-pulse" />
-                            <div className="relative h-14 w-14 rounded-full bg-gradient-to-br from-purple-100 to-indigo-100 dark:from-purple-900/30 dark:to-indigo-900/30 flex items-center justify-center">
-                              <Loader2 className="h-7 w-7 animate-spin text-purple-600 dark:text-purple-400" />
+                            <div className="relative h-14 w-14 rounded-full bg-gradient-to-br from-blue-100 to-indigo-100 dark:from-blue-900/30 dark:to-indigo-900/30 flex items-center justify-center">
+                              <Loader2 className="h-7 w-7 animate-spin text-blue-600 dark:text-blue-400" />
                             </div>
                           </div>
                           <p className="text-sm font-medium text-slate-500 dark:text-slate-400">{t('teamChat.loadingMessages')}</p>
@@ -1354,9 +1492,8 @@ const InternalChatPage: React.FC = () => {
                       <div className="flex justify-center items-center h-full py-20">
                         <div className="text-center">
                           <div className="relative mb-5 mx-auto w-fit">
-                            <div className="absolute inset-0 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-2xl blur-lg opacity-30" />
-                            <div className="relative h-20 w-20 rounded-2xl bg-gradient-to-br from-purple-100 to-indigo-100 dark:from-purple-900/30 dark:to-indigo-900/30 flex items-center justify-center shadow-lg">
-                              <Send className="h-10 w-10 text-purple-500 dark:text-purple-400" />
+                                    <div className="relative h-20 w-20 rounded-2xl bg-gradient-to-br from-blue-100 to-indigo-100 dark:from-blue-900/30 dark:to-indigo-900/30 flex items-center justify-center shadow-lg">
+                              <Send className="h-10 w-10 text-blue-500 dark:text-blue-400" />
                             </div>
                           </div>
                           <p className="text-lg font-semibold text-slate-600 dark:text-slate-300">{t('teamChat.noMessages')}</p>
@@ -1364,12 +1501,16 @@ const InternalChatPage: React.FC = () => {
                         </div>
                       </div>
                     ) : (
-                      messages?.map((msg) => {
+                      <div className="space-y-1">
+                      {messages?.map((msg) => {
                         // Render system messages differently
                         if (msg.extra_data?.is_system) {
                           return (
-                            <div key={msg.id} className="flex w-full justify-center my-4 animate-fade-in">
-                              <div className="px-4 py-2 rounded-full bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 text-sm flex items-center gap-2">
+                            <div
+                              key={msg.id}
+                              className="flex w-full justify-center my-4"
+                            >
+                              <div className="px-4 py-2 rounded-full bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 text-sm flex items-center gap-2 shadow-sm">
                                 <span>{msg.content}</span>
                                 <span className="text-xs text-slate-400 dark:text-slate-500">
                                   {new Date(msg.created_at).toLocaleTimeString([], {
@@ -1383,59 +1524,46 @@ const InternalChatPage: React.FC = () => {
                         }
 
                         // Regular message rendering
+                        const isOwn = msg.sender_id === user?.id;
                         return (
                         <div
                           key={msg.id}
                           className={cn(
-                            'flex w-full items-end gap-2.5 animate-fade-in',
-                            msg.sender_id === user?.id ? 'justify-end' : 'justify-start'
+                            'flex w-full items-end gap-2',
+                            isOwn ? 'justify-end' : 'justify-start'
                           )}
                         >
-                          {msg.sender_id !== user?.id && (
-                            <Avatar className="h-8 w-8 ring-2 ring-white dark:ring-slate-800 flex-shrink-0">
+                          {/* Avatar — other user */}
+                          {!isOwn && (
+                            <Avatar className="h-7 w-7 flex-shrink-0 self-end mb-5">
                               <AvatarImage src={msg.sender?.profile_picture_url} />
-                              <AvatarFallback className="text-xs bg-gradient-to-br from-blue-400 to-purple-500 text-white">
+                              <AvatarFallback className="text-xs font-semibold bg-slate-400 dark:bg-slate-600 text-white">
                                 {msg.sender?.first_name?.[0] || 'U'}
                               </AvatarFallback>
                             </Avatar>
                           )}
-                          <div className="flex flex-col gap-1 max-w-[70%]">
-                            <div
-                              className={cn(
-                                'p-3.5 rounded-2xl shadow-sm',
-                                msg.sender_id === user?.id
-                                  ? 'bg-gradient-to-br from-purple-500 to-indigo-600 text-white rounded-br-md'
-                                  : 'bg-white dark:bg-slate-800 text-gray-800 dark:text-gray-100 rounded-bl-md border border-slate-200 dark:border-slate-700'
-                              )}
-                            >
-                              <div className="flex items-center gap-2 mb-1.5">
-                                <span className={cn(
-                                  "text-xs font-semibold",
-                                  msg.sender_id === user?.id
-                                    ? "text-purple-100"
-                                    : "text-purple-600 dark:text-purple-400"
-                                )}>
-                                  {msg.sender_id === user?.id
-                                    ? t('teamChat.you')
-                                    : msg.sender?.first_name || msg.sender?.email}
-                                </span>
-                                <span className={cn(
-                                  "text-xs",
-                                  msg.sender_id === user?.id
-                                    ? "text-purple-200"
-                                    : "text-slate-400 dark:text-slate-500"
-                                )}>
-                                  {new Date(msg.created_at).toLocaleTimeString([], {
-                                    hour: '2-digit',
-                                    minute: '2-digit',
-                                  })}
-                                </span>
-                              </div>
+
+                          <div className={cn(
+                            "flex flex-col max-w-[62%]",
+                            isOwn ? 'items-end' : 'items-start'
+                          )}>
+                            {/* Sender name */}
+                            {!isOwn && (
+                              <span className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 mb-0.5 px-1">
+                                {msg.sender?.first_name || msg.sender?.email}
+                              </span>
+                            )}
+
+                            {/* Bubble */}
+                            <div className={cn(
+                              'px-3.5 py-2 rounded-2xl text-sm leading-relaxed',
+                              isOwn
+                                ? `bg-gradient-to-br from-violet-500 to-indigo-600 text-white ${isRTL ? 'rounded-bl-sm' : 'rounded-br-sm'}`
+                                : `bg-slate-100 dark:bg-slate-700 text-slate-900 dark:text-slate-100 ${isRTL ? 'rounded-br-sm' : 'rounded-bl-sm'}`
+                            )}>
                               <div className={cn(
-                                "prose prose-sm max-w-full",
-                                msg.sender_id === user?.id
-                                  ? "prose-invert"
-                                  : "dark:prose-invert"
+                                "prose prose-sm max-w-full prose-p:my-0.5 prose-p:leading-relaxed",
+                                isOwn ? "prose-invert" : "dark:prose-invert"
                               )}>
                                 <MentionText
                                   content={msg.content}
@@ -1450,13 +1578,13 @@ const InternalChatPage: React.FC = () => {
                                     }
                                     return acc;
                                   }, {} as any) || {}}
-                                  className={msg.sender_id === user?.id ? "text-white" : ""}
+                                  className={isOwn ? "text-white" : ""}
                                 />
                               </div>
 
-                              {/* Display attachments */}
+                              {/* Attachments */}
                               {msg.attachments && msg.attachments.length > 0 && (
-                                <div className="mt-2 space-y-2">
+                                <div className="mt-2 space-y-1.5">
                                   {msg.attachments.map((attachment) => (
                                     <FileAttachment
                                       key={attachment.id}
@@ -1467,9 +1595,9 @@ const InternalChatPage: React.FC = () => {
                                 </div>
                               )}
 
-                              {/* Reactions */}
+                              {/* Reactions (existing) */}
                               {msg.reactions && msg.reactions.length > 0 && (
-                                <div className="mt-2">
+                                <div className="mt-1.5">
                                   <MessageReactions
                                     reactions={msg.reactions}
                                     currentUserId={user?.id}
@@ -1485,58 +1613,93 @@ const InternalChatPage: React.FC = () => {
                                   />
                                 </div>
                               )}
+                            </div>
 
-                              {/* Reply button */}
-                              <div className="mt-2 flex items-center gap-2">
+                            {/* Actions + timestamp row below bubble */}
+                            <div className={cn(
+                              "flex items-center gap-1 mt-0.5 px-1",
+                              isOwn ? 'flex-row-reverse' : ''
+                            )}>
+                              <span className="text-[10px] text-slate-400 dark:text-slate-500">
+                                {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                              </span>
+                              {/* Inline reply button */}
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => {
+                                  setReplyingTo(msg);
+                                  setTimeout(() => chatInputAreaRef.current?.querySelector('input')?.focus(), 50);
+                                }}
+                                className="h-5 px-1.5 text-[10px] gap-1 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 rounded"
+                              >
+                                <MessageSquare className="h-3 w-3" />
+                                Reply
+                              </Button>
+                              {/* View thread button — only when replies exist */}
+                              {msg.reply_count && msg.reply_count > 0 ? (
                                 <Button
                                   variant="ghost"
                                   size="sm"
                                   onClick={() => handleOpenThread(msg)}
-                                  className={cn(
-                                    "h-7 text-xs gap-1",
-                                    msg.sender_id === user?.id
-                                      ? "text-purple-100 hover:text-white hover:bg-purple-600/50"
-                                      : "text-slate-600 dark:text-slate-400 hover:text-purple-600 dark:hover:text-purple-400"
-                                  )}
+                                  className="h-5 px-1.5 text-[10px] gap-1 text-violet-500 hover:text-violet-700 dark:text-violet-400 dark:hover:text-violet-200 hover:bg-slate-100 dark:hover:bg-slate-700 rounded"
                                 >
-                                  <MessageSquare className="h-3 w-3" />
-                                  {msg.reply_count && msg.reply_count > 0 ? (
-                                    <span>{msg.reply_count} {msg.reply_count === 1 ? 'reply' : 'replies'}</span>
-                                  ) : (
-                                    <span>Reply</span>
-                                  )}
+                                  {msg.reply_count} {msg.reply_count === 1 ? 'reply' : 'replies'}
                                 </Button>
-
-                                {/* Show emoji picker when no reactions yet */}
-                                {(!msg.reactions || msg.reactions.length === 0) && (
-                                  <MessageReactions
-                                    reactions={[]}
-                                    currentUserId={user?.id}
-                                    onAddReaction={(emoji) => handleAddReaction(msg.id, emoji)}
-                                    onRemoveReaction={(emoji) => handleRemoveReaction(msg.id, emoji)}
-                                  />
-                                )}
-                              </div>
+                              ) : null}
+                              {(!msg.reactions || msg.reactions.length === 0) && (
+                                <MessageReactions
+                                  reactions={[]}
+                                  currentUserId={user?.id}
+                                  onAddReaction={(emoji) => handleAddReaction(msg.id, emoji)}
+                                  onRemoveReaction={(emoji) => handleRemoveReaction(msg.id, emoji)}
+                                />
+                              )}
                             </div>
                           </div>
-                          {msg.sender_id === user?.id && (
-                            <Avatar className="h-8 w-8 ring-2 ring-white dark:ring-slate-800 flex-shrink-0">
+
+                          {/* Avatar — own message */}
+                          {isOwn && (
+                            <Avatar className="h-7 w-7 flex-shrink-0 self-end mb-5">
                               <AvatarImage src={user?.profile_picture_url} />
-                              <AvatarFallback className="text-xs bg-gradient-to-br from-purple-500 to-indigo-600 text-white">
+                              <AvatarFallback className="text-xs font-semibold bg-violet-100 dark:bg-violet-900/40 text-violet-700 dark:text-violet-300">
                                 {user?.first_name?.[0] || user?.email?.[0]?.toUpperCase() || 'U'}
                               </AvatarFallback>
                             </Avatar>
                           )}
                         </div>
                       );
-                    })
+                    })}
+                      <div ref={messagesEndRef} />
+                      </div>
                     )}
-                    <div ref={messagesEndRef} />
                   </div>
                 </ScrollArea>
               </CardContent>
-              <div className="p-4 border-t border-slate-200/80 dark:border-slate-700/60 bg-gradient-to-r from-white via-purple-50/20 to-indigo-50/20 dark:from-slate-800 dark:via-purple-900/10 dark:to-indigo-900/10 flex-shrink-0">
-                <div className="flex flex-col gap-3">
+              <div className="border-t border-slate-200/80 dark:border-slate-700/60 bg-white dark:bg-slate-800 flex-shrink-0">
+                {/* Reply quote bar */}
+                {replyingTo && (
+                  <div className="flex items-center justify-between px-4 py-2 bg-slate-50 dark:bg-slate-900/60 border-b border-slate-200 dark:border-slate-700">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <div className="w-0.5 h-8 bg-violet-500 rounded-full flex-shrink-0" />
+                      <div className="min-w-0">
+                        <p className="text-[10px] font-semibold text-violet-500 mb-0.5">
+                          Replying to {replyingTo.sender?.first_name || replyingTo.sender?.email}
+                        </p>
+                        <p className="text-xs text-slate-500 dark:text-slate-400 truncate">
+                          {replyingTo.content}
+                        </p>
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => setReplyingTo(null)}
+                      className="ml-3 p-1 rounded hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 flex-shrink-0"
+                    >
+                      <X className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
+                )}
+                <div className="p-3 flex flex-col gap-3">
                   {/* File Upload Component */}
                   {selectedFiles.length > 0 && (
                     <div className="px-2 py-2 bg-slate-100/80 dark:bg-slate-900/50 rounded-xl">
@@ -1559,20 +1722,20 @@ const InternalChatPage: React.FC = () => {
                       multiple={true}
                     />
 
-                    <div className="flex-1 relative">
+                    <div className="flex-1 relative" ref={chatInputAreaRef}>
                       <SlashCommandInput
                         placeholder={t('teamChat.typeMessage')}
                         value={inputValue}
                         onChange={setInputValue}
                         onKeyPress={(e) => e.key === 'Enter' && !e.shiftKey && handleSendMessage()}
-                        className="w-full px-5 py-3.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-700/60 focus:border-purple-500 dark:focus:border-purple-400 focus:ring-2 focus:ring-purple-500/20 dark:focus:ring-purple-400/20 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 shadow-sm hover:shadow-md transition-shadow"
+                        className="w-full px-4 py-2 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 focus:border-blue-500 dark:focus:border-blue-500 focus:ring-1 focus:ring-blue-500/30 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 text-sm"
                         disabled={isUploadingFiles}
                       />
                     </div>
                     <Button
                       onClick={handleSendMessage}
                       disabled={(!inputValue.trim() && selectedFiles.length === 0) || isUploadingFiles}
-                      className="rounded-xl w-12 h-12 bg-gradient-to-r from-purple-500 to-indigo-600 hover:from-purple-600 hover:to-indigo-700 text-white shadow-lg shadow-purple-500/25 hover:shadow-xl hover:shadow-purple-500/30 transition-all disabled:opacity-50 disabled:cursor-not-allowed hover:scale-105"
+                      className="rounded-xl w-9 h-9 bg-gradient-to-r from-violet-500 to-indigo-600 hover:from-violet-600 hover:to-indigo-700 text-white shadow-sm shadow-violet-500/25 transition-all disabled:opacity-40 disabled:cursor-not-allowed flex-shrink-0"
                     >
                       {isUploadingFiles ? (
                         <Loader2 className="h-5 w-5 animate-spin" />
@@ -1585,15 +1748,14 @@ const InternalChatPage: React.FC = () => {
               </div>
             </>
           ) : (
-            <div className="flex-1 flex items-center justify-center bg-gradient-to-br from-slate-50 via-purple-50/30 to-indigo-50/30 dark:from-slate-900/50 dark:via-purple-950/20 dark:to-indigo-950/20">
+            <div className="flex-1 flex items-center justify-center bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/30 dark:from-slate-900/50 dark:via-blue-950/20 dark:to-indigo-950/20">
               <div className="text-center py-12">
                 <div className="relative mb-6 mx-auto w-fit">
-                  <div className="absolute inset-0 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-3xl blur-xl opacity-30 animate-pulse" />
-                  <div className="relative h-24 w-24 rounded-3xl bg-gradient-to-br from-purple-100 to-indigo-100 dark:from-purple-900/30 dark:to-indigo-900/30 flex items-center justify-center shadow-xl shadow-purple-500/20">
-                    <MessageSquare className="h-12 w-12 text-purple-500 dark:text-purple-400" />
+                  <div className="relative h-24 w-24 rounded-3xl bg-gradient-to-br from-violet-100 to-indigo-100 dark:from-violet-900/30 dark:to-indigo-900/30 flex items-center justify-center shadow-xl shadow-violet-500/20">
+                    <MessageSquare className="h-12 w-12 text-blue-500 dark:text-blue-400" />
                   </div>
                 </div>
-                <h3 className="text-xl font-bold bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent mb-2">
+                <h3 className="text-xl font-bold bg-gradient-to-r from-violet-600 to-indigo-600 bg-clip-text text-transparent mb-2">
                   {t('teamChat.selectChannel')}
                 </h3>
                 <p className="text-slate-500 dark:text-slate-400 text-sm max-w-xs mx-auto">
@@ -1601,7 +1763,7 @@ const InternalChatPage: React.FC = () => {
                 </p>
                 <Button
                   onClick={() => setCreateChannelModalOpen(true)}
-                  className="mt-6 bg-gradient-to-r from-purple-500 to-indigo-600 hover:from-purple-600 hover:to-indigo-700 text-white rounded-xl shadow-lg shadow-purple-500/25 hover:shadow-xl hover:shadow-purple-500/30 transition-all px-6"
+                  className="mt-6 bg-gradient-to-r from-violet-500 to-indigo-600 hover:from-violet-600 hover:to-indigo-700 text-white rounded-xl shadow-lg shadow-violet-500/25 hover:shadow-xl hover:shadow-violet-500/30 transition-all px-6"
                 >
                   <Plus className="h-4 w-4 mr-2" />
                   Create Channel
@@ -1610,6 +1772,52 @@ const InternalChatPage: React.FC = () => {
             </div>
           )}
         </div>
+
+        {/* Search panel */}
+        {selectedChannel && (
+          <SearchModal
+            isOpen={isSearchModalOpen}
+            onClose={() => setIsSearchModalOpen(false)}
+            channelId={selectedChannel.id}
+            onMessageClick={(messageId) => {
+              console.log('Navigate to message:', messageId);
+            }}
+          />
+        )}
+
+        {/* Members panel */}
+        {selectedChannel && (
+          <ManageChannelMembersModal
+            isOpen={isManageMembersModalOpen}
+            onClose={() => setManageMembersModalOpen(false)}
+            channelId={selectedChannel.id}
+            userPresences={userPresences}
+          />
+        )}
+
+        {/* Call History panel */}
+        <div className={cn(
+          'h-full flex-shrink-0 flex flex-col border-l border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 overflow-hidden transition-all duration-300 ease-in-out',
+          isCallHistoryOpen ? 'w-80' : 'w-0 border-l-0'
+        )}>
+          <div className="flex items-center justify-between px-4 py-3 border-b border-slate-200 dark:border-slate-700 flex-shrink-0">
+            <div className="flex items-center gap-2">
+              <History className="h-4 w-4 text-slate-500 dark:text-slate-400" />
+              <span className="text-sm font-semibold text-slate-800 dark:text-white">Call History</span>
+            </div>
+            <button
+              onClick={() => setIsCallHistoryOpen(false)}
+              className="p-1 rounded hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </div>
+          <div className="flex-1 overflow-hidden">
+            {selectedChannel && isCallHistoryOpen && (
+              <CallHistory channelId={selectedChannel.id} currentUserId={user?.id} />
+            )}
+          </div>
+        </div>
       </div>
       <CreateChannelModal
         isOpen={isCreateChannelModalOpen}
@@ -1617,14 +1825,25 @@ const InternalChatPage: React.FC = () => {
         onSubmit={handleCreateChannel}
         isLoading={createChannelMutation.isLoading}
       />
-      {selectedChannel && (
-        <ManageChannelMembersModal
-          isOpen={isManageMembersModalOpen}
-          onClose={() => setManageMembersModalOpen(false)}
-          channelId={selectedChannel.id}
-          userPresences={userPresences}
-        />
-      )}
+      <NewChatModal
+        isOpen={isNewChatModalOpen}
+        onClose={() => setNewChatModalOpen(false)}
+        currentUserId={user?.id}
+        existingChannels={channels || []}
+        onOpenChannel={(channelId) => {
+          const ch = (channels || []).find((c) => c.id === channelId);
+          if (ch) handleChannelSelect(ch);
+          // If newly created, wait for query invalidation and then select
+          else {
+            queryClient.invalidateQueries({ queryKey: ['chatChannels'] });
+            setSearchParams({ channelId: channelId.toString() });
+          }
+        }}
+        onCreate={async (channelData) => {
+          return await newChatMutation.mutateAsync(channelData);
+        }}
+        isLoading={newChatMutation.isLoading}
+      />
       {threadParentMessage && (
         <MessageThreadModal
           isOpen={isThreadModalOpen}
@@ -1633,17 +1852,6 @@ const InternalChatPage: React.FC = () => {
           currentUserId={user?.id}
           onSendReply={handleSendReply}
           onDownloadFile={handleDownloadFile}
-        />
-      )}
-      {selectedChannel && (
-        <SearchModal
-          isOpen={isSearchModalOpen}
-          onClose={() => setIsSearchModalOpen(false)}
-          channelId={selectedChannel.id}
-          onMessageClick={(messageId) => {
-            // Optionally scroll to message or open thread
-            console.log('Navigate to message:', messageId);
-          }}
         />
       )}
       {incomingCall && (
@@ -1666,26 +1874,6 @@ const InternalChatPage: React.FC = () => {
         />
       )}
 
-      {/* Call History Sheet */}
-      <Sheet open={isCallHistoryOpen} onOpenChange={setIsCallHistoryOpen}>
-        <SheetContent className="w-[400px] sm:w-[540px] flex flex-col bg-gradient-to-br from-white to-purple-50/30 dark:from-slate-800 dark:to-purple-950/20 border-l border-slate-200/80 dark:border-slate-700/60">
-          <SheetHeader className="pb-4 border-b border-slate-200/80 dark:border-slate-700/60">
-            <SheetTitle className={`flex items-center gap-3 ${isRTL ? 'flex-row-reverse' : ''}`}>
-              <div className="p-2.5 rounded-xl bg-gradient-to-br from-purple-500 to-indigo-600 shadow-lg shadow-purple-500/25">
-                <History className="h-5 w-5 text-white" />
-              </div>
-              <span className="bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent font-bold">
-                Call History
-              </span>
-            </SheetTitle>
-          </SheetHeader>
-          <div className="flex-1 mt-4 overflow-hidden">
-            {selectedChannel && (
-              <CallHistory channelId={selectedChannel.id} currentUserId={user?.id} />
-            )}
-          </div>
-        </SheetContent>
-      </Sheet>
     </TooltipProvider>
   );
 };

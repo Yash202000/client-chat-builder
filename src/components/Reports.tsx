@@ -1,4 +1,8 @@
 import { useState } from "react";
+import {
+  BarChart, Bar, LineChart, Line, PieChart, Pie, Cell,
+  XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer
+} from 'recharts';
 import { format } from "date-fns";
 import { Calendar as CalendarIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -25,7 +29,7 @@ import {
   Bell,
   Bot,
   Heart,
-  LineChart,
+  LineChart as LineChartIcon,
   Coins
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -264,6 +268,25 @@ export const Reports = () => {
     },
     enabled: !!companyId,
   });
+
+  const [summaryDays, setSummaryDays] = useState(30);
+
+  const { data: summaryData } = useQuery({
+    queryKey: ['reportsSummary', companyId, summaryDays],
+    queryFn: async () => {
+      if (!companyId) return null;
+      const response = await authFetch(`/api/v1/reports/summary?days=${summaryDays}`);
+      if (!response.ok) throw new Error("Failed to fetch summary");
+      return response.json();
+    },
+    enabled: !!companyId,
+  });
+
+  const CHART_COLORS = ['#6366f1', '#22c55e', '#f59e0b', '#ef4444', '#3b82f6', '#ec4899', '#14b8a6', '#f97316'];
+  const STATUS_COLORS: Record<string, string> = {
+    active: '#22c55e', inactive: '#94a3b8', assigned: '#6366f1',
+    pending: '#f59e0b', resolved: '#3b82f6', archived: '#64748b',
+  };
 
   const metrics = [
     {
@@ -512,7 +535,7 @@ export const Reports = () => {
             <span className="hidden sm:inline">{t("reports.tabs.customers")}</span>
           </TabsTrigger>
           <TabsTrigger value="trends" className="rounded-xl data-[state=active]:bg-gradient-to-r data-[state=active]:from-orange-500 data-[state=active]:to-red-500 data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=active]:shadow-orange-500/25 text-slate-600 dark:text-slate-400 font-medium transition-all duration-200 flex items-center gap-1.5">
-            <LineChart className="h-3.5 w-3.5" />
+            <LineChartIcon className="h-3.5 w-3.5" />
             <span className="hidden sm:inline">{t("reports.tabs.trends")}</span>
           </TabsTrigger>
           <TabsTrigger value="token-usage" className="rounded-xl data-[state=active]:bg-gradient-to-r data-[state=active]:from-orange-500 data-[state=active]:to-red-500 data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=active]:shadow-orange-500/25 text-slate-600 dark:text-slate-400 font-medium transition-all duration-200 flex items-center gap-1.5">
@@ -538,6 +561,113 @@ export const Reports = () => {
         </TabsList>
 
         <TabsContent value="overview" className="space-y-6">
+          {/* Summary Charts */}
+          {summaryData && (
+            <div className="space-y-6">
+              {/* Day range selector */}
+              <div className="flex items-center gap-2">
+                {[7, 30, 90].map(d => (
+                  <button
+                    key={d}
+                    onClick={() => setSummaryDays(d)}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                      summaryDays === d
+                        ? 'bg-orange-500 text-white shadow-md'
+                        : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700'
+                    }`}
+                  >
+                    Last {d}d
+                  </button>
+                ))}
+                <span className="text-xs text-slate-400 dark:text-slate-500 ml-2">
+                  {summaryData.total_sessions} total · {summaryData.resolution_rate}% resolved
+                </span>
+              </div>
+
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                {/* Daily Volume — Line Chart */}
+                <div className="lg:col-span-2 rounded-2xl border border-slate-200/80 dark:border-slate-700/60 bg-white dark:bg-slate-800 p-5 shadow-sm">
+                  <h3 className="font-bold text-slate-800 dark:text-white mb-4 flex items-center gap-2">
+                    <LineChartIcon className="h-4 w-4 text-orange-500" />
+                    Daily Volume
+                  </h3>
+                  <ResponsiveContainer width="100%" height={200}>
+                    <LineChart data={summaryData.daily_volume}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+                      <XAxis dataKey="date" tick={{ fontSize: 11 }} tickFormatter={v => v?.slice(5)} />
+                      <YAxis tick={{ fontSize: 11 }} allowDecimals={false} />
+                      <Tooltip />
+                      <Line type="monotone" dataKey="count" stroke="#f97316" strokeWidth={2} dot={false} name="Sessions" />
+                    </LineChart>
+                  </ResponsiveContainer>
+                </div>
+
+                {/* Status Breakdown — Pie Chart */}
+                <div className="rounded-2xl border border-slate-200/80 dark:border-slate-700/60 bg-white dark:bg-slate-800 p-5 shadow-sm">
+                  <h3 className="font-bold text-slate-800 dark:text-white mb-4">Status Breakdown</h3>
+                  <ResponsiveContainer width="100%" height={200}>
+                    <PieChart>
+                      <Pie data={summaryData.sessions_by_status} dataKey="count" nameKey="status" cx="50%" cy="50%" outerRadius={70} label={({ status, percent }) => `${status} ${(percent * 100).toFixed(0)}%`} labelLine={false}>
+                        {summaryData.sessions_by_status.map((entry, i) => (
+                          <Cell key={entry.status} fill={STATUS_COLORS[entry.status] || CHART_COLORS[i % CHART_COLORS.length]} />
+                        ))}
+                      </Pie>
+                      <Tooltip />
+                    </PieChart>
+                  </ResponsiveContainer>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* Sessions per Channel — Bar Chart */}
+                <div className="rounded-2xl border border-slate-200/80 dark:border-slate-700/60 bg-white dark:bg-slate-800 p-5 shadow-sm">
+                  <h3 className="font-bold text-slate-800 dark:text-white mb-4">Sessions by Channel</h3>
+                  <ResponsiveContainer width="100%" height={200}>
+                    <BarChart data={summaryData.sessions_per_channel} layout="vertical">
+                      <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+                      <XAxis type="number" tick={{ fontSize: 11 }} allowDecimals={false} />
+                      <YAxis type="category" dataKey="channel" tick={{ fontSize: 11 }} width={80} />
+                      <Tooltip />
+                      <Bar dataKey="count" name="Sessions" radius={[0, 4, 4, 0]}>
+                        {summaryData.sessions_per_channel.map((entry, i) => (
+                          <Cell key={entry.channel} fill={CHART_COLORS[i % CHART_COLORS.length]} />
+                        ))}
+                      </Bar>
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+
+                {/* Agent Leaderboard */}
+                <div className="rounded-2xl border border-slate-200/80 dark:border-slate-700/60 bg-white dark:bg-slate-800 p-5 shadow-sm">
+                  <h3 className="font-bold text-slate-800 dark:text-white mb-4">Agent Leaderboard</h3>
+                  {summaryData.sessions_per_agent.length === 0 ? (
+                    <p className="text-sm text-slate-400 text-center py-8">No assigned sessions yet</p>
+                  ) : (
+                    <div className="space-y-2 max-h-[200px] overflow-y-auto">
+                      {summaryData.sessions_per_agent.map((row, i) => (
+                        <div key={row.agent} className="flex items-center gap-3">
+                          <span className="text-xs font-bold text-slate-400 w-5 text-right">{i + 1}</span>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center justify-between mb-1">
+                              <span className="text-xs font-semibold text-slate-700 dark:text-slate-300 truncate">{row.agent}</span>
+                              <span className="text-xs font-bold text-orange-500">{row.count}</span>
+                            </div>
+                            <div className="h-1.5 bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden">
+                              <div
+                                className="h-full bg-gradient-to-r from-orange-400 to-red-500 rounded-full"
+                                style={{ width: `${(row.count / summaryData.sessions_per_agent[0].count) * 100}%` }}
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Conversation Status Distribution */}
             <div className="rounded-2xl border border-slate-200/80 dark:border-slate-700/60 bg-gradient-to-br from-white to-slate-50 dark:from-slate-800 dark:to-slate-900 shadow-xl shadow-slate-200/50 dark:shadow-slate-900/50 overflow-hidden">
@@ -821,7 +951,7 @@ export const Reports = () => {
             <div className="px-6 py-4 border-b border-slate-200/60 dark:border-slate-700/50 bg-gradient-to-r from-teal-50/50 to-cyan-50/50 dark:from-teal-950/30 dark:to-cyan-950/30">
               <div className={`flex items-center gap-3 ${isRTL ? 'flex-row-reverse' : ''}`}>
                 <div className="p-2.5 rounded-xl bg-gradient-to-br from-teal-500 to-cyan-600 shadow-lg shadow-teal-500/25">
-                  <LineChart className="h-5 w-5 text-white" />
+                  <LineChartIcon className="h-5 w-5 text-white" />
                 </div>
                 <div>
                   <h3 className="font-bold text-slate-800 dark:text-white">{t("reports.trends.conversationTrends")}</h3>

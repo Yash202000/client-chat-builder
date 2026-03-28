@@ -25,7 +25,7 @@ interface Channel {
  */
 export const getChannelDisplayName = (channel: Channel, currentUserId?: number): string => {
   // For DM channels, show the other user's name
-  if (channel.channel_type === 'DM' && currentUserId) {
+  if (channel.channel_type?.toUpperCase() === 'DM' && currentUserId) {
     const otherParticipant = channel.participants.find(
       (p) => p.user_id !== currentUserId
     );
@@ -53,7 +53,7 @@ export const getChannelDisplayName = (channel: Channel, currentUserId?: number):
  */
 export const getChannelAvatar = (channel: Channel, currentUserId?: number) => {
   // For DM channels, get the other user's avatar
-  if (channel.channel_type === 'DM' && currentUserId) {
+  if (channel.channel_type?.toUpperCase() === 'DM' && currentUserId) {
     const otherParticipant = channel.participants.find(
       (p) => p.user_id !== currentUserId
     );
@@ -83,7 +83,7 @@ export const getChannelAvatar = (channel: Channel, currentUserId?: number) => {
  */
 export const getChannelDescription = (channel: Channel, currentUserId?: number): string => {
   // For DM channels, show the other user's email
-  if (channel.channel_type === 'DM' && currentUserId) {
+  if (channel.channel_type?.toUpperCase() === 'DM' && currentUserId) {
     const otherParticipant = channel.participants.find(
       (p) => p.user_id !== currentUserId
     );

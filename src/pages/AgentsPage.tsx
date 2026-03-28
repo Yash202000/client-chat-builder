@@ -10,7 +10,7 @@ const AgentsPage = () => {
     <div className="space-y-6 p-6 animate-fade-in">
       {/* Modern Header */}
       <div className="flex items-center gap-4">
-        <div className="h-14 w-14 rounded-2xl bg-gradient-to-br from-purple-500 via-pink-500 to-rose-500 flex items-center justify-center shadow-lg shadow-purple-500/25">
+        <div className="h-14 w-14 rounded-2xl bg-gradient-to-br from-blue-500 via-indigo-500 to-blue-600 flex items-center justify-center shadow-lg shadow-blue-500/25">
           <Bot className="h-7 w-7 text-white" />
         </div>
         <div>

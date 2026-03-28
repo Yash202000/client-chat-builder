@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -13,9 +13,62 @@ import { useWebSocket } from '@/hooks/use-websocket';
 import { toast } from '@/hooks/use-toast';
 import { Session, User, PRIORITY_CONFIG } from '@/types';
 import { useAuth } from "@/hooks/useAuth";
-import { MessageSquare, Phone, Globe, Instagram, Mail, Send, Search, Filter, Archive, PanelLeftClose, PanelRightOpen, AlertTriangle, ArrowUp, Minus, ArrowDown, Inbox, Users, CheckCircle2, LayoutGrid, Sparkles, Clock, User as UserIcon } from 'lucide-react';
+import { MessageSquare, Phone, Globe, Instagram, Mail, Send, Search, Filter, Archive, PanelLeftClose, PanelRightOpen, AlertTriangle, ArrowUp, Minus, ArrowDown, Inbox, Users, CheckCircle2, LayoutGrid, Sparkles, Clock, User as UserIcon, Loader2 } from 'lucide-react';
+import SLATimer from '@/components/SLATimer';
 import { getWebSocketUrl } from '@/config/api';
 import { formatDistanceToNow } from 'date-fns';
+
+const WhatsAppIcon = ({ className }: { className?: string }) => (
+  <svg viewBox="0 0 24 24" className={className} fill="currentColor">
+    <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
+  </svg>
+);
+const MessengerIcon = ({ className }: { className?: string }) => (
+  <svg viewBox="0 0 24 24" className={className} fill="currentColor">
+    <path d="M12 0C5.373 0 0 4.974 0 11.111c0 3.498 1.744 6.614 4.469 8.654V24l4.088-2.242c1.092.301 2.246.464 3.443.464 6.627 0 12-4.974 12-11.111S18.627 0 12 0zm1.191 14.963l-3.055-3.26-5.963 3.26L10.732 8l3.131 3.259L19.752 8l-6.561 6.963z"/>
+  </svg>
+);
+const InstagramIcon = ({ className }: { className?: string }) => (
+  <svg viewBox="0 0 24 24" className={className} fill="currentColor">
+    <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>
+  </svg>
+);
+const TelegramIcon = ({ className }: { className?: string }) => (
+  <svg viewBox="0 0 24 24" className={className} fill="currentColor">
+    <path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/>
+  </svg>
+);
+const TwilioIcon = ({ className }: { className?: string }) => (
+  <svg viewBox="0 0 24 24" className={className} fill="currentColor">
+    <path d="M12 0C5.381 0 0 5.381 0 12s5.381 12 12 12 12-5.381 12-12S18.619 0 12 0zM9.75 6.75a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3zm4.5 0a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3zm-4.5 7.5a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3zm4.5 0a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3z"/>
+  </svg>
+);
+const ApiIcon = ({ className }: { className?: string }) => (
+  <svg viewBox="0 0 24 24" className={className} fill="currentColor">
+    <path d="M14 12l-2 2-2-2 2-2 2 2zm-2-6l2.12 2.12 2.5-2.5L12 1 7.38 5.62l2.5 2.5L12 6zm-6 6l2.12-2.12-2.5-2.5L1 12l4.62 4.62 2.5 2.5L6 12zm12 0l-2.12 2.12 2.5 2.5L23 12l-4.62-4.62-2.5 2.5L18 12zm-6 6l-2.12-2.12-2.5 2.5L12 23l4.62-4.62-2.5-2.5L12 18z"/>
+  </svg>
+);
+
+const CHANNEL_CONFIG: Record<string, {
+  titleKey: string;
+  subtitleKey: string;
+  iconClass: string;
+  Icon: React.ComponentType<{ className?: string }>;
+}> = {
+  web_chat:     { titleKey: 'navigation.activeClients', subtitleKey: 'conversations.channelSubtitle.webChat',    iconClass: 'text-blue-600 dark:text-blue-400',    Icon: ({ className }) => <Globe className={className} /> },
+  whatsapp:     { titleKey: 'navigation.whatsappInbox', subtitleKey: 'conversations.channelSubtitle.whatsapp',  iconClass: 'text-green-600 dark:text-green-400',  Icon: WhatsAppIcon },
+  instagram:    { titleKey: 'navigation.instagramInbox',subtitleKey: 'conversations.channelSubtitle.instagram', iconClass: 'text-pink-600 dark:text-pink-400',    Icon: InstagramIcon },
+  messenger:    { titleKey: 'navigation.messengerInbox',subtitleKey: 'conversations.channelSubtitle.messenger', iconClass: 'text-blue-500 dark:text-blue-400',    Icon: MessengerIcon },
+  telegram:     { titleKey: 'navigation.telegramInbox', subtitleKey: 'conversations.channelSubtitle.telegram',  iconClass: 'text-sky-500 dark:text-sky-400',      Icon: TelegramIcon },
+  twilio_voice: { titleKey: 'navigation.twilioInbox',   subtitleKey: 'conversations.channelSubtitle.twilio',   iconClass: 'text-red-500 dark:text-red-400',       Icon: TwilioIcon },
+  api:          { titleKey: 'navigation.apiInbox',      subtitleKey: 'conversations.channelSubtitle.api',      iconClass: 'text-cyan-600 dark:text-cyan-400',     Icon: ApiIcon },
+};
+
+const parseUTCDate = (ts: string) => {
+  if (!ts) return new Date(ts);
+  // Backend sends naive UTC datetimes without 'Z' — append it so browser parses as UTC
+  return new Date(ts.endsWith('Z') || ts.includes('+') ? ts : ts + 'Z');
+};
 import { useTranslation } from 'react-i18next';
 import { useI18n } from '@/hooks/useI18n';
 
@@ -101,7 +154,11 @@ const ConversationSkeleton = () => (
   </div>
 );
 
-const ConversationsPage: React.FC = () => {
+interface ConversationsPageProps {
+  channel?: string;
+}
+
+const ConversationsPage: React.FC<ConversationsPageProps> = ({ channel }) => {
   const { t } = useTranslation();
   const { isRTL } = useI18n();
   const queryClient = useQueryClient();
@@ -114,6 +171,12 @@ const ConversationsPage: React.FC = () => {
   const [isRightSidebarCollapsed, setIsRightSidebarCollapsed] = useState(false);
   const [reopenedSessions, setReopenedSessions] = useState<Set<string>>(new Set());
   const [sidebarView, setSidebarView] = useState<'contact' | 'summary'>('contact');
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [bulkAssigneeId, setBulkAssigneeId] = useState<string>('');
+  const [quickFilters, setQuickFilters] = useState<Set<string>>(new Set());
+  const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
+  const [globalSearchQuery, setGlobalSearchQuery] = useState('');
+  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState('');
 
   const companyId = useMemo(() => user?.company_id, [user]);
 
@@ -138,6 +201,25 @@ const ConversationsPage: React.FC = () => {
     setSidebarView('contact');
   }, [selectedSessionId]);
 
+  // Cmd+K / Ctrl+K opens global search modal
+  React.useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        e.preventDefault();
+        setIsSearchModalOpen(true);
+      }
+      if (e.key === 'Escape') setIsSearchModalOpen(false);
+    };
+    document.addEventListener('keydown', handler);
+    return () => document.removeEventListener('keydown', handler);
+  }, []);
+
+  // Debounce global search query
+  React.useEffect(() => {
+    const timer = setTimeout(() => setDebouncedSearchQuery(globalSearchQuery), 350);
+    return () => clearTimeout(timer);
+  }, [globalSearchQuery]);
+
   const { data: users } = useQuery<User[]>({
     queryKey: ['users', companyId],
     queryFn: async () => {
@@ -149,17 +231,33 @@ const ConversationsPage: React.FC = () => {
     enabled: !!companyId,
   });
 
+  // Global message search
+  const { data: searchResults, isFetching: isSearchFetching } = useQuery<any[]>({
+    queryKey: ['conversationSearch', debouncedSearchQuery],
+    queryFn: async () => {
+      if (!debouncedSearchQuery.trim() || debouncedSearchQuery.trim().length < 2) return [];
+      const res = await authFetch(`/api/v1/conversations/search?q=${encodeURIComponent(debouncedSearchQuery.trim())}&limit=20`);
+      if (!res.ok) return [];
+      return res.json();
+    },
+    enabled: debouncedSearchQuery.trim().length >= 2,
+  });
+
   // Fetch session counts (always fetch for badge display)
   const { data: sessionCounts, isLoading: isLoadingCounts } = useQuery<{ mine: number; open: number; resolved: number; all: number }>({
-    queryKey: ['sessionCounts', companyId, user?.id],
+    queryKey: ['sessionCounts', companyId, user?.id, channel],
     queryFn: async () => {
       if (!companyId) return { mine: 0, open: 0, resolved: 0, all: 0 };
-      const response = await authFetch(`/api/v1/conversations/sessions/counts`);
+      const channelParam = channel ? `?channel=${encodeURIComponent(channel)}` : '';
+      const response = await authFetch(`/api/v1/conversations/sessions/counts${channelParam}`);
       if (!response.ok) throw new Error('Failed to fetch session counts');
       const counts = await response.json();
 
       // Also fetch all sessions to count "mine" (sessions assigned to current user)
-      const sessionsResponse = await authFetch(`/api/v1/conversations/sessions?status_filter=open`);
+      const mineUrl = channel
+        ? `/api/v1/conversations/sessions?status_filter=open&channel=${encodeURIComponent(channel)}`
+        : `/api/v1/conversations/sessions?status_filter=open`;
+      const sessionsResponse = await authFetch(mineUrl);
       const allSessions = await sessionsResponse.json();
       // Count sessions assigned to current user (assignee_id is source of truth, not status)
       const mineCount = allSessions.filter(s => s.assignee_id === user?.id).length;
@@ -173,13 +271,15 @@ const ConversationsPage: React.FC = () => {
 
   // Fetch sessions based on active tab (server-side filtering)
   const { data: sessions, isLoading: isLoadingSessions } = useQuery<Session[]>({
-    queryKey: ['sessions', companyId, activeTab, user?.id],
+    queryKey: ['sessions', companyId, activeTab, user?.id, channel],
     queryFn: async () => {
       if (!companyId) return [];
 
+      const channelParam = channel ? `&channel=${encodeURIComponent(channel)}` : '';
+
       // For 'mine' tab, fetch all open and filter to sessions assigned to current user
       if (activeTab === 'mine') {
-        const response = await authFetch(`/api/v1/conversations/sessions?status_filter=open`);
+        const response = await authFetch(`/api/v1/conversations/sessions?status_filter=open${channelParam}`);
         if (!response.ok) throw new Error('Failed to fetch sessions');
         const allSessions = await response.json();
         // Filter to only show sessions assigned to current user (assignee_id is source of truth)
@@ -188,8 +288,8 @@ const ConversationsPage: React.FC = () => {
 
       const statusFilter = activeTab === 'all' ? '' : activeTab; // 'open', 'resolved', or ''
       const url = statusFilter
-        ? `/api/v1/conversations/sessions?status_filter=${statusFilter}`
-        : `/api/v1/conversations/sessions`;
+        ? `/api/v1/conversations/sessions?status_filter=${statusFilter}${channelParam}`
+        : `/api/v1/conversations/sessions${channelParam ? `?${channelParam.slice(1)}` : ''}`;
       const response = await authFetch(url);
       if (!response.ok) throw new Error('Failed to fetch sessions');
       return response.json();
@@ -377,7 +477,7 @@ const ConversationsPage: React.FC = () => {
                   {(!eventData.assignee_id || eventData.assignee_id !== user?.id) && (
                     <button
                       onClick={handleAssignToMe}
-                      className="text-xs bg-purple-500 text-white px-3 py-1.5 rounded hover:bg-purple-600 font-medium transition-colors"
+                      className="text-xs bg-blue-500 text-white px-3 py-1.5 rounded hover:bg-indigo-600 font-medium transition-colors"
                     >
                       {t('conversations.notifications.assignToMe')}
                     </button>
@@ -488,7 +588,7 @@ const ConversationsPage: React.FC = () => {
       case 'active': return 'bg-green-50 dark:bg-green-950 border-l-green-500';
       case 'inactive': return 'bg-gray-50 dark:bg-gray-900 border-l-gray-400';
       case 'resolved': return 'bg-blue-50 dark:bg-blue-950 border-l-blue-500 opacity-70';
-      case 'assigned': return 'bg-purple-50 dark:bg-purple-950 border-l-purple-500';
+      case 'assigned': return 'bg-blue-50 dark:bg-indigo-950 border-l-blue-500';
       case 'pending': return 'bg-red-50 dark:bg-red-950 border-l-red-500';
       default: return 'bg-white dark:bg-slate-800 border-l-gray-300';
     }
@@ -519,7 +619,7 @@ const ConversationsPage: React.FC = () => {
         </svg>
       );
       case 'freeswitch': return (
-        <svg className="h-4 w-4 text-purple-500" viewBox="0 0 24 24" fill="currentColor">
+        <svg className="h-4 w-4 text-blue-500" viewBox="0 0 24 24" fill="currentColor">
           <path d="M20 15.5c-1.25 0-2.45-.2-3.57-.57a1.02 1.02 0 0 0-1.02.24l-2.2 2.2a15.045 15.045 0 0 1-6.59-6.59l2.2-2.21a.96.96 0 0 0 .25-1A11.36 11.36 0 0 1 8.5 4c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1 0 9.39 7.61 17 17 17 .55 0 1-.45 1-1v-3.5c0-.55-.45-1-1-1zM12 3v10l3-3h6V3h-9z"/>
         </svg>
       );
@@ -562,23 +662,19 @@ const ConversationsPage: React.FC = () => {
 
   if (isAuthLoading) {
     return (
-      <div className="flex items-center justify-center h-full bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800">
-        <motion.div
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          className="text-center"
-        >
-          <div className="relative">
-            <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-500 to-purple-600 animate-pulse-ring mx-auto mb-6 flex items-center justify-center">
-              <MessageSquare className="w-8 h-8 text-white" />
-            </div>
-            <div className="absolute -inset-4 rounded-3xl bg-gradient-to-r from-blue-500/20 to-purple-500/20 blur-xl animate-pulse" />
-          </div>
-          <p className="text-muted-foreground font-medium">{t('conversations.loading') || 'Loading conversations...'}</p>
-        </motion.div>
+      <div className="flex items-center justify-center h-full bg-slate-50 dark:bg-slate-950">
+        <Loader2 className="h-6 w-6 animate-spin text-slate-400" />
       </div>
     );
   }
+
+  const toggleQuickFilter = (f: string) => {
+    setQuickFilters(prev => {
+      const next = new Set(prev);
+      next.has(f) ? next.delete(f) : next.add(f);
+      return next;
+    });
+  };
 
   // Filter sessions by search query and sort by priority (tab filtering is done server-side)
   const filteredSessions = useMemo(() => {
@@ -589,12 +685,18 @@ const ConversationsPage: React.FC = () => {
     // Filter by search query (client-side for instant feedback)
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase();
-      result = sessions.filter(session =>
+      result = result.filter(session =>
         session.contact_name?.toLowerCase().includes(query) ||
         session.contact_phone?.toLowerCase().includes(query) ||
         session.first_message_content?.toLowerCase().includes(query)
       );
     }
+
+    // Apply quick filters
+    if (quickFilters.has('unassigned')) result = result.filter(s => !s.assignee_id);
+    if (quickFilters.has('high_priority')) result = result.filter(s => (s.priority || 0) >= 3);
+    if (quickFilters.has('connected')) result = result.filter(s => s.is_client_connected);
+    if (quickFilters.has('my_team')) result = result.filter(s => s.assignee_id === user?.id);
 
     // Sort by priority (high to low), then by timestamp (recent first)
     return [...result].sort((a, b) => {
@@ -602,7 +704,7 @@ const ConversationsPage: React.FC = () => {
       if (priorityDiff !== 0) return priorityDiff;
       return new Date(b.last_message_timestamp).getTime() - new Date(a.last_message_timestamp).getTime();
     });
-  }, [sessions, searchQuery]);
+  }, [sessions, searchQuery, quickFilters, user?.id]);
 
   // Check if conversation is assigned to current user
   // Note: assignee_id indicates assignment regardless of status field
@@ -617,8 +719,39 @@ const ConversationsPage: React.FC = () => {
     return !channel || channel === 'web' || channel === 'websocket' || channel === 'web_chat';
   };
 
+  const toggleSelect = (id: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setSelectedIds(prev => {
+      const next = new Set(prev);
+      next.has(id) ? next.delete(id) : next.add(id);
+      return next;
+    });
+  };
+
+  const selectAll = () => setSelectedIds(new Set(filteredSessions.map(s => s.conversation_id)));
+  const clearSelection = () => setSelectedIds(new Set());
+
+  const bulkActionMutation = useMutation({
+    mutationFn: async ({ action, assigneeId }: { action: string; assigneeId?: number }) => {
+      const res = await authFetch('/api/v1/conversations/bulk-action', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ session_ids: Array.from(selectedIds), action, assignee_id: assigneeId }),
+      });
+      if (!res.ok) throw new Error('Bulk action failed');
+      return res.json();
+    },
+    onSuccess: (data) => {
+      toast({ title: `Updated ${data.updated} conversation${data.updated !== 1 ? 's' : ''}` });
+      clearSelection();
+      queryClient.invalidateQueries({ queryKey: ['sessions', companyId] });
+      queryClient.invalidateQueries({ queryKey: ['sessionCounts', companyId] });
+    },
+  });
+
   // Enhanced Conversation Card Component with animations
   const ConversationCard = ({ session, index }: { session: Session; index: number }) => {
+    const isChecked = selectedIds.has(session.conversation_id);
     const assignedToMe = isAssignedToMe(session);
     const isDisconnected = assignedToMe && !session.is_client_connected;
     const isRecentlyReopened = reopenedSessions.has(session.conversation_id);
@@ -660,10 +793,25 @@ const ConversationsPage: React.FC = () => {
         whileHover="hover"
         whileTap="tap"
         onClick={() => setSelectedSessionId(session.conversation_id)}
-        className={`${getCardClasses()} ${hasPriority ? `border-l-4 ${getPriorityClass()}` : ''} ${isRecentlyReopened ? 'conversation-reopened' : ''}`}
+        className={`${getCardClasses()} ${hasPriority ? `border-l-4 ${getPriorityClass()}` : ''} ${isRecentlyReopened ? 'conversation-reopened' : ''} ${isChecked ? 'ring-2 ring-indigo-400 dark:ring-indigo-500' : ''}`}
         style={{ animationDelay: `${index * 0.05}s` }}
       >
         <div className={`flex items-start gap-3 ${isRTL ? 'flex-row-reverse' : ''}`}>
+          {/* Checkbox */}
+          <div
+            onClick={(e) => toggleSelect(session.conversation_id, e)}
+            className={`flex-shrink-0 mt-0.5 w-4 h-4 rounded border-2 flex items-center justify-center transition-all cursor-pointer ${
+              isChecked
+                ? 'bg-indigo-500 border-indigo-500'
+                : 'border-slate-300 dark:border-slate-600 hover:border-indigo-400'
+            }`}
+          >
+            {isChecked && (
+              <svg className="w-2.5 h-2.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+              </svg>
+            )}
+          </div>
           {/* Channel Icon with Status */}
           <div className="channel-icon-container flex-shrink-0 relative">
             {getChannelIcon(session.channel)}
@@ -688,7 +836,7 @@ const ConversationsPage: React.FC = () => {
                   title="Client disconnected"
                 />
               )}
-              {!assignedToMe && session.status === 'active' && (
+              {!assignedToMe && session.is_client_connected && (
                 <motion.span
                   initial={{ scale: 0 }}
                   animate={{ scale: 1 }}
@@ -753,7 +901,7 @@ const ConversationsPage: React.FC = () => {
                     ? 'bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-900/30 dark:text-blue-400 dark:border-blue-800'
                     : assignedToMe
                     ? 'bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-900/30 dark:text-amber-400 dark:border-amber-800'
-                    : 'bg-purple-100 text-purple-700 border-purple-200 dark:bg-purple-900/30 dark:text-purple-400 dark:border-purple-800'
+                    : 'bg-blue-100 text-indigo-700 border-blue-200 dark:bg-indigo-900/30 dark:text-blue-400 dark:border-indigo-800'
                 }`}
               >
                 {assignedToMe ? t('conversations.status.mine') : session.status}
@@ -774,16 +922,10 @@ const ConversationsPage: React.FC = () => {
 
             {/* Meta Information */}
             <div className="flex items-center gap-3 text-xs text-muted-foreground">
-              <span className="flex items-center gap-1">
-                <Clock className="w-3 h-3" />
-                {session.last_message_timestamp
-                  ? formatDistanceToNow(new Date(session.last_message_timestamp), { addSuffix: true })
-                  : 'No messages'
-                }
-              </span>
+              <SLATimer lastMessageTimestamp={session.last_message_timestamp} />
 
               {session.assignee_id && !assignedToMe && (
-                <span className="flex items-center gap-1 text-purple-600 dark:text-purple-400">
+                <span className="flex items-center gap-1 text-indigo-600 dark:text-blue-400">
                   <UserIcon className="w-3 h-3" />
                   <span className="truncate max-w-[100px]">{getAssigneeEmail(session.assignee_id)}</span>
                 </span>
@@ -798,7 +940,7 @@ const ConversationsPage: React.FC = () => {
                 className="text-xs text-orange-600 dark:text-orange-400 mt-2 flex items-center gap-1.5 bg-orange-50 dark:bg-orange-900/20 px-2 py-1 rounded-md"
               >
                 <span className="w-1.5 h-1.5 rounded-full bg-orange-500 animate-pulse" />
-                Reopened {formatDistanceToNow(new Date(session.last_reopened_at), { addSuffix: true })}
+                Reopened {formatDistanceToNow(parseUTCDate(session.last_reopened_at), { addSuffix: true })}
               </motion.p>
             )}
           </div>
@@ -808,7 +950,7 @@ const ConversationsPage: React.FC = () => {
   };
 
   return (
-    <div className="h-full w-full overflow-hidden bg-gradient-to-br from-slate-50 via-white to-slate-100 dark:from-slate-900 dark:via-slate-900 dark:to-slate-800">
+    <div className="h-full w-full overflow-hidden bg-slate-50 dark:bg-slate-950">
       <div className="grid grid-cols-1 md:grid-cols-12 gap-4 h-full p-4">
         {/* Left Sidebar - Conversation List */}
         <motion.div
@@ -817,16 +959,13 @@ const ConversationsPage: React.FC = () => {
           transition={{ duration: 0.4, ease: "easeOut" }}
           className={`h-full overflow-hidden transition-all duration-500 ease-out ${isSidebarCollapsed ? 'md:col-span-1' : 'md:col-span-3'}`}
         >
-          <Card className="h-full flex flex-col card-shadow-lg bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm border-slate-200/50 dark:border-slate-700/50 relative overflow-hidden">
-            {/* Decorative gradient line at top */}
-            <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500" />
-
+          <Card className="h-full flex flex-col shadow-sm bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 relative overflow-hidden">
             {/* Collapse/Expand Button */}
             <motion.button
               whileHover={{ scale: 1.1 }}
               whileTap={{ scale: 0.95 }}
               onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
-              className={`absolute ${isRTL ? '-left-3' : '-right-3'} top-1/2 -translate-y-1/2 z-10 bg-gradient-to-br from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white rounded-full p-2 shadow-lg hover:shadow-xl transition-all duration-300`}
+              className={`absolute ${isRTL ? '-left-3' : '-right-3'} top-1/2 -translate-y-1/2 z-10 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 rounded-full p-2 shadow-sm border border-slate-200 dark:border-slate-700 transition-all duration-300`}
               title={isSidebarCollapsed ? t('conversations.expandSidebar') : t('conversations.collapseSidebar')}
             >
               <motion.div
@@ -841,7 +980,7 @@ const ConversationsPage: React.FC = () => {
               </motion.div>
             </motion.button>
 
-            <CardHeader className={`border-b border-slate-200/50 dark:border-slate-700/50 bg-gradient-to-b from-white to-slate-50/50 dark:from-slate-800 dark:to-slate-900/50 flex-shrink-0 py-4 ${isSidebarCollapsed ? 'px-2' : 'space-y-4'}`}>
+            <CardHeader className={`border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 flex-shrink-0 py-4 ${isSidebarCollapsed ? 'px-2' : 'space-y-4'}`}>
               <AnimatePresence mode="wait">
                 {!isSidebarCollapsed && (
                   <motion.div
@@ -854,21 +993,43 @@ const ConversationsPage: React.FC = () => {
                     {/* Header with count */}
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-3">
-                        <div className="p-2 rounded-xl bg-gradient-to-br from-blue-500 to-purple-600 shadow-lg">
-                          <Inbox className="w-5 h-5 text-white" />
-                        </div>
-                        <div>
-                          <CardTitle className="text-lg font-bold dark:text-white">{t('conversations.inbox')}</CardTitle>
-                          <p className="text-xs text-muted-foreground">Active conversations</p>
-                        </div>
+                        {(() => {
+                          const cfg = channel ? CHANNEL_CONFIG[channel] : null;
+                          const IconComponent = cfg?.Icon ?? (({ className }: { className?: string }) => <Inbox className={className} />);
+                          const iconClass = cfg?.iconClass ?? 'text-blue-600 dark:text-blue-400';
+                          return (
+                            <>
+                              <div className="h-9 w-9 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
+                                <IconComponent className={`w-5 h-5 ${iconClass}`} />
+                              </div>
+                              <div>
+                                <CardTitle className="text-lg font-bold dark:text-white">
+                                  {cfg ? t(cfg.titleKey) : t('conversations.inbox')}
+                                </CardTitle>
+                                <p className="text-xs text-muted-foreground">
+                                  {cfg ? t(cfg.subtitleKey) : t('conversations.activeConversations')}
+                                </p>
+                              </div>
+                            </>
+                          );
+                        })()}
                       </div>
                       <motion.div
                         key={sessionCounts?.all}
                         initial={{ scale: 0.8 }}
                         animate={{ scale: 1 }}
-                        className="flex items-center gap-1"
+                        className="flex items-center gap-1.5"
                       >
-                        <Badge variant="secondary" className="bg-gradient-to-r from-slate-100 to-slate-200 dark:from-slate-700 dark:to-slate-800 text-slate-700 dark:text-slate-200 font-semibold px-3 py-1 rounded-full">
+                        <button
+                          onClick={() => setIsSearchModalOpen(true)}
+                          className="flex items-center gap-1.5 text-xs font-medium px-2.5 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors border border-slate-200 dark:border-slate-600"
+                          title="Search messages (Ctrl+K)"
+                        >
+                          <Search className="w-3.5 h-3.5" />
+                          <span className="hidden sm:inline">Search</span>
+                          <kbd className="hidden sm:inline text-[9px] px-1 py-0.5 rounded bg-slate-200 dark:bg-slate-600 font-mono">⌘K</kbd>
+                        </button>
+                        <Badge variant="secondary" className="bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-200 font-semibold px-3 py-1 rounded-full">
                           {sessionCounts?.all || 0}
                         </Badge>
                       </motion.div>
@@ -876,7 +1037,6 @@ const ConversationsPage: React.FC = () => {
 
                     {/* Enhanced Search Bar */}
                     <div className="relative group">
-                      <div className="absolute inset-0 bg-gradient-to-r from-blue-500/20 to-purple-500/20 rounded-xl blur-xl opacity-0 group-focus-within:opacity-100 transition-opacity duration-300" />
                       <div className="relative">
                         <Search className={`absolute top-1/2 transform -translate-y-1/2 h-4 w-4 text-slate-400 group-focus-within:text-blue-500 transition-colors ${isRTL ? 'right-4' : 'left-4'}`} />
                         <Input
@@ -889,8 +1049,43 @@ const ConversationsPage: React.FC = () => {
                       </div>
                     </div>
 
+                    {/* Quick Filters */}
+                    <div className="flex flex-wrap gap-1.5">
+                      {[
+                        { id: 'unassigned', label: 'Unassigned', color: 'amber' },
+                        { id: 'high_priority', label: '🔥 Priority', color: 'red' },
+                        { id: 'connected', label: '🟢 Online', color: 'green' },
+                        { id: 'my_team', label: '⭐ Mine', color: 'indigo' },
+                      ].map(f => {
+                        const active = quickFilters.has(f.id);
+                        const colors: Record<string, string> = {
+                          amber: active ? 'bg-amber-500 text-white border-amber-500' : 'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-900/20 dark:text-amber-300 dark:border-amber-800',
+                          red:   active ? 'bg-red-500 text-white border-red-500'     : 'bg-red-50 text-red-700 border-red-200 dark:bg-red-900/20 dark:text-red-300 dark:border-red-800',
+                          green: active ? 'bg-green-500 text-white border-green-500' : 'bg-green-50 text-green-700 border-green-200 dark:bg-green-900/20 dark:text-green-300 dark:border-green-800',
+                          indigo:active ? 'bg-indigo-500 text-white border-indigo-500': 'bg-indigo-50 text-indigo-700 border-indigo-200 dark:bg-indigo-900/20 dark:text-indigo-300 dark:border-indigo-800',
+                        };
+                        return (
+                          <button
+                            key={f.id}
+                            onClick={() => toggleQuickFilter(f.id)}
+                            className={`text-[11px] font-semibold px-2.5 py-1 rounded-full border transition-all ${colors[f.color]}`}
+                          >
+                            {f.label}
+                          </button>
+                        );
+                      })}
+                      {quickFilters.size > 0 && (
+                        <button
+                          onClick={() => setQuickFilters(new Set())}
+                          className="text-[11px] font-semibold px-2.5 py-1 rounded-full border border-slate-200 dark:border-slate-600 text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 transition-all"
+                        >
+                          ✕ Clear
+                        </button>
+                      )}
+                    </div>
+
                     {/* Enhanced Tabs */}
-                    <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'mine' | 'open' | 'resolved' | 'all')} className="w-full">
+                    <Tabs value={activeTab} onValueChange={(v) => { setActiveTab(v as 'mine' | 'open' | 'resolved' | 'all'); clearSelection(); }} className="w-full">
                       <TabsList className="w-full grid grid-cols-4 bg-slate-100/80 dark:bg-slate-800/80 p-1.5 rounded-xl gap-1">
                         <TabsTrigger
                           value="open"
@@ -931,7 +1126,7 @@ const ConversationsPage: React.FC = () => {
                                 initial={{ scale: 0 }}
                                 animate={{ scale: 1 }}
                                 exit={{ scale: 0 }}
-                                className="absolute -top-1 -right-1 bg-gradient-to-r from-red-500 to-pink-500 text-white text-[10px] font-bold rounded-full h-5 w-5 flex items-center justify-center shadow-lg border-2 border-white dark:border-slate-800"
+                                className="absolute -top-1 -right-1 bg-gradient-to-r from-red-500 to-red-600 text-white text-[10px] font-bold rounded-full h-5 w-5 flex items-center justify-center shadow-lg border-2 border-white dark:border-slate-800"
                               >
                                 {unreadAssignments}
                               </motion.span>
@@ -966,7 +1161,7 @@ const ConversationsPage: React.FC = () => {
                               key={sessionCounts?.all}
                               initial={{ scale: 0.8 }}
                               animate={{ scale: 1 }}
-                              className="text-xs font-bold text-purple-600 dark:text-purple-400"
+                              className="text-xs font-bold text-indigo-600 dark:text-blue-400"
                             >
                               {sessionCounts?.all || 0}
                             </motion.span>
@@ -987,8 +1182,8 @@ const ConversationsPage: React.FC = () => {
                     exit={{ opacity: 0 }}
                     className="flex flex-col gap-3 items-center py-2"
                   >
-                    <div className="p-2 rounded-xl bg-gradient-to-br from-blue-500 to-purple-600">
-                      <Inbox className="w-4 h-4 text-white" />
+                    <div className="h-8 w-8 rounded-lg bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center">
+                      <Inbox className="w-4 h-4 text-blue-600 dark:text-blue-400" />
                     </div>
                     <Badge variant="secondary" className="text-xs font-bold">
                       {sessionCounts?.all || 0}
@@ -997,7 +1192,7 @@ const ConversationsPage: React.FC = () => {
                       <motion.span
                         initial={{ scale: 0 }}
                         animate={{ scale: 1 }}
-                        className="bg-gradient-to-r from-red-500 to-pink-500 text-white text-[10px] font-bold rounded-full h-5 w-5 flex items-center justify-center"
+                        className="bg-gradient-to-r from-red-500 to-red-600 text-white text-[10px] font-bold rounded-full h-5 w-5 flex items-center justify-center"
                       >
                         {unreadAssignments}
                       </motion.span>
@@ -1006,6 +1201,55 @@ const ConversationsPage: React.FC = () => {
                 )}
               </AnimatePresence>
             </CardHeader>
+            {/* Bulk Action Bar */}
+            <AnimatePresence>
+              {selectedIds.size > 0 && !isSidebarCollapsed && (
+                <motion.div
+                  initial={{ opacity: 0, y: -8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -8 }}
+                  className="px-3 py-2 bg-indigo-50 dark:bg-indigo-950/40 border-b border-indigo-200 dark:border-indigo-800 flex flex-wrap items-center gap-2"
+                >
+                  <span className="text-xs font-bold text-indigo-700 dark:text-indigo-300 min-w-max">
+                    {selectedIds.size} selected
+                  </span>
+                  <button onClick={selectAll} className="text-xs text-indigo-500 hover:text-indigo-700 dark:hover:text-indigo-300 underline">
+                    All {filteredSessions.length}
+                  </button>
+                  <button onClick={clearSelection} className="text-xs text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 underline">
+                    Clear
+                  </button>
+                  <div className="flex-1" />
+                  <button
+                    onClick={() => bulkActionMutation.mutate({ action: 'resolve' })}
+                    disabled={bulkActionMutation.isLoading}
+                    className="flex items-center gap-1 text-xs font-semibold px-2.5 py-1 rounded-lg bg-green-100 text-green-700 hover:bg-green-200 dark:bg-green-900/30 dark:text-green-300 dark:hover:bg-green-900/50 transition-colors"
+                  >
+                    <CheckCircle2 className="w-3 h-3" /> Resolve
+                  </button>
+                  <div className="flex items-center gap-1">
+                    <select
+                      value={bulkAssigneeId}
+                      onChange={e => setBulkAssigneeId(e.target.value)}
+                      className="text-xs rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 px-2 py-1 h-7"
+                    >
+                      <option value="">Assign to...</option>
+                      {Array.isArray(users) && users.map(u => (
+                        <option key={u.id} value={u.id}>{u.email}</option>
+                      ))}
+                    </select>
+                    <button
+                      onClick={() => { if (bulkAssigneeId) bulkActionMutation.mutate({ action: 'assign', assigneeId: Number(bulkAssigneeId) }); }}
+                      disabled={!bulkAssigneeId || bulkActionMutation.isLoading}
+                      className="text-xs font-semibold px-2.5 py-1 rounded-lg bg-indigo-100 text-indigo-700 hover:bg-indigo-200 dark:bg-indigo-900/30 dark:text-indigo-300 disabled:opacity-40 transition-colors"
+                    >
+                      Go
+                    </button>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
             <CardContent className={`flex-1 overflow-y-auto bg-gradient-to-b from-slate-50/50 to-white dark:from-slate-900/50 dark:to-slate-800 ${isSidebarCollapsed ? 'p-0' : 'p-3'}`}>
               {isLoadingSessions ? (
                 <motion.div
@@ -1029,7 +1273,7 @@ const ConversationsPage: React.FC = () => {
                     const StatusGroupHeader = ({ label, count, colorClass, icon: Icon }: { label: string; count: number; colorClass: string; icon: any }) => (
                       <motion.div
                         variants={itemVariants}
-                        className={`group-header px-4 py-2.5 rounded-lg mx-1 mb-2 flex items-center justify-between ${colorClass}`}
+                        className={`px-4 py-2.5 rounded-lg mx-1 mb-2 flex items-center justify-between ${colorClass}`}
                       >
                         <div className="flex items-center gap-2">
                           <Icon className="w-3.5 h-3.5" />
@@ -1071,7 +1315,7 @@ const ConversationsPage: React.FC = () => {
                             <StatusGroupHeader
                               label={t('conversations.statusGroups.inactive')}
                               count={inactiveUnassigned.length}
-                              colorClass="bg-slate-100/80 dark:bg-slate-800/50 text-slate-600 dark:text-slate-400"
+                              colorClass="bg-slate-300/80 dark:bg-slate-600/60 text-slate-700 dark:text-slate-200"
                               icon={Clock}
                             />
                             <div className="space-y-2 px-1">
@@ -1087,7 +1331,7 @@ const ConversationsPage: React.FC = () => {
                             <StatusGroupHeader
                               label={t('conversations.statusGroups.assigned')}
                               count={assigned.length}
-                              colorClass="bg-purple-100/80 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300"
+                              colorClass="bg-blue-100/80 dark:bg-indigo-900/30 text-indigo-700 dark:text-blue-300"
                               icon={Users}
                             />
                             <div className="space-y-2 px-1">
@@ -1168,7 +1412,7 @@ const ConversationsPage: React.FC = () => {
                         onClick={() => setSelectedSessionId(session.conversation_id)}
                         className={`p-2.5 rounded-xl transition-all relative ${
                           selectedSessionId === session.conversation_id
-                            ? 'bg-gradient-to-br from-blue-100 to-indigo-100 dark:from-blue-900/50 dark:to-indigo-900/50 shadow-md'
+                            ? 'bg-blue-50 dark:bg-blue-900/30'
                             : 'hover:bg-slate-100 dark:hover:bg-slate-700'
                         }`}
                         title={session.contact_name || t('conversations.card.unknownContact')}
@@ -1196,7 +1440,7 @@ const ConversationsPage: React.FC = () => {
                 >
                   <div className="text-center">
                     <div className="empty-state-icon inline-block mb-6">
-                      <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-slate-100 to-slate-200 dark:from-slate-700 dark:to-slate-800 flex items-center justify-center shadow-lg">
+                      <div className="w-20 h-20 rounded-xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
                         <MessageSquare className="w-10 h-10 text-slate-400 dark:text-slate-500" />
                       </div>
                     </div>
@@ -1252,12 +1496,7 @@ const ConversationsPage: React.FC = () => {
                 exit={{ opacity: 0 }}
                 className="h-full"
               >
-                <Card className="h-full flex items-center justify-center card-shadow-lg bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm border-slate-200/50 dark:border-slate-700/50 overflow-hidden relative">
-                  {/* Decorative background elements */}
-                  <div className="absolute inset-0 overflow-hidden pointer-events-none">
-                    <div className="absolute -top-24 -right-24 w-96 h-96 bg-gradient-to-br from-blue-500/5 to-purple-500/5 rounded-full blur-3xl" />
-                    <div className="absolute -bottom-24 -left-24 w-96 h-96 bg-gradient-to-br from-purple-500/5 to-pink-500/5 rounded-full blur-3xl" />
-                  </div>
+                <Card className="h-full flex items-center justify-center shadow-sm bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 overflow-hidden">
 
                   <div className="text-center p-8 relative z-10">
                     <motion.div
@@ -1266,15 +1505,8 @@ const ConversationsPage: React.FC = () => {
                       transition={{ type: "spring", stiffness: 200, damping: 15 }}
                       className="empty-state-icon inline-block mb-6"
                     >
-                      <div className="relative">
-                        <div className="w-24 h-24 rounded-3xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center shadow-2xl shadow-blue-500/20">
-                          <MessageSquare className="w-12 h-12 text-white" />
-                        </div>
-                        <motion.div
-                          animate={{ rotate: 360 }}
-                          transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
-                          className="absolute -inset-4 rounded-full border-2 border-dashed border-blue-200 dark:border-blue-800"
-                        />
+                      <div className="w-24 h-24 rounded-2xl bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center">
+                        <MessageSquare className="w-12 h-12 text-blue-500 dark:text-blue-400" />
                       </div>
                     </motion.div>
 
@@ -1282,7 +1514,7 @@ const ConversationsPage: React.FC = () => {
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: 0.2 }}
-                      className="text-2xl font-bold mb-3 bg-gradient-to-r from-slate-800 to-slate-600 dark:from-white dark:to-slate-300 bg-clip-text text-transparent"
+                      className="text-2xl font-bold mb-3 text-slate-800 dark:text-white"
                     >
                       {t('conversations.emptyState.noSelection')}
                     </motion.h3>
@@ -1290,7 +1522,7 @@ const ConversationsPage: React.FC = () => {
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: 0.3 }}
-                      className="text-muted-foreground max-w-sm mx-auto leading-relaxed"
+                      className="text-slate-500 dark:text-slate-400 max-w-sm mx-auto leading-relaxed"
                     >
                       {t('conversations.emptyState.noSelectionDesc')}
                     </motion.p>
@@ -1306,9 +1538,9 @@ const ConversationsPage: React.FC = () => {
                           <div
                             key={i}
                             className={`w-10 h-10 rounded-full border-2 border-white dark:border-slate-800 flex items-center justify-center text-white text-xs font-bold ${
-                              i === 0 ? 'bg-gradient-to-br from-blue-500 to-blue-600' :
-                              i === 1 ? 'bg-gradient-to-br from-purple-500 to-purple-600' :
-                              'bg-gradient-to-br from-pink-500 to-pink-600'
+                              i === 0 ? 'bg-blue-400' :
+                              i === 1 ? 'bg-indigo-500' :
+                              'bg-purple-500'
                             }`}
                             style={{ animationDelay: `${i * 0.1}s` }}
                           >
@@ -1316,7 +1548,7 @@ const ConversationsPage: React.FC = () => {
                           </div>
                         ))}
                       </div>
-                      <p className="text-sm text-muted-foreground">Select a conversation to start</p>
+                      <p className="text-sm text-slate-500 dark:text-slate-400">Select a conversation to start</p>
                     </motion.div>
                   </div>
                 </Card>
@@ -1332,16 +1564,13 @@ const ConversationsPage: React.FC = () => {
           transition={{ duration: 0.4, delay: 0.2 }}
           className={`h-full overflow-hidden transition-all duration-500 ease-out ${isRightSidebarCollapsed ? 'md:col-span-1' : 'md:col-span-3'}`}
         >
-          <Card className="h-full flex flex-col card-shadow-lg bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm border-slate-200/50 dark:border-slate-700/50 relative overflow-hidden">
-            {/* Decorative gradient line at top */}
-            <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-500" />
-
+          <Card className="h-full flex flex-col shadow-sm bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 relative overflow-hidden">
             {/* Collapse/Expand Button */}
             <motion.button
               whileHover={{ scale: 1.1 }}
               whileTap={{ scale: 0.95 }}
               onClick={() => setIsRightSidebarCollapsed(!isRightSidebarCollapsed)}
-              className={`absolute ${isRTL ? '-right-3' : '-left-3'} top-1/2 -translate-y-1/2 z-10 bg-gradient-to-br from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white rounded-full p-2 shadow-lg hover:shadow-xl transition-all duration-300`}
+              className={`absolute ${isRTL ? '-right-3' : '-left-3'} top-1/2 -translate-y-1/2 z-10 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 rounded-full p-2 shadow-sm border border-slate-200 dark:border-slate-700 transition-all duration-300`}
               title={isRightSidebarCollapsed ? t('conversations.expandSidebar') : t('conversations.collapseSidebar')}
             >
               <motion.div
@@ -1373,11 +1602,11 @@ const ConversationsPage: React.FC = () => {
                       transition={{ type: "spring", stiffness: 200, damping: 15 }}
                       className="flex flex-col items-center gap-3"
                     >
-                      <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center shadow-lg">
+                      <div className="h-12 w-12 rounded-xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
                         {sidebarView === 'summary' ? (
-                          <Sparkles className="h-6 w-6 text-white" />
+                          <Sparkles className="h-6 w-6 text-slate-600 dark:text-slate-300" />
                         ) : (
-                          <UserIcon className="h-6 w-6 text-white" />
+                          <UserIcon className="h-6 w-6 text-slate-600 dark:text-slate-300" />
                         )}
                       </div>
                       <span className="text-xs text-muted-foreground text-center font-medium" style={{ writingMode: 'vertical-rl', textOrientation: 'mixed' }}>
@@ -1414,8 +1643,8 @@ const ConversationsPage: React.FC = () => {
                     exit={{ opacity: 0 }}
                     className="flex flex-col items-center justify-center h-full p-2"
                   >
-                    <div className="h-10 w-10 rounded-xl bg-slate-100 dark:bg-slate-700 flex items-center justify-center">
-                      <UserIcon className="h-5 w-5 text-muted-foreground" />
+                    <div className="h-10 w-10 rounded-xl bg-emerald-50 dark:bg-emerald-900/20 flex items-center justify-center">
+                      <UserIcon className="h-5 w-5 text-emerald-500 dark:text-emerald-400" />
                     </div>
                   </motion.div>
                 ) : (
@@ -1433,13 +1662,8 @@ const ConversationsPage: React.FC = () => {
                         transition={{ type: "spring", stiffness: 200, damping: 15 }}
                         className="empty-state-icon inline-block mb-6"
                       >
-                        <div className="relative">
-                          <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center shadow-xl shadow-emerald-500/20">
-                            <UserIcon className="w-10 h-10 text-white" />
-                          </div>
-                          <div className="absolute -bottom-2 -right-2 w-8 h-8 rounded-lg bg-gradient-to-br from-cyan-400 to-blue-500 flex items-center justify-center shadow-lg">
-                            <Phone className="w-4 h-4 text-white" />
-                          </div>
+                        <div className="w-20 h-20 rounded-xl bg-emerald-50 dark:bg-emerald-900/20 flex items-center justify-center">
+                          <UserIcon className="w-10 h-10 text-emerald-500 dark:text-emerald-400" />
                         </div>
                       </motion.div>
 
@@ -1447,7 +1671,7 @@ const ConversationsPage: React.FC = () => {
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: 0.1 }}
-                        className="text-lg font-bold mb-2 bg-gradient-to-r from-slate-800 to-slate-600 dark:from-white dark:to-slate-300 bg-clip-text text-transparent"
+                        className="text-lg font-bold mb-2 text-slate-800 dark:text-white"
                       >
                         {t('conversations.emptyState.contactDetails')}
                       </motion.h3>
@@ -1455,7 +1679,7 @@ const ConversationsPage: React.FC = () => {
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: 0.2 }}
-                        className="text-muted-foreground text-sm max-w-[180px] mx-auto"
+                        className="text-slate-500 dark:text-slate-400 text-sm max-w-[180px] mx-auto"
                       >
                         {t('conversations.emptyState.contactDetailsDesc')}
                       </motion.p>
@@ -1467,6 +1691,154 @@ const ConversationsPage: React.FC = () => {
           </Card>
         </motion.div>
       </div>
+
+      {/* Global Search Modal */}
+      <AnimatePresence>
+        {isSearchModalOpen && (
+          <>
+            {/* Backdrop */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.15 }}
+              className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm"
+              onClick={() => setIsSearchModalOpen(false)}
+            />
+            {/* Modal */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: -20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: -20 }}
+              transition={{ duration: 0.2, type: 'spring', stiffness: 400, damping: 30 }}
+              className="fixed top-16 left-1/2 -translate-x-1/2 z-50 w-full max-w-xl mx-4"
+            >
+              <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-700 overflow-hidden">
+                {/* Search Input */}
+                <div className="flex items-center gap-3 px-4 py-3 border-b border-slate-200 dark:border-slate-700">
+                  {isSearchFetching
+                    ? <Loader2 className="w-4 h-4 text-blue-500 flex-shrink-0 animate-spin" />
+                    : <Search className="w-4 h-4 text-slate-400 flex-shrink-0" />
+                  }
+                  <input
+                    autoFocus
+                    type="text"
+                    value={globalSearchQuery}
+                    onChange={e => setGlobalSearchQuery(e.target.value)}
+                    placeholder="Search all conversations..."
+                    className="flex-1 text-sm bg-transparent outline-none text-slate-800 dark:text-slate-100 placeholder:text-slate-400"
+                  />
+                  {globalSearchQuery && (
+                    <button
+                      onClick={() => setGlobalSearchQuery('')}
+                      className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 text-xs px-1"
+                    >
+                      ✕
+                    </button>
+                  )}
+                  <kbd className="text-[10px] px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-500 font-mono border border-slate-200 dark:border-slate-600">
+                    Esc
+                  </kbd>
+                </div>
+
+                {/* Results */}
+                <div className="max-h-[420px] overflow-y-auto">
+                  {debouncedSearchQuery.trim().length < 2 ? (
+                    <div className="py-10 text-center text-sm text-slate-400">
+                      Type at least 2 characters to search
+                    </div>
+                  ) : isSearchFetching ? (
+                    <div className="py-10 text-center text-sm text-slate-400 flex items-center justify-center gap-2">
+                      <Loader2 className="w-4 h-4 animate-spin" /> Searching…
+                    </div>
+                  ) : !searchResults || searchResults.length === 0 ? (
+                    <div className="py-10 text-center text-sm text-slate-400">
+                      No messages found for "<span className="font-semibold">{debouncedSearchQuery}</span>"
+                    </div>
+                  ) : (
+                    <div>
+                      <div className="px-4 pt-3 pb-1 text-xs text-slate-400 font-medium">
+                        {searchResults.length} result{searchResults.length !== 1 ? 's' : ''}
+                      </div>
+                      {searchResults.map((result) => {
+                        // Build highlighted snippet
+                        const snippet = result.snippet as string;
+                        const q = result.query as string;
+                        const parts = snippet.split(new RegExp(`(${q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi'));
+
+                        return (
+                          <button
+                            key={result.message_id}
+                            onClick={() => {
+                              setSelectedSessionId(result.session_id);
+                              setIsSearchModalOpen(false);
+                              setGlobalSearchQuery('');
+                            }}
+                            className="w-full px-4 py-3 text-left hover:bg-slate-50 dark:hover:bg-slate-800/60 transition-colors border-b border-slate-100 dark:border-slate-800 last:border-0 group"
+                          >
+                            <div className="flex items-start gap-3">
+                              {/* Channel icon */}
+                              <div className="flex-shrink-0 mt-0.5">
+                                {getChannelIcon(result.channel)}
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                {/* Contact + channel + status row */}
+                                <div className="flex items-center gap-2 mb-1">
+                                  <span className="text-sm font-semibold text-slate-800 dark:text-slate-100 truncate">
+                                    {result.contact_name}
+                                  </span>
+                                  <span className="text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400 capitalize">
+                                    {result.channel?.replace('_', ' ')}
+                                  </span>
+                                  <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded-full ${
+                                    result.status === 'resolved'
+                                      ? 'bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400'
+                                      : result.status === 'active'
+                                      ? 'bg-green-100 text-green-600 dark:bg-green-900/30 dark:text-green-400'
+                                      : 'bg-slate-100 text-slate-500 dark:bg-slate-700 dark:text-slate-400'
+                                  }`}>
+                                    {result.status}
+                                  </span>
+                                </div>
+                                {/* Highlighted snippet */}
+                                <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed line-clamp-2">
+                                  {parts.map((part, i) =>
+                                    part.toLowerCase() === q.toLowerCase()
+                                      ? <mark key={i} className="bg-yellow-200 dark:bg-yellow-900/60 text-yellow-900 dark:text-yellow-200 rounded px-0.5 not-italic font-medium">{part}</mark>
+                                      : part
+                                  )}
+                                </p>
+                                {/* Timestamp */}
+                                {result.timestamp && (
+                                  <p className="text-[10px] text-slate-400 mt-1">
+                                    {formatDistanceToNow(new Date(result.timestamp), { addSuffix: true })}
+                                  </p>
+                                )}
+                              </div>
+                              {/* Arrow */}
+                              <div className="flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity text-slate-400">
+                                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                                </svg>
+                              </div>
+                            </div>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+
+                {/* Footer hint */}
+                <div className="px-4 py-2.5 border-t border-slate-100 dark:border-slate-800 flex items-center gap-4 text-[10px] text-slate-400">
+                  <span>↵ Open conversation</span>
+                  <span>Esc Close</span>
+                </div>
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
     </div>
   );
 };

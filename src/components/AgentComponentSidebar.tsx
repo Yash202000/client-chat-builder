@@ -27,19 +27,17 @@ const DraggableNode = ({ type, label, icon, resourceId, toolType, mcpServerUrl, 
 
   return (
     <div
-      className={`flex ${isCollapsed ? 'justify-center p-2.5' : 'flex-col items-center p-4'} m-1.5 rounded-xl transition-all duration-200 ${
+      className={`flex items-center overflow-hidden ${isCollapsed ? 'justify-center p-2' : 'gap-2 px-3 py-2'} mx-2 my-1 rounded-lg transition-all duration-200 ${
         isDisabled
           ? 'cursor-not-allowed bg-slate-100 dark:bg-slate-700/50 text-slate-400 dark:text-slate-500 opacity-60'
-          : 'cursor-grab bg-white dark:bg-slate-800 hover:bg-gradient-to-br hover:from-purple-50 hover:to-pink-50 dark:hover:from-purple-900/20 dark:hover:to-pink-900/20 shadow-sm hover:shadow-lg hover:shadow-purple-500/10 border border-slate-200 dark:border-slate-700 hover:border-purple-300 dark:hover:border-purple-700 hover:scale-[1.02] active:scale-95'
+          : 'cursor-grab bg-white dark:bg-slate-800 hover:bg-purple-50 dark:hover:from-purple-900/20 shadow-sm hover:shadow-md border border-slate-200 dark:border-slate-700 hover:border-purple-300 dark:hover:border-purple-700 active:scale-95'
       }`}
       onDragStart={(event) => onDragStart(event, type, resourceId, label, toolType, mcpServerUrl)}
       draggable={!isDisabled}
-      title={isCollapsed ? label : undefined}
+      title={label}
     >
-      <div className={`${isCollapsed ? '' : 'p-2 rounded-lg bg-slate-50 dark:bg-slate-700/50'}`}>
-        {icon}
-      </div>
-      {!isCollapsed && <span className="mt-2 font-medium text-sm text-slate-700 dark:text-slate-200 text-center line-clamp-2">{label}</span>}
+      <div className="flex-shrink-0">{icon}</div>
+      {!isCollapsed && <span className="font-medium text-xs text-slate-700 dark:text-slate-200 leading-tight min-w-0 break-words">{label}</span>}
     </div>
   );
 };
@@ -85,13 +83,13 @@ export const AgentComponentSidebar = ({ agent, isCollapsed = false, onToggle }: 
   const getToolIcon = (toolType) => {
     switch (toolType) {
       case 'mcp':
-        return <Cloud className="text-blue-500" size={32} />;
+        return <Cloud className="text-blue-500" size={16} />;
       case 'custom':
-        return <Code className="text-green-500" size={32} />;
+        return <Code className="text-green-500" size={16} />;
       case 'builtin':
-        return <Shield className="text-purple-500" size={32} />;
+        return <Shield className="text-purple-500" size={16} />;
       default:
-        return <Zap className="text-orange-500" size={32} />;
+        return <Zap className="text-orange-500" size={16} />;
     }
   };
 
@@ -100,7 +98,7 @@ export const AgentComponentSidebar = ({ agent, isCollapsed = false, onToggle }: 
   const attachedWorkflowIds = new Set(agent.workflows?.map(w => w.id) || []);
 
   return (
-    <aside className={`${isCollapsed ? 'w-16' : 'w-72'} bg-gradient-to-b from-slate-50 to-white dark:from-slate-900 dark:to-slate-900 ${isRTL ? 'border-l' : 'border-r'} border-slate-200 dark:border-slate-700 overflow-y-auto transition-all duration-300 ease-in-out scrollbar-thin scrollbar-thumb-slate-200 dark:scrollbar-thumb-slate-700`}>
+    <aside className={`${isCollapsed ? 'w-12' : 'w-[232px]'} bg-gradient-to-b from-slate-50 to-white dark:from-slate-900 dark:to-slate-900 ${isRTL ? 'border-l' : 'border-r'} border-slate-200 dark:border-slate-700 overflow-y-auto transition-all duration-300 ease-in-out scrollbar-thin scrollbar-thumb-slate-200 dark:scrollbar-thumb-slate-700`}>
       {/* Header with toggle button */}
       <div className={`sticky top-0 z-10 flex items-center ${isCollapsed ? 'justify-center' : 'justify-between'} p-4 bg-gradient-to-b from-slate-50 via-slate-50 to-transparent dark:from-slate-900 dark:via-slate-900`}>
         {!isCollapsed && (
@@ -158,7 +156,7 @@ export const AgentComponentSidebar = ({ agent, isCollapsed = false, onToggle }: 
                 key={`kb-${kb.id}`}
                 type="knowledge"
                 label={kb.name}
-                icon={<BrainCircuit className="text-indigo-500" size={24} />}
+                icon={<BrainCircuit className="text-indigo-500" size={16} />}
                 resourceId={kb.id}
                 isDisabled={attachedKbIds.has(kb.id)}
                 isCollapsed={true}
@@ -175,7 +173,7 @@ export const AgentComponentSidebar = ({ agent, isCollapsed = false, onToggle }: 
                 key={`workflow-${workflow.id}`}
                 type="workflow"
                 label={workflow.name}
-                icon={<Layers className="text-purple-500" size={24} />}
+                icon={<Layers className="text-purple-500" size={16} />}
                 resourceId={workflow.id}
                 isDisabled={attachedWorkflowIds.has(workflow.id)}
                 isCollapsed={true}
@@ -222,7 +220,7 @@ export const AgentComponentSidebar = ({ agent, isCollapsed = false, onToggle }: 
                   key={`kb-${kb.id}`}
                   type="knowledge"
                   label={kb.name}
-                  icon={<BrainCircuit className="text-indigo-500" size={32} />}
+                  icon={<BrainCircuit className="text-indigo-500" size={16} />}
                   resourceId={kb.id}
                   isDisabled={attachedKbIds.has(kb.id)}
                 />
@@ -248,7 +246,7 @@ export const AgentComponentSidebar = ({ agent, isCollapsed = false, onToggle }: 
                   key={`workflow-${workflow.id}`}
                   type="workflow"
                   label={workflow.name}
-                  icon={<Layers className="text-purple-500" size={32} />}
+                  icon={<Layers className="text-purple-500" size={16} />}
                   resourceId={workflow.id}
                   isDisabled={attachedWorkflowIds.has(workflow.id)}
                 />

@@ -18,3 +18,17 @@ export const postChatMessage = async (message: string, conversationId?: string, 
   });
   return response.data;
 };
+
+export const getAIChatSessions = async () => {
+  const response = await axios.get(`${API_URL}/api/v1/ai-chat/sessions`, {
+    headers: getAuthHeaders(),
+  });
+  return response.data;
+};
+
+export const getSessionMessages = async (conversationId: string) => {
+  const response = await axios.get(`${API_URL}/api/v1/ai-chat/sessions/${conversationId}/messages`, {
+    headers: getAuthHeaders(),
+  });
+  return response.data;
+};

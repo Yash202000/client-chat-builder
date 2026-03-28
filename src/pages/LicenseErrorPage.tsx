@@ -138,7 +138,7 @@ export const LicenseErrorPage = () => {
           </div>
 
           <p className="text-center text-xs text-slate-400">
-            Powered by <span className="font-semibold text-amber-500">AgentConnect</span>
+            Powered by <span className="font-semibold text-amber-500">HeyGenAlly</span>
           </p>
         </CardContent>
       </Card>

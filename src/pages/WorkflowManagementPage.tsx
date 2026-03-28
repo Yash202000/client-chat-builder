@@ -11,7 +11,8 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { Badge } from "@/components/ui/badge";
-import { Edit, Copy, PlusCircle, Trash2, WorkflowIcon, Sparkles, Upload, Download, LayoutTemplate, Layers } from 'lucide-react';
+import { Input } from "@/components/ui/input";
+import { Edit, Copy, PlusCircle, Trash2, WorkflowIcon, Sparkles, Upload, Download, LayoutTemplate, Layers, Search, GitBranch, CheckCircle2, Circle, ChevronRight } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -30,7 +31,7 @@ import {
 } from "@/components/ui/select";
 import { useAuth } from "@/hooks/useAuth";
 import { useI18n } from "@/hooks/useI18n";
-import CreateWorkflowDialog from '@/components/CreateWorkflowDialog'; // Assuming this component exists
+import CreateWorkflowDialog from '@/components/CreateWorkflowDialog';
 import WorkflowTemplateModal from '@/components/WorkflowTemplateModal';
 
 const WorkflowManagementPage = () => {
@@ -45,6 +46,7 @@ const WorkflowManagementPage = () => {
   const [agents, setAgents] = useState<any[]>([]);
   const [isImporting, setIsImporting] = useState(false);
   const [subworkflowUsage, setSubworkflowUsage] = useState<Record<number, {id: number, name: string}[]>>({});
+  const [searchQuery, setSearchQuery] = useState('');
   const { authFetch } = useAuth();
   const navigate = useNavigate();
 
@@ -237,6 +239,13 @@ const WorkflowManagementPage = () => {
     }
   };
 
+  const activeVersionCount = workflows.reduce((acc, w) => acc + (w.versions || []).filter(v => v.is_active).length, 0);
+  const totalVersionCount = workflows.reduce((acc, w) => acc + (w.versions || []).length, 0);
+  const filteredWorkflows = workflows.filter(w =>
+    w.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    w.description?.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
   return (
     <>
       <CreateWorkflowDialog
@@ -248,315 +257,315 @@ const WorkflowManagementPage = () => {
         isOpen={isTemplateModalOpen}
         onClose={() => setTemplateModalOpen(false)}
       />
-      <div className={`container mx-auto p-6 max-w-7xl text-left`}>
-        {/* Modern Header */}
-        <div className="mb-8">
-          <div className={`flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-4`}>
-            <div className="flex items-center gap-4">
-              <div className="h-14 w-14 rounded-2xl bg-gradient-to-br from-blue-500 via-indigo-500 to-purple-500 flex items-center justify-center shadow-lg shadow-blue-500/25">
-                <WorkflowIcon className="h-7 w-7 text-white" />
+
+      <div className="min-h-full bg-slate-50 dark:bg-slate-950" dir={isRTL ? 'rtl' : 'ltr'}>
+        {/* Top header bar */}
+        <div className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800">
+          <div className="px-6 py-6">
+            <div className="flex items-center justify-between gap-4">
+              <div className="flex items-center gap-4">
+                <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-blue-500 via-indigo-500 to-purple-600 flex items-center justify-center flex-shrink-0 shadow-lg shadow-blue-500/25">
+                  <WorkflowIcon className="h-6 w-6 text-white" />
+                </div>
+                <div>
+                  <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 bg-clip-text text-transparent leading-tight">
+                    {t("workflows.title")}
+                  </h1>
+                  <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">{t("workflows.subtitle")}</p>
+                </div>
               </div>
-              <div>
-                <h1 className="text-3xl font-bold text-slate-900 dark:text-white">
-                  {t("workflows.title")}
-                </h1>
-                <p className="text-slate-500 dark:text-slate-400">
-                  {t("workflows.subtitle")}
-                </p>
+              <div className="flex items-center gap-2">
+                <Permission permission="workflow:create">
+                  <Button
+                    onClick={openImportDialog}
+                    variant="outline"
+                    className="h-9 px-4 text-sm border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800"
+                  >
+                    <Upload className="h-4 w-4 mr-1.5" />
+                    {t("workflows.importWorkflow") || "Import"}
+                  </Button>
+                </Permission>
+                <Permission permission="workflow:create">
+                  <Button
+                    onClick={() => setTemplateModalOpen(true)}
+                    variant="outline"
+                    className="h-9 px-4 text-sm border-purple-200 dark:border-purple-800/60 text-purple-600 dark:text-purple-400 hover:bg-purple-50 dark:hover:bg-purple-900/20"
+                  >
+                    <LayoutTemplate className="h-4 w-4 mr-1.5" />
+                    {t("workflowTemplates.newFromTemplate") || "From Template"}
+                  </Button>
+                </Permission>
+                <Permission permission="workflow:create">
+                  <Button
+                    onClick={() => setCreateDialogOpen(true)}
+                    className="h-9 px-4 text-sm bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white shadow-md shadow-blue-500/30"
+                  >
+                    <PlusCircle className="h-4 w-4 mr-1.5" />
+                    {t("workflows.createWorkflow")}
+                  </Button>
+                </Permission>
               </div>
             </div>
-            <div className={`flex gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
-              <Permission permission="workflow:create">
-                <Button
-                  onClick={openImportDialog}
-                  variant="outline"
-                  className={`border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 transition-all duration-200 flex items-center ${isRTL ? 'flex-row-reverse' : ''}`}
-                >
-                  <Upload className={`h-4 w-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
-                  {t("workflows.importWorkflow") || "Import"}
-                </Button>
-              </Permission>
-              <Permission permission="workflow:create">
-                <Button
-                  onClick={() => setTemplateModalOpen(true)}
-                  variant="outline"
-                  className={`border-purple-200 dark:border-purple-800 text-purple-600 dark:text-purple-400 hover:bg-purple-50 dark:hover:bg-purple-900/20 transition-all duration-200 flex items-center ${isRTL ? 'flex-row-reverse' : ''}`}
-                >
-                  <LayoutTemplate className={`h-4 w-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
-                  {t("workflowTemplates.newFromTemplate") || "From Template"}
-                </Button>
-              </Permission>
-              <Permission permission="workflow:create">
-                <Button
-                  onClick={() => setCreateDialogOpen(true)}
-                  className={`bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white shadow-lg shadow-blue-500/25 hover:shadow-blue-500/40 transition-all duration-200 flex items-center ${isRTL ? 'flex-row-reverse' : ''}`}
-                >
-                  <PlusCircle className={`h-4 w-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
-                  {t("workflows.createWorkflow")}
-                </Button>
-              </Permission>
-            </div>
-          </div>
-
-          {/* Stats Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mt-6">
-            <Card className="relative overflow-hidden bg-white dark:bg-slate-800 border-0 shadow-lg shadow-blue-500/10 hover:shadow-xl hover:shadow-blue-500/20 transition-all duration-300 group">
-              <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 via-indigo-500/5 to-transparent dark:from-blue-500/10 dark:via-indigo-500/10" />
-              <CardContent className="pt-6 pb-5 relative">
-                <div className={`flex items-center justify-between ${isRTL ? 'flex-row-reverse' : ''}`}>
-                  <div>
-                    <p className="text-sm font-medium text-slate-500 dark:text-slate-400 mb-1">{t("workflows.totalWorkflows")}</p>
-                    <p className="text-4xl font-bold text-slate-900 dark:text-white">{workflows.length}</p>
-                  </div>
-                  <div className="h-14 w-14 rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-500 flex items-center justify-center shadow-lg shadow-blue-500/30 group-hover:scale-110 transition-transform duration-300">
-                    <WorkflowIcon className="h-7 w-7 text-white" />
-                  </div>
-                </div>
-                <div className="mt-3 flex items-center gap-1 text-xs text-slate-400">
-                  <span className="inline-block w-2 h-2 rounded-full bg-blue-500"></span>
-                  All configured workflows
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="relative overflow-hidden bg-white dark:bg-slate-800 border-0 shadow-lg shadow-emerald-500/10 hover:shadow-xl hover:shadow-emerald-500/20 transition-all duration-300 group">
-              <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/5 via-green-500/5 to-transparent dark:from-emerald-500/10 dark:via-green-500/10" />
-              <CardContent className="pt-6 pb-5 relative">
-                <div className={`flex items-center justify-between ${isRTL ? 'flex-row-reverse' : ''}`}>
-                  <div>
-                    <p className="text-sm font-medium text-slate-500 dark:text-slate-400 mb-1">{t("workflows.activeVersions")}</p>
-                    <p className="text-4xl font-bold text-slate-900 dark:text-white">
-                      {workflows.reduce((acc, w) => acc + w.versions.filter(v => v.is_active).length, 0)}
-                    </p>
-                  </div>
-                  <div className="h-14 w-14 rounded-2xl bg-gradient-to-br from-emerald-500 to-green-500 flex items-center justify-center shadow-lg shadow-emerald-500/30 group-hover:scale-110 transition-transform duration-300">
-                    <Sparkles className="h-7 w-7 text-white" />
-                  </div>
-                </div>
-                <div className="mt-3 flex items-center gap-1 text-xs text-emerald-600 dark:text-emerald-400">
-                  <span className="inline-block w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                  Currently running
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="relative overflow-hidden bg-white dark:bg-slate-800 border-0 shadow-lg shadow-purple-500/10 hover:shadow-xl hover:shadow-purple-500/20 transition-all duration-300 group">
-              <div className="absolute inset-0 bg-gradient-to-br from-purple-500/5 via-violet-500/5 to-transparent dark:from-purple-500/10 dark:via-violet-500/10" />
-              <CardContent className="pt-6 pb-5 relative">
-                <div className={`flex items-center justify-between ${isRTL ? 'flex-row-reverse' : ''}`}>
-                  <div>
-                    <p className="text-sm font-medium text-slate-500 dark:text-slate-400 mb-1">{t("workflows.totalVersions")}</p>
-                    <p className="text-4xl font-bold text-slate-900 dark:text-white">
-                      {workflows.reduce((acc, w) => acc + w.versions.length, 0)}
-                    </p>
-                  </div>
-                  <div className="h-14 w-14 rounded-2xl bg-gradient-to-br from-purple-500 to-violet-500 flex items-center justify-center shadow-lg shadow-purple-500/30 group-hover:scale-110 transition-transform duration-300">
-                    <Layers className="h-7 w-7 text-white" />
-                  </div>
-                </div>
-                <div className="mt-3 flex items-center gap-1 text-xs text-slate-400">
-                  <span className="inline-block w-2 h-2 rounded-full bg-purple-500"></span>
-                  All versions combined
-                </div>
-              </CardContent>
-            </Card>
           </div>
         </div>
 
-        <Card className="border-0 shadow-lg shadow-slate-200/50 dark:shadow-none bg-white dark:bg-slate-800 overflow-hidden rounded-2xl">
-          <CardHeader className="border-b border-slate-100 dark:border-slate-700 bg-gradient-to-r from-slate-50 to-white dark:from-slate-800 dark:to-slate-900 py-5">
-            <CardTitle className="text-xl font-semibold text-slate-900 dark:text-white">{t("workflows.allWorkflows")}</CardTitle>
-          </CardHeader>
-          <CardContent className="p-6">
-            {workflows.length === 0 ? (
-              <div className="text-center py-16 rounded-2xl bg-gradient-to-br from-slate-50 to-white dark:from-slate-800 dark:to-slate-900 border border-slate-200 dark:border-slate-700">
-                <div className="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-gradient-to-br from-blue-500 to-purple-500 mb-6 shadow-lg shadow-blue-500/30">
-                  <WorkflowIcon className="h-10 w-10 text-white" />
+        <div className="px-6 py-6 space-y-6">
+          {/* Stats row */}
+          <div className="grid grid-cols-3 gap-4">
+            {[
+              { label: t("workflows.totalWorkflows"), value: workflows.length, sub: "Total workflows", icon: WorkflowIcon, gradient: "from-blue-500 to-indigo-600", shadow: "shadow-blue-500/20", accent: "bg-blue-500" },
+              { label: t("workflows.activeVersions"), value: activeVersionCount, sub: "Currently deployed", icon: CheckCircle2, gradient: "from-emerald-500 to-teal-600", shadow: "shadow-emerald-500/20", accent: "bg-emerald-500" },
+              { label: t("workflows.totalVersions"), value: totalVersionCount, sub: "Across all workflows", icon: GitBranch, gradient: "from-purple-500 to-violet-600", shadow: "shadow-purple-500/20", accent: "bg-purple-500" },
+            ].map(({ label, value, sub, icon: Icon, gradient, shadow, accent }) => (
+              <div key={label} className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-5 overflow-hidden relative">
+                <div className="flex items-center justify-between mb-4">
+                  <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">{label}</span>
+                  <div className={`h-9 w-9 rounded-lg bg-gradient-to-br ${gradient} flex items-center justify-center shadow-md ${shadow}`}>
+                    <Icon className="h-4.5 w-4.5 text-white" />
+                  </div>
                 </div>
-                <h3 className="text-xl font-semibold mb-2 text-slate-900 dark:text-white">{t("workflows.noWorkflowsYet")}</h3>
-                <p className="text-slate-500 dark:text-slate-400 mb-6 max-w-md mx-auto">{t("workflows.getStartedMessage")}</p>
+                <p className="text-4xl font-bold text-slate-900 dark:text-white tabular-nums">{value}</p>
+                <div className="flex items-center gap-1.5 mt-2">
+                  <span className={`inline-block h-1.5 w-1.5 rounded-full ${accent}`} />
+                  <p className="text-xs text-slate-400 dark:text-slate-500">{sub}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Workflow list */}
+          <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 overflow-hidden">
+            {/* Toolbar */}
+            <div className="flex items-center justify-between px-5 py-3.5 border-b border-slate-100 dark:border-slate-800">
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-semibold text-slate-800 dark:text-white">{t("workflows.allWorkflows")}</span>
+                {workflows.length > 0 && (
+                  <span className="text-xs font-medium px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 tabular-nums">{workflows.length}</span>
+                )}
+              </div>
+              <div className="relative w-56">
+                <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400 pointer-events-none" />
+                <Input
+                  placeholder="Search workflows..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-8 h-7 text-xs bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700"
+                />
+              </div>
+            </div>
+
+            {workflows.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-20 px-6 text-center">
+                <div className="h-14 w-14 rounded-2xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center mb-4 shadow-lg shadow-blue-500/25">
+                  <WorkflowIcon className="h-7 w-7 text-white" />
+                </div>
+                <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1">{t("workflows.noWorkflowsYet")}</h3>
+                <p className="text-xs text-slate-400 dark:text-slate-500 max-w-xs mb-5">{t("workflows.getStartedMessage")}</p>
                 <Button
                   onClick={() => setCreateDialogOpen(true)}
-                  className="bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white shadow-lg shadow-blue-500/25 hover:shadow-blue-500/40 transition-all duration-200"
+                  size="sm"
+                  className="h-8 text-xs bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white shadow-md shadow-blue-500/30"
                 >
-                  <PlusCircle className={`h-4 w-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
+                  <PlusCircle className="h-3.5 w-3.5 mr-1.5" />
                   {t("workflows.createFirstWorkflow")}
                 </Button>
               </div>
+            ) : filteredWorkflows.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-16 text-center">
+                <Search className="h-6 w-6 text-slate-300 dark:text-slate-600 mb-3" />
+                <p className="text-sm text-slate-500 dark:text-slate-400">No workflows match <span className="font-medium">"{searchQuery}"</span></p>
+              </div>
             ) : (
-              <Accordion type="single" collapsible className="w-full space-y-3">
-                {workflows.map((workflow) => (
-                  <AccordionItem
-                    value={`item-${workflow.id}`}
-                    key={workflow.id}
-                    className="border border-slate-200 dark:border-slate-700 rounded-xl hover:shadow-lg hover:shadow-slate-200/50 dark:hover:shadow-none transition-all duration-200 bg-white dark:bg-slate-800 overflow-hidden group"
-                  >
-                    <AccordionTrigger className="p-5 hover:no-underline hover:bg-slate-50/50 dark:hover:bg-slate-700/30 transition-colors">
-                      <div className={`flex justify-between items-center w-full`}>
-                        <div className={`flex items-center gap-4`}>
-                          <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center shadow-md shadow-blue-500/20 group-hover:scale-105 transition-transform duration-200">
-                            <WorkflowIcon className="h-6 w-6 text-white" />
-                          </div>
-                          <div className='text-left'>
-                            <span className="font-semibold text-lg text-slate-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">{workflow.name}</span>
-                            <p className="text-sm text-slate-500 dark:text-slate-400">{workflow.description || t("workflows.noDescription")}</p>
-                          </div>
-                        </div>
-                        <div className={`flex items-center gap-2`}>
-                          {subworkflowUsage[workflow.id] && subworkflowUsage[workflow.id].length > 0 && (
-                            <Badge
-                              variant="secondary"
-                              className={`${isRTL ? 'ml-2' : 'mr-2'} bg-violet-100 text-violet-700 dark:bg-violet-900/30 dark:text-violet-300 border-violet-200 dark:border-violet-700`}
-                              title={`${t("workflows.usedAsSubworkflowBy") || "Used as subworkflow by"}: ${subworkflowUsage[workflow.id].map(w => w.name).join(', ')}`}
-                            >
-                              <Layers className="h-3 w-3 mr-1" />
-                              {subworkflowUsage[workflow.id].length}
-                            </Badge>
-                          )}
-                          <Badge variant="outline" className={`${isRTL ? 'ml-2' : 'mr-2'} dark:border-slate-600 dark:text-gray-300`}>
-                            {workflow.versions.length} {workflow.versions.length === 1 ? t("workflows.version") : t("workflows.versionsPlural")}
-                          </Badge>
-                          <Permission permission="workflow:read">
-                            <div
-                              role="button"
-                              aria-label="Export workflow"
-                              className="p-2 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-900/30 transition-colors"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleExport(workflow.id, workflow.name);
-                              }}
-                            >
-                              <Download className="h-4 w-4 text-blue-500 dark:text-blue-400" />
+              <Accordion type="single" collapsible className="w-full divide-y divide-slate-100 dark:divide-slate-800">
+                {filteredWorkflows.map((workflow) => {
+                  const activeCount = (workflow.versions || []).filter(v => v.is_active).length;
+                  const versionCount = (workflow.versions || []).length;
+                  const usedBy = subworkflowUsage[workflow.id] || [];
+
+                  return (
+                    <AccordionItem
+                      value={`item-${workflow.id}`}
+                      key={workflow.id}
+                      className="border-0 group"
+                    >
+                      <AccordionTrigger className="px-5 py-4 hover:no-underline hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors [&>svg]:hidden">
+                        <div className="flex items-center justify-between w-full gap-4">
+                          {/* Left: icon + info */}
+                          <div className="flex items-center gap-3 min-w-0">
+                            <div className="h-9 w-9 rounded-lg bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center flex-shrink-0 shadow-sm shadow-blue-500/20">
+                              <WorkflowIcon className="h-4.5 w-4.5 text-white" />
                             </div>
-                          </Permission>
-                          <Permission permission="workflow:delete">
-                            <div
-                              role="button"
-                              aria-label="Delete workflow"
-                              className="p-2 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/30 transition-colors"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                deleteWorkflow(workflow.id);
-                              }}
-                            >
-                              <Trash2 className="h-4 w-4 text-red-500 dark:text-red-400" />
+                            <div className="min-w-0 text-left">
+                              <p className="text-sm font-semibold text-slate-900 dark:text-white truncate">{workflow.name}</p>
+                              {workflow.description && (
+                                <p className="text-xs text-slate-400 dark:text-slate-500 truncate max-w-sm">{workflow.description}</p>
+                              )}
                             </div>
-                          </Permission>
-                        </div>
-                      </div>
-                    </AccordionTrigger>
-                    <AccordionContent className="p-5 border-t border-slate-100 dark:border-slate-700 bg-gradient-to-br from-slate-50/50 to-white dark:from-slate-900/30 dark:to-slate-800/30">
-                      <div className="space-y-3">
-                        <div className={`flex justify-between items-center mb-4`}>
-                          <h4 className="font-semibold text-sm text-slate-600 dark:text-slate-400 uppercase tracking-wider">{t("workflows.versions")}</h4>
-                          <Permission permission="workflow:update">
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => createWorkflowVersion(workflow.id)}
-                              className="border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all duration-200 flex items-center"
-                            >
-                              <Copy className={`h-3 w-3 ${isRTL ? 'ml-2' : 'mr-2'}`} />
-                              {t("workflows.createNewVersion")}
-                            </Button>
-                          </Permission>
-                        </div>
-                        <div className="space-y-2">
-                          {/* Always include parent workflow as version 1, plus any child versions */}
-                          {[workflow, ...workflow.versions]
-                            .sort((a, b) => b.version - a.version)
-                            .map((version) => (
-                            <div
-                              key={version.id}
-                              className="flex items-center justify-between p-4 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 hover:border-blue-300 dark:hover:border-blue-600 transition-all duration-200 shadow-sm hover:shadow-md"
-                            >
-                              <div className={`flex items-center gap-3`}>
-                                <div
-                                  className={`h-10 w-10 rounded-xl flex items-center justify-center font-bold text-sm ${
-                                    version.is_active
-                                      ? 'bg-gradient-to-br from-emerald-500 to-green-500 text-white shadow-md shadow-emerald-500/25'
-                                      : 'bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-400'
-                                  }`}
+                          </div>
+
+                          {/* Right: meta + actions */}
+                          <div className="flex items-center gap-3 flex-shrink-0">
+                            {usedBy.length > 0 && (
+                              <span
+                                className="inline-flex items-center gap-1 text-xs font-medium text-violet-600 dark:text-violet-400 bg-violet-50 dark:bg-violet-500/10 px-2 py-0.5 rounded"
+                                title={`Used by: ${usedBy.map(w => w.name).join(', ')}`}
+                              >
+                                <Layers className="h-3 w-3" />
+                                {usedBy.length} parent{usedBy.length !== 1 ? 's' : ''}
+                              </span>
+                            )}
+                            <div className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400">
+                              <GitBranch className="h-3.5 w-3.5" />
+                              <span>{versionCount} {versionCount === 1 ? t("workflows.version") : t("workflows.versionsPlural")}</span>
+                            </div>
+                            {activeCount > 0 && (
+                              <span className="inline-flex items-center gap-1.5 text-xs font-medium text-emerald-600 dark:text-emerald-400">
+                                <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                                {t("workflows.active")}
+                              </span>
+                            )}
+                            <div className="flex items-center gap-1 border-l border-slate-200 dark:border-slate-700 pl-3">
+                              <Permission permission="workflow:read">
+                                <button
+                                  aria-label="Export workflow"
+                                  className="h-7 w-7 rounded flex items-center justify-center text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
+                                  onClick={(e) => { e.stopPropagation(); handleExport(workflow.id, workflow.name); }}
                                 >
-                                  v{version.version}
-                                </div>
-                                <div className='text-left'>
-                                  <span className="font-medium text-slate-900 dark:text-white">{t("workflows.versionLabel", { number: version.version })}</span>
-                                  <p className="text-sm text-slate-500 dark:text-slate-400">
-                                    {version.description || t("workflows.noDescription")}
-                                  </p>
-                                </div>
-                              </div>
-                              <div className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
-                                {version.is_active ? (
-                                  <Badge className="bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-0 flex items-center gap-1">
-                                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                                    {t("workflows.active")}
-                                  </Badge>
-                                ) : (
-                                  <Badge variant="secondary" className="bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-400 border-0">{t("workflows.inactive")}</Badge>
-                                )}
-                                <Permission permission="workflow:update">
-                                  <Button
-                                    size="sm"
-                                    variant="outline"
-                                    onClick={() => navigate(`/dashboard/workflows/${version.id}`)}
-                                    className="border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 transition-all duration-200 flex items-center"
-                                  >
-                                    <Edit className={`h-4 w-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
-                                    {t("workflows.edit")}
-                                  </Button>
-                                </Permission>
-                                {version.is_active ? (
-                                  <Permission permission="workflow:update">
-                                    <Button
-                                      size="sm"
-                                      variant="outline"
-                                      onClick={() => deactivateWorkflowVersion(version.id)}
-                                      className="border-amber-200 dark:border-amber-800 text-amber-600 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-900/20 transition-all duration-200"
-                                    >
-                                      {t("workflows.deactivate")}
-                                    </Button>
-                                  </Permission>
-                                ) : (
-                                  <Permission permission="workflow:update">
-                                    <Button
-                                      size="sm"
-                                      onClick={() => activateWorkflowVersion(version.id)}
-                                      className="bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600 text-white shadow-md shadow-blue-500/25 transition-all duration-200"
-                                    >
-                                      {t("workflows.activate")}
-                                    </Button>
-                                  </Permission>
-                                )}
-                              </div>
+                                  <Download className="h-3.5 w-3.5" />
+                                </button>
+                              </Permission>
+                              <Permission permission="workflow:delete">
+                                <button
+                                  aria-label="Delete workflow"
+                                  className="h-7 w-7 rounded flex items-center justify-center text-slate-400 hover:text-red-500 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors"
+                                  onClick={(e) => { e.stopPropagation(); deleteWorkflow(workflow.id); }}
+                                >
+                                  <Trash2 className="h-3.5 w-3.5" />
+                                </button>
+                              </Permission>
                             </div>
-                          ))}
+                            <ChevronRight className="h-4 w-4 text-slate-400 transition-transform duration-200 group-data-[state=open]:rotate-90" />
+                          </div>
                         </div>
-                      </div>
-                    </AccordionContent>
-                  </AccordionItem>
-                ))}
+                      </AccordionTrigger>
+
+                      <AccordionContent className="px-5 pb-4 pt-0 border-t border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/30">
+                        <div className="pt-3">
+                          {/* Versions header */}
+                          <div className="flex items-center justify-between mb-3">
+                            <span className="text-[11px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-widest">{t("workflows.versions")}</span>
+                            <Permission permission="workflow:update">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => createWorkflowVersion(workflow.id)}
+                                className="h-7 text-xs border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-white dark:hover:bg-slate-800"
+                              >
+                                <Copy className="h-3 w-3 mr-1.5" />
+                                {t("workflows.createNewVersion")}
+                              </Button>
+                            </Permission>
+                          </div>
+
+                          {/* Versions table */}
+                          <div className="rounded-lg border border-slate-200 dark:border-slate-700 overflow-hidden bg-white dark:bg-slate-900">
+                            {/* Table header */}
+                            <div className="grid grid-cols-[80px_1fr_120px_180px] text-[11px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider px-4 py-2.5 border-b border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50">
+                              <span>Version</span>
+                              <span>Description</span>
+                              <span>Status</span>
+                              <span className="text-right">Actions</span>
+                            </div>
+                            {[workflow, ...workflow.versions]
+                              .sort((a, b) => b.version - a.version)
+                              .map((version, idx, arr) => (
+                                <div
+                                  key={version.id}
+                                  className={`grid grid-cols-[80px_1fr_120px_180px] items-center px-4 py-3 ${idx < arr.length - 1 ? 'border-b border-slate-100 dark:border-slate-800' : ''} hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors`}
+                                >
+                                  <div className="flex items-center gap-2">
+                                    <span className={`inline-flex items-center justify-center h-6 w-10 rounded text-xs font-bold tabular-nums ${version.is_active ? 'bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-sm' : 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400'}`}>
+                                      v{version.version}
+                                    </span>
+                                  </div>
+                                  <span className="text-xs text-slate-500 dark:text-slate-400 truncate pr-4">
+                                    {version.description || <span className="text-slate-300 dark:text-slate-600 italic">{t("workflows.noDescription")}</span>}
+                                  </span>
+                                  <div>
+                                    {version.is_active ? (
+                                      <span className="inline-flex items-center gap-1.5 text-xs font-medium text-emerald-600 dark:text-emerald-400">
+                                        <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                                        {t("workflows.active")}
+                                      </span>
+                                    ) : (
+                                      <span className="inline-flex items-center gap-1.5 text-xs text-slate-400 dark:text-slate-500">
+                                        <Circle className="h-3 w-3" />
+                                        {t("workflows.inactive")}
+                                      </span>
+                                    )}
+                                  </div>
+                                  <div className="flex items-center justify-end gap-1.5">
+                                    <Permission permission="workflow:update">
+                                      <Button
+                                        size="sm"
+                                        variant="outline"
+                                        onClick={() => navigate(`/dashboard/workflows/${version.id}`)}
+                                        className="h-6 px-2.5 text-xs border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800"
+                                      >
+                                        <Edit className="h-3 w-3 mr-1" />
+                                        {t("workflows.edit")}
+                                      </Button>
+                                    </Permission>
+                                    {version.is_active ? (
+                                      <Permission permission="workflow:update">
+                                        <Button
+                                          size="sm"
+                                          variant="outline"
+                                          onClick={() => deactivateWorkflowVersion(version.id)}
+                                          className="h-6 px-2.5 text-xs border-amber-200 dark:border-amber-800/50 text-amber-600 dark:text-amber-500 hover:bg-amber-50 dark:hover:bg-amber-500/10"
+                                        >
+                                          {t("workflows.deactivate")}
+                                        </Button>
+                                      </Permission>
+                                    ) : (
+                                      <Permission permission="workflow:update">
+                                        <Button
+                                          size="sm"
+                                          onClick={() => activateWorkflowVersion(version.id)}
+                                          className="h-6 px-2.5 text-xs bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white shadow-sm shadow-blue-500/30 border-0"
+                                        >
+                                          {t("workflows.activate")}
+                                        </Button>
+                                      </Permission>
+                                    )}
+                                  </div>
+                                </div>
+                              ))}
+                          </div>
+                        </div>
+                      </AccordionContent>
+                    </AccordionItem>
+                  );
+                })}
               </Accordion>
             )}
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       </div>
 
       {/* Import Workflow Dialog */}
       <Dialog open={isImportDialogOpen} onOpenChange={setImportDialogOpen}>
-        <DialogContent className="sm:max-w-md dark:bg-slate-800 dark:border-slate-700">
+        <DialogContent className="sm:max-w-md dark:bg-slate-900 dark:border-slate-800">
           <DialogHeader>
             <DialogTitle className="dark:text-white">{t("workflows.importWorkflow") || "Import Workflow"}</DialogTitle>
-            <DialogDescription className="dark:text-gray-400">
+            <DialogDescription className="dark:text-slate-400 text-sm">
               {t("workflows.importDescription") || "Upload a workflow JSON file to import it into your workspace."}
             </DialogDescription>
           </DialogHeader>
 
-          <div className="space-y-4 py-4">
-            {/* File Upload */}
-            <div className="space-y-2">
-              <Label htmlFor="workflow-file" className="dark:text-gray-300">
+          <div className="space-y-4 py-3">
+            <div className="space-y-1.5">
+              <Label htmlFor="workflow-file" className="text-sm dark:text-slate-300">
                 {t("workflows.selectFile") || "Workflow File"}
               </Label>
               <input
@@ -564,45 +573,34 @@ const WorkflowManagementPage = () => {
                 type="file"
                 accept=".json"
                 onChange={handleFileSelect}
-                className="w-full px-3 py-2 border rounded-md dark:bg-slate-900 dark:border-slate-600 dark:text-white file:mr-4 file:py-1 file:px-3 file:rounded file:border-0 file:bg-blue-50 file:text-blue-700 dark:file:bg-blue-900/50 dark:file:text-blue-300 hover:file:bg-blue-100 cursor-pointer"
+                className="w-full px-3 py-2 text-sm border rounded-lg dark:bg-slate-800 dark:border-slate-700 dark:text-white file:mr-3 file:py-1 file:px-2.5 file:rounded file:border-0 file:text-xs file:bg-slate-100 file:text-slate-700 dark:file:bg-slate-700 dark:file:text-slate-300 hover:file:bg-slate-200 cursor-pointer"
               />
             </div>
 
-            {/* Preview imported workflow info */}
             {importData && (
-              <div className="p-3 bg-slate-100 dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-700">
-                <h4 className="font-medium text-sm mb-2 dark:text-white">{t("workflows.preview") || "Preview"}</h4>
-                <div className="text-sm space-y-1">
-                  <p className="dark:text-gray-300">
-                    <span className="text-gray-500 dark:text-gray-500">{t("workflows.name") || "Name"}:</span>{" "}
-                    {importData.workflow?.name || "Unknown"}
-                  </p>
-                  <p className="dark:text-gray-300">
-                    <span className="text-gray-500 dark:text-gray-500">{t("workflows.description") || "Description"}:</span>{" "}
-                    {importData.workflow?.description || "No description"}
-                  </p>
+              <div className="p-3 bg-slate-50 dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 text-sm space-y-1.5">
+                <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">{t("workflows.preview") || "Preview"}</p>
+                <div className="space-y-1 text-xs">
+                  <div className="flex gap-2"><span className="text-slate-400 w-20 flex-shrink-0">Name</span><span className="text-slate-700 dark:text-slate-200 font-medium">{importData.workflow?.name || "Unknown"}</span></div>
+                  <div className="flex gap-2"><span className="text-slate-400 w-20 flex-shrink-0">Description</span><span className="text-slate-700 dark:text-slate-200">{importData.workflow?.description || "—"}</span></div>
                   {importData.required_tools?.length > 0 && (
-                    <p className="dark:text-gray-300">
-                      <span className="text-gray-500 dark:text-gray-500">{t("workflows.requiredTools") || "Required Tools"}:</span>{" "}
-                      {importData.required_tools.join(", ")}
-                    </p>
+                    <div className="flex gap-2"><span className="text-slate-400 w-20 flex-shrink-0">Tools</span><span className="text-slate-700 dark:text-slate-200">{importData.required_tools.join(", ")}</span></div>
                   )}
                 </div>
               </div>
             )}
 
-            {/* Agent Selection */}
-            <div className="space-y-2">
-              <Label htmlFor="agent-select" className="dark:text-gray-300">
+            <div className="space-y-1.5">
+              <Label htmlFor="agent-select" className="text-sm dark:text-slate-300">
                 {t("workflows.selectAgent") || "Assign to Agent"}
               </Label>
               <Select value={selectedAgentId} onValueChange={setSelectedAgentId}>
-                <SelectTrigger className="dark:bg-slate-900 dark:border-slate-600 dark:text-white">
+                <SelectTrigger className="dark:bg-slate-800 dark:border-slate-700 dark:text-white">
                   <SelectValue placeholder={t("workflows.selectAgentPlaceholder") || "Select an agent..."} />
                 </SelectTrigger>
                 <SelectContent className="dark:bg-slate-800 dark:border-slate-700">
                   {agents.map((agent) => (
-                    <SelectItem key={agent.id} value={agent.id.toString()} className="dark:text-white dark:hover:bg-slate-700">
+                    <SelectItem key={agent.id} value={agent.id.toString()} className="dark:text-white dark:focus:bg-slate-700">
                       {agent.name}
                     </SelectItem>
                   ))}
@@ -611,14 +609,15 @@ const WorkflowManagementPage = () => {
             </div>
           </div>
 
-          <DialogFooter className="gap-2">
-            <Button variant="outline" onClick={closeImportDialog} className="dark:border-slate-600 dark:text-white dark:hover:bg-slate-700">
+          <DialogFooter className="gap-2 pt-2">
+            <Button variant="outline" size="sm" onClick={closeImportDialog} className="dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800">
               {t("common.cancel") || "Cancel"}
             </Button>
             <Button
+              size="sm"
               onClick={handleImport}
               disabled={!importData || !selectedAgentId || isImporting}
-              className="bg-blue-600 hover:bg-blue-700 text-white"
+              className="bg-slate-900 hover:bg-slate-800 dark:bg-white dark:hover:bg-slate-100 text-white dark:text-slate-900"
             >
               {isImporting ? (t("common.importing") || "Importing...") : (t("workflows.import") || "Import")}
             </Button>

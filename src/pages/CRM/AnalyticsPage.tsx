@@ -7,6 +7,7 @@ import {
   Target,
   ArrowUpRight,
   ArrowDownRight,
+  Loader2,
 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -80,7 +81,11 @@ export default function AnalyticsPage() {
   };
 
   if (loading || !data) {
-    return <div className="flex items-center justify-center h-screen">Loading...</div>;
+    return (
+      <div className="flex items-center justify-center h-64">
+        <Loader2 className="h-6 w-6 animate-spin text-slate-400" />
+      </div>
+    );
   }
 
   const conversionRate = data.leadStats.total_leads > 0
@@ -92,299 +97,159 @@ export default function AnalyticsPage() {
     : 0;
 
   return (
-    <div className="container mx-auto py-6 space-y-6">
+    <div className="min-h-full bg-slate-50 dark:bg-slate-950">
       {/* Header */}
-      <div>
-        <h1 className="text-3xl font-bold flex items-center gap-2">
-          <BarChart3 className="h-8 w-8" />
-          CRM Analytics
-        </h1>
-        <p className="text-muted-foreground mt-1">
-          Comprehensive view of your CRM performance and metrics
-        </p>
+      <div className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 px-6 py-6">
+        <div className="flex items-center gap-3">
+          <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center flex-shrink-0">
+            <BarChart3 className="h-6 w-6 text-white" />
+          </div>
+          <div>
+            <h1 className="text-2xl font-bold text-slate-900 dark:text-white leading-tight">CRM Analytics</h1>
+            <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">Comprehensive view of your CRM performance and metrics</p>
+          </div>
+        </div>
       </div>
 
-      {/* Overview Metrics */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
-            <DollarSign className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              ${(data.campaignStats.total_revenue || 0).toLocaleString()}
-            </div>
-            <div className="flex items-center gap-1 text-xs text-green-600 mt-2">
-              <ArrowUpRight className="h-3 w-3" />
-              <span>From campaigns</span>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Pipeline Value</CardTitle>
-            <Target className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              ${(data.leadStats.total_pipeline_value || 0).toLocaleString()}
-            </div>
-            <p className="text-xs text-muted-foreground mt-2">
-              {data.leadStats.opportunity_count || 0} opportunities
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Conversion Rate</CardTitle>
-            <TrendingUp className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{conversionRate.toFixed(1)}%</div>
-            <p className="text-xs text-muted-foreground mt-2">
-              {data.leadStats.customer_count || 0} / {data.leadStats.total_leads || 0} leads
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Avg. Lead Score</CardTitle>
-            <BarChart3 className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {data.leadStats.avg_score ? data.leadStats.avg_score.toFixed(0) : 0}/100
-            </div>
-            <Progress value={data.leadStats.avg_score || 0} className="mt-2" />
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Lead Funnel */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Lead Funnel Analysis</CardTitle>
-          <CardDescription>Track leads through your sales pipeline</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <div className="flex items-center justify-between text-sm">
-                <span className="font-medium">Total Leads</span>
-                <span className="text-muted-foreground">{data.leadStats.total_leads || 0}</span>
+      <div className="px-6 py-6 space-y-6">
+        {/* Overview Metrics */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          {[
+            { label: 'Total Revenue', value: `$${(data.campaignStats.total_revenue || 0).toLocaleString()}`, sub: 'From campaigns', icon: DollarSign, iconBg: 'bg-green-50 dark:bg-green-900/20', iconColor: 'text-green-600 dark:text-green-400' },
+            { label: 'Pipeline Value', value: `$${(data.leadStats.total_pipeline_value || 0).toLocaleString()}`, sub: `${data.leadStats.opportunity_count || 0} opportunities`, icon: Target, iconBg: 'bg-blue-50 dark:bg-blue-900/20', iconColor: 'text-blue-600 dark:text-blue-400' },
+            { label: 'Conversion Rate', value: `${conversionRate.toFixed(1)}%`, sub: `${data.leadStats.customer_count || 0} / ${data.leadStats.total_leads || 0} leads`, icon: TrendingUp, iconBg: 'bg-purple-50 dark:bg-purple-900/20', iconColor: 'text-purple-600 dark:text-purple-400' },
+            { label: 'Avg. Lead Score', value: `${data.leadStats.avg_score ? data.leadStats.avg_score.toFixed(0) : 0}/100`, sub: null, icon: BarChart3, iconBg: 'bg-amber-50 dark:bg-amber-900/20', iconColor: 'text-amber-600 dark:text-amber-400', progress: data.leadStats.avg_score || 0 },
+          ].map(({ label, value, sub, icon: Icon, iconBg, iconColor, progress }) => (
+            <div key={label} className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm p-5">
+              <div className="flex items-center justify-between mb-3">
+                <span className="text-sm font-medium text-slate-600 dark:text-slate-400">{label}</span>
+                <div className={`h-10 w-10 rounded-lg ${iconBg} flex items-center justify-center`}>
+                  <Icon className={`h-5 w-5 ${iconColor}`} />
+                </div>
               </div>
-              <Progress value={100} className="bg-gray-100" />
+              <div className="text-2xl font-bold text-slate-900 dark:text-white">{value}</div>
+              {sub && <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">{sub}</p>}
+              {progress !== undefined && <Progress value={progress} className="mt-2" />}
             </div>
+          ))}
+        </div>
 
-            <div className="space-y-2">
-              <div className="flex items-center justify-between text-sm">
-                <span className="font-medium">Marketing Qualified (MQL)</span>
-                <span className="text-muted-foreground">
-                  {data.leadStats.mql_count || 0} ({data.leadStats.total_leads > 0
-                    ? ((data.leadStats.mql_count / data.leadStats.total_leads) * 100).toFixed(1)
-                    : 0}%)
-                </span>
+        {/* Lead Funnel */}
+        <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm">
+          <div className="p-6 border-b border-slate-200 dark:border-slate-800">
+            <h3 className="text-base font-semibold text-slate-900 dark:text-white">Lead Funnel Analysis</h3>
+            <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">Track leads through your sales pipeline</p>
+          </div>
+          <div className="p-6 space-y-4">
+            {[
+              { label: 'Total Leads', count: data.leadStats.total_leads || 0, pct: 100 },
+              { label: 'Marketing Qualified (MQL)', count: data.leadStats.mql_count || 0, pct: data.leadStats.total_leads > 0 ? (data.leadStats.mql_count / data.leadStats.total_leads) * 100 : 0 },
+              { label: 'Sales Qualified (SQL)', count: data.leadStats.sql_count || 0, pct: data.leadStats.total_leads > 0 ? (data.leadStats.sql_count / data.leadStats.total_leads) * 100 : 0 },
+              { label: 'Opportunities', count: data.leadStats.opportunity_count || 0, pct: data.leadStats.total_leads > 0 ? (data.leadStats.opportunity_count / data.leadStats.total_leads) * 100 : 0 },
+              { label: 'Customers', count: data.leadStats.customer_count || 0, pct: conversionRate },
+            ].map(({ label, count, pct }) => (
+              <div key={label} className="space-y-1.5">
+                <div className="flex items-center justify-between text-sm">
+                  <span className="font-medium text-slate-700 dark:text-slate-300">{label}</span>
+                  <span className="text-slate-500 dark:text-slate-400">{count} ({pct.toFixed(1)}%)</span>
+                </div>
+                <Progress value={pct} />
               </div>
-              <Progress
-                value={data.leadStats.total_leads > 0
-                  ? (data.leadStats.mql_count / data.leadStats.total_leads) * 100
-                  : 0}
-                className="bg-blue-100"
-              />
+            ))}
+          </div>
+        </div>
+
+        {/* Campaign + Lead Quality */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm">
+            <div className="p-6 border-b border-slate-200 dark:border-slate-800">
+              <h3 className="text-base font-semibold text-slate-900 dark:text-white">Campaign Overview</h3>
+              <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">Active campaign metrics</p>
             </div>
-
-            <div className="space-y-2">
-              <div className="flex items-center justify-between text-sm">
-                <span className="font-medium">Sales Qualified (SQL)</span>
-                <span className="text-muted-foreground">
-                  {data.leadStats.sql_count || 0} ({data.leadStats.total_leads > 0
-                    ? ((data.leadStats.sql_count / data.leadStats.total_leads) * 100).toFixed(1)
-                    : 0}%)
-                </span>
-              </div>
-              <Progress
-                value={data.leadStats.total_leads > 0
-                  ? (data.leadStats.sql_count / data.leadStats.total_leads) * 100
-                  : 0}
-                className="bg-purple-100"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <div className="flex items-center justify-between text-sm">
-                <span className="font-medium">Opportunities</span>
-                <span className="text-muted-foreground">
-                  {data.leadStats.opportunity_count || 0} ({data.leadStats.total_leads > 0
-                    ? ((data.leadStats.opportunity_count / data.leadStats.total_leads) * 100).toFixed(1)
-                    : 0}%)
-                </span>
-              </div>
-              <Progress
-                value={data.leadStats.total_leads > 0
-                  ? (data.leadStats.opportunity_count / data.leadStats.total_leads) * 100
-                  : 0}
-                className="bg-yellow-100"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <div className="flex items-center justify-between text-sm">
-                <span className="font-medium">Customers</span>
-                <span className="text-muted-foreground">
-                  {data.leadStats.customer_count || 0} ({conversionRate.toFixed(1)}%)
-                </span>
-              </div>
-              <Progress
-                value={conversionRate}
-                className="bg-green-100"
-              />
+            <div className="p-6 space-y-3">
+              {[
+                { label: 'Total Campaigns', value: data.campaignStats.total_campaigns },
+                { label: 'Active Campaigns', value: data.campaignStats.active_campaigns },
+                { label: 'Total Contacts Reached', value: data.campaignStats.total_contacts_reached.toLocaleString() },
+                { label: 'Avg. Engagement Rate', value: `${data.campaignStats.avg_engagement_rate.toFixed(1)}%` },
+              ].map(({ label, value }) => (
+                <div key={label} className="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-800/50 rounded-lg border border-slate-200 dark:border-slate-700">
+                  <span className="text-sm font-medium text-slate-700 dark:text-slate-300">{label}</span>
+                  <span className="text-sm font-semibold text-slate-900 dark:text-white">{value}</span>
+                </div>
+              ))}
             </div>
           </div>
-        </CardContent>
-      </Card>
 
-      {/* Campaign Performance */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card>
-          <CardHeader>
-            <CardTitle>Campaign Overview</CardTitle>
-            <CardDescription>Active campaign metrics</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex items-center justify-between p-3 bg-muted rounded-lg">
-              <span className="text-sm font-medium">Total Campaigns</span>
-              <Badge variant="secondary">{data.campaignStats.total_campaigns}</Badge>
+          <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm">
+            <div className="p-6 border-b border-slate-200 dark:border-slate-800">
+              <h3 className="text-base font-semibold text-slate-900 dark:text-white">Lead Quality Metrics</h3>
+              <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">Lead qualification breakdown</p>
             </div>
-            <div className="flex items-center justify-between p-3 bg-muted rounded-lg">
-              <span className="text-sm font-medium">Active Campaigns</span>
-              <Badge>{data.campaignStats.active_campaigns}</Badge>
+            <div className="p-6 space-y-4">
+              {[
+                { label: 'Qualified Leads', count: data.leadStats.qualified_count || 0, pct: qualificationRate },
+                { label: 'Unqualified Leads', count: data.leadStats.unqualified_count || 0, pct: data.leadStats.total_leads > 0 ? ((data.leadStats.unqualified_count || 0) / data.leadStats.total_leads) * 100 : 0 },
+                { label: 'Lost Opportunities', count: data.leadStats.lost_count || 0, pct: data.leadStats.total_leads > 0 ? ((data.leadStats.lost_count || 0) / data.leadStats.total_leads) * 100 : 0 },
+              ].map(({ label, count, pct }) => (
+                <div key={label} className="space-y-1.5">
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="font-medium text-slate-700 dark:text-slate-300">{label}</span>
+                    <span className="text-slate-500 dark:text-slate-400">{count} ({pct.toFixed(1)}%)</span>
+                  </div>
+                  <Progress value={pct} />
+                </div>
+              ))}
             </div>
-            <div className="flex items-center justify-between p-3 bg-muted rounded-lg">
-              <span className="text-sm font-medium">Total Contacts Reached</span>
-              <Badge variant="outline">{data.campaignStats.total_contacts_reached.toLocaleString()}</Badge>
-            </div>
-            <div className="flex items-center justify-between p-3 bg-muted rounded-lg">
-              <span className="text-sm font-medium">Avg. Engagement Rate</span>
-              <Badge variant="outline">{data.campaignStats.avg_engagement_rate.toFixed(1)}%</Badge>
-            </div>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Lead Quality Metrics</CardTitle>
-            <CardDescription>Lead qualification breakdown</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <span className="text-sm font-medium">Qualified Leads</span>
-                <span className="text-sm text-muted-foreground">
-                  {data.leadStats.qualified_count || 0} ({qualificationRate.toFixed(1)}%)
-                </span>
-              </div>
-              <Progress value={qualificationRate} className="bg-green-100" />
-            </div>
-
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <span className="text-sm font-medium">Unqualified Leads</span>
-                <span className="text-sm text-muted-foreground">
-                  {data.leadStats.unqualified_count || 0} ({data.leadStats.total_leads > 0
-                    ? (((data.leadStats.unqualified_count || 0) / data.leadStats.total_leads) * 100).toFixed(1)
-                    : 0}%)
-                </span>
-              </div>
-              <Progress
-                value={data.leadStats.total_leads > 0
-                  ? ((data.leadStats.unqualified_count || 0) / data.leadStats.total_leads) * 100
-                  : 0}
-                className="bg-red-100"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <span className="text-sm font-medium">Lost Opportunities</span>
-                <span className="text-sm text-muted-foreground">
-                  {data.leadStats.lost_count || 0} ({data.leadStats.total_leads > 0
-                    ? (((data.leadStats.lost_count || 0) / data.leadStats.total_leads) * 100).toFixed(1)
-                    : 0}%)
-                </span>
-              </div>
-              <Progress
-                value={data.leadStats.total_leads > 0
-                  ? ((data.leadStats.lost_count || 0) / data.leadStats.total_leads) * 100
-                  : 0}
-                className="bg-gray-100"
-              />
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Key Insights */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Key Insights</CardTitle>
-          <CardDescription>Performance highlights and recommendations</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-3">
+        {/* Key Insights */}
+        <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm">
+          <div className="p-6 border-b border-slate-200 dark:border-slate-800">
+            <h3 className="text-base font-semibold text-slate-900 dark:text-white">Key Insights</h3>
+            <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">Performance highlights and recommendations</p>
+          </div>
+          <div className="p-6 space-y-3">
             {conversionRate >= 10 && (
-              <div className="flex items-start gap-3 p-3 bg-green-50 rounded-lg border border-green-200">
-                <ArrowUpRight className="h-5 w-5 text-green-600 mt-0.5" />
+              <div className="flex items-start gap-3 p-3 bg-slate-50 dark:bg-slate-800/50 rounded-lg border border-slate-200 dark:border-slate-700">
+                <ArrowUpRight className="h-4 w-4 text-slate-500 mt-0.5 flex-shrink-0" />
                 <div>
-                  <p className="text-sm font-medium text-green-900">Strong Conversion Rate</p>
-                  <p className="text-sm text-green-700">
-                    Your {conversionRate.toFixed(1)}% conversion rate is excellent. Keep up the great work!
-                  </p>
+                  <p className="text-sm font-medium text-slate-900 dark:text-white">Strong Conversion Rate</p>
+                  <p className="text-sm text-slate-500 dark:text-slate-400">Your {conversionRate.toFixed(1)}% conversion rate is excellent. Keep up the great work!</p>
                 </div>
               </div>
             )}
-
             {(data.leadStats.avg_score || 0) >= 70 && (
-              <div className="flex items-start gap-3 p-3 bg-blue-50 rounded-lg border border-blue-200">
-                <TrendingUp className="h-5 w-5 text-blue-600 mt-0.5" />
+              <div className="flex items-start gap-3 p-3 bg-slate-50 dark:bg-slate-800/50 rounded-lg border border-slate-200 dark:border-slate-700">
+                <TrendingUp className="h-4 w-4 text-slate-500 mt-0.5 flex-shrink-0" />
                 <div>
-                  <p className="text-sm font-medium text-blue-900">High Lead Quality</p>
-                  <p className="text-sm text-blue-700">
-                    Average lead score of {(data.leadStats.avg_score || 0).toFixed(0)} indicates high-quality leads in your pipeline.
-                  </p>
+                  <p className="text-sm font-medium text-slate-900 dark:text-white">High Lead Quality</p>
+                  <p className="text-sm text-slate-500 dark:text-slate-400">Average lead score of {(data.leadStats.avg_score || 0).toFixed(0)} indicates high-quality leads in your pipeline.</p>
                 </div>
               </div>
             )}
-
             {data.campaignStats.active_campaigns === 0 && (
-              <div className="flex items-start gap-3 p-3 bg-yellow-50 rounded-lg border border-yellow-200">
-                <ArrowDownRight className="h-5 w-5 text-yellow-600 mt-0.5" />
+              <div className="flex items-start gap-3 p-3 bg-slate-50 dark:bg-slate-800/50 rounded-lg border border-slate-200 dark:border-slate-700">
+                <ArrowDownRight className="h-4 w-4 text-slate-500 mt-0.5 flex-shrink-0" />
                 <div>
-                  <p className="text-sm font-medium text-yellow-900">No Active Campaigns</p>
-                  <p className="text-sm text-yellow-700">
-                    Consider launching new campaigns to engage your leads and drive conversions.
-                  </p>
+                  <p className="text-sm font-medium text-slate-900 dark:text-white">No Active Campaigns</p>
+                  <p className="text-sm text-slate-500 dark:text-slate-400">Consider launching new campaigns to engage your leads and drive conversions.</p>
                 </div>
               </div>
             )}
-
             {data.leadStats.total_leads === 0 && (
-              <div className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg border border-gray-200">
-                <Users className="h-5 w-5 text-gray-600 mt-0.5" />
+              <div className="flex items-start gap-3 p-3 bg-slate-50 dark:bg-slate-800/50 rounded-lg border border-slate-200 dark:border-slate-700">
+                <Users className="h-4 w-4 text-slate-500 mt-0.5 flex-shrink-0" />
                 <div>
-                  <p className="text-sm font-medium text-gray-900">Get Started</p>
-                  <p className="text-sm text-gray-700">
-                    Start by adding leads to your CRM to track them through your sales pipeline.
-                  </p>
+                  <p className="text-sm font-medium text-slate-900 dark:text-white">Get Started</p>
+                  <p className="text-sm text-slate-500 dark:text-slate-400">Start by adding leads to your CRM to track them through your sales pipeline.</p>
                 </div>
               </div>
             )}
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     </div>
   );
 }

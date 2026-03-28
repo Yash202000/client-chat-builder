@@ -11,7 +11,7 @@ import { AddNodeButton } from './workflow/AddNodeButton';
 
 export const LlmNode = ({ id, data }) => (
   <div className="relative group">
-    <div className="px-4 py-3 border border-blue-200/80 dark:border-blue-700/60 rounded-2xl bg-gradient-to-br from-white to-blue-50 dark:from-slate-800 dark:to-blue-950/30 shadow-lg shadow-blue-500/10 hover:shadow-xl hover:shadow-blue-500/20 hover:scale-[1.02] transition-all duration-200 backdrop-blur-sm min-w-[160px]">
+    <div className="px-4 py-3 border border-blue-200/80 dark:border-blue-700/60 rounded-2xl bg-gradient-to-br from-white to-blue-50 dark:from-slate-800 dark:to-blue-950/30 shadow-lg hover:shadow-xl hover:scale-[1.02] transition-all duration-200 backdrop-blur-sm min-w-[160px]">
       <Handle type="target" position={Position.Top} className="w-3 h-3 !bg-gradient-to-br !from-blue-400 !to-indigo-500 border-2 border-white dark:border-slate-800 shadow-md" />
       <div className="flex items-center gap-2.5 mb-2">
         <div className="p-2 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 shadow-md shadow-blue-500/30">
@@ -33,7 +33,7 @@ export const LlmNode = ({ id, data }) => (
 
 export const ToolNode = ({ id, data }) => (
   <div className="relative group">
-    <div className="px-4 py-3 border border-emerald-200/80 dark:border-emerald-700/60 rounded-2xl bg-gradient-to-br from-white to-emerald-50 dark:from-slate-800 dark:to-emerald-950/30 shadow-lg shadow-emerald-500/10 hover:shadow-xl hover:shadow-emerald-500/20 hover:scale-[1.02] transition-all duration-200 backdrop-blur-sm min-w-[160px]">
+    <div className="px-4 py-3 border border-emerald-200/80 dark:border-emerald-700/60 rounded-2xl bg-gradient-to-br from-white to-emerald-50 dark:from-slate-800 dark:to-emerald-950/30 shadow-lg hover:shadow-xl hover:scale-[1.02] transition-all duration-200 backdrop-blur-sm min-w-[160px]">
       <Handle type="target" position={Position.Top} className="w-3 h-3 !bg-gradient-to-br !from-emerald-400 !to-green-500 border-2 border-white dark:border-slate-800 shadow-md" />
       <div className="flex items-center gap-2.5 mb-2">
         <div className="p-2 rounded-xl bg-gradient-to-br from-emerald-500 to-green-600 shadow-md shadow-emerald-500/30">
@@ -76,7 +76,7 @@ export const ConditionNode = ({ id, data }) => {
 
   return (
     <div className="relative group">
-      <div className={`px-4 py-3 border border-amber-200/80 dark:border-amber-700/60 rounded-2xl bg-gradient-to-br from-white to-amber-50 dark:from-slate-800 dark:to-amber-950/30 shadow-lg shadow-amber-500/10 hover:shadow-xl hover:shadow-amber-500/20 hover:scale-[1.02] transition-all duration-200 backdrop-blur-sm ${isMultiCondition ? 'min-w-[180px]' : 'min-w-[160px]'}`}
+      <div className={`px-4 py-3 border border-amber-200/80 dark:border-amber-700/60 rounded-2xl bg-gradient-to-br from-white to-amber-50 dark:from-slate-800 dark:to-amber-950/30 shadow-lg hover:shadow-xl hover:scale-[1.02] transition-all duration-200 backdrop-blur-sm ${isMultiCondition ? 'min-w-[180px]' : 'min-w-[160px]'}`}
            style={{ minWidth: isMultiCondition ? `${Math.max(180, totalHandles * 50)}px` : undefined }}>
         <Handle type="target" position={Position.Top} className="w-3 h-3 !bg-gradient-to-br !from-amber-400 !to-orange-500 border-2 border-white dark:border-slate-800 shadow-md" />
         <div className="flex items-center gap-2.5 mb-2">
@@ -161,7 +161,7 @@ export const ConditionNode = ({ id, data }) => {
 
 export const OutputNode = ({ id, data }) => (
   <div className="relative group">
-    <div className="px-4 py-3 border border-indigo-200/80 dark:border-indigo-700/60 rounded-2xl bg-gradient-to-br from-white to-indigo-50 dark:from-slate-800 dark:to-indigo-950/30 shadow-lg shadow-indigo-500/10 hover:shadow-xl hover:shadow-indigo-500/20 hover:scale-[1.02] transition-all duration-200 backdrop-blur-sm min-w-[160px]">
+    <div className="px-4 py-3 border border-indigo-200/80 dark:border-indigo-700/60 rounded-2xl bg-gradient-to-br from-white to-indigo-50 dark:from-slate-800 dark:to-indigo-950/30 shadow-lg hover:shadow-xl hover:scale-[1.02] transition-all duration-200 backdrop-blur-sm min-w-[160px]">
       <Handle type="target" position={Position.Top} className="w-3 h-3 !bg-gradient-to-br !from-indigo-400 !to-violet-500 border-2 border-white dark:border-slate-800 shadow-md" />
       <div className="flex items-center gap-2.5 mb-2">
         <div className="p-2 rounded-xl bg-gradient-to-br from-indigo-500 to-violet-600 shadow-md shadow-indigo-500/30">
@@ -169,10 +169,16 @@ export const OutputNode = ({ id, data }) => (
         </div>
         <strong className="text-sm font-semibold text-slate-800 dark:text-white">{data.label}</strong>
       </div>
-      <div className="text-xs text-slate-500 dark:text-slate-400 font-medium flex items-center gap-1">
-        <span className="w-1.5 h-1.5 rounded-full bg-indigo-500"></span>
-        Workflow Output
-      </div>
+      {data.output_value ? (
+        <div className="text-xs text-slate-600 dark:text-slate-300 bg-indigo-50 dark:bg-indigo-950/40 rounded-lg px-2.5 py-1.5 leading-relaxed line-clamp-3">
+          {data.output_value}
+        </div>
+      ) : (
+        <div className="text-xs text-slate-500 dark:text-slate-400 font-medium flex items-center gap-1">
+          <span className="w-1.5 h-1.5 rounded-full bg-indigo-500"></span>
+          Workflow Output
+        </div>
+      )}
       <Handle type="source" position={Position.Bottom} id="output" className="w-3 h-3 !bg-slate-500 dark:!bg-slate-400 border-2 border-white dark:border-slate-800 shadow-md" />
     </div>
     <AddNodeButton nodeId={id} handleId="output" position="bottom" />
@@ -181,7 +187,7 @@ export const OutputNode = ({ id, data }) => (
 
 export const StartNode = ({ id, data }) => (
   <div className="relative group">
-    <div className="px-6 py-4 border-2 border-dashed border-emerald-300/80 dark:border-emerald-600/60 rounded-full bg-gradient-to-br from-emerald-50 via-white to-teal-50 dark:from-emerald-950/50 dark:via-slate-800 dark:to-teal-950/50 shadow-lg shadow-emerald-500/15 hover:shadow-xl hover:shadow-emerald-500/25 hover:scale-[1.03] transition-all duration-200 backdrop-blur-sm ring-4 ring-emerald-100/50 dark:ring-emerald-900/30">
+    <div className="px-6 py-4 border-2 border-dashed border-emerald-300/80 dark:border-emerald-600/60 rounded-full bg-gradient-to-br from-emerald-50 via-white to-teal-50 dark:from-emerald-950/50 dark:via-slate-800 dark:to-teal-950/50 shadow-md hover:shadow-lg hover:scale-[1.03] transition-all duration-200 backdrop-blur-sm">
       <div className="flex flex-col items-center gap-1.5">
         <div className="flex items-center gap-2">
           <span className="w-2 h-2 rounded-full bg-gradient-to-br from-emerald-400 to-teal-500 animate-pulse"></span>
@@ -197,7 +203,7 @@ export const StartNode = ({ id, data }) => (
 
 export const ListenNode = ({ id, data }) => (
   <div className="relative group">
-    <div className="px-4 py-3 border border-cyan-200/80 dark:border-cyan-700/60 rounded-2xl bg-gradient-to-br from-white to-cyan-50 dark:from-slate-800 dark:to-cyan-950/30 shadow-lg shadow-cyan-500/10 hover:shadow-xl hover:shadow-cyan-500/20 hover:scale-[1.02] transition-all duration-200 backdrop-blur-sm min-w-[160px]">
+    <div className="px-4 py-3 border border-cyan-200/80 dark:border-cyan-700/60 rounded-2xl bg-gradient-to-br from-white to-cyan-50 dark:from-slate-800 dark:to-cyan-950/30 shadow-lg hover:shadow-xl hover:scale-[1.02] transition-all duration-200 backdrop-blur-sm min-w-[160px]">
       <Handle type="target" position={Position.Top} className="w-3 h-3 !bg-gradient-to-br !from-cyan-400 !to-sky-500 border-2 border-white dark:border-slate-800 shadow-md" />
       <div className="flex items-center gap-2.5 mb-2">
         <div className="p-2 rounded-xl bg-gradient-to-br from-cyan-500 to-sky-600 shadow-md shadow-cyan-500/30">
@@ -219,7 +225,7 @@ export const ListenNode = ({ id, data }) => (
 
 export const PromptNode = ({ id, data }) => (
   <div className="relative group">
-    <div className="px-4 py-3 border border-yellow-200/80 dark:border-yellow-700/60 rounded-2xl bg-gradient-to-br from-white to-yellow-50 dark:from-slate-800 dark:to-yellow-950/30 shadow-lg shadow-yellow-500/10 hover:shadow-xl hover:shadow-yellow-500/20 hover:scale-[1.02] transition-all duration-200 backdrop-blur-sm min-w-[160px]">
+    <div className="px-4 py-3 border border-yellow-200/80 dark:border-yellow-700/60 rounded-2xl bg-gradient-to-br from-white to-yellow-50 dark:from-slate-800 dark:to-yellow-950/30 shadow-md hover:shadow-lg hover:scale-[1.02] transition-all duration-200 backdrop-blur-sm min-w-[160px]">
       <Handle type="target" position={Position.Top} className="w-3 h-3 !bg-gradient-to-br !from-yellow-400 !to-amber-500 border-2 border-white dark:border-slate-800 shadow-md" />
       <div className="flex items-center gap-2.5 mb-2">
         <div className="p-2 rounded-xl bg-gradient-to-br from-yellow-500 to-amber-600 shadow-md shadow-yellow-500/30">
@@ -239,7 +245,7 @@ export const PromptNode = ({ id, data }) => (
 
 export const KnowledgeNode = ({ id, data }) => (
   <div className="relative group">
-    <div className="px-4 py-3 border border-violet-200/80 dark:border-violet-700/60 rounded-2xl bg-gradient-to-br from-white to-violet-50 dark:from-slate-800 dark:to-violet-950/30 shadow-lg shadow-violet-500/10 hover:shadow-xl hover:shadow-violet-500/20 hover:scale-[1.02] transition-all duration-200 backdrop-blur-sm min-w-[160px]">
+    <div className="px-4 py-3 border border-violet-200/80 dark:border-violet-700/60 rounded-2xl bg-gradient-to-br from-white to-violet-50 dark:from-slate-800 dark:to-violet-950/30 shadow-lg hover:shadow-xl hover:scale-[1.02] transition-all duration-200 backdrop-blur-sm min-w-[160px]">
       <Handle type="target" position={Position.Top} className="w-3 h-3 !bg-gradient-to-br !from-violet-400 !to-purple-500 border-2 border-white dark:border-slate-800 shadow-md" />
       <div className="flex items-center gap-2.5 mb-2">
         <div className="p-2 rounded-xl bg-gradient-to-br from-violet-500 to-purple-600 shadow-md shadow-violet-500/30">
@@ -261,7 +267,7 @@ export const KnowledgeNode = ({ id, data }) => (
 
 export const CodeNode = ({ id, data }) => (
   <div className="relative group">
-    <div className="px-4 py-3 border border-slate-300/80 dark:border-slate-600/60 rounded-2xl bg-gradient-to-br from-white to-slate-100 dark:from-slate-800 dark:to-slate-900/50 shadow-lg shadow-slate-500/10 hover:shadow-xl hover:shadow-slate-500/20 hover:scale-[1.02] transition-all duration-200 backdrop-blur-sm min-w-[160px]">
+    <div className="px-4 py-3 border border-slate-300/80 dark:border-slate-600/60 rounded-2xl bg-gradient-to-br from-white to-slate-100 dark:from-slate-800 dark:to-slate-900/50 shadow-lg hover:shadow-xl hover:scale-[1.02] transition-all duration-200 backdrop-blur-sm min-w-[160px]">
       <Handle type="target" position={Position.Top} className="w-3 h-3 !bg-gradient-to-br !from-slate-400 !to-gray-500 border-2 border-white dark:border-slate-800 shadow-md" />
       <div className="flex items-center gap-2.5 mb-2">
         <div className="p-2 rounded-xl bg-gradient-to-br from-slate-600 to-gray-700 shadow-md shadow-slate-500/30">
@@ -283,7 +289,7 @@ export const CodeNode = ({ id, data }) => (
 
 export const DataManipulationNode = ({ id, data }) => (
   <div className="relative group">
-    <div className="px-4 py-3 border border-sky-200/80 dark:border-sky-700/60 rounded-2xl bg-gradient-to-br from-white to-sky-50 dark:from-slate-800 dark:to-sky-950/30 shadow-lg shadow-sky-500/10 hover:shadow-xl hover:shadow-sky-500/20 hover:scale-[1.02] transition-all duration-200 backdrop-blur-sm min-w-[160px]">
+    <div className="px-4 py-3 border border-sky-200/80 dark:border-sky-700/60 rounded-2xl bg-gradient-to-br from-white to-sky-50 dark:from-slate-800 dark:to-sky-950/30 shadow-lg hover:shadow-xl hover:scale-[1.02] transition-all duration-200 backdrop-blur-sm min-w-[160px]">
       <Handle type="target" position={Position.Top} className="w-3 h-3 !bg-gradient-to-br !from-sky-400 !to-blue-500 border-2 border-white dark:border-slate-800 shadow-md" />
       <div className="flex items-center gap-2.5 mb-2">
         <div className="p-2 rounded-xl bg-gradient-to-br from-sky-500 to-blue-600 shadow-md shadow-sky-500/30">
@@ -305,7 +311,7 @@ export const DataManipulationNode = ({ id, data }) => (
 
 export const HttpRequestNode = ({ id, data }) => (
   <div className="relative group">
-    <div className="px-4 py-3 border border-teal-200/80 dark:border-teal-700/60 rounded-2xl bg-gradient-to-br from-white to-teal-50 dark:from-slate-800 dark:to-teal-950/30 shadow-lg shadow-teal-500/10 hover:shadow-xl hover:shadow-teal-500/20 hover:scale-[1.02] transition-all duration-200 backdrop-blur-sm min-w-[160px]">
+    <div className="px-4 py-3 border border-teal-200/80 dark:border-teal-700/60 rounded-2xl bg-gradient-to-br from-white to-teal-50 dark:from-slate-800 dark:to-teal-950/30 shadow-lg hover:shadow-xl hover:scale-[1.02] transition-all duration-200 backdrop-blur-sm min-w-[160px]">
       <Handle type="target" position={Position.Top} className="w-3 h-3 !bg-gradient-to-br !from-teal-400 !to-emerald-500 border-2 border-white dark:border-slate-800 shadow-md" />
       <div className="flex items-center gap-2.5 mb-2">
         <div className="p-2 rounded-xl bg-gradient-to-br from-teal-500 to-emerald-600 shadow-md shadow-teal-500/30">
@@ -327,7 +333,7 @@ export const HttpRequestNode = ({ id, data }) => (
 
 export const FormNode = ({ id, data }) => (
   <div className="relative group">
-    <div className="px-4 py-3 border border-purple-200/80 dark:border-purple-700/60 rounded-2xl bg-gradient-to-br from-white to-purple-50 dark:from-slate-800 dark:to-purple-950/30 shadow-lg shadow-purple-500/10 hover:shadow-xl hover:shadow-purple-500/20 hover:scale-[1.02] transition-all duration-200 backdrop-blur-sm min-w-[160px]">
+    <div className="px-4 py-3 border border-purple-200/80 dark:border-purple-700/60 rounded-2xl bg-gradient-to-br from-white to-purple-50 dark:from-slate-800 dark:to-purple-950/30 shadow-lg hover:shadow-xl hover:scale-[1.02] transition-all duration-200 backdrop-blur-sm min-w-[160px]">
       <Handle type="target" position={Position.Top} className="w-3 h-3 !bg-gradient-to-br !from-purple-400 !to-fuchsia-500 border-2 border-white dark:border-slate-800 shadow-md" />
       <div className="flex items-center gap-2.5 mb-2">
         <div className="p-2 rounded-xl bg-gradient-to-br from-purple-500 to-fuchsia-600 shadow-md shadow-purple-500/30">
@@ -351,7 +357,7 @@ export const FormNode = ({ id, data }) => (
 
 export const IntentRouterNode = ({ id, data }) => (
   <div className="relative group">
-    <div className="px-4 py-3 border border-violet-200/80 dark:border-violet-700/60 rounded-2xl bg-gradient-to-br from-white to-violet-50 dark:from-slate-800 dark:to-violet-950/30 shadow-lg shadow-violet-500/10 hover:shadow-xl hover:shadow-violet-500/20 hover:scale-[1.02] transition-all duration-200 backdrop-blur-sm min-w-[160px]">
+    <div className="px-4 py-3 border border-violet-200/80 dark:border-violet-700/60 rounded-2xl bg-gradient-to-br from-white to-violet-50 dark:from-slate-800 dark:to-violet-950/30 shadow-lg hover:shadow-xl hover:scale-[1.02] transition-all duration-200 backdrop-blur-sm min-w-[160px]">
       <Handle type="target" position={Position.Top} className="w-3 h-3 !bg-gradient-to-br !from-violet-400 !to-purple-500 border-2 border-white dark:border-slate-800 shadow-md" />
       <div className="flex items-center gap-2.5 mb-2">
         <div className="p-2 rounded-xl bg-gradient-to-br from-violet-500 to-purple-600 shadow-md shadow-violet-500/30">
@@ -376,7 +382,7 @@ export const IntentRouterNode = ({ id, data }) => (
 
 export const EntityCollectorNode = ({ id, data }) => (
   <div className="relative group">
-    <div className="px-4 py-3 border border-rose-200/80 dark:border-rose-700/60 rounded-2xl bg-gradient-to-br from-white to-rose-50 dark:from-slate-800 dark:to-rose-950/30 shadow-lg shadow-rose-500/10 hover:shadow-xl hover:shadow-rose-500/20 hover:scale-[1.02] transition-all duration-200 backdrop-blur-sm min-w-[160px]">
+    <div className="px-4 py-3 border border-rose-200/80 dark:border-rose-700/60 rounded-2xl bg-gradient-to-br from-white to-rose-50 dark:from-slate-800 dark:to-rose-950/30 shadow-lg hover:shadow-xl hover:scale-[1.02] transition-all duration-200 backdrop-blur-sm min-w-[160px]">
       <Handle type="target" position={Position.Top} className="w-3 h-3 !bg-gradient-to-br !from-rose-400 !to-pink-500 border-2 border-white dark:border-slate-800 shadow-md" />
       <div className="flex items-center gap-2.5 mb-2">
         <div className="p-2 rounded-xl bg-gradient-to-br from-rose-500 to-pink-600 shadow-md shadow-rose-500/30">
@@ -398,7 +404,7 @@ export const EntityCollectorNode = ({ id, data }) => (
 
 export const CheckEntityNode = ({ id, data }) => (
   <div className="relative group">
-    <div className="px-4 py-3 border border-emerald-200/80 dark:border-emerald-700/60 rounded-2xl bg-gradient-to-br from-white to-emerald-50 dark:from-slate-800 dark:to-emerald-950/30 shadow-lg shadow-emerald-500/10 hover:shadow-xl hover:shadow-emerald-500/20 hover:scale-[1.02] transition-all duration-200 backdrop-blur-sm min-w-[160px]">
+    <div className="px-4 py-3 border border-emerald-200/80 dark:border-emerald-700/60 rounded-2xl bg-gradient-to-br from-white to-emerald-50 dark:from-slate-800 dark:to-emerald-950/30 shadow-lg hover:shadow-xl hover:scale-[1.02] transition-all duration-200 backdrop-blur-sm min-w-[160px]">
       <Handle type="target" position={Position.Top} className="w-3 h-3 !bg-gradient-to-br !from-emerald-400 !to-teal-500 border-2 border-white dark:border-slate-800 shadow-md" />
       <div className="flex items-center gap-2.5 mb-2">
         <div className="p-2 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 shadow-md shadow-emerald-500/30">
@@ -420,7 +426,7 @@ export const CheckEntityNode = ({ id, data }) => (
 
 export const UpdateContextNode = ({ id, data }) => (
   <div className="relative group">
-    <div className="px-4 py-3 border border-blue-200/80 dark:border-blue-700/60 rounded-2xl bg-gradient-to-br from-white to-blue-50 dark:from-slate-800 dark:to-blue-950/30 shadow-lg shadow-blue-500/10 hover:shadow-xl hover:shadow-blue-500/20 hover:scale-[1.02] transition-all duration-200 backdrop-blur-sm min-w-[160px]">
+    <div className="px-4 py-3 border border-blue-200/80 dark:border-blue-700/60 rounded-2xl bg-gradient-to-br from-white to-blue-50 dark:from-slate-800 dark:to-blue-950/30 shadow-lg hover:shadow-xl hover:scale-[1.02] transition-all duration-200 backdrop-blur-sm min-w-[160px]">
       <Handle type="target" position={Position.Top} className="w-3 h-3 !bg-gradient-to-br !from-blue-400 !to-cyan-500 border-2 border-white dark:border-slate-800 shadow-md" />
       <div className="flex items-center gap-2.5 mb-2">
         <div className="p-2 rounded-xl bg-gradient-to-br from-blue-500 to-cyan-600 shadow-md shadow-blue-500/30">
@@ -440,7 +446,7 @@ export const UpdateContextNode = ({ id, data }) => (
 
 export const TagConversationNode = ({ id, data }) => (
   <div className="relative group">
-    <div className="px-4 py-3 border border-fuchsia-200/80 dark:border-fuchsia-700/60 rounded-2xl bg-gradient-to-br from-white to-fuchsia-50 dark:from-slate-800 dark:to-fuchsia-950/30 shadow-lg shadow-fuchsia-500/10 hover:shadow-xl hover:shadow-fuchsia-500/20 hover:scale-[1.02] transition-all duration-200 backdrop-blur-sm min-w-[160px]">
+    <div className="px-4 py-3 border border-fuchsia-200/80 dark:border-fuchsia-700/60 rounded-2xl bg-gradient-to-br from-white to-fuchsia-50 dark:from-slate-800 dark:to-fuchsia-950/30 shadow-lg hover:shadow-xl hover:scale-[1.02] transition-all duration-200 backdrop-blur-sm min-w-[160px]">
       <Handle type="target" position={Position.Top} className="w-3 h-3 !bg-gradient-to-br !from-fuchsia-400 !to-pink-500 border-2 border-white dark:border-slate-800 shadow-md" />
       <div className="flex items-center gap-2.5 mb-2">
         <div className="p-2 rounded-xl bg-gradient-to-br from-fuchsia-500 to-pink-600 shadow-md shadow-fuchsia-500/30">
@@ -460,7 +466,7 @@ export const TagConversationNode = ({ id, data }) => (
 
 export const AssignToAgentNode = ({ id, data }) => (
   <div className="relative group">
-    <div className="px-4 py-3 border border-orange-200/80 dark:border-orange-700/60 rounded-2xl bg-gradient-to-br from-white to-orange-50 dark:from-slate-800 dark:to-orange-950/30 shadow-lg shadow-orange-500/10 hover:shadow-xl hover:shadow-orange-500/20 hover:scale-[1.02] transition-all duration-200 backdrop-blur-sm min-w-[160px]">
+    <div className="px-4 py-3 border border-orange-200/80 dark:border-orange-700/60 rounded-2xl bg-gradient-to-br from-white to-orange-50 dark:from-slate-800 dark:to-orange-950/30 shadow-lg hover:shadow-xl hover:scale-[1.02] transition-all duration-200 backdrop-blur-sm min-w-[160px]">
       <Handle type="target" position={Position.Top} className="w-3 h-3 !bg-gradient-to-br !from-orange-400 !to-amber-500 border-2 border-white dark:border-slate-800 shadow-md" />
       <div className="flex items-center gap-2.5 mb-2">
         <div className="p-2 rounded-xl bg-gradient-to-br from-orange-500 to-amber-600 shadow-md shadow-orange-500/30">
@@ -480,7 +486,7 @@ export const AssignToAgentNode = ({ id, data }) => (
 
 export const SetStatusNode = ({ id, data }) => (
   <div className="relative group">
-    <div className="px-4 py-3 border border-lime-200/80 dark:border-lime-700/60 rounded-2xl bg-gradient-to-br from-white to-lime-50 dark:from-slate-800 dark:to-lime-950/30 shadow-lg shadow-lime-500/10 hover:shadow-xl hover:shadow-lime-500/20 hover:scale-[1.02] transition-all duration-200 backdrop-blur-sm min-w-[160px]">
+    <div className="px-4 py-3 border border-lime-200/80 dark:border-lime-700/60 rounded-2xl bg-gradient-to-br from-white to-lime-50 dark:from-slate-800 dark:to-lime-950/30 shadow-lg hover:shadow-xl hover:scale-[1.02] transition-all duration-200 backdrop-blur-sm min-w-[160px]">
       <Handle type="target" position={Position.Top} className="w-3 h-3 !bg-gradient-to-br !from-lime-400 !to-green-500 border-2 border-white dark:border-slate-800 shadow-md" />
       <div className="flex items-center gap-2.5 mb-2">
         <div className="p-2 rounded-xl bg-gradient-to-br from-lime-500 to-green-600 shadow-md shadow-lime-500/30">
@@ -500,7 +506,7 @@ export const SetStatusNode = ({ id, data }) => (
 
 export const ChannelRedirectNode = ({ id, data }) => (
   <div className="relative group">
-    <div className="px-4 py-3 border border-rose-200/80 dark:border-rose-700/60 rounded-2xl bg-gradient-to-br from-white to-rose-50 dark:from-slate-800 dark:to-rose-950/30 shadow-lg shadow-rose-500/10 hover:shadow-xl hover:shadow-rose-500/20 hover:scale-[1.02] transition-all duration-200 backdrop-blur-sm min-w-[160px]">
+    <div className="px-4 py-3 border border-rose-200/80 dark:border-rose-700/60 rounded-2xl bg-gradient-to-br from-white to-rose-50 dark:from-slate-800 dark:to-rose-950/30 shadow-lg hover:shadow-xl hover:scale-[1.02] transition-all duration-200 backdrop-blur-sm min-w-[160px]">
       <Handle type="target" position={Position.Top} className="w-3 h-3 !bg-gradient-to-br !from-rose-400 !to-pink-500 border-2 border-white dark:border-slate-800 shadow-md" />
       <div className="flex items-center gap-2.5 mb-2">
         <div className="p-2 rounded-xl bg-gradient-to-br from-rose-500 to-pink-600 shadow-md shadow-rose-500/30">
@@ -543,7 +549,7 @@ export const QuestionClassifierNode = ({ id, data }) => {
 
   return (
     <div className="relative group">
-      <div className={`px-4 py-3 border border-amber-200/80 dark:border-amber-700/60 rounded-2xl bg-gradient-to-br from-white to-amber-50 dark:from-slate-800 dark:to-amber-950/30 shadow-lg shadow-amber-500/10 hover:shadow-xl hover:shadow-amber-500/20 hover:scale-[1.02] transition-all duration-200 backdrop-blur-sm ${hasClasses ? 'min-w-[180px]' : 'min-w-[160px]'}`}
+      <div className={`px-4 py-3 border border-amber-200/80 dark:border-amber-700/60 rounded-2xl bg-gradient-to-br from-white to-amber-50 dark:from-slate-800 dark:to-amber-950/30 shadow-lg hover:shadow-xl hover:scale-[1.02] transition-all duration-200 backdrop-blur-sm ${hasClasses ? 'min-w-[180px]' : 'min-w-[160px]'}`}
            style={{ minWidth: hasClasses ? `${Math.max(180, totalHandles * 60)}px` : undefined }}>
         <Handle type="target" position={Position.Top} className="w-3 h-3 !bg-gradient-to-br !from-amber-400 !to-yellow-500 border-2 border-white dark:border-slate-800 shadow-md" />
         <div className="flex items-center gap-2.5 mb-2">
@@ -624,7 +630,7 @@ export const ExtractEntitiesNode = ({ id, data }) => {
 
   return (
     <div className="relative group">
-      <div className="px-4 py-3 border border-purple-200/80 dark:border-purple-700/60 rounded-2xl bg-gradient-to-br from-white to-purple-50 dark:from-slate-800 dark:to-purple-950/30 shadow-lg shadow-purple-500/10 hover:shadow-xl hover:shadow-purple-500/20 hover:scale-[1.02] transition-all duration-200 backdrop-blur-sm min-w-[160px]">
+      <div className="px-4 py-3 border border-purple-200/80 dark:border-purple-700/60 rounded-2xl bg-gradient-to-br from-white to-purple-50 dark:from-slate-800 dark:to-purple-950/30 shadow-lg hover:shadow-xl hover:scale-[1.02] transition-all duration-200 backdrop-blur-sm min-w-[160px]">
         <Handle type="target" position={Position.Top} className="w-3 h-3 !bg-gradient-to-br !from-purple-400 !to-fuchsia-500 border-2 border-white dark:border-slate-800 shadow-md" />
         <div className="flex items-center gap-2.5 mb-2">
           <div className="p-2 rounded-xl bg-gradient-to-br from-purple-500 to-fuchsia-600 shadow-md shadow-purple-500/30">
@@ -652,7 +658,7 @@ export const SubworkflowNode = ({ id, data }) => {
 
   return (
     <div className="relative group">
-      <div className="px-4 py-3 border border-violet-200/80 dark:border-violet-700/60 rounded-2xl bg-gradient-to-br from-white to-violet-50 dark:from-slate-800 dark:to-violet-950/30 shadow-lg shadow-violet-500/10 hover:shadow-xl hover:shadow-violet-500/20 hover:scale-[1.02] transition-all duration-200 backdrop-blur-sm min-w-[160px]">
+      <div className="px-4 py-3 border border-violet-200/80 dark:border-violet-700/60 rounded-2xl bg-gradient-to-br from-white to-violet-50 dark:from-slate-800 dark:to-violet-950/30 shadow-lg hover:shadow-xl hover:scale-[1.02] transition-all duration-200 backdrop-blur-sm min-w-[160px]">
         <Handle type="target" position={Position.Top} className="w-3 h-3 !bg-gradient-to-br !from-violet-400 !to-purple-500 border-2 border-white dark:border-slate-800 shadow-md" />
         <div className="flex items-center gap-2.5 mb-2">
           <div className="p-2 rounded-xl bg-gradient-to-br from-violet-500 to-purple-600 shadow-md shadow-violet-500/30">
@@ -677,7 +683,7 @@ export const SubworkflowNode = ({ id, data }) => {
 
 export const TriggerWebSocketNode = ({ id, data }) => (
   <div className="relative group">
-    <div className="px-5 py-4 border-2 border-cyan-300/80 dark:border-cyan-600/60 rounded-2xl bg-gradient-to-br from-cyan-50 via-white to-blue-50 dark:from-cyan-950/40 dark:via-slate-800 dark:to-blue-950/40 shadow-xl shadow-cyan-500/15 hover:shadow-2xl hover:shadow-cyan-500/25 hover:scale-[1.02] transition-all duration-200 backdrop-blur-sm ring-2 ring-cyan-200/50 dark:ring-cyan-700/30">
+    <div className="px-5 py-4 border-2 border-cyan-300/80 dark:border-cyan-600/60 rounded-2xl bg-gradient-to-br from-cyan-50 via-white to-blue-50 dark:from-cyan-950/40 dark:via-slate-800 dark:to-blue-950/40 shadow-md hover:shadow-lg hover:scale-[1.02] transition-all duration-200 backdrop-blur-sm">
       <div className="flex items-center gap-2.5 mb-2">
         <div className="p-2.5 rounded-xl bg-gradient-to-br from-cyan-500 to-blue-600 shadow-lg shadow-cyan-500/30">
           <Wifi size={18} className="text-white" />
@@ -705,7 +711,7 @@ export const TriggerWebSocketNode = ({ id, data }) => (
 
 export const TriggerWhatsAppNode = ({ id, data }) => (
   <div className="relative group">
-    <div className="px-5 py-4 border-2 border-green-300/80 dark:border-green-600/60 rounded-2xl bg-gradient-to-br from-green-50 via-white to-emerald-50 dark:from-green-950/40 dark:via-slate-800 dark:to-emerald-950/40 shadow-xl shadow-green-500/15 hover:shadow-2xl hover:shadow-green-500/25 hover:scale-[1.02] transition-all duration-200 backdrop-blur-sm ring-2 ring-green-200/50 dark:ring-green-700/30">
+    <div className="px-5 py-4 border-2 border-green-300/80 dark:border-green-600/60 rounded-2xl bg-gradient-to-br from-green-50 via-white to-emerald-50 dark:from-green-950/40 dark:via-slate-800 dark:to-emerald-950/40 shadow-md hover:shadow-lg hover:scale-[1.02] transition-all duration-200 backdrop-blur-sm">
       <div className="flex items-center gap-2.5 mb-2">
         <div className="p-2.5 rounded-xl bg-gradient-to-br from-green-500 to-emerald-600 shadow-lg shadow-green-500/30">
           <Phone size={18} className="text-white" />
@@ -733,7 +739,7 @@ export const TriggerWhatsAppNode = ({ id, data }) => (
 
 export const TriggerTelegramNode = ({ id, data }) => (
   <div className="relative group">
-    <div className="px-5 py-4 border-2 border-sky-300/80 dark:border-sky-600/60 rounded-2xl bg-gradient-to-br from-sky-50 via-white to-blue-50 dark:from-sky-950/40 dark:via-slate-800 dark:to-blue-950/40 shadow-xl shadow-sky-500/15 hover:shadow-2xl hover:shadow-sky-500/25 hover:scale-[1.02] transition-all duration-200 backdrop-blur-sm ring-2 ring-sky-200/50 dark:ring-sky-700/30">
+    <div className="px-5 py-4 border-2 border-sky-300/80 dark:border-sky-600/60 rounded-2xl bg-gradient-to-br from-sky-50 via-white to-blue-50 dark:from-sky-950/40 dark:via-slate-800 dark:to-blue-950/40 shadow-md hover:shadow-lg hover:scale-[1.02] transition-all duration-200 backdrop-blur-sm">
       <div className="flex items-center gap-2.5 mb-2">
         <div className="p-2.5 rounded-xl bg-gradient-to-br from-sky-500 to-blue-600 shadow-lg shadow-sky-500/30">
           <Send size={18} className="text-white" />
@@ -761,7 +767,7 @@ export const TriggerTelegramNode = ({ id, data }) => (
 
 export const TriggerInstagramNode = ({ id, data }) => (
   <div className="relative group">
-    <div className="px-5 py-4 border-2 border-pink-300/80 dark:border-pink-600/60 rounded-2xl bg-gradient-to-br from-pink-50 via-white to-fuchsia-50 dark:from-pink-950/40 dark:via-slate-800 dark:to-fuchsia-950/40 shadow-xl shadow-pink-500/15 hover:shadow-2xl hover:shadow-pink-500/25 hover:scale-[1.02] transition-all duration-200 backdrop-blur-sm ring-2 ring-pink-200/50 dark:ring-pink-700/30">
+    <div className="px-5 py-4 border-2 border-pink-300/80 dark:border-pink-600/60 rounded-2xl bg-gradient-to-br from-pink-50 via-white to-fuchsia-50 dark:from-pink-950/40 dark:via-slate-800 dark:to-fuchsia-950/40 shadow-md hover:shadow-lg hover:scale-[1.02] transition-all duration-200 backdrop-blur-sm">
       <div className="flex items-center gap-2.5 mb-2">
         <div className="p-2.5 rounded-xl bg-gradient-to-br from-pink-500 to-fuchsia-600 shadow-lg shadow-pink-500/30">
           <Instagram size={18} className="text-white" />
@@ -789,7 +795,7 @@ export const TriggerInstagramNode = ({ id, data }) => (
 
 export const TriggerTwilioVoiceNode = ({ id, data }) => (
   <div className="relative group">
-    <div className="px-5 py-4 border-2 border-red-300/80 dark:border-red-600/60 rounded-2xl bg-gradient-to-br from-red-50 via-white to-orange-50 dark:from-red-950/40 dark:via-slate-800 dark:to-orange-950/40 shadow-xl shadow-red-500/15 hover:shadow-2xl hover:shadow-red-500/25 hover:scale-[1.02] transition-all duration-200 backdrop-blur-sm ring-2 ring-red-200/50 dark:ring-red-700/30">
+    <div className="px-5 py-4 border-2 border-red-300/80 dark:border-red-600/60 rounded-2xl bg-gradient-to-br from-red-50 via-white to-orange-50 dark:from-red-950/40 dark:via-slate-800 dark:to-orange-950/40 shadow-md hover:shadow-lg hover:scale-[1.02] transition-all duration-200 backdrop-blur-sm">
       <div className="flex items-center gap-2.5 mb-2">
         <div className="p-2.5 rounded-xl bg-gradient-to-br from-red-500 to-orange-600 shadow-lg shadow-red-500/30">
           <PhoneCall size={18} className="text-white" />
@@ -817,7 +823,7 @@ export const TriggerTwilioVoiceNode = ({ id, data }) => (
 
 export const TriggerFreeSwitchNode = ({ id, data }) => (
   <div className="relative group">
-    <div className="px-5 py-4 border-2 border-teal-300/80 dark:border-teal-600/60 rounded-2xl bg-gradient-to-br from-teal-50 via-white to-cyan-50 dark:from-teal-950/40 dark:via-slate-800 dark:to-cyan-950/40 shadow-xl shadow-teal-500/15 hover:shadow-2xl hover:shadow-teal-500/25 hover:scale-[1.02] transition-all duration-200 backdrop-blur-sm ring-2 ring-teal-200/50 dark:ring-teal-700/30">
+    <div className="px-5 py-4 border-2 border-teal-300/80 dark:border-teal-600/60 rounded-2xl bg-gradient-to-br from-teal-50 via-white to-cyan-50 dark:from-teal-950/40 dark:via-slate-800 dark:to-cyan-950/40 shadow-md hover:shadow-lg hover:scale-[1.02] transition-all duration-200 backdrop-blur-sm">
       <div className="flex items-center gap-2.5 mb-2">
         <div className="p-2.5 rounded-xl bg-gradient-to-br from-teal-500 to-cyan-600 shadow-lg shadow-teal-500/30">
           <Server size={18} className="text-white" />
@@ -847,7 +853,7 @@ export const TriggerFreeSwitchNode = ({ id, data }) => (
 
 export const ForEachLoopNode = ({ id, data }) => (
   <div className="relative group">
-    <div className="px-4 py-3 border border-teal-200/80 dark:border-teal-700/60 rounded-2xl bg-gradient-to-br from-white to-teal-50 dark:from-slate-800 dark:to-teal-950/30 shadow-lg shadow-teal-500/10 hover:shadow-xl hover:shadow-teal-500/20 hover:scale-[1.02] transition-all duration-200 backdrop-blur-sm min-w-[160px]">
+    <div className="px-4 py-3 border border-teal-200/80 dark:border-teal-700/60 rounded-2xl bg-gradient-to-br from-white to-teal-50 dark:from-slate-800 dark:to-teal-950/30 shadow-lg hover:shadow-xl hover:scale-[1.02] transition-all duration-200 backdrop-blur-sm min-w-[160px]">
       <Handle type="target" position={Position.Top} className="w-3 h-3 !bg-gradient-to-br !from-teal-400 !to-cyan-500 border-2 border-white dark:border-slate-800 shadow-md" />
       <div className="flex items-center gap-2.5 mb-2">
         <div className="p-2 rounded-xl bg-gradient-to-br from-teal-500 to-cyan-600 shadow-md shadow-teal-500/30">
@@ -893,7 +899,7 @@ export const ForEachLoopNode = ({ id, data }) => (
 
 export const WhileLoopNode = ({ id, data }) => (
   <div className="relative group">
-    <div className="px-4 py-3 border border-violet-200/80 dark:border-violet-700/60 rounded-2xl bg-gradient-to-br from-white to-violet-50 dark:from-slate-800 dark:to-violet-950/30 shadow-lg shadow-violet-500/10 hover:shadow-xl hover:shadow-violet-500/20 hover:scale-[1.02] transition-all duration-200 backdrop-blur-sm min-w-[160px]">
+    <div className="px-4 py-3 border border-violet-200/80 dark:border-violet-700/60 rounded-2xl bg-gradient-to-br from-white to-violet-50 dark:from-slate-800 dark:to-violet-950/30 shadow-lg hover:shadow-xl hover:scale-[1.02] transition-all duration-200 backdrop-blur-sm min-w-[160px]">
       <Handle type="target" position={Position.Top} className="w-3 h-3 !bg-gradient-to-br !from-violet-400 !to-purple-500 border-2 border-white dark:border-slate-800 shadow-md" />
       <div className="flex items-center gap-2.5 mb-2">
         <div className="p-2 rounded-xl bg-gradient-to-br from-violet-500 to-purple-600 shadow-md shadow-violet-500/30">

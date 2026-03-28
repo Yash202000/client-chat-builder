@@ -10,7 +10,6 @@ const TeamPage = () => {
     <div className="space-y-6 p-6 animate-fade-in" dir={isRTL ? 'rtl' : 'ltr'}>
       <div className={`flex items-center gap-4 ${isRTL ? 'flex-row-reverse' : ''}`}>
         <div className="relative group">
-          <div className="absolute inset-0 bg-gradient-to-br from-blue-500 to-cyan-600 rounded-2xl blur-lg opacity-40 group-hover:opacity-60 transition-all" />
           <div className="relative p-4 rounded-2xl bg-gradient-to-br from-blue-500 to-cyan-600 shadow-xl shadow-blue-500/25">
             <Users className="h-8 w-8 text-white" />
           </div>

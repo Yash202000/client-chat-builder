@@ -56,6 +56,7 @@ export const AgentBuilderContext = createContext(null);
 
 export const AgentBuilder = ({ agent }: AgentBuilderProps) => {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes(agent.name));
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
   const [reactFlowInstance, setReactFlowInstance] = useState(null);
@@ -404,8 +405,17 @@ export const AgentBuilder = ({ agent }: AgentBuilderProps) => {
   }, []);
 
   const onNodeClick = useCallback((_, node) => {
+    if (node.type === 'chat_message') {
+      navigate(`/dashboard/designer?agentId=${agent.id}`);
+      return;
+    }
+    if (node.type === 'workflow') {
+      const workflowId = node.id.split('-')[1];
+      navigate(`/dashboard/workflows/${workflowId}`);
+      return;
+    }
     setSelectedNode(node);
-  }, []);
+  }, [navigate, agent.id]);
 
   const onPaneClick = useCallback(() => setSelectedNode(null), []);
 
@@ -453,6 +463,7 @@ export const AgentBuilder = ({ agent }: AgentBuilderProps) => {
               onPaneClick={onPaneClick}
               nodeTypes={nodeTypes}
               fitView
+              fitViewOptions={{ maxZoom: 0.75, padding: 0.3 }}
               defaultEdgeOptions={{
                 type: 'smoothstep',
                 animated: true,

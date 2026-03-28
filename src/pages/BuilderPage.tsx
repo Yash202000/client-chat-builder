@@ -8,7 +8,7 @@ import { AgentBuilder } from "@/components/AgentBuilder";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Agent } from "@/types";
 import { toast } from "@/hooks/use-toast";
-import { History, PlusCircle, Workflow } from "lucide-react";
+import { History, PlusCircle, Workflow, Paintbrush } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Comments } from "@/components/Comments";
@@ -149,6 +149,15 @@ const BuilderPage = () => {
           </div>
         </div>
         <div className={`flex gap-2`}>
+          {agentId && (
+            <Button
+              onClick={() => navigate(`/dashboard/designer?agentId=${agentId}`)}
+              className="bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-700 hover:to-purple-700 text-white shadow-md shadow-violet-500/25 hover:shadow-violet-500/40 transition-all duration-200"
+            >
+              <Paintbrush className={`h-4 w-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
+              {t('builder.design')}
+            </Button>
+          )}
           {agentId && agent && (
             <Button
               variant="outline"

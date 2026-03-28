@@ -461,7 +461,6 @@ export const TeamManagement = () => {
                 </h3>
               </div>
               <div className="relative">
-                <div className="absolute inset-0 bg-gradient-to-br from-blue-600 to-cyan-600 rounded-xl blur-md opacity-40" />
                 <div className="relative h-12 w-12 rounded-xl bg-gradient-to-br from-blue-600 to-cyan-600 flex items-center justify-center shadow-lg shadow-blue-500/30">
                   <Users className="h-6 w-6 text-white" />
                 </div>
@@ -480,7 +479,6 @@ export const TeamManagement = () => {
                 </h3>
               </div>
               <div className="relative">
-                <div className="absolute inset-0 bg-gradient-to-br from-purple-600 to-pink-600 rounded-xl blur-md opacity-40" />
                 <div className="relative h-12 w-12 rounded-xl bg-gradient-to-br from-purple-600 to-pink-600 flex items-center justify-center shadow-lg shadow-purple-500/30">
                   <Users className="h-6 w-6 text-white" />
                 </div>
@@ -499,7 +497,6 @@ export const TeamManagement = () => {
                 </h3>
               </div>
               <div className="relative">
-                <div className="absolute inset-0 bg-gradient-to-br from-amber-600 to-orange-600 rounded-xl blur-md opacity-40" />
                 <div className="relative h-12 w-12 rounded-xl bg-gradient-to-br from-amber-600 to-orange-600 flex items-center justify-center shadow-lg shadow-amber-500/30">
                   <Shield className="h-6 w-6 text-white" />
                 </div>
@@ -823,7 +820,6 @@ export const TeamManagement = () => {
                         <div className={`flex items-center justify-between ${isRTL ? 'flex-row-reverse' : ''}`}>
                           <CardTitle className={`dark:text-white flex items-center gap-3 ${isRTL ? 'flex-row-reverse' : ''}`}>
                             <div className="relative">
-                              <div className="absolute inset-0 bg-gradient-to-br from-purple-600 to-pink-600 rounded-xl blur-md opacity-40" />
                               <div className="relative h-10 w-10 rounded-xl bg-gradient-to-br from-purple-600 to-pink-600 flex items-center justify-center shadow-lg shadow-purple-500/30">
                                 <Users className="h-5 w-5 text-white" />
                               </div>
@@ -957,7 +953,6 @@ export const TeamManagement = () => {
                       <CardHeader className={`flex flex-row items-start justify-between border-b border-slate-200/80 dark:border-slate-700/60 bg-gradient-to-r from-amber-50/50 to-orange-50/50 dark:from-amber-900/20 dark:to-orange-900/20 rounded-t-2xl ${isRTL ? 'flex-row-reverse' : ''}`}>
                         <div className={`flex items-start gap-3 flex-1 ${isRTL ? 'flex-row-reverse' : ''}`}>
                           <div className="relative flex-shrink-0">
-                            <div className="absolute inset-0 bg-gradient-to-br from-amber-500 to-orange-600 rounded-xl blur-md opacity-40" />
                             <div className="relative h-10 w-10 rounded-xl bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center shadow-lg shadow-amber-500/30">
                               <Shield className="h-5 w-5 text-white" />
                             </div>

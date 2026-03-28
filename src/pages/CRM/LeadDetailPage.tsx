@@ -624,7 +624,7 @@ export default function LeadDetailPage() {
                     }}
                     className={cn(
                       "flex flex-col items-center gap-1.5 transition-all group flex-1",
-                      isActive ? "scale-105" : "hover:scale-102"
+                      isActive ? "" : ""
                     )}
                   >
                     <div

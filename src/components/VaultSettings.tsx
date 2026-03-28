@@ -7,9 +7,11 @@ import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Trash2, Edit, PlusCircle, Copy, Shield, Loader2, Calendar, Key, Check, Vault } from "lucide-react";
+import { Trash2, Edit, PlusCircle, Copy, Shield, Loader2, Calendar, Key, Check, Vault, Info, Lock } from "lucide-react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { useI18n } from '@/hooks/useI18n';
+import { useSystemConfig } from '@/hooks/useSystemConfig';
 
 // Updated type to match the new backend schema
 interface Credential {
@@ -38,6 +40,8 @@ export const VaultSettings = () => {
     credentials: "",
   });
   const { authFetch } = useAuth();
+  const { data: systemConfig } = useSystemConfig();
+  const isManaged = systemConfig?.managed_credentials || false;
 
   const { data: credentials, isLoading, isError } = useQuery<Credential[]>({ 
     queryKey: ['credentials'], 
@@ -149,7 +153,6 @@ export const VaultSettings = () => {
     <div className="flex items-center justify-center py-16">
       <div className="flex flex-col items-center gap-4">
         <div className="relative">
-          <div className="absolute inset-0 bg-gradient-to-br from-violet-500 to-purple-600 rounded-full blur-xl opacity-30 animate-pulse" />
           <div className="relative w-16 h-16 bg-gradient-to-br from-violet-500 to-purple-600 rounded-full flex items-center justify-center shadow-xl shadow-violet-500/25">
             <Loader2 className="h-8 w-8 text-white animate-spin" />
           </div>
@@ -161,7 +164,6 @@ export const VaultSettings = () => {
   if (isError) return (
     <div className="flex flex-col items-center justify-center py-16">
       <div className="relative mb-4">
-        <div className="absolute inset-0 bg-gradient-to-br from-red-500 to-rose-600 rounded-full blur-xl opacity-30" />
         <div className="relative w-16 h-16 bg-gradient-to-br from-red-500 to-rose-600 rounded-full flex items-center justify-center shadow-xl shadow-red-500/25">
           <Shield className="h-8 w-8 text-white" />
         </div>
@@ -245,11 +247,10 @@ export const VaultSettings = () => {
   );
 
   return (
-    <div className="w-full max-w-7xl mx-auto" dir={isRTL ? 'rtl' : 'ltr'}>
+    <div className="w-full" dir={isRTL ? 'rtl' : 'ltr'}>
       <div className={`flex flex-col sm:flex-row items-start sm:items-center justify-between mb-8 gap-4 ${isRTL ? 'sm:flex-row-reverse' : ''}`}>
         <div className={`flex items-center gap-4 ${isRTL ? 'flex-row-reverse' : ''}`}>
           <div className="relative group">
-            <div className="absolute inset-0 bg-gradient-to-br from-violet-500 to-purple-600 rounded-2xl blur-lg opacity-40 group-hover:opacity-60 transition-all" />
             <div className="relative p-4 rounded-2xl bg-gradient-to-br from-violet-500 to-purple-600 shadow-xl shadow-violet-500/25">
               <Vault className="h-8 w-8 text-white" />
             </div>
@@ -261,10 +262,34 @@ export const VaultSettings = () => {
             <p className="text-gray-600 dark:text-gray-400">{t('vault.subtitle')}</p>
           </div>
         </div>
-        <Button onClick={handleOpenCreate} className="rounded-xl bg-gradient-to-r from-violet-500 to-purple-600 hover:from-violet-600 hover:to-purple-700 text-white shadow-lg shadow-violet-500/25 hover:shadow-xl hover:shadow-violet-500/30 transition-all">
-          <PlusCircle className={`${isRTL ? 'ml-2' : 'mr-2'} h-4 w-4`} /> {t('vault.addNewKey')}
+        <Button
+          onClick={handleOpenCreate}
+          disabled={isManaged}
+          className="rounded-xl bg-gradient-to-r from-violet-500 to-purple-600 hover:from-violet-600 hover:to-purple-700 text-white shadow-lg shadow-violet-500/25 hover:shadow-xl hover:shadow-violet-500/30 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          <PlusCircle className={`${isRTL ? 'ml-2' : 'mr-2'} h-4 w-4`} />
+          {isManaged ? (
+            <>
+              <Lock className={`${isRTL ? 'ml-2' : 'mr-2'} h-4 w-4`} />
+              {t('vault.addNewKey')} ({t('vault.locked')})
+            </>
+          ) : (
+            t('vault.addNewKey')
+          )}
         </Button>
       </div>
+
+      {isManaged && (
+        <Alert className="mb-6 border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-900/20">
+          <Info className="h-4 w-4 text-amber-600 dark:text-amber-400" />
+          <AlertTitle className="text-amber-800 dark:text-amber-300">
+            {t('vault.managedMode') || 'System-Managed Credentials'}
+          </AlertTitle>
+          <AlertDescription className="text-amber-700 dark:text-amber-400">
+            {t('vault.managedModeDesc') || 'API credentials are configured at the system level by your administrator. Contact your system administrator to update credentials.'}
+          </AlertDescription>
+        </Alert>
+      )}
 
       {credentials && credentials.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -273,7 +298,6 @@ export const VaultSettings = () => {
               <CardHeader className="border-b border-slate-200/80 dark:border-slate-700/60 bg-gradient-to-r from-slate-50 to-slate-100/80 dark:from-slate-800 dark:to-slate-900/80">
                 <div className={`flex items-center gap-3 ${isRTL ? 'flex-row-reverse' : ''}`}>
                   <div className="relative">
-                    <div className="absolute inset-0 bg-gradient-to-br from-violet-500 to-purple-600 rounded-xl blur-md opacity-30 group-hover:opacity-50 transition-all" />
                     <div className="relative w-12 h-12 bg-gradient-to-br from-violet-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg shadow-violet-500/25">
                       <Key className="w-6 h-6 text-white" />
                     </div>
@@ -297,12 +321,23 @@ export const VaultSettings = () => {
                 </div>
               </CardContent>
               <CardFooter className={`flex ${isRTL ? 'flex-row-reverse justify-start' : 'justify-end'} gap-2 border-t border-slate-200/80 dark:border-slate-700/60 pt-4 bg-slate-50/50 dark:bg-slate-900/30`}>
-                <Button variant="outline" size="sm" onClick={() => handleOpenEdit(credential)} className="rounded-lg dark:border-slate-600 dark:text-white dark:hover:bg-slate-700 hover:border-violet-300 hover:bg-violet-50 dark:hover:border-violet-700 dark:hover:bg-violet-900/30 transition-colors">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleOpenEdit(credential)}
+                  disabled={isManaged}
+                  className="rounded-lg dark:border-slate-600 dark:text-white dark:hover:bg-slate-700 hover:border-violet-300 hover:bg-violet-50 dark:hover:border-violet-700 dark:hover:bg-violet-900/30 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
                   <Edit className={`h-4 w-4 ${isRTL ? 'ml-1' : 'mr-1'}`} /> {t('vault.edit')}
                 </Button>
                 <AlertDialog>
                   <AlertDialogTrigger asChild>
-                    <Button variant="ghost" size="sm" className="rounded-lg hover:bg-red-100 dark:hover:bg-red-900/30 hover:text-red-600 dark:hover:text-red-400 transition-colors">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      disabled={isManaged}
+                      className="rounded-lg hover:bg-red-100 dark:hover:bg-red-900/30 hover:text-red-600 dark:hover:text-red-400 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
                       <Trash2 className={`h-4 w-4 ${isRTL ? 'ml-1' : 'mr-1'}`} /> {t('vault.delete')}
                     </Button>
                   </AlertDialogTrigger>
@@ -334,7 +369,6 @@ export const VaultSettings = () => {
       ) : (
         <div className="flex flex-col items-center justify-center py-16 border-2 border-dashed border-slate-300 dark:border-slate-700 rounded-2xl bg-slate-50/50 dark:bg-slate-900/30">
           <div className="relative mb-6">
-            <div className="absolute inset-0 bg-gradient-to-br from-violet-500 to-purple-600 rounded-full blur-xl opacity-30" />
             <div className="relative w-24 h-24 bg-gradient-to-br from-violet-500 to-purple-600 rounded-full flex items-center justify-center shadow-xl shadow-violet-500/25">
               <Vault className="h-12 w-12 text-white" />
             </div>

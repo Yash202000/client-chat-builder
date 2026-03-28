@@ -241,6 +241,11 @@ export interface SubscriptionPlan {
   currency: string;
   features?: string;
   is_active: boolean;
+  razorpay_plan_id?: string;
+  default_user_limit?: number;
+  trial_days?: number;
+  description?: string;
+  billing_interval?: string;
   created_at: string;
   updated_at: string;
 }

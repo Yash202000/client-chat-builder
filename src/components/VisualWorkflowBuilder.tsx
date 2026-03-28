@@ -18,7 +18,7 @@ import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from '@/componen
 import { ImperativePanelHandle } from 'react-resizable-panels';
 
 import Sidebar from './Sidebar';
-import PropertiesPanel from './PropertiesPanel';
+import WorkflowAISidebar, { WorkflowAISidebarHandle } from './WorkflowAISidebar';
 import { WorkflowDetailsDialog } from './WorkflowDetailsDialog';
 import { WorkflowSettings } from './WorkflowSettings';
 import SaveAsTemplateModal from './SaveAsTemplateModal';
@@ -33,7 +33,6 @@ import {
   ForEachLoopNode, WhileLoopNode
 } from './CustomNodes';
 import { useAuth } from "@/hooks/useAuth";
-import { Comments } from './Comments';
 import { useI18n } from '@/hooks/useI18n';
 import { WorkflowBuilderContext } from './workflow/WorkflowBuilderContext';
 
@@ -57,6 +56,20 @@ const VisualWorkflowBuilder = () => {
   const navigate = useNavigate();
   const reactFlowWrapper = useRef(null);
   const { authFetch } = useAuth();
+
+  // AI Sidebar ref
+  const sidebarRef = useRef<WorkflowAISidebarHandle>(null);
+  const [highlightedNodeIds, setHighlightedNodeIds] = useState<Set<string>>(new Set());
+
+  // Nodes with AI-highlight class applied temporarily
+  const displayNodes = useMemo(
+    () => nodes.map((n) =>
+      highlightedNodeIds.has(n.id)
+        ? { ...n, className: (n.className ? n.className + ' ' : '') + 'ring-2 ring-green-400 ring-offset-2' }
+        : n
+    ),
+    [nodes, highlightedNodeIds]
+  );
 
   // Properties Panel resize state
   const propertiesPanelRef = useRef<ImperativePanelHandle>(null);
@@ -316,14 +329,40 @@ const VisualWorkflowBuilder = () => {
     if (typeof type === 'undefined' || !type) return;
 
     const position = reactFlowInstance.screenToFlowPosition({ x: event.clientX, y: event.clientY });
+    const newNodeId = `${type}-${+new Date()}`;
     const newNode = {
-      id: `${type}-${+new Date()}`,
+      id: newNodeId,
       type,
       position,
-      data
+      data,
+      style: { opacity: 0 }
     };
 
     setNodes((nds) => nds.concat(newNode));
+
+    // Start animation after a brief delay to ensure position is set
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        setNodes((nds) =>
+          nds.map((node) =>
+            node.id === newNodeId
+              ? { ...node, className: 'workflow-node-enter', style: {} }
+              : node
+          )
+        );
+      });
+    });
+
+    // Remove animation class after animation completes (800ms)
+    setTimeout(() => {
+      setNodes((nds) =>
+        nds.map((node) =>
+          node.id === newNodeId
+            ? { ...node, className: '' }
+            : node
+        )
+      );
+    }, 800);
   }, [reactFlowInstance, setNodes]);
 
   // Estimated node dimensions for collision detection
@@ -453,11 +492,36 @@ const VisualWorkflowBuilder = () => {
       id: newNodeId,
       type: nodeType,
       position,
-      data: nodeData.label ? nodeData : { ...nodeData, label: `${nodeType} node` }
+      data: nodeData.label ? nodeData : { ...nodeData, label: `${nodeType} node` },
+      style: { opacity: 0 }
     };
 
-    // Add the new node
+    // Add the new node (invisible first)
     setNodes((nds) => [...nds, newNode]);
+
+    // Start animation after a brief delay to ensure position is set
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        setNodes((nds) =>
+          nds.map((node) =>
+            node.id === newNodeId
+              ? { ...node, className: 'workflow-node-enter', style: {} }
+              : node
+          )
+        );
+      });
+    });
+
+    // Remove animation class after animation completes (800ms)
+    setTimeout(() => {
+      setNodes((nds) =>
+        nds.map((node) =>
+          node.id === newNodeId
+            ? { ...node, className: '' }
+            : node
+        )
+      );
+    }, 800);
 
     // Create edge connecting source to new node
     const newEdge = {
@@ -478,6 +542,7 @@ const VisualWorkflowBuilder = () => {
   }, [nodes, setNodes, setEdges, getNodeDimensions, findFreePosition]);
   const onNodeClick = useCallback((_, node) => {
     setSelectedNode(node);
+    sidebarRef.current?.switchToProperties();
     // Auto-expand properties panel if collapsed
     if (isPropertiesPanelCollapsed && propertiesPanelRef.current) {
       propertiesPanelRef.current.expand();
@@ -485,7 +550,10 @@ const VisualWorkflowBuilder = () => {
       localStorage.setItem('workflowBuilder.propertiesPanel.collapsed', 'false');
     }
   }, [isPropertiesPanelCollapsed]);
-  const onPaneClick = useCallback(() => setSelectedNode(null), []);
+  const onPaneClick = useCallback(() => {
+    setSelectedNode(null);
+    sidebarRef.current?.switchToChat();
+  }, []);
   const deleteNode = useCallback(() => {
     if (selectedNode) {
       setNodes((nds) => nds.filter((node) => node.id !== selectedNode.id));
@@ -610,7 +678,7 @@ const VisualWorkflowBuilder = () => {
               <ResizablePanel defaultSize={100 - getSavedPanelSize()} minSize={50}>
                 <div className="h-full workflow-canvas" ref={reactFlowWrapper}>
                   <ReactFlow
-                    nodes={nodes}
+                    nodes={displayNodes}
                     edges={edges}
                     onNodesChange={onNodesChange}
                     onEdgesChange={onEdgesChange}
@@ -621,6 +689,13 @@ const VisualWorkflowBuilder = () => {
                     onNodeClick={onNodeClick}
                     onPaneClick={onPaneClick}
                     fitView
+                    minZoom={0.1}
+                    maxZoom={5}
+                    fitViewOptions={{
+                      padding: 0.1,
+                      maxZoom: 5,
+                      minZoom: 0.5
+                    }}
                     nodeTypes={nodeTypes}
                     deleteKeyCode={['Backspace', 'Delete']}
                     defaultEdgeOptions={{
@@ -630,7 +705,7 @@ const VisualWorkflowBuilder = () => {
                     }}
                     className="bg-gradient-to-br from-slate-50 via-white to-slate-100 dark:from-slate-900 dark:via-slate-900 dark:to-slate-800"
                   >
-                    <Controls className="bg-white/90 dark:bg-slate-800/90 backdrop-blur-sm rounded-xl shadow-lg border border-slate-200 dark:border-slate-700 overflow-hidden [&_button]:dark:text-white [&_button]:dark:hover:bg-slate-700 [&_button]:transition-colors" />
+                    <Controls className="bg-white/90 dark:bg-slate-800/90 backdrop-blur-sm rounded-xl shadow-lg border border-slate-200 dark:border-slate-700 overflow-hidden [&_button]:text-slate-700 [&_button]:dark:text-white [&_button]:hover:bg-slate-100 [&_button]:dark:hover:bg-slate-700 [&_button]:transition-colors [&_button_svg]:fill-slate-700 [&_button_svg]:dark:fill-white" />
                     <MiniMap
                       className="bg-white/90 dark:bg-slate-800/90 backdrop-blur-sm rounded-xl shadow-lg border border-slate-200 dark:border-slate-700 overflow-hidden"
                       nodeColor={(node) => {
@@ -669,14 +744,22 @@ const VisualWorkflowBuilder = () => {
                   localStorage.setItem('workflowBuilder.propertiesPanel.collapsed', 'false');
                 }}
               >
-                <div className="h-full border-l border-slate-200/80 dark:border-slate-700 bg-gradient-to-b from-white to-slate-50 dark:from-slate-800 dark:to-slate-900 shadow-xl overflow-hidden flex flex-col">
-                  {/* Panel Content */}
-                  <div className="flex-1 overflow-y-auto scrollbar-thin scrollbar-thumb-slate-200 dark:scrollbar-thumb-slate-700">
-                    <PropertiesPanel selectedNode={selectedNode} nodes={nodes} setNodes={setNodes} deleteNode={deleteNode} workflowId={workflowId} />
-                    {workflow && workflow.id && (
-                      <Comments workflowId={workflow.id} />
-                    )}
-                  </div>
+                <div className="h-full overflow-hidden">
+                  <WorkflowAISidebar
+                    ref={sidebarRef}
+                    selectedNode={selectedNode}
+                    nodes={nodes}
+                    edges={edges}
+                    setNodes={setNodes}
+                    setEdges={setEdges}
+                    deleteNode={deleteNode}
+                    workflowId={workflowId}
+                    workflowDbId={workflow?.id}
+                    onNodesUpdated={(ids) => {
+                      setHighlightedNodeIds(new Set(ids));
+                      setTimeout(() => setHighlightedNodeIds(new Set()), 2000);
+                    }}
+                  />
                 </div>
               </ResizablePanel>
             </ResizablePanelGroup>
