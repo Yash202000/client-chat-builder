@@ -6,7 +6,7 @@ const DesignerPage = () => {
   const agentId = searchParams.get("agentId");
 
   return (
-    <div className="animate-fade-in">
+    <div className="h-[calc(100vh-4rem)] p-5 overflow-hidden">
       <AdvancedChatPreview selectedAgentId={agentId ? parseInt(agentId) : undefined} />
     </div>
   );

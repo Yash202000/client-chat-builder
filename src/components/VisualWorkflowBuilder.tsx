@@ -564,7 +564,16 @@ const VisualWorkflowBuilder = () => {
   }, [selectedNode, setNodes, setEdges, t]);
 
   if (!workflow) {
-    return <div className="text-center p-8 dark:text-white">{t("workflows.editor.loading")}</div>;
+    return (
+      <div className="flex items-center justify-center h-screen bg-background">
+        <div className="flex flex-col items-center gap-3">
+          <div className="h-10 w-10 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center animate-pulse">
+            <WorkflowIcon className="h-5 w-5 text-amber-600 dark:text-amber-400" />
+          </div>
+          <p className="text-sm text-muted-foreground font-mono">{t("workflows.editor.loading")}</p>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -588,40 +597,59 @@ const VisualWorkflowBuilder = () => {
           workflowName={workflow.name || ''}
         />
       )}
-      <div className="dndflow h-screen flex flex-col bg-gradient-to-br from-slate-100 via-slate-50 to-white dark:from-slate-950 dark:via-slate-900 dark:to-slate-900">
-        {/* Modern Toolbar */}
-        <div className="flex-shrink-0 px-6 py-4 border-b border-slate-200/80 dark:border-slate-700 bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm shadow-sm" dir={isRTL ? 'rtl' : 'ltr'}>
-          <div className={`flex items-center gap-4 flex-wrap`}>
-            <Button onClick={() => navigate('/dashboard/workflows')} variant="outline" size="sm" className="border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 transition-all duration-200">
-              <ArrowLeft className={`h-4 w-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
+      <div className="dndflow h-screen flex flex-col bg-background">
+        {/* Toolbar */}
+        <div className="flex-shrink-0 px-4 py-2.5 border-b border-border bg-card" dir={isRTL ? 'rtl' : 'ltr'}>
+          <div className="flex items-center gap-3 flex-wrap">
+            <Button
+              onClick={() => navigate('/dashboard/workflows')}
+              variant="ghost"
+              size="sm"
+              className="h-8 px-2.5 text-xs text-muted-foreground hover:text-foreground gap-1.5"
+            >
+              <ArrowLeft className="h-3.5 w-3.5" />
               {t("workflows.editor.backButton")}
             </Button>
+
+            <div className="w-px h-5 bg-border flex-shrink-0" />
+
             <div className="flex-grow min-w-0">
-              <div className={`flex items-center gap-3`}>
-                <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center flex-shrink-0 shadow-md shadow-blue-500/20">
-                  <WorkflowIcon className="h-5 w-5 text-white" />
+              <div className="flex items-center gap-2.5">
+                <div className="h-8 w-8 rounded-lg bg-amber-500/10 border border-amber-500/20 flex items-center justify-center flex-shrink-0">
+                  <WorkflowIcon className="h-4 w-4 text-amber-600 dark:text-amber-400" />
                 </div>
                 <div className="min-w-0">
-                  <h2 className="text-lg font-bold truncate text-slate-900 dark:text-white">{workflow.name}</h2>
-                  <div className={`flex items-center gap-2`}>
-                    <Badge variant="outline" className="text-xs border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300">{t("workflows.editor.versionBadge", { version: workflow.version })}</Badge>
+                  <h2 className="text-sm font-semibold truncate text-foreground font-mono leading-tight">{workflow.name}</h2>
+                  <div className="flex items-center gap-1.5 mt-0.5">
+                    <Badge variant="outline" className="text-[10px] font-mono border-border text-muted-foreground h-4 px-1.5">{t("workflows.editor.versionBadge", { version: workflow.version })}</Badge>
                     {workflow.is_active && (
-                      <Badge className="bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-0 text-xs flex items-center gap-1">
-                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                      <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-emerald-600 dark:text-emerald-400">
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
                         {t("workflows.editor.activebadge")}
-                      </Badge>
+                      </span>
                     )}
                   </div>
                 </div>
               </div>
             </div>
-            <div className={`flex items-center gap-2`}>
-              <Button onClick={() => setDetailsDialogOpen(true)} variant="outline" size="sm" className="border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 transition-all duration-200">
-                <Edit className={`h-4 w-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
+
+            <div className="flex items-center gap-1.5">
+              <Button
+                onClick={() => setDetailsDialogOpen(true)}
+                variant="outline"
+                size="sm"
+                className="h-8 px-3 text-xs border-border text-muted-foreground hover:text-foreground gap-1.5"
+              >
+                <Edit className="h-3 w-3" />
                 {t("workflows.editor.editDetailsButton")}
               </Button>
-              <Button onClick={() => setShowSettings(true)} variant="outline" size="sm" className="border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 transition-all duration-200">
-                <Settings className={`h-4 w-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
+              <Button
+                onClick={() => setShowSettings(true)}
+                variant="outline"
+                size="sm"
+                className="h-8 px-3 text-xs border-border text-muted-foreground hover:text-foreground gap-1.5"
+              >
+                <Settings className="h-3 w-3" />
                 {t("workflows.editor.settingsButton")}
               </Button>
               {workflow?.id && (
@@ -629,16 +657,16 @@ const VisualWorkflowBuilder = () => {
                   onClick={() => setSaveAsTemplateOpen(true)}
                   variant="outline"
                   size="sm"
-                  className="border-purple-200 dark:border-purple-800 text-purple-600 dark:text-purple-400 hover:bg-purple-50 dark:hover:bg-purple-900/20 transition-all duration-200"
+                  className="h-8 px-3 text-xs border-border text-muted-foreground hover:text-foreground gap-1.5"
                 >
-                  <LayoutTemplate className={`h-4 w-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
+                  <LayoutTemplate className="h-3 w-3" />
                   {t("workflowTemplates.saveAsTemplate")}
                 </Button>
               )}
               <Button
                 onClick={() => saveWorkflow()}
                 size="sm"
-                className="bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white shadow-md shadow-blue-500/25 hover:shadow-blue-500/40 transition-all duration-200"
+                className="h-8 px-4 text-xs bg-amber-500 hover:bg-amber-600 text-white shadow-sm font-medium"
               >
                 {t("workflows.editor.saveButton")}
               </Button>
@@ -648,21 +676,21 @@ const VisualWorkflowBuilder = () => {
 
         {/* Subworkflow Usage Banner */}
         {usedByWorkflows.length > 0 && (
-          <div className="mx-4 mt-2 p-4 bg-gradient-to-r from-violet-50 to-purple-50 dark:from-violet-900/20 dark:to-purple-900/20 border border-violet-200 dark:border-violet-700 rounded-xl flex items-center gap-3 shadow-sm">
-            <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-violet-500 to-purple-500 flex items-center justify-center shadow-md shadow-violet-500/25 flex-shrink-0">
-              <Layers className="h-5 w-5 text-white" />
+          <div className="mx-4 mt-2 p-3 bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800 rounded-lg flex items-center gap-2.5">
+            <div className="h-7 w-7 rounded-lg bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center flex-shrink-0">
+              <Layers className="h-3.5 w-3.5 text-amber-600 dark:text-amber-500" />
             </div>
-            <div className="flex-1">
-              <span className="text-sm font-semibold text-violet-800 dark:text-violet-200">
-                {t("workflows.editor.usedAsSubworkflow") || "This workflow is used as a subworkflow by"}:
+            <div className="flex-1 min-w-0">
+              <span className="text-xs font-semibold text-amber-800 dark:text-amber-200">
+                {t("workflows.editor.usedAsSubworkflow") || "Used as subworkflow by"}:
               </span>
-              <span className="text-sm text-violet-600 dark:text-violet-300 ml-1">
+              <span className="text-xs text-amber-700 dark:text-amber-300 ml-1 truncate">
                 {usedByWorkflows.map(w => w.name).join(', ')}
               </span>
             </div>
-            <div className="flex items-center gap-1 text-amber-600 dark:text-amber-400 flex-shrink-0">
-              <AlertTriangle className="h-4 w-4" />
-              <span className="text-xs font-medium hidden sm:inline">{t("workflows.editor.subworkflowWarning") || "Changes affect parent workflows"}</span>
+            <div className="flex items-center gap-1.5 text-amber-600 dark:text-amber-400 flex-shrink-0">
+              <AlertTriangle className="h-3.5 w-3.5" />
+              <span className="text-[11px] font-medium hidden sm:inline">{t("workflows.editor.subworkflowWarning") || "Changes affect parent workflows"}</span>
             </div>
           </div>
         )}
@@ -703,11 +731,11 @@ const VisualWorkflowBuilder = () => {
                       animated: true,
                       style: { stroke: '#8b5cf6', strokeWidth: 2.5 },
                     }}
-                    className="bg-gradient-to-br from-slate-50 via-white to-slate-100 dark:from-slate-900 dark:via-slate-900 dark:to-slate-800"
+                    className="bg-background"
                   >
-                    <Controls className="bg-white/90 dark:bg-slate-800/90 backdrop-blur-sm rounded-xl shadow-lg border border-slate-200 dark:border-slate-700 overflow-hidden [&_button]:text-slate-700 [&_button]:dark:text-white [&_button]:hover:bg-slate-100 [&_button]:dark:hover:bg-slate-700 [&_button]:transition-colors [&_button_svg]:fill-slate-700 [&_button_svg]:dark:fill-white" />
+                    <Controls className="bg-card border-border rounded-lg shadow-sm overflow-hidden [&_button]:text-foreground [&_button]:hover:bg-muted [&_button]:transition-colors [&_button_svg]:fill-foreground" />
                     <MiniMap
-                      className="bg-white/90 dark:bg-slate-800/90 backdrop-blur-sm rounded-xl shadow-lg border border-slate-200 dark:border-slate-700 overflow-hidden"
+                      className="bg-card border-border rounded-lg shadow-sm overflow-hidden"
                       nodeColor={(node) => {
                         if (node.type === 'start') return '#10b981';
                         if (node.type === 'response') return '#ef4444';
@@ -716,15 +744,14 @@ const VisualWorkflowBuilder = () => {
                         if (node.type === 'condition') return '#f59e0b';
                         return '#8b5cf6';
                       }}
-                      maskColor="rgb(15, 23, 42, 0.6)"
                     />
-                    <Background variant="dots" gap={24} size={1.5} color="#94a3b8" className="dark:opacity-20" />
+                    <Background variant="dots" gap={24} size={1} color="#94a3b8" className="opacity-25" />
                   </ReactFlow>
                 </div>
               </ResizablePanel>
 
               {/* Resize Handle */}
-              <ResizableHandle withHandle className="bg-slate-200 dark:bg-slate-700 hover:bg-blue-500 dark:hover:bg-blue-600 transition-colors" />
+              <ResizableHandle withHandle className="bg-border hover:bg-amber-400 dark:hover:bg-amber-500 transition-colors" />
 
               {/* Properties Panel */}
               <ResizablePanel
@@ -769,7 +796,7 @@ const VisualWorkflowBuilder = () => {
               variant="ghost"
               size="icon"
               onClick={togglePropertiesPanel}
-              className={`absolute top-4 z-20 h-8 w-8 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-md hover:bg-slate-100 dark:hover:bg-slate-700 ${isRTL ? 'left-0 rounded-r-md rounded-l-none' : 'right-0 rounded-l-md rounded-r-none'}`}
+              className={`absolute top-4 z-20 h-8 w-8 bg-card border border-border shadow-sm hover:bg-muted transition-colors ${isRTL ? 'left-0 rounded-r-md rounded-l-none' : 'right-0 rounded-l-md rounded-r-none'}`}
               title={isPropertiesPanelCollapsed ? t("workflows.editor.properties.expand") : t("workflows.editor.properties.collapse")}
             >
               {isRTL

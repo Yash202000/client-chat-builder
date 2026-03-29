@@ -15,6 +15,7 @@ import { useI18n } from "@/hooks/useI18n";
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { solarizedlight } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import { Permission } from "@/components/Permission";
+import { motion, AnimatePresence } from 'framer-motion';
 
 const KnowledgeBaseManagementPage = () => {
   const queryClient = useQueryClient();
@@ -269,264 +270,241 @@ const KnowledgeBaseManagementPage = () => {
   );
 
   return (
-    <div className="min-h-full bg-slate-50 dark:bg-slate-950" dir={isRTL ? 'rtl' : 'ltr'}>
+    <div className="p-6" dir={isRTL ? 'rtl' : 'ltr'}>
 
-      {/* Header bar */}
-      <div className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800">
-        <div className="px-6 py-6">
-          <div className="flex items-center justify-between gap-4">
-            <div className="flex items-center gap-4">
-              <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-indigo-500 via-blue-500 to-violet-600 flex items-center justify-center flex-shrink-0 shadow-lg shadow-indigo-500/25">
-                <BookOpen className="h-6 w-6 text-white" />
-              </div>
-              <div>
-                <h1 className="text-2xl font-bold bg-gradient-to-r from-indigo-600 via-blue-600 to-violet-600 bg-clip-text text-transparent leading-tight">
-                  {t("knowledgeBase.title")}
-                </h1>
-                <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">{t("knowledgeBase.subtitle") || "Upload documents and create structured content for AI agents"}</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-2">
-              <Permission permission="knowledgebase:create">
-                <Dialog open={isImportUrlDialogOpen} onOpenChange={setIsImportUrlDialogOpen}>
-                  <DialogTrigger asChild>
-                    <Button variant="outline" className="h-9 px-4 text-sm border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800">
-                      <LinkIcon className="h-4 w-4 mr-1.5" />
-                      {t("knowledgeBase.importFromUrl")}
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent className="dark:bg-slate-900 dark:border-slate-800 rounded-2xl sm:rounded-2xl">
-                    <DialogHeader className="pb-4 border-b border-slate-200 dark:border-slate-700">
-                      <DialogTitle className="flex items-center gap-3 text-xl">
-                        <div className="p-2.5 rounded-xl bg-gradient-to-br from-indigo-500 to-blue-600 shadow-md shadow-indigo-500/25">
-                          <LinkIcon className="h-5 w-5 text-white" />
-                        </div>
-                        <span className="font-bold text-slate-900 dark:text-white">{t("knowledgeBase.importDialog.title")}</span>
-                      </DialogTitle>
-                      <DialogDescription className="mt-1">{t("knowledgeBase.importDialog.description")}</DialogDescription>
-                    </DialogHeader>
-                    <ImportUrlForm onSubmit={handleImportUrl} knowledgeBases={knowledgeBases || []} />
-                  </DialogContent>
-                </Dialog>
-              </Permission>
-              <Permission permission="knowledgebase:create">
-                <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-                  <DialogTrigger asChild>
-                    <Button className="h-9 px-4 text-sm bg-gradient-to-r from-indigo-500 to-blue-600 hover:from-indigo-600 hover:to-blue-700 text-white shadow-md shadow-indigo-500/30">
-                      <Plus className="h-4 w-4 mr-1.5" />
-                      {t("knowledgeBase.createNew")}
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent className="dark:bg-slate-900 dark:border-slate-800 rounded-2xl sm:rounded-2xl">
-                    <DialogHeader className="pb-4 border-b border-slate-200 dark:border-slate-700">
-                      <DialogTitle className="flex items-center gap-3 text-xl">
-                        <div className="p-2.5 rounded-xl bg-gradient-to-br from-indigo-500 to-blue-600 shadow-md shadow-indigo-500/25">
-                          <Plus className="h-5 w-5 text-white" />
-                        </div>
-                        <span className="font-bold text-slate-900 dark:text-white">{t("knowledgeBase.createDialog.title")}</span>
-                      </DialogTitle>
-                      <DialogDescription className="mt-1">{t("knowledgeBase.createDialog.description")}</DialogDescription>
-                    </DialogHeader>
-                    <KnowledgeBaseForm onSubmit={handleCreate} />
-                  </DialogContent>
-                </Dialog>
-              </Permission>
-            </div>
+      {/* Top bar: stats pills + search + action buttons */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+        {/* Stats pills */}
+        <div className="flex items-center gap-2 flex-wrap">
+          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20">
+            <BookOpen className="h-3 w-3" />
+            {knowledgeBases?.length || 0} total
+          </span>
+          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+            <HardDrive className="h-3 w-3" />
+            {knowledgeBases?.filter(kb => kb.type === 'local').length || 0} {t("knowledgeBase.managePage.local")}
+          </span>
+          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-violet-500/10 text-violet-600 dark:text-violet-400 border border-violet-500/20">
+            <Cloud className="h-3 w-3" />
+            {knowledgeBases?.filter(kb => kb.type === 'remote').length || 0} {t("knowledgeBase.managePage.remote")}
+          </span>
+        </div>
+
+        {/* Search + action buttons */}
+        <div className="flex items-center gap-2 flex-wrap">
+          <div className="relative">
+            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
+            <Input
+              placeholder="Search knowledge bases..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-8 h-8 w-52 text-xs"
+            />
           </div>
+          <Permission permission="knowledgebase:create">
+            <Dialog open={isImportUrlDialogOpen} onOpenChange={setIsImportUrlDialogOpen}>
+              <DialogTrigger asChild>
+                <Button variant="outline" size="sm" className="h-8 px-3 text-xs">
+                  <LinkIcon className="h-3.5 w-3.5 mr-1.5" />
+                  {t("knowledgeBase.importFromUrl")}
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="dark:bg-slate-900 dark:border-slate-800 rounded-2xl sm:rounded-2xl">
+                <DialogHeader className="pb-4 border-b border-slate-200 dark:border-slate-700">
+                  <DialogTitle className="flex items-center gap-3 text-xl">
+                    <div className="p-2.5 rounded-xl bg-gradient-to-br from-indigo-500 to-blue-600 shadow-md shadow-indigo-500/25">
+                      <LinkIcon className="h-5 w-5 text-white" />
+                    </div>
+                    <span className="font-bold text-slate-900 dark:text-white">{t("knowledgeBase.importDialog.title")}</span>
+                  </DialogTitle>
+                  <DialogDescription className="mt-1">{t("knowledgeBase.importDialog.description")}</DialogDescription>
+                </DialogHeader>
+                <ImportUrlForm onSubmit={handleImportUrl} knowledgeBases={knowledgeBases || []} />
+              </DialogContent>
+            </Dialog>
+          </Permission>
+          <Permission permission="knowledgebase:create">
+            <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+              <DialogTrigger asChild>
+                <Button size="sm" className="h-8 px-3 text-xs">
+                  <Plus className="h-3.5 w-3.5 mr-1.5" />
+                  {t("knowledgeBase.createNew")}
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="dark:bg-slate-900 dark:border-slate-800 rounded-2xl sm:rounded-2xl">
+                <DialogHeader className="pb-4 border-b border-slate-200 dark:border-slate-700">
+                  <DialogTitle className="flex items-center gap-3 text-xl">
+                    <div className="p-2.5 rounded-xl bg-gradient-to-br from-indigo-500 to-blue-600 shadow-md shadow-indigo-500/25">
+                      <Plus className="h-5 w-5 text-white" />
+                    </div>
+                    <span className="font-bold text-slate-900 dark:text-white">{t("knowledgeBase.createDialog.title")}</span>
+                  </DialogTitle>
+                  <DialogDescription className="mt-1">{t("knowledgeBase.createDialog.description")}</DialogDescription>
+                </DialogHeader>
+                <KnowledgeBaseForm onSubmit={handleCreate} />
+              </DialogContent>
+            </Dialog>
+          </Permission>
         </div>
       </div>
 
-      <div className="px-6 py-6 space-y-6">
-
-        {/* Stats row */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {[
-            { label: t("knowledgeBase.managePage.totalKnowledgeBases"), value: knowledgeBases?.length || 0, icon: BookOpen, gradient: 'from-indigo-500 to-blue-600', shadow: 'shadow-indigo-500/20', accent: 'bg-indigo-500', dot: 'text-slate-400' },
-            { label: t("knowledgeBase.managePage.local"), value: knowledgeBases?.filter(kb => kb.type === 'local').length || 0, icon: HardDrive, gradient: 'from-emerald-500 to-teal-600', shadow: 'shadow-emerald-500/20', accent: 'bg-emerald-500', dot: 'text-emerald-500' },
-            { label: t("knowledgeBase.managePage.remote"), value: knowledgeBases?.filter(kb => kb.type === 'remote').length || 0, icon: Cloud, gradient: 'from-purple-500 to-violet-600', shadow: 'shadow-purple-500/20', accent: 'bg-purple-500', dot: 'text-purple-500' },
-          ].map(({ label, value, icon: Icon, gradient, shadow, accent, dot }) => (
-            <div key={label} className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-5">
-              <div className="flex items-center justify-between mb-4">
-                <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">{label}</span>
-                <div className={`h-9 w-9 rounded-lg bg-gradient-to-br flex items-center justify-center shadow-md ${gradient} ${shadow}`}>
-                  <Icon className="h-4 w-4 text-white" />
-                </div>
-              </div>
-              <p className="text-4xl font-bold text-slate-900 dark:text-white tabular-nums">{value}</p>
-              <div className="flex items-center gap-1.5 mt-2">
-                <span className={`inline-block h-1.5 w-1.5 rounded-full ${accent}`} />
-                <span className="text-xs text-slate-400 dark:text-slate-500">knowledge bases</span>
-              </div>
-            </div>
+      {/* KB card grid */}
+      {isLoading ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <div key={i} className="h-44 rounded-xl bg-muted animate-pulse" />
           ))}
         </div>
-
-        {/* KB List */}
-        <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 overflow-hidden">
-          {/* Toolbar */}
-          <div className="flex items-center justify-between px-5 py-3.5 border-b border-slate-100 dark:border-slate-800">
-            <div className="flex items-center gap-2">
-              <span className="text-sm font-semibold text-slate-800 dark:text-white">{t("knowledgeBase.managePage.yourKnowledgeBases")}</span>
-              {knowledgeBases && knowledgeBases.length > 0 && (
-                <span className="text-xs font-medium px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 tabular-nums">{filteredKbs?.length}</span>
-              )}
-            </div>
-            <div className="relative">
-              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400 pointer-events-none" />
-              <Input
-                placeholder="Search knowledge bases..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-8 h-8 w-52 text-xs bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700"
-              />
-            </div>
+      ) : !filteredKbs || filteredKbs.length === 0 ? (
+        <div className="flex flex-col items-center justify-center py-24 text-center">
+          <div className="h-16 w-16 rounded-2xl bg-muted border border-border flex items-center justify-center mb-4">
+            <BookOpen className="h-7 w-7 text-muted-foreground" />
           </div>
+          <h3 className="text-sm font-semibold text-foreground mb-1">{t("knowledgeBase.managePage.noKnowledgeBasesYet")}</h3>
+          <p className="text-xs text-muted-foreground max-w-xs mb-5">{t("knowledgeBase.managePage.getStartedMessage")}</p>
+          <Button size="sm" onClick={() => setIsCreateDialogOpen(true)}>
+            <Plus className="h-3.5 w-3.5 mr-1.5" />
+            {t("knowledgeBase.managePage.createKnowledgeBase")}
+          </Button>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+          <AnimatePresence>
+            {filteredKbs.map((kb, i) => (
+              <motion.div
+                key={kb.id}
+                initial={{ opacity: 0, y: 16 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: 16 }}
+                transition={{ duration: 0.3, delay: i * 0.045 }}
+                className="rounded-xl border border-border bg-card overflow-hidden flex flex-col group"
+              >
+                {/* Top accent line */}
+                <div className={`h-0.5 bg-gradient-to-r ${kb.type === 'local' ? 'from-indigo-500 to-blue-600' : 'from-violet-500 to-purple-600'}`} />
 
-          {isLoading ? (
-            <div className="flex items-center justify-center py-16">
-              <Loader2 className="h-6 w-6 animate-spin text-slate-400" />
-            </div>
-          ) : filteredKbs && filteredKbs.length > 0 ? (
-            <div className="divide-y divide-slate-100 dark:divide-slate-800">
-              {filteredKbs.map((kb) => (
-                <div key={kb.id} className="flex items-center gap-4 px-5 py-3.5 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors group">
-                  {/* Icon */}
-                  <Link to={`/dashboard/knowledge-base/${kb.id}`} className="flex-shrink-0">
-                    <div className="h-9 w-9 rounded-lg bg-gradient-to-br from-indigo-500 to-blue-600 flex items-center justify-center text-white text-xs font-bold shadow-sm shadow-indigo-500/20">
+                {/* Clickable card body */}
+                <Link to={`/dashboard/knowledge-base/${kb.id}`} className="p-4 flex-1 flex flex-col gap-3 hover:bg-muted/20 transition-colors">
+                  <div className="flex items-start gap-3">
+                    {/* Avatar: 2-letter initials */}
+                    <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-indigo-500 to-blue-600 flex items-center justify-center text-white text-xs font-bold flex-shrink-0 shadow-sm shadow-indigo-500/20">
                       {kb.name.substring(0, 2).toUpperCase()}
                     </div>
-                  </Link>
-
-                  {/* Name + badges */}
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <Link to={`/dashboard/knowledge-base/${kb.id}`} className="text-sm font-semibold text-slate-900 dark:text-white hover:text-indigo-600 dark:hover:text-indigo-400 truncate transition-colors">
-                        {kb.name}
-                      </Link>
-                      <span className={`inline-flex items-center gap-1 text-[10px] font-semibold px-1.5 py-0.5 rounded border ${
-                        kb.type === 'local'
-                          ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400 border-emerald-200 dark:border-emerald-700/50'
-                          : 'bg-purple-50 text-purple-700 dark:bg-purple-500/10 dark:text-purple-400 border-purple-200 dark:border-purple-700/50'
-                      }`}>
-                        {kb.type === 'local' ? <HardDrive className="h-2.5 w-2.5" /> : <Cloud className="h-2.5 w-2.5" />}
-                        {kb.type === 'local' ? t("knowledgeBase.managePage.localBadge") : t("knowledgeBase.managePage.remoteBadge")}
-                      </span>
-                      {kb.chroma_collection_name && (
-                        <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-1.5 py-0.5 rounded bg-blue-50 text-blue-700 dark:bg-blue-500/10 dark:text-blue-400 border border-blue-200 dark:border-blue-700/50">
-                          <Database className="h-2.5 w-2.5" />
-                          Indexed
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-1.5 flex-wrap mb-1">
+                        <span className="text-sm font-semibold text-foreground truncate">{kb.name}</span>
+                        <span className={`inline-flex items-center gap-1 text-[10px] font-semibold px-1.5 py-0.5 rounded border ${
+                          kb.type === 'local'
+                            ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400 border-emerald-200 dark:border-emerald-700/50'
+                            : 'bg-violet-50 text-violet-700 dark:bg-violet-500/10 dark:text-violet-400 border-violet-200 dark:border-violet-700/50'
+                        }`}>
+                          {kb.type === 'local' ? <HardDrive className="h-2.5 w-2.5" /> : <Cloud className="h-2.5 w-2.5" />}
+                          {kb.type === 'local' ? t("knowledgeBase.managePage.localBadge") : t("knowledgeBase.managePage.remoteBadge")}
                         </span>
+                        {kb.chroma_collection_name && (
+                          <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-1.5 py-0.5 rounded bg-blue-50 text-blue-700 dark:bg-blue-500/10 dark:text-blue-400 border border-blue-200 dark:border-blue-700/50">
+                            <Database className="h-2.5 w-2.5" />
+                            Indexed
+                          </span>
+                        )}
+                      </div>
+                      {kb.description && (
+                        <p className="text-xs text-muted-foreground line-clamp-2">{kb.description}</p>
                       )}
                     </div>
-                    {kb.description && (
-                      <p className="text-xs text-slate-400 dark:text-slate-500 truncate mt-0.5">{kb.description}</p>
-                    )}
                   </div>
+                </Link>
 
-                  {/* Actions */}
-                  <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0">
-                    <Dialog open={isPreviewDialogOpen && selectedKb?.id === kb.id} onOpenChange={(isOpen) => { if (!isOpen) setSelectedKb(null); setIsPreviewDialogOpen(isOpen); }}>
+                {/* Card footer — hover-reveal actions */}
+                <div className="px-4 py-2.5 border-t border-border bg-muted/30 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <Dialog open={isPreviewDialogOpen && selectedKb?.id === kb.id} onOpenChange={(isOpen) => { if (!isOpen) setSelectedKb(null); setIsPreviewDialogOpen(isOpen); }}>
+                    <DialogTrigger asChild>
+                      <Button variant="ghost" size="icon" onClick={() => setSelectedKb(kb)} className="h-7 w-7 text-muted-foreground hover:text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-900/20" title="Preview">
+                        <Eye className="h-3.5 w-3.5" />
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent className="sm:max-w-[80vw] max-h-[80vh] overflow-y-auto dark:bg-slate-900 dark:border-slate-800 rounded-2xl sm:rounded-2xl">
+                      <DialogHeader className="pb-4 border-b border-slate-200 dark:border-slate-700">
+                        <DialogTitle className="flex items-center gap-3 text-xl">
+                          <div className="p-2.5 rounded-xl bg-gradient-to-br from-indigo-500 to-blue-600 shadow-md shadow-indigo-500/25">
+                            <Eye className="h-5 w-5 text-white" />
+                          </div>
+                          <span className="font-bold text-slate-900 dark:text-white">{t("knowledgeBase.managePage.previewTitle")} {selectedKb?.name}</span>
+                        </DialogTitle>
+                        <DialogDescription className="mt-1">{t("knowledgeBase.managePage.previewDescription")}</DialogDescription>
+                      </DialogHeader>
+                      {isLoadingPreview ? (
+                        <div className="flex items-center justify-center py-12">
+                          <Loader2 className="h-6 w-6 animate-spin text-slate-400" />
+                        </div>
+                      ) : (
+                        <div className="py-4">
+                          <SyntaxHighlighter language="javascript" style={solarizedlight} customStyle={{ maxHeight: '60vh', overflowY: 'auto', borderRadius: '12px' }}>
+                            {previewContent?.content || ""}
+                          </SyntaxHighlighter>
+                        </div>
+                      )}
+                    </DialogContent>
+                  </Dialog>
+
+                  <Permission permission="knowledgebase:update">
+                    <Dialog open={isGenerateQnADialogOpen && selectedKb?.id === kb.id} onOpenChange={(isOpen) => { if (!isOpen) setSelectedKb(null); setIsGenerateQnADialogOpen(isOpen); }}>
                       <DialogTrigger asChild>
-                        <Button variant="ghost" size="icon" onClick={() => setSelectedKb(kb)} className="h-7 w-7 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-900/20" title="Preview">
-                          <Eye className="h-3.5 w-3.5" />
+                        <Button variant="ghost" size="icon" onClick={() => setSelectedKb(kb)} className="h-7 w-7 text-muted-foreground hover:text-violet-600 hover:bg-violet-50 dark:hover:bg-violet-900/20" title="Generate Q&A">
+                          <Brain className="h-3.5 w-3.5" />
                         </Button>
                       </DialogTrigger>
-                      <DialogContent className="sm:max-w-[80vw] max-h-[80vh] overflow-y-auto dark:bg-slate-900 dark:border-slate-800 rounded-2xl sm:rounded-2xl">
+                      <DialogContent className="dark:bg-slate-900 dark:border-slate-800 rounded-2xl sm:rounded-2xl">
                         <DialogHeader className="pb-4 border-b border-slate-200 dark:border-slate-700">
                           <DialogTitle className="flex items-center gap-3 text-xl">
-                            <div className="p-2.5 rounded-xl bg-gradient-to-br from-indigo-500 to-blue-600 shadow-md shadow-indigo-500/25">
-                              <Eye className="h-5 w-5 text-white" />
+                            <div className="p-2.5 rounded-xl bg-gradient-to-br from-purple-500 to-violet-600 shadow-md shadow-purple-500/25">
+                              <Brain className="h-5 w-5 text-white" />
                             </div>
-                            <span className="font-bold text-slate-900 dark:text-white">{t("knowledgeBase.managePage.previewTitle")} {selectedKb?.name}</span>
+                            <span className="font-bold text-slate-900 dark:text-white">{t("knowledgeBase.managePage.generateQnATitle")} {selectedKb?.name}</span>
                           </DialogTitle>
-                          <DialogDescription className="mt-1">{t("knowledgeBase.managePage.previewDescription")}</DialogDescription>
                         </DialogHeader>
-                        {isLoadingPreview ? (
-                          <div className="flex items-center justify-center py-12">
-                            <Loader2 className="h-6 w-6 animate-spin text-slate-400" />
-                          </div>
-                        ) : (
-                          <div className="py-4">
-                            <SyntaxHighlighter language="javascript" style={solarizedlight} customStyle={{ maxHeight: '60vh', overflowY: 'auto', borderRadius: '12px' }}>
-                              {previewContent?.content || ""}
-                            </SyntaxHighlighter>
-                          </div>
-                        )}
+                        <GenerateQnAForm kb={selectedKb} onSubmit={handleGenerateQnA} />
                       </DialogContent>
                     </Dialog>
+                  </Permission>
 
-                    <Permission permission="knowledgebase:update">
-                      <Dialog open={isGenerateQnADialogOpen && selectedKb?.id === kb.id} onOpenChange={(isOpen) => { if (!isOpen) setSelectedKb(null); setIsGenerateQnADialogOpen(isOpen); }}>
-                        <DialogTrigger asChild>
-                          <Button variant="ghost" size="icon" onClick={() => setSelectedKb(kb)} className="h-7 w-7 text-slate-400 hover:text-purple-600 hover:bg-purple-50 dark:hover:bg-purple-900/20" title="Generate Q&A">
-                            <Brain className="h-3.5 w-3.5" />
-                          </Button>
-                        </DialogTrigger>
-                        <DialogContent className="dark:bg-slate-900 dark:border-slate-800 rounded-2xl sm:rounded-2xl">
-                          <DialogHeader className="pb-4 border-b border-slate-200 dark:border-slate-700">
-                            <DialogTitle className="flex items-center gap-3 text-xl">
-                              <div className="p-2.5 rounded-xl bg-gradient-to-br from-purple-500 to-violet-600 shadow-md shadow-purple-500/25">
-                                <Brain className="h-5 w-5 text-white" />
-                              </div>
-                              <span className="font-bold text-slate-900 dark:text-white">{t("knowledgeBase.managePage.generateQnATitle")} {selectedKb?.name}</span>
-                            </DialogTitle>
-                          </DialogHeader>
-                          <GenerateQnAForm kb={selectedKb} onSubmit={handleGenerateQnA} />
-                        </DialogContent>
-                      </Dialog>
-                    </Permission>
+                  <Permission permission="knowledgebase:update">
+                    <Dialog open={isEditDialogOpen && selectedKb?.id === kb.id} onOpenChange={(isOpen) => { if (!isOpen) setSelectedKb(null); setIsEditDialogOpen(isOpen); }}>
+                      <DialogTrigger asChild>
+                        <Button variant="ghost" size="icon" onClick={() => setSelectedKb(kb)} className="h-7 w-7 text-muted-foreground hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20" title="Edit">
+                          <Edit className="h-3.5 w-3.5" />
+                        </Button>
+                      </DialogTrigger>
+                      <DialogContent className="dark:bg-slate-900 dark:border-slate-800 rounded-2xl sm:rounded-2xl">
+                        <DialogHeader className="pb-4 border-b border-slate-200 dark:border-slate-700">
+                          <DialogTitle className="flex items-center gap-3 text-xl">
+                            <div className="p-2.5 rounded-xl bg-gradient-to-br from-blue-500 to-cyan-600 shadow-md shadow-blue-500/25">
+                              <Edit className="h-5 w-5 text-white" />
+                            </div>
+                            <span className="font-bold text-slate-900 dark:text-white">{t("knowledgeBase.managePage.editKnowledgeBase")}</span>
+                          </DialogTitle>
+                        </DialogHeader>
+                        <KnowledgeBaseForm kb={selectedKb} onSubmit={(values) => handleUpdate({ ...kb, ...values })} />
+                      </DialogContent>
+                    </Dialog>
+                  </Permission>
 
-                    <Permission permission="knowledgebase:update">
-                      <Dialog open={isEditDialogOpen && selectedKb?.id === kb.id} onOpenChange={(isOpen) => { if (!isOpen) setSelectedKb(null); setIsEditDialogOpen(isOpen); }}>
-                        <DialogTrigger asChild>
-                          <Button variant="ghost" size="icon" onClick={() => setSelectedKb(kb)} className="h-7 w-7 text-slate-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20" title="Edit">
-                            <Edit className="h-3.5 w-3.5" />
-                          </Button>
-                        </DialogTrigger>
-                        <DialogContent className="dark:bg-slate-900 dark:border-slate-800 rounded-2xl sm:rounded-2xl">
-                          <DialogHeader className="pb-4 border-b border-slate-200 dark:border-slate-700">
-                            <DialogTitle className="flex items-center gap-3 text-xl">
-                              <div className="p-2.5 rounded-xl bg-gradient-to-br from-blue-500 to-cyan-600 shadow-md shadow-blue-500/25">
-                                <Edit className="h-5 w-5 text-white" />
-                              </div>
-                              <span className="font-bold text-slate-900 dark:text-white">{t("knowledgeBase.managePage.editKnowledgeBase")}</span>
-                            </DialogTitle>
-                          </DialogHeader>
-                          <KnowledgeBaseForm kb={selectedKb} onSubmit={(values) => handleUpdate({ ...kb, ...values })} />
-                        </DialogContent>
-                      </Dialog>
-                    </Permission>
+                  <Permission permission="knowledgebase:delete">
+                    <Button variant="ghost" size="icon" onClick={() => deleteKnowledgeBaseMutation.mutate(kb.id)} className="h-7 w-7 text-muted-foreground hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20" title="Delete">
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </Button>
+                  </Permission>
 
-                    <Permission permission="knowledgebase:delete">
-                      <Button variant="ghost" size="icon" onClick={() => deleteKnowledgeBaseMutation.mutate(kb.id)} className="h-7 w-7 text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20" title="Delete">
-                        <Trash2 className="h-3.5 w-3.5" />
-                      </Button>
-                    </Permission>
-
-                    <Link to={`/dashboard/knowledge-base/${kb.id}`}>
-                      <Button variant="ghost" size="icon" className="h-7 w-7 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-900/20" title="Open">
-                        <ExternalLink className="h-3.5 w-3.5" />
-                      </Button>
-                    </Link>
-                  </div>
+                  <Link to={`/dashboard/knowledge-base/${kb.id}`} className="ml-auto">
+                    <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-900/20" title="Open">
+                      <ExternalLink className="h-3.5 w-3.5" />
+                    </Button>
+                  </Link>
                 </div>
-              ))}
-            </div>
-          ) : (
-            <div className="flex flex-col items-center justify-center py-16 text-center">
-              <div className="h-14 w-14 rounded-2xl bg-gradient-to-br from-indigo-500 to-blue-600 flex items-center justify-center mb-4 shadow-md shadow-indigo-500/25">
-                <BookOpen className="h-7 w-7 text-white" />
-              </div>
-              <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1">{t("knowledgeBase.managePage.noKnowledgeBasesYet")}</h3>
-              <p className="text-xs text-slate-400 dark:text-slate-500 max-w-xs mb-5">{t("knowledgeBase.managePage.getStartedMessage")}</p>
-              <Button onClick={() => setIsCreateDialogOpen(true)} className="h-9 px-4 text-sm bg-gradient-to-r from-indigo-500 to-blue-600 hover:from-indigo-600 hover:to-blue-700 text-white shadow-md shadow-indigo-500/30">
-                <Plus className="h-4 w-4 mr-1.5" />
-                {t("knowledgeBase.managePage.createKnowledgeBase")}
-              </Button>
-            </div>
-          )}
+              </motion.div>
+            ))}
+          </AnimatePresence>
         </div>
-      </div>
+      )}
     </div>
   );
 };

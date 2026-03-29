@@ -15,6 +15,7 @@ import { Comments } from "@/components/Comments";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useTranslation } from 'react-i18next';
 import { useI18n } from '@/hooks/useI18n';
+import { motion } from 'framer-motion';
 
 const BuilderPage = () => {
   const { t } = useTranslation();
@@ -111,9 +112,9 @@ const BuilderPage = () => {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-[80vh]">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-muted-foreground">{t('builder.loadingAgent')}</p>
+        <div className="flex flex-col items-center gap-3">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-500" />
+          <p className="text-sm text-muted-foreground">{t('builder.loadingAgent')}</p>
         </div>
       </div>
     );
@@ -123,187 +124,214 @@ const BuilderPage = () => {
     return (
       <div className="flex items-center justify-center h-[80vh]">
         <div className="text-center">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-red-100 dark:bg-red-900/20 mb-4">
-            <span className="text-3xl">⚠️</span>
+          <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-destructive/10 border border-destructive/20 mb-4">
+            <span className="text-2xl">⚠️</span>
           </div>
-          <h3 className="text-lg font-semibold mb-2 dark:text-white">{t('builder.errorLoadingAgent')}</h3>
-          <p className="text-muted-foreground">{t('builder.errorLoadingAgentDesc')}</p>
+          <h3 className="text-base font-semibold text-foreground mb-1">{t('builder.errorLoadingAgent')}</h3>
+          <p className="text-sm text-muted-foreground">{t('builder.errorLoadingAgentDesc')}</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6 p-6 animate-fade-in">
-      {/* Modern Header */}
-      <div className={`flex justify-between items-center`}>
-        <div className="flex items-center gap-4">
-          <div className="h-14 w-14 rounded-2xl bg-gradient-to-br from-emerald-500 via-green-500 to-teal-500 flex items-center justify-center shadow-lg shadow-emerald-500/25">
-            <Workflow className="h-7 w-7 text-white" />
+    <div className="flex flex-col h-full p-5 gap-4">
+      {/* Header bar */}
+      <motion.div
+        initial={{ opacity: 0, y: -8 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.22 }}
+        className="flex items-center justify-between gap-3"
+      >
+        <div className="flex items-center gap-3">
+          <div className="h-9 w-9 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center flex-shrink-0">
+            <Workflow className="h-4.5 w-4.5 text-emerald-500" />
           </div>
           <div>
-            <h2 className="text-3xl font-bold text-slate-900 dark:text-white">
-              {t('builder.title')}
-            </h2>
-            <p className="text-slate-500 dark:text-slate-400">{t('builder.subtitle')}</p>
+            <h1 className="text-base font-semibold text-foreground leading-tight">
+              {agentId && agent ? agent.name : t('builder.title')}
+            </h1>
+            {agentId && agent ? (
+              <p className="text-xs text-muted-foreground font-mono">
+                agent #{agentId} · v{agent.version_number ?? 1}
+              </p>
+            ) : (
+              <p className="text-xs text-muted-foreground">{t('builder.subtitle')}</p>
+            )}
           </div>
         </div>
-        <div className={`flex gap-2`}>
+
+        <div className="flex items-center gap-2">
           {agentId && (
             <Button
+              size="sm"
+              variant="outline"
               onClick={() => navigate(`/dashboard/designer?agentId=${agentId}`)}
-              className="bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-700 hover:to-purple-700 text-white shadow-md shadow-violet-500/25 hover:shadow-violet-500/40 transition-all duration-200"
+              className="h-8 px-3 text-xs border-violet-500/30 text-violet-500 hover:bg-violet-500/10 hover:border-violet-500/50"
             >
-              <Paintbrush className={`h-4 w-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
+              <Paintbrush className="h-3.5 w-3.5 mr-1.5" />
               {t('builder.design')}
             </Button>
           )}
           {agentId && agent && (
             <Button
+              size="sm"
               variant="outline"
               onClick={() => createNewVersionMutation.mutate(agent.id)}
               disabled={createNewVersionMutation.isPending}
-              className="border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800"
+              className="h-8 px-3 text-xs"
             >
-              <PlusCircle className={`h-4 w-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
+              <PlusCircle className="h-3.5 w-3.5 mr-1.5" />
               {createNewVersionMutation.isPending ? t('builder.creating') : t('builder.newVersion')}
             </Button>
           )}
           {agentId && (
             <Button
+              size="sm"
               variant="outline"
               onClick={() => setIsHistoryDialogOpen(true)}
-              className="border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800"
+              className="h-8 px-3 text-xs"
             >
-              <History className={`h-4 w-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
+              <History className="h-3.5 w-3.5 mr-1.5" />
               {t('builder.history')}
             </Button>
           )}
           {!agentId && (
             <Button
+              size="sm"
               onClick={() => setIsCreateAgentDialogOpen(true)}
-              className="bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-700 hover:to-green-700 text-white shadow-lg shadow-emerald-500/25 hover:shadow-emerald-500/40 transition-all duration-200"
+              className="h-8 px-3 text-xs bg-emerald-600 hover:bg-emerald-700 text-white"
             >
-              <PlusCircle className={`h-4 w-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
+              <PlusCircle className="h-3.5 w-3.5 mr-1.5" />
               {t('builder.createNewAgent')}
             </Button>
           )}
         </div>
-      </div>
+      </motion.div>
 
-      {agentId && agent ? (
-        <>
+      {/* Main content */}
+      <motion.div
+        initial={{ opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.25, delay: 0.06 }}
+        className="flex-1 min-h-0"
+      >
+        {agentId && agent ? (
           <AgentBuilder
             agent={agent}
-            onSave={() => { /* Handle save, e.g., navigate back or show toast */ }}
-            onCancel={() => { /* Handle cancel, e.g., navigate back */ }}
+            onSave={() => {}}
+            onCancel={() => {}}
           />
-        </>
-      ) : !agentId && (
-        <div className="flex flex-col items-center justify-center h-[60vh] rounded-2xl bg-gradient-to-br from-slate-50 to-white dark:from-slate-800 dark:to-slate-900 border border-slate-200 dark:border-slate-700 shadow-lg shadow-slate-200/50 dark:shadow-none">
-          <div className="text-center p-8 max-w-md">
-            <div className="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-gradient-to-br from-emerald-500 to-green-500 mb-6 shadow-lg shadow-emerald-500/30">
-              <Workflow className="h-10 w-10 text-white" />
-            </div>
-            <h3 className="text-2xl font-bold mb-2 text-slate-900 dark:text-white">{t('builder.selectAgent')}</h3>
-            <p className="mb-6 text-slate-500 dark:text-slate-400">{t('builder.selectAgentDesc')}</p>
-            {isLoadingAgents ? (
-              <div className={`flex items-center justify-center ${isRTL ? 'flex-row-reverse' : ''}`}>
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-600"></div>
-                <p className={`text-slate-500 ${isRTL ? 'mr-3' : 'ml-3'}`}>{t('builder.loadingAgents')}</p>
+        ) : !agentId && (
+          <div className="flex flex-col items-center justify-center h-full rounded-xl border border-border bg-card">
+            <div className="text-center p-8 max-w-sm">
+              <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 mb-5">
+                <Workflow className="h-8 w-8 text-emerald-500" />
               </div>
-            ) : (
-              <Select onValueChange={(value) => navigate(`/dashboard/builder/${value}`)}>
-                <SelectTrigger className="w-[320px] h-12 bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 shadow-sm">
-                  <SelectValue placeholder={t('builder.selectAnAgent')} />
-                </SelectTrigger>
-                <SelectContent>
-                  {agents?.map((agent) => (
-                    <SelectItem key={agent.id} value={String(agent.id)}>
-                      {agent.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            )}
+              <h3 className="text-lg font-semibold text-foreground mb-1.5">{t('builder.selectAgent')}</h3>
+              <p className="text-sm text-muted-foreground mb-6">{t('builder.selectAgentDesc')}</p>
+              {isLoadingAgents ? (
+                <div className="flex items-center justify-center gap-2">
+                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-emerald-500" />
+                  <p className="text-sm text-muted-foreground">{t('builder.loadingAgents')}</p>
+                </div>
+              ) : (
+                <Select onValueChange={(value) => navigate(`/dashboard/builder/${value}`)}>
+                  <SelectTrigger className="w-72 h-9 text-sm bg-background border-border">
+                    <SelectValue placeholder={t('builder.selectAnAgent')} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {agents?.map((agent) => (
+                      <SelectItem key={agent.id} value={String(agent.id)}>
+                        {agent.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
+            </div>
           </div>
-        </div>
-      )}
+        )}
+      </motion.div>
 
       <CreateAgentDialog
         open={isCreateAgentDialogOpen}
         onOpenChange={setIsCreateAgentDialogOpen}
       />
 
-      {/* Enhanced Version History Dialog */}
+      {/* Version History Dialog */}
       <Dialog open={isHistoryDialogOpen} onOpenChange={setIsHistoryDialogOpen}>
-        <DialogContent className="max-w-3xl bg-white dark:bg-slate-800">
+        <DialogContent className="max-w-2xl bg-card border-border">
           <DialogHeader>
-            <DialogTitle className="text-2xl font-bold dark:text-white">
+            <DialogTitle className="text-base font-semibold text-foreground flex items-center gap-2">
+              <History className="h-4 w-4 text-muted-foreground" />
               {t('builder.versionHistory')}
             </DialogTitle>
-            <p className="text-muted-foreground">
+            <p className="text-xs text-muted-foreground">
               {t('builder.manageVersionsFor', { name: agent?.name })}
             </p>
           </DialogHeader>
           {isLoadingHistory ? (
-            <div className="flex items-center justify-center py-12">
-              <div className="text-center">
-                <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-green-600 mx-auto mb-3"></div>
-                <p className="text-muted-foreground">{t('builder.loadingHistory')}</p>
-              </div>
+            <div className="flex items-center justify-center py-10">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-500" />
             </div>
           ) : (
-            <div className="rounded-lg border border-slate-200 dark:border-slate-700 overflow-hidden">
+            <div className="rounded-lg border border-border overflow-hidden">
               <Table>
-                <TableHeader className="bg-slate-50 dark:bg-slate-900">
-                  <TableRow>
-                    <TableHead className="font-semibold dark:text-gray-300">{t('builder.version')}</TableHead>
-                    <TableHead className="font-semibold dark:text-gray-300">{t('builder.status')}</TableHead>
-                    <TableHead className="font-semibold dark:text-gray-300">{t('builder.createdAt')}</TableHead>
-                    <TableHead className="font-semibold dark:text-gray-300">{t('builder.actions')}</TableHead>
+                <TableHeader>
+                  <TableRow className="bg-muted/50 hover:bg-muted/50 border-border">
+                    <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t('builder.version')}</TableHead>
+                    <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t('builder.status')}</TableHead>
+                    <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t('builder.createdAt')}</TableHead>
+                    <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t('builder.actions')}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {agentHistory?.map((version) => (
-                    <TableRow key={version.id} className="hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
-                      <TableCell className="font-medium dark:text-white">
-                        <div className={`flex items-center gap-2 `}>
-                          <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center text-white font-bold text-sm">
+                  {agentHistory?.map((version, i) => (
+                    <motion.tr
+                      key={version.id}
+                      initial={{ opacity: 0, x: -8 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ duration: 0.15, delay: i * 0.04 }}
+                      className="border-border hover:bg-muted/40 transition-colors"
+                    >
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          <span className="font-mono text-xs px-2 py-0.5 rounded bg-muted border border-border text-foreground">
                             v{version.version_number}
-                          </div>
-                          {t('builder.version')} {version.version_number}
+                          </span>
+                          <span className="text-sm text-muted-foreground">{t('builder.version')} {version.version_number}</span>
                         </div>
                       </TableCell>
                       <TableCell>
                         {version.status === "active" ? (
-                          <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400 border border-green-200 dark:border-green-800 ${isRTL ? 'flex-row-reverse' : ''}`}>
-                            <span className={`w-2 h-2 bg-green-600 dark:bg-green-400 rounded-full ${isRTL ? 'ml-2' : 'mr-2'}`}></span>
+                          <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-medium bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400">
+                            <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse" />
                             {t('builder.active')}
                           </span>
                         ) : (
-                          <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
+                          <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-medium bg-muted border border-border text-muted-foreground">
                             {t('builder.inactive')}
                           </span>
                         )}
                       </TableCell>
-                      <TableCell className={`text-sm text-muted-foreground`}>
+                      <TableCell className="text-xs text-muted-foreground font-mono">
                         {new Date(version.created_at).toLocaleString()}
                       </TableCell>
                       <TableCell>
                         {version.status !== "active" && (
                           <Button
-                            variant="outline"
                             size="sm"
+                            variant="outline"
                             onClick={() => activateVersionMutation.mutate(version.id)}
                             disabled={activateVersionMutation.isPending}
-                            className="btn-hover-lift bg-green-50 dark:bg-green-900/20 hover:bg-green-100 dark:hover:bg-green-900/40 border-green-200 dark:border-green-800 text-green-700 dark:text-green-400"
+                            className="h-7 px-2.5 text-xs border-emerald-500/30 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/10"
                           >
                             {activateVersionMutation.isPending ? t('builder.activating') : t('builder.activate')}
                           </Button>
                         )}
                       </TableCell>
-                    </TableRow>
+                    </motion.tr>
                   ))}
                 </TableBody>
               </Table>

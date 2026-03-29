@@ -1,39 +1,63 @@
 import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { MoreHorizontal, Edit, Trash2, Code, PlusCircle, Eye, Search, Filter, X, MessageSquare, Phone, Globe, Instagram, Mail, Send, ArrowLeft, Users, Clock } from "lucide-react";
+import {
+  MoreHorizontal, Edit, Trash2, Code, PlusCircle, Eye, Search,
+  X, MessageSquare, Globe, Instagram, Mail, ArrowLeft, Users,
+  Cpu, Zap, Bot, ChevronRight, Filter
+} from "lucide-react";
 import { Permission } from "@/components/Permission";
 import { formatDistanceToNow } from 'date-fns';
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
+  DropdownMenu, DropdownMenuContent, DropdownMenuItem,
+  DropdownMenuSeparator, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import { toast } from "@/hooks/use-toast";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Agent, Session } from "@/types";
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader,
+  AlertDialogTitle, AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { useAuth } from "@/hooks/useAuth";
 import { ConversationDetail } from "./ConversationDetail";
 import { CreateAgentDialog } from "@/components/CreateAgentDialog";
 import { API_BASE_URL } from "@/config/api";
 import { useTranslation } from 'react-i18next';
 import { useI18n } from '@/hooks/useI18n';
+import { motion, AnimatePresence } from 'framer-motion';
+import { cn } from "@/lib/utils";
+
+// ─── Agent avatar gradient palette ───────────────────────────────────────────
+const AGENT_PALETTES = [
+  { gradient: 'from-violet-500 to-purple-700', ring: 'ring-violet-500/20', badge: 'bg-violet-50 dark:bg-violet-950/30 text-violet-700 dark:text-violet-300 border-violet-200 dark:border-violet-800' },
+  { gradient: 'from-blue-500 to-indigo-700', ring: 'ring-blue-500/20', badge: 'bg-blue-50 dark:bg-blue-950/30 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-800' },
+  { gradient: 'from-emerald-500 to-teal-700', ring: 'ring-emerald-500/20', badge: 'bg-emerald-50 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800' },
+  { gradient: 'from-orange-500 to-rose-600', ring: 'ring-orange-500/20', badge: 'bg-orange-50 dark:bg-orange-950/30 text-orange-700 dark:text-orange-300 border-orange-200 dark:border-orange-800' },
+  { gradient: 'from-sky-500 to-cyan-700', ring: 'ring-sky-500/20', badge: 'bg-sky-50 dark:bg-sky-950/30 text-sky-700 dark:text-sky-300 border-sky-200 dark:border-sky-800' },
+  { gradient: 'from-fuchsia-500 to-pink-700', ring: 'ring-fuchsia-500/20', badge: 'bg-fuchsia-50 dark:bg-fuchsia-950/30 text-fuchsia-700 dark:text-fuchsia-300 border-fuchsia-200 dark:border-fuchsia-800' },
+  { gradient: 'from-amber-500 to-yellow-600', ring: 'ring-amber-500/20', badge: 'bg-amber-50 dark:bg-amber-950/30 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-800' },
+  { gradient: 'from-lime-500 to-green-700', ring: 'ring-lime-500/20', badge: 'bg-lime-50 dark:bg-lime-950/30 text-lime-700 dark:text-lime-300 border-lime-200 dark:border-lime-800' },
+];
+
+const getAgentPalette = (name: string) => {
+  const hash = name.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+  return AGENT_PALETTES[hash % AGENT_PALETTES.length];
+};
+
+// ─── Card animation variants ──────────────────────────────────────────────────
+const cardVariants = {
+  hidden: { opacity: 0, y: 16 },
+  visible: (i: number) => ({
+    opacity: 1, y: 0,
+    transition: { duration: 0.3, ease: [0.22, 1, 0.36, 1], delay: i * 0.045 },
+  }),
+};
 
 export const AgentList = () => {
   const { t } = useTranslation();
@@ -43,6 +67,7 @@ export const AgentList = () => {
   const [selectedAgent, setSelectedAgent] = useState<Agent | null>(null);
   const [selectedSessionId, setSelectedSessionId] = useState<string | null>(null);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const [agentSearch, setAgentSearch] = useState('');
   const { authFetch, user } = useAuth();
   const companyId = user?.company_id;
 
@@ -52,10 +77,8 @@ export const AgentList = () => {
   const [channelFilter, setChannelFilter] = useState<string>('all');
   const [assigneeFilter, setAssigneeFilter] = useState<string>('all');
 
-  // Check if channel supports real-time connection status
-  const isWebChannel = (channel?: string) => {
-    return !channel || channel === 'web' || channel === 'websocket' || channel === 'web_chat';
-  };
+  const isWebChannel = (channel?: string) =>
+    !channel || channel === 'web' || channel === 'websocket' || channel === 'web_chat';
 
   const { data: agents, isLoading, isError } = useQuery<Agent[]>({
     queryKey: ['agents', companyId],
@@ -78,7 +101,6 @@ export const AgentList = () => {
     enabled: !!selectedAgent,
   });
 
-  // Fetch users for assignee filter
   const { data: users } = useQuery({
     queryKey: ['users', companyId],
     queryFn: async () => {
@@ -90,26 +112,19 @@ export const AgentList = () => {
     enabled: !!companyId && !!selectedAgent,
   });
 
-  // Get unique channels from sessions
   const availableChannels = useMemo(() => {
     if (!sessions) return [];
-    const channels = [...new Set(sessions.map(s => s.channel).filter(Boolean))];
-    return channels;
+    return [...new Set(sessions.map(s => s.channel).filter(Boolean))];
   }, [sessions]);
 
-  // Get unique statuses from sessions
   const availableStatuses = useMemo(() => {
     if (!sessions) return [];
-    const statuses = [...new Set(sessions.map(s => s.status).filter(Boolean))];
-    return statuses;
+    return [...new Set(sessions.map(s => s.status).filter(Boolean))];
   }, [sessions]);
 
-  // Filter sessions based on filters
   const filteredSessions = useMemo(() => {
     if (!sessions) return [];
-
     return sessions.filter(session => {
-      // Search filter
       if (searchQuery) {
         const query = searchQuery.toLowerCase();
         const matchesSearch =
@@ -119,94 +134,66 @@ export const AgentList = () => {
           session.first_message_content?.toLowerCase().includes(query);
         if (!matchesSearch) return false;
       }
-
-      // Status filter
-      if (statusFilter !== 'all' && session.status !== statusFilter) {
-        return false;
-      }
-
-      // Channel filter
-      if (channelFilter !== 'all' && session.channel !== channelFilter) {
-        return false;
-      }
-
-      // Assignee filter
+      if (statusFilter !== 'all' && session.status !== statusFilter) return false;
+      if (channelFilter !== 'all' && session.channel !== channelFilter) return false;
       if (assigneeFilter !== 'all') {
         if (assigneeFilter === 'unassigned' && session.assignee_id) return false;
         if (assigneeFilter !== 'unassigned' && session.assignee_id !== parseInt(assigneeFilter)) return false;
       }
-
       return true;
     });
   }, [sessions, searchQuery, statusFilter, channelFilter, assigneeFilter]);
 
-  // Helper function to get channel icon
+  const filteredAgents = useMemo(() => {
+    if (!agents) return [];
+    if (!agentSearch) return agents;
+    const q = agentSearch.toLowerCase();
+    return agents.filter(a =>
+      a.name.toLowerCase().includes(q) ||
+      a.llm_provider?.toLowerCase().includes(q) ||
+      a.model_name?.toLowerCase().includes(q)
+    );
+  }, [agents, agentSearch]);
+
   const getChannelIcon = (channel: string) => {
     switch (channel?.toLowerCase()) {
       case 'whatsapp': return (
         <svg className="h-4 w-4 text-green-500" viewBox="0 0 24 24" fill="currentColor">
-          <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
+          <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
         </svg>
       );
       case 'web': return <Globe className="h-4 w-4 text-blue-500" />;
       case 'instagram': return <Instagram className="h-4 w-4 text-pink-500" />;
       case 'messenger': return (
         <svg className="h-4 w-4 text-blue-600" viewBox="0 0 24 24" fill="currentColor">
-          <path d="M12 0C5.373 0 0 4.974 0 11.111c0 3.498 1.744 6.614 4.469 8.654V24l4.088-2.242c1.092.301 2.246.464 3.443.464 6.627 0 12-4.974 12-11.111S18.627 0 12 0zm1.191 14.963l-3.055-3.26-5.963 3.26L10.732 8l3.131 3.259L19.752 8l-6.561 6.963z"/>
+          <path d="M12 0C5.373 0 0 4.974 0 11.111c0 3.498 1.744 6.614 4.469 8.654V24l4.088-2.242c1.092.301 2.246.464 3.443.464 6.627 0 12-4.974 12-11.111S18.627 0 12 0zm1.191 14.963l-3.055-3.26-5.963 3.26L10.732 8l3.131 3.259L19.752 8l-6.561 6.963z" />
         </svg>
       );
       case 'telegram': return (
         <svg className="h-4 w-4 text-sky-500" viewBox="0 0 24 24" fill="currentColor">
-          <path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/>
+          <path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z" />
         </svg>
       );
       case 'gmail': return <Mail className="h-4 w-4 text-red-500" />;
-      case 'twilio_voice': return (
-        <svg className="h-4 w-4 text-red-500" viewBox="0 0 24 24" fill="currentColor">
-          <path d="M12 0C5.381 0 0 5.381 0 12s5.381 12 12 12 12-5.381 12-12S18.619 0 12 0zM9.75 6.75a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3zm4.5 0a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3zm-4.5 7.5a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3zm4.5 0a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3z"/>
-        </svg>
-      );
-      case 'freeswitch': return (
-        <svg className="h-4 w-4 text-purple-500" viewBox="0 0 24 24" fill="currentColor">
-          <path d="M20 15.5c-1.25 0-2.45-.2-3.57-.57a1.02 1.02 0 0 0-1.02.24l-2.2 2.2a15.045 15.045 0 0 1-6.59-6.59l2.2-2.21a.96.96 0 0 0 .25-1A11.36 11.36 0 0 1 8.5 4c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1 0 9.39 7.61 17 17 17 .55 0 1-.45 1-1v-3.5c0-.55-.45-1-1-1zM12 3v10l3-3h6V3h-9z"/>
-        </svg>
-      );
-      case 'api': return (
-        <svg className="h-4 w-4 text-cyan-500" viewBox="0 0 24 24" fill="currentColor">
-          <path d="M14 12l-2 2-2-2 2-2 2 2zm-2-6l2.12 2.12 2.5-2.5L12 1 7.38 5.62l2.5 2.5L12 6zm-6 6l2.12-2.12-2.5-2.5L1 12l4.62 4.62 2.5-2.5L6 12zm12 0l-2.12 2.12 2.5 2.5L23 12l-4.62-4.62-2.5 2.5L18 12zm-6 6l-2.12-2.12-2.5 2.5L12 23l4.62-4.62-2.5-2.5L12 18z"/>
-        </svg>
-      );
-      default: return <MessageSquare className="h-4 w-4 text-gray-500" />;
+      default: return <MessageSquare className="h-4 w-4 text-muted-foreground" />;
     }
   };
 
-  // Helper function to get status badge
-  const getStatusBadge = (status: string) => {
-    const statusConfig = {
-      active: { bg: 'bg-green-100 dark:bg-green-900/30', text: 'text-green-700 dark:text-green-400', dot: 'bg-green-500' },
-      inactive: { bg: 'bg-gray-100 dark:bg-gray-800', text: 'text-gray-700 dark:text-gray-400', dot: 'bg-gray-500' },
-      assigned: { bg: 'bg-blue-100 dark:bg-blue-900/30', text: 'text-blue-700 dark:text-blue-400', dot: 'bg-blue-500' },
-      pending: { bg: 'bg-yellow-100 dark:bg-yellow-900/30', text: 'text-yellow-700 dark:text-yellow-400', dot: 'bg-yellow-500' },
-      resolved: { bg: 'bg-purple-100 dark:bg-purple-900/30', text: 'text-purple-700 dark:text-purple-400', dot: 'bg-purple-500' },
-      archived: { bg: 'bg-slate-100 dark:bg-slate-800', text: 'text-slate-700 dark:text-slate-400', dot: 'bg-slate-500' },
+  const getStatusConfig = (status: string) => {
+    const map: Record<string, { bg: string; text: string; dot: string }> = {
+      active:   { bg: 'bg-emerald-50 dark:bg-emerald-950/30', text: 'text-emerald-700 dark:text-emerald-400', dot: 'bg-emerald-500' },
+      inactive: { bg: 'bg-muted', text: 'text-muted-foreground', dot: 'bg-muted-foreground' },
+      assigned: { bg: 'bg-blue-50 dark:bg-blue-950/30', text: 'text-blue-700 dark:text-blue-400', dot: 'bg-blue-500' },
+      pending:  { bg: 'bg-amber-50 dark:bg-amber-950/30', text: 'text-amber-700 dark:text-amber-400', dot: 'bg-amber-500' },
+      resolved: { bg: 'bg-violet-50 dark:bg-violet-950/30', text: 'text-violet-700 dark:text-violet-400', dot: 'bg-violet-500' },
+      archived: { bg: 'bg-muted', text: 'text-muted-foreground', dot: 'bg-muted-foreground' },
     };
-    const config = statusConfig[status] || statusConfig.inactive;
-    return (
-      <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-medium ${config.bg} ${config.text}`}>
-        <span className={`w-1.5 h-1.5 rounded-full ${config.dot}`}></span>
-        {status}
-      </span>
-    );
+    return map[status] || map.inactive;
   };
 
-  // Clear all filters
   const clearFilters = () => {
-    setSearchQuery('');
-    setStatusFilter('all');
-    setChannelFilter('all');
-    setAssigneeFilter('all');
+    setSearchQuery(''); setStatusFilter('all'); setChannelFilter('all'); setAssigneeFilter('all');
   };
-
   const hasActiveFilters = searchQuery || statusFilter !== 'all' || channelFilter !== 'all' || assigneeFilter !== 'all';
 
   const deleteAgentMutation = useMutation({
@@ -217,31 +204,46 @@ export const AgentList = () => {
       toast({ title: t('agents.agentDeleted') });
     },
     onError: (error: any) => {
-      toast({
-        title: t('agents.deleteFailed'),
-        description: error.message || "An unexpected error occurred.",
-        variant: "destructive",
-      });
+      toast({ title: t('agents.deleteFailed'), description: error.message, variant: "destructive" });
     },
   });
 
   const handleCopyEmbedCode = (agentId: number) => {
-    const backendUrl = API_BASE_URL;
-    const embedCode = `<script
-    src="${backendUrl}/widget/widget.js"
-    id="heygenally-widget-script"
-    data-agent-id="${agentId}"
-    data-company-id="${companyId}"
-    data-backend-url="${backendUrl}">
-</script>
-<div id="heygenally-widget"></div>`;
+    const embedCode = `<script\n    src="${API_BASE_URL}/widget/widget.js"\n    id="heygenally-widget-script"\n    data-agent-id="${agentId}"\n    data-company-id="${companyId}"\n    data-backend-url="${API_BASE_URL}">\n</script>\n<div id="heygenally-widget"></div>`;
     navigator.clipboard.writeText(embedCode);
     toast({ title: t('agents.embedCodeCopied') });
   };
 
-  if (isLoading) return <div>{t('agents.loading')}</div>;
-  if (isError) return <div>{t('agents.error')}</div>;
+  // ─── Loading skeleton ──────────────────────────────────────────────────────
+  if (isLoading) {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <div className="h-6 w-32 bg-muted rounded-md animate-pulse" />
+          <div className="h-9 w-28 bg-muted rounded-lg animate-pulse" />
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+          {[...Array(6)].map((_, i) => (
+            <div key={i} className="h-52 rounded-xl bg-muted animate-pulse" style={{ animationDelay: `${i * 0.07}s` }} />
+          ))}
+        </div>
+      </div>
+    );
+  }
 
+  if (isError) {
+    return (
+      <div className="flex flex-col items-center justify-center py-20 text-center">
+        <div className="h-14 w-14 rounded-2xl bg-destructive/10 flex items-center justify-center mb-4">
+          <Bot className="h-7 w-7 text-destructive" />
+        </div>
+        <p className="text-base font-medium text-foreground mb-1">{t('agents.error')}</p>
+        <p className="text-sm text-muted-foreground">Could not load agents. Please try again.</p>
+      </div>
+    );
+  }
+
+  // ─── Conversation detail view ─────────────────────────────────────────────
   if (selectedAgent && selectedSessionId) {
     return (
       <ConversationDetail
@@ -253,384 +255,396 @@ export const AgentList = () => {
     );
   }
 
+  // ─── Sessions view ─────────────────────────────────────────────────────────
   if (selectedAgent) {
+    const palette = getAgentPalette(selectedAgent.name);
     return (
-      <div className="space-y-4">
+      <div className="space-y-5">
         {/* Header */}
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <Button
-              onClick={() => {
-                setSelectedAgent(null);
-                clearFilters();
-              }}
-              variant="ghost"
-              size="icon"
-              className="hover:bg-slate-100 dark:hover:bg-slate-800"
-            >
-              <ArrowLeft className="h-5 w-5" />
-            </Button>
-            <div>
-              <h2 className="text-2xl font-bold dark:text-white">{t('agents.conversationsFor', { name: selectedAgent.name })}</h2>
-              <p className="text-sm text-gray-500 dark:text-gray-400">
-                {filteredSessions.length} of {sessions?.length || 0} conversations
-              </p>
-            </div>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => { setSelectedAgent(null); clearFilters(); }}
+            className="h-9 w-9 rounded-lg flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+          >
+            <ArrowLeft className="h-4 w-4" />
+          </button>
+          <div className={`h-9 w-9 rounded-xl bg-gradient-to-br ${palette.gradient} flex items-center justify-center flex-shrink-0`}>
+            <span className="text-white text-xs font-bold">{selectedAgent.name.substring(0, 2).toUpperCase()}</span>
+          </div>
+          <div>
+            <h2 className="text-lg font-semibold text-foreground leading-tight">
+              {t('agents.conversationsFor', { name: selectedAgent.name })}
+            </h2>
+            <p className="text-xs text-muted-foreground">
+              {filteredSessions.length} of {sessions?.length || 0} conversations
+            </p>
           </div>
         </div>
 
         {/* Filters */}
-        <Card className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700">
-          <CardContent className="p-4">
-            <div className="flex flex-wrap gap-3 items-center">
-              {/* Search */}
-              <div className="relative flex-1 min-w-[200px]">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-                <Input
-                  placeholder={t('conversations.search')}
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-9 bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-700"
-                />
+        <div className="flex flex-wrap gap-2 items-center p-3 rounded-xl border border-border bg-card">
+          <div className="relative flex-1 min-w-[180px]">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+            <Input
+              placeholder={t('conversations.search')}
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-8 h-8 text-sm bg-background border-border"
+            />
+          </div>
+          <Select value={statusFilter} onValueChange={setStatusFilter}>
+            <SelectTrigger className="w-[130px] h-8 text-sm bg-background border-border">
+              <SelectValue placeholder="Status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Status</SelectItem>
+              {availableStatuses.map(s => <SelectItem key={s} value={s} className="capitalize">{s}</SelectItem>)}
+            </SelectContent>
+          </Select>
+          <Select value={channelFilter} onValueChange={setChannelFilter}>
+            <SelectTrigger className="w-[130px] h-8 text-sm bg-background border-border">
+              <SelectValue placeholder="Channel" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Channels</SelectItem>
+              {availableChannels.map(c => <SelectItem key={c} value={c} className="capitalize">{c}</SelectItem>)}
+            </SelectContent>
+          </Select>
+          <Select value={assigneeFilter} onValueChange={setAssigneeFilter}>
+            <SelectTrigger className="w-[150px] h-8 text-sm bg-background border-border">
+              <SelectValue placeholder="Assignee" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Assignees</SelectItem>
+              <SelectItem value="unassigned">Unassigned</SelectItem>
+              {users?.map((u: any) => (
+                <SelectItem key={u.id} value={u.id.toString()}>{u.first_name || u.email}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          {hasActiveFilters && (
+            <button onClick={clearFilters} className="h-8 px-3 rounded-lg text-xs text-muted-foreground hover:text-foreground hover:bg-muted transition-colors flex items-center gap-1.5">
+              <X className="h-3 w-3" /> Clear
+            </button>
+          )}
+        </div>
+
+        {/* Sessions list */}
+        <div className="rounded-xl border border-border bg-card overflow-hidden">
+          {isLoadingSessions ? (
+            <div className="p-8 text-center">
+              <div className="space-y-3">
+                {[...Array(4)].map((_, i) => <div key={i} className="h-16 rounded-lg bg-muted animate-pulse" />)}
               </div>
-
-              {/* Status Filter */}
-              <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger className="w-[140px] bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-700">
-                  <SelectValue placeholder="Status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Status</SelectItem>
-                  {availableStatuses.map(status => (
-                    <SelectItem key={status} value={status} className="capitalize">{status}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-
-              {/* Channel Filter */}
-              <Select value={channelFilter} onValueChange={setChannelFilter}>
-                <SelectTrigger className="w-[140px] bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-700">
-                  <SelectValue placeholder="Channel" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Channels</SelectItem>
-                  {availableChannels.map(channel => (
-                    <SelectItem key={channel} value={channel} className="capitalize">{channel}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-
-              {/* Assignee Filter */}
-              <Select value={assigneeFilter} onValueChange={setAssigneeFilter}>
-                <SelectTrigger className="w-[160px] bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-700">
-                  <SelectValue placeholder="Assignee" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Assignees</SelectItem>
-                  <SelectItem value="unassigned">Unassigned</SelectItem>
-                  {users?.map((u: any) => (
-                    <SelectItem key={u.id} value={u.id.toString()}>
-                      {u.first_name || u.email}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-
-              {/* Clear Filters */}
+            </div>
+          ) : filteredSessions.length > 0 ? (
+            <div className="divide-y divide-border">
+              {filteredSessions.filter(s => s.conversation_id).map((session) => {
+                const assignee = users?.find((u: any) => u.id === session.assignee_id);
+                const sc = getStatusConfig(session.status);
+                return (
+                  <div
+                    key={session.conversation_id}
+                    onClick={() => setSelectedSessionId(session.conversation_id)}
+                    className="group flex items-center gap-3 px-4 py-3.5 hover:bg-muted/50 cursor-pointer transition-colors"
+                  >
+                    <div className="h-9 w-9 rounded-full bg-muted flex items-center justify-center flex-shrink-0">
+                      {getChannelIcon(session.channel)}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-0.5">
+                        <span className="text-sm font-medium text-foreground truncate">
+                          {session.contact_name || session.contact_phone || `Session ${session.conversation_id.substring(0, 8)}…`}
+                        </span>
+                        {isWebChannel(session.channel) && session.is_client_connected && (
+                          <span className="h-1.5 w-1.5 bg-emerald-500 rounded-full animate-pulse" />
+                        )}
+                      </div>
+                      {session.first_message_content && (
+                        <p className="text-xs text-muted-foreground truncate">{session.first_message_content}</p>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-2 flex-shrink-0">
+                      <span className={cn('inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-medium', sc.bg, sc.text)}>
+                        <span className={cn('h-1.5 w-1.5 rounded-full', sc.dot)} />
+                        {session.status}
+                      </span>
+                      {assignee && (
+                        <span className="text-xs text-muted-foreground hidden sm:block">
+                          {assignee.first_name || assignee.email}
+                        </span>
+                      )}
+                      <span className="text-xs text-muted-foreground">
+                        {session.last_message_timestamp && formatDistanceToNow(new Date(session.last_message_timestamp), { addSuffix: true })}
+                      </span>
+                      <ChevronRight className="h-3.5 w-3.5 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          ) : (
+            <div className="py-16 text-center">
+              <div className="h-12 w-12 rounded-xl bg-muted flex items-center justify-center mx-auto mb-3">
+                <MessageSquare className="h-6 w-6 text-muted-foreground" />
+              </div>
+              <p className="text-sm font-medium text-foreground mb-1">
+                {hasActiveFilters ? 'No matching conversations' : t('agents.noConversations')}
+              </p>
               {hasActiveFilters && (
-                <Button variant="ghost" size="sm" onClick={clearFilters} className="text-gray-500 hover:text-gray-700">
-                  <X className="h-4 w-4 mr-1" />
-                  Clear
-                </Button>
+                <button onClick={clearFilters} className="text-xs text-primary hover:underline mt-1">Clear filters</button>
               )}
             </div>
-          </CardContent>
-        </Card>
-
-        {/* Sessions List */}
-        <Card className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700">
-          <CardContent className="p-0">
-            {isLoadingSessions ? (
-              <div className="p-8 text-center text-gray-500">{t('agents.loadingConversations')}</div>
-            ) : filteredSessions.length > 0 ? (
-              <div className="divide-y divide-slate-100 dark:divide-slate-700">
-                {filteredSessions.filter(s => s.conversation_id).map((session) => {
-                  const assignee = users?.find((u: any) => u.id === session.assignee_id);
-
-                  return (
-                    <div
-                      key={session.conversation_id}
-                      onClick={() => setSelectedSessionId(session.conversation_id)}
-                      className="p-4 hover:bg-slate-50 dark:hover:bg-slate-700/50 cursor-pointer transition-colors"
-                    >
-                      <div className="flex items-start justify-between gap-4">
-                        <div className="flex items-start gap-3 flex-1 min-w-0">
-                          {/* Channel Icon */}
-                          <div className="flex-shrink-0 w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-700 flex items-center justify-center">
-                            {getChannelIcon(session.channel)}
-                          </div>
-
-                          {/* Main Content */}
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2 mb-1">
-                              <span className="font-semibold text-gray-900 dark:text-white truncate">
-                                {session.contact_name || session.contact_phone || `Session ${session.conversation_id.substring(0, 8)}...`}
-                              </span>
-                              {/* Only show online indicator for web channels */}
-                              {isWebChannel(session.channel) && session.is_client_connected && (
-                                <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse" title="Online"></span>
-                              )}
-                            </div>
-
-                            {session.first_message_content && (
-                              <p className="text-sm text-gray-500 dark:text-gray-400 truncate mb-2">
-                                {session.first_message_content}
-                              </p>
-                            )}
-
-                            <div className="flex items-center gap-2 flex-wrap">
-                              {getStatusBadge(session.status)}
-                              <span className="text-xs text-gray-400 capitalize">{session.channel}</span>
-                              {session.reopen_count > 0 && (
-                                <span className="text-xs text-orange-500">🔄 Reopened {session.reopen_count}x</span>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* Right Side - Time & Assignee */}
-                        <div className="flex-shrink-0 text-right">
-                          <div className="text-xs text-gray-400 mb-1">
-                            {session.last_message_timestamp && formatDistanceToNow(new Date(session.last_message_timestamp), { addSuffix: true })}
-                          </div>
-                          {assignee && (
-                            <div className="flex items-center gap-1 text-xs text-gray-500">
-                              <Users className="h-3 w-3" />
-                              <span>{assignee.first_name || assignee.email}</span>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            ) : (
-              <div className="p-12 text-center">
-                <MessageSquare className="h-12 w-12 text-gray-300 dark:text-gray-600 mx-auto mb-4" />
-                <p className="text-gray-500 dark:text-gray-400">
-                  {hasActiveFilters ? 'No conversations match your filters' : t('agents.noConversations')}
-                </p>
-                {hasActiveFilters && (
-                  <Button variant="link" onClick={clearFilters} className="mt-2">
-                    Clear filters
-                  </Button>
-                )}
-              </div>
-            )}
-          </CardContent>
-        </Card>
+          )}
+        </div>
       </div>
     );
   }
 
+  // ─── Main agents grid ──────────────────────────────────────────────────────
+  const totalAgents = agents?.length || 0;
+  const activeAgents = agents?.filter(a => a.status === 'active').length || 0;
+  const inactiveAgents = agents?.filter(a => a.status !== 'active').length || 0;
+
   return (
     <>
       <CreateAgentDialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen} />
-      {/* Stats Overview Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mb-6">
-        <Card className="relative overflow-hidden bg-white dark:bg-slate-800 border-0 shadow-lg shadow-purple-500/10 hover:shadow-xl hover:shadow-purple-500/20 transition-all duration-300 group">
-          <div className="absolute inset-0 bg-gradient-to-br from-purple-500/5 via-pink-500/5 to-transparent dark:from-purple-500/10 dark:via-pink-500/10" />
-          <CardContent className="pt-6 pb-5 relative">
-            <div className={`flex items-center justify-between ${isRTL ? 'flex-row-reverse' : ''}`}>
-              <div>
-                <p className="text-sm font-medium text-slate-500 dark:text-slate-400 mb-1">{t('agents.totalAgents')}</p>
-                <h3 className="text-4xl font-bold text-slate-900 dark:text-white">
-                  {agents?.length || 0}
-                </h3>
-              </div>
-              <div className="h-14 w-14 rounded-2xl bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center shadow-lg shadow-purple-500/30 group-hover:scale-110 transition-transform duration-300">
-                <svg className="h-7 w-7 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <rect x="3" y="11" width="18" height="10" rx="2" />
-                  <circle cx="12" cy="5" r="2" />
-                  <path d="M12 7v4" />
-                  <line x1="8" y1="16" x2="8" y2="16" />
-                  <line x1="16" y1="16" x2="16" y2="16" />
-                </svg>
-              </div>
-            </div>
-            <div className="mt-3 flex items-center gap-1 text-xs text-slate-400">
-              <span className="inline-block w-2 h-2 rounded-full bg-purple-500"></span>
-              All configured agents
-            </div>
-          </CardContent>
-        </Card>
 
-        <Card className="relative overflow-hidden bg-white dark:bg-slate-800 border-0 shadow-lg shadow-emerald-500/10 hover:shadow-xl hover:shadow-emerald-500/20 transition-all duration-300 group">
-          <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/5 via-green-500/5 to-transparent dark:from-emerald-500/10 dark:via-green-500/10" />
-          <CardContent className="pt-6 pb-5 relative">
-            <div className={`flex items-center justify-between ${isRTL ? 'flex-row-reverse' : ''}`}>
-              <div>
-                <p className="text-sm font-medium text-slate-500 dark:text-slate-400 mb-1">{t('agents.active')}</p>
-                <h3 className="text-4xl font-bold text-slate-900 dark:text-white">
-                  {agents?.filter(a => a.status === 'active').length || 0}
-                </h3>
-              </div>
-              <div className="h-14 w-14 rounded-2xl bg-gradient-to-br from-emerald-500 to-green-500 flex items-center justify-center shadow-lg shadow-emerald-500/30 group-hover:scale-110 transition-transform duration-300">
-                <svg className="h-7 w-7 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
-                  <polyline points="22 4 12 14.01 9 11.01" />
-                </svg>
-              </div>
-            </div>
-            <div className="mt-3 flex items-center gap-1 text-xs text-emerald-600 dark:text-emerald-400">
-              <span className="inline-block w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-              Currently running
-            </div>
-          </CardContent>
-        </Card>
+      {/* ── Stats + actions bar ─────────────────────────────────────────────── */}
+      <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
+        {/* Stats pills */}
+        <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-muted border border-border">
+            <Cpu className="h-3.5 w-3.5 text-muted-foreground" />
+            <span className="text-sm font-semibold text-foreground tabular-nums">{totalAgents}</span>
+            <span className="text-xs text-muted-foreground">total</span>
+          </div>
+          <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800">
+            <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+            <span className="text-sm font-semibold text-emerald-700 dark:text-emerald-400 tabular-nums">{activeAgents}</span>
+            <span className="text-xs text-emerald-600 dark:text-emerald-500">active</span>
+          </div>
+          <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-muted border border-border">
+            <span className="h-1.5 w-1.5 rounded-full bg-muted-foreground" />
+            <span className="text-sm font-semibold text-foreground tabular-nums">{inactiveAgents}</span>
+            <span className="text-xs text-muted-foreground">inactive</span>
+          </div>
+        </div>
 
-        <Card className="relative overflow-hidden bg-white dark:bg-slate-800 border-0 shadow-lg shadow-slate-500/10 hover:shadow-xl hover:shadow-slate-500/20 transition-all duration-300 group">
-          <div className="absolute inset-0 bg-gradient-to-br from-slate-500/5 via-gray-500/5 to-transparent dark:from-slate-500/10 dark:via-gray-500/10" />
-          <CardContent className="pt-6 pb-5 relative">
-            <div className={`flex items-center justify-between ${isRTL ? 'flex-row-reverse' : ''}`}>
-              <div>
-                <p className="text-sm font-medium text-slate-500 dark:text-slate-400 mb-1">{t('agents.inactive')}</p>
-                <h3 className="text-4xl font-bold text-slate-900 dark:text-white">
-                  {agents?.filter(a => a.status !== 'active').length || 0}
-                </h3>
-              </div>
-              <div className="h-14 w-14 rounded-2xl bg-gradient-to-br from-slate-400 to-slate-500 dark:from-slate-600 dark:to-slate-700 flex items-center justify-center shadow-lg shadow-slate-500/30 group-hover:scale-110 transition-transform duration-300">
-                <svg className="h-7 w-7 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <circle cx="12" cy="12" r="10" />
-                  <line x1="4.93" y1="4.93" x2="19.07" y2="19.07" />
-                </svg>
-              </div>
-            </div>
-            <div className="mt-3 flex items-center gap-1 text-xs text-slate-400">
-              <span className="inline-block w-2 h-2 rounded-full bg-slate-400"></span>
-              Paused or disabled
-            </div>
-          </CardContent>
-        </Card>
+        {/* Search + create */}
+        <div className="flex items-center gap-2">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+            <Input
+              placeholder="Search agents…"
+              value={agentSearch}
+              onChange={(e) => setAgentSearch(e.target.value)}
+              className="pl-8 h-9 w-52 text-sm bg-background border-border"
+            />
+            {agentSearch && (
+              <button onClick={() => setAgentSearch('')} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
+                <X className="h-3.5 w-3.5" />
+              </button>
+            )}
+          </div>
+          <Permission permission="agent:create">
+            <Button
+              onClick={() => setIsCreateDialogOpen(true)}
+              size="sm"
+              className="h-9 gap-1.5 bg-primary hover:bg-primary/90 text-primary-foreground shadow-sm"
+            >
+              <PlusCircle className="h-4 w-4" />
+              {t('agents.createAgent')}
+            </Button>
+          </Permission>
+        </div>
       </div>
 
-      {/* Agents Table Card */}
-      <Card className="border-0 shadow-lg shadow-slate-200/50 dark:shadow-none bg-white dark:bg-slate-800 overflow-hidden">
-        <CardHeader className="border-b border-slate-100 dark:border-slate-700 bg-gradient-to-r from-slate-50 to-white dark:from-slate-800 dark:to-slate-800 py-5">
-          <div className={`flex justify-between items-center`}>
-            <div>
-              <CardTitle className="text-xl font-semibold text-slate-900 dark:text-white">{t('agents.yourAgents')}</CardTitle>
-              <CardDescription className="text-slate-500 dark:text-slate-400 mt-1">{t('agents.manageAgents')}</CardDescription>
-            </div>
+      {/* ── Agent cards grid ─────────────────────────────────────────────────── */}
+      {filteredAgents.length === 0 ? (
+        <div className="flex flex-col items-center justify-center py-24 text-center">
+          <div className="h-16 w-16 rounded-2xl bg-muted flex items-center justify-center mb-4 border border-border">
+            <Bot className="h-8 w-8 text-muted-foreground" />
+          </div>
+          <p className="text-base font-medium text-foreground mb-1">
+            {agentSearch ? 'No agents match your search' : t('agents.noAgents', 'No agents yet')}
+          </p>
+          <p className="text-sm text-muted-foreground mb-4">
+            {agentSearch ? 'Try a different search term' : 'Create your first AI agent to get started'}
+          </p>
+          {!agentSearch && (
             <Permission permission="agent:create">
-              <Button
-                onClick={() => setIsCreateDialogOpen(true)}
-                className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white shadow-lg shadow-purple-500/25 hover:shadow-purple-500/40 transition-all duration-200 hover:scale-[1.02]"
-              >
-                <PlusCircle className={`h-4 w-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
+              <Button onClick={() => setIsCreateDialogOpen(true)} size="sm" variant="outline" className="gap-1.5">
+                <PlusCircle className="h-4 w-4" />
                 {t('agents.createAgent')}
               </Button>
             </Permission>
-          </div>
-        </CardHeader>
-        <CardContent className="p-0">
-          <div className="overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow className="bg-slate-50/50 dark:bg-slate-900/50 hover:bg-slate-50/50">
-                  <TableHead className="font-semibold text-slate-600 dark:text-slate-300 text-xs uppercase tracking-wider">{t('agents.agentName')}</TableHead>
-                  <TableHead className="font-semibold text-slate-600 dark:text-slate-300 text-xs uppercase tracking-wider">{t('agents.llmProvider')}</TableHead>
-                  <TableHead className="font-semibold text-slate-600 dark:text-slate-300 text-xs uppercase tracking-wider">{t('agents.model')}</TableHead>
-                  <TableHead className="font-semibold text-slate-600 dark:text-slate-300 text-xs uppercase tracking-wider">{t('agents.status')}</TableHead>
-                  <TableHead className={`font-semibold text-slate-600 dark:text-slate-300 text-xs uppercase tracking-wider text-left`}>{t('agents.actions')}</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {agents?.map((agent) => (
-                  <TableRow key={agent.id} onClick={() => navigate(`/dashboard/builder/${agent.id}`)} className="group hover:bg-slate-50/80 dark:hover:bg-slate-700/30 transition-colors border-b border-slate-100 dark:border-slate-700/50 cursor-pointer">
-                    <TableCell className="py-4">
-                      <div className={`flex items-center gap-3`}>
-                        <div className="relative">
-                          <Avatar className="h-11 w-11 ring-2 ring-white dark:ring-slate-700 shadow-md">
-                            <AvatarFallback className="bg-gradient-to-br from-purple-500 via-pink-500 to-rose-500 text-white font-semibold text-sm">
+          )}
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+          <AnimatePresence>
+            {filteredAgents.map((agent, i) => {
+              const palette = getAgentPalette(agent.name);
+              const isActive = agent.status === 'active';
+
+              return (
+                <motion.div
+                  key={agent.id}
+                  custom={i}
+                  variants={cardVariants}
+                  initial="hidden"
+                  animate="visible"
+                  layout
+                >
+                  <div
+                    className={cn(
+                      'group relative flex flex-col rounded-xl border border-border bg-card overflow-hidden',
+                      'transition-all duration-200 hover:border-border/80 hover:shadow-md hover:shadow-black/5 dark:hover:shadow-black/20',
+                      'cursor-pointer'
+                    )}
+                    onClick={() => navigate(`/dashboard/builder/${agent.id}`)}
+                  >
+                    {/* Top accent line */}
+                    <div className={cn('h-0.5 w-full bg-gradient-to-r', palette.gradient)} />
+
+                    {/* Card body */}
+                    <div className="flex flex-col flex-1 p-4 gap-3">
+
+                      {/* Agent identity row */}
+                      <div className="flex items-start gap-3">
+                        {/* Avatar */}
+                        <div className="relative flex-shrink-0">
+                          <div className={cn(
+                            'h-12 w-12 rounded-xl bg-gradient-to-br flex items-center justify-center',
+                            palette.gradient
+                          )}>
+                            <span className="text-white text-sm font-bold tracking-wide">
                               {agent.name.substring(0, 2).toUpperCase()}
-                            </AvatarFallback>
-                          </Avatar>
-                          {agent.status === 'active' && (
-                            <span className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 bg-emerald-500 rounded-full border-2 border-white dark:border-slate-800"></span>
+                            </span>
+                          </div>
+                          {isActive && (
+                            <span className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full bg-emerald-500 border-2 border-card" />
                           )}
                         </div>
-                        <div>
-                          <p className="font-semibold text-slate-900 dark:text-white group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors">{agent.name}</p>
-                          <p className="text-sm text-slate-500 dark:text-slate-400 truncate max-w-xs">{agent.prompt}</p>
+
+                        {/* Name + status */}
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-start justify-between gap-2 mb-0.5">
+                            <p className="text-sm font-semibold text-foreground leading-tight truncate group-hover:text-primary transition-colors">
+                              {agent.name}
+                            </p>
+                            <span className={cn(
+                              'flex-shrink-0 inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium border',
+                              isActive
+                                ? 'bg-emerald-50 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800'
+                                : 'bg-muted text-muted-foreground border-border'
+                            )}>
+                              <span className={cn('h-1.5 w-1.5 rounded-full', isActive ? 'bg-emerald-500 animate-pulse' : 'bg-muted-foreground')} />
+                              {isActive ? t('agents.active') : t('agents.inactive')}
+                            </span>
+                          </div>
+
+                          {/* Provider + model */}
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            {agent.llm_provider && (
+                              <span className={cn('inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-xs font-medium border', palette.badge)}>
+                                <Zap className="h-2.5 w-2.5" />
+                                <span className="capitalize">{agent.llm_provider}</span>
+                              </span>
+                            )}
+                            {agent.model_name && (
+                              <span className="inline-flex items-center px-1.5 py-0.5 rounded-md text-xs font-medium bg-muted border border-border text-muted-foreground font-mono">
+                                {agent.model_name}
+                              </span>
+                            )}
+                          </div>
                         </div>
                       </div>
-                    </TableCell>
-                    <TableCell className="py-4">
-                      <span className="inline-flex items-center px-2.5 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-700/50 text-sm font-medium text-slate-700 dark:text-slate-300 capitalize">
-                        {agent.llm_provider}
-                      </span>
-                    </TableCell>
-                    <TableCell className="py-4">
-                      <span className="text-sm font-medium text-slate-600 dark:text-slate-300">{agent.model_name}</span>
-                    </TableCell>
-                    <TableCell className="py-4">
-                      {agent.status === 'active' ? (
-                        <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400 ${isRTL ? 'flex-row-reverse' : ''}`}>
-                          <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse"></span>
-                          {t('agents.active')}
-                        </span>
-                      ) : (
-                        <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-slate-100 text-slate-600 dark:bg-slate-700/50 dark:text-slate-400">
-                          <span className="w-1.5 h-1.5 bg-slate-400 rounded-full"></span>
-                          {t('agents.inactive')}
-                        </span>
+
+                      {/* Prompt preview */}
+                      {agent.prompt && (
+                        <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed">
+                          {agent.prompt}
+                        </p>
                       )}
-                    </TableCell>
-                    <TableCell className={isRTL ? 'text-left' : 'text-right'} onClick={(e) => e.stopPropagation()}>
+                    </div>
+
+                    {/* Card footer */}
+                    <div
+                      className="flex items-center justify-between gap-2 px-4 py-2.5 border-t border-border bg-muted/30"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <div className="flex items-center gap-1">
+                        {/* View conversations */}
+                        <button
+                          onClick={() => setSelectedAgent(agent)}
+                          className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                          title={t('agents.viewConversations')}
+                        >
+                          <MessageSquare className="h-3.5 w-3.5" />
+                          Conversations
+                        </button>
+
+                        {/* Edit */}
+                        <Permission permission="agent:update">
+                          <button
+                            onClick={() => navigate(`/dashboard/builder/${agent.id}`)}
+                            className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                            title={t('agents.editAgent')}
+                          >
+                            <Edit className="h-3.5 w-3.5" />
+                            Edit
+                          </button>
+                        </Permission>
+                      </div>
+
+                      {/* More actions */}
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="icon" className="hover:bg-slate-100 dark:hover:bg-slate-700">
-                            <MoreHorizontal className="h-4 w-4" />
-                          </Button>
+                          <button className="h-7 w-7 rounded-lg flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-colors">
+                            <MoreHorizontal className="h-3.5 w-3.5" />
+                          </button>
                         </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="w-56">
-                          <DropdownMenuItem onClick={() => setSelectedAgent(agent)} className="cursor-pointer">
-                            <Eye className={`h-4 w-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
+                        <DropdownMenuContent align="end" className="w-52">
+                          <DropdownMenuItem onClick={() => setSelectedAgent(agent)} className="cursor-pointer gap-2">
+                            <Eye className="h-4 w-4" />
                             {t('agents.viewConversations')}
                           </DropdownMenuItem>
                           <Permission permission="agent:update">
-                            <DropdownMenuItem onClick={() => navigate(`/dashboard/builder/${agent.id}`)} className="cursor-pointer">
-                              <Edit className={`h-4 w-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
+                            <DropdownMenuItem onClick={() => navigate(`/dashboard/builder/${agent.id}`)} className="cursor-pointer gap-2">
+                              <Edit className="h-4 w-4" />
                               {t('agents.editAgent')}
                             </DropdownMenuItem>
                           </Permission>
-                          <DropdownMenuItem onClick={() => handleCopyEmbedCode(agent.id)} className="cursor-pointer">
-                            <Code className={`h-4 w-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
+                          <DropdownMenuItem onClick={() => handleCopyEmbedCode(agent.id)} className="cursor-pointer gap-2">
+                            <Code className="h-4 w-4" />
                             {t('agents.copyEmbedCode')}
                           </DropdownMenuItem>
                           <DropdownMenuSeparator />
                           <Permission permission="agent:delete">
                             <AlertDialog>
                               <AlertDialogTrigger asChild>
-                                <DropdownMenuItem onSelect={(e) => e.preventDefault()} className="text-red-600 dark:text-red-400 focus:text-red-600 dark:focus:text-red-400 cursor-pointer">
-                                  <Trash2 className={`h-4 w-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
+                                <DropdownMenuItem
+                                  onSelect={(e) => e.preventDefault()}
+                                  className="text-destructive focus:text-destructive cursor-pointer gap-2"
+                                >
+                                  <Trash2 className="h-4 w-4" />
                                   {t('agents.delete')}
                                 </DropdownMenuItem>
                               </AlertDialogTrigger>
-                              <AlertDialogContent className="bg-white dark:bg-slate-800">
+                              <AlertDialogContent>
                                 <AlertDialogHeader>
-                                  <AlertDialogTitle className="dark:text-white">{t('agents.deleteConfirmTitle')}</AlertDialogTitle>
-                                  <AlertDialogDescription className="dark:text-gray-400">
+                                  <AlertDialogTitle>{t('agents.deleteConfirmTitle')}</AlertDialogTitle>
+                                  <AlertDialogDescription>
                                     {t('agents.deleteConfirmDesc', { name: agent.name })}
                                   </AlertDialogDescription>
                                 </AlertDialogHeader>
                                 <AlertDialogFooter>
-                                  <AlertDialogCancel className="dark:bg-slate-700 dark:text-gray-300">{t('agents.cancel')}</AlertDialogCancel>
+                                  <AlertDialogCancel>{t('agents.cancel')}</AlertDialogCancel>
                                   <AlertDialogAction
                                     onClick={() => deleteAgentMutation.mutate(agent.id)}
-                                    className="bg-red-600 hover:bg-red-700 text-white"
+                                    className="bg-destructive hover:bg-destructive/90 text-destructive-foreground"
                                   >
                                     {t('agents.delete')}
                                   </AlertDialogAction>
@@ -640,14 +654,14 @@ export const AgentList = () => {
                           </Permission>
                         </DropdownMenuContent>
                       </DropdownMenu>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
-        </CardContent>
-      </Card>
+                    </div>
+                  </div>
+                </motion.div>
+              );
+            })}
+          </AnimatePresence>
+        </div>
+      )}
     </>
   );
 };

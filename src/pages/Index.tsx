@@ -280,7 +280,7 @@ const Index = () => {
             >
               <Sparkles className="w-4 h-4 text-blue-600 dark:text-blue-400" />
               <span className="text-sm font-medium text-blue-700 dark:text-blue-300">
-                Enterprise-Grade AI Agent Platform
+                No-Code AI Agent Builder &amp; Chatbot Platform
               </span>
               <ArrowRight className="w-4 h-4 text-blue-600 dark:text-blue-400" />
             </motion.div>
@@ -314,10 +314,10 @@ const Index = () => {
             transition={{ duration: 0.8, delay: 0.6 }}
             className="text-xl md:text-2xl text-slate-600 dark:text-slate-400 mb-12 max-w-4xl mx-auto leading-relaxed"
           >
-            Create, deploy, and manage AI agents with our{" "}
-            <span className="font-semibold text-slate-800 dark:text-slate-200">visual workflow builder</span>.
-            Multi-LLM support, knowledge bases, and{" "}
-            <span className="font-semibold text-slate-800 dark:text-slate-200">real-time analytics</span> — all in one platform.
+            Build, deploy, and manage{" "}
+            <span className="font-semibold text-slate-800 dark:text-slate-200">AI chatbots & voice agents</span>{" "}
+            with a no-code visual workflow builder. Multi-LLM support, knowledge bases, CRM, WhatsApp, and{" "}
+            <span className="font-semibold text-slate-800 dark:text-slate-200">embeddable web widgets</span> — the complete AI agent platform for your business.
           </motion.p>
 
           <motion.div

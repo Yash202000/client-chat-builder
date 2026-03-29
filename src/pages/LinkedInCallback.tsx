@@ -14,47 +14,60 @@ export const LinkedInCallback: React.FC = () => {
     const handleLinkedInCallback = async () => {
       const params = new URLSearchParams(location.search);
       const code = params.get('code');
+      const state = params.get('state') ?? '';
 
-      if (code) {
+      if (!code) return;
+
+      // Social Accounts flow — state starts with "social:"
+      if (state.startsWith('social:')) {
         try {
-          const response = await authFetch('/api/v1/proxy/linkedin/oauth/v2/accessToken', {
+          const response = await authFetch('/api/v1/social/auth/linkedin/exchange', {
             method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              code,
-              redirect_uri: `${window.location.origin}/linkedin-callback`,
-              grant_type: 'authorization_code',
-            }),
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ code }),
           });
 
           if (response.ok) {
-            const data = await response.json();
-            // Now you have the access token, you can save it to the integration
-            // This will likely involve another API call to your backend to create/update the integration
-            // with the new credentials.
-            
-            // For now, we'll just show a success message
-            toast({ title: 'Success', description: 'LinkedIn connected successfully.' });
-            
-            // Invalidate the integrations query to refetch the list
-            queryClient.invalidateQueries({ queryKey: ['integrations'] });
-            
-            // Notify the main window and close the popup
-            if (window.opener) {
-              window.opener.postMessage('linkedin-success', window.location.origin);
-              window.close();
-            } else {
-              // Fallback for cases where the popup is not opened by a script
-              navigate('/settings');
-            }
+            toast({ title: 'LinkedIn connected!', description: 'Your account has been linked.' });
+            queryClient.invalidateQueries({ queryKey: ['social-accounts'] });
+            navigate('/dashboard/social/accounts?connected=linkedin');
           } else {
-            toast({ title: 'Error', description: 'Failed to get access token from LinkedIn.', variant: 'destructive' });
+            toast({ title: 'Error', description: 'Failed to connect LinkedIn account.', variant: 'destructive' });
+            navigate('/dashboard/social/accounts');
           }
-        } catch (error) {
+        } catch {
           toast({ title: 'Error', description: 'An unexpected error occurred.', variant: 'destructive' });
+          navigate('/dashboard/social/accounts');
         }
+        return;
+      }
+
+      // Legacy integration flow — opens in popup
+      try {
+        const response = await authFetch('/api/v1/proxy/linkedin/oauth/v2/accessToken', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            code,
+            redirect_uri: `${window.location.origin}/linkedin-callback`,
+            grant_type: 'authorization_code',
+          }),
+        });
+
+        if (response.ok) {
+          toast({ title: 'Success', description: 'LinkedIn connected successfully.' });
+          queryClient.invalidateQueries({ queryKey: ['integrations'] });
+          if (window.opener) {
+            window.opener.postMessage('linkedin-success', window.location.origin);
+            window.close();
+          } else {
+            navigate('/settings');
+          }
+        } else {
+          toast({ title: 'Error', description: 'Failed to get access token from LinkedIn.', variant: 'destructive' });
+        }
+      } catch {
+        toast({ title: 'Error', description: 'An unexpected error occurred.', variant: 'destructive' });
       }
     };
 

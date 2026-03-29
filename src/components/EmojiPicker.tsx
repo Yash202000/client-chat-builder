@@ -46,7 +46,7 @@ const EmojiPicker: React.FC<EmojiPickerProps> = ({ onEmojiSelect, className }) =
             <button
               key={emoji}
               onClick={() => handleEmojiClick(emoji)}
-              className="flex items-center justify-center h-10 w-10 rounded hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors text-2xl"
+              className="flex items-center justify-center h-10 w-10 rounded hover:bg-muted transition-colors text-2xl"
             >
               {emoji}
             </button>

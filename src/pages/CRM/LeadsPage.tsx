@@ -7,17 +7,15 @@ import {
   Draggable,
   DropResult,
 } from '@hello-pangea/dnd';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   Users,
   Plus,
   Search,
   Download,
   Upload,
-  MoreVertical,
   Star,
   DollarSign,
-  TrendingUp,
-  TrendingDown,
   Check,
   ChevronsUpDown,
   AlertCircle,
@@ -31,21 +29,9 @@ import {
   List,
   Tag,
   Loader2,
-  Sparkles,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-  DropdownMenuSeparator,
-  DropdownMenuLabel,
-} from '@/components/ui/dropdown-menu';
 import {
   Select,
   SelectContent,
@@ -129,12 +115,12 @@ const STAGE_LABELS: Record<string, string> = {
 };
 
 const STAGE_COLORS: Record<string, string> = {
-  lead: 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300',
-  mql: 'bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300',
-  sql: 'bg-purple-100 text-purple-700 dark:bg-purple-900/50 dark:text-purple-300',
-  opportunity: 'bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-300',
-  customer: 'bg-green-100 text-green-700 dark:bg-green-900/50 dark:text-green-300',
-  lost: 'bg-red-100 text-red-700 dark:bg-red-900/50 dark:text-red-300',
+  lead: 'bg-muted text-muted-foreground border border-border',
+  mql: 'bg-blue-500/10 border border-blue-500/20 text-blue-600 dark:text-blue-400',
+  sql: 'bg-violet-500/10 border border-violet-500/20 text-violet-600 dark:text-violet-400',
+  opportunity: 'bg-amber-500/10 border border-amber-500/20 text-amber-600 dark:text-amber-400',
+  customer: 'bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400',
+  lost: 'bg-red-500/10 border border-red-500/20 text-red-600 dark:text-red-400',
 };
 
 const STAGE_GRADIENTS: Record<string, string> = {
@@ -354,263 +340,141 @@ export default function LeadsPage() {
     }
   }, [toast]);
 
-  const metrics = [
-    {
-      title: t('crm.dashboard.stats.totalLeads'),
-      value: stats?.total_leads || 0,
-      subtext: `${stats?.qualified_count || 0} ${t('crm.leads.qualification.qualified').toLowerCase()}`,
-      icon: Users,
-      gradient: 'from-blue-100 to-blue-200 dark:from-blue-900/50 dark:to-blue-800/50',
-      iconColor: 'text-blue-600 dark:text-blue-400',
-      trend: '+12%',
-      trendUp: true,
-    },
-    {
-      title: t('crm.dashboard.stats.pipelineValue'),
-      value: `$${(stats?.total_pipeline_value || 0).toLocaleString()}`,
-      subtext: `${stats?.opportunity_count || 0} ${t('crm.leads.stages.opportunity').toLowerCase()}`,
-      icon: CircleDollarSign,
-      gradient: 'from-green-100 to-green-200 dark:from-green-900/50 dark:to-green-800/50',
-      iconColor: 'text-green-600 dark:text-green-400',
-      trend: '+8%',
-      trendUp: true,
-    },
-    {
-      title: t('crm.leads.stats.avgScore'),
-      value: `${stats?.avg_score ? stats.avg_score.toFixed(0) : 0}/100`,
-      subtext: t('crm.leads.fields.score'),
-      icon: Star,
-      gradient: 'from-yellow-100 to-yellow-200 dark:from-yellow-900/50 dark:to-yellow-800/50',
-      iconColor: 'text-yellow-600 dark:text-yellow-400',
-      trend: '+5',
-      trendUp: true,
-    },
-    {
-      title: t('crm.dashboard.stats.conversionRate'),
-      value: `${stats?.total_leads ? (((stats?.customer_count || 0) / stats.total_leads) * 100).toFixed(1) : 0}%`,
-      subtext: `${stats?.customer_count || 0} ${t('crm.leads.stages.customer').toLowerCase()}`,
-      icon: Percent,
-      gradient: 'from-purple-100 to-purple-200 dark:from-purple-900/50 dark:to-purple-800/50',
-      iconColor: 'text-purple-600 dark:text-purple-400',
-      trend: '+2.3%',
-      trendUp: true,
-    },
-  ];
-
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-64">
-        <Loader2 className="h-6 w-6 animate-spin text-slate-400" />
+        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-full bg-slate-50 dark:bg-slate-950">
-      {/* Header bar */}
-      <div className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800">
-        <div className="px-6 py-6">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center flex-shrink-0">
-                <Sparkles className="h-6 w-6 text-white" />
-              </div>
-              <div>
-                <h1 className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent leading-tight">
-                  {t('crm.leads.title')}
-                </h1>
-                <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">
-                  {t('crm.leads.subtitle')}
-                </p>
-              </div>
-            </div>
-            <div className="flex items-center gap-3">
-              <Button variant="outline" size="sm" className="h-9 px-4 text-sm dark:border-slate-700">
-                <Upload className="h-4 w-4 mr-2" />
-                {t('crm.common.import')}
-              </Button>
-              <Button variant="outline" size="sm" className="h-9 px-4 text-sm dark:border-slate-700">
-                <Download className="h-4 w-4 mr-2" />
-                {t('crm.common.export')}
-              </Button>
-              <Button
-                size="sm"
-                onClick={() => setCreateDialogOpen(true)}
-                className="h-9 px-4 text-sm bg-gradient-to-r from-purple-500 to-indigo-600 hover:from-purple-600 hover:to-indigo-700 text-white"
-              >
-                <Plus className="h-4 w-4 mr-2" />
-                {t('crm.leads.addLead')}
-              </Button>
-            </div>
-          </div>
+    <div className="flex flex-col h-full">
+      {/* Compact header: pills + actions */}
+      <div className="flex items-center justify-between gap-3 mb-4 flex-wrap">
+        {/* Stat pills */}
+        <div className="flex items-center gap-2 flex-wrap">
+          <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-muted border border-border text-xs font-semibold text-foreground">
+            <Users className="h-3.5 w-3.5 text-muted-foreground" />
+            {stats?.total_leads || 0} Leads
+          </span>
+          <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-xs font-semibold text-emerald-600 dark:text-emerald-400">
+            <CircleDollarSign className="h-3.5 w-3.5" />
+            ${(stats?.total_pipeline_value || 0).toLocaleString()} Pipeline
+          </span>
+          <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-amber-500/10 border border-amber-500/20 text-xs font-semibold text-amber-600 dark:text-amber-400">
+            <Star className="h-3.5 w-3.5" />
+            {stats?.avg_score ? stats.avg_score.toFixed(0) : 0}/100 Score
+          </span>
+          <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-violet-500/10 border border-violet-500/20 text-xs font-semibold text-violet-600 dark:text-violet-400">
+            <Percent className="h-3.5 w-3.5" />
+            {stats?.total_leads ? (((stats?.customer_count || 0) / stats.total_leads) * 100).toFixed(1) : 0}% Conv.
+          </span>
+        </div>
+        {/* Actions */}
+        <div className="flex items-center gap-2">
+          <Button variant="outline" size="sm" className="h-8 px-3 text-xs">
+            <Upload className="h-3.5 w-3.5 mr-1.5" />{t('crm.common.import')}
+          </Button>
+          <Button variant="outline" size="sm" className="h-8 px-3 text-xs">
+            <Download className="h-3.5 w-3.5 mr-1.5" />{t('crm.common.export')}
+          </Button>
+          <Button size="sm" onClick={() => setCreateDialogOpen(true)} className="h-8 px-3 text-xs">
+            <Plus className="h-3.5 w-3.5 mr-1.5" />{t('crm.leads.addLead')}
+          </Button>
         </div>
       </div>
 
-      <div className="px-6 py-6 space-y-6">
-
-      {/* Banner for Contacts Without Leads */}
+      {/* Contacts without leads banner */}
       {showBanner && contactsWithoutLeads > 0 && (
-        <div className="rounded-xl border border-amber-200 dark:border-amber-800/60 bg-amber-50 dark:bg-amber-950/20 p-4">
-          <div className="flex items-center justify-between gap-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-xl bg-gradient-to-br from-amber-500 to-orange-500 shadow-md">
-                <AlertCircle className="h-5 w-5 text-white" />
-              </div>
-              <span className="text-amber-800 dark:text-amber-200 font-medium">
-                {t('crm.leads.contactsWithoutLeads', { count: contactsWithoutLeads })}
-              </span>
-            </div>
-            <div className="flex items-center gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                className="rounded-xl border-amber-300 dark:border-amber-700 text-amber-700 dark:text-amber-300 hover:bg-amber-100 dark:hover:bg-amber-900/30"
-                onClick={() => navigate('/dashboard/crm/contacts')}
-              >
-                {t('crm.contacts.title')}
-              </Button>
-              <Button variant="ghost" size="sm" onClick={() => setShowBanner(false)} className="rounded-xl hover:bg-amber-100 dark:hover:bg-amber-900/30">
-                <X className="h-4 w-4 text-amber-600 dark:text-amber-400" />
-              </Button>
-            </div>
+        <div className="rounded-xl border border-amber-500/20 bg-amber-500/5 px-4 py-3 mb-4 flex items-center justify-between gap-4">
+          <div className="flex items-center gap-2.5">
+            <AlertCircle className="h-4 w-4 text-amber-500 flex-shrink-0" />
+            <span className="text-sm font-medium text-amber-700 dark:text-amber-300">
+              {t('crm.leads.contactsWithoutLeads', { count: contactsWithoutLeads })}
+            </span>
+          </div>
+          <div className="flex items-center gap-2">
+            <Button variant="outline" size="sm" className="h-7 px-2.5 text-xs border-amber-300 dark:border-amber-700 text-amber-700 dark:text-amber-300" onClick={() => navigate('/dashboard/crm/contacts')}>
+              {t('crm.contacts.title')}
+            </Button>
+            <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={() => setShowBanner(false)}>
+              <X className="h-3.5 w-3.5 text-amber-500" />
+            </Button>
           </div>
         </div>
       )}
 
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {metrics.map((metric) => {
-          const IconComponent = metric.icon;
-          const colorMap = {
-            'text-blue-600 dark:text-blue-400': { bg: 'bg-white dark:bg-slate-800', border: 'border-blue-200/80 dark:border-blue-800/60', icon: 'from-blue-500 to-blue-600' },
-            'text-green-600 dark:text-green-400': { bg: 'bg-white dark:bg-slate-800', border: 'border-green-200/80 dark:border-green-800/60', icon: 'from-green-500 to-emerald-600' },
-            'text-yellow-600 dark:text-yellow-400': { bg: 'bg-white dark:bg-slate-800', border: 'border-yellow-200/80 dark:border-yellow-800/60', icon: 'from-yellow-500 to-amber-600' },
-            'text-purple-600 dark:text-purple-400': { bg: 'bg-white dark:bg-slate-800', border: 'border-purple-200/80 dark:border-purple-800/60', icon: 'from-purple-500 to-indigo-600' },
-          };
-          const colors = colorMap[metric.iconColor] || { bg: 'bg-white dark:bg-slate-800', border: 'border-slate-200/80 dark:border-slate-700/60', icon: 'from-slate-500 to-slate-600' };
-
-          return (
-            <div
-              key={metric.title}
-              className={`p-5 rounded-xl border ${colors.border} bg-white dark:bg-slate-900 shadow-sm hover:shadow-md transition-all duration-200`}
-            >
-              <div className="flex items-start justify-between mb-3">
-                <div className={`h-10 w-10 rounded-lg bg-gradient-to-br ${colors.icon} flex items-center justify-center`}>
-                  <IconComponent className="h-5 w-5 text-white" />
-                </div>
-                <div className={`flex items-center gap-1 px-2 py-1 rounded-lg ${metric.trendUp ? 'bg-green-100 dark:bg-green-900/30' : 'bg-red-100 dark:bg-red-900/30'}`}>
-                  {metric.trendUp ? (
-                    <TrendingUp className="h-3.5 w-3.5 text-green-600 dark:text-green-400" />
-                  ) : (
-                    <TrendingDown className="h-3.5 w-3.5 text-red-600 dark:text-red-400" />
-                  )}
-                  <span className={`text-xs font-bold ${metric.trendUp ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
-                    {metric.trend}
-                  </span>
-                </div>
-              </div>
-              <div>
-                <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">
-                  {metric.title}
-                </p>
-                <p className="text-2xl font-bold text-slate-800 dark:text-white mb-1">{metric.value}</p>
-                <p className="text-sm text-slate-500 dark:text-slate-400">{metric.subtext}</p>
-              </div>
-            </div>
-          );
-        })}
-      </div>
-
-      {/* Filters and View Toggle */}
-      <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4">
-        <div className="flex flex-col md:flex-row items-center gap-3">
-          <div className="flex-1 relative w-full">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-slate-400" />
-            <Input
-              placeholder={t('crm.leads.searchPlaceholder')}
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-9 h-9 dark:bg-slate-800 dark:border-slate-700"
-            />
-          </div>
-          <Select value={selectedStage} onValueChange={setSelectedStage}>
-            <SelectTrigger className="w-[160px] h-9 dark:bg-slate-800 dark:border-slate-700">
-              <SelectValue placeholder={t('crm.leads.filters.byStage')} />
-            </SelectTrigger>
-            <SelectContent className="rounded-xl">
-              <SelectItem value="all">{t('crm.leads.filters.all')}</SelectItem>
-              {Object.entries(STAGE_LABELS).map(([value, label]) => (
-                <SelectItem key={value} value={value}>{t(`crm.leads.stages.${value}`, label)}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <div className="flex items-center gap-2 bg-white dark:bg-slate-800 border border-slate-200/80 dark:border-slate-600/80 rounded-xl px-4 py-2">
-            <Tag className="h-4 w-4 text-slate-400" />
-            <TagSelector
-              entityType="lead"
-              selectedTagIds={filterTagIds}
-              onTagsChange={setFilterTagIds}
-              showCreateOption={false}
-              maxDisplay={3}
-            />
-            {filterTagIds.length > 0 && (
-              <Button
-                variant="ghost"
-                size="sm"
-                className="h-6 px-2 text-xs rounded-lg"
-                onClick={() => setFilterTagIds([])}
-              >
-                {t('common.clear')}
-              </Button>
-            )}
-          </div>
-          <div className="flex items-center bg-slate-100 dark:bg-slate-800 rounded-lg p-1">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setView('kanban')}
-              className={cn(
-                "h-7 px-3 text-xs rounded-md transition-all",
-                view === 'kanban'
-                  ? 'bg-white dark:bg-slate-700 text-slate-800 dark:text-white shadow-sm'
-                  : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'
-              )}
-            >
-              <LayoutGrid className="h-3.5 w-3.5 mr-1.5" />
-              {t('crm.leads.views.kanban')}
+      {/* Filter + view toggle bar */}
+      <div className="flex items-center gap-2 mb-4 flex-wrap">
+        <div className="relative flex-1 min-w-48">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+          <Input
+            placeholder={t('crm.leads.searchPlaceholder')}
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-8 h-8 text-sm bg-muted/40 border-border"
+          />
+        </div>
+        <Select value={selectedStage} onValueChange={setSelectedStage}>
+          <SelectTrigger className="w-40 h-8 text-sm bg-muted/40 border-border">
+            <SelectValue placeholder={t('crm.leads.filters.byStage')} />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">{t('crm.leads.filters.all')}</SelectItem>
+            {Object.entries(STAGE_LABELS).map(([value, label]) => (
+              <SelectItem key={value} value={value}>{t(`crm.leads.stages.${value}`, label)}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <div className="flex items-center gap-2 bg-muted/40 border border-border rounded-md px-3 py-1.5">
+          <Tag className="h-3.5 w-3.5 text-muted-foreground" />
+          <TagSelector
+            entityType="lead"
+            selectedTagIds={filterTagIds}
+            onTagsChange={setFilterTagIds}
+            showCreateOption={false}
+            maxDisplay={3}
+          />
+          {filterTagIds.length > 0 && (
+            <Button variant="ghost" size="sm" className="h-5 px-1.5 text-xs" onClick={() => setFilterTagIds([])}>
+              {t('common.clear')}
             </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setView('table')}
-              className={cn(
-                "h-7 px-3 text-xs rounded-md transition-all",
-                view === 'table'
-                  ? 'bg-white dark:bg-slate-700 text-slate-800 dark:text-white shadow-sm'
-                  : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'
-              )}
-            >
-              <List className="h-3.5 w-3.5 mr-1.5" />
-              {t('crm.leads.views.list')}
-            </Button>
-          </div>
+          )}
+        </div>
+        {/* View toggle */}
+        <div className="flex items-center bg-muted rounded-lg p-0.5">
+          <Button
+            variant="ghost" size="sm"
+            onClick={() => setView('kanban')}
+            className={cn("h-7 px-3 text-xs rounded-md transition-all", view === 'kanban' ? 'bg-card text-foreground shadow-sm' : 'text-muted-foreground')}
+          >
+            <LayoutGrid className="h-3.5 w-3.5 mr-1.5" />{t('crm.leads.views.kanban')}
+          </Button>
+          <Button
+            variant="ghost" size="sm"
+            onClick={() => setView('table')}
+            className={cn("h-7 px-3 text-xs rounded-md transition-all", view === 'table' ? 'bg-card text-foreground shadow-sm' : 'text-muted-foreground')}
+          >
+            <List className="h-3.5 w-3.5 mr-1.5" />{t('crm.leads.views.list')}
+          </Button>
         </div>
       </div>
 
-      {/* Kanban View */}
+      {/* Kanban View - PRESERVE ALL drag-drop logic exactly */}
       {view === 'kanban' && (
         <DragDropContext onDragEnd={handleDragEnd}>
-          <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-3 flex-1">
             {Object.entries(STAGE_LABELS).map(([stage, label]) => (
-              <div key={stage} className="space-y-3">
-                <div className="flex items-center justify-between px-2">
-                  <div className="flex items-center gap-2">
+              <div key={stage} className="flex flex-col min-h-0">
+                <div className="flex items-center justify-between px-1 mb-2">
+                  <div className="flex items-center gap-1.5">
                     <div className={`w-2 h-2 rounded-full bg-gradient-to-r ${STAGE_GRADIENTS[stage]}`} />
-                    <h3 className="font-semibold text-sm dark:text-white">{t(`crm.leads.stages.${stage}`, label)}</h3>
+                    <span className="font-semibold text-xs text-foreground">{t(`crm.leads.stages.${stage}`, label)}</span>
                   </div>
-                  <Badge variant="secondary" className="bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300">
+                  <span className="text-xs font-medium px-1.5 py-0.5 rounded-full bg-muted text-muted-foreground">
                     {leadsByStage[stage]?.length || 0}
-                  </Badge>
+                  </span>
                 </div>
                 <Droppable droppableId={stage}>
                   {(provided, snapshot) => (
@@ -618,73 +482,65 @@ export default function LeadsPage() {
                       ref={provided.innerRef}
                       {...provided.droppableProps}
                       className={cn(
-                        "space-y-2 min-h-[300px] rounded-xl p-2 transition-all duration-200",
+                        "flex-1 space-y-2 min-h-[200px] rounded-xl p-2 transition-all duration-200",
                         snapshot.isDraggingOver
-                          ? "bg-orange-50 dark:bg-orange-900/10 border-2 border-dashed border-orange-300 dark:border-orange-700"
-                          : "bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700"
+                          ? "bg-primary/5 border-2 border-dashed border-primary/30"
+                          : "bg-muted/30 border border-border"
                       )}
                     >
                       {leadsByStage[stage]?.map((lead, index) => (
                         <Draggable key={lead.id} draggableId={`lead-${lead.id}`} index={index}>
                           {(provided, snapshot) => (
-                            <Card
+                            <div
                               ref={provided.innerRef}
                               {...provided.draggableProps}
                               className={cn(
-                                "cursor-pointer transition-all duration-200 border-slate-200 dark:border-slate-700 dark:bg-slate-800",
+                                "rounded-lg border bg-card p-3 cursor-pointer transition-all duration-200",
                                 snapshot.isDragging
-                                  ? "shadow-xl ring-2 ring-orange-400 rotate-2"
-                                  : "hover:shadow-lg hover:-translate-y-0.5"
+                                  ? "shadow-xl ring-2 ring-primary/30 rotate-1 border-primary/20"
+                                  : "hover:shadow-md hover:-translate-y-0.5 border-border"
                               )}
                               onClick={() => navigate(`/dashboard/crm/leads/${lead.id}`)}
                             >
-                              <CardHeader className="p-3 space-y-1">
-                                <div className="flex items-start justify-between">
-                                  <div className="flex items-center gap-1.5">
-                                    <div
-                                      {...provided.dragHandleProps}
-                                      className="cursor-grab active:cursor-grabbing p-0.5 rounded hover:bg-slate-100 dark:hover:bg-slate-700"
-                                      onClick={(e) => e.stopPropagation()}
-                                    >
-                                      <GripVertical className="h-3.5 w-3.5 text-slate-400" />
-                                    </div>
-                                    <CardTitle className="text-sm font-medium dark:text-white">
-                                      {lead.contact?.name || 'Unknown'}
-                                    </CardTitle>
+                              <div className="flex items-start justify-between mb-1">
+                                <div className="flex items-center gap-1">
+                                  <div
+                                    {...provided.dragHandleProps}
+                                    className="cursor-grab active:cursor-grabbing p-0.5 rounded hover:bg-muted"
+                                    onClick={(e) => e.stopPropagation()}
+                                  >
+                                    <GripVertical className="h-3 w-3 text-muted-foreground" />
                                   </div>
-                                  <div className="flex items-center gap-1 bg-yellow-50 dark:bg-yellow-900/30 px-1.5 py-0.5 rounded">
-                                    <Star className="h-3 w-3 text-yellow-500 fill-yellow-500" />
-                                    <span className="text-xs font-medium text-yellow-700 dark:text-yellow-400">{lead.score}</span>
-                                  </div>
+                                  <span className="text-xs font-semibold text-foreground leading-tight">
+                                    {lead.contact?.name || 'Unknown'}
+                                  </span>
                                 </div>
-                                <CardDescription className="text-xs pl-5 dark:text-gray-400">
-                                  {lead.contact?.email}
-                                </CardDescription>
-                              </CardHeader>
-                              <CardContent className="p-3 pt-0 space-y-2 pl-6">
-                                {lead.deal_value && (
-                                  <div className="flex items-center text-xs text-green-600 dark:text-green-400 font-medium">
-                                    <DollarSign className="h-3 w-3 mr-0.5" />
-                                    {lead.deal_value.toLocaleString()}
-                                  </div>
-                                )}
-                                {lead.source && (
-                                  <Badge variant="outline" className="text-xs border-slate-300 dark:border-slate-600">
-                                    {lead.source}
-                                  </Badge>
-                                )}
-                              </CardContent>
-                            </Card>
+                                <div className="flex items-center gap-0.5 bg-amber-500/10 px-1.5 py-0.5 rounded">
+                                  <Star className="h-2.5 w-2.5 text-amber-500 fill-amber-500" />
+                                  <span className="text-xs font-medium text-amber-600 dark:text-amber-400">{lead.score}</span>
+                                </div>
+                              </div>
+                              <p className="text-xs text-muted-foreground ml-5 truncate mb-1.5">{lead.contact?.email}</p>
+                              {lead.deal_value && (
+                                <div className="flex items-center text-xs text-emerald-600 dark:text-emerald-400 font-medium ml-5">
+                                  <DollarSign className="h-3 w-3 mr-0.5" />
+                                  {lead.deal_value.toLocaleString()}
+                                </div>
+                              )}
+                              {lead.source && (
+                                <span className="ml-5 mt-1 inline-block text-xs px-1.5 py-0.5 rounded bg-muted text-muted-foreground border border-border">
+                                  {lead.source}
+                                </span>
+                              )}
+                            </div>
                           )}
                         </Draggable>
                       ))}
                       {provided.placeholder}
                       {leadsByStage[stage]?.length === 0 && (
-                        <div className="flex flex-col items-center justify-center py-8 text-center">
-                          <div className="h-10 w-10 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center mb-2">
-                            <Target className="h-5 w-5 text-slate-400" />
-                          </div>
-                          <p className="text-xs text-slate-500 dark:text-slate-400">{t('crm.leads.noLeadsInStage', { stage: t(`crm.leads.stages.${stage}`, label) })}</p>
+                        <div className="flex flex-col items-center justify-center py-6 text-center">
+                          <Target className="h-6 w-6 text-muted-foreground/30 mb-1" />
+                          <p className="text-xs text-muted-foreground/60">{t('crm.leads.noLeadsInStage', { stage: t(`crm.leads.stages.${stage}`, label) })}</p>
                         </div>
                       )}
                     </div>
@@ -698,112 +554,99 @@ export default function LeadsPage() {
 
       {/* Table View */}
       {view === 'table' && (
-        <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm overflow-hidden">
+        <div className="rounded-xl border border-border bg-card overflow-hidden">
           <Table>
             <TableHeader>
-              <TableRow className="bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700">
-                <TableHead className="font-semibold">{t('crm.leads.fields.name')}</TableHead>
-                <TableHead className="font-semibold">{t('crm.leads.fields.email')}</TableHead>
-                <TableHead className="font-semibold">{t('crm.leads.fields.stage')}</TableHead>
-                <TableHead className="font-semibold">{t('crm.leads.fields.score')}</TableHead>
-                <TableHead className="font-semibold">{t('crm.leads.fields.dealValue')}</TableHead>
-                <TableHead className="font-semibold">{t('crm.leads.fields.source')}</TableHead>
-                <TableHead className="font-semibold">{t('crm.common.status')}</TableHead>
-                <TableHead></TableHead>
+              <TableRow className="bg-muted/50 border-border hover:bg-muted/50">
+                <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t('crm.leads.fields.name')}</TableHead>
+                <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t('crm.leads.fields.email')}</TableHead>
+                <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t('crm.leads.fields.stage')}</TableHead>
+                <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t('crm.leads.fields.score')}</TableHead>
+                <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t('crm.leads.fields.dealValue')}</TableHead>
+                <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t('crm.leads.fields.source')}</TableHead>
+                <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t('crm.common.status')}</TableHead>
+                <TableHead className="w-10"></TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredLeads.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={8} className="text-center py-12">
-                    <div className="flex flex-col items-center">
-                      <div className="h-14 w-14 rounded-2xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center mb-4">
-                        <Users className="h-7 w-7 text-slate-400" />
+              <AnimatePresence>
+                {filteredLeads.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={8} className="text-center py-12">
+                      <div className="flex flex-col items-center gap-2">
+                        <div className="h-12 w-12 rounded-2xl bg-muted border border-border flex items-center justify-center">
+                          <Users className="h-6 w-6 text-muted-foreground" />
+                        </div>
+                        <p className="text-sm text-muted-foreground">{t('crm.leads.noLeads')}</p>
                       </div>
-                      <p className="text-slate-500 dark:text-slate-400">{t('crm.leads.noLeads')}</p>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ) : (
-                filteredLeads.map((lead) => (
-                  <TableRow
-                    key={lead.id}
-                    className="cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-900/50 transition-colors"
-                    onClick={() => navigate(`/dashboard/crm/leads/${lead.id}`)}
-                  >
-                    <TableCell className="font-medium dark:text-white">{lead.contact?.name}</TableCell>
-                    <TableCell className="dark:text-gray-300">{lead.contact?.email}</TableCell>
-                    <TableCell>
-                      <Badge className={cn("font-medium", STAGE_COLORS[lead.stage])}>
-                        {STAGE_LABELS[lead.stage]}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-1.5">
-                        <Star className="h-3.5 w-3.5 fill-yellow-400 text-yellow-400" />
-                        <span className="dark:text-white">{lead.score}/100</span>
-                      </div>
-                    </TableCell>
-                    <TableCell className="text-green-600 dark:text-green-400 font-medium">
-                      {lead.deal_value ? `$${lead.deal_value.toLocaleString()}` : '-'}
-                    </TableCell>
-                    <TableCell className="dark:text-gray-300">{lead.source || '-'}</TableCell>
-                    <TableCell>
-                      <Badge variant={lead.qualification_status === 'qualified' ? 'default' : 'secondary'}
-                        className={lead.qualification_status === 'qualified'
-                          ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
-                          : ''}>
-                        {lead.qualification_status}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                            <MoreVertical className="h-4 w-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="dark:bg-slate-900 dark:border-slate-800">
-                          <DropdownMenuLabel>{t('crm.common.actions')}</DropdownMenuLabel>
-                          <DropdownMenuItem onClick={(e) => { e.stopPropagation(); navigate(`/dashboard/crm/leads/${lead.id}`); }}>
-                            {t('crm.common.view')}
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onClick={(e) => { e.stopPropagation(); handleQualifyLead(lead.id); }}>
-                            {t('crm.leads.actions.qualify')}
-                          </DropdownMenuItem>
-                          <DropdownMenuSeparator />
-                          <DropdownMenuItem className="text-red-600 dark:text-red-400">{t('crm.leads.deleteLead')}</DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
                     </TableCell>
                   </TableRow>
-                ))
-              )}
+                ) : (
+                  filteredLeads.map((lead, i) => (
+                    <motion.tr
+                      key={lead.id}
+                      initial={{ opacity: 0, y: 6 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0 }}
+                      transition={{ duration: 0.18, delay: i * 0.025 }}
+                      className="border-border hover:bg-muted/40 transition-colors cursor-pointer"
+                      onClick={() => navigate(`/dashboard/crm/leads/${lead.id}`)}
+                    >
+                      <TableCell className="font-medium text-foreground">{lead.contact?.name}</TableCell>
+                      <TableCell className="text-muted-foreground text-sm">{lead.contact?.email}</TableCell>
+                      <TableCell>
+                        <span className={cn("inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium", STAGE_COLORS[lead.stage])}>
+                          {STAGE_LABELS[lead.stage]}
+                        </span>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-1.5">
+                          <Star className="h-3 w-3 fill-amber-400 text-amber-400" />
+                          <span className="text-sm text-foreground">{lead.score}/100</span>
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-emerald-600 dark:text-emerald-400 font-medium text-sm">
+                        {lead.deal_value ? `$${lead.deal_value.toLocaleString()}` : '—'}
+                      </TableCell>
+                      <TableCell className="text-muted-foreground text-sm">{lead.source || '—'}</TableCell>
+                      <TableCell>
+                        <span className={cn("inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium",
+                          lead.qualification_status === 'qualified' ? 'bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400' : 'bg-muted border border-border text-muted-foreground')}>
+                          {lead.qualification_status}
+                        </span>
+                      </TableCell>
+                      <TableCell>
+                        <Button variant="ghost" size="sm" className="h-7 w-7 p-0 rounded-lg hover:bg-muted" onClick={(e) => { e.stopPropagation(); handleQualifyLead(lead.id); }}>
+                          <UserCheck className="h-3.5 w-3.5 text-muted-foreground" />
+                        </Button>
+                      </TableCell>
+                    </motion.tr>
+                  ))
+                )}
+              </AnimatePresence>
             </TableBody>
           </Table>
         </div>
       )}
 
-      </div>
-
       {/* Create Lead Dialog */}
       <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto dark:bg-slate-900 dark:border-slate-800">
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle className="text-2xl font-bold bg-gradient-to-r from-orange-600 to-red-600 bg-clip-text text-transparent">
+            <DialogTitle className="text-xl font-bold text-foreground">
               {t('crm.leads.addLead')}
             </DialogTitle>
-            <DialogDescription className="dark:text-gray-400">
+            <DialogDescription className="text-muted-foreground">
               {t('crm.leads.createLeadDescription')}
             </DialogDescription>
           </DialogHeader>
 
           <Tabs value={createMode} onValueChange={(v) => setCreateMode(v as 'existing' | 'new')}>
-            <TabsList className="grid w-full grid-cols-2 bg-slate-100 dark:bg-slate-900">
-              <TabsTrigger value="existing" className="data-[state=active]:bg-white dark:data-[state=active]:bg-slate-700">
+            <TabsList className="grid w-full grid-cols-2 bg-muted">
+              <TabsTrigger value="existing" className="data-[state=active]:bg-card data-[state=active]:text-foreground">
                 {t('crm.leads.fromExistingContact')}
               </TabsTrigger>
-              <TabsTrigger value="new" className="data-[state=active]:bg-white dark:data-[state=active]:bg-slate-700">
+              <TabsTrigger value="new" className="data-[state=active]:bg-card data-[state=active]:text-foreground">
                 {t('crm.leads.newContact')}
               </TabsTrigger>
             </TabsList>
@@ -813,14 +656,14 @@ export default function LeadsPage() {
                 <Label htmlFor="contact">{t('crm.leads.selectContact')} <span className="text-red-500">*</span></Label>
                 <Popover open={openCombobox} onOpenChange={setOpenCombobox}>
                   <PopoverTrigger asChild>
-                    <Button variant="outline" role="combobox" aria-expanded={openCombobox} className="w-full justify-between dark:bg-slate-900 dark:border-slate-600">
+                    <Button variant="outline" role="combobox" aria-expanded={openCombobox} className="w-full justify-between bg-background border-border">
                       {selectedContactId
                         ? availableContacts.find((c) => c.id.toString() === selectedContactId)?.name
                         : t('crm.leads.searchContacts')}
                       <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                     </Button>
                   </PopoverTrigger>
-                  <PopoverContent className="w-full p-0 dark:bg-slate-900 dark:border-slate-800" align="start">
+                  <PopoverContent className="w-full p-0" align="start">
                     <Command>
                       <CommandInput placeholder={t('crm.leads.searchByNameOrEmail')} />
                       <CommandList>
@@ -853,12 +696,12 @@ export default function LeadsPage() {
                   <Label htmlFor="deal_value_existing">{t('crm.leads.fields.dealValue')} ($)</Label>
                   <Input id="deal_value_existing" type="number" placeholder="10000" value={newLead.deal_value}
                     onChange={(e) => setNewLead({ ...newLead, deal_value: e.target.value })}
-                    className="dark:bg-slate-900 dark:border-slate-600" />
+                    className="bg-background border-border" />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="source_existing">{t('crm.leads.fields.source')}</Label>
                   <Select value={newLead.source} onValueChange={(value) => setNewLead({ ...newLead, source: value })}>
-                    <SelectTrigger className="dark:bg-slate-900 dark:border-slate-600"><SelectValue placeholder={t('crm.leads.selectSource')} /></SelectTrigger>
+                    <SelectTrigger className="bg-background border-border"><SelectValue placeholder={t('crm.leads.selectSource')} /></SelectTrigger>
                     <SelectContent>
                       <SelectItem value="website">{t('crm.leads.sources.website')}</SelectItem>
                       <SelectItem value="referral">{t('crm.leads.sources.referral')}</SelectItem>
@@ -877,16 +720,14 @@ export default function LeadsPage() {
                 <Label htmlFor="notes_existing">{t('crm.leads.fields.notes')}</Label>
                 <Textarea id="notes_existing" placeholder={t('crm.leads.notesPlaceholder')} value={newLead.notes}
                   onChange={(e) => setNewLead({ ...newLead, notes: e.target.value })} rows={3}
-                  className="dark:bg-slate-900 dark:border-slate-600" />
+                  className="bg-background border-border" />
               </div>
 
               <div className="flex justify-end gap-2 pt-4">
-                <Button variant="outline" onClick={() => { setCreateDialogOpen(false); setSelectedContactId(''); setNewLead({ name: '', email: '', phone_number: '', company: '', deal_value: '', source: '', notes: '' }); }}
-                  className="dark:bg-slate-700 dark:border-slate-600">
+                <Button variant="outline" onClick={() => { setCreateDialogOpen(false); setSelectedContactId(''); setNewLead({ name: '', email: '', phone_number: '', company: '', deal_value: '', source: '', notes: '' }); }}>
                   {t('crm.common.cancel')}
                 </Button>
-                <Button onClick={handleCreateLead} disabled={!selectedContactId}
-                  className="bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-700 hover:to-red-700 text-white">
+                <Button onClick={handleCreateLead} disabled={!selectedContactId}>
                   <Plus className="h-4 w-4 mr-2" />{t('crm.leads.addLead')}
                 </Button>
               </div>
@@ -898,36 +739,36 @@ export default function LeadsPage() {
                   <Label htmlFor="name">{t('crm.leads.fields.name')} <span className="text-red-500">*</span></Label>
                   <Input id="name" placeholder="John Doe" value={newLead.name}
                     onChange={(e) => setNewLead({ ...newLead, name: e.target.value })}
-                    className="dark:bg-slate-900 dark:border-slate-600" />
+                    className="bg-background border-border" />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="email">{t('crm.leads.fields.email')} <span className="text-red-500">*</span></Label>
                   <Input id="email" type="email" placeholder="john@example.com" value={newLead.email}
                     onChange={(e) => setNewLead({ ...newLead, email: e.target.value })}
-                    className="dark:bg-slate-900 dark:border-slate-600" />
+                    className="bg-background border-border" />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="phone">{t('crm.leads.fields.phone')}</Label>
                   <Input id="phone" placeholder="+1 234 567 8900" value={newLead.phone_number}
                     onChange={(e) => setNewLead({ ...newLead, phone_number: e.target.value })}
-                    className="dark:bg-slate-900 dark:border-slate-600" />
+                    className="bg-background border-border" />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="company">{t('crm.leads.fields.company')}</Label>
                   <Input id="company" placeholder="Acme Inc." value={newLead.company}
                     onChange={(e) => setNewLead({ ...newLead, company: e.target.value })}
-                    className="dark:bg-slate-900 dark:border-slate-600" />
+                    className="bg-background border-border" />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="deal_value">{t('crm.leads.fields.dealValue')} ($)</Label>
                   <Input id="deal_value" type="number" placeholder="10000" value={newLead.deal_value}
                     onChange={(e) => setNewLead({ ...newLead, deal_value: e.target.value })}
-                    className="dark:bg-slate-900 dark:border-slate-600" />
+                    className="bg-background border-border" />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="source">{t('crm.leads.fields.source')}</Label>
                   <Select value={newLead.source} onValueChange={(value) => setNewLead({ ...newLead, source: value })}>
-                    <SelectTrigger className="dark:bg-slate-900 dark:border-slate-600"><SelectValue placeholder={t('crm.leads.selectSource')} /></SelectTrigger>
+                    <SelectTrigger className="bg-background border-border"><SelectValue placeholder={t('crm.leads.selectSource')} /></SelectTrigger>
                     <SelectContent>
                       <SelectItem value="website">{t('crm.leads.sources.website')}</SelectItem>
                       <SelectItem value="referral">{t('crm.leads.sources.referral')}</SelectItem>
@@ -946,16 +787,14 @@ export default function LeadsPage() {
                 <Label htmlFor="notes">{t('crm.leads.fields.notes')}</Label>
                 <Textarea id="notes" placeholder={t('crm.leads.notesPlaceholder')} value={newLead.notes}
                   onChange={(e) => setNewLead({ ...newLead, notes: e.target.value })} rows={3}
-                  className="dark:bg-slate-900 dark:border-slate-600" />
+                  className="bg-background border-border" />
               </div>
 
               <div className="flex justify-end gap-2 pt-4">
-                <Button variant="outline" onClick={() => { setCreateDialogOpen(false); setNewLead({ name: '', email: '', phone_number: '', company: '', deal_value: '', source: '', notes: '' }); }}
-                  className="dark:bg-slate-700 dark:border-slate-600">
+                <Button variant="outline" onClick={() => { setCreateDialogOpen(false); setNewLead({ name: '', email: '', phone_number: '', company: '', deal_value: '', source: '', notes: '' }); }}>
                   {t('crm.common.cancel')}
                 </Button>
-                <Button onClick={handleCreateLead}
-                  className="bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-700 hover:to-red-700 text-white">
+                <Button onClick={handleCreateLead}>
                   <Plus className="h-4 w-4 mr-2" />{t('crm.leads.addLead')}
                 </Button>
               </div>

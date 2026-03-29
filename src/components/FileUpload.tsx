@@ -131,16 +131,14 @@ const FileUpload: React.FC<FileUploadProps> = ({
         onDragLeave={handleDragLeave}
         onDrop={handleDrop}
         className={cn(
-          'relative border-2 border-dashed rounded-lg transition-colors',
-          isDragging
-            ? 'border-purple-500 bg-purple-50 dark:bg-purple-950/20'
-            : 'border-slate-300 dark:border-slate-700',
+          'relative rounded-lg transition-colors',
+          isDragging && 'ring-2 ring-primary bg-primary/5',
           disabled && 'opacity-50 cursor-not-allowed'
         )}
       >
         {isDragging && (
-          <div className="absolute inset-0 flex items-center justify-center bg-purple-50/90 dark:bg-purple-950/40 rounded-lg z-10">
-            <p className="text-purple-600 dark:text-purple-400 font-medium">Drop files here</p>
+          <div className="absolute inset-0 flex items-center justify-center bg-primary/10 rounded-lg z-10">
+            <p className="text-primary font-medium text-xs">Drop files here</p>
           </div>
         )}
 
@@ -151,7 +149,7 @@ const FileUpload: React.FC<FileUploadProps> = ({
           size="icon"
           onClick={handleButtonClick}
           disabled={disabled || isUploading}
-          className="relative h-8 w-8"
+          className="relative h-7 w-7 text-muted-foreground hover:text-foreground hover:bg-muted"
         >
           {isUploading ? (
             <Loader2 className="h-4 w-4 animate-spin" />

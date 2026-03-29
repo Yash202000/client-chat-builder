@@ -1107,602 +1107,591 @@ const InternalChatPage: React.FC = () => {
 
   if (isLoadingChannels)
     return (
-      <div className="flex justify-center items-center h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/30 dark:from-slate-900 dark:via-blue-950/20 dark:to-indigo-950/20">
-        <div className="flex flex-col items-center gap-4">
-          <div className="relative">
-            <div className="relative h-16 w-16 rounded-2xl bg-gradient-to-br from-blue-100 to-indigo-100 dark:from-blue-900/30 dark:to-indigo-900/30 flex items-center justify-center shadow-xl">
-              <Loader2 className="h-8 w-8 animate-spin text-blue-600 dark:text-blue-400" />
-            </div>
-          </div>
-          <p className="text-sm font-medium text-slate-500 dark:text-slate-400">Loading channels...</p>
+      <div className="flex justify-center items-center h-screen bg-background">
+        <div className="flex flex-col items-center gap-3">
+          <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+          <p className="text-sm text-muted-foreground">Loading channels…</p>
         </div>
       </div>
     );
   if (channelsError)
     return (
-      <div className="flex justify-center items-center h-screen bg-gradient-to-br from-slate-50 via-red-50/30 to-rose-50/30 dark:from-slate-900 dark:via-red-950/20 dark:to-rose-950/20" dir={isRTL ? 'rtl' : 'ltr'}>
-        <div className="text-center p-8 bg-white/80 dark:bg-slate-800/80 rounded-2xl border border-red-200/80 dark:border-red-800/60 shadow-xl shadow-red-500/10 max-w-md">
-          <div className="h-14 w-14 rounded-xl bg-red-100 dark:bg-red-900/30 flex items-center justify-center mx-auto mb-4">
-            <MessageSquare className="h-7 w-7 text-red-500 dark:text-red-400" />
-          </div>
-          <p className="text-red-600 dark:text-red-400 font-semibold text-lg">{t('teamChat.error')}</p>
-          <p className="text-sm text-red-500 dark:text-red-400 mt-2">{channelsError.message}</p>
+      <div className="flex justify-center items-center h-screen bg-background" dir={isRTL ? 'rtl' : 'ltr'}>
+        <div className="text-center p-8 bg-card rounded-xl border border-border max-w-sm">
+          <MessageSquare className="h-8 w-8 text-muted-foreground mx-auto mb-3" />
+          <p className="font-semibold text-foreground">{t('teamChat.error')}</p>
+          <p className="text-sm text-muted-foreground mt-1">{channelsError.message}</p>
         </div>
       </div>
     );
 
   return (
     <TooltipProvider>
-      <div className="flex h-full bg-slate-50 dark:bg-slate-950 overflow-hidden" dir={isRTL ? 'rtl' : 'ltr'}>
-        {/* Left Sidebar: Channel List */}
-        <Card className={cn(
-          "flex-shrink-0 rounded-none flex flex-col h-full relative transition-all duration-300 bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 shadow-sm",
-          channelSidebarCollapsed ? "w-16" : "w-72"
-        )}>
-          {/* Collapse/Expand Button */}
-          <motion.button
-            whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.95 }}
-            onClick={() => setChannelSidebarCollapsed(!channelSidebarCollapsed)}
-            className={`absolute ${isRTL ? '-left-3' : '-right-3'} top-1/2 -translate-y-1/2 z-10 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 rounded-full p-2 shadow-sm border border-slate-200 dark:border-slate-700 transition-all duration-300`}
-          >
-            <motion.div animate={{ rotate: channelSidebarCollapsed ? 180 : 0 }} transition={{ duration: 0.3 }}>
-              <PanelLeftClose className="h-4 w-4" />
-            </motion.div>
-          </motion.button>
+      <div className="flex h-full bg-background overflow-hidden" dir={isRTL ? 'rtl' : 'ltr'}>
 
-          <CardHeader className={`border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 flex-shrink-0 py-4 ${channelSidebarCollapsed ? 'px-2' : ''}`}>
-            {!channelSidebarCollapsed ? (
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="h-9 w-9 rounded-lg bg-violet-50 dark:bg-violet-900/20 flex items-center justify-center">
-                    <MessageSquare className="w-5 h-5 text-violet-500 dark:text-violet-400" />
-                  </div>
-                  <div>
-                    <CardTitle className="text-lg font-bold dark:text-white">{t('teamChat.channels')}</CardTitle>
-                    <p className="text-xs text-muted-foreground">Team conversations</p>
-                  </div>
+        {/* ── LEFT SIDEBAR ─────────────────────────────────────────────────── */}
+        <div className={cn(
+          'flex-shrink-0 flex flex-col h-full bg-card border-r border-border transition-all duration-300 relative',
+          channelSidebarCollapsed ? 'w-[52px]' : 'w-64'
+        )}>
+          {/* Header */}
+          <div className={cn(
+            'flex-shrink-0 flex items-center border-b border-border h-[52px]',
+            channelSidebarCollapsed ? 'justify-center px-0' : 'justify-between px-3'
+          )}>
+            {!channelSidebarCollapsed && (
+              <div className="flex items-center gap-2">
+                <div className="h-7 w-7 rounded-md bg-primary/10 flex items-center justify-center">
+                  <MessageSquare className="w-3.5 h-3.5 text-primary" />
                 </div>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button variant="ghost" size="icon" className="h-8 w-8 rounded-lg hover:bg-violet-50 dark:hover:bg-violet-900/30" onClick={() => setNewChatModalOpen(true)}>
-                      <Pencil className="h-3.5 w-3.5 text-violet-600 dark:text-violet-400" />
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent><p>New chat</p></TooltipContent>
-                </Tooltip>
-              </div>
-            ) : (
-              <div className="flex flex-col gap-3 items-center py-2">
-                <div className="h-8 w-8 rounded-lg bg-violet-50 dark:bg-violet-900/20 flex items-center justify-center">
-                  <MessageSquare className="w-4 h-4 text-violet-500 dark:text-violet-400" />
-                </div>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button variant="ghost" size="icon" onClick={() => setNewChatModalOpen(true)} className="h-8 w-8 rounded-lg hover:bg-violet-50 dark:hover:bg-violet-900/30">
-                      <Pencil className="h-4 w-4 text-violet-600 dark:text-violet-400" />
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent side="right"><p>New chat</p></TooltipContent>
-                </Tooltip>
+                <span className="text-sm font-semibold text-foreground">{t('teamChat.channels')}</span>
               </div>
             )}
-          </CardHeader>
-          <CardContent className={`flex-1 overflow-y-auto bg-gradient-to-b from-slate-50/50 to-white dark:from-slate-900/50 dark:to-slate-800 ${channelSidebarCollapsed ? 'p-0' : 'p-3'}`}>
-            <ScrollArea className="h-full">
-              {channels?.length === 0 ? (
-                <div className={cn(
-                  "flex flex-col items-center justify-center py-12",
-                  channelSidebarCollapsed ? "px-2" : "px-4"
-                )}>
-                  <div className="relative mb-4">
-                    <div className="relative h-16 w-16 rounded-2xl bg-violet-50 dark:bg-violet-900/20 flex items-center justify-center">
-                      <MessageSquare className="h-8 w-8 text-violet-400 dark:text-violet-500" />
-                    </div>
-                  </div>
-                  {!channelSidebarCollapsed && (
-                    <>
-                      <p className="text-sm font-medium text-slate-600 dark:text-slate-300 text-center">{t('teamChat.noChannels')}</p>
-                      <p className="text-xs text-slate-400 dark:text-slate-500 text-center mt-1">Create a channel to start chatting</p>
-                    </>
-                  )}
-                </div>
-              ) : (
-                <div className="space-y-1.5">
-                  {channels?.map((channel, index) => {
-                    const displayName = getChannelDisplayName(channel, user?.id);
-                    const avatar = getChannelAvatar(channel, user?.id);
-                    const description = getChannelDescription(channel, user?.id);
-                    const isSelected = selectedChannel?.id === channel.id;
+            <div className={cn('flex items-center gap-1', channelSidebarCollapsed && 'flex-col gap-1.5 py-2')}>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button
+                    onClick={() => setNewChatModalOpen(true)}
+                    className="h-7 w-7 rounded-md flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                  >
+                    <Pencil className="h-3.5 w-3.5" />
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent side={isRTL ? 'left' : 'right'}><p>New chat</p></TooltipContent>
+              </Tooltip>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button
+                    onClick={() => setChannelSidebarCollapsed(!channelSidebarCollapsed)}
+                    className="h-7 w-7 rounded-md flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                  >
+                    <motion.div animate={{ rotate: channelSidebarCollapsed ? 180 : 0 }} transition={{ duration: 0.25 }}>
+                      <PanelLeftClose className="h-3.5 w-3.5" />
+                    </motion.div>
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent side={isRTL ? 'left' : 'right'}>
+                  <p>{channelSidebarCollapsed ? t('conversations.expandSidebar') : t('conversations.collapseSidebar')}</p>
+                </TooltipContent>
+              </Tooltip>
+            </div>
+          </div>
 
-                    return (
-                      <Tooltip key={channel.id}>
-                        <TooltipTrigger asChild>
-                          <motion.div
-                            variants={channelCardVariants}
-                            initial="hidden"
-                            animate="visible"
-                            whileHover="hover"
-                            whileTap="tap"
-                            dir={isRTL ? 'rtl' : 'ltr'}
-                            style={{ animationDelay: `${index * 0.05}s` }}
-                            className={cn(
-                              'flex items-center cursor-pointer rounded-xl border transition-all duration-200',
-                              channelSidebarCollapsed ? 'p-2 justify-center' : 'p-3',
-                              isSelected
-                                ? 'bg-violet-50 dark:bg-violet-900/20 border-violet-200 dark:border-violet-800 shadow-sm ring-1 ring-violet-500/20'
-                                : 'bg-white dark:bg-slate-800/50 border-slate-100 dark:border-slate-700/50 hover:bg-slate-50 dark:hover:bg-slate-800 hover:border-slate-200 dark:hover:border-slate-600'
-                            )}
-                            onClick={() => handleChannelSelect(channel)}
-                          >
-                            <div className="channel-icon-container flex-shrink-0 relative">
-                              <Avatar className={cn(
-                                channelSidebarCollapsed ? "h-10 w-10" : "h-11 w-11",
-                                !channelSidebarCollapsed && (isRTL ? "ml-3" : "mr-3")
-                              )}>
-                                {avatar.url && <AvatarImage src={avatar.url} />}
-                                <AvatarFallback className="font-bold text-lg bg-violet-100 dark:bg-violet-900/40 text-violet-700 dark:text-violet-300">
-                                  {avatar.fallback}
-                                </AvatarFallback>
-                              </Avatar>
-                              {/* Status indicator - matching conversation cards */}
-                              <AnimatePresence>
-                                {isSelected && (
-                                  <motion.span
-                                    initial={{ scale: 0 }}
-                                    animate={{ scale: 1 }}
-                                    exit={{ scale: 0 }}
-                                    className={`absolute -top-1 ${isRTL ? '-left-1' : '-right-1'} h-3 w-3 bg-green-500 rounded-full status-dot status-dot-online border-2 border-white dark:border-slate-800`}
-                                    title="Active channel"
-                                  />
-                                )}
-                              </AnimatePresence>
-                            </div>
-                            {!channelSidebarCollapsed && (
-                              <div className="flex-1 min-w-0">
-                                <p className={cn(
-                                  "font-semibold text-sm truncate",
-                                  isSelected
-                                    ? "text-violet-900 dark:text-violet-100"
-                                    : "text-slate-800 dark:text-slate-100"
-                                )}>{displayName}</p>
-                                <p className="text-xs text-slate-500 dark:text-slate-400 truncate mt-0.5">
-                                  {description}
-                                </p>
-                              </div>
-                            )}
-                          </motion.div>
-                        </TooltipTrigger>
-                        {channelSidebarCollapsed && (
-                          <TooltipContent side="right" className="rounded-xl">
-                            <div>
-                              <p className="font-semibold">{displayName}</p>
-                              <p className="text-xs text-slate-400">{description}</p>
-                            </div>
-                          </TooltipContent>
-                        )}
-                      </Tooltip>
-                    );
-                  })}
-                </div>
+          {/* Channel list */}
+          <ScrollArea className="flex-1">
+            <div className={cn('py-2', channelSidebarCollapsed ? 'px-1.5' : 'px-2')}>
+              {/* Group channels */}
+              {!channelSidebarCollapsed && channels?.some(c => c.channel_type?.toUpperCase() !== 'DM') && (
+                <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/50 px-2 mb-1 mt-1">
+                  Channels
+                </p>
               )}
-            </ScrollArea>
-          </CardContent>
-        </Card>
+              {channels?.filter(c => c.channel_type?.toUpperCase() !== 'DM').map((channel) => {
+                const displayName = getChannelDisplayName(channel, user?.id);
+                const avatar = getChannelAvatar(channel, user?.id);
+                const isSelected = selectedChannel?.id === channel.id;
+                return (
+                  <Tooltip key={channel.id}>
+                    <TooltipTrigger asChild>
+                      <motion.button
+                        whileTap={{ scale: 0.98 }}
+                        onClick={() => handleChannelSelect(channel)}
+                        className={cn(
+                          'w-full flex items-center gap-2.5 rounded-lg text-left transition-all duration-150 relative group',
+                          channelSidebarCollapsed ? 'p-1.5 justify-center' : 'px-2 py-1.5',
+                          isSelected
+                            ? 'bg-primary/10 text-foreground'
+                            : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+                        )}
+                      >
+                        {isSelected && (
+                          <span className={cn(
+                            'absolute inset-y-1 w-0.5 bg-primary rounded-full',
+                            isRTL ? 'right-0' : 'left-0'
+                          )} />
+                        )}
+                        <Avatar className={cn('flex-shrink-0', channelSidebarCollapsed ? 'h-8 w-8' : 'h-7 w-7')}>
+                          {avatar.url && <AvatarImage src={avatar.url} />}
+                          <AvatarFallback className={cn(
+                            'text-xs font-semibold',
+                            isSelected ? 'bg-primary/20 text-primary' : 'bg-muted text-muted-foreground'
+                          )}>
+                            {avatar.fallback}
+                          </AvatarFallback>
+                        </Avatar>
+                        {!channelSidebarCollapsed && (
+                          <span className="text-[13px] font-medium truncate leading-tight">
+                            # {displayName}
+                          </span>
+                        )}
+                      </motion.button>
+                    </TooltipTrigger>
+                    {channelSidebarCollapsed && (
+                      <TooltipContent side={isRTL ? 'left' : 'right'}>
+                        <p className="font-medium"># {displayName}</p>
+                      </TooltipContent>
+                    )}
+                  </Tooltip>
+                );
+              })}
 
-        {/* Main Chat Area */}
-        <div className="flex-1 flex flex-col h-full overflow-hidden bg-white dark:bg-slate-900">
-          {selectedChannel ? (
-            <>
-              <CardHeader className="flex flex-row items-center justify-between p-4 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 flex-shrink-0">
-                <div className="flex-1">
-                  <div className={`flex items-center gap-4 ${isRTL ? 'flex-row-reverse' : ''}`}>
-                    {(() => {
-                      const avatar = getChannelAvatar(selectedChannel, user?.id);
-                      return (
-                        <div>
-                          <Avatar className="h-11 w-11">
+              {/* DM channels */}
+              {!channelSidebarCollapsed && channels?.some(c => c.channel_type?.toUpperCase() === 'DM') && (
+                <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/50 px-2 mb-1 mt-3">
+                  Direct Messages
+                </p>
+              )}
+              {channels?.filter(c => c.channel_type?.toUpperCase() === 'DM').map((channel) => {
+                const displayName = getChannelDisplayName(channel, user?.id);
+                const avatar = getChannelAvatar(channel, user?.id);
+                const isSelected = selectedChannel?.id === channel.id;
+                const otherUser = channel.participants?.find(p => p.user_id !== user?.id)?.user;
+                const isOnline = otherUser && userPresences[otherUser.id] === 'online';
+                return (
+                  <Tooltip key={channel.id}>
+                    <TooltipTrigger asChild>
+                      <motion.button
+                        whileTap={{ scale: 0.98 }}
+                        onClick={() => handleChannelSelect(channel)}
+                        className={cn(
+                          'w-full flex items-center gap-2.5 rounded-lg text-left transition-all duration-150 relative',
+                          channelSidebarCollapsed ? 'p-1.5 justify-center' : 'px-2 py-1.5',
+                          isSelected
+                            ? 'bg-primary/10 text-foreground'
+                            : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+                        )}
+                      >
+                        {isSelected && (
+                          <span className={cn(
+                            'absolute inset-y-1 w-0.5 bg-primary rounded-full',
+                            isRTL ? 'right-0' : 'left-0'
+                          )} />
+                        )}
+                        <div className="relative flex-shrink-0">
+                          <Avatar className={cn(channelSidebarCollapsed ? 'h-8 w-8' : 'h-7 w-7')}>
                             {avatar.url && <AvatarImage src={avatar.url} />}
-                            <AvatarFallback className="font-bold text-xl bg-violet-100 dark:bg-violet-900/40 text-violet-700 dark:text-violet-300">
+                            <AvatarFallback className={cn(
+                              'text-xs font-semibold',
+                              isSelected ? 'bg-primary/20 text-primary' : 'bg-muted text-muted-foreground'
+                            )}>
                               {avatar.fallback}
                             </AvatarFallback>
                           </Avatar>
+                          {isOnline && (
+                            <span className="absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full bg-green-500 border-2 border-card" />
+                          )}
                         </div>
-                      );
-                    })()}
-                    <div>
-                      <div className="flex items-center gap-1.5">
-                        {isRenamingChannel && selectedChannel.channel_type?.toUpperCase() !== 'DM' ? (
-                          <>
-                            <input
-                              autoFocus
-                              value={renameValue}
-                              onChange={(e) => setRenameValue(e.target.value)}
-                              onKeyDown={(e) => {
-                                if (e.key === 'Enter' && renameValue.trim()) {
-                                  renameChannelMutation.mutate({ channelId: selectedChannel.id, name: renameValue.trim() });
-                                } else if (e.key === 'Escape') {
-                                  setIsRenamingChannel(false);
-                                }
-                              }}
-                              className="text-base font-semibold text-slate-900 dark:text-white bg-slate-100 dark:bg-slate-700 border border-violet-300 dark:border-violet-600 rounded-lg px-2 py-0.5 outline-none w-48"
-                            />
-                            <Button
-                              size="icon"
-                              variant="ghost"
-                              disabled={!renameValue.trim() || renameChannelMutation.isLoading}
-                              onClick={() => renameChannelMutation.mutate({ channelId: selectedChannel.id, name: renameValue.trim() })}
-                              className="h-7 w-7 rounded-lg text-green-600 hover:bg-green-50 dark:hover:bg-green-900/20"
-                            >
-                              {renameChannelMutation.isLoading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Check className="h-3.5 w-3.5" />}
-                            </Button>
-                            <Button
-                              size="icon"
-                              variant="ghost"
-                              onClick={() => setIsRenamingChannel(false)}
-                              className="h-7 w-7 rounded-lg text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-700"
-                            >
-                              <X className="h-3.5 w-3.5" />
-                            </Button>
-                          </>
-                        ) : (
-                          <>
-                            <CardTitle className="text-base font-semibold text-slate-900 dark:text-white">
-                              {getChannelDisplayName(selectedChannel, user?.id)}
-                            </CardTitle>
-                            {selectedChannel.channel_type?.toUpperCase() !== 'DM' && (
-                              <button
-                                onClick={() => { setRenameValue(selectedChannel.name || ''); setIsRenamingChannel(true); }}
-                                className="text-slate-300 hover:text-slate-500 dark:text-slate-600 dark:hover:text-slate-400 transition-colors"
-                                title="Rename channel"
-                              >
-                                <Pencil className="h-3.5 w-3.5" />
-                              </button>
-                            )}
-                          </>
+                        {!channelSidebarCollapsed && (
+                          <span className="text-[13px] font-medium truncate leading-tight">
+                            {displayName}
+                          </span>
                         )}
+                      </motion.button>
+                    </TooltipTrigger>
+                    {channelSidebarCollapsed && (
+                      <TooltipContent side={isRTL ? 'left' : 'right'}>
+                        <p className="font-medium">{displayName}</p>
+                      </TooltipContent>
+                    )}
+                  </Tooltip>
+                );
+              })}
+
+              {channels?.length === 0 && (
+                <div className="flex flex-col items-center justify-center py-10 px-4 text-center">
+                  <MessageSquare className="h-8 w-8 text-muted-foreground/30 mb-2" />
+                  {!channelSidebarCollapsed && (
+                    <>
+                      <p className="text-xs font-medium text-muted-foreground">{t('teamChat.noChannels')}</p>
+                      <button
+                        onClick={() => setCreateChannelModalOpen(true)}
+                        className="mt-3 text-xs text-primary hover:underline"
+                      >
+                        Create one
+                      </button>
+                    </>
+                  )}
+                </div>
+              )}
+            </div>
+          </ScrollArea>
+
+        </div>
+
+        {/* ── MAIN CHAT AREA ────────────────────────────────────────────────── */}
+        <div className="flex-1 flex flex-col h-full overflow-hidden bg-background">
+          {selectedChannel ? (
+            <>
+              {/* Header */}
+              <div className={cn(
+                'flex-shrink-0 flex items-center justify-between h-[52px] border-b border-border px-4',
+                isRTL ? 'flex-row-reverse' : ''
+              )}>
+                {/* Left: channel info */}
+                <div className={cn('flex items-center gap-3 min-w-0', isRTL ? 'flex-row-reverse' : '')}>
+                  {(() => {
+                    const avatar = getChannelAvatar(selectedChannel, user?.id);
+                    return (
+                      <Avatar className="h-8 w-8 flex-shrink-0">
+                        {avatar.url && <AvatarImage src={avatar.url} />}
+                        <AvatarFallback className="bg-primary/10 text-primary text-xs font-bold">
+                          {avatar.fallback}
+                        </AvatarFallback>
+                      </Avatar>
+                    );
+                  })()}
+                  <div className="min-w-0">
+                    <div className={cn('flex items-center gap-1.5', isRTL ? 'flex-row-reverse' : '')}>
+                      {isRenamingChannel && selectedChannel.channel_type?.toUpperCase() !== 'DM' ? (
+                        <>
+                          <input
+                            autoFocus
+                            value={renameValue}
+                            onChange={(e) => setRenameValue(e.target.value)}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter' && renameValue.trim()) {
+                                renameChannelMutation.mutate({ channelId: selectedChannel.id, name: renameValue.trim() });
+                              } else if (e.key === 'Escape') {
+                                setIsRenamingChannel(false);
+                              }
+                            }}
+                            className="text-sm font-semibold text-foreground bg-muted border border-border rounded-md px-2 py-0.5 outline-none focus:border-primary w-40"
+                          />
+                          <button
+                            disabled={!renameValue.trim() || renameChannelMutation.isLoading}
+                            onClick={() => renameChannelMutation.mutate({ channelId: selectedChannel.id, name: renameValue.trim() })}
+                            className="h-6 w-6 rounded flex items-center justify-center text-green-600 hover:bg-green-50 dark:hover:bg-green-900/20 disabled:opacity-40 transition-colors"
+                          >
+                            {renameChannelMutation.isLoading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Check className="h-3.5 w-3.5" />}
+                          </button>
+                          <button
+                            onClick={() => setIsRenamingChannel(false)}
+                            className="h-6 w-6 rounded flex items-center justify-center text-muted-foreground hover:bg-muted transition-colors"
+                          >
+                            <X className="h-3.5 w-3.5" />
+                          </button>
+                        </>
+                      ) : (
+                        <>
+                          <h2 className="text-sm font-semibold text-foreground truncate">
+                            {selectedChannel.channel_type?.toUpperCase() !== 'DM' ? `# ` : ''}{getChannelDisplayName(selectedChannel, user?.id)}
+                          </h2>
+                          {selectedChannel.channel_type?.toUpperCase() !== 'DM' && (
+                            <button
+                              onClick={() => { setRenameValue(selectedChannel.name || ''); setIsRenamingChannel(true); }}
+                              className="text-muted-foreground/40 hover:text-muted-foreground transition-colors"
+                              title="Rename channel"
+                            >
+                              <Pencil className="h-3 w-3" />
+                            </button>
+                          )}
+                        </>
+                      )}
+                    </div>
+                    {/* Members row */}
+                    <div className={cn('flex items-center gap-2 mt-0.5', isRTL ? 'flex-row-reverse' : '')}>
+                      <div className={cn('flex -space-x-1.5', isRTL ? 'space-x-reverse' : '')}>
+                        {channelMembers?.slice(0, 4).map((member: any, index: number) => (
+                          <Avatar key={member?.id || `m-${index}`} className="h-4 w-4 ring-1 ring-background">
+                            <AvatarImage src={member?.profile_picture_url} />
+                            <AvatarFallback className="text-[8px] bg-muted text-muted-foreground">
+                              {member?.first_name?.[0] || 'U'}
+                            </AvatarFallback>
+                          </Avatar>
+                        ))}
                       </div>
-                      <div className={`flex items-center mt-2 gap-3 ${isRTL ? 'flex-row-reverse' : ''}`}>
-                        <div className={`flex ${isRTL ? 'space-x-reverse' : ''} -space-x-2 overflow-hidden`}>
-                          {channelMembers?.slice(0, 5).map((member: any, index: number) => (
-                            <Avatar key={member?.id || `member-${index}`} className="inline-block h-7 w-7 rounded-full ring-2 ring-white dark:ring-slate-800 shadow-sm">
-                              <AvatarImage src={member?.profile_picture_url} />
-                              <AvatarFallback className="text-xs bg-violet-100 dark:bg-violet-900/40 text-violet-700 dark:text-violet-300 font-medium">
-                                {member?.first_name?.[0] || 'U'}
-                              </AvatarFallback>
-                            </Avatar>
-                          ))}
-                        </div>
-                        <span className="text-xs px-3 py-1 rounded-full bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 font-semibold">
-                          {channelMembers?.length} {channelMembers?.length === 1 ? t('teamChat.member') : t('teamChat.members')}
-                        </span>
-                        {/* Active/Online Members Indicator */}
-                        {(() => {
-                          const onlineCount = channelMembers?.filter((member: any) =>
-                            userPresences[member?.id] === 'online'
-                          ).length || 0;
-                          return onlineCount > 0 ? (
-                            <span className="flex items-center gap-1.5 text-xs font-medium text-green-600 dark:text-green-400">
-                              <span className="w-2 h-2 rounded-full bg-green-500 status-dot status-dot-online" />
-                              {onlineCount} {t('teamChat.online')}
-                            </span>
-                          ) : null;
-                        })()}
-                      </div>
+                      <span className="text-[11px] text-muted-foreground">
+                        {channelMembers?.length} {channelMembers?.length === 1 ? t('teamChat.member') : t('teamChat.members')}
+                      </span>
+                      {(() => {
+                        const onlineCount = channelMembers?.filter((m: any) => userPresences[m?.id] === 'online').length || 0;
+                        return onlineCount > 0 ? (
+                          <span className="flex items-center gap-1 text-[11px] text-green-600 dark:text-green-400">
+                            <span className="w-1.5 h-1.5 rounded-full bg-green-500" />
+                            {onlineCount} {t('teamChat.online')}
+                          </span>
+                        ) : null;
+                      })()}
                     </div>
                   </div>
                 </div>
-                <div className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
+
+                {/* Right: action buttons */}
+                <div className={cn('flex items-center gap-1 flex-shrink-0', isRTL ? 'flex-row-reverse' : '')}>
                   <Tooltip>
                     <TooltipTrigger asChild>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => setIsSearchModalOpen(true)}
-                        className="h-8 w-8 rounded-lg text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
-                      >
+                      <Button variant="ghost" size="icon" onClick={() => setIsSearchModalOpen(true)}
+                        className="h-8 w-8 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted">
                         <Search className="h-4 w-4" />
                       </Button>
                     </TooltipTrigger>
-                    <TooltipContent className="rounded-xl">
-                      <p>Search Messages</p>
-                    </TooltipContent>
+                    <TooltipContent><p>Search messages</p></TooltipContent>
                   </Tooltip>
                   <Tooltip>
                     <TooltipTrigger asChild>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => setIsCallHistoryOpen(true)}
-                        className="h-8 w-8 rounded-lg text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
-                      >
+                      <Button variant="ghost" size="icon" onClick={() => setIsCallHistoryOpen(true)}
+                        className="h-8 w-8 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted">
                         <History className="h-4 w-4" />
                       </Button>
                     </TooltipTrigger>
-                    <TooltipContent className="rounded-xl">
-                      <p>Call History</p>
-                    </TooltipContent>
+                    <TooltipContent><p>Call history</p></TooltipContent>
                   </Tooltip>
                   <Tooltip>
                     <TooltipTrigger asChild>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => setManageMembersModalOpen(true)}
-                        className="h-8 w-8 rounded-lg text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
-                      >
+                      <Button variant="ghost" size="icon" onClick={() => setManageMembersModalOpen(true)}
+                        className="h-8 w-8 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted">
                         <Users className="h-4 w-4" />
                       </Button>
                     </TooltipTrigger>
-                    <TooltipContent className="rounded-xl">
-                      <p>{t('teamChat.manageMembers')}</p>
-                    </TooltipContent>
+                    <TooltipContent><p>{t('teamChat.manageMembers')}</p></TooltipContent>
                   </Tooltip>
+                  <div className="w-px h-4 bg-border mx-1" />
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <Button
-                        size="icon"
+                        size="sm"
                         onClick={handleVideoCallAction}
                         disabled={initiateVideoCallMutation.isLoading || joinVideoCallMutation.isLoading}
-                        className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white rounded-xl w-11 h-11 shadow-lg shadow-green-500/25 hover:shadow-xl hover:shadow-green-500/30 transition-all"
+                        className={cn(
+                          'h-8 px-3 rounded-md text-xs font-medium gap-1.5 transition-all',
+                          activeCallExists
+                            ? 'bg-green-500 hover:bg-green-600 text-white'
+                            : 'bg-primary hover:bg-primary/90 text-primary-foreground'
+                        )}
                       >
                         {(initiateVideoCallMutation.isLoading || joinVideoCallMutation.isLoading) ? (
-                          <Loader2 className="h-5 w-5 animate-spin" />
+                          <Loader2 className="h-3.5 w-3.5 animate-spin" />
                         ) : (
-                          <Video className="h-5 w-5" />
+                          <Video className="h-3.5 w-3.5" />
                         )}
+                        {activeCallExists === true ? t('teamChat.joinCall') : t('teamChat.startCall')}
                       </Button>
                     </TooltipTrigger>
-                    <TooltipContent className="rounded-xl">
-                      <p>
-                        {(() => {
-                          const text = activeCallExists === true ? t('teamChat.joinCall') : t('teamChat.startCall');
-                          console.log('[Tooltip Render] activeCallExists:', activeCallExists, '-> showing:', text);
-                          return text;
-                        })()}
-                      </p>
+                    <TooltipContent>
+                      <p>{activeCallExists === true ? t('teamChat.joinCall') : t('teamChat.startCall')}</p>
                     </TooltipContent>
                   </Tooltip>
                 </div>
-              </CardHeader>
-              <CardContent className="flex-1 p-6 flex flex-col overflow-hidden bg-gradient-to-b from-slate-50 to-white dark:from-slate-900/50 dark:to-slate-800/50 min-h-0">
-                <ScrollArea className="flex-1 pr-4 h-full">
-                  <div className="space-y-4">
+              </div>
+
+              {/* Messages */}
+              <div className="flex-1 overflow-hidden min-h-0">
+                <ScrollArea className="h-full">
+                  <div className="px-4 py-4">
                     {isLoadingMessages ? (
-                      <div className="flex justify-center items-center h-full py-20">
-                        <div className="flex flex-col items-center gap-4">
-                          <div className="relative">
-                            <div className="relative h-14 w-14 rounded-full bg-gradient-to-br from-blue-100 to-indigo-100 dark:from-blue-900/30 dark:to-indigo-900/30 flex items-center justify-center">
-                              <Loader2 className="h-7 w-7 animate-spin text-blue-600 dark:text-blue-400" />
-                            </div>
-                          </div>
-                          <p className="text-sm font-medium text-slate-500 dark:text-slate-400">{t('teamChat.loadingMessages')}</p>
+                      <div className="flex justify-center items-center py-20">
+                        <div className="flex flex-col items-center gap-3">
+                          <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                          <p className="text-sm text-muted-foreground">{t('teamChat.loadingMessages')}</p>
                         </div>
                       </div>
                     ) : messagesError ? (
-                      <div className="flex justify-center items-center h-full py-20">
-                        <div className="text-center p-6 bg-gradient-to-br from-red-50 to-rose-50 dark:from-red-900/20 dark:to-rose-900/20 rounded-2xl border border-red-200/80 dark:border-red-800/60 shadow-lg shadow-red-500/10">
-                          <div className="h-12 w-12 rounded-xl bg-red-100 dark:bg-red-900/30 flex items-center justify-center mx-auto mb-3">
-                            <MessageSquare className="h-6 w-6 text-red-500 dark:text-red-400" />
-                          </div>
-                          <p className="text-red-600 dark:text-red-400 font-semibold">{t('teamChat.errorMessages')}</p>
-                          <p className="text-sm text-red-500 dark:text-red-400 mt-1">{messagesError.message}</p>
+                      <div className="flex justify-center items-center py-20">
+                        <div className="text-center p-6 bg-card rounded-xl border border-border max-w-sm">
+                          <MessageSquare className="h-7 w-7 text-muted-foreground mx-auto mb-2" />
+                          <p className="font-semibold text-foreground">{t('teamChat.errorMessages')}</p>
+                          <p className="text-sm text-muted-foreground mt-1">{messagesError.message}</p>
                         </div>
                       </div>
                     ) : messages?.length === 0 ? (
-                      <div className="flex justify-center items-center h-full py-20">
-                        <div className="text-center">
-                          <div className="relative mb-5 mx-auto w-fit">
-                                    <div className="relative h-20 w-20 rounded-2xl bg-gradient-to-br from-blue-100 to-indigo-100 dark:from-blue-900/30 dark:to-indigo-900/30 flex items-center justify-center shadow-lg">
-                              <Send className="h-10 w-10 text-blue-500 dark:text-blue-400" />
-                            </div>
-                          </div>
-                          <p className="text-lg font-semibold text-slate-600 dark:text-slate-300">{t('teamChat.noMessages')}</p>
-                          <p className="text-sm text-slate-400 dark:text-slate-500 mt-1">Start the conversation!</p>
+                      <div className="flex flex-col items-center justify-center py-20 text-center">
+                        <div className="h-14 w-14 rounded-2xl bg-muted flex items-center justify-center mb-4">
+                          <MessageSquare className="h-7 w-7 text-muted-foreground" />
                         </div>
+                        <p className="text-sm font-semibold text-foreground">{t('teamChat.noMessages')}</p>
+                        <p className="text-xs text-muted-foreground mt-1">Send the first message to start the conversation</p>
                       </div>
                     ) : (
-                      <div className="space-y-1">
-                      {messages?.map((msg) => {
-                        // Render system messages differently
-                        if (msg.extra_data?.is_system) {
+                      <motion.div
+                        variants={containerVariants}
+                        initial="hidden"
+                        animate="visible"
+                        className="space-y-0.5"
+                      >
+                        {messages?.map((msg) => {
+                          if ((msg as any).extra_data?.is_system) {
+                            return (
+                              <div key={msg.id} className="flex w-full justify-center my-3">
+                                <div className="px-3 py-1 rounded-full bg-muted border border-border text-muted-foreground text-xs flex items-center gap-2">
+                                  <span>{msg.content}</span>
+                                  <span className="opacity-60">
+                                    {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                  </span>
+                                </div>
+                              </div>
+                            );
+                          }
+
+                          const isOwn = msg.sender_id === user?.id;
                           return (
-                            <div
+                            <motion.div
                               key={msg.id}
-                              className="flex w-full justify-center my-4"
+                              variants={messageVariants}
+                              className={cn(
+                                'group flex w-full items-end gap-2.5 py-0.5',
+                                isOwn ? 'justify-end' : 'justify-start'
+                              )}
                             >
-                              <div className="px-4 py-2 rounded-full bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 text-sm flex items-center gap-2 shadow-sm">
-                                <span>{msg.content}</span>
-                                <span className="text-xs text-slate-400 dark:text-slate-500">
-                                  {new Date(msg.created_at).toLocaleTimeString([], {
-                                    hour: '2-digit',
-                                    minute: '2-digit',
-                                  })}
-                                </span>
-                              </div>
-                            </div>
-                          );
-                        }
+                              {/* Avatar — other */}
+                              {!isOwn && (
+                                <Avatar className="h-7 w-7 flex-shrink-0 self-end mb-5">
+                                  <AvatarImage src={msg.sender?.profile_picture_url} />
+                                  <AvatarFallback className="text-xs font-semibold bg-muted text-muted-foreground">
+                                    {msg.sender?.first_name?.[0] || 'U'}
+                                  </AvatarFallback>
+                                </Avatar>
+                              )}
 
-                        // Regular message rendering
-                        const isOwn = msg.sender_id === user?.id;
-                        return (
-                        <div
-                          key={msg.id}
-                          className={cn(
-                            'flex w-full items-end gap-2',
-                            isOwn ? 'justify-end' : 'justify-start'
-                          )}
-                        >
-                          {/* Avatar — other user */}
-                          {!isOwn && (
-                            <Avatar className="h-7 w-7 flex-shrink-0 self-end mb-5">
-                              <AvatarImage src={msg.sender?.profile_picture_url} />
-                              <AvatarFallback className="text-xs font-semibold bg-slate-400 dark:bg-slate-600 text-white">
-                                {msg.sender?.first_name?.[0] || 'U'}
-                              </AvatarFallback>
-                            </Avatar>
-                          )}
+                              <div className={cn('flex flex-col max-w-[58%]', isOwn ? 'items-end' : 'items-start')}>
+                                {!isOwn && (
+                                  <span className="text-[11px] font-semibold text-muted-foreground mb-0.5 px-1">
+                                    {msg.sender?.first_name || msg.sender?.email}
+                                  </span>
+                                )}
 
-                          <div className={cn(
-                            "flex flex-col max-w-[62%]",
-                            isOwn ? 'items-end' : 'items-start'
-                          )}>
-                            {/* Sender name */}
-                            {!isOwn && (
-                              <span className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 mb-0.5 px-1">
-                                {msg.sender?.first_name || msg.sender?.email}
-                              </span>
-                            )}
-
-                            {/* Bubble */}
-                            <div className={cn(
-                              'px-3.5 py-2 rounded-2xl text-sm leading-relaxed',
-                              isOwn
-                                ? `bg-gradient-to-br from-violet-500 to-indigo-600 text-white ${isRTL ? 'rounded-bl-sm' : 'rounded-br-sm'}`
-                                : `bg-slate-100 dark:bg-slate-700 text-slate-900 dark:text-slate-100 ${isRTL ? 'rounded-br-sm' : 'rounded-bl-sm'}`
-                            )}>
-                              <div className={cn(
-                                "prose prose-sm max-w-full prose-p:my-0.5 prose-p:leading-relaxed",
-                                isOwn ? "prose-invert" : "dark:prose-invert"
-                              )}>
-                                <MentionText
-                                  content={msg.content}
-                                  users={channelMembers?.reduce((acc, member) => {
-                                    if (member && member.id) {
-                                      acc[member.id] = {
-                                        id: member.id,
-                                        first_name: member.first_name,
-                                        last_name: member.last_name,
-                                        email: member.email
-                                      };
-                                    }
-                                    return acc;
-                                  }, {} as any) || {}}
-                                  className={isOwn ? "text-white" : ""}
-                                />
-                              </div>
-
-                              {/* Attachments */}
-                              {msg.attachments && msg.attachments.length > 0 && (
-                                <div className="mt-2 space-y-1.5">
-                                  {msg.attachments.map((attachment) => (
-                                    <FileAttachment
-                                      key={attachment.id}
-                                      attachment={attachment}
-                                      onDownload={handleDownloadFile}
+                                {/* Bubble */}
+                                <div className={cn(
+                                  'px-3.5 py-2 text-sm leading-relaxed',
+                                  isOwn
+                                    ? `bg-primary text-primary-foreground rounded-2xl ${isRTL ? 'rounded-bl-md' : 'rounded-br-md'}`
+                                    : `bg-card border border-border text-foreground rounded-2xl ${isRTL ? 'rounded-br-md' : 'rounded-bl-md'}`
+                                )}>
+                                  <div className={cn(
+                                    'prose prose-sm max-w-full prose-p:my-0.5 prose-p:leading-relaxed',
+                                    isOwn ? 'prose-invert' : 'dark:prose-invert'
+                                  )}>
+                                    <MentionText
+                                      content={msg.content}
+                                      users={channelMembers?.reduce((acc, member) => {
+                                        if (member && member.id) {
+                                          acc[member.id] = {
+                                            id: member.id,
+                                            first_name: member.first_name,
+                                            last_name: member.last_name,
+                                            email: member.email
+                                          };
+                                        }
+                                        return acc;
+                                      }, {} as any) || {}}
+                                      className={isOwn ? 'text-primary-foreground' : ''}
                                     />
-                                  ))}
+                                  </div>
+                                  {msg.attachments && msg.attachments.length > 0 && (
+                                    <div className="mt-2 space-y-1.5">
+                                      {msg.attachments.map((attachment) => (
+                                        <FileAttachment key={attachment.id} attachment={attachment} onDownload={handleDownloadFile} />
+                                      ))}
+                                    </div>
+                                  )}
+                                  {msg.reactions && msg.reactions.length > 0 && (
+                                    <div className="mt-1.5">
+                                      <MessageReactions
+                                        reactions={msg.reactions}
+                                        currentUserId={user?.id}
+                                        onAddReaction={(emoji) => handleAddReaction(msg.id, emoji)}
+                                        onRemoveReaction={(emoji) => handleRemoveReaction(msg.id, emoji)}
+                                        users={messages?.reduce((acc, m) => {
+                                          acc[m.sender_id] = { first_name: m.sender.first_name, email: m.sender.email };
+                                          return acc;
+                                        }, {} as any)}
+                                      />
+                                    </div>
+                                  )}
                                 </div>
-                              )}
 
-                              {/* Reactions (existing) */}
-                              {msg.reactions && msg.reactions.length > 0 && (
-                                <div className="mt-1.5">
-                                  <MessageReactions
-                                    reactions={msg.reactions}
-                                    currentUserId={user?.id}
-                                    onAddReaction={(emoji) => handleAddReaction(msg.id, emoji)}
-                                    onRemoveReaction={(emoji) => handleRemoveReaction(msg.id, emoji)}
-                                    users={messages?.reduce((acc, m) => {
-                                      acc[m.sender_id] = {
-                                        first_name: m.sender.first_name,
-                                        email: m.sender.email
-                                      };
-                                      return acc;
-                                    }, {} as any)}
-                                  />
+                                {/* Actions + timestamp — visible on hover */}
+                                <div className={cn(
+                                  'flex items-center gap-1 mt-0.5 px-1 opacity-0 group-hover:opacity-100 transition-opacity',
+                                  isOwn ? 'flex-row-reverse' : ''
+                                )}>
+                                  <span className="text-[10px] text-muted-foreground">
+                                    {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                  </span>
+                                  <button
+                                    onClick={() => {
+                                      setReplyingTo(msg);
+                                      setTimeout(() => chatInputAreaRef.current?.querySelector('input')?.focus(), 50);
+                                    }}
+                                    className="h-5 px-1.5 rounded text-[10px] gap-1 flex items-center text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                                  >
+                                    <MessageSquare className="h-3 w-3" />
+                                    Reply
+                                  </button>
+                                  {msg.reply_count && msg.reply_count > 0 ? (
+                                    <button
+                                      onClick={() => handleOpenThread(msg)}
+                                      className="h-5 px-1.5 rounded text-[10px] gap-1 flex items-center text-primary hover:bg-primary/10 transition-colors"
+                                    >
+                                      {msg.reply_count} {msg.reply_count === 1 ? 'reply' : 'replies'}
+                                    </button>
+                                  ) : null}
+                                  {(!msg.reactions || msg.reactions.length === 0) && (
+                                    <MessageReactions
+                                      reactions={[]}
+                                      currentUserId={user?.id}
+                                      onAddReaction={(emoji) => handleAddReaction(msg.id, emoji)}
+                                      onRemoveReaction={(emoji) => handleRemoveReaction(msg.id, emoji)}
+                                    />
+                                  )}
                                 </div>
-                              )}
-                            </div>
+                              </div>
 
-                            {/* Actions + timestamp row below bubble */}
-                            <div className={cn(
-                              "flex items-center gap-1 mt-0.5 px-1",
-                              isOwn ? 'flex-row-reverse' : ''
-                            )}>
-                              <span className="text-[10px] text-slate-400 dark:text-slate-500">
-                                {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                              </span>
-                              {/* Inline reply button */}
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => {
-                                  setReplyingTo(msg);
-                                  setTimeout(() => chatInputAreaRef.current?.querySelector('input')?.focus(), 50);
-                                }}
-                                className="h-5 px-1.5 text-[10px] gap-1 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 rounded"
-                              >
-                                <MessageSquare className="h-3 w-3" />
-                                Reply
-                              </Button>
-                              {/* View thread button — only when replies exist */}
-                              {msg.reply_count && msg.reply_count > 0 ? (
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() => handleOpenThread(msg)}
-                                  className="h-5 px-1.5 text-[10px] gap-1 text-violet-500 hover:text-violet-700 dark:text-violet-400 dark:hover:text-violet-200 hover:bg-slate-100 dark:hover:bg-slate-700 rounded"
-                                >
-                                  {msg.reply_count} {msg.reply_count === 1 ? 'reply' : 'replies'}
-                                </Button>
-                              ) : null}
-                              {(!msg.reactions || msg.reactions.length === 0) && (
-                                <MessageReactions
-                                  reactions={[]}
-                                  currentUserId={user?.id}
-                                  onAddReaction={(emoji) => handleAddReaction(msg.id, emoji)}
-                                  onRemoveReaction={(emoji) => handleRemoveReaction(msg.id, emoji)}
-                                />
+                              {/* Avatar — own */}
+                              {isOwn && (
+                                <Avatar className="h-7 w-7 flex-shrink-0 self-end mb-5">
+                                  <AvatarImage src={user?.profile_picture_url} />
+                                  <AvatarFallback className="text-xs font-semibold bg-primary/10 text-primary">
+                                    {user?.first_name?.[0] || user?.email?.[0]?.toUpperCase() || 'U'}
+                                  </AvatarFallback>
+                                </Avatar>
                               )}
-                            </div>
-                          </div>
-
-                          {/* Avatar — own message */}
-                          {isOwn && (
-                            <Avatar className="h-7 w-7 flex-shrink-0 self-end mb-5">
-                              <AvatarImage src={user?.profile_picture_url} />
-                              <AvatarFallback className="text-xs font-semibold bg-violet-100 dark:bg-violet-900/40 text-violet-700 dark:text-violet-300">
-                                {user?.first_name?.[0] || user?.email?.[0]?.toUpperCase() || 'U'}
-                              </AvatarFallback>
-                            </Avatar>
-                          )}
-                        </div>
-                      );
-                    })}
-                      <div ref={messagesEndRef} />
-                      </div>
+                            </motion.div>
+                          );
+                        })}
+                        <div ref={messagesEndRef} />
+                      </motion.div>
                     )}
                   </div>
                 </ScrollArea>
-              </CardContent>
-              <div className="border-t border-slate-200/80 dark:border-slate-700/60 bg-white dark:bg-slate-800 flex-shrink-0">
-                {/* Reply quote bar */}
-                {replyingTo && (
-                  <div className="flex items-center justify-between px-4 py-2 bg-slate-50 dark:bg-slate-900/60 border-b border-slate-200 dark:border-slate-700">
-                    <div className="flex items-center gap-2 min-w-0">
-                      <div className="w-0.5 h-8 bg-violet-500 rounded-full flex-shrink-0" />
-                      <div className="min-w-0">
-                        <p className="text-[10px] font-semibold text-violet-500 mb-0.5">
-                          Replying to {replyingTo.sender?.first_name || replyingTo.sender?.email}
-                        </p>
-                        <p className="text-xs text-slate-500 dark:text-slate-400 truncate">
-                          {replyingTo.content}
-                        </p>
-                      </div>
-                    </div>
-                    <button
-                      onClick={() => setReplyingTo(null)}
-                      className="ml-3 p-1 rounded hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 flex-shrink-0"
-                    >
-                      <X className="h-3.5 w-3.5" />
-                    </button>
-                  </div>
-                )}
-                <div className="p-3 flex flex-col gap-3">
-                  {/* File Upload Component */}
+              </div>
+
+              {/* ── Composer ─────────────────────────────────────────────── */}
+              <div className="flex-shrink-0 px-3 pb-3 pt-1">
+                <div className={cn(
+                  'rounded-xl border border-border bg-card shadow-sm overflow-hidden transition-colors',
+                  replyingTo && 'border-primary/30'
+                )}>
+                  {/* Reply bar */}
+                  <AnimatePresence>
+                    {replyingTo && (
+                      <motion.div
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: 'auto' }}
+                        exit={{ opacity: 0, height: 0 }}
+                        className="flex items-center justify-between px-3 py-2 border-b border-border/50 bg-muted/30"
+                      >
+                        <div className={cn('flex items-center gap-2 min-w-0', isRTL ? 'flex-row-reverse' : '')}>
+                          <div className="w-0.5 h-6 bg-primary rounded-full flex-shrink-0" />
+                          <div className="min-w-0">
+                            <p className="text-[10px] font-semibold text-primary mb-0.5">
+                              Replying to {replyingTo.sender?.first_name || replyingTo.sender?.email}
+                            </p>
+                            <p className="text-xs text-muted-foreground truncate">{replyingTo.content}</p>
+                          </div>
+                        </div>
+                        <button
+                          onClick={() => setReplyingTo(null)}
+                          className="ml-3 p-1 rounded hover:bg-muted text-muted-foreground hover:text-foreground flex-shrink-0 transition-colors"
+                        >
+                          <X className="h-3.5 w-3.5" />
+                        </button>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+
+                  {/* Selected files preview */}
                   {selectedFiles.length > 0 && (
-                    <div className="px-2 py-2 bg-slate-100/80 dark:bg-slate-900/50 rounded-xl">
+                    <div className="px-3 pt-2">
                       <FileUpload
                         onFileSelect={handleFileSelect}
                         onFileRemove={handleFileRemove}
@@ -1712,8 +1701,8 @@ const InternalChatPage: React.FC = () => {
                     </div>
                   )}
 
-                  <div className={`flex items-center gap-3 ${isRTL ? 'flex-row-reverse' : ''}`}>
-                    {/* File Attach Button */}
+                  {/* Input row */}
+                  <div className={cn('flex items-center gap-2 px-3 py-2', isRTL ? 'flex-row-reverse' : '')}>
                     <FileUpload
                       onFileSelect={handleFileSelect}
                       onFileRemove={handleFileRemove}
@@ -1721,71 +1710,67 @@ const InternalChatPage: React.FC = () => {
                       isUploading={isUploadingFiles}
                       multiple={true}
                     />
-
-                    <div className="flex-1 relative" ref={chatInputAreaRef}>
+                    <div className="flex-1" ref={chatInputAreaRef}>
                       <SlashCommandInput
                         placeholder={t('teamChat.typeMessage')}
                         value={inputValue}
                         onChange={setInputValue}
                         onKeyPress={(e) => e.key === 'Enter' && !e.shiftKey && handleSendMessage()}
-                        className="w-full px-4 py-2 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 focus:border-blue-500 dark:focus:border-blue-500 focus:ring-1 focus:ring-blue-500/30 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 text-sm"
+                        className="w-full bg-transparent border-0 outline-none text-sm text-foreground placeholder:text-muted-foreground/50 focus:ring-0 py-0.5"
                         disabled={isUploadingFiles}
                       />
                     </div>
-                    <Button
+                    <motion.button
+                      whileTap={{ scale: 0.92 }}
                       onClick={handleSendMessage}
                       disabled={(!inputValue.trim() && selectedFiles.length === 0) || isUploadingFiles}
-                      className="rounded-xl w-9 h-9 bg-gradient-to-r from-violet-500 to-indigo-600 hover:from-violet-600 hover:to-indigo-700 text-white shadow-sm shadow-violet-500/25 transition-all disabled:opacity-40 disabled:cursor-not-allowed flex-shrink-0"
+                      className={cn(
+                        'h-7 w-7 rounded-md flex items-center justify-center flex-shrink-0 transition-all',
+                        (inputValue.trim() || selectedFiles.length > 0)
+                          ? 'bg-primary text-primary-foreground hover:bg-primary/90'
+                          : 'bg-muted text-muted-foreground/40 cursor-not-allowed'
+                      )}
                     >
                       {isUploadingFiles ? (
-                        <Loader2 className="h-5 w-5 animate-spin" />
+                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
                       ) : (
-                        <Send className="h-5 w-5" />
+                        <Send className="h-3.5 w-3.5" />
                       )}
-                    </Button>
+                    </motion.button>
                   </div>
                 </div>
               </div>
             </>
           ) : (
-            <div className="flex-1 flex items-center justify-center bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/30 dark:from-slate-900/50 dark:via-blue-950/20 dark:to-indigo-950/20">
-              <div className="text-center py-12">
-                <div className="relative mb-6 mx-auto w-fit">
-                  <div className="relative h-24 w-24 rounded-3xl bg-gradient-to-br from-violet-100 to-indigo-100 dark:from-violet-900/30 dark:to-indigo-900/30 flex items-center justify-center shadow-xl shadow-violet-500/20">
-                    <MessageSquare className="h-12 w-12 text-blue-500 dark:text-blue-400" />
-                  </div>
+            /* Empty state — no channel selected */
+            <div className="flex-1 flex items-center justify-center bg-background">
+              <div className="text-center">
+                <div className="h-16 w-16 rounded-2xl bg-muted flex items-center justify-center mx-auto mb-5">
+                  <MessageSquare className="h-8 w-8 text-muted-foreground" />
                 </div>
-                <h3 className="text-xl font-bold bg-gradient-to-r from-violet-600 to-indigo-600 bg-clip-text text-transparent mb-2">
-                  {t('teamChat.selectChannel')}
-                </h3>
-                <p className="text-slate-500 dark:text-slate-400 text-sm max-w-xs mx-auto">
-                  {t('teamChat.selectChannelDesc')}
-                </p>
-                <Button
+                <h3 className="text-base font-semibold text-foreground mb-1">{t('teamChat.selectChannel')}</h3>
+                <p className="text-sm text-muted-foreground max-w-xs mx-auto mb-5">{t('teamChat.selectChannelDesc')}</p>
+                <button
                   onClick={() => setCreateChannelModalOpen(true)}
-                  className="mt-6 bg-gradient-to-r from-violet-500 to-indigo-600 hover:from-violet-600 hover:to-indigo-700 text-white rounded-xl shadow-lg shadow-violet-500/25 hover:shadow-xl hover:shadow-violet-500/30 transition-all px-6"
+                  className="inline-flex items-center gap-1.5 h-8 px-4 rounded-lg bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 transition-colors"
                 >
-                  <Plus className="h-4 w-4 mr-2" />
+                  <Plus className="h-3.5 w-3.5" />
                   Create Channel
-                </Button>
+                </button>
               </div>
             </div>
           )}
         </div>
 
-        {/* Search panel */}
+        {/* Modals */}
         {selectedChannel && (
           <SearchModal
             isOpen={isSearchModalOpen}
             onClose={() => setIsSearchModalOpen(false)}
             channelId={selectedChannel.id}
-            onMessageClick={(messageId) => {
-              console.log('Navigate to message:', messageId);
-            }}
+            onMessageClick={(messageId) => { console.log('Navigate to message:', messageId); }}
           />
         )}
-
-        {/* Members panel */}
         {selectedChannel && (
           <ManageChannelMembersModal
             isOpen={isManageMembersModalOpen}
@@ -1795,19 +1780,19 @@ const InternalChatPage: React.FC = () => {
           />
         )}
 
-        {/* Call History panel */}
+        {/* ── CALL HISTORY PANEL ───────────────────────────────────────────── */}
         <div className={cn(
-          'h-full flex-shrink-0 flex flex-col border-l border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 overflow-hidden transition-all duration-300 ease-in-out',
-          isCallHistoryOpen ? 'w-80' : 'w-0 border-l-0'
+          'h-full flex-shrink-0 flex flex-col border-l border-border bg-card overflow-hidden transition-all duration-300 ease-in-out',
+          isCallHistoryOpen ? 'w-72' : 'w-0 border-l-0'
         )}>
-          <div className="flex items-center justify-between px-4 py-3 border-b border-slate-200 dark:border-slate-700 flex-shrink-0">
+          <div className="flex items-center justify-between px-4 h-[52px] border-b border-border flex-shrink-0">
             <div className="flex items-center gap-2">
-              <History className="h-4 w-4 text-slate-500 dark:text-slate-400" />
-              <span className="text-sm font-semibold text-slate-800 dark:text-white">Call History</span>
+              <History className="h-4 w-4 text-muted-foreground" />
+              <span className="text-sm font-semibold text-foreground">Call History</span>
             </div>
             <button
               onClick={() => setIsCallHistoryOpen(false)}
-              className="p-1 rounded hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors"
+              className="h-7 w-7 rounded-md flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
             >
               <X className="h-4 w-4" />
             </button>

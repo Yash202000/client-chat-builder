@@ -16,6 +16,11 @@ export default defineConfig(({ mode }) => {
   server: {
     host: "::",
     port: 8080,
+    hmr: {
+      protocol: env.VITE_HMR_PROTOCOL || 'ws',
+      host: env.VITE_HMR_HOST || 'localhost',
+      clientPort: env.VITE_HMR_PORT ? parseInt(env.VITE_HMR_PORT) : undefined,
+    },
     proxy: {
       '/api': {
         target: backendUrl,

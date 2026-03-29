@@ -24,7 +24,8 @@ import { useTranslation } from 'react-i18next';
 import { useI18n } from '@/hooks/useI18n';
 import FileUpload from './FileUpload';
 import { uploadConversationFile } from '@/services/chatService';
-import RichTextEditor from './RichTextEditor';
+import RichTextEditor, { RichTextEditorHandle } from './RichTextEditor';
+import EmojiPicker from './EmojiPicker';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
@@ -64,22 +65,22 @@ const fadeInVariants = {
 
 // Message Skeleton for loading state
 const MessageSkeleton = ({ isUser = false }: { isUser?: boolean }) => (
-  <div className={`flex items-end gap-3 ${isUser ? 'justify-start' : 'justify-end'}`}>
+  <div className={`flex items-end gap-2.5 ${isUser ? 'justify-start' : 'justify-end'}`}>
     {isUser && (
-      <div className="w-10 h-10 rounded-full bg-green-600 flex items-center justify-center opacity-60">
-        <UserIcon className="h-5 w-5 text-white" />
+      <div className="w-7 h-7 rounded-full bg-muted border border-border flex items-center justify-center opacity-60 flex-shrink-0">
+        <UserIcon className="h-3.5 w-3.5 text-muted-foreground" />
       </div>
     )}
     <div className={`flex flex-col ${isUser ? 'items-start' : 'items-end'} max-w-[60%]`}>
-      <div className={`rounded-2xl p-4 skeleton`}>
-        <div className="h-4 w-32 rounded skeleton mb-2" />
-        <div className="h-4 w-48 rounded skeleton" />
+      <div className={`rounded-2xl px-3.5 py-2.5 animate-pulse bg-muted ${isUser ? 'rounded-bl-md' : 'rounded-br-md'}`}>
+        <div className="h-3.5 w-32 rounded bg-muted-foreground/20 mb-2" />
+        <div className="h-3.5 w-48 rounded bg-muted-foreground/20" />
       </div>
-      <div className="h-3 w-16 rounded skeleton mt-1.5" />
+      <div className="h-2.5 w-14 rounded bg-muted animate-pulse mt-1.5" />
     </div>
     {!isUser && (
-      <div className="w-10 h-10 rounded-full bg-slate-600 flex items-center justify-center opacity-60">
-        <Bot className="h-5 w-5 text-white" />
+      <div className="w-7 h-7 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center opacity-60 flex-shrink-0">
+        <Bot className="h-3.5 w-3.5 text-primary" />
       </div>
     )}
   </div>
@@ -173,8 +174,8 @@ const AttachmentDisplay: React.FC<{ attachments: MessageAttachment[], sender: st
               rel="noopener noreferrer"
               className={`flex items-center gap-2 px-3 py-2 rounded-lg transition-colors ${
                 sender === 'user'
-                  ? 'bg-blue-50 hover:bg-blue-100 dark:bg-blue-900/30 dark:hover:bg-blue-900/50'
-                  : 'bg-white/20 hover:bg-white/30'
+                  ? 'bg-muted hover:bg-muted/80'
+                  : 'bg-primary-foreground/20 hover:bg-primary-foreground/30'
               }`}
             >
               <MapPin className="h-4 w-4 flex-shrink-0" />
@@ -205,7 +206,7 @@ const AttachmentDisplay: React.FC<{ attachments: MessageAttachment[], sender: st
                 />
               </a>
               <div className={`flex items-center gap-2 text-xs ${
-                sender === 'user' ? 'text-slate-600 dark:text-slate-400' : 'text-white/80'
+                sender === 'user' ? 'text-muted-foreground' : 'text-primary-foreground/80'
               }`}>
                 <Image className="h-3 w-3" />
                 <span>{att.file_name}</span>
@@ -218,8 +219,8 @@ const AttachmentDisplay: React.FC<{ attachments: MessageAttachment[], sender: st
                     rel="noopener noreferrer"
                     className={`flex items-center gap-1 px-2 py-0.5 rounded ${
                       sender === 'user'
-                        ? 'bg-blue-100 hover:bg-blue-200 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300'
-                        : 'bg-white/20 hover:bg-white/30'
+                        ? 'bg-primary/10 hover:bg-primary/20 text-primary'
+                        : 'bg-primary-foreground/20 hover:bg-primary-foreground/30 text-primary-foreground'
                     }`}
                   >
                     <Download className="h-3 w-3" />
@@ -237,8 +238,8 @@ const AttachmentDisplay: React.FC<{ attachments: MessageAttachment[], sender: st
             key={index}
             className={`flex items-center gap-2 px-3 py-2 rounded-lg ${
               sender === 'user'
-                ? 'bg-slate-100 dark:bg-slate-600'
-                : 'bg-white/10'
+                ? 'bg-muted'
+                : 'bg-primary-foreground/10'
             }`}
           >
             <File className="h-4 w-4 flex-shrink-0" />
@@ -246,7 +247,7 @@ const AttachmentDisplay: React.FC<{ attachments: MessageAttachment[], sender: st
               <span className="text-sm truncate block">{att.file_name || 'File'}</span>
               {att.file_size && (
                 <span className={`text-xs ${
-                  sender === 'user' ? 'text-slate-500 dark:text-slate-400' : 'text-white/70'
+                  sender === 'user' ? 'text-muted-foreground' : 'text-primary-foreground/70'
                 }`}>
                   {formatFileSize(att.file_size)}
                 </span>
@@ -260,8 +261,8 @@ const AttachmentDisplay: React.FC<{ attachments: MessageAttachment[], sender: st
                 rel="noopener noreferrer"
                 className={`flex items-center gap-1 px-2 py-1 rounded text-xs font-medium transition-colors ${
                   sender === 'user'
-                    ? 'bg-blue-100 hover:bg-blue-200 text-blue-700 dark:bg-blue-900/50 dark:hover:bg-blue-900/70 dark:text-blue-300'
-                    : 'bg-white/20 hover:bg-white/30'
+                    ? 'bg-primary/10 hover:bg-primary/20 text-primary'
+                    : 'bg-primary-foreground/20 hover:bg-primary-foreground/30 text-primary-foreground'
                 }`}
               >
                 <Download className="h-3 w-3" />
@@ -294,6 +295,7 @@ export const ConversationDetail: React.FC<ConversationDetailProps> = ({ sessionI
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [isUploadingFiles, setIsUploadingFiles] = useState(false);
   const [hasDraft, setHasDraft] = useState(false);
+  const [activeComposerTab, setActiveComposerTab] = useState<'reply' | 'note'>('reply');
   const typingTimeoutRef = useRef<NodeJS.Timeout>();
   const draftSaveTimeoutRef = useRef<NodeJS.Timeout>();
   const currentSessionIdRef = useRef(sessionId);
@@ -311,6 +313,8 @@ export const ConversationDetail: React.FC<ConversationDetailProps> = ({ sessionI
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const ws = useRef<WebSocket | null>(null);
+  const replyEditorRef = useRef<RichTextEditorHandle | null>(null);
+  const noteEditorRef = useRef<RichTextEditorHandle | null>(null);
   const previousScrollHeight = useRef<number>(0);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const { authFetch, token } = useAuth();
@@ -924,7 +928,7 @@ export const ConversationDetail: React.FC<ConversationDetailProps> = ({ sessionI
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.3 }}
-      className="flex h-full bg-white dark:bg-slate-900 rounded-xl overflow-hidden border border-slate-200 dark:border-slate-800"
+      className="flex h-full bg-background rounded-xl overflow-hidden border border-border"
     >
       <div className="flex flex-col flex-grow">
         {/* Enhanced Header */}
@@ -932,11 +936,11 @@ export const ConversationDetail: React.FC<ConversationDetailProps> = ({ sessionI
           initial={{ y: -20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ duration: 0.4, ease: "easeOut" }}
-          className="flex-shrink-0 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 relative overflow-hidden"
+          className="flex-shrink-0 border-b border-border bg-card relative overflow-hidden"
         >
 
           {/* Top Row - Title and Quick Actions */}
-          <div className={`flex items-center justify-between px-6 py-4 ${!readOnly ? 'border-b border-slate-100 dark:border-slate-700/50' : ''}`}>
+          <div className={`flex items-center justify-between px-4 py-3 ${!readOnly ? 'border-b border-border/50' : ''}`}>
             <div className="flex items-center gap-4">
               {/* Back button for read-only mode */}
               {readOnly && onBack && (
@@ -958,8 +962,8 @@ export const ConversationDetail: React.FC<ConversationDetailProps> = ({ sessionI
                   animate={{ scale: 1 }}
                   transition={{ type: "spring", stiffness: 200, damping: 15 }}
                 >
-                  <div className="h-12 w-12 rounded-full bg-green-50 dark:bg-green-900/20 flex items-center justify-center border border-slate-200 dark:border-slate-700">
-                    <UserIcon className="h-6 w-6 text-green-600 dark:text-green-400" />
+                  <div className="h-10 w-10 rounded-full bg-muted flex items-center justify-center border border-border">
+                    <UserIcon className="h-5 w-5 text-muted-foreground" />
                   </div>
                 </motion.div>
                 {/* Online indicator */}
@@ -967,7 +971,7 @@ export const ConversationDetail: React.FC<ConversationDetailProps> = ({ sessionI
                   <motion.div
                     initial={{ scale: 0 }}
                     animate={{ scale: 1 }}
-                    className="absolute -bottom-0.5 -right-0.5 h-3.5 w-3.5 bg-green-500 rounded-full border-2 border-white dark:border-slate-800"
+                    className="absolute -bottom-0.5 -right-0.5 h-3 w-3 bg-green-500 rounded-full border-2 border-card"
                   />
                 )}
               </div>
@@ -975,7 +979,7 @@ export const ConversationDetail: React.FC<ConversationDetailProps> = ({ sessionI
               {/* Contact Info */}
               <div className="flex flex-col">
                 <div className="flex items-center gap-2">
-                  <h2 className="text-lg font-bold text-slate-800 dark:text-white">
+                  <h2 className="text-[15px] font-semibold text-foreground">
                     {contact?.name || (readOnly ? t('conversations.detail.viewConversation', { defaultValue: 'View Conversation' }) : t('conversations.detail.conversation'))}
                   </h2>
                   <span className="px-2 py-0.5 bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 text-[10px] font-medium rounded-full">
@@ -984,10 +988,10 @@ export const ConversationDetail: React.FC<ConversationDetailProps> = ({ sessionI
                 </div>
                 <div className="flex items-center gap-2 mt-0.5">
                   {contact?.email && (
-                    <span className="text-xs text-slate-500 dark:text-slate-400">{contact.email}</span>
+                    <span className="text-xs text-muted-foreground">{contact.email}</span>
                   )}
-                  <span className="text-slate-300 dark:text-slate-600">•</span>
-                  <span className="text-xs text-slate-400 dark:text-slate-500 font-mono">
+                  <span className="text-border">•</span>
+                  <span className="text-xs text-muted-foreground/60 font-mono">
                     #{sessionId.slice(0, 8)}
                   </span>
                 </div>
@@ -1018,7 +1022,7 @@ export const ConversationDetail: React.FC<ConversationDetailProps> = ({ sessionI
                 <Button
                   size="sm"
                   onClick={onSummaryClick}
-                  className="bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg h-7 px-2.5 text-xs"
+                  className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-lg h-7 px-2.5 text-xs"
                 >
                   <Sparkles className={`h-3.5 w-3.5 ${isRTL ? 'ml-1.5' : 'mr-1.5'}`} />
                   {t('conversations.detail.summary', { defaultValue: 'AI Summary' })}
@@ -1049,7 +1053,7 @@ export const ConversationDetail: React.FC<ConversationDetailProps> = ({ sessionI
                     variant="outline"
                     onClick={() => startCallMutation.mutate()}
                     disabled={startCallMutation.isPending}
-                    className="rounded-lg h-7 px-2.5 text-xs border-slate-200 dark:border-slate-600"
+                    className="rounded-lg h-7 px-2.5 text-xs border-border"
                   >
                     <Video className={`h-3.5 w-3.5 ${isRTL ? 'ml-1.5' : 'mr-1.5'}`} />
                     {t('conversations.detail.videoCall')}
@@ -1060,8 +1064,8 @@ export const ConversationDetail: React.FC<ConversationDetailProps> = ({ sessionI
                     disabled={statusMutation.isPending || conversationStatus === 'resolved'}
                     className={`rounded-lg h-7 px-2.5 text-xs ${
                       conversationStatus === 'resolved'
-                        ? 'bg-green-100 text-green-700 hover:bg-green-200 border border-green-200'
-                        : 'bg-blue-600 hover:bg-blue-700 text-white'
+                        ? 'bg-green-100 text-green-700 hover:bg-green-200 border border-green-200 dark:bg-green-900/30 dark:text-green-400 dark:border-green-800'
+                        : 'bg-primary hover:bg-primary/90 text-primary-foreground'
                     }`}
                   >
                     <CheckCircle className={`h-3.5 w-3.5 ${isRTL ? 'ml-1.5' : 'mr-1.5'}`} />
@@ -1078,12 +1082,12 @@ export const ConversationDetail: React.FC<ConversationDetailProps> = ({ sessionI
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.2 }}
-              className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-slate-900 border-t border-slate-100 dark:border-slate-800"
+              className="flex items-center gap-2 px-4 py-2 bg-card border-t border-border/50"
             >
               {/* AI Toggle */}
-              <div className="flex items-center gap-1.5 bg-slate-50 dark:bg-slate-800 rounded-lg px-2.5 py-1.5 border border-slate-200 dark:border-slate-700">
-                <Bot className={`h-3.5 w-3.5 transition-colors flex-shrink-0 ${isAiEnabled ? 'text-blue-600 dark:text-blue-400' : 'text-slate-400'}`} />
-                <Label htmlFor="ai-toggle" className="text-xs font-medium cursor-pointer text-slate-600 dark:text-slate-300 whitespace-nowrap">
+              <div className="flex items-center gap-1.5 bg-muted rounded-lg px-2.5 py-1.5 border border-border">
+                <Bot className={`h-3.5 w-3.5 transition-colors flex-shrink-0 ${isAiEnabled ? 'text-blue-500' : 'text-muted-foreground'}`} />
+                <Label htmlFor="ai-toggle" className="text-xs font-medium cursor-pointer text-foreground whitespace-nowrap">
                   {t('conversations.detail.aiReplies')}
                 </Label>
                 <Switch
@@ -1096,14 +1100,14 @@ export const ConversationDetail: React.FC<ConversationDetailProps> = ({ sessionI
               </div>
 
               {/* Assign To */}
-              <div className="flex items-center gap-1.5 bg-slate-50 dark:bg-slate-800 rounded-lg px-2.5 py-1.5 border border-slate-200 dark:border-slate-700">
-                <Users className="h-3.5 w-3.5 text-slate-500 dark:text-slate-400 flex-shrink-0" />
+              <div className="flex items-center gap-1.5 bg-muted rounded-lg px-2.5 py-1.5 border border-border">
+                <Users className="h-3.5 w-3.5 text-muted-foreground flex-shrink-0" />
                 <Select
                   key={`assignee-${sessionId}`}
                   value={sessionDetails?.assignee_id?.toString() || undefined}
                   onValueChange={(value) => assigneeMutation.mutate(parseInt(value))}
                 >
-                  <SelectTrigger className="border-0 h-auto p-0 focus:ring-0 w-[130px] text-xs font-medium text-slate-600 dark:text-slate-300">
+                  <SelectTrigger className="border-0 h-auto p-0 focus:ring-0 w-[130px] text-xs font-medium text-foreground">
                     <SelectValue placeholder={t('conversations.detail.assignTo')} />
                   </SelectTrigger>
                   <SelectContent className="rounded-xl">
@@ -1111,12 +1115,12 @@ export const ConversationDetail: React.FC<ConversationDetailProps> = ({ sessionI
                       <SelectItem key={user.id} value={user.id.toString()} className="rounded-lg">
                         <div className="flex items-center gap-2">
                           <div className="relative h-7 w-7 flex-shrink-0">
-                            <div className="h-7 w-7 rounded-lg bg-slate-100 dark:bg-slate-700 flex items-center justify-center">
-                              <span className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                            <div className="h-7 w-7 rounded-lg bg-muted flex items-center justify-center">
+                              <span className="text-xs font-bold text-foreground">
                                 {user.email.charAt(0).toUpperCase()}
                               </span>
                             </div>
-                            <span className={`absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full border border-white dark:border-slate-800 ${
+                            <span className={`absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full border border-card ${
                               user.presence_status === 'online' ? 'bg-emerald-500' :
                               user.presence_status === 'away' ? 'bg-yellow-400' :
                               user.presence_status === 'busy' || user.presence_status === 'do_not_disturb' ? 'bg-red-500' :
@@ -1133,14 +1137,14 @@ export const ConversationDetail: React.FC<ConversationDetailProps> = ({ sessionI
               </div>
 
               {/* Priority Selector */}
-              <div className="flex items-center gap-1.5 bg-slate-50 dark:bg-slate-800 rounded-lg px-2.5 py-1.5 border border-slate-200 dark:border-slate-700">
-                <Flag className={`h-3.5 w-3.5 flex-shrink-0 ${conversationPriority > 0 ? PRIORITY_CONFIG[conversationPriority]?.color : 'text-slate-400'}`} />
+              <div className="flex items-center gap-1.5 bg-muted rounded-lg px-2.5 py-1.5 border border-border">
+                <Flag className={`h-3.5 w-3.5 flex-shrink-0 ${conversationPriority > 0 ? PRIORITY_CONFIG[conversationPriority]?.color : 'text-muted-foreground'}`} />
                 <Select
                   key={`priority-${sessionId}-${conversationPriority}`}
                   value={conversationPriority.toString()}
                   onValueChange={(value) => priorityMutation.mutate(parseInt(value))}
                 >
-                  <SelectTrigger className="border-0 h-auto p-0 focus:ring-0 w-[90px] text-xs font-medium text-slate-600 dark:text-slate-300">
+                  <SelectTrigger className="border-0 h-auto p-0 focus:ring-0 w-[90px] text-xs font-medium text-foreground">
                     <SelectValue placeholder={t('conversations.priority.label', { defaultValue: 'Priority' })} />
                   </SelectTrigger>
                   <SelectContent className="rounded-xl">
@@ -1168,7 +1172,7 @@ export const ConversationDetail: React.FC<ConversationDetailProps> = ({ sessionI
         </motion.header>
 
         {/* Enhanced Messages Area */}
-        <main ref={messagesContainerRef} className="flex-grow overflow-y-auto p-4 bg-slate-50 dark:bg-slate-900 relative">
+        <main ref={messagesContainerRef} className="flex-grow overflow-y-auto p-4 bg-muted/20 relative">
 
           <AnimatePresence mode="wait">
             {isLoading ? (
@@ -1201,8 +1205,8 @@ export const ConversationDetail: React.FC<ConversationDetailProps> = ({ sessionI
                       exit={{ opacity: 0, y: -20 }}
                       className="flex justify-center py-4"
                     >
-                      <div className="flex items-center gap-3 bg-white dark:bg-slate-800 px-4 py-2 rounded-full shadow-sm border border-slate-200 dark:border-slate-700">
-                        <Loader2 className="h-4 w-4 text-blue-500 animate-spin" />
+                      <div className="flex items-center gap-3 bg-card px-4 py-2 rounded-full shadow-sm border border-border">
+                        <Loader2 className="h-4 w-4 text-primary animate-spin" />
                         <span className="text-sm text-muted-foreground font-medium">
                           {t('conversations.detail.loadingOlderMessages', { defaultValue: 'Loading older messages...' })}
                         </span>
@@ -1219,11 +1223,11 @@ export const ConversationDetail: React.FC<ConversationDetailProps> = ({ sessionI
                     className="flex justify-center py-4"
                   >
                     <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                      <div className="h-px w-12 bg-gradient-to-r from-transparent to-slate-300 dark:to-slate-600" />
+                      <div className="h-px w-12 bg-gradient-to-r from-transparent to-border" />
                       <ChevronUp className="h-4 w-4" />
                       <span className="font-medium">{t('conversations.detail.noMoreMessages', { defaultValue: 'Beginning of conversation' })}</span>
                       <ChevronUp className="h-4 w-4" />
-                      <div className="h-px w-12 bg-gradient-to-l from-transparent to-slate-300 dark:to-slate-600" />
+                      <div className="h-px w-12 bg-gradient-to-l from-transparent to-border" />
                     </div>
                   </motion.div>
                 )}
@@ -1240,16 +1244,16 @@ export const ConversationDetail: React.FC<ConversationDetailProps> = ({ sessionI
                       {showDateSeparator && (
                         <div className="flex items-center justify-center my-8">
                           <div className="flex items-center gap-4">
-                            <div className="h-px w-16 bg-gradient-to-r from-transparent via-slate-300 to-slate-300 dark:via-slate-600 dark:to-slate-600" />
-                            <div className="bg-white dark:bg-slate-800 px-5 py-2 rounded-full shadow-sm border border-slate-200 dark:border-slate-700">
+                            <div className="h-px w-16 bg-gradient-to-r from-transparent via-border to-border" />
+                            <div className="bg-card px-4 py-1.5 rounded-full shadow-sm border border-border">
                               <div className="flex items-center gap-2">
-                                <Clock className="h-3.5 w-3.5 text-slate-400" />
-                                <p className="text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider">
+                                <Clock className="h-3 w-3 text-muted-foreground" />
+                                <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
                                   {formatDateSeparator(new Date(msg.timestamp))}
                                 </p>
                               </div>
                             </div>
-                            <div className="h-px w-16 bg-gradient-to-l from-transparent via-slate-300 to-slate-300 dark:via-slate-600 dark:to-slate-600" />
+                            <div className="h-px w-16 bg-gradient-to-l from-transparent via-border to-border" />
                           </div>
                         </div>
                       )}
@@ -1271,7 +1275,7 @@ export const ConversationDetail: React.FC<ConversationDetailProps> = ({ sessionI
                                   <span className="text-sm font-bold text-amber-700 dark:text-amber-400">{t('conversations.detail.privateNote')}</span>
                                   <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-200/50 dark:bg-amber-800/30 text-amber-700 dark:text-amber-400 font-medium">Internal Only</span>
                                 </div>
-                                <p className="text-sm text-slate-700 dark:text-slate-300 leading-relaxed">{msg.message}</p>
+                                <p className="text-sm text-foreground leading-relaxed">{msg.message}</p>
                                 <p className="text-xs text-amber-600/70 dark:text-amber-400/70 mt-3 flex items-center gap-1.5">
                                   <Clock className="h-3 w-3" />
                                   {new Date(msg.timestamp).toLocaleString()}
@@ -1284,16 +1288,16 @@ export const ConversationDetail: React.FC<ConversationDetailProps> = ({ sessionI
                         /* Enhanced Regular Message */
                         <div className={`flex items-end gap-2 ${msg.sender === 'user' ? 'justify-start' : 'justify-end'}`}>
                           {msg.sender === 'user' && (
-                            <div className="h-7 w-7 flex-shrink-0 rounded-full bg-green-600 flex items-center justify-center">
-                              <UserIcon className="h-3.5 w-3.5 text-white" />
+                            <div className="h-7 w-7 flex-shrink-0 rounded-full bg-muted border border-border flex items-center justify-center">
+                              <UserIcon className="h-3.5 w-3.5 text-muted-foreground" />
                             </div>
                           )}
                           <div className={`flex flex-col ${msg.sender === 'user' ? 'items-start' : 'items-end'} max-w-[65%]`}>
                             <div
-                              className={`px-3.5 py-2 rounded-xl ${
+                              className={`px-3.5 py-2.5 rounded-2xl ${
                                 msg.sender === 'user'
-                                  ? `bg-white dark:bg-slate-700/90 border border-slate-200 dark:border-slate-600/50 ${isRTL ? 'rounded-br-sm' : 'rounded-bl-sm'} dark:text-white`
-                                  : `bg-blue-600 text-white ${isRTL ? 'rounded-bl-sm' : 'rounded-br-sm'}`
+                                  ? `bg-card border border-border ${isRTL ? 'rounded-br-md' : 'rounded-bl-md'} text-foreground shadow-sm`
+                                  : `bg-primary text-primary-foreground ${isRTL ? 'rounded-bl-md' : 'rounded-br-md'} shadow-sm`
                               }`}
                             >
                               <div className="prose prose-sm dark:prose-invert max-w-full prose-p:my-1 prose-headings:my-2">
@@ -1305,7 +1309,7 @@ export const ConversationDetail: React.FC<ConversationDetailProps> = ({ sessionI
                                         {...props}
                                         target="_blank"
                                         rel="noopener noreferrer"
-                                        className={`${msg.sender === 'user' ? 'text-blue-600 hover:text-blue-700' : 'text-blue-200 hover:text-white'} underline underline-offset-2 transition-colors`}
+                                        className={`${msg.sender === 'user' ? 'text-primary hover:text-primary/80' : 'text-primary-foreground/80 hover:text-primary-foreground'} underline underline-offset-2 transition-colors`}
                                       />
                                     ),
                                     p: ({node, ...props}) => <p className="text-[13px] leading-snug break-words" {...props} />,
@@ -1324,7 +1328,7 @@ export const ConversationDetail: React.FC<ConversationDetailProps> = ({ sessionI
                                           {String(children).replace(/\n$/, '')}
                                         </SyntaxHighlighter>
                                       ) : (
-                                        <code className={`text-xs px-1 py-0.5 rounded ${msg.sender === 'user' ? 'bg-slate-100 dark:bg-slate-600 text-pink-600 dark:text-pink-400' : 'bg-blue-700/50 text-blue-100'}`} {...props}>
+                                        <code className={`text-xs px-1 py-0.5 rounded ${msg.sender === 'user' ? 'bg-muted text-foreground' : 'bg-primary-foreground/20 text-primary-foreground'}`} {...props}>
                                           {children}
                                         </code>
                                       );
@@ -1352,8 +1356,8 @@ export const ConversationDetail: React.FC<ConversationDetailProps> = ({ sessionI
                                           key={optionIndex}
                                           className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
                                             msg.sender === 'user'
-                                              ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300 hover:bg-blue-200'
-                                              : 'bg-white/20 text-white hover:bg-white/30'
+                                              ? 'bg-primary/10 text-primary hover:bg-primary/20'
+                                              : 'bg-primary-foreground/20 text-primary-foreground hover:bg-primary-foreground/30'
                                           }`}
                                         >
                                           {displayText}
@@ -1364,14 +1368,14 @@ export const ConversationDetail: React.FC<ConversationDetailProps> = ({ sessionI
                                 </div>
                               )}
                             </div>
-                            <p className={`text-[10px] mt-1 px-1 flex items-center gap-1 ${msg.sender === 'user' ? 'text-slate-400' : 'text-slate-500 dark:text-slate-400'}`}>
+                            <p className="text-[10px] mt-1 px-1 flex items-center gap-1 text-muted-foreground/60">
                               <Clock className="h-2.5 w-2.5" />
                               {new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                             </p>
                           </div>
                           {msg.sender !== 'user' && (
-                            <div className="h-7 w-7 flex-shrink-0 rounded-full bg-slate-600 flex items-center justify-center">
-                              <Bot className="h-3.5 w-3.5 text-white" />
+                            <div className="h-7 w-7 flex-shrink-0 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center">
+                              <Bot className="h-3.5 w-3.5 text-primary" />
                             </div>
                           )}
                         </div>
@@ -1396,15 +1400,15 @@ export const ConversationDetail: React.FC<ConversationDetailProps> = ({ sessionI
                     transition={{ type: "spring", stiffness: 200, damping: 15 }}
                     className="relative inline-block mb-6"
                   >
-                    <div className="w-24 h-24 rounded-2xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
-                      <MessageSquare className="h-12 w-12 text-slate-400" />
+                    <div className="w-20 h-20 rounded-2xl bg-muted flex items-center justify-center">
+                      <MessageSquare className="h-10 w-10 text-muted-foreground/40" />
                     </div>
                   </motion.div>
                   <motion.h3
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.2 }}
-                    className="text-xl font-bold text-slate-800 dark:text-white mb-3"
+                    className="text-lg font-semibold text-foreground mb-2"
                   >
                     {t('conversations.detail.noMessages')}
                   </motion.h3>
@@ -1422,144 +1426,154 @@ export const ConversationDetail: React.FC<ConversationDetailProps> = ({ sessionI
           </AnimatePresence>
         </main>
 
-        {/* Compact Footer Input - WhatsApp/Instagram Style */}
+        {/* Composer */}
         {!readOnly && (
           <motion.footer
-            initial={{ y: 10, opacity: 0 }}
+            initial={{ y: 12, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
-            transition={{ delay: 0.2, type: "spring", stiffness: 400, damping: 30 }}
-            className="flex-shrink-0 border-t border-slate-200 dark:border-slate-700/80 bg-white dark:bg-slate-900"
+            transition={{ delay: 0.2, type: 'spring', stiffness: 400, damping: 30 }}
+            className="flex-shrink-0 px-2 pb-2 pt-1"
           >
-            <Tabs defaultValue="reply" className="w-full">
-              {/* Minimal Tab Switcher */}
-              <div className="flex items-center gap-1 px-3 pt-1.5">
-                <TabsList className="h-auto p-0 bg-transparent gap-1">
-                  <TabsTrigger
-                    value="reply"
-                    className="relative text-xs px-3 py-1 rounded-full data-[state=active]:bg-blue-100 dark:data-[state=active]:bg-blue-900/30 data-[state=active]:text-blue-600 dark:data-[state=active]:text-blue-400 text-slate-500 dark:text-slate-400 transition-all duration-200 data-[state=active]:shadow-none"
-                  >
-                    {t('conversations.detail.replyTab')}
-                  </TabsTrigger>
-                  <TabsTrigger
-                    value="note"
-                    className="relative text-xs px-3 py-1 rounded-full data-[state=active]:bg-amber-100 dark:data-[state=active]:bg-amber-900/30 data-[state=active]:text-amber-600 dark:data-[state=active]:text-amber-400 text-slate-500 dark:text-slate-400 transition-all duration-200 data-[state=active]:shadow-none"
-                  >
-                    <span className="flex items-center gap-1">
-                      <Book className="h-3 w-3" />
+            {/* AI suggestion chips — above the card */}
+            <AnimatePresence>
+              {suggestedReplies.length > 0 && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: 'auto' }}
+                  exit={{ opacity: 0, height: 0 }}
+                  className="mb-2 overflow-hidden"
+                >
+                  <div className={`flex items-center gap-2 overflow-x-auto pb-1 scrollbar-hide ${isRTL ? 'flex-row-reverse' : ''}`}>
+                    <Sparkles className="h-3 w-3 text-purple-500 flex-shrink-0" />
+                    {suggestedReplies.map((reply, index) => (
+                      <motion.button
+                        key={index}
+                        initial={{ opacity: 0, y: 4 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: index * 0.04 }}
+                        whileTap={{ scale: 0.95 }}
+                        onClick={() => setMessage(reply)}
+                        className="flex-shrink-0 px-2.5 py-1 bg-purple-50 dark:bg-purple-900/20 border border-purple-200/60 dark:border-purple-700/40 rounded-full text-[11px] text-purple-700 dark:text-purple-300 hover:bg-purple-100 dark:hover:bg-purple-900/40 transition-colors"
+                      >
+                        {reply}
+                      </motion.button>
+                    ))}
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            <Tabs
+              defaultValue="reply"
+              onValueChange={(v) => setActiveComposerTab(v as 'reply' | 'note')}
+              className="w-full"
+            >
+              {/* Floating composer card — tints amber in note mode */}
+              <motion.div
+                animate={{ opacity: 1 }}
+                className={`rounded-xl border shadow-sm transition-colors duration-200 ${
+                  activeComposerTab === 'note'
+                    ? 'bg-amber-50/60 dark:bg-amber-900/10 border-amber-200/70 dark:border-amber-700/30'
+                    : 'bg-card border-border'
+                }`}
+              >
+                {/* ── Top bar: tabs + draft indicator ── */}
+                <div className={`flex items-center justify-between px-3 pt-2 pb-1.5 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                  <TabsList className="h-6 p-0.5 bg-muted/70 rounded-lg gap-0">
+                    <TabsTrigger
+                      value="reply"
+                      className="h-5 px-2.5 text-[11px] font-medium rounded-md data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm text-muted-foreground transition-all"
+                    >
+                      {t('conversations.detail.replyTab')}
+                    </TabsTrigger>
+                    <TabsTrigger
+                      value="note"
+                      className="h-5 px-2.5 text-[11px] font-medium rounded-md data-[state=active]:bg-amber-100 dark:data-[state=active]:bg-amber-800/50 data-[state=active]:text-amber-700 dark:data-[state=active]:text-amber-300 data-[state=active]:shadow-sm text-muted-foreground transition-all flex items-center gap-1"
+                    >
+                      <Book className="h-2.5 w-2.5" />
                       {t('conversations.detail.privateNoteTab')}
-                    </span>
-                  </TabsTrigger>
-                </TabsList>
+                    </TabsTrigger>
+                  </TabsList>
 
-                {/* Draft indicator - minimal */}
-                <AnimatePresence>
-                  {hasDraft && (
-                    <motion.span
-                      initial={{ opacity: 0, scale: 0.8 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      exit={{ opacity: 0, scale: 0.8 }}
-                      className="ml-auto text-[10px] text-green-600 dark:text-green-400 flex items-center gap-1"
-                    >
-                      <div className="w-1.5 h-1.5 bg-green-500 rounded-full" />
-                      Saved
-                    </motion.span>
-                  )}
-                </AnimatePresence>
-              </div>
+                  <AnimatePresence>
+                    {hasDraft && (
+                      <motion.div
+                        initial={{ opacity: 0, x: 6 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        exit={{ opacity: 0, x: 6 }}
+                        className={`flex items-center gap-1.5 ${isRTL ? 'flex-row-reverse' : ''}`}
+                      >
+                        <div className="w-1.5 h-1.5 rounded-full bg-green-500" />
+                        <span className="text-[10px] text-muted-foreground/60">Saved</span>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
 
-              {/* Reply Tab - Compact Input */}
-              <TabsContent value="reply" className="mt-0 focus-visible:outline-none focus-visible:ring-0">
-                {/* AI Suggestions - Compact chips above input */}
-                <AnimatePresence>
-                  {suggestedReplies.length > 0 && (
-                    <motion.div
-                      initial={{ opacity: 0, height: 0 }}
-                      animate={{ opacity: 1, height: 'auto' }}
-                      exit={{ opacity: 0, height: 0 }}
-                      className="px-3 pt-2"
-                    >
-                      <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-hide">
-                        <Sparkles className="h-3 w-3 text-purple-500 flex-shrink-0" />
-                        {suggestedReplies.map((reply, index) => (
-                          <motion.button
-                            key={index}
-                            initial={{ opacity: 0, scale: 0.9 }}
-                            animate={{ opacity: 1, scale: 1 }}
-                            transition={{ delay: index * 0.03 }}
-                            whileTap={{ scale: 0.95 }}
-                            onClick={() => setMessage(reply)}
-                            className="flex-shrink-0 px-3 py-1 bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-700/50 rounded-full text-xs text-purple-700 dark:text-purple-300 hover:bg-purple-100 dark:hover:bg-purple-900/40 transition-colors"
-                          >
-                            {reply}
-                          </motion.button>
-                        ))}
-                      </div>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-
-                {/* File Preview - Above input */}
-                <AnimatePresence>
-                  {selectedFiles.length > 0 && (
-                    <motion.div
-                      initial={{ opacity: 0, height: 0 }}
-                      animate={{ opacity: 1, height: 'auto' }}
-                      exit={{ opacity: 0, height: 0 }}
-                      className="px-3 pt-2"
-                    >
-                      <div className="flex items-center gap-2 p-2 bg-slate-50 dark:bg-slate-800 rounded-lg">
-                        <Paperclip className="h-3.5 w-3.5 text-slate-400" />
-                        <span className="text-xs text-slate-600 dark:text-slate-300">
-                          {selectedFiles.length} file{selectedFiles.length > 1 ? 's' : ''}
-                        </span>
-                        <FileUpload
-                          onFileSelect={handleFileSelect}
-                          onFileRemove={handleFileRemove}
-                          selectedFiles={selectedFiles}
-                          isUploading={isUploadingFiles}
-                        />
-                      </div>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-
-                {/* Instagram-style Input Bar */}
-                <div className="px-3 pb-2 pt-1">
-                  <div className={`relative flex items-center gap-2 bg-slate-100 dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 focus-within:border-blue-400 dark:focus-within:border-blue-500 transition-all px-3 py-1 ${isRTL ? 'flex-row-reverse' : ''}`}>
-                    {/* Input Field */}
-                    <div className="flex-1 min-w-0">
-                      <RichTextEditor
-                        value={message}
-                        onChange={handleRichTextChange}
-                        placeholder={t('conversations.detail.messageInput')}
-                        onEnterKey={handleSendMessage}
-                      />
-
-                      {/* Recording overlay */}
-                      <AnimatePresence>
-                        {isRecording && (
-                          <motion.div
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            exit={{ opacity: 0 }}
-                            className="absolute inset-0 flex items-center justify-center bg-red-50 dark:bg-red-900/30 rounded-xl"
-                          >
-                            <div className="flex items-center gap-2">
-                              <motion.div
-                                animate={{ opacity: [1, 0.3, 1] }}
-                                transition={{ duration: 1, repeat: Infinity }}
-                                className="w-2 h-2 bg-red-500 rounded-full"
-                              />
-                              <span className="text-sm text-red-600 dark:text-red-400">Recording...</span>
+                {/* ── Reply tab ── */}
+                <TabsContent value="reply" className="mt-0 focus-visible:outline-none focus-visible:ring-0">
+                  {/* File chips */}
+                  <AnimatePresence>
+                    {selectedFiles.length > 0 && (
+                      <motion.div
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: 'auto' }}
+                        exit={{ opacity: 0, height: 0 }}
+                        className="overflow-hidden px-3 pb-2"
+                      >
+                        <div className={`flex items-center gap-1.5 flex-wrap ${isRTL ? 'flex-row-reverse' : ''}`}>
+                          {selectedFiles.map((file, i) => (
+                            <div key={i} className={`flex items-center gap-1.5 pl-2 pr-1.5 py-1 bg-muted rounded-full border border-border text-[11px] text-foreground ${isRTL ? 'flex-row-reverse' : ''}`}>
+                              <Paperclip className="h-2.5 w-2.5 text-muted-foreground flex-shrink-0" />
+                              <span className="max-w-[120px] truncate">{file.name}</span>
+                              <button
+                                onClick={() => handleFileRemove(i)}
+                                className="ml-0.5 w-4 h-4 rounded-full flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted-foreground/10 transition-colors"
+                              >
+                                <svg className="h-2.5 w-2.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+                              </button>
                             </div>
-                          </motion.div>
-                        )}
-                      </AnimatePresence>
-                    </div>
+                          ))}
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
 
-                    {/* Right Icons - Attachment, Mic, Send */}
-                    <div className={`flex items-center gap-1 flex-shrink-0 ${isRTL ? 'flex-row-reverse' : ''}`}>
-                      {/* Attachment */}
+                  {/* Text input */}
+                  <div className="relative px-3 pb-0 min-h-[34px]">
+                    <RichTextEditor
+                      value={message}
+                      onChange={handleRichTextChange}
+                      placeholder={t('conversations.detail.messageInput')}
+                      onEnterKey={handleSendMessage}
+                      editorRef={replyEditorRef}
+                    />
+                    {/* Recording overlay */}
+                    <AnimatePresence>
+                      {isRecording && (
+                        <motion.div
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          exit={{ opacity: 0 }}
+                          className="absolute inset-0 flex items-center px-3 bg-red-50/80 dark:bg-red-900/20 rounded-lg"
+                        >
+                          <div className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                            <motion.div
+                              animate={{ scale: [1, 1.5, 1], opacity: [1, 0.4, 1] }}
+                              transition={{ duration: 1.1, repeat: Infinity }}
+                              className="w-2 h-2 bg-red-500 rounded-full"
+                            />
+                            <span className="text-sm font-medium text-red-600 dark:text-red-400">Recording…</span>
+                          </div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
+
+                  {/* Toolbar */}
+                  <div className={`flex items-center justify-between px-2 pb-1.5 pt-1 border-t border-border/30 mt-0.5 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                    <div className={`flex items-center gap-0.5 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                      <EmojiPicker onEmojiSelect={(emoji) => replyEditorRef.current?.insertEmoji(emoji)} />
                       <FileUpload
                         onFileSelect={handleFileSelect}
                         onFileRemove={handleFileRemove}
@@ -1567,96 +1581,94 @@ export const ConversationDetail: React.FC<ConversationDetailProps> = ({ sessionI
                         isUploading={isUploadingFiles}
                         multiple={true}
                       />
-
-                      {/* Mic Button */}
                       <Button
                         variant="ghost"
                         size="icon"
                         onClick={handleMicClick}
-                        className={`h-9 w-9 rounded-full transition-all ${
+                        className={`h-7 w-7 rounded-md transition-all ${
                           isRecording
                             ? 'bg-red-500 hover:bg-red-600 text-white'
-                            : 'text-slate-500 hover:text-slate-700 hover:bg-slate-200 dark:hover:bg-slate-700'
+                            : 'text-muted-foreground hover:text-foreground hover:bg-muted'
                         }`}
                       >
                         {isRecording ? (
-                          <motion.div animate={{ scale: [1, 1.2, 1] }} transition={{ duration: 0.5, repeat: Infinity }}>
-                            <Mic className="h-5 w-5" />
+                          <motion.div animate={{ scale: [1, 1.15, 1] }} transition={{ duration: 0.7, repeat: Infinity }}>
+                            <Mic className="h-4 w-4" />
                           </motion.div>
                         ) : (
-                          <Mic className="h-5 w-5" />
+                          <Mic className="h-4 w-4" />
                         )}
                       </Button>
-
-                      {/* Send Button */}
-                      <motion.div whileTap={{ scale: 0.9 }}>
-                        <Button
-                          onClick={handleSendMessage}
-                          disabled={sendMessageMutation.isPending || (!message.trim() && selectedFiles.length === 0) || isUploadingFiles}
-                          size="icon"
-                          className={`h-9 w-9 rounded-full transition-all ${
-                            message.trim() || selectedFiles.length > 0
-                              ? 'bg-blue-500 hover:bg-blue-600 text-white'
-                              : 'text-slate-500 hover:text-slate-700 hover:bg-slate-200 dark:hover:bg-slate-700 bg-transparent'
-                          }`}
-                        >
-                          {sendMessageMutation.isPending || isUploadingFiles ? (
-                            <Loader2 className="h-5 w-5 animate-spin" />
-                          ) : (
-                            <Send className={`h-5 w-5 ${isRTL ? 'rotate-180' : ''}`} />
-                          )}
-                        </Button>
-                      </motion.div>
                     </div>
+
+                    <motion.div whileTap={{ scale: 0.94 }}>
+                      <Button
+                        onClick={handleSendMessage}
+                        disabled={sendMessageMutation.isPending || (!message.trim() && selectedFiles.length === 0) || isUploadingFiles}
+                        size="sm"
+                        className={`h-7 px-3 rounded-md text-xs font-medium gap-1.5 transition-all ${
+                          message.trim() || selectedFiles.length > 0
+                            ? 'bg-primary hover:bg-primary/90 text-primary-foreground shadow-sm'
+                            : 'bg-muted text-muted-foreground/50 cursor-not-allowed'
+                        }`}
+                      >
+                        {sendMessageMutation.isPending || isUploadingFiles ? (
+                          <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                        ) : (
+                          <>
+                            <Send className={`h-3.5 w-3.5 ${isRTL ? 'rotate-180' : ''}`} />
+                            {t('conversations.detail.replyTab')}
+                          </>
+                        )}
+                      </Button>
+                    </motion.div>
                   </div>
-                </div>
-              </TabsContent>
+                </TabsContent>
 
-              {/* Private Note Tab - Instagram style */}
-              <TabsContent value="note" className="mt-0 focus-visible:outline-none focus-visible:ring-0">
-                <div className="px-3 pb-2 pt-1">
-                  <div className={`relative flex items-center gap-2 bg-amber-50 dark:bg-amber-900/20 rounded-xl border border-amber-200 dark:border-amber-700/50 focus-within:border-amber-400 dark:focus-within:border-amber-500 transition-all px-3 py-1 ${isRTL ? 'flex-row-reverse' : ''}`}>
-                    {/* Note Input */}
-                    <div className="flex-1 min-w-0">
-                      <RichTextEditor
-                        value={note}
-                        onChange={(value) => setNote(value)}
-                        placeholder={t('conversations.detail.noteInput')}
-                        className="bg-transparent"
-                      />
-                    </div>
-
-                    {/* Right side - indicator + save button */}
-                    <div className={`flex items-center gap-2 flex-shrink-0 ${isRTL ? 'flex-row-reverse' : ''}`}>
-                      {/* Team only indicator */}
-                      <div className="flex items-center gap-1.5 px-2 py-1 bg-amber-100 dark:bg-amber-800/30 rounded-full">
-                        <div className="w-1.5 h-1.5 bg-amber-500 rounded-full animate-pulse" />
-                        <span className="text-[10px] text-amber-700 dark:text-amber-300 font-medium whitespace-nowrap">Team only</span>
-                      </div>
-
-                      {/* Save Note Button */}
-                      <motion.div whileTap={{ scale: 0.9 }}>
-                        <Button
-                          onClick={handlePostNote}
-                          disabled={sendMessageMutation.isPending || !note.trim()}
-                          size="icon"
-                          className={`h-9 w-9 rounded-full transition-all ${
-                            note.trim()
-                              ? 'bg-amber-500 hover:bg-amber-600 text-white'
-                              : 'text-amber-500 hover:text-amber-600 hover:bg-amber-100 dark:hover:bg-amber-900/40 bg-transparent'
-                          }`}
-                        >
-                          {sendMessageMutation.isPending ? (
-                            <Loader2 className="h-5 w-5 animate-spin" />
-                          ) : (
-                            <Book className="h-5 w-5" />
-                          )}
-                        </Button>
-                      </motion.div>
-                    </div>
+                {/* ── Note tab ── */}
+                <TabsContent value="note" className="mt-0 focus-visible:outline-none focus-visible:ring-0">
+                  {/* Text input */}
+                  <div className="px-3 pb-0 min-h-[34px]">
+                    <RichTextEditor
+                      value={note}
+                      onChange={(value) => setNote(value)}
+                      placeholder={t('conversations.detail.noteInput')}
+                      className="bg-transparent"
+                      editorRef={noteEditorRef}
+                    />
                   </div>
-                </div>
-              </TabsContent>
+
+                  {/* Toolbar */}
+                  <div className={`flex items-center justify-between px-2 pb-1.5 pt-1 border-t border-amber-200/40 dark:border-amber-700/20 mt-0.5 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                    <div className={`flex items-center gap-1.5 px-2.5 py-1 bg-amber-100/70 dark:bg-amber-800/20 rounded-full ${isRTL ? 'flex-row-reverse' : ''}`}>
+                      <div className="w-1.5 h-1.5 bg-amber-500 rounded-full animate-pulse" />
+                      <span className="text-[10px] text-amber-700 dark:text-amber-400 font-medium whitespace-nowrap">Team only · not visible to customer</span>
+                    </div>
+
+                    <motion.div whileTap={{ scale: 0.94 }}>
+                      <Button
+                        onClick={handlePostNote}
+                        disabled={sendMessageMutation.isPending || !note.trim()}
+                        size="sm"
+                        className={`h-7 px-3 rounded-md text-xs font-medium gap-1.5 transition-all ${
+                          note.trim()
+                            ? 'bg-amber-500 hover:bg-amber-600 text-white shadow-sm'
+                            : 'bg-amber-100/50 dark:bg-amber-900/20 text-amber-400 dark:text-amber-600 cursor-not-allowed'
+                        }`}
+                      >
+                        {sendMessageMutation.isPending ? (
+                          <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                        ) : (
+                          <>
+                            <Book className="h-3.5 w-3.5" />
+                            Save Note
+                          </>
+                        )}
+                      </Button>
+                    </motion.div>
+                  </div>
+                </TabsContent>
+              </motion.div>
             </Tabs>
           </motion.footer>
         )}

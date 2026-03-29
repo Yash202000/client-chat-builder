@@ -97,6 +97,14 @@ import {
   MarketplacePage,
   CMSSettingsPage,
 } from "./pages/CMS";
+// Social / Marketing Hub Pages
+import SocialHubPage from "./pages/Social/SocialHubPage";
+import PostComposerPage from "./pages/Social/PostComposerPage";
+import ContentCalendarPage from "./pages/Social/ContentCalendarPage";
+import TrendingPostsPage from "./pages/Social/TrendingPostsPage";
+import SocialAccountsPage from "./pages/Social/SocialAccountsPage";
+import SocialAnalyticsPage from "./pages/Social/SocialAnalyticsPage";
+import LinkedInLeadsPage from "./pages/CRM/LinkedInLeadsPage";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -199,6 +207,14 @@ const AppRoutes = () => {
           <Route path="inbox/email" element={<EmailInboxPage />} />
           <Route path="inbox/sms" element={<SMSInboxPage />} />
           <Route path="crm/analytics" element={<AnalyticsPage />} />
+          <Route path="crm/linkedin-leads" element={<LinkedInLeadsPage />} />
+          {/* Marketing Hub / Social Routes */}
+          <Route path="social" element={<SocialHubPage />} />
+          <Route path="social/compose" element={<PostComposerPage />} />
+          <Route path="social/calendar" element={<ContentCalendarPage />} />
+          <Route path="social/trending" element={<TrendingPostsPage />} />
+          <Route path="social/accounts" element={<SocialAccountsPage />} />
+          <Route path="social/analytics" element={<SocialAnalyticsPage />} />
           {/* CMS Routes */}
           <Route path="cms" element={<CMSDashboardPage />} />
           <Route path="cms/types" element={<ContentTypesPage />} />

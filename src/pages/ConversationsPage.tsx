@@ -1,11 +1,8 @@
 import React, { useState, useMemo } from 'react';
 import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ConversationDetail } from '@/components/ConversationDetail';
 import { ContactProfile } from '@/components/ContactProfile';
 import { ConversationSummary } from '@/components/ConversationSummary';
@@ -13,7 +10,12 @@ import { useWebSocket } from '@/hooks/use-websocket';
 import { toast } from '@/hooks/use-toast';
 import { Session, User, PRIORITY_CONFIG } from '@/types';
 import { useAuth } from "@/hooks/useAuth";
-import { MessageSquare, Phone, Globe, Instagram, Mail, Send, Search, Filter, Archive, PanelLeftClose, PanelRightOpen, AlertTriangle, ArrowUp, Minus, ArrowDown, Inbox, Users, CheckCircle2, LayoutGrid, Sparkles, Clock, User as UserIcon, Loader2 } from 'lucide-react';
+import {
+  MessageSquare, Phone, Globe, Instagram, Mail, Send, Search, Filter,
+  Archive, PanelLeftClose, PanelRightOpen, AlertTriangle, ArrowUp, Minus,
+  ArrowDown, Inbox, Users, CheckCircle2, LayoutGrid, Sparkles, Clock,
+  User as UserIcon, Loader2, ChevronLeft, ChevronRight
+} from 'lucide-react';
 import SLATimer from '@/components/SLATimer';
 import { getWebSocketUrl } from '@/config/api';
 import { formatDistanceToNow } from 'date-fns';
@@ -72,83 +74,44 @@ const parseUTCDate = (ts: string) => {
 import { useTranslation } from 'react-i18next';
 import { useI18n } from '@/hooks/useI18n';
 
-// Animation variants for Framer Motion
-const containerVariants = {
+// ─── Motion variants ──────────────────────────────────────────────────────────
+const listVariants = {
   hidden: { opacity: 0 },
-  visible: {
-    opacity: 1,
-    transition: {
-      staggerChildren: 0.05,
-      delayChildren: 0.1
-    }
-  }
-};
-
-const itemVariants = {
-  hidden: { opacity: 0, y: 20 },
-  visible: {
-    opacity: 1,
-    y: 0,
-    transition: {
-      type: "spring",
-      stiffness: 300,
-      damping: 24
-    }
-  }
+  visible: { opacity: 1, transition: { staggerChildren: 0.04 } },
 };
 
 const cardVariants = {
-  hidden: { opacity: 0, scale: 0.95 },
-  visible: {
-    opacity: 1,
-    scale: 1,
-    transition: {
-      type: "spring",
-      stiffness: 400,
-      damping: 25
-    }
-  },
-  hover: {
-    scale: 1.02,
-    transition: {
-      type: "spring",
-      stiffness: 400,
-      damping: 10
-    }
-  },
-  tap: {
-    scale: 0.98
+  hidden: { opacity: 0, x: -8 },
+  visible: { opacity: 1, x: 0, transition: { type: 'spring', stiffness: 400, damping: 28 } },
+  hover: { x: 1, transition: { duration: 0.1 } },
+  tap: { scale: 0.99 },
+};
+
+// ─── Channel avatar bg helper ─────────────────────────────────────────────────
+const channelAvatarBg = (ch?: string) => {
+  switch (ch) {
+    case 'whatsapp':     return 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300';
+    case 'instagram':    return 'bg-pink-100 dark:bg-pink-900/30 text-pink-700 dark:text-pink-300';
+    case 'messenger':    return 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300';
+    case 'telegram':     return 'bg-sky-100 dark:bg-sky-900/30 text-sky-700 dark:text-sky-300';
+    case 'twilio_voice': return 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300';
+    default:             return 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300';
   }
 };
 
-const sidebarVariants = {
-  expanded: {
-    width: "100%",
-    transition: {
-      type: "spring",
-      stiffness: 300,
-      damping: 30
-    }
-  },
-  collapsed: {
-    width: "100%",
-    transition: {
-      type: "spring",
-      stiffness: 300,
-      damping: 30
-    }
-  }
-};
-
-// Skeleton Component for loading states
+// ─── Skeleton ─────────────────────────────────────────────────────────────────
 const ConversationSkeleton = () => (
-  <div className="p-4 border-b border-slate-100 dark:border-slate-700">
-    <div className="flex items-start gap-3">
-      <div className="w-10 h-10 rounded-xl skeleton" />
-      <div className="flex-1 space-y-2">
-        <div className="h-4 w-3/4 rounded skeleton" />
-        <div className="h-3 w-1/2 rounded skeleton" />
-        <div className="h-3 w-1/3 rounded skeleton" />
+  <div className="flex items-start gap-3 px-3 py-3 border-l-[3px] border-transparent">
+    <div className="w-9 h-9 rounded-full animate-pulse bg-muted rounded-lg flex-shrink-0" />
+    <div className="flex-1 space-y-2 pt-0.5">
+      <div className="flex justify-between">
+        <div className="h-3.5 w-2/5 animate-pulse bg-muted rounded-lg" />
+        <div className="h-3 w-10 animate-pulse bg-muted rounded-lg" />
+      </div>
+      <div className="h-3 w-3/4 animate-pulse bg-muted rounded-lg" />
+      <div className="flex gap-1.5">
+        <div className="h-4 w-14 animate-pulse bg-muted rounded-lg" />
+        <div className="h-4 w-10 animate-pulse bg-muted rounded-lg" />
       </div>
     </div>
   </div>
@@ -567,8 +530,8 @@ const ConversationsPage: React.FC<ConversationsPageProps> = ({ channel }) => {
 
   const getAssigneeEmail = (assigneeId?: number) => {
     if (!assigneeId || !users || !Array.isArray(users)) return 'N/A';
-    const user = users.find(u => u.id === assigneeId);
-    return user ? user.email : 'Unknown';
+    const u = users.find(u => u.id === assigneeId);
+    return u ? u.email : 'Unknown';
   };
 
   const getStatusBadgeVariant = (status: string) => {
@@ -625,12 +588,12 @@ const ConversationsPage: React.FC<ConversationsPageProps> = ({ channel }) => {
       );
       case 'api': return (
         <svg className="h-4 w-4 text-cyan-500" viewBox="0 0 24 24" fill="currentColor">
-          <path d="M14 12l-2 2-2-2 2-2 2 2zm-2-6l2.12 2.12 2.5-2.5L12 1 7.38 5.62l2.5 2.5L12 6zm-6 6l2.12-2.12-2.5-2.5L1 12l4.62 4.62 2.5-2.5L6 12zm12 0l-2.12 2.12 2.5 2.5L23 12l-4.62-4.62-2.5 2.5L18 12zm-6 6l-2.12-2.12-2.5 2.5L12 23l4.62-4.62-2.5-2.5L12 18z"/>
+          <path d="M14 12l-2 2-2-2 2-2 2 2zm-2-6l2.12 2.12 2.5-2.5L12 1 7.38 5.62l2.5 2.5L12 6zm-6 6l2.12-2.12-2.5-2.5L1 12l4.62 4.62 2.5 2.5L6 12zm12 0l-2.12 2.12 2.5 2.5L23 12l-4.62-4.62-2.5 2.5L18 12zm-6 6l-2.12-2.12-2.5 2.5L12 23l4.62-4.62-2.5-2.5L12 18z"/>
         </svg>
       );
       case 'web':
       default:
-        return <Globe className="h-4 w-4 text-gray-500" />;
+        return <Globe className="h-4 w-4 text-slate-400" />;
     }
   };
 
@@ -662,8 +625,8 @@ const ConversationsPage: React.FC<ConversationsPageProps> = ({ channel }) => {
 
   if (isAuthLoading) {
     return (
-      <div className="flex items-center justify-center h-full bg-slate-50 dark:bg-slate-950">
-        <Loader2 className="h-6 w-6 animate-spin text-slate-400" />
+      <div className="flex items-center justify-center h-full bg-background">
+        <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
       </div>
     );
   }
@@ -749,7 +712,7 @@ const ConversationsPage: React.FC<ConversationsPageProps> = ({ channel }) => {
     },
   });
 
-  // Enhanced Conversation Card Component with animations
+  // ─── Conversation Card ────────────────────────────────────────────────────────
   const ConversationCard = ({ session, index }: { session: Session; index: number }) => {
     const isChecked = selectedIds.has(session.conversation_id);
     const assignedToMe = isAssignedToMe(session);
@@ -759,31 +722,44 @@ const ConversationsPage: React.FC<ConversationsPageProps> = ({ channel }) => {
     const hasPriority = (session.priority || 0) > 0;
     const isSelected = selectedSessionId === session.conversation_id;
 
-    const getCardClasses = () => {
-      const base = "conversation-card w-full p-4 text-left rounded-xl border transition-all duration-300";
+    // Left border strip color
+    const borderColor = isSelected
+      ? 'border-l-primary'
+      : assignedToMe
+      ? 'border-l-amber-500'
+      : session.status === 'active'
+      ? 'border-l-green-500'
+      : session.status === 'inactive'
+      ? 'border-l-slate-300'
+      : session.status === 'pending'
+      ? 'border-l-red-500'
+      : session.status === 'resolved'
+      ? 'border-l-blue-400'
+      : 'border-l-border';
 
-      if (isSelected) {
-        return `${base} bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950/50 dark:to-indigo-950/50 border-blue-200 dark:border-blue-800 shadow-lg ring-2 ring-blue-500/20`;
-      }
+    // Card background
+    const cardBg = isSelected
+      ? 'bg-primary/[0.06]'
+      : assignedToMe
+      ? 'bg-amber-50/40 dark:bg-amber-950/20'
+      : 'bg-card hover:bg-muted/40';
 
-      if (assignedToMe) {
-        return `${base} conversation-card-assigned border-amber-200 dark:border-amber-800/50 hover:shadow-md hover:border-amber-300 dark:hover:border-amber-700`;
-      }
+    // Status badge classes
+    const statusBadgeClass =
+      session.status === 'active'
+        ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
+        : session.status === 'inactive'
+        ? 'bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400'
+        : session.status === 'resolved'
+        ? 'bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400'
+        : session.status === 'pending'
+        ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
+        : assignedToMe
+        ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300'
+        : 'bg-muted text-muted-foreground';
 
-      return `${base} bg-white dark:bg-slate-800/50 border-slate-100 dark:border-slate-700/50 hover:bg-slate-50 dark:hover:bg-slate-800 hover:shadow-md hover:border-slate-200 dark:hover:border-slate-600`;
-    };
-
-    const getPriorityClass = () => {
-      if (!hasPriority) return '';
-      const priority = session.priority || 0;
-      switch (priority) {
-        case 4: return 'priority-critical';
-        case 3: return 'priority-high';
-        case 2: return 'priority-medium';
-        case 1: return 'priority-low';
-        default: return '';
-      }
-    };
+    const contactName = session.contact_name || session.contact_phone || t('conversations.card.unknownContact');
+    const avatarLetter = contactName.charAt(0).toUpperCase();
 
     return (
       <motion.button
@@ -793,153 +769,115 @@ const ConversationsPage: React.FC<ConversationsPageProps> = ({ channel }) => {
         whileHover="hover"
         whileTap="tap"
         onClick={() => setSelectedSessionId(session.conversation_id)}
-        className={`${getCardClasses()} ${hasPriority ? `border-l-4 ${getPriorityClass()}` : ''} ${isRecentlyReopened ? 'conversation-reopened' : ''} ${isChecked ? 'ring-2 ring-indigo-400 dark:ring-indigo-500' : ''}`}
-        style={{ animationDelay: `${index * 0.05}s` }}
+        className={`w-full text-left border-l-[3px] transition-colors duration-150 ${borderColor} ${cardBg} ${isRecentlyReopened ? 'ring-1 ring-inset ring-orange-300 dark:ring-orange-700' : ''}`}
       >
-        <div className={`flex items-start gap-3 ${isRTL ? 'flex-row-reverse' : ''}`}>
+        <div className="flex items-start gap-2.5 px-3 py-2.5">
           {/* Checkbox */}
           <div
             onClick={(e) => toggleSelect(session.conversation_id, e)}
-            className={`flex-shrink-0 mt-0.5 w-4 h-4 rounded border-2 flex items-center justify-center transition-all cursor-pointer ${
+            className={`flex-shrink-0 mt-1 w-3.5 h-3.5 rounded border-[1.5px] flex items-center justify-center transition-all cursor-pointer ${
               isChecked
-                ? 'bg-indigo-500 border-indigo-500'
-                : 'border-slate-300 dark:border-slate-600 hover:border-indigo-400'
+                ? 'bg-primary border-primary'
+                : 'border-border hover:border-primary/60'
             }`}
           >
             {isChecked && (
-              <svg className="w-2.5 h-2.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+              <svg className="w-2 h-2 text-primary-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3.5}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
               </svg>
             )}
           </div>
-          {/* Channel Icon with Status */}
-          <div className="channel-icon-container flex-shrink-0 relative">
-            {getChannelIcon(session.channel)}
 
-            {/* Status indicator */}
+          {/* Avatar circle */}
+          <div className="relative flex-shrink-0">
+            <div className={`w-9 h-9 rounded-full flex items-center justify-center text-[13px] font-semibold ${channelAvatarBg(session.channel)}`}>
+              {avatarLetter}
+            </div>
+            {/* Online / offline dot */}
             <AnimatePresence>
-              {assignedToMe && isWebChannel(session.channel) && session.is_client_connected && (
+              {isWebChannel(session.channel) && session.is_client_connected && (
                 <motion.span
+                  key="online"
                   initial={{ scale: 0 }}
                   animate={{ scale: 1 }}
                   exit={{ scale: 0 }}
-                  className={`absolute -top-1 ${isRTL ? '-left-1' : '-right-1'} h-3 w-3 bg-green-500 rounded-full status-dot status-dot-online border-2 border-white dark:border-slate-800`}
-                  title="Client connected"
+                  className="absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full bg-green-500 border-2 border-card animate-pulse"
                 />
               )}
-              {assignedToMe && isWebChannel(session.channel) && !session.is_client_connected && (
+              {isWebChannel(session.channel) && !session.is_client_connected && assignedToMe && (
                 <motion.span
+                  key="offline"
                   initial={{ scale: 0 }}
                   animate={{ scale: 1 }}
                   exit={{ scale: 0 }}
-                  className={`absolute -top-1 ${isRTL ? '-left-1' : '-right-1'} h-3 w-3 bg-red-500 rounded-full status-dot status-dot-offline border-2 border-white dark:border-slate-800`}
-                  title="Client disconnected"
-                />
-              )}
-              {!assignedToMe && session.is_client_connected && (
-                <motion.span
-                  initial={{ scale: 0 }}
-                  animate={{ scale: 1 }}
-                  className={`absolute -top-1 ${isRTL ? '-left-1' : '-right-1'} h-3 w-3 bg-green-500 rounded-full status-dot status-dot-online border-2 border-white dark:border-slate-800`}
-                />
-              )}
-              {!assignedToMe && session.status === 'inactive' && (
-                <motion.span
-                  initial={{ scale: 0 }}
-                  animate={{ scale: 1 }}
-                  className={`absolute -top-1 ${isRTL ? '-left-1' : '-right-1'} h-3 w-3 bg-gray-400 rounded-full border-2 border-white dark:border-slate-800`}
+                  className="absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full bg-red-500 border-2 border-card"
                 />
               )}
             </AnimatePresence>
           </div>
 
           {/* Content */}
-          <div className="flex-grow min-w-0">
-            {/* Header Row */}
-            <div className="flex items-center justify-between mb-2">
-              <div className="flex items-center gap-2 flex-1 min-w-0">
-                {assignedToMe && (
-                  <motion.span
-                    initial={{ rotate: -30, scale: 0 }}
-                    animate={{ rotate: 0, scale: 1 }}
-                    className="flex-shrink-0"
-                  >
-                    <Sparkles className="w-4 h-4 text-amber-500" />
-                  </motion.span>
-                )}
-                <h4 className={`font-semibold text-sm truncate ${
-                  session.status === 'resolved'
-                    ? 'text-slate-500 dark:text-slate-400'
-                    : assignedToMe
-                    ? 'text-amber-900 dark:text-amber-100'
-                    : 'text-slate-800 dark:text-slate-100'
-                }`}>
-                  {session.contact_name || session.contact_phone || t('conversations.card.unknownContact')}
-                </h4>
-              </div>
-
-              <div className="flex items-center gap-1.5">
-                {hasPriority && <PriorityBadge priority={session.priority || 0} />}
-                {hasBeenReopened && (
-                  <Badge className="text-[10px] px-1.5 py-0.5 reopened-badge border-0 font-medium">
-                    {session.reopen_count}x
-                  </Badge>
-                )}
-              </div>
-            </div>
-
-            {/* Status Badges Row */}
-            <div className="flex items-center gap-2 mb-2">
-              <Badge
-                variant="outline"
-                className={`text-[10px] px-2 py-0.5 font-medium transition-colors ${
-                  session.status === 'active'
-                    ? 'bg-green-100 text-green-700 border-green-200 dark:bg-green-900/30 dark:text-green-400 dark:border-green-800'
-                    : session.status === 'inactive'
-                    ? 'bg-slate-100 text-slate-600 border-slate-200 dark:bg-slate-800 dark:text-slate-400 dark:border-slate-700'
-                    : session.status === 'resolved'
-                    ? 'bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-900/30 dark:text-blue-400 dark:border-blue-800'
-                    : assignedToMe
-                    ? 'bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-900/30 dark:text-amber-400 dark:border-amber-800'
-                    : 'bg-blue-100 text-indigo-700 border-blue-200 dark:bg-indigo-900/30 dark:text-blue-400 dark:border-indigo-800'
-                }`}
-              >
-                {assignedToMe ? t('conversations.status.mine') : session.status}
-              </Badge>
-
-              {/* Connection/Time indicator */}
-              {assignedToMe && isWebChannel(session.channel) && (
-                <span className={`flex items-center gap-1 text-[10px] font-medium ${
-                  session.is_client_connected
-                    ? 'text-green-600 dark:text-green-400'
-                    : 'text-red-500 dark:text-red-400'
-                }`}>
-                  <span className={`w-1.5 h-1.5 rounded-full ${session.is_client_connected ? 'bg-green-500' : 'bg-red-500'}`} />
-                  {session.is_client_connected ? 'Online' : 'Offline'}
+          <div className="flex-1 min-w-0">
+            {/* Row 1: name + time */}
+            <div className="flex items-baseline justify-between gap-1 mb-0.5">
+              <span className={`text-[13px] font-semibold truncate leading-snug ${
+                session.status === 'resolved'
+                  ? 'text-muted-foreground'
+                  : assignedToMe
+                  ? 'text-amber-900 dark:text-amber-100'
+                  : 'text-foreground'
+              }`}>
+                {contactName}
+              </span>
+              {session.last_message_timestamp && (
+                <span className="flex-shrink-0 text-[10px] text-muted-foreground/70 tabular-nums">
+                  {formatDistanceToNow(parseUTCDate(session.last_message_timestamp), { addSuffix: false })}
                 </span>
               )}
             </div>
 
-            {/* Meta Information */}
-            <div className="flex items-center gap-3 text-xs text-muted-foreground">
+            {/* Row 2: last message preview */}
+            <p className="text-[11px] text-muted-foreground truncate leading-relaxed mb-1.5">
+              {session.first_message_content || '\u00A0'}
+            </p>
+
+            {/* Row 3: badges */}
+            <div className="flex items-center gap-1.5 flex-wrap">
+              {/* Status badge */}
+              <span className={`inline-flex items-center text-[10px] font-medium px-1.5 py-0.5 rounded-full ${statusBadgeClass}`}>
+                {assignedToMe ? t('conversations.status.mine') : session.status}
+              </span>
+
+              {/* Priority badge */}
+              {hasPriority && <PriorityBadge priority={session.priority || 0} />}
+
+              {/* SLA */}
               <SLATimer lastMessageTimestamp={session.last_message_timestamp} />
 
+              {/* Assignee (if not mine) */}
               {session.assignee_id && !assignedToMe && (
-                <span className="flex items-center gap-1 text-indigo-600 dark:text-blue-400">
-                  <UserIcon className="w-3 h-3" />
-                  <span className="truncate max-w-[100px]">{getAssigneeEmail(session.assignee_id)}</span>
+                <span className="inline-flex items-center gap-0.5 text-[10px] text-blue-600 dark:text-blue-400">
+                  <UserIcon className="w-2.5 h-2.5" />
+                  <span className="truncate max-w-[80px]">{getAssigneeEmail(session.assignee_id)}</span>
+                </span>
+              )}
+
+              {/* Reopen count */}
+              {hasBeenReopened && (
+                <span className="inline-flex items-center text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300">
+                  {session.reopen_count}x
                 </span>
               )}
             </div>
 
-            {/* Additional status messages */}
+            {/* Reopened timestamp */}
             {hasBeenReopened && session.last_reopened_at && (
               <motion.p
-                initial={{ opacity: 0, x: -10 }}
+                initial={{ opacity: 0, x: -6 }}
                 animate={{ opacity: 1, x: 0 }}
-                className="text-xs text-orange-600 dark:text-orange-400 mt-2 flex items-center gap-1.5 bg-orange-50 dark:bg-orange-900/20 px-2 py-1 rounded-md"
+                className="text-[10px] text-orange-600 dark:text-orange-400 mt-1.5 flex items-center gap-1"
               >
-                <span className="w-1.5 h-1.5 rounded-full bg-orange-500 animate-pulse" />
+                <span className="w-1.5 h-1.5 rounded-full bg-orange-500 animate-pulse flex-shrink-0" />
                 Reopened {formatDistanceToNow(parseUTCDate(session.last_reopened_at), { addSuffix: true })}
               </motion.p>
             )}
@@ -949,750 +887,520 @@ const ConversationsPage: React.FC<ConversationsPageProps> = ({ channel }) => {
     );
   };
 
+  // ─── Group separator header ───────────────────────────────────────────────────
+  const GroupHeader = ({ label, count, dotColor }: { label: string; count: number; dotColor: string }) => (
+    <div className="flex items-center gap-2 px-3 py-1.5 mt-2 mb-1 sticky top-0 bg-card/95 backdrop-blur-sm z-10">
+      <span className={`h-1.5 w-1.5 rounded-full flex-shrink-0 ${dotColor}`} />
+      <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/60">{label}</span>
+      <div className="flex-1 h-px bg-border/60" />
+      <span className="text-[10px] font-bold text-muted-foreground/60">{count}</span>
+    </div>
+  );
+
+  // ─── Tab config ───────────────────────────────────────────────────────────────
+  const tabs = [
+    { id: 'open',     label: t('conversations.tabs.open'),     count: sessionCounts?.open     ?? 0, countClass: 'text-blue-600 dark:text-blue-400' },
+    { id: 'mine',     label: t('conversations.tabs.mine'),     count: sessionCounts?.mine     ?? 0, countClass: 'text-amber-600 dark:text-amber-400' },
+    { id: 'resolved', label: t('conversations.tabs.resolved'), count: sessionCounts?.resolved ?? 0, countClass: 'text-green-600 dark:text-green-400' },
+    { id: 'all',      label: t('conversations.tabs.all'),      count: sessionCounts?.all      ?? 0, countClass: 'text-muted-foreground' },
+  ] as const;
+
+  // ─── Render ───────────────────────────────────────────────────────────────────
   return (
-    <div className="h-full w-full overflow-hidden bg-slate-50 dark:bg-slate-950">
-      <div className="grid grid-cols-1 md:grid-cols-12 gap-4 h-full p-4">
-        {/* Left Sidebar - Conversation List */}
-        <motion.div
-          initial={{ opacity: 0, x: -20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.4, ease: "easeOut" }}
-          className={`h-full overflow-hidden transition-all duration-500 ease-out ${isSidebarCollapsed ? 'md:col-span-1' : 'md:col-span-3'}`}
-        >
-          <Card className="h-full flex flex-col shadow-sm bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 relative overflow-hidden">
-            {/* Collapse/Expand Button */}
-            <motion.button
-              whileHover={{ scale: 1.1 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
-              className={`absolute ${isRTL ? '-left-3' : '-right-3'} top-1/2 -translate-y-1/2 z-10 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 rounded-full p-2 shadow-sm border border-slate-200 dark:border-slate-700 transition-all duration-300`}
-              title={isSidebarCollapsed ? t('conversations.expandSidebar') : t('conversations.collapseSidebar')}
+    <div className="h-full flex bg-background overflow-hidden">
+
+      {/* ── LEFT PANEL ───────────────────────────────────────────────────────── */}
+      <div className={`flex-shrink-0 flex flex-col bg-card border-r border-border transition-all duration-300 relative ${isSidebarCollapsed ? 'w-14' : 'w-80'}`}>
+
+        <AnimatePresence mode="wait">
+          {!isSidebarCollapsed ? (
+            <motion.div
+              key="expanded-header"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.15 }}
+              className="flex-shrink-0 border-b border-border"
             >
-              <motion.div
-                animate={{ rotate: isSidebarCollapsed ? 180 : 0 }}
-                transition={{ duration: 0.3 }}
-              >
-                {isRTL ? (
-                  <PanelRightOpen className="h-4 w-4" />
-                ) : (
-                  <PanelLeftClose className="h-4 w-4" />
-                )}
-              </motion.div>
-            </motion.button>
-
-            <CardHeader className={`border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 flex-shrink-0 py-4 ${isSidebarCollapsed ? 'px-2' : 'space-y-4'}`}>
-              <AnimatePresence mode="wait">
-                {!isSidebarCollapsed && (
-                  <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    transition={{ duration: 0.2 }}
-                    className="space-y-4"
-                  >
-                    {/* Header with count */}
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        {(() => {
-                          const cfg = channel ? CHANNEL_CONFIG[channel] : null;
-                          const IconComponent = cfg?.Icon ?? (({ className }: { className?: string }) => <Inbox className={className} />);
-                          const iconClass = cfg?.iconClass ?? 'text-blue-600 dark:text-blue-400';
-                          return (
-                            <>
-                              <div className="h-9 w-9 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
-                                <IconComponent className={`w-5 h-5 ${iconClass}`} />
-                              </div>
-                              <div>
-                                <CardTitle className="text-lg font-bold dark:text-white">
-                                  {cfg ? t(cfg.titleKey) : t('conversations.inbox')}
-                                </CardTitle>
-                                <p className="text-xs text-muted-foreground">
-                                  {cfg ? t(cfg.subtitleKey) : t('conversations.activeConversations')}
-                                </p>
-                              </div>
-                            </>
-                          );
-                        })()}
-                      </div>
-                      <motion.div
-                        key={sessionCounts?.all}
-                        initial={{ scale: 0.8 }}
-                        animate={{ scale: 1 }}
-                        className="flex items-center gap-1.5"
-                      >
-                        <button
-                          onClick={() => setIsSearchModalOpen(true)}
-                          className="flex items-center gap-1.5 text-xs font-medium px-2.5 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors border border-slate-200 dark:border-slate-600"
-                          title="Search messages (Ctrl+K)"
-                        >
-                          <Search className="w-3.5 h-3.5" />
-                          <span className="hidden sm:inline">Search</span>
-                          <kbd className="hidden sm:inline text-[9px] px-1 py-0.5 rounded bg-slate-200 dark:bg-slate-600 font-mono">⌘K</kbd>
-                        </button>
-                        <Badge variant="secondary" className="bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-200 font-semibold px-3 py-1 rounded-full">
-                          {sessionCounts?.all || 0}
-                        </Badge>
-                      </motion.div>
+              {/* Row 1: icon + title + count + search btn + collapse btn */}
+              <div className="flex items-center gap-2 px-3 pt-3 pb-2">
+                {(() => {
+                  const cfg = channel ? CHANNEL_CONFIG[channel] : null;
+                  const IconComponent = cfg?.Icon ?? (({ className }: { className?: string }) => <Inbox className={className} />);
+                  const iconClass = cfg?.iconClass ?? 'text-blue-600 dark:text-blue-400';
+                  return (
+                    <div className="h-[26px] w-[26px] rounded-lg bg-muted flex items-center justify-center flex-shrink-0">
+                      <IconComponent className={`w-3.5 h-3.5 ${iconClass}`} />
                     </div>
-
-                    {/* Enhanced Search Bar */}
-                    <div className="relative group">
-                      <div className="relative">
-                        <Search className={`absolute top-1/2 transform -translate-y-1/2 h-4 w-4 text-slate-400 group-focus-within:text-blue-500 transition-colors ${isRTL ? 'right-4' : 'left-4'}`} />
-                        <Input
-                          type="text"
-                          placeholder={t('conversations.search')}
-                          value={searchQuery}
-                          onChange={(e) => setSearchQuery(e.target.value)}
-                          className={`bg-white dark:bg-slate-900/50 border-slate-200 dark:border-slate-700 rounded-xl h-11 input-modern ${isRTL ? 'pr-11' : 'pl-11'} transition-all duration-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20`}
-                        />
-                      </div>
-                    </div>
-
-                    {/* Quick Filters */}
-                    <div className="flex flex-wrap gap-1.5">
-                      {[
-                        { id: 'unassigned', label: 'Unassigned', color: 'amber' },
-                        { id: 'high_priority', label: '🔥 Priority', color: 'red' },
-                        { id: 'connected', label: '🟢 Online', color: 'green' },
-                        { id: 'my_team', label: '⭐ Mine', color: 'indigo' },
-                      ].map(f => {
-                        const active = quickFilters.has(f.id);
-                        const colors: Record<string, string> = {
-                          amber: active ? 'bg-amber-500 text-white border-amber-500' : 'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-900/20 dark:text-amber-300 dark:border-amber-800',
-                          red:   active ? 'bg-red-500 text-white border-red-500'     : 'bg-red-50 text-red-700 border-red-200 dark:bg-red-900/20 dark:text-red-300 dark:border-red-800',
-                          green: active ? 'bg-green-500 text-white border-green-500' : 'bg-green-50 text-green-700 border-green-200 dark:bg-green-900/20 dark:text-green-300 dark:border-green-800',
-                          indigo:active ? 'bg-indigo-500 text-white border-indigo-500': 'bg-indigo-50 text-indigo-700 border-indigo-200 dark:bg-indigo-900/20 dark:text-indigo-300 dark:border-indigo-800',
-                        };
-                        return (
-                          <button
-                            key={f.id}
-                            onClick={() => toggleQuickFilter(f.id)}
-                            className={`text-[11px] font-semibold px-2.5 py-1 rounded-full border transition-all ${colors[f.color]}`}
-                          >
-                            {f.label}
-                          </button>
-                        );
-                      })}
-                      {quickFilters.size > 0 && (
-                        <button
-                          onClick={() => setQuickFilters(new Set())}
-                          className="text-[11px] font-semibold px-2.5 py-1 rounded-full border border-slate-200 dark:border-slate-600 text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 transition-all"
-                        >
-                          ✕ Clear
-                        </button>
-                      )}
-                    </div>
-
-                    {/* Enhanced Tabs */}
-                    <Tabs value={activeTab} onValueChange={(v) => { setActiveTab(v as 'mine' | 'open' | 'resolved' | 'all'); clearSelection(); }} className="w-full">
-                      <TabsList className="w-full grid grid-cols-4 bg-slate-100/80 dark:bg-slate-800/80 p-1.5 rounded-xl gap-1">
-                        <TabsTrigger
-                          value="open"
-                          className="tab-modern text-xs font-medium rounded-lg data-[state=active]:bg-white dark:data-[state=active]:bg-slate-700 data-[state=active]:shadow-md transition-all duration-300 py-2.5"
-                        >
-                          <span className="flex flex-col items-center gap-0.5">
-                            <Inbox className="w-4 h-4 mb-0.5" />
-                            <span className="text-[10px]">{t('conversations.tabs.open')}</span>
-                            <motion.span
-                              key={sessionCounts?.open}
-                              initial={{ scale: 0.8 }}
-                              animate={{ scale: 1 }}
-                              className="text-xs font-bold text-blue-600 dark:text-blue-400"
-                            >
-                              {sessionCounts?.open || 0}
-                            </motion.span>
-                          </span>
-                        </TabsTrigger>
-                        <TabsTrigger
-                          value="mine"
-                          className="tab-modern text-xs font-medium rounded-lg data-[state=active]:bg-white dark:data-[state=active]:bg-slate-700 data-[state=active]:shadow-md transition-all duration-300 py-2.5 relative"
-                        >
-                          <span className="flex flex-col items-center gap-0.5">
-                            <Sparkles className="w-4 h-4 mb-0.5" />
-                            <span className="text-[10px]">{t('conversations.tabs.mine')}</span>
-                            <motion.span
-                              key={sessionCounts?.mine}
-                              initial={{ scale: 0.8 }}
-                              animate={{ scale: 1 }}
-                              className="text-xs font-bold text-amber-600 dark:text-amber-400"
-                            >
-                              {sessionCounts?.mine || 0}
-                            </motion.span>
-                          </span>
-                          <AnimatePresence>
-                            {unreadAssignments > 0 && (
-                              <motion.span
-                                initial={{ scale: 0 }}
-                                animate={{ scale: 1 }}
-                                exit={{ scale: 0 }}
-                                className="absolute -top-1 -right-1 bg-gradient-to-r from-red-500 to-red-600 text-white text-[10px] font-bold rounded-full h-5 w-5 flex items-center justify-center shadow-lg border-2 border-white dark:border-slate-800"
-                              >
-                                {unreadAssignments}
-                              </motion.span>
-                            )}
-                          </AnimatePresence>
-                        </TabsTrigger>
-                        <TabsTrigger
-                          value="resolved"
-                          className="tab-modern text-xs font-medium rounded-lg data-[state=active]:bg-white dark:data-[state=active]:bg-slate-700 data-[state=active]:shadow-md transition-all duration-300 py-2.5"
-                        >
-                          <span className="flex flex-col items-center gap-0.5">
-                            <CheckCircle2 className="w-4 h-4 mb-0.5" />
-                            <span className="text-[10px]">{t('conversations.tabs.resolved')}</span>
-                            <motion.span
-                              key={sessionCounts?.resolved}
-                              initial={{ scale: 0.8 }}
-                              animate={{ scale: 1 }}
-                              className="text-xs font-bold text-green-600 dark:text-green-400"
-                            >
-                              {sessionCounts?.resolved || 0}
-                            </motion.span>
-                          </span>
-                        </TabsTrigger>
-                        <TabsTrigger
-                          value="all"
-                          className="tab-modern text-xs font-medium rounded-lg data-[state=active]:bg-white dark:data-[state=active]:bg-slate-700 data-[state=active]:shadow-md transition-all duration-300 py-2.5"
-                        >
-                          <span className="flex flex-col items-center gap-0.5">
-                            <LayoutGrid className="w-4 h-4 mb-0.5" />
-                            <span className="text-[10px]">{t('conversations.tabs.all')}</span>
-                            <motion.span
-                              key={sessionCounts?.all}
-                              initial={{ scale: 0.8 }}
-                              animate={{ scale: 1 }}
-                              className="text-xs font-bold text-indigo-600 dark:text-blue-400"
-                            >
-                              {sessionCounts?.all || 0}
-                            </motion.span>
-                          </span>
-                        </TabsTrigger>
-                      </TabsList>
-                    </Tabs>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-
-              {/* Collapsed view */}
-              <AnimatePresence mode="wait">
-                {isSidebarCollapsed && (
-                  <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    className="flex flex-col gap-3 items-center py-2"
-                  >
-                    <div className="h-8 w-8 rounded-lg bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center">
-                      <Inbox className="w-4 h-4 text-blue-600 dark:text-blue-400" />
-                    </div>
-                    <Badge variant="secondary" className="text-xs font-bold">
-                      {sessionCounts?.all || 0}
-                    </Badge>
-                    {unreadAssignments > 0 && (
-                      <motion.span
-                        initial={{ scale: 0 }}
-                        animate={{ scale: 1 }}
-                        className="bg-gradient-to-r from-red-500 to-red-600 text-white text-[10px] font-bold rounded-full h-5 w-5 flex items-center justify-center"
-                      >
-                        {unreadAssignments}
-                      </motion.span>
-                    )}
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </CardHeader>
-            {/* Bulk Action Bar */}
-            <AnimatePresence>
-              {selectedIds.size > 0 && !isSidebarCollapsed && (
-                <motion.div
-                  initial={{ opacity: 0, y: -8 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -8 }}
-                  className="px-3 py-2 bg-indigo-50 dark:bg-indigo-950/40 border-b border-indigo-200 dark:border-indigo-800 flex flex-wrap items-center gap-2"
+                  );
+                })()}
+                <span className="text-sm font-semibold text-foreground truncate flex-1">
+                  {channel ? t(CHANNEL_CONFIG[channel]?.titleKey ?? 'conversations.inbox') : t('conversations.inbox')}
+                </span>
+                <motion.span
+                  key={sessionCounts?.all}
+                  initial={{ scale: 0.8 }}
+                  animate={{ scale: 1 }}
+                  className="text-[11px] font-bold px-1.5 py-0.5 rounded-full bg-muted text-muted-foreground"
                 >
-                  <span className="text-xs font-bold text-indigo-700 dark:text-indigo-300 min-w-max">
-                    {selectedIds.size} selected
-                  </span>
-                  <button onClick={selectAll} className="text-xs text-indigo-500 hover:text-indigo-700 dark:hover:text-indigo-300 underline">
-                    All {filteredSessions.length}
-                  </button>
-                  <button onClick={clearSelection} className="text-xs text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 underline">
-                    Clear
-                  </button>
-                  <div className="flex-1" />
-                  <button
-                    onClick={() => bulkActionMutation.mutate({ action: 'resolve' })}
-                    disabled={bulkActionMutation.isLoading}
-                    className="flex items-center gap-1 text-xs font-semibold px-2.5 py-1 rounded-lg bg-green-100 text-green-700 hover:bg-green-200 dark:bg-green-900/30 dark:text-green-300 dark:hover:bg-green-900/50 transition-colors"
-                  >
-                    <CheckCircle2 className="w-3 h-3" /> Resolve
-                  </button>
-                  <div className="flex items-center gap-1">
-                    <select
-                      value={bulkAssigneeId}
-                      onChange={e => setBulkAssigneeId(e.target.value)}
-                      className="text-xs rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 px-2 py-1 h-7"
-                    >
-                      <option value="">Assign to...</option>
-                      {Array.isArray(users) && users.map(u => (
-                        <option key={u.id} value={u.id}>{u.email}</option>
-                      ))}
-                    </select>
+                  {sessionCounts?.all ?? 0}
+                </motion.span>
+                <button
+                  onClick={() => setIsSearchModalOpen(true)}
+                  className="flex items-center gap-1 text-[11px] font-medium px-2 py-1 rounded-lg bg-muted text-muted-foreground hover:text-foreground hover:bg-muted/80 transition-colors"
+                  title="Search (Ctrl+K)"
+                >
+                  <Search className="w-3 h-3" />
+                  <kbd className="text-[9px] font-mono opacity-60">⌘K</kbd>
+                </button>
+                <button
+                  onClick={() => setIsSidebarCollapsed(true)}
+                  className="p-1 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                  title={t('conversations.collapseSidebar')}
+                >
+                  <PanelLeftClose className="w-3.5 h-3.5" />
+                </button>
+              </div>
+
+              {/* Row 2: Search input */}
+              <div className="px-3 pb-2">
+                <div className="relative">
+                  <Search className={`absolute top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground/60 ${isRTL ? 'right-3' : 'left-3'}`} />
+                  <Input
+                    type="text"
+                    placeholder={t('conversations.search')}
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className={`h-8 text-xs rounded-xl bg-background border-border ${isRTL ? 'pr-9' : 'pl-9'} focus-visible:ring-1`}
+                  />
+                </div>
+              </div>
+
+              {/* Row 3: Quick filter chips */}
+              <div className="flex flex-wrap gap-1 px-3 pb-2">
+                {[
+                  { id: 'unassigned',   label: 'Unassigned' },
+                  { id: 'high_priority',label: '🔥 Priority' },
+                  { id: 'connected',    label: '🟢 Online' },
+                  { id: 'my_team',      label: '⭐ Mine' },
+                ].map(f => {
+                  const active = quickFilters.has(f.id);
+                  return (
                     <button
-                      onClick={() => { if (bulkAssigneeId) bulkActionMutation.mutate({ action: 'assign', assigneeId: Number(bulkAssigneeId) }); }}
-                      disabled={!bulkAssigneeId || bulkActionMutation.isLoading}
-                      className="text-xs font-semibold px-2.5 py-1 rounded-lg bg-indigo-100 text-indigo-700 hover:bg-indigo-200 dark:bg-indigo-900/30 dark:text-indigo-300 disabled:opacity-40 transition-colors"
+                      key={f.id}
+                      onClick={() => toggleQuickFilter(f.id)}
+                      className={`text-[11px] rounded-full border px-2 py-0.5 transition-all ${
+                        active
+                          ? 'bg-primary text-primary-foreground border-primary'
+                          : 'bg-background text-muted-foreground border-border hover:text-foreground hover:border-border/80'
+                      }`}
                     >
-                      Go
+                      {f.label}
                     </button>
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
+                  );
+                })}
+                {quickFilters.size > 0 && (
+                  <button
+                    onClick={() => setQuickFilters(new Set())}
+                    className="text-[11px] rounded-full border border-border px-2 py-0.5 text-muted-foreground hover:text-foreground transition-all"
+                  >
+                    ✕ Clear
+                  </button>
+                )}
+              </div>
 
-            <CardContent className={`flex-1 overflow-y-auto bg-gradient-to-b from-slate-50/50 to-white dark:from-slate-900/50 dark:to-slate-800 ${isSidebarCollapsed ? 'p-0' : 'p-3'}`}>
-              {isLoadingSessions ? (
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  className="space-y-3"
-                >
-                  {[...Array(5)].map((_, i) => (
-                    <ConversationSkeleton key={i} />
-                  ))}
-                </motion.div>
-              ) : filteredSessions.length > 0 && !isSidebarCollapsed ? (
-                <motion.div
-                  variants={containerVariants}
-                  initial="hidden"
-                  animate="visible"
-                  className="space-y-2"
-                >
-                  {/* Status Group Header Component */}
-                  {(() => {
-                    const StatusGroupHeader = ({ label, count, colorClass, icon: Icon }: { label: string; count: number; colorClass: string; icon: any }) => (
-                      <motion.div
-                        variants={itemVariants}
-                        className={`px-4 py-2.5 rounded-lg mx-1 mb-2 flex items-center justify-between ${colorClass}`}
-                      >
-                        <div className="flex items-center gap-2">
-                          <Icon className="w-3.5 h-3.5" />
-                          <span className="text-xs font-semibold uppercase tracking-wide">{label}</span>
-                        </div>
-                        <Badge variant="secondary" className="text-[10px] px-2 py-0.5 font-bold rounded-full">
-                          {count}
-                        </Badge>
-                      </motion.div>
-                    );
-
-                    const activeUnassigned = filteredSessions.filter(s => s.status === 'active' && !s.assignee_id);
-                    const inactiveUnassigned = filteredSessions.filter(s => s.status === 'inactive' && !s.assignee_id);
-                    const assigned = filteredSessions.filter(s => s.status === 'assigned' || s.assignee_id != null);
-                    const pending = filteredSessions.filter(s => s.status === 'pending');
-                    const resolved = filteredSessions.filter(s => s.status === 'resolved');
-                    const archived = filteredSessions.filter(s => s.status === 'archived');
-
+              {/* Row 4: Tab bar */}
+              <div className="px-3 pb-3">
+                <div className="bg-muted rounded-xl p-1 flex gap-0.5">
+                  {tabs.map(tab => {
+                    const isActive = activeTab === tab.id;
                     return (
-                      <>
-                        {activeUnassigned.length > 0 && (
-                          <div className="mb-4">
-                            <StatusGroupHeader
-                              label={t('conversations.statusGroups.active')}
-                              count={activeUnassigned.length}
-                              colorClass="bg-green-100/80 dark:bg-green-900/30 text-green-700 dark:text-green-300"
-                              icon={Sparkles}
-                            />
-                            <div className="space-y-2 px-1">
-                              {activeUnassigned.map((session, idx) => (
-                                <ConversationCard key={session.conversation_id} session={session} index={idx} />
-                              ))}
-                            </div>
-                          </div>
-                        )}
-
-                        {inactiveUnassigned.length > 0 && (
-                          <div className="mb-4">
-                            <StatusGroupHeader
-                              label={t('conversations.statusGroups.inactive')}
-                              count={inactiveUnassigned.length}
-                              colorClass="bg-slate-300/80 dark:bg-slate-600/60 text-slate-700 dark:text-slate-200"
-                              icon={Clock}
-                            />
-                            <div className="space-y-2 px-1">
-                              {inactiveUnassigned.map((session, idx) => (
-                                <ConversationCard key={session.conversation_id} session={session} index={idx} />
-                              ))}
-                            </div>
-                          </div>
-                        )}
-
-                        {assigned.length > 0 && (
-                          <div className="mb-4">
-                            <StatusGroupHeader
-                              label={t('conversations.statusGroups.assigned')}
-                              count={assigned.length}
-                              colorClass="bg-blue-100/80 dark:bg-indigo-900/30 text-indigo-700 dark:text-blue-300"
-                              icon={Users}
-                            />
-                            <div className="space-y-2 px-1">
-                              {assigned.map((session, idx) => (
-                                <ConversationCard key={session.conversation_id} session={session} index={idx} />
-                              ))}
-                            </div>
-                          </div>
-                        )}
-
-                        {pending.length > 0 && (
-                          <div className="mb-4">
-                            <StatusGroupHeader
-                              label={t('conversations.statusGroups.pending')}
-                              count={pending.length}
-                              colorClass="bg-red-100/80 dark:bg-red-900/30 text-red-700 dark:text-red-300"
-                              icon={AlertTriangle}
-                            />
-                            <div className="space-y-2 px-1">
-                              {pending.map((session, idx) => (
-                                <ConversationCard key={session.conversation_id} session={session} index={idx} />
-                              ))}
-                            </div>
-                          </div>
-                        )}
-
-                        {resolved.length > 0 && (
-                          <div className="mb-4">
-                            <StatusGroupHeader
-                              label={t('conversations.statusGroups.resolved')}
-                              count={resolved.length}
-                              colorClass="bg-blue-100/80 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300"
-                              icon={CheckCircle2}
-                            />
-                            <div className="space-y-2 px-1">
-                              {resolved.map((session, idx) => (
-                                <ConversationCard key={session.conversation_id} session={session} index={idx} />
-                              ))}
-                            </div>
-                          </div>
-                        )}
-
-                        {archived.length > 0 && (
-                          <div className="mb-4">
-                            <StatusGroupHeader
-                              label={t('conversations.statusGroups.archived')}
-                              count={archived.length}
-                              colorClass="bg-slate-100/80 dark:bg-slate-700/30 text-slate-600 dark:text-slate-400"
-                              icon={Archive}
-                            />
-                            <div className="space-y-2 px-1">
-                              {archived.map((session, idx) => (
-                                <ConversationCard key={session.conversation_id} session={session} index={idx} />
-                              ))}
-                            </div>
-                          </div>
-                        )}
-                      </>
-                    );
-                  })()}
-                </motion.div>
-              ) : isSidebarCollapsed && filteredSessions.length > 0 ? (
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  className="flex flex-col gap-2 p-2"
-                >
-                  {filteredSessions.slice(0, 10).map((session, idx) => {
-                    const assignedToMe = session.assignee_id === user?.id;
-                    return (
-                      <motion.button
-                        key={session.conversation_id}
-                        initial={{ opacity: 0, scale: 0.8 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        transition={{ delay: idx * 0.05 }}
-                        whileHover={{ scale: 1.1 }}
-                        whileTap={{ scale: 0.95 }}
-                        onClick={() => setSelectedSessionId(session.conversation_id)}
-                        className={`p-2.5 rounded-xl transition-all relative ${
-                          selectedSessionId === session.conversation_id
-                            ? 'bg-blue-50 dark:bg-blue-900/30'
-                            : 'hover:bg-slate-100 dark:hover:bg-slate-700'
+                      <button
+                        key={tab.id}
+                        onClick={() => { setActiveTab(tab.id); clearSelection(); }}
+                        className={`flex-1 flex items-center justify-center gap-1 rounded-lg py-1.5 text-xs font-medium transition-all duration-150 relative ${
+                          isActive
+                            ? 'bg-background shadow-sm text-foreground'
+                            : 'text-muted-foreground hover:text-foreground'
                         }`}
-                        title={session.contact_name || t('conversations.card.unknownContact')}
                       >
-                        <div className="flex flex-col items-center gap-1.5">
-                          <div className="channel-icon-container w-8 h-8 relative">
-                            {getChannelIcon(session.channel)}
-                            {assignedToMe && session.is_client_connected && (
-                              <span className="absolute -top-0.5 -right-0.5 h-2.5 w-2.5 bg-green-500 rounded-full border border-white dark:border-slate-800 status-dot status-dot-online" />
-                            )}
-                            {assignedToMe && !session.is_client_connected && (
-                              <span className="absolute -top-0.5 -right-0.5 h-2.5 w-2.5 bg-red-500 rounded-full border border-white dark:border-slate-800" />
-                            )}
-                          </div>
-                        </div>
-                      </motion.button>
+                        <span>{tab.label}</span>
+                        <motion.span
+                          key={tab.count}
+                          initial={{ scale: 0.7 }}
+                          animate={{ scale: 1 }}
+                          className={`text-[10px] font-bold ${isActive ? tab.countClass : 'text-muted-foreground/60'}`}
+                        >
+                          {tab.count}
+                        </motion.span>
+                        {/* Unread dot on Mine tab */}
+                        {tab.id === 'mine' && unreadAssignments > 0 && (
+                          <AnimatePresence>
+                            <motion.span
+                              initial={{ scale: 0 }}
+                              animate={{ scale: 1 }}
+                              exit={{ scale: 0 }}
+                              className="absolute -top-1 -right-0.5 bg-destructive text-destructive-foreground text-[9px] font-bold rounded-full h-4 w-4 flex items-center justify-center"
+                            >
+                              {unreadAssignments}
+                            </motion.span>
+                          </AnimatePresence>
+                        )}
+                      </button>
                     );
                   })}
-                </motion.div>
-              ) : (
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="flex items-center justify-center h-full p-8"
-                >
-                  <div className="text-center">
-                    <div className="empty-state-icon inline-block mb-6">
-                      <div className="w-20 h-20 rounded-xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
-                        <MessageSquare className="w-10 h-10 text-slate-400 dark:text-slate-500" />
-                      </div>
-                    </div>
-                    <h3 className="text-lg font-semibold text-slate-700 dark:text-slate-300 mb-2">
-                      {searchQuery ? t('conversations.emptyState.noMatches') : 'No conversations'}
-                    </h3>
-                    <p className="text-sm text-muted-foreground max-w-[200px] mx-auto">
-                      {searchQuery
-                        ? 'Try adjusting your search query'
-                        : `No ${activeTab} conversations at the moment`
-                      }
-                    </p>
-                  </div>
-                </motion.div>
-              )}
-            </CardContent>
-          </Card>
-        </motion.div>
-
-        {/* Center - Conversation Detail */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4, delay: 0.1 }}
-          className={`h-full overflow-hidden transition-all duration-500 ease-out ${
-            isSidebarCollapsed && isRightSidebarCollapsed ? 'md:col-span-10' :
-            isSidebarCollapsed ? 'md:col-span-8' :
-            isRightSidebarCollapsed ? 'md:col-span-8' :
-            'md:col-span-6'
-          }`}
-        >
-          <AnimatePresence mode="wait">
-            {selectedSessionId ? (
-              <motion.div
-                key={selectedSessionId}
-                initial={{ opacity: 0, scale: 0.98 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.98 }}
-                transition={{ duration: 0.3 }}
-                className="h-full"
+                </div>
+              </div>
+            </motion.div>
+          ) : (
+            <motion.div
+              key="collapsed-header"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="flex-shrink-0 flex flex-col items-center gap-3 py-3 border-b border-border"
+            >
+              <button
+                onClick={() => setIsSidebarCollapsed(false)}
+                className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                title={t('conversations.expandSidebar')}
               >
-                <ConversationDetail
-                  sessionId={selectedSessionId}
-                  agentId={1}
-                  onSummaryClick={() => setSidebarView(sidebarView === 'summary' ? 'contact' : 'summary')}
-                />
-              </motion.div>
-            ) : (
+                <PanelRightOpen className="w-4 h-4" />
+              </button>
+              <span className="text-[11px] font-bold text-muted-foreground/70 tabular-nums">
+                {sessionCounts?.all ?? 0}
+              </span>
+              {unreadAssignments > 0 && (
+                <motion.span
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  className="bg-destructive text-destructive-foreground text-[9px] font-bold rounded-full h-4 w-4 flex items-center justify-center"
+                >
+                  {unreadAssignments}
+                </motion.span>
+              )}
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Bulk action bar */}
+        <AnimatePresence>
+          {selectedIds.size > 0 && !isSidebarCollapsed && (
+            <motion.div
+              initial={{ opacity: 0, y: -8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -8 }}
+              className="bg-primary/[0.06] border-b border-primary/20 px-3 py-2 flex items-center gap-2 flex-wrap flex-shrink-0"
+            >
+              <span className="text-xs font-bold text-foreground min-w-max">{selectedIds.size} selected</span>
+              <button onClick={selectAll} className="text-[11px] text-primary underline underline-offset-2">
+                All {filteredSessions.length}
+              </button>
+              <button onClick={clearSelection} className="text-[11px] text-muted-foreground underline underline-offset-2">
+                Clear
+              </button>
+              <div className="flex-1" />
+              <button
+                onClick={() => bulkActionMutation.mutate({ action: 'resolve' })}
+                disabled={bulkActionMutation.isLoading}
+                className="flex items-center gap-1 text-xs font-semibold px-2.5 py-1 rounded-lg bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300 hover:bg-green-200 dark:hover:bg-green-900/50 transition-colors disabled:opacity-40"
+              >
+                <CheckCircle2 className="w-3 h-3" /> Resolve
+              </button>
+              <div className="flex items-center gap-1">
+                <select
+                  value={bulkAssigneeId}
+                  onChange={e => setBulkAssigneeId(e.target.value)}
+                  className="text-xs rounded-lg border border-border bg-background text-foreground px-2 py-1 h-7 focus:outline-none"
+                >
+                  <option value="">Assign to…</option>
+                  {Array.isArray(users) && users.map(u => (
+                    <option key={u.id} value={u.id}>{u.email}</option>
+                  ))}
+                </select>
+                <button
+                  onClick={() => { if (bulkAssigneeId) bulkActionMutation.mutate({ action: 'assign', assigneeId: Number(bulkAssigneeId) }); }}
+                  disabled={!bulkAssigneeId || bulkActionMutation.isLoading}
+                  className="text-xs font-semibold px-2.5 py-1 rounded-lg bg-primary/[0.10] text-primary hover:bg-primary/[0.15] disabled:opacity-40 transition-colors"
+                >
+                  Go
+                </button>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Session list */}
+        <div className="flex-1 overflow-y-auto">
+          {isLoadingSessions ? (
+            <div className="divide-y divide-border/50">
+              {[...Array(6)].map((_, i) => <ConversationSkeleton key={i} />)}
+            </div>
+          ) : filteredSessions.length > 0 && !isSidebarCollapsed ? (
+            <motion.div variants={listVariants} initial="hidden" animate="visible">
+              {(() => {
+                const activeUnassigned  = filteredSessions.filter(s => s.status === 'active'   && !s.assignee_id);
+                const inactiveUnassigned= filteredSessions.filter(s => s.status === 'inactive' && !s.assignee_id);
+                const assigned          = filteredSessions.filter(s => s.status === 'assigned' || s.assignee_id != null);
+                const pending           = filteredSessions.filter(s => s.status === 'pending');
+                const resolved          = filteredSessions.filter(s => s.status === 'resolved');
+                const archived          = filteredSessions.filter(s => s.status === 'archived');
+
+                return (
+                  <>
+                    {activeUnassigned.length > 0 && (
+                      <>
+                        <GroupHeader label={t('conversations.statusGroups.active')} count={activeUnassigned.length} dotColor="bg-green-500" />
+                        {activeUnassigned.map((s, i) => <ConversationCard key={s.conversation_id} session={s} index={i} />)}
+                      </>
+                    )}
+                    {inactiveUnassigned.length > 0 && (
+                      <>
+                        <GroupHeader label={t('conversations.statusGroups.inactive')} count={inactiveUnassigned.length} dotColor="bg-slate-400" />
+                        {inactiveUnassigned.map((s, i) => <ConversationCard key={s.conversation_id} session={s} index={i} />)}
+                      </>
+                    )}
+                    {assigned.length > 0 && (
+                      <>
+                        <GroupHeader label={t('conversations.statusGroups.assigned')} count={assigned.length} dotColor="bg-amber-500" />
+                        {assigned.map((s, i) => <ConversationCard key={s.conversation_id} session={s} index={i} />)}
+                      </>
+                    )}
+                    {pending.length > 0 && (
+                      <>
+                        <GroupHeader label={t('conversations.statusGroups.pending')} count={pending.length} dotColor="bg-red-500" />
+                        {pending.map((s, i) => <ConversationCard key={s.conversation_id} session={s} index={i} />)}
+                      </>
+                    )}
+                    {resolved.length > 0 && (
+                      <>
+                        <GroupHeader label={t('conversations.statusGroups.resolved')} count={resolved.length} dotColor="bg-blue-400" />
+                        {resolved.map((s, i) => <ConversationCard key={s.conversation_id} session={s} index={i} />)}
+                      </>
+                    )}
+                    {archived.length > 0 && (
+                      <>
+                        <GroupHeader label={t('conversations.statusGroups.archived')} count={archived.length} dotColor="bg-slate-300" />
+                        {archived.map((s, i) => <ConversationCard key={s.conversation_id} session={s} index={i} />)}
+                      </>
+                    )}
+                  </>
+                );
+              })()}
+            </motion.div>
+          ) : isSidebarCollapsed && filteredSessions.length > 0 ? (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="flex flex-col gap-1 p-1.5"
+            >
+              {filteredSessions.slice(0, 10).map((session, idx) => {
+                const assignedToMe = session.assignee_id === user?.id;
+                const contactName = session.contact_name || session.contact_phone || '?';
+                return (
+                  <motion.button
+                    key={session.conversation_id}
+                    initial={{ opacity: 0, scale: 0.8 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ delay: idx * 0.04 }}
+                    whileHover={{ scale: 1.08 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={() => setSelectedSessionId(session.conversation_id)}
+                    className={`relative w-10 h-10 rounded-full flex items-center justify-center text-[12px] font-semibold transition-all ${channelAvatarBg(session.channel)} ${
+                      selectedSessionId === session.conversation_id
+                        ? 'ring-2 ring-primary ring-offset-1 ring-offset-card'
+                        : 'hover:ring-2 hover:ring-border hover:ring-offset-1 hover:ring-offset-card'
+                    }`}
+                    title={contactName}
+                  >
+                    {contactName.charAt(0).toUpperCase()}
+                    {assignedToMe && session.is_client_connected && (
+                      <span className="absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full bg-green-500 border-2 border-card" />
+                    )}
+                    {assignedToMe && !session.is_client_connected && (
+                      <span className="absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full bg-red-500 border-2 border-card" />
+                    )}
+                  </motion.button>
+                );
+              })}
+            </motion.div>
+          ) : (
+            <motion.div
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="flex flex-col items-center justify-center h-full p-6 text-center"
+            >
+              <div className="w-14 h-14 rounded-2xl bg-muted flex items-center justify-center mb-3">
+                <MessageSquare className="w-7 h-7 text-muted-foreground/50" />
+              </div>
+              <p className="text-sm font-medium text-foreground mb-1">
+                {searchQuery ? t('conversations.emptyState.noMatches') : 'No conversations'}
+              </p>
+              <p className="text-xs text-muted-foreground">
+                {searchQuery ? 'Try adjusting your search' : `No ${activeTab} conversations`}
+              </p>
+            </motion.div>
+          )}
+        </div>
+      </div>
+
+      {/* ── CENTER PANEL ─────────────────────────────────────────────────────── */}
+      <div className="flex-1 overflow-hidden min-w-0">
+        <AnimatePresence mode="wait">
+          {selectedSessionId ? (
+            <motion.div
+              key={selectedSessionId}
+              initial={{ opacity: 0, scale: 0.99 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.99 }}
+              transition={{ duration: 0.2 }}
+              className="h-full"
+            >
+              <ConversationDetail
+                sessionId={selectedSessionId}
+                agentId={1}
+                onSummaryClick={() => setSidebarView(sidebarView === 'summary' ? 'contact' : 'summary')}
+              />
+            </motion.div>
+          ) : (
+            <motion.div
+              key="empty-center"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="h-full flex items-center justify-center bg-background"
+            >
+              <div className="flex flex-col items-center gap-5 select-none">
+                {/* Stacked bubble illustration */}
+                <div className="relative w-20 h-20">
+                  <div className="absolute bottom-0 left-0 w-14 h-12 bg-muted rounded-2xl rounded-bl-none rotate-[-8deg] opacity-40" />
+                  <div className="absolute bottom-2 left-4 w-14 h-12 bg-muted rounded-2xl rounded-bl-none rotate-[-3deg] opacity-60" />
+                  <div className="absolute bottom-4 left-7 w-14 h-12 bg-muted rounded-2xl rounded-bl-none" />
+                </div>
+                <div className="text-center space-y-1">
+                  <h3 className="text-xl font-semibold text-foreground">
+                    {t('conversations.emptyState.noSelection')}
+                  </h3>
+                  <p className="text-sm text-muted-foreground max-w-xs">
+                    {t('conversations.emptyState.noSelectionDesc')}
+                  </p>
+                </div>
+                {/* Channel context row */}
+                <div className="flex items-center gap-2.5 mt-1">
+                  {['whatsapp', 'instagram', 'messenger', 'telegram', 'web_chat'].map((ch) => {
+                    const cfg = CHANNEL_CONFIG[ch];
+                    if (!cfg) return null;
+                    const IconC = cfg.Icon;
+                    return (
+                      <div
+                        key={ch}
+                        className={`w-8 h-8 rounded-full flex items-center justify-center ${channelAvatarBg(ch)}`}
+                        title={ch}
+                      >
+                        <IconC className="w-4 h-4" />
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+
+      {/* ── RIGHT PANEL ──────────────────────────────────────────────────────── */}
+      <div className={`flex-shrink-0 relative flex flex-col border-l border-border bg-card transition-all duration-300 ${isRightSidebarCollapsed ? 'w-10' : 'w-72'}`}>
+        {/* Collapse toggle — absolute so it doesn't push content down */}
+        <button
+          onClick={() => setIsRightSidebarCollapsed(!isRightSidebarCollapsed)}
+          className="absolute top-2 left-1.5 z-10 p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+          title={isRightSidebarCollapsed ? t('conversations.expandSidebar') : t('conversations.collapseSidebar')}
+        >
+          {isRightSidebarCollapsed ? (
+            <ChevronLeft className="w-3.5 h-3.5" />
+          ) : (
+            <ChevronRight className="w-3.5 h-3.5" />
+          )}
+        </button>
+
+        <AnimatePresence mode="wait">
+          {selectedSessionId ? (
+            isRightSidebarCollapsed ? (
               <motion.div
-                key="empty"
+                key="right-collapsed"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                className="h-full"
+                className="flex-1 flex flex-col items-center pt-4 gap-3"
               >
-                <Card className="h-full flex items-center justify-center shadow-sm bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 overflow-hidden">
-
-                  <div className="text-center p-8 relative z-10">
-                    <motion.div
-                      initial={{ scale: 0.8, opacity: 0 }}
-                      animate={{ scale: 1, opacity: 1 }}
-                      transition={{ type: "spring", stiffness: 200, damping: 15 }}
-                      className="empty-state-icon inline-block mb-6"
-                    >
-                      <div className="w-24 h-24 rounded-2xl bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center">
-                        <MessageSquare className="w-12 h-12 text-blue-500 dark:text-blue-400" />
-                      </div>
-                    </motion.div>
-
-                    <motion.h3
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: 0.2 }}
-                      className="text-2xl font-bold mb-3 text-slate-800 dark:text-white"
-                    >
-                      {t('conversations.emptyState.noSelection')}
-                    </motion.h3>
-                    <motion.p
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: 0.3 }}
-                      className="text-slate-500 dark:text-slate-400 max-w-sm mx-auto leading-relaxed"
-                    >
-                      {t('conversations.emptyState.noSelectionDesc')}
-                    </motion.p>
-
-                    <motion.div
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: 0.4 }}
-                      className="mt-8 flex items-center justify-center gap-4"
-                    >
-                      <div className="flex -space-x-2">
-                        {[...Array(3)].map((_, i) => (
-                          <div
-                            key={i}
-                            className={`w-10 h-10 rounded-full border-2 border-white dark:border-slate-800 flex items-center justify-center text-white text-xs font-bold ${
-                              i === 0 ? 'bg-blue-400' :
-                              i === 1 ? 'bg-indigo-500' :
-                              'bg-purple-500'
-                            }`}
-                            style={{ animationDelay: `${i * 0.1}s` }}
-                          >
-                            {i + 1}
-                          </div>
-                        ))}
-                      </div>
-                      <p className="text-sm text-slate-500 dark:text-slate-400">Select a conversation to start</p>
-                    </motion.div>
-                  </div>
-                </Card>
+                <div className="h-8 w-8 rounded-lg bg-muted flex items-center justify-center">
+                  {sidebarView === 'summary'
+                    ? <Sparkles className="h-4 w-4 text-muted-foreground" />
+                    : <UserIcon className="h-4 w-4 text-muted-foreground" />
+                  }
+                </div>
+                <span
+                  className="text-[10px] font-medium text-muted-foreground"
+                  style={{ writingMode: 'vertical-rl', textOrientation: 'mixed' }}
+                >
+                  {sidebarView === 'summary' ? 'Summary' : 'Contact'}
+                </span>
               </motion.div>
-            )}
-          </AnimatePresence>
-        </motion.div>
-
-        {/* Right Sidebar - Contact Profile or Summary */}
-        <motion.div
-          initial={{ opacity: 0, x: 20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.4, delay: 0.2 }}
-          className={`h-full overflow-hidden transition-all duration-500 ease-out ${isRightSidebarCollapsed ? 'md:col-span-1' : 'md:col-span-3'}`}
-        >
-          <Card className="h-full flex flex-col shadow-sm bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 relative overflow-hidden">
-            {/* Collapse/Expand Button */}
-            <motion.button
-              whileHover={{ scale: 1.1 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={() => setIsRightSidebarCollapsed(!isRightSidebarCollapsed)}
-              className={`absolute ${isRTL ? '-right-3' : '-left-3'} top-1/2 -translate-y-1/2 z-10 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 rounded-full p-2 shadow-sm border border-slate-200 dark:border-slate-700 transition-all duration-300`}
-              title={isRightSidebarCollapsed ? t('conversations.expandSidebar') : t('conversations.collapseSidebar')}
-            >
+            ) : (
               <motion.div
-                animate={{ rotate: isRightSidebarCollapsed ? 0 : 180 }}
-                transition={{ duration: 0.3 }}
+                key="right-expanded"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="flex-1 overflow-hidden"
               >
-                {isRTL ? (
-                  <PanelLeftClose className="h-4 w-4" />
+                {sidebarView === 'summary' ? (
+                  <ConversationSummary
+                    sessionId={selectedSessionId}
+                    onBack={() => setSidebarView('contact')}
+                  />
                 ) : (
-                  <PanelRightOpen className="h-4 w-4" />
+                  <ContactProfile sessionId={selectedSessionId} />
                 )}
               </motion.div>
-            </motion.button>
-
-            <AnimatePresence mode="wait">
-              {selectedSessionId ? (
-                isRightSidebarCollapsed ? (
-                  /* Collapsed view - show minimal info */
-                  <motion.div
-                    key="collapsed"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    className="flex flex-col items-center justify-center h-full p-2 gap-4"
-                  >
-                    <motion.div
-                      initial={{ scale: 0 }}
-                      animate={{ scale: 1 }}
-                      transition={{ type: "spring", stiffness: 200, damping: 15 }}
-                      className="flex flex-col items-center gap-3"
-                    >
-                      <div className="h-12 w-12 rounded-xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
-                        {sidebarView === 'summary' ? (
-                          <Sparkles className="h-6 w-6 text-slate-600 dark:text-slate-300" />
-                        ) : (
-                          <UserIcon className="h-6 w-6 text-slate-600 dark:text-slate-300" />
-                        )}
-                      </div>
-                      <span className="text-xs text-muted-foreground text-center font-medium" style={{ writingMode: 'vertical-rl', textOrientation: 'mixed' }}>
-                        {sidebarView === 'summary' ? 'Summary' : 'Contact'}
-                      </span>
-                    </motion.div>
-                  </motion.div>
-                ) : (
-                  /* Expanded view - show full content */
-                  <motion.div
-                    key="expanded"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    className="h-full overflow-hidden"
-                  >
-                    {sidebarView === 'summary' ? (
-                      <ConversationSummary
-                        sessionId={selectedSessionId}
-                        onBack={() => setSidebarView('contact')}
-                      />
-                    ) : (
-                      <ContactProfile sessionId={selectedSessionId} />
-                    )}
-                  </motion.div>
-                )
-              ) : (
-                /* No session selected */
-                isRightSidebarCollapsed ? (
-                  <motion.div
-                    key="collapsed-empty"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    className="flex flex-col items-center justify-center h-full p-2"
-                  >
-                    <div className="h-10 w-10 rounded-xl bg-emerald-50 dark:bg-emerald-900/20 flex items-center justify-center">
-                      <UserIcon className="h-5 w-5 text-emerald-500 dark:text-emerald-400" />
-                    </div>
-                  </motion.div>
-                ) : (
-                  <motion.div
-                    key="expanded-empty"
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: 20 }}
-                    className="flex items-center justify-center h-full"
-                  >
-                    <div className="text-center p-8">
-                      <motion.div
-                        initial={{ scale: 0.8 }}
-                        animate={{ scale: 1 }}
-                        transition={{ type: "spring", stiffness: 200, damping: 15 }}
-                        className="empty-state-icon inline-block mb-6"
-                      >
-                        <div className="w-20 h-20 rounded-xl bg-emerald-50 dark:bg-emerald-900/20 flex items-center justify-center">
-                          <UserIcon className="w-10 h-10 text-emerald-500 dark:text-emerald-400" />
-                        </div>
-                      </motion.div>
-
-                      <motion.h3
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.1 }}
-                        className="text-lg font-bold mb-2 text-slate-800 dark:text-white"
-                      >
-                        {t('conversations.emptyState.contactDetails')}
-                      </motion.h3>
-                      <motion.p
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.2 }}
-                        className="text-slate-500 dark:text-slate-400 text-sm max-w-[180px] mx-auto"
-                      >
-                        {t('conversations.emptyState.contactDetailsDesc')}
-                      </motion.p>
-                    </div>
-                  </motion.div>
-                )
-              )}
-            </AnimatePresence>
-          </Card>
-        </motion.div>
+            )
+          ) : (
+            isRightSidebarCollapsed ? (
+              <motion.div
+                key="right-collapsed-empty"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="flex-1 flex flex-col items-center pt-4"
+              >
+                <div className="h-8 w-8 rounded-lg bg-muted flex items-center justify-center">
+                  <UserIcon className="h-4 w-4 text-muted-foreground" />
+                </div>
+              </motion.div>
+            ) : (
+              <motion.div
+                key="right-expanded-empty"
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: 12 }}
+                className="flex-1 flex flex-col items-center justify-center p-6 text-center"
+              >
+                <div className="w-14 h-14 rounded-2xl bg-muted flex items-center justify-center mb-3">
+                  <UserIcon className="w-7 h-7 text-muted-foreground/50" />
+                </div>
+                <p className="text-sm font-medium text-foreground mb-1">
+                  {t('conversations.emptyState.contactDetails')}
+                </p>
+                <p className="text-xs text-muted-foreground max-w-[160px]">
+                  {t('conversations.emptyState.contactDetailsDesc')}
+                </p>
+              </motion.div>
+            )
+          )}
+        </AnimatePresence>
       </div>
 
-      {/* Global Search Modal */}
+      {/* ── GLOBAL SEARCH MODAL ───────────────────────────────────────────────── */}
       <AnimatePresence>
         {isSearchModalOpen && (
           <>
@@ -1702,41 +1410,41 @@ const ConversationsPage: React.FC<ConversationsPageProps> = ({ channel }) => {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.15 }}
-              className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm"
+              className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm"
               onClick={() => setIsSearchModalOpen(false)}
             />
             {/* Modal */}
             <motion.div
-              initial={{ opacity: 0, scale: 0.95, y: -20 }}
+              initial={{ opacity: 0, scale: 0.96, y: -16 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: -20 }}
-              transition={{ duration: 0.2, type: 'spring', stiffness: 400, damping: 30 }}
-              className="fixed top-16 left-1/2 -translate-x-1/2 z-50 w-full max-w-xl mx-4"
+              exit={{ opacity: 0, scale: 0.96, y: -16 }}
+              transition={{ duration: 0.18, type: 'spring', stiffness: 420, damping: 32 }}
+              className="fixed top-16 left-1/2 -translate-x-1/2 z-50 w-full max-w-xl px-4"
             >
-              <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-700 overflow-hidden">
-                {/* Search Input */}
-                <div className="flex items-center gap-3 px-4 py-3 border-b border-slate-200 dark:border-slate-700">
+              <div className="bg-background border border-border rounded-2xl shadow-2xl overflow-hidden">
+                {/* Input row */}
+                <div className="flex items-center gap-3 px-4 py-3.5 border-b border-border">
                   {isSearchFetching
-                    ? <Loader2 className="w-4 h-4 text-blue-500 flex-shrink-0 animate-spin" />
-                    : <Search className="w-4 h-4 text-slate-400 flex-shrink-0" />
+                    ? <Loader2 className="w-4 h-4 text-primary flex-shrink-0 animate-spin" />
+                    : <Search className="w-4 h-4 text-muted-foreground flex-shrink-0" />
                   }
                   <input
                     autoFocus
                     type="text"
                     value={globalSearchQuery}
                     onChange={e => setGlobalSearchQuery(e.target.value)}
-                    placeholder="Search all conversations..."
-                    className="flex-1 text-sm bg-transparent outline-none text-slate-800 dark:text-slate-100 placeholder:text-slate-400"
+                    placeholder="Search all conversations…"
+                    className="flex-1 text-sm bg-transparent outline-none text-foreground placeholder:text-muted-foreground"
                   />
                   {globalSearchQuery && (
                     <button
                       onClick={() => setGlobalSearchQuery('')}
-                      className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 text-xs px-1"
+                      className="text-muted-foreground hover:text-foreground text-xs px-1 transition-colors"
                     >
                       ✕
                     </button>
                   )}
-                  <kbd className="text-[10px] px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-500 font-mono border border-slate-200 dark:border-slate-600">
+                  <kbd className="text-[10px] px-1.5 py-0.5 rounded bg-muted text-muted-foreground font-mono border border-border">
                     Esc
                   </kbd>
                 </div>
@@ -1744,24 +1452,23 @@ const ConversationsPage: React.FC<ConversationsPageProps> = ({ channel }) => {
                 {/* Results */}
                 <div className="max-h-[420px] overflow-y-auto">
                   {debouncedSearchQuery.trim().length < 2 ? (
-                    <div className="py-10 text-center text-sm text-slate-400">
+                    <div className="py-12 text-center text-sm text-muted-foreground">
                       Type at least 2 characters to search
                     </div>
                   ) : isSearchFetching ? (
-                    <div className="py-10 text-center text-sm text-slate-400 flex items-center justify-center gap-2">
+                    <div className="py-12 text-center text-sm text-muted-foreground flex items-center justify-center gap-2">
                       <Loader2 className="w-4 h-4 animate-spin" /> Searching…
                     </div>
                   ) : !searchResults || searchResults.length === 0 ? (
-                    <div className="py-10 text-center text-sm text-slate-400">
-                      No messages found for "<span className="font-semibold">{debouncedSearchQuery}</span>"
+                    <div className="py-12 text-center text-sm text-muted-foreground">
+                      No messages found for "<span className="font-semibold text-foreground">{debouncedSearchQuery}</span>"
                     </div>
                   ) : (
                     <div>
-                      <div className="px-4 pt-3 pb-1 text-xs text-slate-400 font-medium">
+                      <div className="px-4 pt-3 pb-1 text-[11px] text-muted-foreground font-medium">
                         {searchResults.length} result{searchResults.length !== 1 ? 's' : ''}
                       </div>
                       {searchResults.map((result) => {
-                        // Build highlighted snippet
                         const snippet = result.snippet as string;
                         const q = result.query as string;
                         const parts = snippet.split(new RegExp(`(${q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi'));
@@ -1774,7 +1481,7 @@ const ConversationsPage: React.FC<ConversationsPageProps> = ({ channel }) => {
                               setIsSearchModalOpen(false);
                               setGlobalSearchQuery('');
                             }}
-                            className="w-full px-4 py-3 text-left hover:bg-slate-50 dark:hover:bg-slate-800/60 transition-colors border-b border-slate-100 dark:border-slate-800 last:border-0 group"
+                            className="w-full px-4 py-3 text-left hover:bg-muted/60 transition-colors border-b border-border last:border-0 group"
                           >
                             <div className="flex items-start gap-3">
                               {/* Channel icon */}
@@ -1783,11 +1490,11 @@ const ConversationsPage: React.FC<ConversationsPageProps> = ({ channel }) => {
                               </div>
                               <div className="flex-1 min-w-0">
                                 {/* Contact + channel + status row */}
-                                <div className="flex items-center gap-2 mb-1">
-                                  <span className="text-sm font-semibold text-slate-800 dark:text-slate-100 truncate">
+                                <div className="flex items-center gap-1.5 mb-1 flex-wrap">
+                                  <span className="text-[13px] font-semibold text-foreground truncate">
                                     {result.contact_name}
                                   </span>
-                                  <span className="text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400 capitalize">
+                                  <span className="text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-muted text-muted-foreground capitalize">
                                     {result.channel?.replace('_', ' ')}
                                   </span>
                                   <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded-full ${
@@ -1795,13 +1502,13 @@ const ConversationsPage: React.FC<ConversationsPageProps> = ({ channel }) => {
                                       ? 'bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400'
                                       : result.status === 'active'
                                       ? 'bg-green-100 text-green-600 dark:bg-green-900/30 dark:text-green-400'
-                                      : 'bg-slate-100 text-slate-500 dark:bg-slate-700 dark:text-slate-400'
+                                      : 'bg-muted text-muted-foreground'
                                   }`}>
                                     {result.status}
                                   </span>
                                 </div>
                                 {/* Highlighted snippet */}
-                                <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed line-clamp-2">
+                                <p className="text-xs text-muted-foreground leading-relaxed line-clamp-2">
                                   {parts.map((part, i) =>
                                     part.toLowerCase() === q.toLowerCase()
                                       ? <mark key={i} className="bg-yellow-200 dark:bg-yellow-900/60 text-yellow-900 dark:text-yellow-200 rounded px-0.5 not-italic font-medium">{part}</mark>
@@ -1810,13 +1517,13 @@ const ConversationsPage: React.FC<ConversationsPageProps> = ({ channel }) => {
                                 </p>
                                 {/* Timestamp */}
                                 {result.timestamp && (
-                                  <p className="text-[10px] text-slate-400 mt-1">
+                                  <p className="text-[10px] text-muted-foreground/60 mt-1">
                                     {formatDistanceToNow(new Date(result.timestamp), { addSuffix: true })}
                                   </p>
                                 )}
                               </div>
                               {/* Arrow */}
-                              <div className="flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity text-slate-400">
+                              <div className="flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground">
                                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                                 </svg>
@@ -1829,10 +1536,16 @@ const ConversationsPage: React.FC<ConversationsPageProps> = ({ channel }) => {
                   )}
                 </div>
 
-                {/* Footer hint */}
-                <div className="px-4 py-2.5 border-t border-slate-100 dark:border-slate-800 flex items-center gap-4 text-[10px] text-slate-400">
-                  <span>↵ Open conversation</span>
-                  <span>Esc Close</span>
+                {/* Footer shortcuts */}
+                <div className="px-4 py-2.5 border-t border-border flex items-center gap-4 text-[10px] text-muted-foreground/70">
+                  <span className="flex items-center gap-1">
+                    <kbd className="px-1 py-0.5 rounded bg-muted border border-border font-mono">↵</kbd>
+                    Open conversation
+                  </span>
+                  <span className="flex items-center gap-1">
+                    <kbd className="px-1 py-0.5 rounded bg-muted border border-border font-mono">Esc</kbd>
+                    Close
+                  </span>
                 </div>
               </div>
             </motion.div>

@@ -5,7 +5,6 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel,
 import { CircleUser, Moon, Sun, PanelLeftClose, PanelLeftOpen, ChevronDown, ChevronRight } from "lucide-react";
 import { useState, useEffect } from "react";
 import { Outlet, NavLink, useNavigate, useLocation } from "react-router-dom";
-import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
 import { useNotifications } from "@/hooks/useNotifications";
 import { useWebSocket } from "@/hooks/use-websocket";
@@ -45,6 +44,12 @@ import {
   Mail,
   Phone,
   Globe,
+  Share2,
+  PenLine,
+  CalendarDays,
+  Megaphone,
+  Settings2,
+  Linkedin,
 } from "lucide-react";
 import { CreateAgentDialog } from "@/components/CreateAgentDialog";
 import { Permission } from "./Permission";
@@ -447,7 +452,8 @@ const AppLayout = () => {
   }, [soundEnabled]);
 
   type SidebarItem = {
-    titleKey: string;
+    titleKey?: string;
+    title?: string;
     url: string;
     icon: React.ElementType;
     permission?: string;
@@ -457,7 +463,7 @@ const AppLayout = () => {
   type SidebarGroup = {
     id: string;
     label: string;
-    labelKey: string;
+    labelKey?: string;
     icon: React.ElementType;
     collapsible: boolean;
     items: SidebarItem[];
@@ -538,6 +544,21 @@ const AppLayout = () => {
       ],
     },
     {
+      id: 'marketing',
+      label: 'Marketing Hub',
+      icon: Megaphone,
+      collapsible: true,
+      items: [
+        { title: "Social Hub", url: "/dashboard/social", icon: Share2 },
+        { title: "Post Composer", url: "/dashboard/social/compose", icon: PenLine },
+        { title: "Content Calendar", url: "/dashboard/social/calendar", icon: CalendarDays },
+        { title: "Trending Posts", url: "/dashboard/social/trending", icon: TrendingUp },
+        { title: "LinkedIn Leads", url: "/dashboard/crm/linkedin-leads", icon: Linkedin },
+        { title: "Social Analytics", url: "/dashboard/social/analytics", icon: BarChart3 },
+        { title: "Social Accounts", url: "/dashboard/social/accounts", icon: Settings2 },
+      ],
+    },
+    {
       id: 'ai',
       label: 'AI',
       labelKey: 'navigation.aiGroup',
@@ -568,317 +589,317 @@ const AppLayout = () => {
   }, [location.pathname]);
 
   return (
-    <div className="h-screen w-screen flex flex-col bg-gray-50 dark:bg-slate-900 overflow-hidden transition-colors">
-      {/* Header */}
-      <header className="flex-shrink-0 bg-gradient-to-r from-white via-white to-slate-50 dark:from-slate-800 dark:via-slate-800 dark:to-slate-900 border-b border-slate-200/80 dark:border-slate-700/80 z-20 shadow-sm">
-        <div className="px-4 lg:px-6 py-2.5">
-          <div className="flex items-center justify-between">
-            {/* Logo & Brand */}
-            <div
-              className="flex items-center gap-3 cursor-pointer lg:cursor-default group"
-              onClick={() => {
-                if (window.innerWidth < 1024) {
-                  setSidebarOpen(!sidebarOpen);
-                }
-              }}
-            >
-              {branding.logoUrl ? (
-                <div className="relative">
-                  <img
-                    src={branding.logoUrl}
-                    alt={branding.companyName}
-                    className="relative h-11 w-11 object-contain rounded-xl shadow-lg ring-2 ring-white/50 dark:ring-slate-700/50"
-                  />
-                </div>
-              ) : (
-                <div className="relative">
-                  <div className="relative p-2.5 bg-gradient-to-br from-blue-500 via-indigo-600 to-purple-600 rounded-xl shadow-lg shadow-blue-500/25">
-                    <MessageSquare className="h-6 w-6 text-white" />
-                  </div>
-                </div>
-              )}
-              <div className="hidden sm:block">
-                <h1 className="text-xl font-bold bg-gradient-to-r from-slate-800 to-slate-600 dark:from-white dark:to-slate-300 bg-clip-text text-transparent">
-                  {branding.companyName}
-                </h1>
-                <p className="text-[10px] font-medium text-slate-500 dark:text-slate-400 -mt-0.5 tracking-wide uppercase">
-                  Connect Smarter
-                </p>
-              </div>
-            </div>
+    <div className="h-screen w-screen flex bg-background overflow-hidden">
 
-            {/* Right Side Actions */}
-            <div className="flex items-center gap-2 lg:gap-3">
-              {/* Notification Bell */}
-              <NotificationBell />
+        {/* ─── SIDEBAR — full height, logo at very top ─── */}
+        <aside
+          className={`flex-shrink-0 flex flex-col bg-card ${isRTL ? 'border-l' : 'border-r'} border-border transition-all duration-300 relative ${
+            sidebarOpen ? '' : (isRTL ? 'mr-[-240px] lg:mr-0' : '-ml-[240px] lg:ml-0')
+          } ${sidebarCollapsed ? 'w-[60px]' : 'w-[240px]'}`}
+        >
 
-              {/* Language Switcher */}
-              <LanguageSwitcher />
-
-              {/* Theme Toggle */}
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={toggleTheme}
-                className="rounded-xl h-10 w-10 bg-slate-100/80 dark:bg-slate-700/50 hover:bg-slate-200 dark:hover:bg-slate-600 border border-slate-200/50 dark:border-slate-600/50 transition-all hover:scale-105"
-                title={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
-              >
-                {theme === 'dark' ? (
-                  <Sun className="h-5 w-5 text-amber-400" />
-                ) : (
-                  <Moon className="h-5 w-5 text-indigo-600" />
-                )}
-              </Button>
-
-              {/* User Info Card with Dropdown Menu */}
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <button className="hidden lg:flex items-center gap-3 pl-4 pr-2 py-1.5 rounded-xl bg-gradient-to-r from-slate-100/80 to-slate-50 dark:from-slate-700/80 dark:to-slate-800 border border-slate-200/80 dark:border-slate-600/60 shadow-sm hover:shadow-lg hover:border-blue-300 dark:hover:border-blue-600 transition-all duration-300 cursor-pointer group">
-                    <div className="flex flex-col items-end">
-                      <p className="text-sm font-semibold text-slate-800 dark:text-slate-100 leading-tight group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
-                        {user?.email?.split('@')[0] || 'User'}
-                      </p>
-                      <p className="text-[10px] text-slate-500 dark:text-slate-400 leading-tight font-medium">
-                        {user?.company_name || 'HeyGenAlly'}
-                      </p>
+          {/* ── Logo / Brand ── */}
+          <div className={`h-11 flex items-center flex-shrink-0 px-3 border-b border-border ${sidebarCollapsed ? 'justify-center' : 'justify-between'}`}>
+            {!sidebarCollapsed ? (
+              <>
+                <div className="flex items-center gap-2.5 min-w-0">
+                  {branding.logoUrl ? (
+                    <img src={branding.logoUrl} alt={branding.companyName} className="h-6 w-6 rounded-lg object-contain flex-shrink-0" />
+                  ) : (
+                    <div className="h-6 w-6 rounded-lg bg-primary flex items-center justify-center flex-shrink-0">
+                      <MessageSquare className="h-3.5 w-3.5 text-primary-foreground" />
                     </div>
-                    <div className="relative">
-                      <div className="relative w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-bold text-sm shadow-lg ring-2 ring-white dark:ring-slate-700">
+                  )}
+                  <span className="text-sm font-semibold text-foreground truncate">{branding.companyName}</span>
+                </div>
+                <button
+                  onClick={() => setSidebarCollapsed(true)}
+                  className="hidden lg:flex h-6 w-6 rounded-md items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-colors flex-shrink-0"
+                  title={t('navigation.collapseSidebar')}
+                >
+                  {isRTL ? <PanelLeftOpen className="h-3.5 w-3.5 scale-x-[-1]" /> : <PanelLeftClose className="h-3.5 w-3.5" />}
+                </button>
+              </>
+            ) : (
+              <>
+                {branding.logoUrl ? (
+                  <img src={branding.logoUrl} alt={branding.companyName} className="h-6 w-6 rounded-lg object-contain" />
+                ) : (
+                  <div className="h-6 w-6 rounded-lg bg-primary flex items-center justify-center">
+                    <MessageSquare className="h-3.5 w-3.5 text-primary-foreground" />
+                  </div>
+                )}
+                <button
+                  onClick={() => setSidebarCollapsed(false)}
+                  className="hidden lg:flex absolute -right-3 top-3 h-6 w-6 rounded-full bg-card border border-border items-center justify-center text-muted-foreground hover:text-foreground shadow-sm z-10 transition-colors"
+                  title={t('navigation.expandSidebar')}
+                >
+                  {isRTL ? <PanelLeftClose className="h-3 w-3 scale-x-[-1]" /> : <PanelLeftOpen className="h-3 w-3" />}
+                </button>
+              </>
+            )}
+          </div>
+
+          {/* ── Nav items ── */}
+          <nav className={`flex-1 overflow-y-auto py-2 scrollbar-thin scrollbar-thumb-border ${sidebarCollapsed ? 'px-1.5' : 'px-2'}`}>
+            {sidebarGroups.map((group, groupIndex) => {
+              const userPermissions = user?.role?.permissions?.map((p: any) => p.name) || [];
+              const visibleItems = group.items.filter(item => {
+                if (item.admin && !user?.is_super_admin) return false;
+                if (item.permission && !user?.is_super_admin && !userPermissions.includes(item.permission)) return false;
+                return true;
+              });
+              if (visibleItems.length === 0) return null;
+
+              const isGroupOpen = !group.collapsible || !!openGroups[group.id];
+
+              return (
+                <div key={group.id} className={groupIndex > 0 && !sidebarCollapsed ? 'mt-1' : ''}>
+
+                  {/* Group label */}
+                  {!sidebarCollapsed && (
+                    group.collapsible ? (
+                      <button
+                        onClick={() => toggleGroup(group.id)}
+                        className="w-full flex items-center justify-between px-2 py-1.5 mt-2 rounded-md text-muted-foreground/60 hover:text-muted-foreground transition-colors"
+                      >
+                        <span className="text-[11px] font-semibold uppercase tracking-wider">
+                          {group.labelKey ? t(group.labelKey, { defaultValue: group.label }) : group.label}
+                        </span>
+                        {isGroupOpen
+                          ? <ChevronDown className="h-3 w-3 opacity-50" />
+                          : <ChevronRight className="h-3 w-3 opacity-50" />
+                        }
+                      </button>
+                    ) : (
+                      <div className="px-2 py-1.5 mt-2">
+                        <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/60">
+                          {group.labelKey ? t(group.labelKey, { defaultValue: group.label }) : group.label}
+                        </span>
+                      </div>
+                    )
+                  )}
+
+                  {/* Collapsed divider between groups */}
+                  {sidebarCollapsed && groupIndex > 0 && (
+                    <div className="mx-2 my-1.5 h-px bg-border/60" />
+                  )}
+
+                  {(isGroupOpen || sidebarCollapsed) && (
+                    <div className={`space-y-0.5 ${!sidebarCollapsed ? 'mt-0.5' : ''}`}>
+                      {visibleItems.map((item) => (
+                        <NavLink
+                          key={item.url}
+                          to={item.url}
+                          title={sidebarCollapsed ? (item.title ?? t(item.titleKey!)) : undefined}
+                          className={({ isActive }) =>
+                            `relative flex items-center rounded-lg text-sm font-medium transition-colors duration-150 group ${
+                              sidebarCollapsed
+                                ? 'justify-center p-2'
+                                : 'gap-2.5 px-2.5 py-1.5'
+                            } ${
+                              isActive
+                                ? 'bg-primary/[0.08] text-primary'
+                                : 'text-muted-foreground hover:text-foreground hover:bg-muted'
+                            }`
+                          }
+                        >
+                          {({ isActive }) => (
+                            <>
+                              {isActive && !sidebarCollapsed && (
+                                <span className={`absolute ${isRTL ? 'right-0' : 'left-0'} top-1/2 -translate-y-1/2 w-0.5 h-4 rounded-full bg-primary`} />
+                              )}
+                              <item.icon className={`flex-shrink-0 h-3.5 w-3.5 ${isActive ? 'text-primary' : ''}`} />
+                              {!sidebarCollapsed && (
+                                <span className="truncate">{item.title ?? t(item.titleKey!)}</span>
+                              )}
+                              {sidebarCollapsed && (
+                                <span className={`absolute ${isRTL ? 'right-full mr-2' : 'left-full ml-2'} px-2 py-1 bg-popover border border-border text-foreground text-xs font-medium rounded-md opacity-0 group-hover:opacity-100 pointer-events-none whitespace-nowrap z-50 shadow-md transition-opacity duration-150`}>
+                                  {item.title ?? t(item.titleKey!)}
+                                </span>
+                              )}
+                            </>
+                          )}
+                        </NavLink>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </nav>
+
+          {/* ── User profile (bottom) ── */}
+          <div className="flex-shrink-0 border-t border-border p-2">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button className={`w-full flex items-center rounded-lg hover:bg-muted transition-colors ${sidebarCollapsed ? 'justify-center p-2' : 'gap-2.5 px-2.5 py-2'}`}>
+                  <div className="relative flex-shrink-0">
+                    <div className="h-7 w-7 rounded-full bg-primary flex items-center justify-center text-primary-foreground text-xs font-bold">
+                      {user?.email?.charAt(0).toUpperCase() || 'U'}
+                    </div>
+                    <span className={`absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 border-2 border-card rounded-full ${
+                      user?.presence_status === 'online' ? 'bg-emerald-500' :
+                      user?.presence_status === 'away' ? 'bg-yellow-400' :
+                      user?.presence_status === 'busy' ? 'bg-red-500' :
+                      user?.presence_status === 'do_not_disturb' ? 'bg-red-600' :
+                      user?.presence_status === 'in_call' ? 'bg-blue-500' :
+                      'bg-muted-foreground'
+                    }`} />
+                  </div>
+                  {!sidebarCollapsed && (
+                    <>
+                      <div className="flex-1 min-w-0 text-left">
+                        <p className="text-[13px] font-medium text-foreground truncate leading-none">{user?.email?.split('@')[0] || 'User'}</p>
+                        <p className="text-[11px] text-muted-foreground truncate mt-0.5 leading-none">{user?.company_name || 'AgentConnect'}</p>
+                      </div>
+                      <ChevronDown className="h-3 w-3 text-muted-foreground flex-shrink-0" />
+                    </>
+                  )}
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent
+                side="right"
+                align="end"
+                sideOffset={8}
+                className="w-64 rounded-xl p-2 shadow-xl border-border"
+              >
+                <div className="px-3 py-2.5 bg-muted rounded-lg mb-2">
+                  <div className="flex items-center gap-2.5">
+                    <div className="relative flex-shrink-0">
+                      <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center text-primary-foreground font-bold">
                         {user?.email?.charAt(0).toUpperCase() || 'U'}
                       </div>
-                      {/* Online Status Indicator */}
-                      <span className={`absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 border-2 border-white dark:border-slate-800 rounded-full shadow-sm ${
+                      <span className={`absolute -bottom-0.5 -right-0.5 w-3 h-3 border-2 border-muted rounded-full ${
                         user?.presence_status === 'online' ? 'bg-emerald-500' :
                         user?.presence_status === 'away' ? 'bg-yellow-400' :
                         user?.presence_status === 'busy' ? 'bg-red-500' :
-                        user?.presence_status === 'do_not_disturb' ? 'bg-red-600' :
-                        user?.presence_status === 'in_call' ? 'bg-blue-500' :
-                        'bg-slate-400'
+                        'bg-muted-foreground'
                       }`} />
                     </div>
-                  </button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-72 rounded-xl p-2 shadow-xl border-slate-200/80 dark:border-slate-700/80">
-                  <div className="px-3 py-3 bg-gradient-to-r from-slate-50 to-slate-100 dark:from-slate-800 dark:to-slate-900 rounded-lg mb-2">
-                    <div className="flex items-center gap-3">
-                      <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-bold text-lg shadow-lg">
-                        {user?.email?.charAt(0).toUpperCase() || 'U'}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-semibold text-slate-800 dark:text-white truncate">{user?.email}</p>
-                        <p className="text-xs text-slate-500 dark:text-slate-400 truncate">
-                          {user?.company_name || 'HeyGenAlly'}
-                        </p>
-                      </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs font-semibold text-foreground truncate">{user?.email}</p>
+                      <p className="text-[10px] text-muted-foreground truncate">{user?.company_name || 'AgentConnect'}</p>
                     </div>
                   </div>
-                  <DropdownMenuSeparator className="my-2" />
-                  <div className="px-2 py-2">
-                    <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 mb-2 px-2 uppercase tracking-wide">Status</p>
-                    <PresenceSelector currentStatus={user?.presence_status} showLabel={true} />
-                  </div>
-                  <DropdownMenuSeparator className="my-2" />
-                  <DropdownMenuItem asChild className="rounded-lg cursor-pointer">
-                    <NavLink to="/dashboard/profile" className="flex items-center gap-2">
-                      <CircleUser className="h-4 w-4" />
-                      {t('navigation.profile')}
-                    </NavLink>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={logout} className="rounded-lg cursor-pointer text-red-600 dark:text-red-400 focus:text-red-600 focus:bg-red-50 dark:focus:bg-red-900/20">
-                    <svg className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                    </svg>
-                    {t('common.logout')}
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-
-              {/* Mobile User Menu */}
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon" className="rounded-xl lg:hidden h-10 w-10 bg-slate-100/80 dark:bg-slate-700/50 hover:bg-slate-200 dark:hover:bg-slate-600 border border-slate-200/50 dark:border-slate-600/50">
-                    <CircleUser className="h-5 w-5" />
-                    <span className="sr-only">Toggle user menu</span>
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-72 rounded-xl p-2 shadow-xl">
-                  <div className="px-3 py-3 bg-gradient-to-r from-slate-50 to-slate-100 dark:from-slate-800 dark:to-slate-900 rounded-lg mb-2">
-                    <div className="flex items-center gap-3">
-                      <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-bold text-lg shadow-lg">
-                        {user?.email?.charAt(0).toUpperCase() || 'U'}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-semibold text-slate-800 dark:text-white truncate">{user?.email}</p>
-                        <p className="text-xs text-slate-500 dark:text-slate-400 truncate">
-                          {user?.company_name || 'HeyGenAlly'}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                  <DropdownMenuSeparator className="my-2" />
-                  <div className="px-2 py-2">
-                    <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 mb-2 px-2 uppercase tracking-wide">Status</p>
-                    <PresenceSelector currentStatus={user?.presence_status} showLabel={true} />
-                  </div>
-                  <DropdownMenuSeparator className="my-2" />
-                  <DropdownMenuItem asChild className="rounded-lg cursor-pointer">
-                    <NavLink to="/dashboard/profile" className="flex items-center gap-2">
-                      <CircleUser className="h-4 w-4" />
-                      {t('navigation.profile')}
-                    </NavLink>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={logout} className="rounded-lg cursor-pointer text-red-600 dark:text-red-400 focus:text-red-600 focus:bg-red-50 dark:focus:bg-red-900/20">
-                    <svg className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                    </svg>
-                    {t('common.logout')}
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </div>
+                </div>
+                <DropdownMenuSeparator className="my-1" />
+                <div className="px-1 py-1.5">
+                  <p className="text-[10px] font-semibold text-muted-foreground mb-1.5 px-1 uppercase tracking-wider">Status</p>
+                  <PresenceSelector currentStatus={user?.presence_status} showLabel={true} />
+                </div>
+                <DropdownMenuSeparator className="my-1" />
+                <DropdownMenuItem asChild className="rounded-lg cursor-pointer text-[13px]">
+                  <NavLink to="/dashboard/profile" className="flex items-center gap-2">
+                    <CircleUser className="h-4 w-4" />
+                    {t('navigation.profile')}
+                  </NavLink>
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={logout}
+                  className="rounded-lg cursor-pointer text-[13px] text-destructive focus:text-destructive focus:bg-destructive/10"
+                >
+                  <svg className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                  </svg>
+                  {t('common.logout')}
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
-        </div>
-      </header>
-
-      <div className="flex flex-1 overflow-hidden">
-        {/* Premium Sidebar */}
-        <aside
-          className={`flex-shrink-0 bg-white dark:bg-slate-800 ${isRTL ? 'border-l' : 'border-r'} border-slate-200 dark:border-slate-700 shadow-[4px_0_16px_-4px_rgba(0,0,0,0.08)] dark:shadow-[4px_0_16px_-4px_rgba(0,0,0,0.4)] transition-all duration-300 relative ${
-            sidebarOpen ? '' : '-ml-64 lg:ml-0'
-          } ${sidebarCollapsed ? 'w-[72px]' : 'w-64'}`}
-        >
-          {/* Decorative gradient line */}
-          <div className={`absolute top-0 ${isRTL ? 'left-0' : 'right-0'} bottom-0 w-px bg-gradient-to-b from-blue-500/20 via-indigo-500/20 to-blue-500/20`} />
-
-          {/* Collapse/Expand Button */}
-          <button
-            onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-            className={`hidden lg:flex absolute ${isRTL ? '-left-3' : '-right-3'} top-6 z-20 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 hover:border-blue-400 dark:hover:border-blue-500 text-slate-500 hover:text-blue-600 dark:text-slate-400 dark:hover:text-blue-400 rounded-full p-1.5 shadow-md hover:shadow-lg transition-all duration-200 transform hover:scale-105`}
-            title={sidebarCollapsed ? t("navigation.expandSidebar") : t("navigation.collapseSidebar")}
-          >
-            {sidebarCollapsed ? (
-              isRTL ? (
-                <PanelLeftClose className="h-3.5 w-3.5 scale-x-[-1]" />
-              ) : (
-                <PanelLeftOpen className="h-3.5 w-3.5" />
-              )
-            ) : (
-              isRTL ? (
-                <PanelLeftOpen className="h-3.5 w-3.5 scale-x-[-1]" />
-              ) : (
-                <PanelLeftClose className="h-3.5 w-3.5" />
-              )
-            )}
-          </button>
-
-          <nav className={`p-3 h-full flex flex-col overflow-y-auto scrollbar-thin scrollbar-thumb-slate-300 dark:scrollbar-thumb-slate-600 ${sidebarCollapsed ? 'items-center' : ''}`}>
-            <div className="flex-1 space-y-1">
-              {sidebarGroups.map((group, groupIndex) => {
-                const userPermissions = user?.role?.permissions?.map((p: any) => p.name) || [];
-                const visibleItems = group.items.filter(item => {
-                  if (item.admin && !user?.is_super_admin) return false;
-                  if (item.permission && !user?.is_super_admin && !userPermissions.includes(item.permission)) return false;
-                  return true;
-                });
-                if (visibleItems.length === 0) return null;
-
-                const isGroupOpen = !group.collapsible || !!openGroups[group.id];
-
-                return (
-                  <div key={group.id}>
-                    {/* Section header — hidden when sidebar is icon-only */}
-                    {!sidebarCollapsed && (
-                      group.collapsible ? (
-                        <button
-                          onClick={() => toggleGroup(group.id)}
-                          // group header styles change when open vs closed 14
-                          className={`w-full flex items-center justify-between px-3 py-2 mt-2 text-[16px] font-semibold transition-colors rounded-md ${
-                            isGroupOpen
-                              ? 'text-slate-800 dark:text-slate-100 bg-slate-100 dark:bg-slate-800/70'
-                              : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100/60 dark:hover:bg-slate-800/40'
-                          }`}
-                        >
-                          <span className="flex items-center gap-3">
-                            <group.icon className="h-4 w-4 flex-shrink-0" />
-                            {t(group.labelKey, { defaultValue: group.label })}
-                          </span>
-                          {isGroupOpen
-                            ? <ChevronDown className="h-3.5 w-3.5 flex-shrink-0" />
-                            : <ChevronRight className="h-3.5 w-3.5 flex-shrink-0" />
-                          }
-                        </button>
-                      ) : (
-                        // Non-collapsible group header 14
-                        <div className="flex items-center gap-3 px-3 py-2 mt-2 text-[16px] font-semibold text-slate-800 dark:text-slate-100">
-                          <group.icon className="h-4 w-4 flex-shrink-0" />
-                          {t(group.labelKey, { defaultValue: group.label })}
-                        </div>
-                      )
-                    )}
-
-                    {/* Items — always visible when sidebar is collapsed (icon-only), otherwise respect open state */}
-                    {(isGroupOpen || sidebarCollapsed) && (
-                      <div className={`space-y-0.5 ${!sidebarCollapsed ? 'mt-1 mx-1 p-1' : ''}`}>
-                        {visibleItems.map((item) => (
-                          <NavLink
-                            key={item.url}
-                            to={item.url}
-                            className={({ isActive }) =>
-                              // Active item has a highlighted background and text, with a vertical indicator bar. In collapsed mode, only icons are shown and the active state is indicated by a subtle background change and the indicator bar. 13
-                              `relative flex items-center rounded-lg text-[15px] font-medium transition-all duration-200 group ${
-                                sidebarCollapsed ? 'justify-center p-2 mx-auto' : `gap-3 py-1.5 ${isActive ? 'pl-4 pr-3' : 'px-3'}`
-                              } ${
-                                isActive
-                                  ? 'bg-gradient-to-r from-blue-500 to-indigo-600 text-white shadow-md shadow-blue-500/20'
-                                  : 'text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-slate-900 dark:hover:text-white'
-                              }`
-                            }
-                            title={sidebarCollapsed ? t(item.titleKey) : undefined}
-                          >
-                            {({ isActive }) => (
-                              <>
-                                {isActive && !sidebarCollapsed && (
-                                  <span className={`absolute ${isRTL ? 'right-0' : 'left-0'} top-1/2 -translate-y-1/2 w-1 h-5 bg-white rounded-full`} />
-                                )}
-                                <item.icon className="flex-shrink-0 h-4 w-4 transition-transform duration-200 group-hover:scale-110" />
-                                {!sidebarCollapsed && (
-                                  <span className="truncate">{t(item.titleKey)}</span>
-                                )}
-                                {sidebarCollapsed && (
-                                  <span className="absolute left-full ml-2 px-2 py-1 bg-slate-900 dark:bg-slate-700 text-white text-xs font-medium rounded-md opacity-0 group-hover:opacity-100 pointer-events-none whitespace-nowrap z-50 shadow-lg transition-opacity duration-200">
-                                    {t(item.titleKey)}
-                                  </span>
-                                )}
-                              </>
-                            )}
-                          </NavLink>
-                        ))}
-                      </div>
-                    )}
-
-                    {/* Divider between groups (only in expanded mode) */}
-                    {!sidebarCollapsed && groupIndex < sidebarGroups.length - 1 && (
-                      <div className="mt-2 h-px bg-slate-200/60 dark:bg-slate-700/40" />
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-          </nav>
         </aside>
 
-        {/* Main Content with Background */}
-        <main className="flex-1 overflow-y-auto bg-slate-50 dark:bg-slate-900 transition-colors">
-          <Outlet />
-        </main>
-      </div>
+        {/* ── Right column: header + main content ── */}
+        <div className="flex-1 flex flex-col overflow-hidden">
+
+          {/* Slim top bar — right side only, sidebar logo is top-left */}
+          <header className="flex-shrink-0 h-11 bg-background border-b border-border flex items-center px-3 justify-between gap-2">
+            {/* Mobile: hamburger + brand */}
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setSidebarOpen(!sidebarOpen)}
+                className="lg:hidden h-7 w-7 rounded-md flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+              >
+                {sidebarOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
+              </button>
+              <div className="flex items-center gap-2 lg:hidden">
+                {branding.logoUrl ? (
+                  <img src={branding.logoUrl} alt={branding.companyName} className="h-5 w-5 rounded-md object-contain" />
+                ) : (
+                  <div className="h-5 w-5 rounded-md bg-primary flex items-center justify-center">
+                    <MessageSquare className="h-3 w-3 text-primary-foreground" />
+                  </div>
+                )}
+                <span className="text-base font-semibold text-foreground">{branding.companyName}</span>
+              </div>
+            </div>
+
+            {/* Right: utility actions */}
+            <div className="flex items-center gap-0.5 ml-auto">
+              <NotificationBell />
+              <LanguageSwitcher />
+              <button
+                onClick={toggleTheme}
+                className="h-7 w-7 rounded-md flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                title={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+              >
+                {theme === 'dark'
+                  ? <Sun className="h-4 w-4 text-amber-400" />
+                  : <Moon className="h-4 w-4" />
+                }
+              </button>
+              {/* Mobile user menu */}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button className="lg:hidden h-7 w-7 rounded-md flex items-center justify-center text-muted-foreground hover:bg-muted transition-colors">
+                    <CircleUser className="h-4 w-4" />
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-64 rounded-xl p-2 shadow-xl border-border">
+                  <div className="px-3 py-2.5 bg-muted rounded-lg mb-2">
+                    <div className="flex items-center gap-2.5">
+                      <div className="w-9 h-9 rounded-full bg-primary flex items-center justify-center text-primary-foreground font-bold text-sm">
+                        {user?.email?.charAt(0).toUpperCase() || 'U'}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs font-semibold text-foreground truncate">{user?.email}</p>
+                        <p className="text-[10px] text-muted-foreground truncate">{user?.company_name || 'AgentConnect'}</p>
+                      </div>
+                    </div>
+                  </div>
+                  <DropdownMenuSeparator className="my-1" />
+                  <div className="px-1 py-1.5">
+                    <p className="text-[10px] font-semibold text-muted-foreground mb-1.5 px-1 uppercase tracking-wider">Status</p>
+                    <PresenceSelector currentStatus={user?.presence_status} showLabel={true} />
+                  </div>
+                  <DropdownMenuSeparator className="my-1" />
+                  <DropdownMenuItem asChild className="rounded-lg cursor-pointer text-[13px]">
+                    <NavLink to="/dashboard/profile" className="flex items-center gap-2">
+                      <CircleUser className="h-4 w-4" />
+                      {t('navigation.profile')}
+                    </NavLink>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={logout} className="rounded-lg cursor-pointer text-[13px] text-destructive focus:text-destructive focus:bg-destructive/10">
+                    <svg className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                    </svg>
+                    {t('common.logout')}
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+          </header>
+
+          <main className="flex-1 overflow-y-auto bg-background transition-colors">
+            <Outlet />
+          </main>
+        </div>
 
       <CreateAgentDialog
         open={isCreateDialogOpen}
         onOpenChange={setIsCreateDialogOpen}
       />
 
-      {/* Global Incoming Call Modal */}
       {incomingCall && (
         <IncomingCallModal
           isOpen={true}
@@ -890,7 +911,6 @@ const AppLayout = () => {
         />
       )}
 
-      {/* Handoff Call Modal (Customer Support) */}
       {handoffCall && (
         <IncomingCallModal
           isOpen={true}
@@ -902,7 +922,6 @@ const AppLayout = () => {
         />
       )}
 
-      {/* Twilio Outbound Call Widget */}
       <CallWidget />
     </div>
   );

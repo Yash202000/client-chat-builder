@@ -1,4 +1,5 @@
-import { useEffect, useCallback, useState, useRef } from 'react';
+import { useEffect, useCallback, useState, useRef, MutableRefObject } from 'react';
+import { createPortal } from 'react-dom';
 import { LexicalComposer } from '@lexical/react/LexicalComposer';
 import { RichTextPlugin } from '@lexical/react/LexicalRichTextPlugin';
 import { ContentEditable } from '@lexical/react/LexicalContentEditable';
@@ -23,20 +24,16 @@ import {
   KEY_ENTER_COMMAND,
 } from 'lexical';
 import { $convertFromMarkdownString, $convertToMarkdownString, TRANSFORMERS } from '@lexical/markdown';
-import { $setBlocksType } from '@lexical/selection';
 import { INSERT_ORDERED_LIST_COMMAND, INSERT_UNORDERED_LIST_COMMAND } from '@lexical/list';
 import { TOGGLE_LINK_COMMAND } from '@lexical/link';
-import { Button } from '@/components/ui/button';
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from '@/components/ui/tooltip';
 import { Bold, Italic, Link as LinkIcon, List, ListOrdered } from 'lucide-react';
-import EmojiPicker from './EmojiPicker';
+import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { SlashCommandPlugin } from './SlashCommandPlugin';
+
+export interface RichTextEditorHandle {
+  insertEmoji: (emoji: string) => void;
+}
 
 interface RichTextEditorProps {
   value: string;
@@ -44,54 +41,41 @@ interface RichTextEditorProps {
   placeholder?: string;
   className?: string;
   onEnterKey?: () => void;
+  editorRef?: MutableRefObject<RichTextEditorHandle | null>;
 }
 
-// Plugin to handle syncing external value with editor (for drafts and clearing)
+// ─── Sync external value into editor ─────────────────────────────────────────
 function SyncValuePlugin({ value }: { value: string }) {
   const [editor] = useLexicalComposerContext();
   const prevValueRef = useRef(value);
   const isInternalChangeRef = useRef(false);
 
-  // Track internal changes to avoid overwriting user input
   useEffect(() => {
     return editor.registerUpdateListener(({ tags }) => {
-      // If the update was triggered by user input, mark it
       if (!tags.has('external')) {
         isInternalChangeRef.current = true;
-        // Reset after a short delay
-        setTimeout(() => {
-          isInternalChangeRef.current = false;
-        }, 100);
+        setTimeout(() => { isInternalChangeRef.current = false; }, 100);
       }
     });
   }, [editor]);
 
   useEffect(() => {
-    // Skip if value hasn't changed
     if (prevValueRef.current === value) return;
-
     const prevValue = prevValueRef.current;
     prevValueRef.current = value;
-
-    // Skip if this was triggered by internal typing
     if (isInternalChangeRef.current) return;
 
     editor.update(() => {
       const root = $getRoot();
       const currentContent = root.getTextContent().trim();
-
-      // Case 1: Clear editor (value went from non-empty to empty)
       if (prevValue !== '' && value === '') {
         if (currentContent !== '') {
           root.clear();
           const paragraph = $createParagraphNode();
           root.append(paragraph);
         }
-      }
-      // Case 2: Load draft (value changed from empty/different to new value)
-      else if (value !== '' && currentContent !== value.trim()) {
+      } else if (value !== '' && currentContent !== value.trim()) {
         root.clear();
-        // Convert markdown to Lexical nodes
         $convertFromMarkdownString(value, TRANSFORMERS);
       }
     }, { tag: 'external' });
@@ -100,22 +84,21 @@ function SyncValuePlugin({ value }: { value: string }) {
   return null;
 }
 
-// Plugin to handle Enter key using Lexical's command system
+// ─── Enter key handler ────────────────────────────────────────────────────────
 function EnterKeyPlugin({ onEnter }: { onEnter?: () => void }) {
   const [editor] = useLexicalComposerContext();
 
   useEffect(() => {
     if (!onEnter) return;
-
     return editor.registerCommand(
       KEY_ENTER_COMMAND,
       (event: KeyboardEvent | null) => {
         if (event && !event.shiftKey) {
           event.preventDefault();
           onEnter();
-          return true; // Prevent default Lexical behavior
+          return true;
         }
-        return false; // Allow Shift+Enter for new line
+        return false;
       },
       COMMAND_PRIORITY_LOW
     );
@@ -124,257 +107,214 @@ function EnterKeyPlugin({ onEnter }: { onEnter?: () => void }) {
   return null;
 }
 
-// Toolbar component (must be inside LexicalComposer)
-function ToolbarPlugin() {
+// ─── Emoji insert plugin (exposes insertEmoji via a mutable ref) ──────────────
+function EmojiInsertPlugin({
+  handleRef,
+}: {
+  handleRef: MutableRefObject<{ insertEmoji: (e: string) => void } | null>;
+}) {
   const [editor] = useLexicalComposerContext();
+
+  useEffect(() => {
+    handleRef.current = {
+      insertEmoji: (emoji: string) => {
+        editor.update(() => {
+          const selection = $getSelection();
+          if ($isRangeSelection(selection)) {
+            $insertNodes([$createTextNode(emoji)]);
+          } else {
+            const root = $getRoot();
+            const last = root.getLastChild();
+            if (last) last.append($createTextNode(emoji));
+          }
+        });
+        editor.focus();
+      },
+    };
+    return () => { handleRef.current = null; };
+  }, [editor, handleRef]);
+
+  return null;
+}
+
+// ─── Floating format toolbar (appears on text selection) ─────────────────────
+function FloatingFormatToolbar() {
+  const [editor] = useLexicalComposerContext();
+  const [visible, setVisible] = useState(false);
+  const [pos, setPos] = useState({ top: 0, left: 0 });
   const [isBold, setIsBold] = useState(false);
   const [isItalic, setIsItalic] = useState(false);
+  const barRef = useRef<HTMLDivElement>(null);
 
-  const updateToolbar = useCallback(() => {
-    const selection = $getSelection();
-    if ($isRangeSelection(selection)) {
+  const update = useCallback(() => {
+    editor.getEditorState().read(() => {
+      const selection = $getSelection();
+      if (!$isRangeSelection(selection) || selection.isCollapsed()) {
+        setVisible(false);
+        return;
+      }
       setIsBold(selection.hasFormat('bold'));
       setIsItalic(selection.hasFormat('italic'));
-    }
-  }, []);
+
+      const nativeSel = window.getSelection();
+      if (!nativeSel || nativeSel.rangeCount === 0) { setVisible(false); return; }
+      const rect = nativeSel.getRangeAt(0).getBoundingClientRect();
+      if (!rect.width) { setVisible(false); return; }
+
+      setPos({
+        top: rect.top + window.scrollY - 44,
+        left: rect.left + window.scrollX + rect.width / 2,
+      });
+      setVisible(true);
+    });
+  }, [editor]);
 
   useEffect(() => {
     return editor.registerCommand(
       SELECTION_CHANGE_COMMAND,
-      () => {
-        updateToolbar();
-        return false;
-      },
-      COMMAND_PRIORITY_LOW
+      () => { update(); return false; },
+      COMMAND_PRIORITY_LOW,
     );
-  }, [editor, updateToolbar]);
+  }, [editor, update]);
 
-  const handleBold = () => {
-    editor.dispatchCommand(FORMAT_TEXT_COMMAND, 'bold');
-  };
-
-  const handleItalic = () => {
-    editor.dispatchCommand(FORMAT_TEXT_COMMAND, 'italic');
-  };
-
-  const handleLink = () => {
-    const url = prompt('Enter URL:');
-    if (url) {
-      editor.dispatchCommand(TOGGLE_LINK_COMMAND, url);
-    }
-  };
-
-  const handleUnorderedList = () => {
-    editor.dispatchCommand(INSERT_UNORDERED_LIST_COMMAND, undefined);
-  };
-
-  const handleOrderedList = () => {
-    editor.dispatchCommand(INSERT_ORDERED_LIST_COMMAND, undefined);
-  };
-
-  const handleEmojiSelect = (emoji: string) => {
-    editor.update(() => {
-      const selection = $getSelection();
-      if ($isRangeSelection(selection)) {
-        const textNode = $createTextNode(emoji);
-        $insertNodes([textNode]);
+  // Hide toolbar on click outside
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (barRef.current && !barRef.current.contains(e.target as Node)) {
+        setVisible(false);
       }
-    });
-  };
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, []);
 
-  return (
-    <TooltipProvider>
-      <div className="flex items-center gap-1 p-2 border-b">
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={handleBold}
-              className={cn('h-8 w-8 p-0', isBold && 'bg-gray-100 dark:bg-gray-800')}
-              type="button"
-            >
-              <Bold className="h-4 w-4" />
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent>
-            <p>Bold (Ctrl+B)</p>
-          </TooltipContent>
-        </Tooltip>
-
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={handleItalic}
-              className={cn('h-8 w-8 p-0', isItalic && 'bg-gray-100 dark:bg-gray-800')}
-              type="button"
-            >
-              <Italic className="h-4 w-4" />
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent>
-            <p>Italic (Ctrl+I)</p>
-          </TooltipContent>
-        </Tooltip>
-
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={handleLink}
-              className="h-8 w-8 p-0"
-              type="button"
-            >
-              <LinkIcon className="h-4 w-4" />
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent>
-            <p>Insert Link</p>
-          </TooltipContent>
-        </Tooltip>
-
-        <div className="w-px h-6 bg-border mx-1" />
-
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={handleUnorderedList}
-              className="h-8 w-8 p-0"
-              type="button"
-            >
-              <List className="h-4 w-4" />
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent>
-            <p>Bullet List</p>
-          </TooltipContent>
-        </Tooltip>
-
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={handleOrderedList}
-              className="h-8 w-8 p-0"
-              type="button"
-            >
-              <ListOrdered className="h-4 w-4" />
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent>
-            <p>Numbered List</p>
-          </TooltipContent>
-        </Tooltip>
-
-        <div className="w-px h-6 bg-border mx-1" />
-
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <div>
-              <EmojiPicker onEmojiSelect={handleEmojiSelect} />
-            </div>
-          </TooltipTrigger>
-          <TooltipContent>
-            <p>Add Emoji</p>
-          </TooltipContent>
-        </Tooltip>
-      </div>
-    </TooltipProvider>
+  const btn = (active: boolean, onClick: () => void, children: React.ReactNode, title: string) => (
+    <button
+      type="button"
+      title={title}
+      onMouseDown={(e) => { e.preventDefault(); onClick(); }}
+      className={`h-6 w-6 rounded flex items-center justify-center transition-colors ${
+        active
+          ? 'bg-foreground text-background'
+          : 'text-muted-foreground hover:text-foreground hover:bg-muted'
+      }`}
+    >
+      {children}
+    </button>
   );
+
+  const toolbar = (
+    <AnimatePresence>
+      {visible && (
+        <motion.div
+          ref={barRef}
+          initial={{ opacity: 0, y: 4, scale: 0.96 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          exit={{ opacity: 0, y: 4, scale: 0.96 }}
+          transition={{ duration: 0.1 }}
+          style={{ position: 'absolute', top: pos.top, left: pos.left, transform: 'translateX(-50%)', zIndex: 9999 }}
+          className="flex items-center gap-0.5 px-1.5 py-1 bg-popover border border-border rounded-lg shadow-lg"
+        >
+          {btn(isBold,   () => editor.dispatchCommand(FORMAT_TEXT_COMMAND, 'bold'),   <Bold className="h-3 w-3" />,         'Bold (Ctrl+B)')}
+          {btn(isItalic, () => editor.dispatchCommand(FORMAT_TEXT_COMMAND, 'italic'), <Italic className="h-3 w-3" />,       'Italic (Ctrl+I)')}
+          <div className="w-px h-3.5 bg-border mx-0.5" />
+          {btn(false, () => editor.dispatchCommand(INSERT_UNORDERED_LIST_COMMAND, undefined), <List className="h-3 w-3" />,        'Bullet list')}
+          {btn(false, () => editor.dispatchCommand(INSERT_ORDERED_LIST_COMMAND, undefined),   <ListOrdered className="h-3 w-3" />, 'Numbered list')}
+          <div className="w-px h-3.5 bg-border mx-0.5" />
+          {btn(false, () => {
+            const url = prompt('Enter URL:');
+            if (url) editor.dispatchCommand(TOGGLE_LINK_COMMAND, url);
+          }, <LinkIcon className="h-3 w-3" />, 'Insert link')}
+        </motion.div>
+      )}
+    </AnimatePresence>
+  );
+
+  return createPortal(toolbar, document.body);
 }
 
-const RichTextEditor: React.FC<RichTextEditorProps> = ({
-  value,
-  onChange,
-  placeholder = 'Type your message...',
-  className,
-  onEnterKey,
-}) => {
-  const initialConfig = {
-    namespace: 'RichTextEditor',
-    theme: {
-      text: {
-        bold: 'font-bold',
-        italic: 'italic',
-        underline: 'underline',
-        strikethrough: 'line-through',
-        code: 'bg-gray-100 dark:bg-gray-800 px-1 py-0.5 rounded text-sm font-mono',
-      },
-      link: 'text-blue-600 hover:underline cursor-pointer',
-      list: {
-        listitem: 'ml-8',
-        nested: {
-          listitem: 'list-none',
-        },
-        ol: 'list-decimal ml-4',
-        ul: 'list-disc ml-4',
-      },
-      paragraph: 'mb-1 text-sm',
-    },
-    onError: (error: Error) => {
-      console.error(error);
-    },
-    nodes: [
-      HeadingNode,
-      ListNode,
-      ListItemNode,
-      QuoteNode,
-      CodeNode,
-      CodeHighlightNode,
-      LinkNode,
-      AutoLinkNode,
-    ],
-  };
+// ─── Main component ───────────────────────────────────────────────────────────
+function RichTextEditor({
+  value, onChange, placeholder = 'Type your message…', className, onEnterKey, editorRef,
+}: RichTextEditorProps) {
+    const emojiHandleRef = useRef<{ insertEmoji: (e: string) => void } | null>(null);
 
-  const lastEmittedValueRef = useRef(value);
-
-  const handleChange = useCallback((editorState: EditorState) => {
-    editorState.read(() => {
-      const markdown = $convertToMarkdownString(TRANSFORMERS);
-      // Only call onChange if the markdown actually changed from what we last emitted
-      if (markdown !== lastEmittedValueRef.current) {
-        lastEmittedValueRef.current = markdown;
-        onChange(markdown);
+    // Expose insertEmoji via the optional editorRef prop
+    useEffect(() => {
+      if (editorRef) {
+        editorRef.current = {
+          insertEmoji: (emoji: string) => emojiHandleRef.current?.insertEmoji(emoji),
+        };
+        return () => { editorRef.current = null; };
       }
-    });
-  }, [onChange]);
+    }, [editorRef]);
 
-  return (
-    <LexicalComposer initialConfig={initialConfig}>
-      <div className={cn('relative', className)}>
-        <ToolbarPlugin />
-        <div className="relative" style={{ zIndex: 1 }}>
-          <RichTextPlugin
-            contentEditable={
-              <ContentEditable
-                className="min-h-[80px] max-h-[200px] overflow-y-auto px-3 py-2 focus:outline-none text-sm"
-                aria-placeholder={placeholder}
-                placeholder={
-                  <div className="absolute top-2 left-3 text-sm text-gray-400 pointer-events-none">
-                    {placeholder}
-                  </div>
-                }
-              />
-            }
-            ErrorBoundary={() => <div>Error loading editor</div>}
-          />
-          <SlashCommandPlugin onTemplateInsert={(id, content) => {
-            console.log('Template inserted:', id, content);
-          }} />
+    const initialConfig = {
+      namespace: 'RichTextEditor',
+      theme: {
+        text: {
+          bold: 'font-bold',
+          italic: 'italic',
+          underline: 'underline',
+          strikethrough: 'line-through',
+          code: 'bg-muted px-1 py-0.5 rounded text-sm font-mono',
+        },
+        link: 'text-primary hover:underline cursor-pointer',
+        list: {
+          listitem: 'ml-8',
+          nested: { listitem: 'list-none' },
+          ol: 'list-decimal ml-4',
+          ul: 'list-disc ml-4',
+        },
+        paragraph: 'mb-1 text-sm',
+      },
+      onError: (error: Error) => console.error(error),
+      nodes: [HeadingNode, ListNode, ListItemNode, QuoteNode, CodeNode, CodeHighlightNode, LinkNode, AutoLinkNode],
+    };
+
+    const lastEmittedValueRef = useRef(value);
+
+    const handleChange = useCallback((editorState: EditorState) => {
+      editorState.read(() => {
+        const markdown = $convertToMarkdownString(TRANSFORMERS);
+        if (markdown !== lastEmittedValueRef.current) {
+          lastEmittedValueRef.current = markdown;
+          onChange(markdown);
+        }
+      });
+    }, [onChange]);
+
+    return (
+      <LexicalComposer initialConfig={initialConfig}>
+        <div className={cn('relative', className)}>
+          <FloatingFormatToolbar />
+          <EmojiInsertPlugin handleRef={emojiHandleRef} />
+          <div className="relative">
+            <RichTextPlugin
+              contentEditable={
+                <ContentEditable
+                  className="min-h-[52px] max-h-[160px] overflow-y-auto py-2 focus:outline-none text-sm text-foreground"
+                  aria-placeholder={placeholder}
+                  placeholder={
+                    <div className="absolute top-2 left-0 text-sm text-muted-foreground/50 pointer-events-none select-none">
+                      {placeholder}
+                    </div>
+                  }
+                />
+              }
+              ErrorBoundary={() => <div>Error loading editor</div>}
+            />
+            <SlashCommandPlugin onTemplateInsert={(id, content) => {
+              console.log('Template inserted:', id, content);
+            }} />
+          </div>
+          <HistoryPlugin />
+          <OnChangePlugin onChange={handleChange} />
+          <SyncValuePlugin value={value} />
+          <EnterKeyPlugin onEnter={onEnterKey} />
         </div>
-        <HistoryPlugin />
-        <OnChangePlugin onChange={handleChange} />
-        <SyncValuePlugin value={value} />
-        <EnterKeyPlugin onEnter={onEnterKey} />
-      </div>
-    </LexicalComposer>
-  );
-};
+      </LexicalComposer>
+    );
+}
 
 export default RichTextEditor;

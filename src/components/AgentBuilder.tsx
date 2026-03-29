@@ -439,7 +439,7 @@ export const AgentBuilder = ({ agent }: AgentBuilderProps) => {
   const contextValue = { handleInspect: () => {} }; // handleInspect is not used anymore
 
   return (
-    <div className="flex h-[80vh] w-full rounded-2xl overflow-hidden shadow-2xl shadow-slate-200/50 dark:shadow-none border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800">
+    <div className="flex h-[calc(100vh-11rem)] w-full rounded-xl overflow-hidden border border-border bg-card">
       <AgentBuilderContext.Provider value={contextValue}>
         <ReactFlowProvider>
           <AgentComponentSidebar
@@ -449,7 +449,7 @@ export const AgentBuilder = ({ agent }: AgentBuilderProps) => {
           />
           <div className="flex-grow workflow-canvas relative">
             {/* Gradient overlay at top */}
-            <div className="absolute top-0 left-0 right-0 h-16 bg-gradient-to-b from-slate-100/80 dark:from-slate-900/80 to-transparent pointer-events-none z-10" />
+            <div className="absolute top-0 left-0 right-0 h-12 bg-gradient-to-b from-card/60 to-transparent pointer-events-none z-10" />
             <ReactFlow
               nodes={nodes}
               edges={edges}
@@ -469,13 +469,13 @@ export const AgentBuilder = ({ agent }: AgentBuilderProps) => {
                 animated: true,
                 style: { stroke: '#8b5cf6', strokeWidth: 2 },
               }}
-              className="bg-gradient-to-br from-slate-50 via-white to-slate-100 dark:from-slate-900 dark:via-slate-900 dark:to-slate-800"
+              className="bg-background"
             >
               <Background
                 variant="dots"
                 gap={24}
                 size={1.5}
-                color="#94a3b8"
+                color="hsl(var(--muted-foreground))"
                 className="dark:opacity-20"
               />
               <Controls className="bg-white/90 dark:bg-slate-800/90 backdrop-blur-sm rounded-xl shadow-lg border border-slate-200 dark:border-slate-700 overflow-hidden" />

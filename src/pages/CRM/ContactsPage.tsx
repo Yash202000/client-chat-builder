@@ -60,6 +60,7 @@ import { cn } from '@/lib/utils';
 import axios from 'axios';
 import { useToast } from '@/hooks/use-toast';
 import { TagSelector } from '@/components/TagSelector';
+import { motion, AnimatePresence } from 'framer-motion';
 
 interface Contact {
   id: number;
@@ -359,284 +360,220 @@ export default function ContactsPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-64">
-        <Loader2 className="h-6 w-6 animate-spin text-slate-400" />
+        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-full bg-slate-50 dark:bg-slate-950">
-      {/* Header bar */}
-      <div className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800">
-        <div className="px-6 py-6">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center flex-shrink-0">
-                <Contact className="h-6 w-6 text-white" />
-              </div>
-              <div>
-                <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent leading-tight">
-                  {t('crm.contacts.title')}
-                </h1>
-                <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">
-                  {t('crm.contacts.subtitle')}
-                </p>
-              </div>
-            </div>
-            <div className="flex items-center gap-3">
-              <Button variant="outline" size="sm" className="h-9 px-4 text-sm dark:border-slate-700">
-                <Upload className="h-4 w-4 mr-2" />
-                {t('crm.common.import')}
-              </Button>
-              <Button variant="outline" size="sm" className="h-9 px-4 text-sm dark:border-slate-700">
-                <Download className="h-4 w-4 mr-2" />
-                {t('crm.common.export')}
-              </Button>
-              <Button
-                size="sm"
-                onClick={() => setCreateDialogOpen(true)}
-                className="h-9 px-4 text-sm bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white"
-              >
-                <Plus className="h-4 w-4 mr-2" />
-                {t('crm.contacts.addContact')}
-              </Button>
-            </div>
-          </div>
+    <div className="flex flex-col h-full">
+      {/* Compact header: pills row + actions on same line */}
+      <div className="flex items-center justify-between gap-3 mb-4 flex-wrap">
+        {/* Left: stat pills */}
+        <div className="flex items-center gap-2 flex-wrap">
+          <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-muted border border-border text-xs font-semibold text-foreground">
+            <Users className="h-3.5 w-3.5 text-muted-foreground" />
+            {stats?.total_contacts || 0} Total
+          </span>
+          <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-xs font-semibold text-emerald-600 dark:text-emerald-400">
+            <UserCheck className="h-3.5 w-3.5" />
+            {stats?.contacts_with_leads || 0} With Leads
+          </span>
+          <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-amber-500/10 border border-amber-500/20 text-xs font-semibold text-amber-600 dark:text-amber-400">
+            <UserPlus className="h-3.5 w-3.5" />
+            {stats?.contacts_without_leads || 0} Without Leads
+          </span>
+        </div>
+        {/* Right: action buttons */}
+        <div className="flex items-center gap-2">
+          <Button variant="outline" size="sm" className="h-8 px-3 text-xs">
+            <Upload className="h-3.5 w-3.5 mr-1.5" />{t('crm.common.import')}
+          </Button>
+          <Button variant="outline" size="sm" className="h-8 px-3 text-xs">
+            <Download className="h-3.5 w-3.5 mr-1.5" />{t('crm.common.export')}
+          </Button>
+          <Button size="sm" onClick={() => setCreateDialogOpen(true)} className="h-8 px-3 text-xs">
+            <Plus className="h-3.5 w-3.5 mr-1.5" />{t('crm.contacts.addContact')}
+          </Button>
         </div>
       </div>
 
-      <div className="px-6 py-6 space-y-6">
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        {metrics.map((metric) => {
-          const IconComponent = metric.icon;
-          const colorMap = {
-            'text-blue-600 dark:text-blue-400': { bg: 'bg-white dark:bg-slate-800', border: 'border-blue-200/80 dark:border-blue-800/60', icon: 'from-blue-500 to-blue-600' },
-            'text-green-600 dark:text-green-400': { bg: 'bg-white dark:bg-slate-800', border: 'border-green-200/80 dark:border-green-800/60', icon: 'from-green-500 to-emerald-600' },
-            'text-orange-600 dark:text-orange-400': { bg: 'bg-white dark:bg-slate-800', border: 'border-orange-200/80 dark:border-orange-800/60', icon: 'from-orange-500 to-red-600' },
-          };
-          const colors = colorMap[metric.iconColor] || { bg: 'bg-white dark:bg-slate-800', border: 'border-slate-200/80 dark:border-slate-700/60', icon: 'from-slate-500 to-slate-600' };
-
-          return (
-            <div
-              key={metric.title}
-              className={`p-5 rounded-xl border ${colors.border} bg-white dark:bg-slate-900 shadow-sm hover:shadow-md transition-all duration-200`}
-            >
-              <div className="flex items-start justify-between mb-3">
-                <div className={`h-10 w-10 rounded-lg bg-gradient-to-br ${colors.icon} flex items-center justify-center`}>
-                  <IconComponent className="h-5 w-5 text-white" />
-                </div>
-                <div className={`flex items-center gap-1 px-2 py-1 rounded-lg ${metric.trendUp ? 'bg-green-100 dark:bg-green-900/30' : 'bg-red-100 dark:bg-red-900/30'}`}>
-                  {metric.trendUp ? (
-                    <TrendingUp className="h-3.5 w-3.5 text-green-600 dark:text-green-400" />
-                  ) : (
-                    <TrendingDown className="h-3.5 w-3.5 text-red-600 dark:text-red-400" />
-                  )}
-                  <span className={`text-xs font-bold ${metric.trendUp ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
-                    {metric.trend}
-                  </span>
-                </div>
-              </div>
-              <div>
-                <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">
-                  {metric.title}
-                </p>
-                <p className="text-2xl font-bold text-slate-800 dark:text-white mb-1">{metric.value}</p>
-                <p className="text-sm text-slate-500 dark:text-slate-400">{metric.subtext}</p>
-              </div>
-            </div>
-          );
-        })}
-      </div>
-
-      {/* Filters and Actions */}
-      <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4">
-        <div className="flex flex-col md:flex-row items-center gap-3">
-          <div className="flex-1 relative w-full">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-slate-400" />
-            <Input
-              placeholder={t('crm.contacts.searchPlaceholder')}
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-9 h-9 dark:bg-slate-800 dark:border-slate-700"
-            />
-          </div>
-          <Select value={filterStatus} onValueChange={(v: any) => setFilterStatus(v)}>
-            <SelectTrigger className="w-[180px] h-9 dark:bg-slate-800 dark:border-slate-700">
-              <SelectValue placeholder={t('crm.contacts.filters.byStatus')} />
-            </SelectTrigger>
-            <SelectContent className="rounded-xl">
-              <SelectItem value="all">{t('crm.contacts.filters.all')}</SelectItem>
-              <SelectItem value="without_lead">{t('crm.contacts.withoutLeads')}</SelectItem>
-              <SelectItem value="with_lead">{t('crm.contacts.withLeads')}</SelectItem>
-            </SelectContent>
-          </Select>
-          <div className="flex items-center gap-2 bg-white dark:bg-slate-800 border border-slate-200/80 dark:border-slate-600/80 rounded-xl px-4 py-2">
-            <Tag className="h-4 w-4 text-slate-400" />
-            <TagSelector
-              entityType="contact"
-              selectedTagIds={filterTagIds}
-              onTagsChange={setFilterTagIds}
-              showCreateOption={false}
-              maxDisplay={3}
-            />
-            {filterTagIds.length > 0 && (
-              <Button
-                variant="ghost"
-                size="sm"
-                className="h-6 px-2 text-xs rounded-lg"
-                onClick={() => setFilterTagIds([])}
-              >
-                {t('common.clear')}
-              </Button>
-            )}
-          </div>
-          {selectedContacts.length > 0 && (
-            <Button
-              onClick={() => toast({ title: 'Coming Soon', description: 'Bulk conversion will be available soon' })}
-              className="rounded-xl bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white shadow-lg"
-            >
-              {t('crm.contacts.convertToLeads', { count: selectedContacts.length })}
+      {/* Filter bar - compact */}
+      <div className="flex items-center gap-2 mb-4 flex-wrap">
+        <div className="relative flex-1 min-w-48">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+          <Input
+            placeholder={t('crm.contacts.searchPlaceholder')}
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-8 h-8 text-sm bg-muted/40 border-border"
+          />
+        </div>
+        <Select value={filterStatus} onValueChange={(v: any) => setFilterStatus(v)}>
+          <SelectTrigger className="w-44 h-8 text-sm bg-muted/40 border-border">
+            <SelectValue placeholder={t('crm.contacts.filters.byStatus')} />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">{t('crm.contacts.filters.all')}</SelectItem>
+            <SelectItem value="without_lead">{t('crm.contacts.withoutLeads')}</SelectItem>
+            <SelectItem value="with_lead">{t('crm.contacts.withLeads')}</SelectItem>
+          </SelectContent>
+        </Select>
+        <div className="flex items-center gap-2 bg-muted/40 border border-border rounded-md px-3 py-1.5">
+          <Tag className="h-3.5 w-3.5 text-muted-foreground" />
+          <TagSelector
+            entityType="contact"
+            selectedTagIds={filterTagIds}
+            onTagsChange={setFilterTagIds}
+            showCreateOption={false}
+            maxDisplay={3}
+          />
+          {filterTagIds.length > 0 && (
+            <Button variant="ghost" size="sm" className="h-5 px-1.5 text-xs" onClick={() => setFilterTagIds([])}>
+              {t('common.clear')}
             </Button>
           )}
         </div>
+        {selectedContacts.length > 0 && (
+          <Button size="sm" className="h-8 px-3 text-xs"
+            onClick={() => toast({ title: 'Coming Soon', description: 'Bulk conversion will be available soon' })}>
+            {t('crm.contacts.convertToLeads', { count: selectedContacts.length })}
+          </Button>
+        )}
       </div>
 
       {/* Table */}
-      <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm overflow-hidden">
+      <div className="rounded-xl border border-border bg-card overflow-hidden flex-1">
         <Table>
           <TableHeader>
-            <TableRow className="bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700">
-              <TableHead className="w-12">
+            <TableRow className="bg-muted/50 border-border hover:bg-muted/50">
+              <TableHead className="w-10">
                 <Checkbox
                   checked={selectedContacts.length === filteredContacts.length && filteredContacts.length > 0}
                   onCheckedChange={toggleSelectAll}
                 />
               </TableHead>
-              <TableHead className="font-bold text-slate-700 dark:text-slate-300">{t('crm.contacts.fields.fullName')}</TableHead>
-              <TableHead className="font-bold text-slate-700 dark:text-slate-300">{t('crm.contacts.fields.email')}</TableHead>
-              <TableHead className="font-bold text-slate-700 dark:text-slate-300">{t('crm.contacts.fields.phone')}</TableHead>
-              <TableHead className="font-bold text-slate-700 dark:text-slate-300">{t('crm.contacts.fields.company')}</TableHead>
-              <TableHead className="font-bold text-slate-700 dark:text-slate-300">{t('crm.contacts.fields.status')}</TableHead>
-              <TableHead></TableHead>
+              <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t('crm.contacts.fields.fullName')}</TableHead>
+              <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t('crm.contacts.fields.email')}</TableHead>
+              <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t('crm.contacts.fields.phone')}</TableHead>
+              <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t('crm.contacts.fields.company')}</TableHead>
+              <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t('crm.contacts.fields.status')}</TableHead>
+              <TableHead className="w-10"></TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filteredContacts.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={7} className="text-center py-16">
-                  <div className="flex flex-col items-center">
-                    <div className="h-14 w-14 rounded-2xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center mb-4">
-                      <Users className="h-7 w-7 text-slate-400 dark:text-slate-500" />
+            <AnimatePresence>
+              {filteredContacts.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={7} className="text-center py-16">
+                    <div className="flex flex-col items-center gap-2">
+                      <div className="h-12 w-12 rounded-2xl bg-muted border border-border flex items-center justify-center">
+                        <Users className="h-6 w-6 text-muted-foreground" />
+                      </div>
+                      <p className="text-sm text-muted-foreground font-medium">{t('crm.contacts.noContacts')}</p>
                     </div>
-                    <p className="text-slate-500 dark:text-slate-400 font-medium">{t('crm.contacts.noContacts')}</p>
-                  </div>
-                </TableCell>
-              </TableRow>
-            ) : (
-              filteredContacts.map((contact) => (
-                <TableRow key={contact.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
-                  <TableCell>
-                    <Checkbox
-                      checked={selectedContacts.includes(contact.id)}
-                      onCheckedChange={() => toggleSelectContact(contact.id)}
-                    />
-                  </TableCell>
-                  <TableCell className="font-semibold text-slate-800 dark:text-white">{contact.name}</TableCell>
-                  <TableCell>
-                    <div className="flex items-center gap-2 text-slate-600 dark:text-slate-300">
-                      <div className="p-1.5 rounded-lg bg-blue-100 dark:bg-blue-900/30">
-                        <Mail className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
-                      </div>
-                      {contact.email}
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    {contact.phone_number ? (
-                      <div className="flex items-center gap-2 text-slate-600 dark:text-slate-300">
-                        <div className="p-1.5 rounded-lg bg-green-100 dark:bg-green-900/30">
-                          <Phone className="h-3.5 w-3.5 text-green-600 dark:text-green-400" />
-                        </div>
-                        {contact.phone_number}
-                      </div>
-                    ) : (
-                      <span className="text-slate-400">-</span>
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    {contact.company ? (
-                      <div className="flex items-center gap-2 text-slate-600 dark:text-slate-300">
-                        <div className="p-1.5 rounded-lg bg-purple-100 dark:bg-purple-900/30">
-                          <Building2 className="h-3.5 w-3.5 text-purple-600 dark:text-purple-400" />
-                        </div>
-                        {contact.company}
-                      </div>
-                    ) : (
-                      <span className="text-slate-400">-</span>
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    {contact.has_lead ? (
-                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 text-xs font-medium">
-                        <CheckCircle2 className="h-3 w-3 mr-1" />
-                        {t('crm.contacts.hasLead')}
-                      </span>
-                    ) : (
-                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 text-xs font-medium">
-                        <UserPlus className="h-3 w-3 mr-1" />
-                        {t('crm.contacts.noLead')}
-                      </span>
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="sm" className="h-8 w-8 p-0 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700">
-                          <MoreVertical className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end" className="rounded-xl dark:bg-slate-900 dark:border-slate-800">
-                        <DropdownMenuLabel>{t('crm.common.actions')}</DropdownMenuLabel>
-                        <DropdownMenuItem onClick={() => handleViewDetails(contact)} className="rounded-lg">
-                          <Eye className="h-4 w-4 mr-2" />
-                          {t('crm.common.view')}
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => handleEditContact(contact)} className="rounded-lg">
-                          <Edit className="h-4 w-4 mr-2" />
-                          {t('crm.contacts.editContact')}
-                        </DropdownMenuItem>
-                        <DropdownMenuSeparator />
-                        {!contact.has_lead ? (
-                          <DropdownMenuItem onClick={() => handleConvertToLead(contact)} className="text-blue-600 dark:text-blue-400 rounded-lg">
-                            <ArrowRight className="h-4 w-4 mr-2" />
-                            {t('crm.contacts.actions.createLead')}
-                          </DropdownMenuItem>
-                        ) : (
-                          <DropdownMenuItem onClick={() => navigate('/dashboard/crm/leads')} className="rounded-lg">
-                            <ArrowRight className="h-4 w-4 mr-2" />
-                            {t('crm.common.view')} {t('crm.leads.title')}
-                          </DropdownMenuItem>
-                        )}
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem className="text-red-600 dark:text-red-400 rounded-lg">
-                          <Trash2 className="h-4 w-4 mr-2" />
-                          {t('crm.contacts.deleteContact')}
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
                   </TableCell>
                 </TableRow>
-              ))
-            )}
+              ) : (
+                filteredContacts.map((contact, i) => (
+                  <motion.tr
+                    key={contact.id}
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.18, delay: i * 0.03 }}
+                    className="border-border hover:bg-muted/40 transition-colors group"
+                  >
+                    <TableCell>
+                      <Checkbox
+                        checked={selectedContacts.includes(contact.id)}
+                        onCheckedChange={() => toggleSelectContact(contact.id)}
+                      />
+                    </TableCell>
+                    <TableCell className="font-semibold text-foreground">
+                      <div className="flex items-center gap-2.5">
+                        <div className="h-7 w-7 rounded-full bg-primary/10 flex items-center justify-center text-xs font-bold text-primary flex-shrink-0">
+                          {contact.name?.charAt(0)?.toUpperCase()}
+                        </div>
+                        {contact.name}
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
+                        <Mail className="h-3.5 w-3.5 flex-shrink-0" />
+                        {contact.email}
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      {contact.phone_number ? (
+                        <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
+                          <Phone className="h-3.5 w-3.5 flex-shrink-0" />
+                          {contact.phone_number}
+                        </div>
+                      ) : <span className="text-muted-foreground/50">—</span>}
+                    </TableCell>
+                    <TableCell>
+                      {contact.company ? (
+                        <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
+                          <Building2 className="h-3.5 w-3.5 flex-shrink-0" />
+                          {contact.company}
+                        </div>
+                      ) : <span className="text-muted-foreground/50">—</span>}
+                    </TableCell>
+                    <TableCell>
+                      {contact.has_lead ? (
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-xs font-medium text-emerald-600 dark:text-emerald-400">
+                          <CheckCircle2 className="h-3 w-3" />{t('crm.contacts.hasLead')}
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-500/10 border border-amber-500/20 text-xs font-medium text-amber-600 dark:text-amber-400">
+                          <UserPlus className="h-3 w-3" />{t('crm.contacts.noLead')}
+                        </span>
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="sm" className="h-7 w-7 p-0 rounded-lg opacity-0 group-hover:opacity-100 hover:bg-muted">
+                            <MoreVertical className="h-3.5 w-3.5" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="rounded-xl">
+                          <DropdownMenuLabel>{t('crm.common.actions')}</DropdownMenuLabel>
+                          <DropdownMenuItem onClick={() => handleViewDetails(contact)}>
+                            <Eye className="h-4 w-4 mr-2" />{t('crm.common.view')}
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => handleEditContact(contact)}>
+                            <Edit className="h-4 w-4 mr-2" />{t('crm.contacts.editContact')}
+                          </DropdownMenuItem>
+                          <DropdownMenuSeparator />
+                          {!contact.has_lead ? (
+                            <DropdownMenuItem onClick={() => handleConvertToLead(contact)} className="text-blue-600 dark:text-blue-400">
+                              <ArrowRight className="h-4 w-4 mr-2" />{t('crm.contacts.actions.createLead')}
+                            </DropdownMenuItem>
+                          ) : (
+                            <DropdownMenuItem onClick={() => navigate('/dashboard/crm/leads')}>
+                              <ArrowRight className="h-4 w-4 mr-2" />{t('crm.common.view')} {t('crm.leads.title')}
+                            </DropdownMenuItem>
+                          )}
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem className="text-destructive">
+                            <Trash2 className="h-4 w-4 mr-2" />{t('crm.contacts.deleteContact')}
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </TableCell>
+                  </motion.tr>
+                ))
+              )}
+            </AnimatePresence>
           </TableBody>
         </Table>
       </div>
 
-      </div>
-
       {/* Create Contact Dialog */}
       <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
-        <DialogContent className="max-w-md rounded-2xl dark:bg-slate-900 dark:border-slate-800">
+        <DialogContent className="max-w-md rounded-2xl bg-card border-border">
           <DialogHeader>
             <div className="flex items-center gap-3 mb-2">
               <div className="p-2.5 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 shadow-lg">
@@ -646,39 +583,39 @@ export default function ContactsPage() {
                 {t('crm.contacts.addContact')}
               </DialogTitle>
             </div>
-            <DialogDescription className="text-slate-500 dark:text-slate-400">
+            <DialogDescription className="text-muted-foreground">
               {t('crm.contacts.addContactDescription')}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <Label className="text-slate-700 dark:text-slate-300 font-medium">{t('crm.contacts.fields.fullName')} <span className="text-red-500">*</span></Label>
+              <Label className="text-foreground font-medium">{t('crm.contacts.fields.fullName')} <span className="text-red-500">*</span></Label>
               <Input placeholder="John Doe" value={newContact.name}
                 onChange={(e) => setNewContact({ ...newContact, name: e.target.value })}
-                className="rounded-xl border-slate-200/80 dark:border-slate-600/80 dark:bg-slate-900" />
+                className="rounded-xl bg-background border-border" />
             </div>
             <div className="space-y-2">
-              <Label className="text-slate-700 dark:text-slate-300 font-medium">{t('crm.contacts.fields.email')} <span className="text-red-500">*</span></Label>
+              <Label className="text-foreground font-medium">{t('crm.contacts.fields.email')} <span className="text-red-500">*</span></Label>
               <Input type="email" placeholder="john@example.com" value={newContact.email}
                 onChange={(e) => setNewContact({ ...newContact, email: e.target.value })}
-                className="rounded-xl border-slate-200/80 dark:border-slate-600/80 dark:bg-slate-900" />
+                className="rounded-xl bg-background border-border" />
             </div>
             <div className="space-y-2">
-              <Label className="text-slate-700 dark:text-slate-300 font-medium">{t('crm.contacts.fields.phone')}</Label>
+              <Label className="text-foreground font-medium">{t('crm.contacts.fields.phone')}</Label>
               <Input placeholder="+1 234 567 8900" value={newContact.phone_number}
                 onChange={(e) => setNewContact({ ...newContact, phone_number: e.target.value })}
-                className="rounded-xl border-slate-200/80 dark:border-slate-600/80 dark:bg-slate-900" />
+                className="rounded-xl bg-background border-border" />
             </div>
             <div className="space-y-2">
-              <Label className="text-slate-700 dark:text-slate-300 font-medium">{t('crm.contacts.fields.company')}</Label>
+              <Label className="text-foreground font-medium">{t('crm.contacts.fields.company')}</Label>
               <Input placeholder="Acme Inc." value={newContact.company}
                 onChange={(e) => setNewContact({ ...newContact, company: e.target.value })}
-                className="rounded-xl border-slate-200/80 dark:border-slate-600/80 dark:bg-slate-900" />
+                className="rounded-xl bg-background border-border" />
             </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => { setCreateDialogOpen(false); setNewContact({ name: '', email: '', phone_number: '', company: '' }); }}
-              className="rounded-xl dark:bg-slate-700 dark:border-slate-600">
+              className="rounded-xl">
               {t('crm.common.cancel')}
             </Button>
             <Button onClick={handleCreateContact}
@@ -691,12 +628,12 @@ export default function ContactsPage() {
 
       {/* Convert to Lead Dialog */}
       <Dialog open={convertDialogOpen} onOpenChange={setConvertDialogOpen}>
-        <DialogContent className="max-w-md dark:bg-slate-900 dark:border-slate-800">
+        <DialogContent className="max-w-md bg-card border-border">
           <DialogHeader>
             <DialogTitle className="text-xl font-bold bg-gradient-to-r from-orange-600 to-red-600 bg-clip-text text-transparent">
               {t('crm.contacts.actions.createLead')}
             </DialogTitle>
-            <DialogDescription className="dark:text-gray-400">
+            <DialogDescription className="text-muted-foreground">
               {t('crm.contacts.convertingContact', { name: convertingContact?.name })}
             </DialogDescription>
           </DialogHeader>
@@ -705,12 +642,12 @@ export default function ContactsPage() {
               <Label>{t('crm.leads.fields.dealValue')} ($)</Label>
               <Input type="number" placeholder="10000" value={leadData.deal_value}
                 onChange={(e) => setLeadData({ ...leadData, deal_value: e.target.value })}
-                className="dark:bg-slate-900 dark:border-slate-600" />
+                className="bg-background border-border" />
             </div>
             <div className="space-y-2">
               <Label>{t('crm.leads.fields.source')}</Label>
               <Select value={leadData.source} onValueChange={(value) => setLeadData({ ...leadData, source: value })}>
-                <SelectTrigger className="dark:bg-slate-900 dark:border-slate-600"><SelectValue placeholder={t('crm.leads.selectSource')} /></SelectTrigger>
+                <SelectTrigger className="bg-background border-border"><SelectValue placeholder={t('crm.leads.selectSource')} /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="website">{t('crm.leads.sources.website')}</SelectItem>
                   <SelectItem value="referral">{t('crm.leads.sources.referral')}</SelectItem>
@@ -727,12 +664,11 @@ export default function ContactsPage() {
               <Label>{t('crm.leads.fields.notes')}</Label>
               <Textarea placeholder={t('crm.leads.notesPlaceholder')} value={leadData.notes}
                 onChange={(e) => setLeadData({ ...leadData, notes: e.target.value })} rows={3}
-                className="dark:bg-slate-900 dark:border-slate-600" />
+                className="bg-background border-border" />
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => { setConvertDialogOpen(false); setLeadData({ deal_value: '', source: '', notes: '' }); setConvertingContact(null); }}
-              className="dark:bg-slate-700 dark:border-slate-600">
+            <Button variant="outline" onClick={() => { setConvertDialogOpen(false); setLeadData({ deal_value: '', source: '', notes: '' }); setConvertingContact(null); }}>
               {t('crm.common.cancel')}
             </Button>
             <Button onClick={submitConversion}
@@ -745,9 +681,9 @@ export default function ContactsPage() {
 
       {/* View Contact Details Dialog */}
       <Dialog open={viewDialogOpen} onOpenChange={setViewDialogOpen}>
-        <DialogContent className="max-w-md dark:bg-slate-900 dark:border-slate-800">
+        <DialogContent className="max-w-md bg-card border-border">
           <DialogHeader>
-            <DialogTitle className="text-xl font-bold dark:text-white">{t('crm.leads.detail.contactInfo')}</DialogTitle>
+            <DialogTitle className="text-xl font-bold text-foreground">{t('crm.leads.detail.contactInfo')}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="flex items-center gap-4">
@@ -757,34 +693,34 @@ export default function ContactsPage() {
                 </span>
               </div>
               <div>
-                <h3 className="text-lg font-semibold dark:text-white">{viewingContact?.name}</h3>
-                <p className="text-sm text-gray-500 dark:text-gray-400">{viewingContact?.email}</p>
+                <h3 className="text-lg font-semibold text-foreground">{viewingContact?.name}</h3>
+                <p className="text-sm text-muted-foreground">{viewingContact?.email}</p>
               </div>
             </div>
-            <div className="space-y-3 pt-4 border-t border-slate-200 dark:border-slate-700">
+            <div className="space-y-3 pt-4 border-t border-border">
               {viewingContact?.phone_number && (
                 <div className="flex items-center gap-3">
-                  <Phone className="h-4 w-4 text-gray-400" />
-                  <span className="dark:text-gray-300">{viewingContact.phone_number}</span>
+                  <Phone className="h-4 w-4 text-muted-foreground" />
+                  <span className="text-foreground">{viewingContact.phone_number}</span>
                 </div>
               )}
               {viewingContact?.company && (
                 <div className="flex items-center gap-3">
-                  <Building2 className="h-4 w-4 text-gray-400" />
-                  <span className="dark:text-gray-300">{viewingContact.company}</span>
+                  <Building2 className="h-4 w-4 text-muted-foreground" />
+                  <span className="text-foreground">{viewingContact.company}</span>
                 </div>
               )}
               <div className="flex items-center gap-3">
-                <span className="text-sm text-gray-500 dark:text-gray-400">{t('crm.contacts.fields.status')}:</span>
+                <span className="text-sm text-muted-foreground">{t('crm.contacts.fields.status')}:</span>
                 {viewingContact?.has_lead ? (
-                  <Badge className="bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400">{t('crm.contacts.hasLead')}</Badge>
+                  <Badge className="bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">{t('crm.contacts.hasLead')}</Badge>
                 ) : (
-                  <Badge className="bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400">{t('crm.contacts.noLead')}</Badge>
+                  <Badge className="bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">{t('crm.contacts.noLead')}</Badge>
                 )}
               </div>
               {/* Tags Section */}
-              <div className="pt-3 border-t border-slate-200 dark:border-slate-700">
-                <Label className="text-sm text-gray-500 dark:text-gray-400 mb-2 block">{t('crm.tags.title')}:</Label>
+              <div className="pt-3 border-t border-border">
+                <Label className="text-sm text-muted-foreground mb-2 block">{t('crm.tags.title')}:</Label>
                 <TagSelector
                   entityType="contact"
                   selectedTagIds={viewingContactTagIds}
@@ -794,7 +730,7 @@ export default function ContactsPage() {
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setViewDialogOpen(false)} className="dark:bg-slate-700 dark:border-slate-600">
+            <Button variant="outline" onClick={() => setViewDialogOpen(false)}>
               {t('crm.common.cancel')}
             </Button>
             {!viewingContact?.has_lead && (
@@ -809,12 +745,12 @@ export default function ContactsPage() {
 
       {/* Edit Contact Dialog */}
       <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
-        <DialogContent className="max-w-md dark:bg-slate-900 dark:border-slate-800">
+        <DialogContent className="max-w-md bg-card border-border">
           <DialogHeader>
             <DialogTitle className="text-xl font-bold bg-gradient-to-r from-orange-600 to-red-600 bg-clip-text text-transparent">
               {t('crm.contacts.editContact')}
             </DialogTitle>
-            <DialogDescription className="dark:text-gray-400">
+            <DialogDescription className="text-muted-foreground">
               {t('crm.contacts.editContactDescription', { name: editingContact?.name })}
             </DialogDescription>
           </DialogHeader>
@@ -823,30 +759,29 @@ export default function ContactsPage() {
               <Label>{t('crm.contacts.fields.fullName')} <span className="text-red-500">*</span></Label>
               <Input placeholder="John Doe" value={editData.name}
                 onChange={(e) => setEditData({ ...editData, name: e.target.value })}
-                className="dark:bg-slate-900 dark:border-slate-600" />
+                className="bg-background border-border" />
             </div>
             <div className="space-y-2">
               <Label>{t('crm.contacts.fields.email')} <span className="text-red-500">*</span></Label>
               <Input type="email" placeholder="john@example.com" value={editData.email}
                 onChange={(e) => setEditData({ ...editData, email: e.target.value })}
-                className="dark:bg-slate-900 dark:border-slate-600" />
+                className="bg-background border-border" />
             </div>
             <div className="space-y-2">
               <Label>{t('crm.contacts.fields.phone')}</Label>
               <Input placeholder="+1 234 567 8900" value={editData.phone_number}
                 onChange={(e) => setEditData({ ...editData, phone_number: e.target.value })}
-                className="dark:bg-slate-900 dark:border-slate-600" />
+                className="bg-background border-border" />
             </div>
             <div className="space-y-2">
               <Label>{t('crm.contacts.fields.company')}</Label>
               <Input placeholder="Acme Inc." value={editData.company}
                 onChange={(e) => setEditData({ ...editData, company: e.target.value })}
-                className="dark:bg-slate-900 dark:border-slate-600" />
+                className="bg-background border-border" />
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => { setEditDialogOpen(false); setEditData({ name: '', email: '', phone_number: '', company: '' }); setEditingContact(null); }}
-              className="dark:bg-slate-700 dark:border-slate-600">
+            <Button variant="outline" onClick={() => { setEditDialogOpen(false); setEditData({ name: '', email: '', phone_number: '', company: '' }); setEditingContact(null); }}>
               {t('crm.common.cancel')}
             </Button>
             <Button onClick={submitEditContact}

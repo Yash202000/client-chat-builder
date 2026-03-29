@@ -583,11 +583,22 @@ export const AdvancedChatPreview = ({ selectedAgentId: initialAgentId }: { selec
     ? { width: customization.widget_width, height: customization.widget_height }
     : widgetSizes[customization.widget_size as keyof typeof widgetSizes] || widgetSizes.medium;
 
+  // ── Position picker helper ─────────────────────────────────────────────
+  const currentPosition = customization.meta?.position || customization.position || 'bottom-right';
+  const POSITIONS = [
+    { key: 'top-left',     label: t('designer.topLeft'),     row: 0, col: 0 },
+    { key: 'top-right',    label: t('designer.topRight'),    row: 0, col: 1 },
+    { key: 'bottom-left',  label: t('designer.bottomLeft'),  row: 1, col: 0 },
+    { key: 'bottom-right', label: t('designer.bottomRight'), row: 1, col: 1 },
+  ];
+
   return (
     <>
-      <div className="flex h-full">
-        {/* Left Column - Customization */}
-        <div className="w-2/3 pr-4 overflow-y-auto">
+      {/* ── Two-column studio layout ──────────────────────────────────────── */}
+      <div className="flex gap-5 h-full min-h-0">
+
+        {/* ── LEFT: Customizer panel ────────────────────────────────────── */}
+        <div className="flex-1 min-w-0 overflow-y-auto rounded-xl border border-border bg-card">
           {previewType === 'web' && (
             <WebChatCustomizer
               customization={customization}
@@ -607,292 +618,253 @@ export const AdvancedChatPreview = ({ selectedAgentId: initialAgentId }: { selec
           )}
         </div>
 
-        {/* Right Column - Live Preview */}
-        <div className="w-1/3 sticky top-6">
-          <div className="bg-white dark:bg-slate-800 rounded-2xl overflow-hidden border-0 shadow-xl shadow-slate-200/50 dark:shadow-none">
-            <div className="bg-gradient-to-r from-slate-50 to-white dark:from-slate-800 dark:to-slate-900 p-4 border-b border-slate-100 dark:border-slate-700">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center shadow-md shadow-indigo-500/25">
-                    <svg className="h-5 w-5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z" />
-                      <circle cx="12" cy="12" r="3" />
-                    </svg>
-                  </div>
-                  <div>
-                    <h3 className="text-lg font-semibold text-slate-900 dark:text-white">{t('designer.livePreview')}</h3>
-                    <p className="text-xs text-slate-500 dark:text-slate-400">{t('designer.livePreviewDesc')}</p>
-                  </div>
+        {/* ── RIGHT: Live preview panel ─────────────────────────────────── */}
+        <div className="w-[360px] flex-shrink-0 flex flex-col gap-3 sticky top-0 self-start">
+
+          {/* Preview panel header */}
+          <div className="rounded-xl border border-border bg-card overflow-hidden">
+            <div className="flex items-center justify-between px-4 py-3 border-b border-border">
+              <div className="flex items-center gap-2.5">
+                <div className="h-7 w-7 rounded-lg bg-primary/10 flex items-center justify-center">
+                  <svg className="h-3.5 w-3.5 text-primary" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z" />
+                    <circle cx="12" cy="12" r="3" />
+                  </svg>
                 </div>
                 <div>
-                  <Label className="text-xs font-medium text-slate-600 dark:text-slate-300 mb-2 block">{t('designer.widgetPosition')}</Label>
-                  <div className="grid grid-cols-2 gap-1">
-                    <Button
-                      variant={(customization.meta?.position || customization.position) === 'top-left' ? 'default' : 'outline'}
-                      size="sm"
-                      onClick={() => updateCustomization('meta', { ...customization.meta, position: 'top-left' })}
-                      className={`flex items-center justify-start gap-2 text-xs h-8 ${(customization.meta?.position || customization.position) === 'top-left' ? 'bg-gradient-to-r from-indigo-500 to-purple-500 text-white border-0' : 'border-slate-200 dark:border-slate-700'}`}
-                    >
-                      <svg className="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M5 9l7-7 7 7M5 15l7 7 7-7" transform="rotate(-45 12 12)"/></svg>
-                      {t('designer.topLeft')}
-                    </Button>
-                    <Button
-                      variant={(customization.meta?.position || customization.position) === 'top-right' ? 'default' : 'outline'}
-                      size="sm"
-                      onClick={() => updateCustomization('meta', { ...customization.meta, position: 'top-right' })}
-                      className={`flex items-center justify-end gap-2 text-xs h-8 ${(customization.meta?.position || customization.position) === 'top-right' ? 'bg-gradient-to-r from-indigo-500 to-purple-500 text-white border-0' : 'border-slate-200 dark:border-slate-700'}`}
-                    >
-                      {t('designer.topRight')}
-                      <svg className="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M5 9l7-7 7 7M5 15l7 7 7-7" transform="rotate(45 12 12)"/></svg>
-                    </Button>
-                    <Button
-                      variant={(customization.meta?.position || customization.position) === 'bottom-left' ? 'default' : 'outline'}
-                      size="sm"
-                      onClick={() => updateCustomization('meta', { ...customization.meta, position: 'bottom-left' })}
-                      className={`flex items-center justify-start gap-2 text-xs h-8 ${(customization.meta?.position || customization.position) === 'bottom-left' ? 'bg-gradient-to-r from-indigo-500 to-purple-500 text-white border-0' : 'border-slate-200 dark:border-slate-700'}`}
-                    >
-                      <svg className="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M5 9l7-7 7 7M5 15l7 7 7-7" transform="rotate(-135 12 12)"/></svg>
-                      {t('designer.bottomLeft')}
-                    </Button>
-                    <Button
-                      variant={(customization.meta?.position || customization.position) === 'bottom-right' ? 'default' : 'outline'}
-                      size="sm"
-                      onClick={() => updateCustomization('meta', { ...customization.meta, position: 'bottom-right' })}
-                      className={`flex items-center justify-end gap-2 text-xs h-8 ${(customization.meta?.position || customization.position) === 'bottom-right' ? 'bg-gradient-to-r from-indigo-500 to-purple-500 text-white border-0' : 'border-slate-200 dark:border-slate-700'}`}
-                    >
-                      {t('designer.bottomRight')}
-                      <svg className="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M5 9l7-7 7 7M5 15l7 7 7-7" transform="rotate(135 12 12)"/></svg>
-                    </Button>
-                  </div>
+                  <p className="text-sm font-semibold text-foreground leading-tight">{t('designer.livePreview')}</p>
+                  <p className="text-[10px] text-muted-foreground leading-tight">{t('designer.livePreviewDesc')}</p>
                 </div>
+              </div>
+              {/* Live dot */}
+              <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800">
+                <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                <span className="text-[10px] font-medium text-emerald-700 dark:text-emerald-400">Live</span>
               </div>
             </div>
 
-            <div className="p-3">
-              {/* Preview Container */}
-              <div className="flex justify-center">
-                <div className="bg-gradient-to-br from-slate-100 via-slate-50 to-white dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 p-4 rounded-2xl relative overflow-hidden border border-slate-200 dark:border-slate-700 shadow-inner" style={{ fontFamily: customization.font_family, width: width + 40, height: height + 80 }}>
-          {customization.client_website_url && (
-            <iframe
-              src={customization.client_website_url}
-              className="absolute top-0 left-0 w-full h-full border-0"
-              title="Client Website Preview"
-            />
-          )}
-            {previewType === 'web' && (
-              <div className={`absolute`} style={{ [widgetPosition.split('-')[0]]: '20px', [widgetPosition.split('-')[1]]: '20px' }}>
-                {isExpanded ? (
-                  <div dir={isWidgetRTL ? 'rtl' : 'ltr'} className="bg-white rounded-lg shadow-2xl flex flex-col animate-scale-in" style={{ width, height, borderRadius: `${customization.border_radius}px`, backgroundColor: customization.dark_mode ? '#1a1a1a' : '#fff' }}>
-                    {customization.show_header && (
-                      <div className="text-white p-3 flex items-center justify-between" style={{ background: customization.primary_color, borderTopLeftRadius: `${customization.border_radius}px`, borderTopRightRadius: `${customization.border_radius}px` }}>
-                        <div className="flex items-center space-x-3">
-                          <Avatar className="h-8 w-8">
-                            <AvatarImage key={customization.agent_avatar_url} src={`${BACKEND_URL}/api/v1/proxy/image-proxy?url=${encodeURIComponent(customization.agent_avatar_url)}`} alt="Agent" />
-                            <AvatarFallback style={{ background: customization.primary_color.includes('gradient') ? customization.primary_color : `${customization.primary_color}20` }}>
-                              {customization.header_title.charAt(0)}
-                            </AvatarFallback>
-                          </Avatar>
-                          <div>
+            {/* Position picker */}
+            <div className="px-4 py-3 flex items-center justify-between gap-4">
+              <p className="text-xs font-medium text-muted-foreground whitespace-nowrap">{t('designer.widgetPosition')}</p>
+              {/* Visual 2×2 position grid */}
+              <div className="relative h-10 w-16 rounded-lg border-2 border-border bg-muted flex-shrink-0" title="Widget position">
+                {POSITIONS.map(({ key, label, row, col }) => (
+                  <button
+                    key={key}
+                    onClick={() => updateCustomization('meta', { ...customization.meta, position: key })}
+                    title={label}
+                    className={cn(
+                      'absolute w-3.5 h-3.5 rounded-sm transition-all duration-150',
+                      row === 0 ? 'top-1.5' : 'bottom-1.5',
+                      col === 0 ? 'left-1.5' : 'right-1.5',
+                      currentPosition === key
+                        ? 'bg-primary scale-110'
+                        : 'bg-border hover:bg-muted-foreground/60'
+                    )}
+                  />
+                ))}
+              </div>
+              {/* Text label for selected */}
+              <span className="text-xs text-foreground font-medium min-w-[72px]">
+                {POSITIONS.find(p => p.key === currentPosition)?.label}
+              </span>
+            </div>
+          </div>
+
+          {/* Device frame */}
+          <div className="rounded-xl border border-border bg-card overflow-hidden">
+            {/* Simulated browser chrome */}
+            <div className="flex items-center gap-1.5 px-3 py-2.5 bg-muted border-b border-border">
+              <span className="h-2.5 w-2.5 rounded-full bg-red-400/70" />
+              <span className="h-2.5 w-2.5 rounded-full bg-amber-400/70" />
+              <span className="h-2.5 w-2.5 rounded-full bg-emerald-400/70" />
+              <div className="flex-1 mx-2 h-5 rounded-md bg-background border border-border flex items-center px-2">
+                <span className="text-[9px] text-muted-foreground truncate">preview.localhost</span>
+              </div>
+            </div>
+
+            {/* Canvas */}
+            <div
+              className="relative overflow-hidden bg-gradient-to-br from-slate-50 via-white to-slate-100 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900"
+              style={{ fontFamily: customization.font_family, width: '100%', height: height + 80 }}
+            >
+              {customization.client_website_url && (
+                <iframe
+                  src={customization.client_website_url}
+                  className="absolute top-0 left-0 w-full h-full border-0"
+                  title="Client Website Preview"
+                />
+              )}
+
+              {/* Subtle grid overlay */}
+              <div className="absolute inset-0 opacity-[0.03] dark:opacity-[0.06]"
+                style={{ backgroundImage: 'radial-gradient(circle, #000 1px, transparent 1px)', backgroundSize: '20px 20px' }} />
+
+              {previewType === 'web' && (
+                <div className="absolute" style={{ [widgetPosition.split('-')[0]]: '16px', [widgetPosition.split('-')[1]]: '16px' }}>
+                  {isExpanded ? (
+                    <div
+                      dir={isWidgetRTL ? 'rtl' : 'ltr'}
+                      className="bg-white shadow-2xl flex flex-col"
+                      style={{
+                        width,
+                        height,
+                        borderRadius: `${customization.border_radius}px`,
+                        backgroundColor: customization.dark_mode ? '#1a1a1a' : '#fff',
+                      }}
+                    >
+                      {customization.show_header && (
+                        <div className="text-white p-3 flex items-center justify-between flex-shrink-0"
+                          style={{
+                            background: customization.primary_color,
+                            borderTopLeftRadius: `${customization.border_radius}px`,
+                            borderTopRightRadius: `${customization.border_radius}px`,
+                          }}
+                        >
+                          <div className="flex items-center space-x-3">
+                            <Avatar className="h-8 w-8">
+                              <AvatarImage key={customization.agent_avatar_url} src={`${BACKEND_URL}/api/v1/proxy/image-proxy?url=${encodeURIComponent(customization.agent_avatar_url)}`} alt="Agent" />
+                              <AvatarFallback style={{ background: customization.primary_color.includes('gradient') ? customization.primary_color : `${customization.primary_color}20` }}>
+                                {customization.header_title.charAt(0)}
+                              </AvatarFallback>
+                            </Avatar>
                             <div className="font-medium text-sm">{customization.header_title}</div>
                           </div>
+                          <Button size="sm" variant="ghost" className="text-white hover:bg-white/20 p-1 h-6 w-6" onClick={() => setIsExpanded(false)}>
+                            <X className="h-4 w-4" />
+                          </Button>
                         </div>
-                        <Button size="sm" variant="ghost" className="text-white hover:bg-white/20 p-1 h-6 w-6" onClick={() => setIsExpanded(false)}><X className="h-4 w-4" /></Button>
-                      </div>
-                    )}
+                      )}
 
-                    <div className="flex-1 p-4 overflow-y-auto space-y-4">
-                      {messages.map((msg) => (
-                         <div key={msg.id} className={cn('flex w-full', msg.sender === 'user' ? 'justify-end' : 'justify-start')}>
-                          <div className={cn('max-w-[85%] p-3 flex flex-col')} style={{ background: msg.sender === 'user' ? customization.user_message_color : customization.bot_message_color, color: msg.sender === 'user' ? customization.user_message_text_color : customization.bot_message_text_color, borderRadius: `${customization.border_radius}px` }}>
-                            <div className="flex items-center justify-between gap-2 mb-2">
-                              <div className="flex items-center gap-2">
-                                <Avatar className="h-5 w-5">
-                                  <AvatarFallback className="bg-transparent text-xs">
-                                    {msg.sender === 'agent' ? <Bot size={14} /> : <User size={14} />}
-                                  </AvatarFallback>
-                                </Avatar>
-                                <span className="text-xs font-semibold">{msg.sender === 'agent' ? 'Agent' : 'You'}</span>
+                      <div className="flex-1 p-4 overflow-y-auto space-y-4">
+                        {messages.map((msg) => (
+                          <div key={msg.id} className={cn('flex w-full', msg.sender === 'user' ? 'justify-end' : 'justify-start')}>
+                            <div className="max-w-[85%] p-3 flex flex-col" style={{ background: msg.sender === 'user' ? customization.user_message_color : customization.bot_message_color, color: msg.sender === 'user' ? customization.user_message_text_color : customization.bot_message_text_color, borderRadius: `${customization.border_radius}px` }}>
+                              <div className="flex items-center justify-between gap-2 mb-2">
+                                <div className="flex items-center gap-2">
+                                  <Avatar className="h-5 w-5">
+                                    <AvatarFallback className="bg-transparent text-xs">
+                                      {msg.sender === 'agent' ? <Bot size={14} /> : <User size={14} />}
+                                    </AvatarFallback>
+                                  </Avatar>
+                                  <span className="text-xs font-semibold">{msg.sender === 'agent' ? 'Agent' : 'You'}</span>
+                                </div>
+                                <span className="text-xs" style={{ color: customization.time_color || (customization.dark_mode ? '#9CA3AF' : '#6B7280') }}>
+                                  {new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                </span>
                               </div>
-                              <span className="text-xs" style={{ color: customization.time_color || (customization.dark_mode ? '#9CA3AF' : '#6B7280') }}>
-                                {new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                              </span>
+                              <p className="text-sm break-words">{msg.text}</p>
                             </div>
-                            <p className="text-sm break-words">{msg.text}</p>
                           </div>
-                        </div>
-                      ))}
-                      <div ref={messagesEndRef} />
-                    </div>
+                        ))}
+                        <div ref={messagesEndRef} />
+                      </div>
 
-                    <div className="p-2 border-t" style={{borderColor: customization.dark_mode ? '#333' : '#eee'}}>
-                      <div className="flex items-center gap-2">
-                        {/* Input container with icons inside - Instagram style */}
-                        <div className={cn(
-                          'flex-grow flex items-center gap-1 px-3 py-2 border rounded-full transition-all',
-                          customization.dark_mode ? 'bg-gray-800 border-gray-700' : 'bg-gray-100 border-gray-200'
-                        )}>
-                          {/* Text input */}
-                          <input
-                            type="text"
-                            value={message}
-                            onChange={(e) => setMessage(e.target.value)}
-                            onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
-                            placeholder={customization.input_placeholder}
-                            className={cn(
-                              'flex-grow bg-transparent outline-none text-sm min-w-0',
-                              customization.dark_mode ? 'text-white placeholder-gray-500' : 'text-gray-900 placeholder-gray-400'
+                      <div className="p-2 border-t flex-shrink-0" style={{ borderColor: customization.dark_mode ? '#333' : '#eee' }}>
+                        <div className="flex items-center gap-2">
+                          <div className={cn('flex-grow flex items-center gap-1 px-3 py-2 border rounded-full transition-all', customization.dark_mode ? 'bg-gray-800 border-gray-700' : 'bg-gray-100 border-gray-200')}>
+                            <input
+                              type="text"
+                              value={message}
+                              onChange={(e) => setMessage(e.target.value)}
+                              onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
+                              placeholder={customization.input_placeholder}
+                              className={cn('flex-grow bg-transparent outline-none text-sm min-w-0', customization.dark_mode ? 'text-white placeholder-gray-500' : 'text-gray-900 placeholder-gray-400')}
+                            />
+                            {message ? (
+                              <button onClick={() => handleSendMessage()} className="p-1.5 rounded-full transition-colors" style={{ color: customization.primary_color }}>
+                                <Send size={20} />
+                              </button>
+                            ) : (
+                              <>
+                                <button className={cn('p-1.5 rounded-full transition-colors', customization.dark_mode ? 'hover:bg-gray-700 text-gray-400' : 'hover:bg-gray-200 text-gray-500')} title="Attach image">
+                                  <ImagePlus size={20} />
+                                </button>
+                                <button className={cn('p-1.5 rounded-full transition-colors', customization.dark_mode ? 'hover:bg-gray-700 text-gray-400' : 'hover:bg-gray-200 text-gray-500')} title="Share location">
+                                  <MapPin size={20} />
+                                </button>
+                              </>
                             )}
-                          />
-                          {/* Right icons - hide when typing, show send when has content */}
-                          {message ? (
-                            <button
-                              onClick={() => handleSendMessage()}
-                              className="p-1.5 rounded-full transition-colors"
-                              style={{ color: customization.primary_color }}
-                            >
-                              <Send size={20} />
-                            </button>
-                          ) : (
-                            <>
-                              <button
-                                className={cn(
-                                  'p-1.5 rounded-full transition-colors',
-                                  customization.dark_mode ? 'hover:bg-gray-700 text-gray-400' : 'hover:bg-gray-200 text-gray-500'
-                                )}
-                                title="Attach image"
-                              >
-                                <ImagePlus size={20} />
-                              </button>
-                              <button
-                                className={cn(
-                                  'p-1.5 rounded-full transition-colors',
-                                  customization.dark_mode ? 'hover:bg-gray-700 text-gray-400' : 'hover:bg-gray-200 text-gray-500'
-                                )}
-                                title="Share location"
-                              >
-                                <MapPin size={20} />
-                              </button>
-                            </>
-                          )}
+                          </div>
+                          <button
+                            onClick={handleToggleRecording}
+                            className={cn('p-2 rounded-full transition-colors flex-shrink-0', isRecording ? 'bg-red-500 text-white' : (customization.dark_mode ? 'bg-gray-800 text-gray-400 hover:bg-gray-700' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'))}
+                          >
+                            {isRecording ? <Loader2 className="animate-spin" size={20} /> : <Mic size={20} />}
+                          </button>
                         </div>
-                        {/* Mic button - always outside */}
-                        <button
-                          onClick={handleToggleRecording}
-                          className={cn(
-                            'p-2 rounded-full transition-colors flex-shrink-0',
-                            isRecording ? 'bg-red-500 text-white' : (customization.dark_mode ? 'bg-gray-800 text-gray-400 hover:bg-gray-700' : 'bg-gray-100 text-gray-500 hover:bg-gray-200')
-                          )}
-                        >
-                          {isRecording ? <Loader2 className="animate-spin" size={20} /> : <Mic size={20} />}
-                        </button>
                       </div>
                     </div>
-                  </div>
-                ) : (
-                  <Button
-                    className="flex items-center justify-center"
-                    style={{
-                      width: '60px',
-                      height: '60px',
-                      borderRadius: '50%',
-                      background: customization.primary_color,
-                      boxShadow: '0 4px 12px rgba(0,0,0,0.15)'
-                    }}
-                    onClick={() => setIsExpanded(true)}
-                  >
-                    {customization.agent_avatar_url ? <img src={`${BACKEND_URL}/api/v1/proxy/image-proxy?url=${encodeURIComponent(customization.agent_avatar_url)}`} className="h-full w-full rounded-full object-cover"  /> : <MessageSquare className="h-8 w-8 text-white" />}
-                  </Button>
-                )}
-              </div>
-            )}
-            {previewType === 'whatsapp' && <WhatsappPreview messages={messages} customization={customization} handleSendMessage={handleSendMessage} message={message} setMessage={setMessage} isRecording={isRecording} handleToggleRecording={handleToggleRecording} />}
-            {previewType === 'messenger' && <MessengerPreview messages={messages} customization={customization} handleSendMessage={handleSendMessage} message={message} setMessage={setMessage} isRecording={isRecording} handleToggleRecording={handleToggleRecording} />}
-            {previewType === 'instagram' && <InstagramPreview messages={messages} customization={customization} handleSendMessage={handleSendMessage} message={message} setMessage={setMessage} isRecording={isRecording} handleToggleRecording={handleToggleRecording} />}
-            {previewType === 'gmail' && <GmailPreview messages={messages} customization={customization} handleSendMessage={handleSendMessage} message={message} setMessage={setMessage} isRecording={isRecording} handleToggleRecording={handleToggleRecording} />}
-            {previewType === 'telegram' && <TelegramPreview messages={messages} customization={customization} handleSendMessage={handleSendMessage} message={message} setMessage={setMessage} isRecording={isRecording} handleToggleRecording={handleToggleRecording} />}
-            {previewType === 'voice' && customization.livekit_url && <VoiceAgentPreview liveKitToken={liveKitToken} shouldConnect={shouldConnect} setShouldConnect={setShouldConnect} livekitUrl={customization.livekit_url} customization={customization} backendUrl={BACKEND_URL}/>}
+                  ) : (
+                    <Button
+                      className="flex items-center justify-center"
+                      style={{ width: '60px', height: '60px', borderRadius: '50%', background: customization.primary_color, boxShadow: '0 4px 20px rgba(0,0,0,0.18)' }}
+                      onClick={() => setIsExpanded(true)}
+                    >
+                      {customization.agent_avatar_url
+                        ? <img src={`${BACKEND_URL}/api/v1/proxy/image-proxy?url=${encodeURIComponent(customization.agent_avatar_url)}`} className="h-full w-full rounded-full object-cover" />
+                        : <MessageSquare className="h-8 w-8 text-white" />
+                      }
+                    </Button>
+                  )}
                 </div>
-              </div>
+              )}
+
+              {previewType === 'whatsapp'  && <WhatsappPreview  messages={messages} customization={customization} handleSendMessage={handleSendMessage} message={message} setMessage={setMessage} isRecording={isRecording} handleToggleRecording={handleToggleRecording} />}
+              {previewType === 'messenger' && <MessengerPreview  messages={messages} customization={customization} handleSendMessage={handleSendMessage} message={message} setMessage={setMessage} isRecording={isRecording} handleToggleRecording={handleToggleRecording} />}
+              {previewType === 'instagram' && <InstagramPreview  messages={messages} customization={customization} handleSendMessage={handleSendMessage} message={message} setMessage={setMessage} isRecording={isRecording} handleToggleRecording={handleToggleRecording} />}
+              {previewType === 'gmail'     && <GmailPreview      messages={messages} customization={customization} handleSendMessage={handleSendMessage} message={message} setMessage={setMessage} isRecording={isRecording} handleToggleRecording={handleToggleRecording} />}
+              {previewType === 'telegram'  && <TelegramPreview   messages={messages} customization={customization} handleSendMessage={handleSendMessage} message={message} setMessage={setMessage} isRecording={isRecording} handleToggleRecording={handleToggleRecording} />}
+              {previewType === 'voice' && customization.livekit_url && <VoiceAgentPreview liveKitToken={liveKitToken} shouldConnect={shouldConnect} setShouldConnect={setShouldConnect} livekitUrl={customization.livekit_url} customization={customization} backendUrl={BACKEND_URL} />}
             </div>
           </div>
         </div>
       </div>
+
+      {/* ── Publish success dialog ─────────────────────────────────────────── */}
       <Dialog open={isPublishDialogOpen} onOpenChange={setIsPublishDialogOpen}>
         <DialogContent className="max-w-lg">
           <DialogHeader>
-            <DialogTitle>{t('designer.publishedSuccess')}</DialogTitle>
-            <DialogDescription>
-              {t('designer.publishedDesc')}
-            </DialogDescription>
+            <DialogTitle className="flex items-center gap-2">
+              <div className="h-8 w-8 rounded-lg bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800 flex items-center justify-center">
+                <svg className="h-4 w-4 text-emerald-600 dark:text-emerald-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" /><polyline points="22 4 12 14.01 9 11.01" />
+                </svg>
+              </div>
+              {t('designer.publishedSuccess')}
+            </DialogTitle>
+            <DialogDescription>{t('designer.publishedDesc')}</DialogDescription>
           </DialogHeader>
-          <div className="mt-4 space-y-4">
+
+          <div className="mt-2 space-y-3">
             {/* Widget Preview URL */}
-            <div>
-              <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 block">
-                Widget Preview (Floating Chat)
-              </label>
+            <div className="rounded-lg border border-border bg-muted/40 p-3">
+              <p className="text-xs font-medium text-muted-foreground mb-2 uppercase tracking-wider">Widget Preview</p>
               <div className="flex gap-2">
-                <Input
-                  readOnly
-                  value={publishedUrl || ""}
-                  className="flex-1"
-                />
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => {
-                    navigator.clipboard.writeText(publishedUrl || "");
-                    toast({ title: t('designer.copiedClipboard') });
-                  }}
-                >
+                <input readOnly value={publishedUrl || ""} className="flex-1 h-8 rounded-md border border-border bg-background px-3 text-xs text-foreground font-mono outline-none" />
+                <Button variant="outline" size="sm" className="h-8 text-xs" onClick={() => { navigator.clipboard.writeText(publishedUrl || ""); toast({ title: t('designer.copiedClipboard') }); }}>
                   Copy
                 </Button>
               </div>
             </div>
 
             {/* Fullpage Chat URL */}
-            <div>
-              <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 block">
-                Fullpage Chat (Standalone App)
-              </label>
+            <div className="rounded-lg border border-border bg-muted/40 p-3">
+              <p className="text-xs font-medium text-muted-foreground mb-2 uppercase tracking-wider">Fullpage Chat</p>
               <div className="flex gap-2">
-                <Input
-                  readOnly
-                  value={publishedUrl?.replace('/preview/', '/chat/') || ""}
-                  className="flex-1"
-                />
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => {
-                    navigator.clipboard.writeText(publishedUrl?.replace('/preview/', '/chat/') || "");
-                    toast({ title: t('designer.copiedClipboard') });
-                  }}
-                >
+                <input readOnly value={publishedUrl?.replace('/preview/', '/chat/') || ""} className="flex-1 h-8 rounded-md border border-border bg-background px-3 text-xs text-foreground font-mono outline-none" />
+                <Button variant="outline" size="sm" className="h-8 text-xs" onClick={() => { navigator.clipboard.writeText(publishedUrl?.replace('/preview/', '/chat/') || ""); toast({ title: t('designer.copiedClipboard') }); }}>
                   Copy
                 </Button>
               </div>
             </div>
 
-            {/* iFrame Embed Code */}
-            <div>
-              <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 block">
-                iFrame Embed Code
-              </label>
+            {/* iFrame Embed */}
+            <div className="rounded-lg border border-border bg-muted/40 p-3">
+              <p className="text-xs font-medium text-muted-foreground mb-2 uppercase tracking-wider">iFrame Embed</p>
               <div className="flex gap-2">
-                <Input
-                  readOnly
-                  value={`<iframe src="${publishedUrl?.replace('/preview/', '/embed/') || ""}" width="400" height="600" frameborder="0"></iframe>`}
-                  className="flex-1 text-xs"
-                />
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => {
-                    navigator.clipboard.writeText(`<iframe src="${publishedUrl?.replace('/preview/', '/embed/') || ""}" width="400" height="600" frameborder="0"></iframe>`);
-                    toast({ title: t('designer.copiedClipboard') });
-                  }}
-                >
+                <input readOnly value={`<iframe src="${publishedUrl?.replace('/preview/', '/embed/') || ""}" width="400" height="600" frameborder="0"></iframe>`} className="flex-1 h-8 rounded-md border border-border bg-background px-3 text-xs text-foreground font-mono outline-none" />
+                <Button variant="outline" size="sm" className="h-8 text-xs" onClick={() => { navigator.clipboard.writeText(`<iframe src="${publishedUrl?.replace('/preview/', '/embed/') || ""}" width="400" height="600" frameborder="0"></iframe>`); toast({ title: t('designer.copiedClipboard') }); }}>
                   Copy
                 </Button>
               </div>
