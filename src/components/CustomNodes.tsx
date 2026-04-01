@@ -76,17 +76,17 @@ export const ConditionNode = ({ id, data }) => {
 
   return (
     <div className="relative group">
-      <div className={`px-4 py-3 border border-amber-200/80 dark:border-amber-700/60 rounded-2xl bg-gradient-to-br from-white to-amber-50 dark:from-slate-800 dark:to-amber-950/30 shadow-lg hover:shadow-xl hover:scale-[1.02] transition-all duration-200 backdrop-blur-sm ${isMultiCondition ? 'min-w-[180px]' : 'min-w-[160px]'}`}
+      <div className={`px-4 py-3 border border-violet-200/80 dark:border-violet-700/60 rounded-2xl bg-gradient-to-br from-white to-violet-50 dark:from-slate-800 dark:to-violet-950/30 shadow-lg hover:shadow-xl hover:scale-[1.02] transition-all duration-200 backdrop-blur-sm ${isMultiCondition ? 'min-w-[180px]' : 'min-w-[160px]'}`}
            style={{ minWidth: isMultiCondition ? `${Math.max(180, totalHandles * 50)}px` : undefined }}>
-        <Handle type="target" position={Position.Top} className="w-3 h-3 !bg-gradient-to-br !from-amber-400 !to-orange-500 border-2 border-white dark:border-slate-800 shadow-md" />
+        <Handle type="target" position={Position.Top} className="w-3 h-3 !bg-gradient-to-br !from-violet-400 !to-orange-500 border-2 border-white dark:border-slate-800 shadow-md" />
         <div className="flex items-center gap-2.5 mb-2">
-          <div className="p-2 rounded-xl bg-gradient-to-br from-amber-500 to-orange-600 shadow-md shadow-amber-500/30">
+          <div className="p-2 rounded-xl bg-gradient-to-br from-violet-500 to-orange-600 shadow-md shadow-violet-500/30">
             <GitBranch size={16} className="text-white" />
           </div>
           <strong className="text-sm font-semibold text-slate-800 dark:text-white">{data.label}</strong>
         </div>
         <div className="text-xs text-slate-500 dark:text-slate-400 font-medium flex items-center gap-1">
-          <span className="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
+          <span className="w-1.5 h-1.5 rounded-full bg-violet-500"></span>
           {isMultiCondition ? `Multi-Condition (${conditions.length})` : 'Conditional Logic'}
         </div>
 
@@ -226,9 +226,9 @@ export const ListenNode = ({ id, data }) => (
 export const PromptNode = ({ id, data }) => (
   <div className="relative group">
     <div className="px-4 py-3 border border-yellow-200/80 dark:border-yellow-700/60 rounded-2xl bg-gradient-to-br from-white to-yellow-50 dark:from-slate-800 dark:to-yellow-950/30 shadow-md hover:shadow-lg hover:scale-[1.02] transition-all duration-200 backdrop-blur-sm min-w-[160px]">
-      <Handle type="target" position={Position.Top} className="w-3 h-3 !bg-gradient-to-br !from-yellow-400 !to-amber-500 border-2 border-white dark:border-slate-800 shadow-md" />
+      <Handle type="target" position={Position.Top} className="w-3 h-3 !bg-gradient-to-br !from-yellow-400 !to-violet-500 border-2 border-white dark:border-slate-800 shadow-md" />
       <div className="flex items-center gap-2.5 mb-2">
-        <div className="p-2 rounded-xl bg-gradient-to-br from-yellow-500 to-amber-600 shadow-md shadow-yellow-500/30">
+        <div className="p-2 rounded-xl bg-gradient-to-br from-yellow-500 to-violet-600 shadow-md shadow-yellow-500/30">
           <HelpCircle size={16} className="text-white" />
         </div>
         <strong className="text-sm font-semibold text-slate-800 dark:text-white">{data.label || 'Prompt for Input'}</strong>
@@ -395,7 +395,7 @@ export const EntityCollectorNode = ({ id, data }) => (
         Gathers required information
       </div>
       <Handle type="source" position={Position.Bottom} id="complete" className="w-3 h-3 !bg-gradient-to-br !from-green-400 !to-emerald-500 border-2 border-white dark:border-slate-800 shadow-md" />
-      <Handle type="source" position={Position.Right} id="partial" className="w-3 h-3 !bg-gradient-to-br !from-amber-400 !to-orange-500 border-2 border-white dark:border-slate-800 shadow-md" />
+      <Handle type="source" position={Position.Right} id="partial" className="w-3 h-3 !bg-gradient-to-br !from-violet-400 !to-orange-500 border-2 border-white dark:border-slate-800 shadow-md" />
     </div>
     <AddNodeButton nodeId={id} handleId="complete" position="bottom" />
     <AddNodeButton nodeId={id} handleId="partial" position="right" />
@@ -467,9 +467,9 @@ export const TagConversationNode = ({ id, data }) => (
 export const AssignToAgentNode = ({ id, data }) => (
   <div className="relative group">
     <div className="px-4 py-3 border border-orange-200/80 dark:border-orange-700/60 rounded-2xl bg-gradient-to-br from-white to-orange-50 dark:from-slate-800 dark:to-orange-950/30 shadow-lg hover:shadow-xl hover:scale-[1.02] transition-all duration-200 backdrop-blur-sm min-w-[160px]">
-      <Handle type="target" position={Position.Top} className="w-3 h-3 !bg-gradient-to-br !from-orange-400 !to-amber-500 border-2 border-white dark:border-slate-800 shadow-md" />
+      <Handle type="target" position={Position.Top} className="w-3 h-3 !bg-gradient-to-br !from-orange-400 !to-violet-500 border-2 border-white dark:border-slate-800 shadow-md" />
       <div className="flex items-center gap-2.5 mb-2">
-        <div className="p-2 rounded-xl bg-gradient-to-br from-orange-500 to-amber-600 shadow-md shadow-orange-500/30">
+        <div className="p-2 rounded-xl bg-gradient-to-br from-orange-500 to-violet-600 shadow-md shadow-orange-500/30">
           <UserPlus size={16} className="text-white" />
         </div>
         <strong className="text-sm font-semibold text-slate-800 dark:text-white">{data.label || 'Assign to Agent'}</strong>
@@ -549,17 +549,17 @@ export const QuestionClassifierNode = ({ id, data }) => {
 
   return (
     <div className="relative group">
-      <div className={`px-4 py-3 border border-amber-200/80 dark:border-amber-700/60 rounded-2xl bg-gradient-to-br from-white to-amber-50 dark:from-slate-800 dark:to-amber-950/30 shadow-lg hover:shadow-xl hover:scale-[1.02] transition-all duration-200 backdrop-blur-sm ${hasClasses ? 'min-w-[180px]' : 'min-w-[160px]'}`}
+      <div className={`px-4 py-3 border border-violet-200/80 dark:border-violet-700/60 rounded-2xl bg-gradient-to-br from-white to-violet-50 dark:from-slate-800 dark:to-violet-950/30 shadow-lg hover:shadow-xl hover:scale-[1.02] transition-all duration-200 backdrop-blur-sm ${hasClasses ? 'min-w-[180px]' : 'min-w-[160px]'}`}
            style={{ minWidth: hasClasses ? `${Math.max(180, totalHandles * 60)}px` : undefined }}>
-        <Handle type="target" position={Position.Top} className="w-3 h-3 !bg-gradient-to-br !from-amber-400 !to-yellow-500 border-2 border-white dark:border-slate-800 shadow-md" />
+        <Handle type="target" position={Position.Top} className="w-3 h-3 !bg-gradient-to-br !from-violet-400 !to-yellow-500 border-2 border-white dark:border-slate-800 shadow-md" />
         <div className="flex items-center gap-2.5 mb-2">
-          <div className="p-2 rounded-xl bg-gradient-to-br from-amber-500 to-yellow-600 shadow-md shadow-amber-500/30">
+          <div className="p-2 rounded-xl bg-gradient-to-br from-violet-500 to-yellow-600 shadow-md shadow-violet-500/30">
             <HelpCircle size={16} className="text-white" />
           </div>
           <strong className="text-sm font-semibold text-slate-800 dark:text-white">{data.label || 'Question Classifier'}</strong>
         </div>
         <div className="text-xs text-slate-500 dark:text-slate-400 font-medium flex items-center gap-1">
-          <span className="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
+          <span className="w-1.5 h-1.5 rounded-full bg-violet-500"></span>
           {hasClasses ? `Classifies into ${classes.length} classes` : 'Classifies using LLM'}
         </div>
 

@@ -174,7 +174,7 @@ export const SubscriptionManagementPage = () => {
       <div className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 px-6 py-6">
         <div className={`flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 ${isRTL ? 'lg:flex-row-reverse' : ''}`}>
           <div className="flex items-center gap-3">
-            <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center flex-shrink-0">
+            <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-violet-500 to-orange-600 flex items-center justify-center flex-shrink-0">
               <CreditCard className="h-6 w-6 text-white" />
             </div>
             <div>
@@ -182,7 +182,7 @@ export const SubscriptionManagementPage = () => {
               <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">{t('subscriptionPlans.subtitle')}</p>
             </div>
           </div>
-          <Button onClick={() => setIsCreatePlanDialogOpen(true)} className="bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700 text-white rounded-xl h-9 px-4 text-sm">
+          <Button onClick={() => setIsCreatePlanDialogOpen(true)} className="bg-gradient-to-r from-violet-600 to-orange-600 hover:from-violet-700 hover:to-orange-700 text-white rounded-xl h-9 px-4 text-sm">
             <PlusCircle className={`${isRTL ? 'ml-2' : 'mr-2'} h-4 w-4`} /> {t('subscriptionPlans.createNewPlan')}
           </Button>
         </div>
@@ -217,7 +217,7 @@ export const SubscriptionManagementPage = () => {
                     </div>
                   </TableCell>
                   <TableCell className="dark:text-gray-300">
-                    <span className="font-semibold text-amber-600 dark:text-amber-400">{plan.price} {plan.currency}</span>
+                    <span className="font-semibold text-violet-600 dark:text-violet-400">{plan.price} {plan.currency}</span>
                   </TableCell>
                   <TableCell className="dark:text-gray-300">
                     <div className="text-xs font-mono">
@@ -257,8 +257,8 @@ export const SubscriptionManagementPage = () => {
           </Table>
         ) : (
           <div className="text-center py-12">
-            <div className="h-14 w-14 rounded-xl bg-amber-50 dark:bg-amber-900/20 flex items-center justify-center mx-auto mb-4">
-              <CreditCard className="w-7 h-7 text-amber-600 dark:text-amber-400" />
+            <div className="h-14 w-14 rounded-xl bg-violet-50 dark:bg-violet-900/20 flex items-center justify-center mx-auto mb-4">
+              <CreditCard className="w-7 h-7 text-violet-600 dark:text-violet-400" />
             </div>
             <h3 className="text-base font-semibold text-slate-900 dark:text-white">{t('subscriptionPlans.noPlansFound')}</h3>
             <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">{t('subscriptionPlans.createFirstPlan')}</p>
@@ -324,7 +324,7 @@ export const SubscriptionManagementPage = () => {
             </div>
             <div>
               <Label htmlFor="razorpay_plan_id" className="dark:text-gray-300">
-                Razorpay Plan ID <span className="text-amber-500">*</span>
+                Razorpay Plan ID <span className="text-violet-500">*</span>
               </Label>
               <Input
                 id="razorpay_plan_id"
@@ -399,7 +399,7 @@ export const SubscriptionManagementPage = () => {
               <Button type="button" variant="outline" onClick={() => setIsCreatePlanDialogOpen(false)} className="dark:border-slate-600 dark:text-white dark:hover:bg-slate-700">
                 {t('common.cancel')}
               </Button>
-              <Button type="submit" disabled={createPlanMutation.isPending} className="bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700 text-white">
+              <Button type="submit" disabled={createPlanMutation.isPending} className="bg-gradient-to-r from-violet-600 to-orange-600 hover:from-violet-700 hover:to-orange-700 text-white">
                 {createPlanMutation.isPending ? t('subscriptionPlans.creating') : t('subscriptionPlans.createPlan')}
               </Button>
             </DialogFooter>
@@ -460,7 +460,7 @@ export const SubscriptionManagementPage = () => {
             </div>
             <div>
               <Label htmlFor="edit-razorpay_plan_id" className="dark:text-gray-300">
-                Razorpay Plan ID <span className="text-amber-500">*</span>
+                Razorpay Plan ID <span className="text-violet-500">*</span>
               </Label>
               <Input
                 id="edit-razorpay_plan_id"
@@ -534,7 +534,7 @@ export const SubscriptionManagementPage = () => {
               <Button type="button" variant="outline" onClick={() => setIsEditPlanDialogOpen(false)} className="dark:border-slate-600 dark:text-white dark:hover:bg-slate-700">
                 {t('common.cancel')}
               </Button>
-              <Button type="submit" disabled={updatePlanMutation.isPending} className="bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700 text-white">
+              <Button type="submit" disabled={updatePlanMutation.isPending} className="bg-gradient-to-r from-violet-600 to-orange-600 hover:from-violet-700 hover:to-orange-700 text-white">
                 {updatePlanMutation.isPending ? t('subscriptionPlans.saving') : t('subscriptionPlans.saveChanges')}
               </Button>
             </DialogFooter>

@@ -62,7 +62,7 @@ export const TRIGGER_NODES: NodeTypeDefinition[] = [
 export const CORE_NODES: NodeTypeDefinition[] = [
   { type: 'llm', label: 'LLM Prompt', icon: Bot, iconColor: 'text-indigo-500', category: 'core', defaultData: {} },
   { type: 'listen', label: 'Listen for Input', icon: Ear, iconColor: 'text-blue-500', category: 'core', defaultData: {} },
-  { type: 'prompt', label: 'Prompt for Input', icon: HelpCircle, iconColor: 'text-amber-500', category: 'core', defaultData: {} },
+  { type: 'prompt', label: 'Prompt for Input', icon: HelpCircle, iconColor: 'text-violet-500', category: 'core', defaultData: {} },
   { type: 'form', label: 'Form', icon: ClipboardList, iconColor: 'text-teal-500', category: 'core', defaultData: {} },
   { type: 'condition', label: 'Condition', icon: GitBranch, iconColor: 'text-yellow-500', category: 'core', defaultData: {} },
   { type: 'knowledge', label: 'Knowledge Search', icon: BookOpen, iconColor: 'text-purple-500', category: 'core', defaultData: {} },
@@ -81,7 +81,7 @@ export const CORE_NODES: NodeTypeDefinition[] = [
 // Chat-Specific Nodes
 export const CHAT_NODES: NodeTypeDefinition[] = [
   { type: 'intent_router', label: 'Intent Router', icon: Target, iconColor: 'text-red-500', category: 'chat', defaultData: {} },
-  { type: 'entity_collector', label: 'Collect Entities', icon: Notebook, iconColor: 'text-amber-500', category: 'chat', defaultData: {} },
+  { type: 'entity_collector', label: 'Collect Entities', icon: Notebook, iconColor: 'text-violet-500', category: 'chat', defaultData: {} },
   { type: 'check_entity', label: 'Check Entity', icon: CheckCircle, iconColor: 'text-emerald-500', category: 'chat', defaultData: {} },
   { type: 'tag_conversation', label: 'Tag Conversation', icon: Tag, iconColor: 'text-blue-500', category: 'chat', defaultData: {} },
   { type: 'assign_to_agent', label: 'Assign to Agent', icon: UserPlus, iconColor: 'text-purple-500', category: 'chat', defaultData: {} },

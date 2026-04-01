@@ -28,7 +28,7 @@ const SLATimer: React.FC<SLATimerProps> = ({ lastMessageTimestamp }) => {
     minutesAgo < 5
       ? 'text-green-600 dark:text-green-400'
       : minutesAgo < 30
-      ? 'text-amber-500 dark:text-amber-400'
+      ? 'text-violet-500 dark:text-violet-400'
       : 'text-red-500 dark:text-red-400';
 
   return (

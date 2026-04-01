@@ -118,7 +118,7 @@ export default function AnalyticsPage() {
             { label: 'Total Revenue', value: `$${(data.campaignStats.total_revenue || 0).toLocaleString()}`, sub: 'From campaigns', icon: DollarSign, iconBg: 'bg-green-50 dark:bg-green-900/20', iconColor: 'text-green-600 dark:text-green-400' },
             { label: 'Pipeline Value', value: `$${(data.leadStats.total_pipeline_value || 0).toLocaleString()}`, sub: `${data.leadStats.opportunity_count || 0} opportunities`, icon: Target, iconBg: 'bg-blue-50 dark:bg-blue-900/20', iconColor: 'text-blue-600 dark:text-blue-400' },
             { label: 'Conversion Rate', value: `${conversionRate.toFixed(1)}%`, sub: `${data.leadStats.customer_count || 0} / ${data.leadStats.total_leads || 0} leads`, icon: TrendingUp, iconBg: 'bg-purple-50 dark:bg-purple-900/20', iconColor: 'text-purple-600 dark:text-purple-400' },
-            { label: 'Avg. Lead Score', value: `${data.leadStats.avg_score ? data.leadStats.avg_score.toFixed(0) : 0}/100`, sub: null, icon: BarChart3, iconBg: 'bg-amber-50 dark:bg-amber-900/20', iconColor: 'text-amber-600 dark:text-amber-400', progress: data.leadStats.avg_score || 0 },
+            { label: 'Avg. Lead Score', value: `${data.leadStats.avg_score ? data.leadStats.avg_score.toFixed(0) : 0}/100`, sub: null, icon: BarChart3, iconBg: 'bg-violet-50 dark:bg-violet-900/20', iconColor: 'text-violet-600 dark:text-violet-400', progress: data.leadStats.avg_score || 0 },
           ].map(({ label, value, sub, icon: Icon, iconBg, iconColor, progress }) => (
             <div key={label} className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm p-5">
               <div className="flex items-center justify-between mb-3">

@@ -2,7 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Input } from '@/components/ui/input';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Contact } from '@/types';
-import { Mail, Phone, User, Edit, Save, Calendar, Tag, Loader2, X } from 'lucide-react';
+import { Mail, Phone, User, Edit, Save, Calendar, Tag, Loader2, X, PanelLeftClose } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from '@/hooks/use-toast';
@@ -16,10 +16,11 @@ import axios from 'axios';
 
 interface ContactProfileProps {
   sessionId: string;
+  onToggle?: () => void;
 }
 
 
-export const ContactProfile: React.FC<ContactProfileProps> = ({ sessionId }) => {
+export const ContactProfile: React.FC<ContactProfileProps> = ({ sessionId, onToggle }) => {
   const { t } = useTranslation();
   const { isRTL } = useI18n();
   const queryClient = useQueryClient();
@@ -143,9 +144,19 @@ export const ContactProfile: React.FC<ContactProfileProps> = ({ sessionId }) => 
       {/* ── Header ─────────────────────────────────────────────────────────── */}
       <div className="flex-shrink-0 px-4 pt-4 pb-3 border-b border-border">
         <div className={`flex items-center justify-between mb-3 ${isRTL ? 'flex-row-reverse' : ''}`}>
-          <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-            {t('conversations.contact.title')}
-          </p>
+          <div className="flex items-center gap-2">
+            {onToggle && (
+              <button
+                onClick={onToggle}
+                className="h-6 w-6 rounded-md flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+              >
+                <PanelLeftClose className="h-3.5 w-3.5" />
+              </button>
+            )}
+            <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+              {t('conversations.contact.title')}
+            </p>
+          </div>
           <div className="flex items-center gap-1.5">
             <AnimatePresence mode="wait">
               {isEditing ? (

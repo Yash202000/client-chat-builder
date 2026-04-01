@@ -118,7 +118,7 @@ const STAGE_COLORS: Record<string, string> = {
   lead: 'bg-muted text-muted-foreground border border-border',
   mql: 'bg-blue-500/10 border border-blue-500/20 text-blue-600 dark:text-blue-400',
   sql: 'bg-violet-500/10 border border-violet-500/20 text-violet-600 dark:text-violet-400',
-  opportunity: 'bg-amber-500/10 border border-amber-500/20 text-amber-600 dark:text-amber-400',
+  opportunity: 'bg-violet-500/10 border border-violet-500/20 text-violet-600 dark:text-violet-400',
   customer: 'bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400',
   lost: 'bg-red-500/10 border border-red-500/20 text-red-600 dark:text-red-400',
 };
@@ -127,7 +127,7 @@ const STAGE_GRADIENTS: Record<string, string> = {
   lead: 'from-slate-500 to-slate-600',
   mql: 'from-blue-500 to-blue-600',
   sql: 'from-purple-500 to-purple-600',
-  opportunity: 'from-amber-500 to-amber-600',
+  opportunity: 'from-violet-500 to-violet-600',
   customer: 'from-green-500 to-green-600',
   lost: 'from-red-500 to-red-600',
 };
@@ -362,7 +362,7 @@ export default function LeadsPage() {
             <CircleDollarSign className="h-3.5 w-3.5" />
             ${(stats?.total_pipeline_value || 0).toLocaleString()} Pipeline
           </span>
-          <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-amber-500/10 border border-amber-500/20 text-xs font-semibold text-amber-600 dark:text-amber-400">
+          <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-violet-500/10 border border-violet-500/20 text-xs font-semibold text-violet-600 dark:text-violet-400">
             <Star className="h-3.5 w-3.5" />
             {stats?.avg_score ? stats.avg_score.toFixed(0) : 0}/100 Score
           </span>
@@ -387,19 +387,19 @@ export default function LeadsPage() {
 
       {/* Contacts without leads banner */}
       {showBanner && contactsWithoutLeads > 0 && (
-        <div className="rounded-xl border border-amber-500/20 bg-amber-500/5 px-4 py-3 mb-4 flex items-center justify-between gap-4">
+        <div className="rounded-xl border border-violet-500/20 bg-violet-500/5 px-4 py-3 mb-4 flex items-center justify-between gap-4">
           <div className="flex items-center gap-2.5">
-            <AlertCircle className="h-4 w-4 text-amber-500 flex-shrink-0" />
-            <span className="text-sm font-medium text-amber-700 dark:text-amber-300">
+            <AlertCircle className="h-4 w-4 text-violet-500 flex-shrink-0" />
+            <span className="text-sm font-medium text-violet-700 dark:text-violet-300">
               {t('crm.leads.contactsWithoutLeads', { count: contactsWithoutLeads })}
             </span>
           </div>
           <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm" className="h-7 px-2.5 text-xs border-amber-300 dark:border-amber-700 text-amber-700 dark:text-amber-300" onClick={() => navigate('/dashboard/crm/contacts')}>
+            <Button variant="outline" size="sm" className="h-7 px-2.5 text-xs border-violet-300 dark:border-violet-700 text-violet-700 dark:text-violet-300" onClick={() => navigate('/dashboard/crm/contacts')}>
               {t('crm.contacts.title')}
             </Button>
             <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={() => setShowBanner(false)}>
-              <X className="h-3.5 w-3.5 text-amber-500" />
+              <X className="h-3.5 w-3.5 text-violet-500" />
             </Button>
           </div>
         </div>
@@ -515,9 +515,9 @@ export default function LeadsPage() {
                                     {lead.contact?.name || 'Unknown'}
                                   </span>
                                 </div>
-                                <div className="flex items-center gap-0.5 bg-amber-500/10 px-1.5 py-0.5 rounded">
-                                  <Star className="h-2.5 w-2.5 text-amber-500 fill-amber-500" />
-                                  <span className="text-xs font-medium text-amber-600 dark:text-amber-400">{lead.score}</span>
+                                <div className="flex items-center gap-0.5 bg-violet-500/10 px-1.5 py-0.5 rounded">
+                                  <Star className="h-2.5 w-2.5 text-violet-500 fill-violet-500" />
+                                  <span className="text-xs font-medium text-violet-600 dark:text-violet-400">{lead.score}</span>
                                 </div>
                               </div>
                               <p className="text-xs text-muted-foreground ml-5 truncate mb-1.5">{lead.contact?.email}</p>
@@ -601,7 +601,7 @@ export default function LeadsPage() {
                       </TableCell>
                       <TableCell>
                         <div className="flex items-center gap-1.5">
-                          <Star className="h-3 w-3 fill-amber-400 text-amber-400" />
+                          <Star className="h-3 w-3 fill-violet-400 text-violet-400" />
                           <span className="text-sm text-foreground">{lead.score}/100</span>
                         </div>
                       </TableCell>

@@ -227,7 +227,7 @@ const ComposeSMSPanel: React.FC<ComposeSMSPanelProps> = ({ contacts, onSend, onD
 
           {/* Char counter */}
           <div className="border-t border-slate-100 dark:border-slate-800 mt-3 pt-2 pb-1 flex-shrink-0">
-            <span className={`text-xs ${message.length > SMS_CHAR_LIMIT ? 'text-amber-500' : 'text-slate-400'}`}>
+            <span className={`text-xs ${message.length > SMS_CHAR_LIMIT ? 'text-violet-500' : 'text-slate-400'}`}>
               {message.length} chars · {msgCount} SMS segment{msgCount > 1 ? 's' : ''}
             </span>
           </div>

@@ -591,30 +591,39 @@ const AppLayout = () => {
   return (
     <div className="h-screen w-screen flex bg-background overflow-hidden">
 
-        {/* ─── SIDEBAR — full height, logo at very top ─── */}
+        {/* ─── SIDEBAR — full height, aurora atmosphere ─── */}
         <aside
-          className={`flex-shrink-0 flex flex-col bg-card ${isRTL ? 'border-l' : 'border-r'} border-border transition-all duration-300 relative ${
+          className={`flex-shrink-0 flex flex-col bg-sidebar transition-all duration-300 relative overflow-hidden ${
             sidebarOpen ? '' : (isRTL ? 'mr-[-240px] lg:mr-0' : '-ml-[240px] lg:ml-0')
           } ${sidebarCollapsed ? 'w-[60px]' : 'w-[240px]'}`}
         >
+          {/* Aurora bloom — very subtle backlit atmosphere */}
+          <div className="pointer-events-none absolute inset-0 z-0">
+            <div className="absolute -bottom-32 -left-32 w-80 h-80 rounded-full bg-violet-600/[0.04] dark:bg-violet-500/[0.05] blur-[80px]" />
+            <div className="absolute -top-16 -left-16 w-64 h-64 rounded-full bg-indigo-500/[0.03] dark:bg-indigo-400/[0.04] blur-[80px]" />
+          </div>
+          {/* Gradient right border (replaces flat border-r) */}
+          <div className={`pointer-events-none absolute ${isRTL ? 'left-0' : 'right-0'} top-0 bottom-0 w-px z-10 bg-gradient-to-b from-violet-500/25 via-border/80 to-cyan-500/15 dark:from-violet-400/20 dark:via-border dark:to-cyan-400/10`} />
 
           {/* ── Logo / Brand ── */}
-          <div className={`h-11 flex items-center flex-shrink-0 px-3 border-b border-border ${sidebarCollapsed ? 'justify-center' : 'justify-between'}`}>
+          <div className={`h-11 flex items-center flex-shrink-0 px-3 border-b border-transparent relative z-10 ${sidebarCollapsed ? 'justify-center' : 'justify-between'}`}>
+            {/* Aurora border-b shimmer */}
+            <div className="pointer-events-none absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-violet-500/30 via-border/60 to-cyan-500/20" />
             {!sidebarCollapsed ? (
               <>
                 <div className="flex items-center gap-2.5 min-w-0">
                   {branding.logoUrl ? (
                     <img src={branding.logoUrl} alt={branding.companyName} className="h-6 w-6 rounded-lg object-contain flex-shrink-0" />
                   ) : (
-                    <div className="h-6 w-6 rounded-lg bg-primary flex items-center justify-center flex-shrink-0">
-                      <MessageSquare className="h-3.5 w-3.5 text-primary-foreground" />
+                    <div className="h-6 w-6 rounded-xl bg-gradient-to-br from-violet-600 to-purple-700 flex items-center justify-center flex-shrink-0 shadow-lg shadow-violet-500/25">
+                      <Bot className="h-3.5 w-3.5 text-white" />
                     </div>
                   )}
-                  <span className="text-sm font-semibold text-foreground truncate">{branding.companyName}</span>
+                  <span className="text-sm font-semibold bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent truncate">{branding.companyName}</span>
                 </div>
                 <button
                   onClick={() => setSidebarCollapsed(true)}
-                  className="hidden lg:flex h-6 w-6 rounded-md items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-colors flex-shrink-0"
+                  className="hidden lg:flex h-6 w-6 rounded-md items-center justify-center text-muted-foreground hover:text-violet-400 hover:bg-violet-500/[0.08] transition-colors flex-shrink-0"
                   title={t('navigation.collapseSidebar')}
                 >
                   {isRTL ? <PanelLeftOpen className="h-3.5 w-3.5 scale-x-[-1]" /> : <PanelLeftClose className="h-3.5 w-3.5" />}
@@ -625,13 +634,13 @@ const AppLayout = () => {
                 {branding.logoUrl ? (
                   <img src={branding.logoUrl} alt={branding.companyName} className="h-6 w-6 rounded-lg object-contain" />
                 ) : (
-                  <div className="h-6 w-6 rounded-lg bg-primary flex items-center justify-center">
-                    <MessageSquare className="h-3.5 w-3.5 text-primary-foreground" />
+                  <div className="h-6 w-6 rounded-xl bg-gradient-to-br from-violet-600 to-purple-700 flex items-center justify-center shadow-lg shadow-violet-500/25">
+                    <Bot className="h-3.5 w-3.5 text-white" />
                   </div>
                 )}
                 <button
                   onClick={() => setSidebarCollapsed(false)}
-                  className="hidden lg:flex absolute -right-3 top-3 h-6 w-6 rounded-full bg-card border border-border items-center justify-center text-muted-foreground hover:text-foreground shadow-sm z-10 transition-colors"
+                  className="hidden lg:flex absolute -right-3 top-3 h-6 w-6 rounded-full bg-card border border-violet-500/20 items-center justify-center text-muted-foreground hover:text-violet-400 shadow-sm z-10 transition-colors"
                   title={t('navigation.expandSidebar')}
                 >
                   {isRTL ? <PanelLeftClose className="h-3 w-3 scale-x-[-1]" /> : <PanelLeftOpen className="h-3 w-3" />}
@@ -661,19 +670,23 @@ const AppLayout = () => {
                     group.collapsible ? (
                       <button
                         onClick={() => toggleGroup(group.id)}
-                        className="w-full flex items-center justify-between px-2 py-1.5 mt-2 rounded-md text-muted-foreground/60 hover:text-muted-foreground transition-colors"
+                        className="w-full flex items-center justify-between px-2 py-1.5 mt-2 rounded-md text-muted-foreground/50 hover:text-violet-400/80 transition-colors group/label"
                       >
-                        <span className="text-[11px] font-semibold uppercase tracking-wider">
-                          {group.labelKey ? t(group.labelKey, { defaultValue: group.label }) : group.label}
-                        </span>
+                        <div className="flex items-center gap-1.5">
+                          <span className="w-1 h-1 rounded-full bg-gradient-to-r from-violet-500/60 to-cyan-500/40 group-hover/label:from-violet-400 group-hover/label:to-cyan-400 transition-colors" />
+                          <span className="text-[10px] font-bold uppercase tracking-widest">
+                            {group.labelKey ? t(group.labelKey, { defaultValue: group.label }) : group.label}
+                          </span>
+                        </div>
                         {isGroupOpen
-                          ? <ChevronDown className="h-3 w-3 opacity-50" />
-                          : <ChevronRight className="h-3 w-3 opacity-50" />
+                          ? <ChevronDown className="h-3 w-3 opacity-40" />
+                          : <ChevronRight className="h-3 w-3 opacity-40" />
                         }
                       </button>
                     ) : (
-                      <div className="px-2 py-1.5 mt-2">
-                        <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/60">
+                      <div className="px-2 py-1.5 mt-2 flex items-center gap-1.5">
+                        <span className="w-1 h-1 rounded-full bg-gradient-to-r from-violet-500/60 to-cyan-500/40" />
+                        <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/50">
                           {group.labelKey ? t(group.labelKey, { defaultValue: group.label }) : group.label}
                         </span>
                       </div>
@@ -693,23 +706,23 @@ const AppLayout = () => {
                           to={item.url}
                           title={sidebarCollapsed ? (item.title ?? t(item.titleKey!)) : undefined}
                           className={({ isActive }) =>
-                            `relative flex items-center rounded-lg text-sm font-medium transition-colors duration-150 group ${
+                            `relative flex items-center rounded-lg text-sm font-medium transition-all duration-150 group ${
                               sidebarCollapsed
                                 ? 'justify-center p-2'
                                 : 'gap-2.5 px-2.5 py-1.5'
                             } ${
                               isActive
-                                ? 'bg-primary/[0.08] text-primary'
-                                : 'text-muted-foreground hover:text-foreground hover:bg-muted'
+                                ? 'bg-gradient-to-r from-violet-500/[0.12] to-transparent text-violet-300 dark:text-violet-300'
+                                : 'text-muted-foreground hover:text-foreground hover:bg-violet-500/[0.05]'
                             }`
                           }
                         >
                           {({ isActive }) => (
                             <>
                               {isActive && !sidebarCollapsed && (
-                                <span className={`absolute ${isRTL ? 'right-0' : 'left-0'} top-1/2 -translate-y-1/2 w-0.5 h-4 rounded-full bg-primary`} />
+                                <span className={`absolute ${isRTL ? 'right-0' : 'left-0'} top-1/2 -translate-y-1/2 w-0.5 h-4 rounded-full bg-gradient-to-b from-violet-400 to-cyan-400 shadow-[0_0_6px_hsl(263_78%_68%/0.6)]`} />
                               )}
-                              <item.icon className={`flex-shrink-0 h-3.5 w-3.5 ${isActive ? 'text-primary' : ''}`} />
+                              <item.icon className={`flex-shrink-0 h-3.5 w-3.5 ${isActive ? 'text-violet-400 drop-shadow-[0_0_4px_hsl(263_78%_68%/0.7)]' : ''}`} />
                               {!sidebarCollapsed && (
                                 <span className="truncate">{item.title ?? t(item.titleKey!)}</span>
                               )}
@@ -730,12 +743,14 @@ const AppLayout = () => {
           </nav>
 
           {/* ── User profile (bottom) ── */}
-          <div className="flex-shrink-0 border-t border-border p-2">
+          <div className="flex-shrink-0 relative p-2 z-10">
+            {/* Aurora top border */}
+            <div className="pointer-events-none absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-violet-500/20 via-border/60 to-cyan-500/15" />
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <button className={`w-full flex items-center rounded-lg hover:bg-muted transition-colors ${sidebarCollapsed ? 'justify-center p-2' : 'gap-2.5 px-2.5 py-2'}`}>
+                <button className={`w-full flex items-center rounded-lg hover:bg-violet-500/[0.07] transition-colors ${sidebarCollapsed ? 'justify-center p-2' : 'gap-2.5 px-2.5 py-2'}`}>
                   <div className="relative flex-shrink-0">
-                    <div className="h-7 w-7 rounded-full bg-primary flex items-center justify-center text-primary-foreground text-xs font-bold">
+                    <div className="h-7 w-7 rounded-full bg-gradient-to-br from-violet-500 to-cyan-500 flex items-center justify-center text-white text-xs font-bold shadow-[0_0_8px_hsl(263_78%_68%/0.3)]">
                       {user?.email?.charAt(0).toUpperCase() || 'U'}
                     </div>
                     <span className={`absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 border-2 border-card rounded-full ${
@@ -767,7 +782,7 @@ const AppLayout = () => {
                 <div className="px-3 py-2.5 bg-muted rounded-lg mb-2">
                   <div className="flex items-center gap-2.5">
                     <div className="relative flex-shrink-0">
-                      <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center text-primary-foreground font-bold">
+                      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-violet-500 to-cyan-500 flex items-center justify-center text-white font-bold shadow-[0_0_12px_hsl(263_78%_68%/0.3)]">
                         {user?.email?.charAt(0).toUpperCase() || 'U'}
                       </div>
                       <span className={`absolute -bottom-0.5 -right-0.5 w-3 h-3 border-2 border-muted rounded-full ${
@@ -813,7 +828,8 @@ const AppLayout = () => {
         <div className="flex-1 flex flex-col overflow-hidden">
 
           {/* Slim top bar — right side only, sidebar logo is top-left */}
-          <header className="flex-shrink-0 h-11 bg-background border-b border-border flex items-center px-3 justify-between gap-2">
+          <header className="flex-shrink-0 h-11 bg-background border-b border-border/50 flex items-center px-3 justify-between gap-2 relative">
+            <div className="pointer-events-none absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-violet-500/20 to-transparent" />
             {/* Mobile: hamburger + brand */}
             <div className="flex items-center gap-2">
               <button
@@ -826,8 +842,8 @@ const AppLayout = () => {
                 {branding.logoUrl ? (
                   <img src={branding.logoUrl} alt={branding.companyName} className="h-5 w-5 rounded-md object-contain" />
                 ) : (
-                  <div className="h-5 w-5 rounded-md bg-primary flex items-center justify-center">
-                    <MessageSquare className="h-3 w-3 text-primary-foreground" />
+                  <div className="h-5 w-5 rounded-lg bg-gradient-to-br from-violet-600 to-purple-700 flex items-center justify-center shadow-md shadow-violet-500/25">
+                    <Bot className="h-3 w-3 text-white" />
                   </div>
                 )}
                 <span className="text-base font-semibold text-foreground">{branding.companyName}</span>
@@ -844,7 +860,7 @@ const AppLayout = () => {
                 title={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
               >
                 {theme === 'dark'
-                  ? <Sun className="h-4 w-4 text-amber-400" />
+                  ? <Sun className="h-4 w-4 text-violet-400" />
                   : <Moon className="h-4 w-4" />
                 }
               </button>

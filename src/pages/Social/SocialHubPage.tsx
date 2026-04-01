@@ -74,7 +74,7 @@ export default function SocialHubPage() {
 
   const kpis = [
     { label: 'Posts This Week', value: analytics.posts_this_week ?? 0, icon: FileText, color: 'text-blue-600' },
-    { label: 'Scheduled', value: analytics.scheduled_count ?? 0, icon: Clock, color: 'text-amber-500' },
+    { label: 'Scheduled', value: analytics.scheduled_count ?? 0, icon: Clock, color: 'text-violet-500' },
     { label: 'Total Engagements', value: analytics.total_engagements ?? 0, icon: TrendingUp, color: 'text-green-500' },
     { label: 'Total Reach', value: analytics.total_reach ?? 0, icon: BarChart3, color: 'text-purple-500' },
   ];

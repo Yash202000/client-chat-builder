@@ -33,7 +33,7 @@ const toastVariants = cva(
         destructive:
           "border-l-red-500 bg-gradient-to-r from-red-50 to-rose-50 dark:from-red-950/50 dark:to-rose-950/50 text-red-900 dark:text-red-100 border border-red-200 dark:border-red-800",
         warning:
-          "border-l-amber-500 bg-gradient-to-r from-amber-50 to-yellow-50 dark:from-amber-950/50 dark:to-yellow-950/50 text-amber-900 dark:text-amber-100 border border-amber-200 dark:border-amber-800",
+          "border-l-violet-500 bg-gradient-to-r from-violet-50 to-yellow-50 dark:from-violet-950/50 dark:to-yellow-950/50 text-violet-900 dark:text-violet-100 border border-violet-200 dark:border-violet-800",
         info:
           "border-l-blue-500 bg-gradient-to-r from-blue-50 to-cyan-50 dark:from-blue-950/50 dark:to-cyan-950/50 text-blue-900 dark:text-blue-100 border border-blue-200 dark:border-blue-800",
       },
@@ -128,7 +128,7 @@ export const getToastIcon = (variant?: string) => {
     case 'destructive':
       return <AlertCircle className="h-5 w-5 text-red-600 dark:text-red-400 flex-shrink-0" />
     case 'warning':
-      return <AlertTriangle className="h-5 w-5 text-amber-600 dark:text-amber-400 flex-shrink-0" />
+      return <AlertTriangle className="h-5 w-5 text-violet-600 dark:text-violet-400 flex-shrink-0" />
     case 'info':
       return <Info className="h-5 w-5 text-blue-600 dark:text-blue-400 flex-shrink-0" />
     default:

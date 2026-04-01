@@ -339,11 +339,11 @@ export const IntegrationDialog: React.FC<IntegrationDialogProps> = ({ isOpen, on
         );
       case 'google_calendar':
         return (
-          <div className="space-y-3 p-4 rounded-xl bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-900/20 dark:to-orange-900/20 border border-amber-200/80 dark:border-amber-700/60">
+          <div className="space-y-3 p-4 rounded-xl bg-gradient-to-br from-violet-50 to-orange-50 dark:from-violet-900/20 dark:to-orange-900/20 border border-violet-200/80 dark:border-violet-700/60">
             <Label className={labelClasses}>Connect to Google Calendar</Label>
             <p className="text-xs text-gray-600 dark:text-gray-400">Click the button below to authorize access to your Google Calendar.</p>
             <Button
-              className="w-full bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700 text-white rounded-xl shadow-lg shadow-amber-500/25 hover:shadow-amber-500/40 hover:scale-[1.02] transition-all"
+              className="w-full bg-gradient-to-r from-violet-600 to-orange-600 hover:from-violet-700 hover:to-orange-700 text-white rounded-xl shadow-lg shadow-violet-500/25 hover:shadow-violet-500/40 hover:scale-[1.02] transition-all"
               onClick={async () => {
                 try {
                   const response = await authFetch('/api/v1/config/google-client-id');

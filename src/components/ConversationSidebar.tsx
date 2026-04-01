@@ -197,7 +197,7 @@ export const ConversationSidebar: React.FC<ConversationSidebarProps> = ({
 
           {/* Location */}
           <div className={`flex items-center gap-3 p-2.5 rounded-xl ${isRTL ? 'flex-row-reverse' : ''}`}>
-            <div className="h-9 w-9 rounded-lg bg-gradient-to-br from-orange-100 to-amber-100 dark:from-orange-900/40 dark:to-amber-900/40 flex items-center justify-center flex-shrink-0">
+            <div className="h-9 w-9 rounded-lg bg-gradient-to-br from-orange-100 to-violet-100 dark:from-orange-900/40 dark:to-violet-900/40 flex items-center justify-center flex-shrink-0">
               <MapPin className="h-4 w-4 text-orange-600 dark:text-orange-400" />
             </div>
             <div className="flex-1 min-w-0">

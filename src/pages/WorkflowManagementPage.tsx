@@ -314,7 +314,7 @@ const WorkflowManagementPage = () => {
               </Button>
             </Permission>
             <Permission permission="workflow:create">
-              <Button onClick={() => setCreateDialogOpen(true)} size="sm" className="h-9 gap-1.5 bg-amber-500 hover:bg-amber-600 text-white shadow-sm">
+              <Button onClick={() => setCreateDialogOpen(true)} size="sm" className="h-9 gap-1.5 bg-violet-500 hover:bg-violet-600 text-white shadow-sm">
                 <PlusCircle className="h-4 w-4" />
                 {t("workflows.createWorkflow")}
               </Button>
@@ -367,7 +367,7 @@ const WorkflowManagementPage = () => {
                           {/* Left accent bar — active = emerald, inactive = blue/indigo */}
                           <div className={cn(
                             'h-0.5 w-full bg-gradient-to-r',
-                            activeCount > 0 ? 'from-amber-400 to-orange-500' : 'from-muted to-muted'
+                            activeCount > 0 ? 'from-violet-400 to-orange-500' : 'from-muted to-muted'
                           )} />
 
                           {/* Card header / accordion trigger */}
@@ -378,10 +378,10 @@ const WorkflowManagementPage = () => {
                                 <div className={cn(
                                   'h-9 w-9 rounded-lg flex items-center justify-center flex-shrink-0',
                                   activeCount > 0
-                                    ? 'bg-amber-500/10 border border-amber-500/20'
+                                    ? 'bg-violet-500/10 border border-violet-500/20'
                                     : 'bg-muted border border-border'
                                 )}>
-                                  <WorkflowIcon className={cn('h-4 w-4', activeCount > 0 ? 'text-amber-600 dark:text-amber-400' : 'text-muted-foreground')} />
+                                  <WorkflowIcon className={cn('h-4 w-4', activeCount > 0 ? 'text-violet-600 dark:text-violet-400' : 'text-muted-foreground')} />
                                 </div>
                                 <div className="min-w-0">
                                   <p className="text-sm font-semibold text-foreground truncate leading-tight group-hover/trigger:text-primary transition-colors">
@@ -527,7 +527,7 @@ const WorkflowManagementPage = () => {
                                           <Permission permission="workflow:update">
                                             <button
                                               onClick={() => deactivateWorkflowVersion(version.id)}
-                                              className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-medium text-amber-600 dark:text-amber-500 hover:bg-amber-50 dark:hover:bg-amber-950/30 border border-amber-200 dark:border-amber-800 transition-colors"
+                                              className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-medium text-violet-600 dark:text-violet-500 hover:bg-violet-50 dark:hover:bg-violet-950/30 border border-violet-200 dark:border-violet-800 transition-colors"
                                             >
                                               {t("workflows.deactivate")}
                                             </button>
@@ -564,8 +564,8 @@ const WorkflowManagementPage = () => {
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              <div className="h-8 w-8 rounded-lg bg-amber-500/10 border border-amber-500/20 flex items-center justify-center">
-                <Upload className="h-4 w-4 text-amber-600 dark:text-amber-400" />
+              <div className="h-8 w-8 rounded-lg bg-violet-500/10 border border-violet-500/20 flex items-center justify-center">
+                <Upload className="h-4 w-4 text-violet-600 dark:text-violet-400" />
               </div>
               {t("workflows.importWorkflow") || "Import Workflow"}
             </DialogTitle>
@@ -637,7 +637,7 @@ const WorkflowManagementPage = () => {
               size="sm"
               onClick={handleImport}
               disabled={!importData || !selectedAgentId || isImporting}
-              className="bg-amber-500 hover:bg-amber-600 text-white"
+              className="bg-violet-500 hover:bg-violet-600 text-white"
             >
               {isImporting ? (t("common.importing") || "Importing…") : (t("workflows.import") || "Import")}
             </Button>

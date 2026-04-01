@@ -140,8 +140,8 @@ const STAGE_CONFIG: Record<string, { label: string; color: string; bgColor: stri
   },
   opportunity: {
     label: 'Opportunity',
-    color: 'text-amber-700 dark:text-amber-300',
-    bgColor: 'bg-amber-100 dark:bg-amber-900/50',
+    color: 'text-violet-700 dark:text-violet-300',
+    bgColor: 'bg-violet-100 dark:bg-violet-900/50',
     icon: <Sparkles className="h-4 w-4" />
   },
   customer: {
@@ -162,13 +162,13 @@ const STAGE_ORDER = ['lead', 'mql', 'sql', 'opportunity', 'customer', 'lost'];
 
 const getScoreColor = (score: number) => {
   if (score >= 70) return 'text-emerald-600 dark:text-emerald-400';
-  if (score >= 40) return 'text-amber-600 dark:text-amber-400';
+  if (score >= 40) return 'text-violet-600 dark:text-violet-400';
   return 'text-red-600 dark:text-red-400';
 };
 
 const getScoreGradient = (score: number) => {
   if (score >= 70) return 'from-emerald-500 to-emerald-600';
-  if (score >= 40) return 'from-amber-500 to-amber-600';
+  if (score >= 40) return 'from-violet-500 to-violet-600';
   return 'from-red-500 to-red-600';
 };
 
@@ -860,8 +860,8 @@ export default function LeadDetailPage() {
                 <CardHeader className="pb-3">
                   <div className="flex items-center justify-between">
                     <CardTitle className="text-base flex items-center gap-2">
-                      <div className="p-1.5 rounded-md bg-amber-100 dark:bg-amber-900/50">
-                        <Award className="h-4 w-4 text-amber-600 dark:text-amber-400" />
+                      <div className="p-1.5 rounded-md bg-violet-100 dark:bg-violet-900/50">
+                        <Award className="h-4 w-4 text-violet-600 dark:text-violet-400" />
                       </div>
                       Score Breakdown
                     </CardTitle>

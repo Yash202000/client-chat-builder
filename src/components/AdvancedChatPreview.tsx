@@ -676,7 +676,7 @@ export const AdvancedChatPreview = ({ selectedAgentId: initialAgentId }: { selec
             {/* Simulated browser chrome */}
             <div className="flex items-center gap-1.5 px-3 py-2.5 bg-muted border-b border-border">
               <span className="h-2.5 w-2.5 rounded-full bg-red-400/70" />
-              <span className="h-2.5 w-2.5 rounded-full bg-amber-400/70" />
+              <span className="h-2.5 w-2.5 rounded-full bg-violet-400/70" />
               <span className="h-2.5 w-2.5 rounded-full bg-emerald-400/70" />
               <div className="flex-1 mx-2 h-5 rounded-md bg-background border border-border flex items-center px-2">
                 <span className="text-[9px] text-muted-foreground truncate">preview.localhost</span>

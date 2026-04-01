@@ -55,7 +55,7 @@ export const TestIntentDialog: React.FC<TestIntentDialogProps> = ({
 
   const getConfidenceColor = (confidence: number) => {
     if (confidence >= 0.8) return 'text-green-600 dark:text-green-400';
-    if (confidence >= 0.6) return 'text-amber-600 dark:text-amber-400';
+    if (confidence >= 0.6) return 'text-violet-600 dark:text-violet-400';
     return 'text-red-600 dark:text-red-400';
   };
 
@@ -188,7 +188,7 @@ export const TestIntentDialog: React.FC<TestIntentDialogProps> = ({
                   <div className={`flex items-center gap-2 p-3 rounded-lg ${
                     result.should_auto_trigger
                       ? 'bg-green-50 dark:bg-green-950/20 border border-green-200 dark:border-green-800'
-                      : 'bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800'
+                      : 'bg-violet-50 dark:bg-violet-950/20 border border-violet-200 dark:border-violet-800'
                   }`}>
                     {result.should_auto_trigger ? (
                       <>
@@ -199,8 +199,8 @@ export const TestIntentDialog: React.FC<TestIntentDialogProps> = ({
                       </>
                     ) : (
                       <>
-                        <AlertCircle className="h-4 w-4 text-amber-600 dark:text-amber-400" />
-                        <span className="text-sm text-amber-700 dark:text-amber-300 font-medium">
+                        <AlertCircle className="h-4 w-4 text-violet-600 dark:text-violet-400" />
+                        <span className="text-sm text-violet-700 dark:text-violet-300 font-medium">
                           Confidence below auto-trigger threshold
                         </span>
                       </>

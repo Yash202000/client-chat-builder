@@ -143,10 +143,15 @@ export const ProfilePage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-50 dark:from-slate-900 dark:via-slate-900 dark:to-slate-800 p-6" dir={isRTL ? 'rtl' : 'ltr'}>
-      <div className="max-w-5xl mx-auto space-y-6 animate-fade-in">
+    <div className="min-h-screen bg-background p-6 relative overflow-hidden" dir={isRTL ? 'rtl' : 'ltr'}>
+      {/* Aurora ambient bloom */}
+      <div className="pointer-events-none fixed inset-0 z-0">
+        <div className="absolute -top-32 -right-32 w-96 h-96 rounded-full bg-violet-600/[0.05] dark:bg-violet-500/[0.07] blur-[100px]" />
+        <div className="absolute bottom-0 left-0 w-80 h-80 rounded-full bg-cyan-500/[0.03] dark:bg-cyan-400/[0.05] blur-[100px]" />
+      </div>
+      <div className="max-w-5xl mx-auto space-y-6 animate-fade-in relative z-10">
         {/* Header Section */}
-        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-violet-600 via-purple-600 to-indigo-600 p-8 shadow-2xl shadow-violet-500/20">
+        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-violet-600/90 via-violet-500/80 to-cyan-600/70 p-8 shadow-2xl shadow-violet-500/20">
           <div className="absolute inset-0 bg-grid-white/[0.05] bg-[size:20px_20px]" />
           <div className="relative flex items-center gap-6">
             <div className="relative group">
@@ -184,7 +189,7 @@ export const ProfilePage = () => {
                   {formData.email}
                 </Badge>
                 {currentUser?.is_super_admin && (
-                  <Badge variant="secondary" className="bg-amber-500/20 backdrop-blur-sm text-amber-100 border-0">
+                  <Badge variant="secondary" className="bg-violet-500/20 backdrop-blur-sm text-violet-100 border-0">
                     <Shield className="h-3 w-3 mr-1" />
                     Admin
                   </Badge>
@@ -196,9 +201,9 @@ export const ProfilePage = () => {
 
         {/* Alert for unsaved changes */}
         {hasChanges && (
-          <Alert className="border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-900/20">
-            <Info className="h-4 w-4 text-amber-600 dark:text-amber-400" />
-            <AlertDescription className="text-amber-800 dark:text-amber-300">
+          <Alert className="border-violet-200 dark:border-violet-800 bg-violet-50 dark:bg-violet-900/20">
+            <Info className="h-4 w-4 text-violet-600 dark:text-violet-400" />
+            <AlertDescription className="text-violet-800 dark:text-violet-300">
               You have unsaved changes. Don't forget to save your profile.
             </AlertDescription>
           </Alert>
@@ -206,8 +211,8 @@ export const ProfilePage = () => {
 
         <form onSubmit={handleUpdate} className="space-y-6">
           {/* Personal Information Card */}
-          <Card className="border-slate-200/80 dark:border-slate-700/60 dark:bg-slate-800/90 rounded-2xl shadow-lg overflow-hidden">
-            <CardHeader className="bg-gradient-to-br from-slate-50 to-slate-100/50 dark:from-slate-800 dark:to-slate-900/50 border-b border-slate-200/80 dark:border-slate-700/60">
+          <Card className="border-border dark:bg-card rounded-2xl shadow-lg overflow-hidden">
+            <CardHeader className="bg-gradient-to-r from-violet-500/[0.06] to-transparent border-b border-border">
               <div className="flex items-center gap-3">
                 <div className="p-2 rounded-lg bg-gradient-to-br from-violet-500 to-purple-600 shadow-lg shadow-violet-500/25">
                   <User className="h-5 w-5 text-white" />
@@ -232,7 +237,7 @@ export const ProfilePage = () => {
                     type="text"
                     value={formData.firstName}
                     onChange={(e) => handleChange("firstName", e.target.value)}
-                    className="rounded-xl h-11 dark:bg-slate-900 dark:border-slate-600 dark:text-white"
+                    className="rounded-xl h-11"
                     placeholder="Enter your first name"
                   />
                 </div>
@@ -246,7 +251,7 @@ export const ProfilePage = () => {
                     type="text"
                     value={formData.lastName}
                     onChange={(e) => handleChange("lastName", e.target.value)}
-                    className="rounded-xl h-11 dark:bg-slate-900 dark:border-slate-600 dark:text-white"
+                    className="rounded-xl h-11"
                     placeholder="Enter your last name"
                   />
                 </div>
@@ -260,7 +265,7 @@ export const ProfilePage = () => {
                     type="email"
                     value={formData.email}
                     onChange={(e) => handleChange("email", e.target.value)}
-                    className="rounded-xl h-11 dark:bg-slate-900 dark:border-slate-600 dark:text-white"
+                    className="rounded-xl h-11"
                     placeholder="your.email@example.com"
                   />
                 </div>
@@ -274,7 +279,7 @@ export const ProfilePage = () => {
                     type="tel"
                     value={formData.phoneNumber}
                     onChange={(e) => handleChange("phoneNumber", e.target.value)}
-                    className="rounded-xl h-11 dark:bg-slate-900 dark:border-slate-600 dark:text-white"
+                    className="rounded-xl h-11"
                     placeholder="+1 (555) 000-0000"
                   />
                 </div>
@@ -288,7 +293,7 @@ export const ProfilePage = () => {
                     type="text"
                     value={formData.jobTitle}
                     onChange={(e) => handleChange("jobTitle", e.target.value)}
-                    className="rounded-xl h-11 dark:bg-slate-900 dark:border-slate-600 dark:text-white"
+                    className="rounded-xl h-11"
                     placeholder="e.g. Customer Support Manager"
                   />
                 </div>
@@ -303,7 +308,7 @@ export const ProfilePage = () => {
                       type="url"
                       value={formData.profilePictureUrl}
                       onChange={(e) => handleChange("profilePictureUrl", e.target.value)}
-                      className="rounded-xl h-11 dark:bg-slate-900 dark:border-slate-600 dark:text-white"
+                      className="rounded-xl h-11"
                       placeholder="https://example.com/photo.jpg"
                     />
                     <Button type="button" variant="outline" size="sm" className="rounded-xl px-4">
@@ -319,8 +324,8 @@ export const ProfilePage = () => {
           </Card>
 
           {/* Security Card */}
-          <Card className="border-slate-200/80 dark:border-slate-700/60 dark:bg-slate-800/90 rounded-2xl shadow-lg overflow-hidden">
-            <CardHeader className="bg-gradient-to-br from-slate-50 to-slate-100/50 dark:from-slate-800 dark:to-slate-900/50 border-b border-slate-200/80 dark:border-slate-700/60">
+          <Card className="border-border dark:bg-card rounded-2xl shadow-lg overflow-hidden">
+            <CardHeader className="bg-gradient-to-r from-violet-500/[0.06] to-transparent border-b border-border">
               <div className="flex items-center gap-3">
                 <div className="p-2 rounded-lg bg-gradient-to-br from-red-500 to-rose-600 shadow-lg shadow-red-500/25">
                   <Lock className="h-5 w-5 text-white" />
@@ -345,7 +350,7 @@ export const ProfilePage = () => {
                     type="password"
                     value={formData.password}
                     onChange={(e) => handleChange("password", e.target.value)}
-                    className="rounded-xl h-11 dark:bg-slate-900 dark:border-slate-600 dark:text-white"
+                    className="rounded-xl h-11"
                     placeholder="Enter new password"
                   />
                   <p className="text-xs text-gray-500 dark:text-gray-400">
@@ -362,7 +367,7 @@ export const ProfilePage = () => {
                     type="password"
                     value={formData.confirmPassword}
                     onChange={(e) => handleChange("confirmPassword", e.target.value)}
-                    className="rounded-xl h-11 dark:bg-slate-900 dark:border-slate-600 dark:text-white"
+                    className="rounded-xl h-11"
                     placeholder="Confirm new password"
                     disabled={!formData.password}
                   />
@@ -375,7 +380,7 @@ export const ProfilePage = () => {
           </Card>
 
           {/* Action Buttons */}
-          <div className="flex items-center justify-end gap-3 sticky bottom-6 bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl p-4 rounded-2xl border border-slate-200/80 dark:border-slate-700/60 shadow-lg">
+          <div className="flex items-center justify-end gap-3 sticky bottom-6 bg-background/80 dark:bg-card/80 backdrop-blur-xl p-4 rounded-2xl border border-border shadow-lg">
             <Button
               type="button"
               variant="outline"
@@ -388,7 +393,7 @@ export const ProfilePage = () => {
             <Button
               type="submit"
               disabled={!hasChanges || isSaving}
-              className="rounded-xl bg-gradient-to-r from-violet-500 to-purple-600 hover:from-violet-600 hover:to-purple-700 text-white shadow-lg shadow-violet-500/25 hover:shadow-xl hover:shadow-violet-500/30 transition-all min-w-[140px]"
+              className="rounded-xl bg-gradient-to-r from-violet-600 to-cyan-600 hover:from-violet-700 hover:to-cyan-700 text-white shadow-lg shadow-violet-500/25 hover:shadow-xl hover:shadow-violet-500/30 transition-all min-w-[140px]"
             >
               {isSaving ? (
                 <>

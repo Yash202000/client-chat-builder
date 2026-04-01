@@ -460,7 +460,7 @@ export const TeamManagement = () => {
           <Users className="h-3.5 w-3.5" />
           {teams?.length || 0} {t('teamManagement.stats.teams')}
         </span>
-        <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-amber-500/10 border border-amber-500/20 text-xs font-semibold text-amber-600 dark:text-amber-400">
+        <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-violet-500/10 border border-violet-500/20 text-xs font-semibold text-violet-600 dark:text-violet-400">
           <Shield className="h-3.5 w-3.5" />
           {roles?.length || 0} {t('teamManagement.stats.roles')}
         </span>
@@ -879,7 +879,7 @@ export const TeamManagement = () => {
                 <Permission permission="role:create">
                   <Button
                     size="sm"
-                    className={`flex items-center gap-2 bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white rounded-lg shadow-lg shadow-amber-500/25 hover:shadow-xl hover:shadow-amber-500/30 transition-all duration-200 hover:scale-[1.02]`}
+                    className={`flex items-center gap-2 bg-gradient-to-r from-violet-500 to-orange-600 hover:from-violet-600 hover:to-orange-700 text-white rounded-lg shadow-lg shadow-violet-500/25 hover:shadow-xl hover:shadow-violet-500/30 transition-all duration-200 hover:scale-[1.02]`}
                     onClick={() => openRoleModal(null)}
                   >
                     <Plus className="h-3.5 w-3.5" />
@@ -913,8 +913,8 @@ export const TeamManagement = () => {
                     >
                       <div className={`flex flex-row items-start justify-between p-4 border-b border-border bg-muted/30 ${isRTL ? 'flex-row-reverse' : ''}`}>
                         <div className={`flex items-start gap-3 flex-1 ${isRTL ? 'flex-row-reverse' : ''}`}>
-                          <div className="h-9 w-9 rounded-lg bg-amber-500/10 border border-amber-500/20 flex items-center justify-center flex-shrink-0">
-                            <Shield className="h-4.5 w-4.5 text-amber-600 dark:text-amber-400" />
+                          <div className="h-9 w-9 rounded-lg bg-violet-500/10 border border-violet-500/20 flex items-center justify-center flex-shrink-0">
+                            <Shield className="h-4.5 w-4.5 text-violet-600 dark:text-violet-400" />
                           </div>
                           <div className="flex-1">
                             <div className="text-sm font-semibold text-foreground">{role.name}</div>
@@ -1227,7 +1227,7 @@ export const TeamManagement = () => {
         <DialogContent className="max-w-2xl dark:bg-slate-800 dark:border-slate-700 rounded-2xl sm:rounded-2xl" dir={isRTL ? 'rtl' : 'ltr'}>
           <DialogHeader className="pb-4 border-b border-slate-200/80 dark:border-slate-700/60">
             <DialogTitle className={`dark:text-white flex items-center gap-3 ${isRTL ? 'flex-row-reverse' : ''}`}>
-              <div className="p-2 rounded-xl bg-gradient-to-br from-amber-500 to-orange-600 shadow-lg shadow-amber-500/25">
+              <div className="p-2 rounded-xl bg-gradient-to-br from-violet-500 to-orange-600 shadow-lg shadow-violet-500/25">
                 <Shield className="h-5 w-5 text-white" />
               </div>
               {selectedRole ? t('teamManagement.dialogs.role.titleEdit') : t('teamManagement.dialogs.role.titleCreate')}
@@ -1362,7 +1362,7 @@ export const TeamManagement = () => {
             <Button
               onClick={handleSaveRole}
               disabled={roleMutation.isPending}
-              className="bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white rounded-xl shadow-lg shadow-amber-500/25"
+              className="bg-gradient-to-r from-violet-500 to-orange-600 hover:from-violet-600 hover:to-orange-700 text-white rounded-xl shadow-lg shadow-violet-500/25"
             >
               {roleMutation.isPending ? (
                 <>

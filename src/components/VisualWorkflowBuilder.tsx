@@ -567,8 +567,8 @@ const VisualWorkflowBuilder = () => {
     return (
       <div className="flex items-center justify-center h-screen bg-background">
         <div className="flex flex-col items-center gap-3">
-          <div className="h-10 w-10 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center animate-pulse">
-            <WorkflowIcon className="h-5 w-5 text-amber-600 dark:text-amber-400" />
+          <div className="h-10 w-10 rounded-xl bg-violet-500/10 border border-violet-500/20 flex items-center justify-center animate-pulse">
+            <WorkflowIcon className="h-5 w-5 text-violet-600 dark:text-violet-400" />
           </div>
           <p className="text-sm text-muted-foreground font-mono">{t("workflows.editor.loading")}</p>
         </div>
@@ -615,8 +615,8 @@ const VisualWorkflowBuilder = () => {
 
             <div className="flex-grow min-w-0">
               <div className="flex items-center gap-2.5">
-                <div className="h-8 w-8 rounded-lg bg-amber-500/10 border border-amber-500/20 flex items-center justify-center flex-shrink-0">
-                  <WorkflowIcon className="h-4 w-4 text-amber-600 dark:text-amber-400" />
+                <div className="h-8 w-8 rounded-lg bg-violet-500/10 border border-violet-500/20 flex items-center justify-center flex-shrink-0">
+                  <WorkflowIcon className="h-4 w-4 text-violet-600 dark:text-violet-400" />
                 </div>
                 <div className="min-w-0">
                   <h2 className="text-sm font-semibold truncate text-foreground font-mono leading-tight">{workflow.name}</h2>
@@ -666,7 +666,7 @@ const VisualWorkflowBuilder = () => {
               <Button
                 onClick={() => saveWorkflow()}
                 size="sm"
-                className="h-8 px-4 text-xs bg-amber-500 hover:bg-amber-600 text-white shadow-sm font-medium"
+                className="h-8 px-4 text-xs bg-violet-500 hover:bg-violet-600 text-white shadow-sm font-medium"
               >
                 {t("workflows.editor.saveButton")}
               </Button>
@@ -676,19 +676,19 @@ const VisualWorkflowBuilder = () => {
 
         {/* Subworkflow Usage Banner */}
         {usedByWorkflows.length > 0 && (
-          <div className="mx-4 mt-2 p-3 bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800 rounded-lg flex items-center gap-2.5">
-            <div className="h-7 w-7 rounded-lg bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center flex-shrink-0">
-              <Layers className="h-3.5 w-3.5 text-amber-600 dark:text-amber-500" />
+          <div className="mx-4 mt-2 p-3 bg-violet-50 dark:bg-violet-950/20 border border-violet-200 dark:border-violet-800 rounded-lg flex items-center gap-2.5">
+            <div className="h-7 w-7 rounded-lg bg-violet-100 dark:bg-violet-900/30 flex items-center justify-center flex-shrink-0">
+              <Layers className="h-3.5 w-3.5 text-violet-600 dark:text-violet-500" />
             </div>
             <div className="flex-1 min-w-0">
-              <span className="text-xs font-semibold text-amber-800 dark:text-amber-200">
+              <span className="text-xs font-semibold text-violet-800 dark:text-violet-200">
                 {t("workflows.editor.usedAsSubworkflow") || "Used as subworkflow by"}:
               </span>
-              <span className="text-xs text-amber-700 dark:text-amber-300 ml-1 truncate">
+              <span className="text-xs text-violet-700 dark:text-violet-300 ml-1 truncate">
                 {usedByWorkflows.map(w => w.name).join(', ')}
               </span>
             </div>
-            <div className="flex items-center gap-1.5 text-amber-600 dark:text-amber-400 flex-shrink-0">
+            <div className="flex items-center gap-1.5 text-violet-600 dark:text-violet-400 flex-shrink-0">
               <AlertTriangle className="h-3.5 w-3.5" />
               <span className="text-[11px] font-medium hidden sm:inline">{t("workflows.editor.subworkflowWarning") || "Changes affect parent workflows"}</span>
             </div>
@@ -751,7 +751,7 @@ const VisualWorkflowBuilder = () => {
               </ResizablePanel>
 
               {/* Resize Handle */}
-              <ResizableHandle withHandle className="bg-border hover:bg-amber-400 dark:hover:bg-amber-500 transition-colors" />
+              <ResizableHandle withHandle className="bg-border hover:bg-violet-400 dark:hover:bg-violet-500 transition-colors" />
 
               {/* Properties Panel */}
               <ResizablePanel

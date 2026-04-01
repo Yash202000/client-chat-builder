@@ -21,12 +21,12 @@ const DraggableNode = ({ type, label, icon, nodeData, isRTL, isCollapsed = false
 
   return (
     <div
-      className={`flex items-center ${isCollapsed ? 'justify-center p-2' : 'px-2.5 py-1.5'} mb-1 border border-border rounded-lg bg-card cursor-grab hover:border-amber-400/50 dark:hover:border-amber-500/40 hover:bg-amber-50/40 dark:hover:bg-amber-950/10 active:scale-95 transition-all duration-150 text-foreground group select-none`}
+      className={`flex items-center ${isCollapsed ? 'justify-center p-2' : 'px-2.5 py-1.5'} mb-1 border border-border rounded-lg bg-card cursor-grab hover:border-violet-400/50 dark:hover:border-violet-500/40 hover:bg-violet-50/40 dark:hover:bg-violet-950/10 active:scale-95 transition-all duration-150 text-foreground group select-none`}
       onDragStart={(event) => onDragStart(event, type)}
       draggable
       title={isCollapsed ? label : undefined}
     >
-      <div className="flex-shrink-0 p-1 rounded-md bg-muted group-hover:bg-amber-100/70 dark:group-hover:bg-amber-900/20 transition-colors">
+      <div className="flex-shrink-0 p-1 rounded-md bg-muted group-hover:bg-violet-100/70 dark:group-hover:bg-violet-900/20 transition-colors">
         {icon}
       </div>
       {!isCollapsed && (
@@ -50,7 +50,7 @@ const AccordionSection = ({ title, children, isRTL, isCollapsed = false }) => {
                 className="flex items-center justify-between py-1.5 px-1 -mx-1 rounded-md cursor-pointer transition-all duration-150 hover:bg-muted/60 group/section"
             >
                 <span className="flex items-center gap-1.5">
-                    <span className={`w-0.5 h-3 rounded-full transition-colors ${isOpen ? 'bg-amber-400 dark:bg-amber-500' : 'bg-border'}`} />
+                    <span className={`w-0.5 h-3 rounded-full transition-colors ${isOpen ? 'bg-violet-400 dark:bg-violet-500' : 'bg-border'}`} />
                     <span className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground group-hover/section:text-foreground transition-colors">{title}</span>
                 </span>
                 <div className={`text-muted-foreground transition-transform duration-200 ${isOpen ? 'rotate-0' : '-rotate-90'}`}>
@@ -101,8 +101,8 @@ const Sidebar = () => {
       <div className={`sticky top-0 z-10 flex items-center ${isCollapsed ? 'justify-center px-1.5' : 'justify-between px-3'} py-2.5 bg-card border-b border-border`}>
         {!isCollapsed && (
           <div className="flex items-center gap-2">
-            <div className="p-1 rounded-md bg-amber-500/10 border border-amber-500/20">
-              <Layers className="h-3.5 w-3.5 text-amber-600 dark:text-amber-400" />
+            <div className="p-1 rounded-md bg-violet-500/10 border border-violet-500/20">
+              <Layers className="h-3.5 w-3.5 text-violet-600 dark:text-violet-400" />
             </div>
             <span className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground font-mono">
               {t("workflows.editor.sidebar.title") || "Nodes"}

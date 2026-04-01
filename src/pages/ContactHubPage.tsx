@@ -116,7 +116,7 @@ const STAGE_CONFIG: Record<string, { label: string; cls: string }> = {
   sql:         { label: "SQL",         cls: "bg-violet-100 text-violet-700 dark:bg-violet-900/40 dark:text-violet-300" },
   opportunity: { label: "Opportunity", cls: "bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300" },
   customer:    { label: "Customer",    cls: "bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300" },
-  evangelist:  { label: "Evangelist",  cls: "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300" },
+  evangelist:  { label: "Evangelist",  cls: "bg-violet-100 text-violet-700 dark:bg-violet-900/40 dark:text-violet-300" },
   other:       { label: "Other",       cls: "bg-slate-100 text-slate-500 dark:bg-slate-700 dark:text-slate-400" },
 };
 
@@ -414,7 +414,7 @@ function TimelineRow({
             session.status === "active"   ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
             : session.status === "resolved" ? "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400"
             : session.status === "inactive" ? "bg-slate-100 text-slate-500 dark:bg-slate-700 dark:text-slate-400"
-            : "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400"
+            : "bg-violet-100 text-violet-700 dark:bg-violet-900/30 dark:text-violet-400"
           )}>
             {session.status}
           </span>

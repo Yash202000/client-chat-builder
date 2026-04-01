@@ -302,7 +302,7 @@ const ToolManagementPage = () => {
                             {cfg.label}
                           </span>
                           {tool.follow_up_config?.enabled && (
-                            <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-1.5 py-0.5 rounded bg-amber-50 dark:bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-700/50">
+                            <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-1.5 py-0.5 rounded bg-violet-50 dark:bg-violet-500/10 text-violet-700 dark:text-violet-400 border border-violet-200 dark:border-violet-700/50">
                               <MessageSquare className="h-2.5 w-2.5" />
                               Follow-up
                             </span>
@@ -1001,10 +1001,10 @@ const McpToolForm = ({ tool, onSubmit, onBack }: { tool?: Tool, onSubmit: (value
       </div>
 
       {authRequired && (
-        <div className="p-4 border bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-700/50 rounded-xl text-center">
-          <h4 className="font-semibold text-amber-800 dark:text-amber-300">{t("tools.forms.authRequired")}</h4>
-          <p className="text-sm text-amber-700 dark:text-amber-400 mb-4">{t("tools.forms.authRequiredMessage")}</p>
-          <Button type="button" onClick={handleAuthenticate} className="rounded-xl bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white shadow-lg shadow-amber-500/25">
+        <div className="p-4 border bg-violet-50 dark:bg-violet-900/20 border-violet-200 dark:border-violet-700/50 rounded-xl text-center">
+          <h4 className="font-semibold text-violet-800 dark:text-violet-300">{t("tools.forms.authRequired")}</h4>
+          <p className="text-sm text-violet-700 dark:text-violet-400 mb-4">{t("tools.forms.authRequiredMessage")}</p>
+          <Button type="button" onClick={handleAuthenticate} className="rounded-xl bg-gradient-to-r from-violet-500 to-orange-600 hover:from-violet-600 hover:to-orange-700 text-white shadow-lg shadow-violet-500/25">
             {t("tools.forms.connectToGoogle")}
           </Button>
         </div>

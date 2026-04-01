@@ -310,7 +310,7 @@ export const Settings = () => {
             <PhoneCall className="h-3.5 w-3.5" />
             <span className="hidden lg:inline">{t('settings.voice', 'Voice')}</span>
           </TabsTrigger>
-          <TabsTrigger value="notifications" className="rounded-lg data-[state=active]:bg-white dark:data-[state=active]:bg-slate-900 data-[state=active]:text-amber-600 dark:data-[state=active]:text-amber-400 data-[state=active]:shadow-sm transition-all flex items-center gap-1.5 text-xs lg:text-sm">
+          <TabsTrigger value="notifications" className="rounded-lg data-[state=active]:bg-white dark:data-[state=active]:bg-slate-900 data-[state=active]:text-violet-600 dark:data-[state=active]:text-violet-400 data-[state=active]:shadow-sm transition-all flex items-center gap-1.5 text-xs lg:text-sm">
             <Bell className="h-3.5 w-3.5" />
             <span className="hidden lg:inline">{t('settings.notifications')}</span>
           </TabsTrigger>
@@ -626,10 +626,10 @@ export const Settings = () => {
         </TabsContent>
 
         <TabsContent value="notifications" className="space-y-6" dir={isRTL ? 'rtl' : 'ltr'}>
-          <div className="rounded-xl border border-amber-200 dark:border-amber-800/50 bg-white dark:bg-slate-900 shadow-sm">
-            <div className="p-6 border-b border-amber-100 dark:border-amber-800/30">
+          <div className="rounded-xl border border-violet-200 dark:border-violet-800/50 bg-white dark:bg-slate-900 shadow-sm">
+            <div className="p-6 border-b border-violet-100 dark:border-violet-800/30">
               <h3 className="flex items-center gap-3 dark:text-white text-base font-semibold">
-                <div className="p-1.5 rounded-lg bg-gradient-to-br from-amber-500 to-orange-600">
+                <div className="p-1.5 rounded-lg bg-gradient-to-br from-violet-500 to-orange-600">
                   <Bell className="h-4 w-4 text-white" />
                 </div>
                 {t('settings.notificationPreferences')}

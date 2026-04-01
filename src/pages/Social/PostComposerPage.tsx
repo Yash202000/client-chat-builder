@@ -222,7 +222,7 @@ export default function PostComposerPage() {
             <div className="flex items-center gap-1 bg-zinc-100 dark:bg-zinc-800 p-1 rounded-xl">
               {availablePlatforms.length === 0 ? (
                 <button onClick={() => navigate('/dashboard/social/accounts')}
-                  className="text-xs text-amber-600 px-3 py-1.5 font-medium">
+                  className="text-xs text-violet-600 px-3 py-1.5 font-medium">
                   Connect an account →
                 </button>
               ) : availablePlatforms.map(p => {

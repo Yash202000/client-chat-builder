@@ -201,10 +201,10 @@ export const NoteDialog: React.FC<NoteDialogProps> = ({
       <DialogContent className="sm:max-w-[500px] dark:bg-slate-800 dark:border-slate-700 rounded-2xl sm:rounded-2xl">
         <DialogHeader className="pb-4 border-b border-slate-200/80 dark:border-slate-700/60">
           <DialogTitle className="dark:text-white flex items-center gap-3 text-xl">
-            <div className="p-2.5 rounded-xl bg-gradient-to-br from-amber-500 to-orange-600 shadow-lg shadow-amber-500/25">
+            <div className="p-2.5 rounded-xl bg-gradient-to-br from-violet-500 to-orange-600 shadow-lg shadow-violet-500/25">
               <StickyNote className="h-5 w-5 text-white" />
             </div>
-            <span className="bg-gradient-to-r from-amber-600 to-orange-600 bg-clip-text text-transparent">
+            <span className="bg-gradient-to-r from-violet-600 to-orange-600 bg-clip-text text-transparent">
               {isEditing ? t('notes.editTitle') : t('notes.addTitle')}
             </span>
           </DialogTitle>
@@ -269,8 +269,8 @@ export const NoteDialog: React.FC<NoteDialogProps> = ({
           {/* Activity Fields for Calls/Meetings */}
           {showActivityFields && (
             <div className="border-t border-slate-200/80 dark:border-slate-700/60 pt-4 space-y-4">
-              <h4 className="text-sm font-semibold text-amber-700 dark:text-amber-400 flex items-center gap-2">
-                <div className="h-1.5 w-1.5 rounded-full bg-amber-500" />
+              <h4 className="text-sm font-semibold text-violet-700 dark:text-violet-400 flex items-center gap-2">
+                <div className="h-1.5 w-1.5 rounded-full bg-violet-500" />
                 {t('notes.activityDetails')}
               </h4>
 
@@ -345,7 +345,7 @@ export const NoteDialog: React.FC<NoteDialogProps> = ({
             <Button
               type="submit"
               disabled={isPending}
-              className="rounded-xl bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white shadow-lg shadow-amber-500/25"
+              className="rounded-xl bg-gradient-to-r from-violet-500 to-orange-600 hover:from-violet-600 hover:to-orange-700 text-white shadow-lg shadow-violet-500/25"
             >
               {isPending ? (
                 <>

@@ -31,13 +31,13 @@ const VariableInput = ({ value, onChange, placeholder, availableVars = [], isRTL
                 type="text"
                 value={value || ''}
                 onChange={onChange}
-                className={`w-full px-3 py-2 ${isRTL ? 'pl-12 pr-3' : 'pr-12 pl-3'} rounded-lg border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-400 dark:focus:border-amber-500 transition-all text-xs`}
+                className={`w-full px-3 py-2 ${isRTL ? 'pl-12 pr-3' : 'pr-12 pl-3'} rounded-lg border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-400 dark:focus:border-violet-500 transition-all text-xs`}
                 placeholder={placeholder}
             />
             <button
                 onClick={() => setShowVars(!showVars)}
                 title={t("workflows.editor.properties.selectVariable")}
-                className={`absolute ${isRTL ? 'left-1 rounded-l-md' : 'right-1 rounded-r-md'} top-1 bottom-1 border-none bg-muted hover:bg-amber-100/70 dark:hover:bg-amber-900/20 cursor-pointer px-2.5 text-muted-foreground hover:text-amber-600 dark:hover:text-amber-400 text-[10px] font-mono transition-colors`}
+                className={`absolute ${isRTL ? 'left-1 rounded-l-md' : 'right-1 rounded-r-md'} top-1 bottom-1 border-none bg-muted hover:bg-violet-100/70 dark:hover:bg-violet-900/20 cursor-pointer px-2.5 text-muted-foreground hover:text-violet-600 dark:hover:text-violet-400 text-[10px] font-mono transition-colors`}
             >
                 {`{·}`}
             </button>
@@ -338,7 +338,7 @@ const PropertiesPanel = ({ selectedNode, nodes, setNodes, deleteNode, workflowId
                 <select
                   value={toolParams[paramName] || ''}
                   onChange={(e) => handleToolParamsChange(paramName, e.target.value)}
-                  className="w-full px-3 py-2.5 rounded-lg border border-border bg-background text-foreground text-xs focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-400 dark:focus:border-amber-500 transition-all"
+                  className="w-full px-3 py-2.5 rounded-lg border border-border bg-background text-foreground text-xs focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-400 dark:focus:border-violet-500 transition-all"
                   dir={isRTL ? 'rtl' : 'ltr'}
                 >
                   <option value="">{t("workflows.editor.properties.select")} {paramName.replace(/_/g, ' ')}</option>
@@ -382,7 +382,7 @@ const PropertiesPanel = ({ selectedNode, nodes, setNodes, deleteNode, workflowId
               type="text"
               value={currentNode.data.label || ''}
               onChange={(e) => handleDataChange('label', e.target.value)}
-              className="w-full px-3 py-2.5 rounded-lg border border-border bg-background text-foreground text-xs focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-400 dark:focus:border-amber-500 transition-all"
+              className="w-full px-3 py-2.5 rounded-lg border border-border bg-background text-foreground text-xs focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-400 dark:focus:border-violet-500 transition-all"
               dir={isRTL ? 'rtl' : 'ltr'}
             />
           </div>
@@ -402,7 +402,7 @@ const PropertiesPanel = ({ selectedNode, nodes, setNodes, deleteNode, workflowId
               <select
                 value={currentNode.data.model || ''}
                 onChange={(e) => handleDataChange('model', e.target.value)}
-                className="w-full px-3 py-2.5 rounded-lg border border-border bg-background text-foreground text-xs focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-400 dark:focus:border-amber-500 transition-all"
+                className="w-full px-3 py-2.5 rounded-lg border border-border bg-background text-foreground text-xs focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-400 dark:focus:border-violet-500 transition-all"
                 dir={isRTL ? 'rtl' : 'ltr'}
               >
                 <option value="">{t("workflows.editor.properties.selectModel")}</option>
@@ -431,7 +431,7 @@ const PropertiesPanel = ({ selectedNode, nodes, setNodes, deleteNode, workflowId
               <select
                 value={currentNode.data.knowledge_base_id || ''}
                 onChange={(e) => handleDataChange('knowledge_base_id', e.target.value ? parseInt(e.target.value) : null)}
-                className="w-full px-3 py-2.5 rounded-lg border border-border bg-background text-foreground text-xs focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-400 dark:focus:border-amber-500 transition-all"
+                className="w-full px-3 py-2.5 rounded-lg border border-border bg-background text-foreground text-xs focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-400 dark:focus:border-violet-500 transition-all"
                 dir={isRTL ? 'rtl' : 'ltr'}
               >
                 <option value="">{t("workflows.editor.properties.none")}</option>
@@ -446,7 +446,7 @@ const PropertiesPanel = ({ selectedNode, nodes, setNodes, deleteNode, workflowId
                 value={currentNode.data.system_prompt || ''}
                 onChange={(e) => handleDataChange('system_prompt', e.target.value)}
                 placeholder={t("workflows.editor.properties.systemPromptPlaceholder")}
-                className="w-full px-3 py-2.5 rounded-lg border border-border bg-background text-foreground text-xs focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-400 dark:focus:border-amber-500 transition-all min-h-[80px] resize-y"
+                className="w-full px-3 py-2.5 rounded-lg border border-border bg-background text-foreground text-xs focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-400 dark:focus:border-violet-500 transition-all min-h-[80px] resize-y"
                 dir={isRTL ? 'rtl' : 'ltr'}
               />
               <p className="text-[10px] text-muted-foreground mt-1">{t("workflows.editor.properties.systemPromptHint")}</p>
@@ -470,7 +470,7 @@ const PropertiesPanel = ({ selectedNode, nodes, setNodes, deleteNode, workflowId
             <div className="mb-4">
               <label className="block mb-1.5 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">{t("workflows.editor.properties.tool")}</label>
               <select
-                className="w-full px-3 py-2.5 rounded-lg border border-border bg-background text-foreground text-xs focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-400 dark:focus:border-amber-500 transition-all"
+                className="w-full px-3 py-2.5 rounded-lg border border-border bg-background text-foreground text-xs focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-400 dark:focus:border-violet-500 transition-all"
                 onChange={(e) => onToolChange(e.target.value)}
                 value={currentNode.data.tool_name || currentNode.data.tool || ''}
                 dir={isRTL ? 'rtl' : 'ltr'}
@@ -531,7 +531,7 @@ const PropertiesPanel = ({ selectedNode, nodes, setNodes, deleteNode, workflowId
                       newConditions[index] = { ...newConditions[index], operator: e.target.value };
                       handleDataChange('conditions', newConditions);
                     }}
-                    className="w-full px-2 py-1.5 text-xs rounded-md border border-border bg-background text-foreground focus:outline-none focus:ring-1 focus:ring-amber-500/30 focus:border-amber-400 dark:focus:border-amber-500"
+                    className="w-full px-2 py-1.5 text-xs rounded-md border border-border bg-background text-foreground focus:outline-none focus:ring-1 focus:ring-violet-500/30 focus:border-violet-400 dark:focus:border-violet-500"
                     dir={isRTL ? 'rtl' : 'ltr'}
                   >
                     <option value="equals">{t("workflows.editor.properties.operators.equals")}</option>
@@ -553,7 +553,7 @@ const PropertiesPanel = ({ selectedNode, nodes, setNodes, deleteNode, workflowId
                       newConditions[index] = { ...newConditions[index], value: e.target.value };
                       handleDataChange('conditions', newConditions);
                     }}
-                    className="w-full px-2 py-1.5 text-xs rounded-md border border-border bg-background text-foreground focus:outline-none focus:ring-1 focus:ring-amber-500/30 focus:border-amber-400 dark:focus:border-amber-500 disabled:opacity-50"
+                    className="w-full px-2 py-1.5 text-xs rounded-md border border-border bg-background text-foreground focus:outline-none focus:ring-1 focus:ring-violet-500/30 focus:border-violet-400 dark:focus:border-violet-500 disabled:opacity-50"
                     placeholder={t("workflows.editor.properties.valuePlaceholder")}
                     disabled={['is_set', 'is_not_set'].includes(condition.operator)}
                     dir={isRTL ? 'rtl' : 'ltr'}
@@ -564,7 +564,7 @@ const PropertiesPanel = ({ selectedNode, nodes, setNodes, deleteNode, workflowId
 
             {/* Else handle info */}
             {(currentNode.data.conditions || []).length > 0 && (
-              <div className="border border-dashed border-border rounded-lg p-3 mb-2 bg-muted/20 hover:border-amber-400/50 dark:hover:border-amber-500/40 transition-all">
+              <div className="border border-dashed border-border rounded-lg p-3 mb-2 bg-muted/20 hover:border-violet-400/50 dark:hover:border-violet-500/40 transition-all">
                 <strong className="text-xs text-muted-foreground font-medium">Else (Handle: else)</strong>
                 <p className="text-[10px] text-muted-foreground mt-1">
                   This path is taken if none of the above conditions match.
@@ -585,7 +585,7 @@ const PropertiesPanel = ({ selectedNode, nodes, setNodes, deleteNode, workflowId
 
             {/* Legacy single condition support info */}
             {(currentNode.data.conditions || []).length === 0 && (currentNode.data.variable || currentNode.data.operator) && (
-              <div className="mt-4 p-4 bg-gradient-to-br from-amber-50 to-yellow-50 dark:from-amber-900/20 dark:to-yellow-900/10 border border-amber-200/60 dark:border-amber-700/40 rounded-xl">
+              <div className="mt-4 p-4 bg-gradient-to-br from-violet-50 to-yellow-50 dark:from-violet-900/20 dark:to-yellow-900/10 border border-violet-200/60 dark:border-violet-700/40 rounded-xl">
                 <p className="text-xs text-yellow-700 dark:text-yellow-300">
                   <strong>Legacy mode:</strong> This node uses old single-condition format.
                   Add a new condition above to upgrade to multi-condition mode.
@@ -606,7 +606,7 @@ const PropertiesPanel = ({ selectedNode, nodes, setNodes, deleteNode, workflowId
               <select
                 value={currentNode.data.knowledge_base_id || ''}
                 onChange={(e) => handleDataChange('knowledge_base_id', e.target.value ? parseInt(e.target.value) : null)}
-                className="w-full px-3 py-2.5 rounded-lg border border-border bg-background text-foreground text-xs focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-400 dark:focus:border-amber-500 transition-all"
+                className="w-full px-3 py-2.5 rounded-lg border border-border bg-background text-foreground text-xs focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-400 dark:focus:border-violet-500 transition-all"
                 dir={isRTL ? 'rtl' : 'ltr'}
               >
                 <option value="">{t("workflows.editor.properties.none")}</option>
@@ -646,7 +646,7 @@ const PropertiesPanel = ({ selectedNode, nodes, setNodes, deleteNode, workflowId
               <select
                 value={currentNode.data.method || 'GET'}
                 onChange={(e) => handleDataChange('method', e.target.value)}
-                className="w-full px-3 py-2.5 rounded-lg border border-border bg-background text-foreground text-xs focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-400 dark:focus:border-amber-500 transition-all"
+                className="w-full px-3 py-2.5 rounded-lg border border-border bg-background text-foreground text-xs focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-400 dark:focus:border-violet-500 transition-all"
                 dir={isRTL ? 'rtl' : 'ltr'}
               >
                 <option value="GET">GET</option>
@@ -662,7 +662,7 @@ const PropertiesPanel = ({ selectedNode, nodes, setNodes, deleteNode, workflowId
                 onChange={(e) => handleDataChange('headers', e.target.value)}
                 placeholder={t("workflows.editor.properties.httpHeadersPlaceholder")}
                 rows={4}
-                className="w-full px-3 py-2 rounded-md border border-border bg-background text-foreground text-xs font-mono focus:outline-none focus:ring-1 focus:ring-amber-500/20 focus:border-amber-400 dark:focus:border-amber-500"
+                className="w-full px-3 py-2 rounded-md border border-border bg-background text-foreground text-xs font-mono focus:outline-none focus:ring-1 focus:ring-violet-500/20 focus:border-violet-400 dark:focus:border-violet-500"
                 dir="ltr"
               />
             </div>
@@ -673,7 +673,7 @@ const PropertiesPanel = ({ selectedNode, nodes, setNodes, deleteNode, workflowId
                 onChange={(e) => handleDataChange('body', e.target.value)}
                 placeholder={t("workflows.editor.properties.httpBodyPlaceholder")}
                 rows={6}
-                className="w-full px-3 py-2 rounded-md border border-border bg-background text-foreground text-xs font-mono focus:outline-none focus:ring-1 focus:ring-amber-500/20 focus:border-amber-400 dark:focus:border-amber-500"
+                className="w-full px-3 py-2 rounded-md border border-border bg-background text-foreground text-xs font-mono focus:outline-none focus:ring-1 focus:ring-violet-500/20 focus:border-violet-400 dark:focus:border-violet-500"
                 dir="ltr"
               />
             </div>
@@ -690,7 +690,7 @@ const PropertiesPanel = ({ selectedNode, nodes, setNodes, deleteNode, workflowId
                 onChange={(e) => handleDataChange('expression', e.target.value)}
                 placeholder={t("workflows.editor.properties.dataExpressionPlaceholder")}
                 rows={5}
-                className="w-full px-3 py-2 rounded-md border border-border bg-background text-foreground text-xs font-mono focus:outline-none focus:ring-1 focus:ring-amber-500/20 focus:border-amber-400 dark:focus:border-amber-500"
+                className="w-full px-3 py-2 rounded-md border border-border bg-background text-foreground text-xs font-mono focus:outline-none focus:ring-1 focus:ring-violet-500/20 focus:border-violet-400 dark:focus:border-violet-500"
                 dir="ltr"
               />
             </div>
@@ -700,7 +700,7 @@ const PropertiesPanel = ({ selectedNode, nodes, setNodes, deleteNode, workflowId
                 type="text"
                 value={currentNode.data.output_variable || ''}
                 onChange={(e) => handleDataChange('output_variable', e.target.value)}
-                className="w-full px-3 py-2.5 rounded-lg border border-border bg-background text-foreground text-xs focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-400 dark:focus:border-amber-500 transition-all"
+                className="w-full px-3 py-2.5 rounded-lg border border-border bg-background text-foreground text-xs focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-400 dark:focus:border-violet-500 transition-all"
                 placeholder={t("workflows.editor.properties.outputVariablePlaceholder")}
                 dir={isRTL ? 'rtl' : 'ltr'}
               />
@@ -743,7 +743,7 @@ const PropertiesPanel = ({ selectedNode, nodes, setNodes, deleteNode, workflowId
                         handleDataChange('arguments', newArgs);
                       }}
                       placeholder="e.g., my_data"
-                      className="w-full px-2 py-1.5 text-xs rounded-md border border-border bg-background text-foreground focus:outline-none focus:ring-1 focus:ring-amber-500/20 font-mono"
+                      className="w-full px-2 py-1.5 text-xs rounded-md border border-border bg-background text-foreground focus:outline-none focus:ring-1 focus:ring-violet-500/20 font-mono"
                       dir="ltr"
                     />
                   </div>
@@ -791,7 +791,7 @@ const PropertiesPanel = ({ selectedNode, nodes, setNodes, deleteNode, workflowId
                       handleDataChange('return_variables', newVars);
                     }}
                     placeholder={t("workflows.editor.properties.returnVariableName")}
-                    className="flex-1 px-2 py-1.5 text-xs rounded-md border border-border bg-background text-foreground focus:outline-none focus:ring-1 focus:ring-amber-500/20 font-mono"
+                    className="flex-1 px-2 py-1.5 text-xs rounded-md border border-border bg-background text-foreground focus:outline-none focus:ring-1 focus:ring-violet-500/20 font-mono"
                     dir="ltr"
                   />
                   <button
@@ -835,7 +835,7 @@ const PropertiesPanel = ({ selectedNode, nodes, setNodes, deleteNode, workflowId
                 onChange={(e) => handleDataChange('code', e.target.value)}
                 placeholder={t("workflows.editor.properties.pythonCodePlaceholder")}
                 rows={10}
-                className="w-full px-3 py-2 rounded-md border border-border bg-background text-foreground text-xs font-mono focus:outline-none focus:ring-1 focus:ring-amber-500/20 focus:border-amber-400 dark:focus:border-amber-500"
+                className="w-full px-3 py-2 rounded-md border border-border bg-background text-foreground text-xs font-mono focus:outline-none focus:ring-1 focus:ring-violet-500/20 focus:border-violet-400 dark:focus:border-violet-500"
                 dir="ltr"
               />
             </div>
@@ -859,7 +859,7 @@ const PropertiesPanel = ({ selectedNode, nodes, setNodes, deleteNode, workflowId
                 type="text"
                 value={(currentNode.data.params?.save_to_variable) || ''}
                 onChange={(e) => handleParamsChange('save_to_variable', e.target.value)}
-                className="w-full px-3 py-2.5 rounded-lg border border-border bg-background text-foreground text-xs focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-400 dark:focus:border-amber-500 transition-all"
+                className="w-full px-3 py-2.5 rounded-lg border border-border bg-background text-foreground text-xs focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-400 dark:focus:border-violet-500 transition-all"
                 placeholder={t("workflows.editor.properties.saveInputToVariablePlaceholder")}
                 dir={isRTL ? 'rtl' : 'ltr'}
               />
@@ -871,7 +871,7 @@ const PropertiesPanel = ({ selectedNode, nodes, setNodes, deleteNode, workflowId
               <select
                 value={(currentNode.data.params?.expected_input_type) || 'any'}
                 onChange={(e) => handleParamsChange('expected_input_type', e.target.value)}
-                className="w-full px-3 py-2.5 rounded-lg border border-border bg-background text-foreground text-xs focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-400 dark:focus:border-amber-500 transition-all"
+                className="w-full px-3 py-2.5 rounded-lg border border-border bg-background text-foreground text-xs focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-400 dark:focus:border-violet-500 transition-all"
                 dir={isRTL ? 'rtl' : 'ltr'}
               >
                 <option value="any">{t("workflows.editor.properties.inputTypeAny") || "Any (Text, Image, or Location)"}</option>
@@ -907,7 +907,7 @@ const PropertiesPanel = ({ selectedNode, nodes, setNodes, deleteNode, workflowId
               <select
                 value={(currentNode.data.params?.validation_mode) || 'none'}
                 onChange={(e) => handleParamsChange('validation_mode', e.target.value)}
-                className="w-full px-3 py-2.5 rounded-lg border border-border bg-background text-foreground text-xs focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-400 dark:focus:border-amber-500 transition-all"
+                className="w-full px-3 py-2.5 rounded-lg border border-border bg-background text-foreground text-xs focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-400 dark:focus:border-violet-500 transition-all"
                 dir={isRTL ? 'rtl' : 'ltr'}
               >
                 <option value="none">{t("workflows.editor.properties.validationModeNone") || "None - Accept any input"}</option>
@@ -934,7 +934,7 @@ const PropertiesPanel = ({ selectedNode, nodes, setNodes, deleteNode, workflowId
                       validation_llm_model: ''
                     });
                   }}
-                  className="w-full px-3 py-2.5 rounded-lg border border-border bg-background text-foreground text-xs focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-400 dark:focus:border-amber-500 transition-all"
+                  className="w-full px-3 py-2.5 rounded-lg border border-border bg-background text-foreground text-xs focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-400 dark:focus:border-violet-500 transition-all"
                   dir={isRTL ? 'rtl' : 'ltr'}
                 >
                   <option value="groq">Groq</option>
@@ -955,7 +955,7 @@ const PropertiesPanel = ({ selectedNode, nodes, setNodes, deleteNode, workflowId
                 <select
                   value={currentNode.data.params?.validation_llm_model || ''}
                   onChange={(e) => handleParamsChange('validation_llm_model', e.target.value)}
-                  className="w-full px-3 py-2.5 rounded-lg border border-border bg-background text-foreground text-xs focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-400 dark:focus:border-amber-500 transition-all"
+                  className="w-full px-3 py-2.5 rounded-lg border border-border bg-background text-foreground text-xs focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-400 dark:focus:border-violet-500 transition-all"
                   dir={isRTL ? 'rtl' : 'ltr'}
                 >
                   <option value="">{t("workflows.editor.properties.validationLlmModelDefault") || "Default (Provider's fastest model)"}</option>
@@ -998,7 +998,7 @@ const PropertiesPanel = ({ selectedNode, nodes, setNodes, deleteNode, workflowId
                   max="10"
                   value={(currentNode.data.params?.max_retries) || 3}
                   onChange={(e) => handleParamsChange('max_retries', parseInt(e.target.value) || 3)}
-                  className="w-full px-3 py-2.5 rounded-lg border border-border bg-background text-foreground text-xs focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-400 dark:focus:border-amber-500 transition-all"
+                  className="w-full px-3 py-2.5 rounded-lg border border-border bg-background text-foreground text-xs focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-400 dark:focus:border-violet-500 transition-all"
                   dir={isRTL ? 'rtl' : 'ltr'}
                 />
                 <p className="text-[10px] text-muted-foreground mt-2">
@@ -1065,7 +1065,7 @@ const PropertiesPanel = ({ selectedNode, nodes, setNodes, deleteNode, workflowId
                 type="text"
                 value={(currentNode.data.params?.save_to_variable) || ''}
                 onChange={(e) => handleParamsChange('save_to_variable', e.target.value)}
-                className="w-full px-3 py-2.5 rounded-lg border border-border bg-background text-foreground text-xs focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-400 dark:focus:border-amber-500 transition-all"
+                className="w-full px-3 py-2.5 rounded-lg border border-border bg-background text-foreground text-xs focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-400 dark:focus:border-violet-500 transition-all"
                 placeholder={t("workflows.editor.properties.saveResponseAsPlaceholder")}
                 dir={isRTL ? 'rtl' : 'ltr'}
               />
@@ -1081,7 +1081,7 @@ const PropertiesPanel = ({ selectedNode, nodes, setNodes, deleteNode, workflowId
               <select
                 value={(currentNode.data.params?.options_mode) || 'manual'}
                 onChange={(e) => handleParamsChange('options_mode', e.target.value)}
-                className="w-full px-3 py-2.5 rounded-lg border border-border bg-background text-foreground text-xs focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-400 dark:focus:border-amber-500 transition-all"
+                className="w-full px-3 py-2.5 rounded-lg border border-border bg-background text-foreground text-xs focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-400 dark:focus:border-violet-500 transition-all"
                 dir={isRTL ? 'rtl' : 'ltr'}
               >
                 <option value="manual">{t("workflows.editor.properties.optionsModeManual")}</option>
@@ -1119,7 +1119,7 @@ const PropertiesPanel = ({ selectedNode, nodes, setNodes, deleteNode, workflowId
                         type="text"
                         value={option.key || ''}
                         onChange={(e) => handleOptionChange(index, 'key', e.target.value)}
-                        className="w-full px-2 py-1.5 text-xs rounded-md border border-border bg-background text-foreground focus:outline-none focus:ring-1 focus:ring-amber-500/30 focus:border-amber-400 dark:focus:border-amber-500 dark:focus:ring-blue-400"
+                        className="w-full px-2 py-1.5 text-xs rounded-md border border-border bg-background text-foreground focus:outline-none focus:ring-1 focus:ring-violet-500/30 focus:border-violet-400 dark:focus:border-violet-500 dark:focus:ring-blue-400"
                         placeholder={t("workflows.editor.properties.optionKeyPlaceholder")}
                         dir={isRTL ? 'rtl' : 'ltr'}
                       />
@@ -1133,7 +1133,7 @@ const PropertiesPanel = ({ selectedNode, nodes, setNodes, deleteNode, workflowId
                         type="text"
                         value={option.value || ''}
                         onChange={(e) => handleOptionChange(index, 'value', e.target.value)}
-                        className="w-full px-2 py-1.5 text-xs rounded-md border border-border bg-background text-foreground focus:outline-none focus:ring-1 focus:ring-amber-500/30 focus:border-amber-400 dark:focus:border-amber-500 dark:focus:ring-blue-400"
+                        className="w-full px-2 py-1.5 text-xs rounded-md border border-border bg-background text-foreground focus:outline-none focus:ring-1 focus:ring-violet-500/30 focus:border-violet-400 dark:focus:border-violet-500 dark:focus:ring-blue-400"
                         placeholder={t("workflows.editor.properties.optionValuePlaceholder")}
                         dir={isRTL ? 'rtl' : 'ltr'}
                       />
@@ -1200,7 +1200,7 @@ const PropertiesPanel = ({ selectedNode, nodes, setNodes, deleteNode, workflowId
                   id="allow_text_input"
                   checked={currentNode.data.params?.allow_text_input || false}
                   onChange={(e) => handleParamsChange('allow_text_input', e.target.checked)}
-                  className="w-4 h-4 rounded border-border text-amber-600 focus:ring-amber-500/30"
+                  className="w-4 h-4 rounded border-border text-violet-600 focus:ring-violet-500/30"
                 />
                 <label htmlFor="allow_text_input" className="text-xs font-medium text-foreground">
                   {t("workflows.editor.properties.allowTextInput")}
@@ -1218,7 +1218,7 @@ const PropertiesPanel = ({ selectedNode, nodes, setNodes, deleteNode, workflowId
               <select
                 value={(currentNode.data.params?.validation_mode) || 'exact'}
                 onChange={(e) => handleParamsChange('validation_mode', e.target.value)}
-                className="w-full px-3 py-2.5 rounded-lg border border-border bg-background text-foreground text-xs focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-400 dark:focus:border-amber-500 transition-all"
+                className="w-full px-3 py-2.5 rounded-lg border border-border bg-background text-foreground text-xs focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-400 dark:focus:border-violet-500 transition-all"
                 dir={isRTL ? 'rtl' : 'ltr'}
               >
                 <option value="exact">{t("workflows.editor.properties.validationModeExactPrompt") || "Exact - Strict string match"}</option>
@@ -1244,7 +1244,7 @@ const PropertiesPanel = ({ selectedNode, nodes, setNodes, deleteNode, workflowId
                       validation_llm_model: ''
                     });
                   }}
-                  className="w-full px-3 py-2.5 rounded-lg border border-border bg-background text-foreground text-xs focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-400 dark:focus:border-amber-500 transition-all"
+                  className="w-full px-3 py-2.5 rounded-lg border border-border bg-background text-foreground text-xs focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-400 dark:focus:border-violet-500 transition-all"
                   dir={isRTL ? 'rtl' : 'ltr'}
                 >
                   <option value="groq">Groq</option>
@@ -1265,7 +1265,7 @@ const PropertiesPanel = ({ selectedNode, nodes, setNodes, deleteNode, workflowId
                 <select
                   value={currentNode.data.params?.validation_llm_model || ''}
                   onChange={(e) => handleParamsChange('validation_llm_model', e.target.value)}
-                  className="w-full px-3 py-2.5 rounded-lg border border-border bg-background text-foreground text-xs focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-400 dark:focus:border-amber-500 transition-all"
+                  className="w-full px-3 py-2.5 rounded-lg border border-border bg-background text-foreground text-xs focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-400 dark:focus:border-violet-500 transition-all"
                   dir={isRTL ? 'rtl' : 'ltr'}
                 >
                   <option value="">{t("workflows.editor.properties.validationLlmModelDefault") || "Default (Provider's fastest model)"}</option>
@@ -1308,7 +1308,7 @@ const PropertiesPanel = ({ selectedNode, nodes, setNodes, deleteNode, workflowId
                   max="10"
                   value={(currentNode.data.params?.max_retries) || 3}
                   onChange={(e) => handleParamsChange('max_retries', parseInt(e.target.value) || 3)}
-                  className="w-full px-3 py-2.5 rounded-lg border border-border bg-background text-foreground text-xs focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-400 dark:focus:border-amber-500 transition-all"
+                  className="w-full px-3 py-2.5 rounded-lg border border-border bg-background text-foreground text-xs focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-400 dark:focus:border-violet-500 transition-all"
                   dir={isRTL ? 'rtl' : 'ltr'}
                 />
                 <p className="text-[10px] text-muted-foreground mt-2">
@@ -1328,7 +1328,7 @@ const PropertiesPanel = ({ selectedNode, nodes, setNodes, deleteNode, workflowId
                 type="text"
                 value={(currentNode.data.params?.title) || ''}
                 onChange={(e) => handleParamsChange('title', e.target.value)}
-                className="w-full px-3 py-2.5 rounded-lg border border-border bg-background text-foreground text-xs focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-400 dark:focus:border-amber-500 transition-all"
+                className="w-full px-3 py-2.5 rounded-lg border border-border bg-background text-foreground text-xs focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-400 dark:focus:border-violet-500 transition-all"
                 placeholder={t("workflows.editor.properties.formTitlePlaceholder")}
                 dir={isRTL ? 'rtl' : 'ltr'}
               />
@@ -1339,7 +1339,7 @@ const PropertiesPanel = ({ selectedNode, nodes, setNodes, deleteNode, workflowId
                 type="text"
                 value={(currentNode.data.params?.save_to_variable) || ''}
                 onChange={(e) => handleParamsChange('save_to_variable', e.target.value)}
-                className="w-full px-3 py-2.5 rounded-lg border border-border bg-background text-foreground text-xs focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-400 dark:focus:border-amber-500 transition-all"
+                className="w-full px-3 py-2.5 rounded-lg border border-border bg-background text-foreground text-xs focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-400 dark:focus:border-violet-500 transition-all"
                 placeholder={t("workflows.editor.properties.saveFormDataToVariablePlaceholder")}
                 dir={isRTL ? 'rtl' : 'ltr'}
               />
@@ -1359,15 +1359,15 @@ const PropertiesPanel = ({ selectedNode, nodes, setNodes, deleteNode, workflowId
                   </div>
                   <div className="mb-2">
                     <label className="block mb-1 text-[10px] font-medium text-muted-foreground">{t("workflows.editor.properties.fieldName")}</label>
-                    <input type="text" value={field.name} onChange={(e) => handleFieldChange(index, 'name', e.target.value)} className="w-full px-2 py-1.5 text-xs rounded-md border border-border bg-background text-foreground focus:outline-none focus:ring-1 focus:ring-amber-500/30 focus:border-amber-400 dark:focus:border-amber-500 dark:focus:ring-blue-400" placeholder={t("workflows.editor.properties.fieldNamePlaceholder")} dir={isRTL ? 'rtl' : 'ltr'} />
+                    <input type="text" value={field.name} onChange={(e) => handleFieldChange(index, 'name', e.target.value)} className="w-full px-2 py-1.5 text-xs rounded-md border border-border bg-background text-foreground focus:outline-none focus:ring-1 focus:ring-violet-500/30 focus:border-violet-400 dark:focus:border-violet-500 dark:focus:ring-blue-400" placeholder={t("workflows.editor.properties.fieldNamePlaceholder")} dir={isRTL ? 'rtl' : 'ltr'} />
                   </div>
                   <div className="mb-2">
                     <label className="block mb-1 text-[10px] font-medium text-muted-foreground">{t("workflows.editor.properties.fieldLabel")}</label>
-                    <input type="text" value={field.label} onChange={(e) => handleFieldChange(index, 'label', e.target.value)} className="w-full px-2 py-1.5 text-xs rounded-md border border-border bg-background text-foreground focus:outline-none focus:ring-1 focus:ring-amber-500/30 focus:border-amber-400 dark:focus:border-amber-500 dark:focus:ring-blue-400" placeholder={t("workflows.editor.properties.fieldLabelPlaceholder")} dir={isRTL ? 'rtl' : 'ltr'} />
+                    <input type="text" value={field.label} onChange={(e) => handleFieldChange(index, 'label', e.target.value)} className="w-full px-2 py-1.5 text-xs rounded-md border border-border bg-background text-foreground focus:outline-none focus:ring-1 focus:ring-violet-500/30 focus:border-violet-400 dark:focus:border-violet-500 dark:focus:ring-blue-400" placeholder={t("workflows.editor.properties.fieldLabelPlaceholder")} dir={isRTL ? 'rtl' : 'ltr'} />
                   </div>
                   <div>
                     <label className="block mb-1 text-[10px] font-medium text-muted-foreground">{t("workflows.editor.properties.fieldType")}</label>
-                    <select value={field.type} onChange={(e) => handleFieldChange(index, 'type', e.target.value)} className="w-full px-2 py-1.5 text-xs rounded-md border border-border bg-background text-foreground focus:outline-none focus:ring-1 focus:ring-amber-500/30 focus:border-amber-400 dark:focus:border-amber-500 dark:focus:ring-blue-400" dir={isRTL ? 'rtl' : 'ltr'}>
+                    <select value={field.type} onChange={(e) => handleFieldChange(index, 'type', e.target.value)} className="w-full px-2 py-1.5 text-xs rounded-md border border-border bg-background text-foreground focus:outline-none focus:ring-1 focus:ring-violet-500/30 focus:border-violet-400 dark:focus:border-violet-500 dark:focus:ring-blue-400" dir={isRTL ? 'rtl' : 'ltr'}>
                       <option value="text">{t("workflows.editor.properties.fieldTypes.text")}</option>
                       <option value="email">{t("workflows.editor.properties.fieldTypes.email")}</option>
                       <option value="number">{t("workflows.editor.properties.fieldTypes.number")}</option>
@@ -1416,7 +1416,7 @@ const PropertiesPanel = ({ selectedNode, nodes, setNodes, deleteNode, workflowId
                 type="text"
                 value={currentNode.data.initial_input_variable || 'user_message'}
                 onChange={(e) => handleDataChange('initial_input_variable', e.target.value)}
-                className="w-full px-3 py-2.5 rounded-lg border border-border bg-background text-foreground text-xs focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-400 dark:focus:border-amber-500 transition-all"
+                className="w-full px-3 py-2.5 rounded-lg border border-border bg-background text-foreground text-xs focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-400 dark:focus:border-violet-500 transition-all"
                 placeholder={t("workflows.editor.properties.initialInputVariablePlaceholder")}
                 dir={isRTL ? 'rtl' : 'ltr'}
               />
@@ -1439,7 +1439,7 @@ const PropertiesPanel = ({ selectedNode, nodes, setNodes, deleteNode, workflowId
                 type="text"
                 value={currentNode.data.label || ''}
                 onChange={(e) => handleDataChange('label', e.target.value)}
-                className="w-full px-3 py-2 rounded-lg border border-border bg-background text-foreground text-xs focus:outline-none focus:ring-1 focus:ring-amber-500/20 focus:border-amber-400 dark:focus:border-amber-500"
+                className="w-full px-3 py-2 rounded-lg border border-border bg-background text-foreground text-xs focus:outline-none focus:ring-1 focus:ring-violet-500/20 focus:border-violet-400 dark:focus:border-violet-500"
                 placeholder={t("workflows.editor.properties.triggers.triggerLabelPlaceholder")}
                 dir={isRTL ? 'rtl' : 'ltr'}
               />
@@ -1449,7 +1449,7 @@ const PropertiesPanel = ({ selectedNode, nodes, setNodes, deleteNode, workflowId
               <select
                 value={currentNode.data.agent_id || ''}
                 onChange={(e) => handleAgentChange(e.target.value)}
-                className="w-full px-3 py-2 rounded-lg border border-border bg-background text-foreground text-xs focus:outline-none focus:ring-1 focus:ring-amber-500/20 focus:border-amber-400 dark:focus:border-amber-500"
+                className="w-full px-3 py-2 rounded-lg border border-border bg-background text-foreground text-xs focus:outline-none focus:ring-1 focus:ring-violet-500/20 focus:border-violet-400 dark:focus:border-violet-500"
                 dir={isRTL ? 'rtl' : 'ltr'}
               >
                 <option value="">{t("workflows.editor.properties.triggers.selectAgent")}</option>
@@ -1466,7 +1466,7 @@ const PropertiesPanel = ({ selectedNode, nodes, setNodes, deleteNode, workflowId
               <select
                 value={currentNode.data.auto_respond !== false ? 'true' : 'false'}
                 onChange={(e) => handleDataChange('auto_respond', e.target.value === 'true')}
-                className="w-full px-3 py-2 rounded-lg border border-border bg-background text-foreground text-xs focus:outline-none focus:ring-1 focus:ring-amber-500/20 focus:border-amber-400 dark:focus:border-amber-500"
+                className="w-full px-3 py-2 rounded-lg border border-border bg-background text-foreground text-xs focus:outline-none focus:ring-1 focus:ring-violet-500/20 focus:border-violet-400 dark:focus:border-violet-500"
                 dir={isRTL ? 'rtl' : 'ltr'}
               >
                 <option value="true">{t("workflows.editor.properties.triggers.autoRespondYes")}</option>
@@ -1489,7 +1489,7 @@ const PropertiesPanel = ({ selectedNode, nodes, setNodes, deleteNode, workflowId
                 type="text"
                 value={currentNode.data.label || ''}
                 onChange={(e) => handleDataChange('label', e.target.value)}
-                className="w-full px-3 py-2 rounded-md border border-border bg-background text-foreground text-sm focus:outline-none focus:ring-1 focus:ring-amber-500/20 focus:border-amber-400 dark:focus:border-amber-500"
+                className="w-full px-3 py-2 rounded-md border border-border bg-background text-foreground text-sm focus:outline-none focus:ring-1 focus:ring-violet-500/20 focus:border-violet-400 dark:focus:border-violet-500"
                 placeholder={t("workflows.editor.properties.triggers.whatsappPlaceholder")}
                 dir={isRTL ? 'rtl' : 'ltr'}
               />
@@ -1499,7 +1499,7 @@ const PropertiesPanel = ({ selectedNode, nodes, setNodes, deleteNode, workflowId
               <select
                 value={currentNode.data.agent_id || ''}
                 onChange={(e) => handleAgentChange(e.target.value)}
-                className="w-full px-3 py-2 rounded-md border border-border bg-background text-foreground text-sm focus:outline-none focus:ring-1 focus:ring-amber-500/20 focus:border-amber-400 dark:focus:border-amber-500"
+                className="w-full px-3 py-2 rounded-md border border-border bg-background text-foreground text-sm focus:outline-none focus:ring-1 focus:ring-violet-500/20 focus:border-violet-400 dark:focus:border-violet-500"
                 dir={isRTL ? 'rtl' : 'ltr'}
               >
                 <option value="">{t("workflows.editor.properties.triggers.selectAgent")}</option>
@@ -1516,7 +1516,7 @@ const PropertiesPanel = ({ selectedNode, nodes, setNodes, deleteNode, workflowId
               <select
                 value={currentNode.data.auto_respond !== false ? 'true' : 'false'}
                 onChange={(e) => handleDataChange('auto_respond', e.target.value === 'true')}
-                className="w-full px-3 py-2 rounded-md border border-border bg-background text-foreground text-sm focus:outline-none focus:ring-1 focus:ring-amber-500/20 focus:border-amber-400 dark:focus:border-amber-500"
+                className="w-full px-3 py-2 rounded-md border border-border bg-background text-foreground text-sm focus:outline-none focus:ring-1 focus:ring-violet-500/20 focus:border-violet-400 dark:focus:border-violet-500"
                 dir={isRTL ? 'rtl' : 'ltr'}
               >
                 <option value="true">{t("workflows.editor.properties.triggers.autoRespondYes")}</option>
@@ -1539,7 +1539,7 @@ const PropertiesPanel = ({ selectedNode, nodes, setNodes, deleteNode, workflowId
                 type="text"
                 value={currentNode.data.label || ''}
                 onChange={(e) => handleDataChange('label', e.target.value)}
-                className="w-full px-3 py-2 rounded-md border border-border bg-background text-foreground text-sm focus:outline-none focus:ring-1 focus:ring-amber-500/20 focus:border-amber-400 dark:focus:border-amber-500"
+                className="w-full px-3 py-2 rounded-md border border-border bg-background text-foreground text-sm focus:outline-none focus:ring-1 focus:ring-violet-500/20 focus:border-violet-400 dark:focus:border-violet-500"
                 placeholder={t("workflows.editor.properties.triggers.telegramPlaceholder")}
                 dir={isRTL ? 'rtl' : 'ltr'}
               />
@@ -1549,7 +1549,7 @@ const PropertiesPanel = ({ selectedNode, nodes, setNodes, deleteNode, workflowId
               <select
                 value={currentNode.data.agent_id || ''}
                 onChange={(e) => handleAgentChange(e.target.value)}
-                className="w-full px-3 py-2 rounded-md border border-border bg-background text-foreground text-sm focus:outline-none focus:ring-1 focus:ring-amber-500/20 focus:border-amber-400 dark:focus:border-amber-500"
+                className="w-full px-3 py-2 rounded-md border border-border bg-background text-foreground text-sm focus:outline-none focus:ring-1 focus:ring-violet-500/20 focus:border-violet-400 dark:focus:border-violet-500"
                 dir={isRTL ? 'rtl' : 'ltr'}
               >
                 <option value="">{t("workflows.editor.properties.triggers.selectAgent")}</option>
@@ -1566,7 +1566,7 @@ const PropertiesPanel = ({ selectedNode, nodes, setNodes, deleteNode, workflowId
               <select
                 value={currentNode.data.auto_respond !== false ? 'true' : 'false'}
                 onChange={(e) => handleDataChange('auto_respond', e.target.value === 'true')}
-                className="w-full px-3 py-2 rounded-md border border-border bg-background text-foreground text-sm focus:outline-none focus:ring-1 focus:ring-amber-500/20 focus:border-amber-400 dark:focus:border-amber-500"
+                className="w-full px-3 py-2 rounded-md border border-border bg-background text-foreground text-sm focus:outline-none focus:ring-1 focus:ring-violet-500/20 focus:border-violet-400 dark:focus:border-violet-500"
                 dir={isRTL ? 'rtl' : 'ltr'}
               >
                 <option value="true">{t("workflows.editor.properties.triggers.autoRespondYes")}</option>
@@ -1589,7 +1589,7 @@ const PropertiesPanel = ({ selectedNode, nodes, setNodes, deleteNode, workflowId
                 type="text"
                 value={currentNode.data.label || ''}
                 onChange={(e) => handleDataChange('label', e.target.value)}
-                className="w-full px-3 py-2 rounded-md border border-border bg-background text-foreground text-sm focus:outline-none focus:ring-1 focus:ring-amber-500/20 focus:border-amber-400 dark:focus:border-amber-500"
+                className="w-full px-3 py-2 rounded-md border border-border bg-background text-foreground text-sm focus:outline-none focus:ring-1 focus:ring-violet-500/20 focus:border-violet-400 dark:focus:border-violet-500"
                 placeholder={t("workflows.editor.properties.triggers.instagramPlaceholder")}
                 dir={isRTL ? 'rtl' : 'ltr'}
               />
@@ -1599,7 +1599,7 @@ const PropertiesPanel = ({ selectedNode, nodes, setNodes, deleteNode, workflowId
               <select
                 value={currentNode.data.agent_id || ''}
                 onChange={(e) => handleAgentChange(e.target.value)}
-                className="w-full px-3 py-2 rounded-md border border-border bg-background text-foreground text-sm focus:outline-none focus:ring-1 focus:ring-amber-500/20 focus:border-amber-400 dark:focus:border-amber-500"
+                className="w-full px-3 py-2 rounded-md border border-border bg-background text-foreground text-sm focus:outline-none focus:ring-1 focus:ring-violet-500/20 focus:border-violet-400 dark:focus:border-violet-500"
                 dir={isRTL ? 'rtl' : 'ltr'}
               >
                 <option value="">{t("workflows.editor.properties.triggers.selectAgent")}</option>
@@ -1616,7 +1616,7 @@ const PropertiesPanel = ({ selectedNode, nodes, setNodes, deleteNode, workflowId
               <select
                 value={currentNode.data.auto_respond !== false ? 'true' : 'false'}
                 onChange={(e) => handleDataChange('auto_respond', e.target.value === 'true')}
-                className="w-full px-3 py-2 rounded-md border border-border bg-background text-foreground text-sm focus:outline-none focus:ring-1 focus:ring-amber-500/20 focus:border-amber-400 dark:focus:border-amber-500"
+                className="w-full px-3 py-2 rounded-md border border-border bg-background text-foreground text-sm focus:outline-none focus:ring-1 focus:ring-violet-500/20 focus:border-violet-400 dark:focus:border-violet-500"
                 dir={isRTL ? 'rtl' : 'ltr'}
               >
                 <option value="true">{t("workflows.editor.properties.triggers.autoRespondYes")}</option>
@@ -1639,7 +1639,7 @@ const PropertiesPanel = ({ selectedNode, nodes, setNodes, deleteNode, workflowId
                 type="text"
                 value={currentNode.data.label || ''}
                 onChange={(e) => handleDataChange('label', e.target.value)}
-                className="w-full px-3 py-2 rounded-md border border-border bg-background text-foreground text-sm focus:outline-none focus:ring-1 focus:ring-amber-500/20 focus:border-amber-400 dark:focus:border-amber-500"
+                className="w-full px-3 py-2 rounded-md border border-border bg-background text-foreground text-sm focus:outline-none focus:ring-1 focus:ring-violet-500/20 focus:border-violet-400 dark:focus:border-violet-500"
                 placeholder={t("workflows.editor.properties.triggers.twilioVoicePlaceholder") || "Voice Call Handler"}
                 dir={isRTL ? 'rtl' : 'ltr'}
               />
@@ -1649,7 +1649,7 @@ const PropertiesPanel = ({ selectedNode, nodes, setNodes, deleteNode, workflowId
               <select
                 value={currentNode.data.agent_id || ''}
                 onChange={(e) => handleAgentChange(e.target.value)}
-                className="w-full px-3 py-2 rounded-md border border-border bg-background text-foreground text-sm focus:outline-none focus:ring-1 focus:ring-amber-500/20 focus:border-amber-400 dark:focus:border-amber-500"
+                className="w-full px-3 py-2 rounded-md border border-border bg-background text-foreground text-sm focus:outline-none focus:ring-1 focus:ring-violet-500/20 focus:border-violet-400 dark:focus:border-violet-500"
                 dir={isRTL ? 'rtl' : 'ltr'}
               >
                 <option value="">{t("workflows.editor.properties.triggers.selectAgent")}</option>
@@ -1666,7 +1666,7 @@ const PropertiesPanel = ({ selectedNode, nodes, setNodes, deleteNode, workflowId
               <textarea
                 value={currentNode.data.welcome_message || ''}
                 onChange={(e) => handleDataChange('welcome_message', e.target.value)}
-                className="w-full px-3 py-2 rounded-md border border-border bg-background text-foreground text-sm focus:outline-none focus:ring-1 focus:ring-amber-500/20 focus:border-amber-400 dark:focus:border-amber-500"
+                className="w-full px-3 py-2 rounded-md border border-border bg-background text-foreground text-sm focus:outline-none focus:ring-1 focus:ring-violet-500/20 focus:border-violet-400 dark:focus:border-violet-500"
                 placeholder={t("workflows.editor.properties.triggers.welcomeMessagePlaceholder") || "Hello! How can I help you today?"}
                 rows={2}
                 dir={isRTL ? 'rtl' : 'ltr'}
@@ -1678,7 +1678,7 @@ const PropertiesPanel = ({ selectedNode, nodes, setNodes, deleteNode, workflowId
               <select
                 value={currentNode.data.language || 'en-US'}
                 onChange={(e) => handleDataChange('language', e.target.value)}
-                className="w-full px-3 py-2 rounded-md border border-border bg-background text-foreground text-sm focus:outline-none focus:ring-1 focus:ring-amber-500/20 focus:border-amber-400 dark:focus:border-amber-500"
+                className="w-full px-3 py-2 rounded-md border border-border bg-background text-foreground text-sm focus:outline-none focus:ring-1 focus:ring-violet-500/20 focus:border-violet-400 dark:focus:border-violet-500"
                 dir={isRTL ? 'rtl' : 'ltr'}
               >
                 <option value="en-US">English (US)</option>
@@ -1702,7 +1702,7 @@ const PropertiesPanel = ({ selectedNode, nodes, setNodes, deleteNode, workflowId
               <select
                 value={currentNode.data.auto_respond !== false ? 'true' : 'false'}
                 onChange={(e) => handleDataChange('auto_respond', e.target.value === 'true')}
-                className="w-full px-3 py-2 rounded-md border border-border bg-background text-foreground text-sm focus:outline-none focus:ring-1 focus:ring-amber-500/20 focus:border-amber-400 dark:focus:border-amber-500"
+                className="w-full px-3 py-2 rounded-md border border-border bg-background text-foreground text-sm focus:outline-none focus:ring-1 focus:ring-violet-500/20 focus:border-violet-400 dark:focus:border-violet-500"
                 dir={isRTL ? 'rtl' : 'ltr'}
               >
                 <option value="true">{t("workflows.editor.properties.triggers.autoRespondYes")}</option>
@@ -1725,7 +1725,7 @@ const PropertiesPanel = ({ selectedNode, nodes, setNodes, deleteNode, workflowId
                 type="text"
                 value={currentNode.data.label || ''}
                 onChange={(e) => handleDataChange('label', e.target.value)}
-                className="w-full px-3 py-2 rounded-md border border-border bg-background text-foreground text-sm focus:outline-none focus:ring-1 focus:ring-amber-500/20 focus:border-amber-400 dark:focus:border-amber-500"
+                className="w-full px-3 py-2 rounded-md border border-border bg-background text-foreground text-sm focus:outline-none focus:ring-1 focus:ring-violet-500/20 focus:border-violet-400 dark:focus:border-violet-500"
                 placeholder={t("workflows.editor.properties.triggers.freeswitchPlaceholder") || "FreeSWITCH Call Handler"}
                 dir={isRTL ? 'rtl' : 'ltr'}
               />
@@ -1735,7 +1735,7 @@ const PropertiesPanel = ({ selectedNode, nodes, setNodes, deleteNode, workflowId
               <select
                 value={currentNode.data.agent_id || ''}
                 onChange={(e) => handleAgentChange(e.target.value)}
-                className="w-full px-3 py-2 rounded-md border border-border bg-background text-foreground text-sm focus:outline-none focus:ring-1 focus:ring-amber-500/20 focus:border-amber-400 dark:focus:border-amber-500"
+                className="w-full px-3 py-2 rounded-md border border-border bg-background text-foreground text-sm focus:outline-none focus:ring-1 focus:ring-violet-500/20 focus:border-violet-400 dark:focus:border-violet-500"
                 dir={isRTL ? 'rtl' : 'ltr'}
               >
                 <option value="">{t("workflows.editor.properties.triggers.selectAgent")}</option>
@@ -1752,7 +1752,7 @@ const PropertiesPanel = ({ selectedNode, nodes, setNodes, deleteNode, workflowId
               <textarea
                 value={currentNode.data.welcome_message || ''}
                 onChange={(e) => handleDataChange('welcome_message', e.target.value)}
-                className="w-full px-3 py-2 rounded-md border border-border bg-background text-foreground text-sm focus:outline-none focus:ring-1 focus:ring-amber-500/20 focus:border-amber-400 dark:focus:border-amber-500"
+                className="w-full px-3 py-2 rounded-md border border-border bg-background text-foreground text-sm focus:outline-none focus:ring-1 focus:ring-violet-500/20 focus:border-violet-400 dark:focus:border-violet-500"
                 placeholder={t("workflows.editor.properties.triggers.welcomeMessagePlaceholder") || "Hello! How can I help you today?"}
                 rows={2}
                 dir={isRTL ? 'rtl' : 'ltr'}
@@ -1764,7 +1764,7 @@ const PropertiesPanel = ({ selectedNode, nodes, setNodes, deleteNode, workflowId
               <select
                 value={currentNode.data.language || 'en-US'}
                 onChange={(e) => handleDataChange('language', e.target.value)}
-                className="w-full px-3 py-2 rounded-md border border-border bg-background text-foreground text-sm focus:outline-none focus:ring-1 focus:ring-amber-500/20 focus:border-amber-400 dark:focus:border-amber-500"
+                className="w-full px-3 py-2 rounded-md border border-border bg-background text-foreground text-sm focus:outline-none focus:ring-1 focus:ring-violet-500/20 focus:border-violet-400 dark:focus:border-violet-500"
                 dir={isRTL ? 'rtl' : 'ltr'}
               >
                 <option value="en-US">English (US)</option>
@@ -1788,7 +1788,7 @@ const PropertiesPanel = ({ selectedNode, nodes, setNodes, deleteNode, workflowId
               <select
                 value={currentNode.data.auto_respond !== false ? 'true' : 'false'}
                 onChange={(e) => handleDataChange('auto_respond', e.target.value === 'true')}
-                className="w-full px-3 py-2 rounded-md border border-border bg-background text-foreground text-sm focus:outline-none focus:ring-1 focus:ring-amber-500/20 focus:border-amber-400 dark:focus:border-amber-500"
+                className="w-full px-3 py-2 rounded-md border border-border bg-background text-foreground text-sm focus:outline-none focus:ring-1 focus:ring-violet-500/20 focus:border-violet-400 dark:focus:border-violet-500"
                 dir={isRTL ? 'rtl' : 'ltr'}
               >
                 <option value="true">{t("workflows.editor.properties.triggers.autoRespondYes")}</option>
@@ -1810,7 +1810,7 @@ const PropertiesPanel = ({ selectedNode, nodes, setNodes, deleteNode, workflowId
               <select
                 value={currentNode.data.default_route || ''}
                 onChange={(e) => handleDataChange('default_route', e.target.value)}
-                className="w-full px-3 py-2.5 rounded-lg border border-border bg-background text-foreground text-xs focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-400 dark:focus:border-amber-500 transition-all"
+                className="w-full px-3 py-2.5 rounded-lg border border-border bg-background text-foreground text-xs focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-400 dark:focus:border-violet-500 transition-all"
                 dir={isRTL ? 'rtl' : 'ltr'}
               >
                 <option value="">{t("workflows.editor.properties.chat.selectDefaultAction")}</option>
@@ -1825,7 +1825,7 @@ const PropertiesPanel = ({ selectedNode, nodes, setNodes, deleteNode, workflowId
                 type="text"
                 value={currentNode.data.intent_variable || 'detected_intent'}
                 onChange={(e) => handleDataChange('intent_variable', e.target.value)}
-                className="w-full px-3 py-2.5 rounded-lg border border-border bg-background text-foreground text-xs focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-400 dark:focus:border-amber-500 transition-all"
+                className="w-full px-3 py-2.5 rounded-lg border border-border bg-background text-foreground text-xs focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-400 dark:focus:border-violet-500 transition-all"
                 placeholder={t("workflows.editor.properties.chat.saveIntentToPlaceholder")}
                 dir={isRTL ? 'rtl' : 'ltr'}
               />
@@ -1845,7 +1845,7 @@ const PropertiesPanel = ({ selectedNode, nodes, setNodes, deleteNode, workflowId
               <select
                 value={currentNode.data.model || 'groq/llama-3.1-8b-instant'}
                 onChange={(e) => handleDataChange('model', e.target.value)}
-                className="w-full px-3 py-2 rounded-md border border-border bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 dark:focus:ring-amber-400"
+                className="w-full px-3 py-2 rounded-md border border-border bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-violet-500 dark:focus:ring-violet-400"
                 dir={isRTL ? 'rtl' : 'ltr'}
               >
                 <option value="groq/llama-3.1-8b-instant">Groq - Llama 3.1 8B (Fast)</option>
@@ -1870,7 +1870,7 @@ const PropertiesPanel = ({ selectedNode, nodes, setNodes, deleteNode, workflowId
                           newClasses[index] = { ...newClasses[index], name: e.target.value };
                           handleDataChange('classes', newClasses);
                         }}
-                        className="flex-1 px-3 py-2 rounded-lg border border-border bg-background text-foreground text-xs focus:outline-none focus:ring-1 focus:ring-amber-500/20 focus:border-amber-400 dark:focus:border-amber-500"
+                        className="flex-1 px-3 py-2 rounded-lg border border-border bg-background text-foreground text-xs focus:outline-none focus:ring-1 focus:ring-violet-500/20 focus:border-violet-400 dark:focus:border-violet-500"
                         placeholder={t("workflows.editor.properties.chat.className")}
                         dir={isRTL ? 'rtl' : 'ltr'}
                       />
@@ -1892,7 +1892,7 @@ const PropertiesPanel = ({ selectedNode, nodes, setNodes, deleteNode, workflowId
                         newClasses[index] = { ...newClasses[index], description: e.target.value };
                         handleDataChange('classes', newClasses);
                       }}
-                      className="w-full px-3 py-2 rounded-lg border border-border bg-background text-foreground text-xs focus:outline-none focus:ring-1 focus:ring-amber-500/20 focus:border-amber-400 dark:focus:border-amber-500"
+                      className="w-full px-3 py-2 rounded-lg border border-border bg-background text-foreground text-xs focus:outline-none focus:ring-1 focus:ring-violet-500/20 focus:border-violet-400 dark:focus:border-violet-500"
                       placeholder={t("workflows.editor.properties.chat.classDescription")}
                       dir={isRTL ? 'rtl' : 'ltr'}
                     />
@@ -1903,7 +1903,7 @@ const PropertiesPanel = ({ selectedNode, nodes, setNodes, deleteNode, workflowId
                     const newClasses = [...(currentNode.data.classes || []), { name: '', description: '' }];
                     handleDataChange('classes', newClasses);
                   }}
-                  className="w-full px-3 py-2 border border-dashed border-border rounded-lg text-muted-foreground hover:border-amber-400/60 hover:text-amber-600 dark:hover:text-amber-400 text-xs font-medium transition-colors"
+                  className="w-full px-3 py-2 border border-dashed border-border rounded-lg text-muted-foreground hover:border-violet-400/60 hover:text-violet-600 dark:hover:text-violet-400 text-xs font-medium transition-colors"
                 >
                   + {t("workflows.editor.properties.chat.addClass")}
                 </button>
@@ -1917,7 +1917,7 @@ const PropertiesPanel = ({ selectedNode, nodes, setNodes, deleteNode, workflowId
                 type="text"
                 value={currentNode.data.input_variable || 'user_message'}
                 onChange={(e) => handleDataChange('input_variable', e.target.value)}
-                className="w-full px-3 py-2 rounded-md border border-border bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 dark:focus:ring-amber-400"
+                className="w-full px-3 py-2 rounded-md border border-border bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-violet-500 dark:focus:ring-violet-400"
                 placeholder="user_message"
                 dir={isRTL ? 'rtl' : 'ltr'}
               />
@@ -1931,7 +1931,7 @@ const PropertiesPanel = ({ selectedNode, nodes, setNodes, deleteNode, workflowId
                 type="text"
                 value={currentNode.data.output_variable || 'classification'}
                 onChange={(e) => handleDataChange('output_variable', e.target.value)}
-                className="w-full px-3 py-2 rounded-md border border-border bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 dark:focus:ring-amber-400"
+                className="w-full px-3 py-2 rounded-md border border-border bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-violet-500 dark:focus:ring-violet-400"
                 placeholder="classification"
                 dir={isRTL ? 'rtl' : 'ltr'}
               />
@@ -1976,7 +1976,7 @@ const PropertiesPanel = ({ selectedNode, nodes, setNodes, deleteNode, workflowId
                           newEntities[index] = { ...newEntities[index], name: e.target.value };
                           handleDataChange('entities', newEntities);
                         }}
-                        className="flex-1 px-3 py-2 rounded-lg border border-border bg-background text-foreground text-xs focus:outline-none focus:ring-1 focus:ring-amber-500/20 focus:border-amber-400 dark:focus:border-amber-500"
+                        className="flex-1 px-3 py-2 rounded-lg border border-border bg-background text-foreground text-xs focus:outline-none focus:ring-1 focus:ring-violet-500/20 focus:border-violet-400 dark:focus:border-violet-500"
                         placeholder="Entity name (e.g., customer_name)"
                         dir={isRTL ? 'rtl' : 'ltr'}
                       />
@@ -1998,7 +1998,7 @@ const PropertiesPanel = ({ selectedNode, nodes, setNodes, deleteNode, workflowId
                         newEntities[index] = { ...newEntities[index], description: e.target.value };
                         handleDataChange('entities', newEntities);
                       }}
-                      className="w-full px-3 py-2 mb-2 rounded-lg border border-border bg-background text-foreground text-xs focus:outline-none focus:ring-1 focus:ring-amber-500/20 focus:border-amber-400 dark:focus:border-amber-500"
+                      className="w-full px-3 py-2 mb-2 rounded-lg border border-border bg-background text-foreground text-xs focus:outline-none focus:ring-1 focus:ring-violet-500/20 focus:border-violet-400 dark:focus:border-violet-500"
                       placeholder="Description (e.g., Customer's full name)"
                       dir={isRTL ? 'rtl' : 'ltr'}
                     />
@@ -2010,7 +2010,7 @@ const PropertiesPanel = ({ selectedNode, nodes, setNodes, deleteNode, workflowId
                           newEntities[index] = { ...newEntities[index], type: e.target.value };
                           handleDataChange('entities', newEntities);
                         }}
-                        className="flex-1 px-3 py-2 rounded-lg border border-border bg-background text-foreground text-xs focus:outline-none focus:ring-1 focus:ring-amber-500/20 focus:border-amber-400 dark:focus:border-amber-500"
+                        className="flex-1 px-3 py-2 rounded-lg border border-border bg-background text-foreground text-xs focus:outline-none focus:ring-1 focus:ring-violet-500/20 focus:border-violet-400 dark:focus:border-violet-500"
                         dir={isRTL ? 'rtl' : 'ltr'}
                       >
                         <option value="text">Text</option>
@@ -2028,7 +2028,7 @@ const PropertiesPanel = ({ selectedNode, nodes, setNodes, deleteNode, workflowId
                             newEntities[index] = { ...newEntities[index], required: e.target.checked };
                             handleDataChange('entities', newEntities);
                           }}
-                          className="w-4 h-4 text-amber-600 bg-background border-border rounded focus:ring-amber-500/30"
+                          className="w-4 h-4 text-violet-600 bg-background border-border rounded focus:ring-violet-500/30"
                         />
                         <span className="text-xs text-muted-foreground font-medium">Required</span>
                       </label>
@@ -2040,7 +2040,7 @@ const PropertiesPanel = ({ selectedNode, nodes, setNodes, deleteNode, workflowId
                     const newEntities = [...(currentNode.data.entities || []), { name: '', description: '', type: 'text', required: true }];
                     handleDataChange('entities', newEntities);
                   }}
-                  className="w-full px-3 py-2 border border-dashed border-border rounded-lg text-muted-foreground hover:border-amber-400/60 hover:text-amber-600 dark:hover:text-amber-400 text-xs font-medium transition-colors"
+                  className="w-full px-3 py-2 border border-dashed border-border rounded-lg text-muted-foreground hover:border-violet-400/60 hover:text-violet-600 dark:hover:text-violet-400 text-xs font-medium transition-colors"
                 >
                   + Add Entity
                 </button>
@@ -2108,7 +2108,7 @@ const PropertiesPanel = ({ selectedNode, nodes, setNodes, deleteNode, workflowId
                 ))}
               </select>
               {availableSubworkflows.length === 0 && (
-                <p className="text-xs text-amber-600 dark:text-amber-400 mt-1">
+                <p className="text-xs text-violet-600 dark:text-violet-400 mt-1">
                   {t("workflows.editor.properties.noSubworkflowsAvailable") || "No other workflows available. Create another workflow first."}
                 </p>
               )}
@@ -2116,8 +2116,8 @@ const PropertiesPanel = ({ selectedNode, nodes, setNodes, deleteNode, workflowId
               {currentNode.data.subworkflow_id && (() => {
                 const selectedWf = availableSubworkflows.find(w => w.id === currentNode.data.subworkflow_id);
                 return selectedWf?.has_triggers ? (
-                  <div className="mt-2 p-2 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700 rounded">
-                    <p className="text-xs text-amber-700 dark:text-amber-300 flex items-start gap-1">
+                  <div className="mt-2 p-2 bg-violet-50 dark:bg-violet-900/20 border border-violet-200 dark:border-violet-700 rounded">
+                    <p className="text-xs text-violet-700 dark:text-violet-300 flex items-start gap-1">
                       <span className="font-bold">⚠</span>
                       <span>
                         {t("workflows.editor.properties.subworkflowHasTriggersWarning") || "This workflow has its own triggers and can also run standalone. Changes may affect both contexts."}
@@ -2166,7 +2166,7 @@ const PropertiesPanel = ({ selectedNode, nodes, setNodes, deleteNode, workflowId
                 type="text"
                 value={currentNode.data.entity_names || ''}
                 onChange={(e) => handleDataChange('entity_names', e.target.value)}
-                className="w-full px-3 py-2.5 rounded-lg border border-border bg-background text-foreground text-xs focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-400 dark:focus:border-amber-500 transition-all"
+                className="w-full px-3 py-2.5 rounded-lg border border-border bg-background text-foreground text-xs focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-400 dark:focus:border-violet-500 transition-all"
                 placeholder={t("workflows.editor.properties.chat.entitiesToCollectPlaceholder")}
                 dir={isRTL ? 'rtl' : 'ltr'}
               />
@@ -2177,7 +2177,7 @@ const PropertiesPanel = ({ selectedNode, nodes, setNodes, deleteNode, workflowId
                 type="number"
                 value={currentNode.data.max_attempts || 3}
                 onChange={(e) => handleDataChange('max_attempts', parseInt(e.target.value))}
-                className="w-full px-3 py-2.5 rounded-lg border border-border bg-background text-foreground text-xs focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-400 dark:focus:border-amber-500 transition-all"
+                className="w-full px-3 py-2.5 rounded-lg border border-border bg-background text-foreground text-xs focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-400 dark:focus:border-violet-500 transition-all"
                 min="1"
                 max="10"
                 dir={isRTL ? 'rtl' : 'ltr'}
@@ -2189,7 +2189,7 @@ const PropertiesPanel = ({ selectedNode, nodes, setNodes, deleteNode, workflowId
                 type="text"
                 value={currentNode.data.save_to_variable || 'collected_entities'}
                 onChange={(e) => handleDataChange('save_to_variable', e.target.value)}
-                className="w-full px-3 py-2.5 rounded-lg border border-border bg-background text-foreground text-xs focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-400 dark:focus:border-amber-500 transition-all"
+                className="w-full px-3 py-2.5 rounded-lg border border-border bg-background text-foreground text-xs focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-400 dark:focus:border-violet-500 transition-all"
                 placeholder={t("workflows.editor.properties.chat.saveEntitiesToPlaceholder")}
                 dir={isRTL ? 'rtl' : 'ltr'}
               />
@@ -2208,7 +2208,7 @@ const PropertiesPanel = ({ selectedNode, nodes, setNodes, deleteNode, workflowId
                 type="text"
                 value={currentNode.data.entity_name || ''}
                 onChange={(e) => handleDataChange('entity_name', e.target.value)}
-                className="w-full px-3 py-2.5 rounded-lg border border-border bg-background text-foreground text-xs focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-400 dark:focus:border-amber-500 transition-all"
+                className="w-full px-3 py-2.5 rounded-lg border border-border bg-background text-foreground text-xs focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-400 dark:focus:border-violet-500 transition-all"
                 placeholder={t("workflows.editor.properties.chat.entityNameToCheckPlaceholder")}
                 dir={isRTL ? 'rtl' : 'ltr'}
               />
@@ -2218,7 +2218,7 @@ const PropertiesPanel = ({ selectedNode, nodes, setNodes, deleteNode, workflowId
               <select
                 value={currentNode.data.validation_rule || 'exists'}
                 onChange={(e) => handleDataChange('validation_rule', e.target.value)}
-                className="w-full px-3 py-2.5 rounded-lg border border-border bg-background text-foreground text-xs focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-400 dark:focus:border-amber-500 transition-all"
+                className="w-full px-3 py-2.5 rounded-lg border border-border bg-background text-foreground text-xs focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-400 dark:focus:border-violet-500 transition-all"
                 dir={isRTL ? 'rtl' : 'ltr'}
               >
                 <option value="exists">{t("workflows.editor.properties.chat.entityExists")}</option>
@@ -2233,7 +2233,7 @@ const PropertiesPanel = ({ selectedNode, nodes, setNodes, deleteNode, workflowId
                   type="text"
                   value={currentNode.data.validation_pattern || ''}
                   onChange={(e) => handleDataChange('validation_pattern', e.target.value)}
-                  className="w-full px-3 py-2 rounded-md border border-border bg-background text-foreground text-xs font-mono focus:outline-none focus:ring-1 focus:ring-amber-500/20 focus:border-amber-400 dark:focus:border-amber-500"
+                  className="w-full px-3 py-2 rounded-md border border-border bg-background text-foreground text-xs font-mono focus:outline-none focus:ring-1 focus:ring-violet-500/20 focus:border-violet-400 dark:focus:border-violet-500"
                   placeholder={t("workflows.editor.properties.chat.regexPatternPlaceholder")}
                   dir="ltr"
                 />
@@ -2253,7 +2253,7 @@ const PropertiesPanel = ({ selectedNode, nodes, setNodes, deleteNode, workflowId
                 type="text"
                 value={currentNode.data.variable_name || ''}
                 onChange={(e) => handleDataChange('variable_name', e.target.value)}
-                className="w-full px-3 py-2.5 rounded-lg border border-border bg-background text-foreground text-xs focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-400 dark:focus:border-amber-500 transition-all"
+                className="w-full px-3 py-2.5 rounded-lg border border-border bg-background text-foreground text-xs focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-400 dark:focus:border-violet-500 transition-all"
                 placeholder={t("workflows.editor.properties.chat.variableNamePlaceholder")}
                 dir={isRTL ? 'rtl' : 'ltr'}
               />
@@ -2273,7 +2273,7 @@ const PropertiesPanel = ({ selectedNode, nodes, setNodes, deleteNode, workflowId
               <select
                 value={currentNode.data.update_mode || 'set'}
                 onChange={(e) => handleDataChange('update_mode', e.target.value)}
-                className="w-full px-3 py-2.5 rounded-lg border border-border bg-background text-foreground text-xs focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-400 dark:focus:border-amber-500 transition-all"
+                className="w-full px-3 py-2.5 rounded-lg border border-border bg-background text-foreground text-xs focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-400 dark:focus:border-violet-500 transition-all"
                 dir={isRTL ? 'rtl' : 'ltr'}
               >
                 <option value="set">{t("workflows.editor.properties.chat.updateModeSet")}</option>
@@ -2295,7 +2295,7 @@ const PropertiesPanel = ({ selectedNode, nodes, setNodes, deleteNode, workflowId
                 type="text"
                 value={currentNode.data.tags || ''}
                 onChange={(e) => handleDataChange('tags', e.target.value)}
-                className="w-full px-3 py-2.5 rounded-lg border border-border bg-background text-foreground text-xs focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-400 dark:focus:border-amber-500 transition-all"
+                className="w-full px-3 py-2.5 rounded-lg border border-border bg-background text-foreground text-xs focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-400 dark:focus:border-violet-500 transition-all"
                 placeholder={t("workflows.editor.properties.chat.tagsPlaceholder")}
                 dir={isRTL ? 'rtl' : 'ltr'}
               />
@@ -2305,7 +2305,7 @@ const PropertiesPanel = ({ selectedNode, nodes, setNodes, deleteNode, workflowId
               <select
                 value={currentNode.data.dynamic_tag_variable || ''}
                 onChange={(e) => handleDataChange('dynamic_tag_variable', e.target.value)}
-                className="w-full px-3 py-2.5 rounded-lg border border-border bg-background text-foreground text-xs focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-400 dark:focus:border-amber-500 transition-all"
+                className="w-full px-3 py-2.5 rounded-lg border border-border bg-background text-foreground text-xs focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-400 dark:focus:border-violet-500 transition-all"
                 dir={isRTL ? 'rtl' : 'ltr'}
               >
                 <option value="">{t("workflows.editor.properties.chat.noneStaticOnly")}</option>
@@ -2327,7 +2327,7 @@ const PropertiesPanel = ({ selectedNode, nodes, setNodes, deleteNode, workflowId
               <select
                 value={currentNode.data.assignment_type || 'specific'}
                 onChange={(e) => handleDataChange('assignment_type', e.target.value)}
-                className="w-full px-3 py-2.5 rounded-lg border border-border bg-background text-foreground text-xs focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-400 dark:focus:border-amber-500 transition-all"
+                className="w-full px-3 py-2.5 rounded-lg border border-border bg-background text-foreground text-xs focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-400 dark:focus:border-violet-500 transition-all"
                 dir={isRTL ? 'rtl' : 'ltr'}
               >
                 <option value="specific">{t("workflows.editor.properties.chat.specificAgent")}</option>
@@ -2343,7 +2343,7 @@ const PropertiesPanel = ({ selectedNode, nodes, setNodes, deleteNode, workflowId
                   type="text"
                   value={currentNode.data.agent_id || ''}
                   onChange={(e) => handleDataChange('agent_id', e.target.value)}
-                  className="w-full px-3 py-2.5 rounded-lg border border-border bg-background text-foreground text-xs focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-400 dark:focus:border-amber-500 transition-all"
+                  className="w-full px-3 py-2.5 rounded-lg border border-border bg-background text-foreground text-xs focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-400 dark:focus:border-violet-500 transition-all"
                   placeholder={t("workflows.editor.properties.chat.agentIdEmailPlaceholder")}
                   dir={isRTL ? 'rtl' : 'ltr'}
                 />
@@ -2356,7 +2356,7 @@ const PropertiesPanel = ({ selectedNode, nodes, setNodes, deleteNode, workflowId
                   type="text"
                   value={currentNode.data.team_name || ''}
                   onChange={(e) => handleDataChange('team_name', e.target.value)}
-                  className="w-full px-3 py-2.5 rounded-lg border border-border bg-background text-foreground text-xs focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-400 dark:focus:border-amber-500 transition-all"
+                  className="w-full px-3 py-2.5 rounded-lg border border-border bg-background text-foreground text-xs focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-400 dark:focus:border-violet-500 transition-all"
                   placeholder={t("workflows.editor.properties.chat.teamNamePlaceholder")}
                   dir={isRTL ? 'rtl' : 'ltr'}
                 />
@@ -2367,7 +2367,7 @@ const PropertiesPanel = ({ selectedNode, nodes, setNodes, deleteNode, workflowId
               <select
                 value={currentNode.data.priority || 'normal'}
                 onChange={(e) => handleDataChange('priority', e.target.value)}
-                className="w-full px-3 py-2.5 rounded-lg border border-border bg-background text-foreground text-xs focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-400 dark:focus:border-amber-500 transition-all"
+                className="w-full px-3 py-2.5 rounded-lg border border-border bg-background text-foreground text-xs focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-400 dark:focus:border-violet-500 transition-all"
                 dir={isRTL ? 'rtl' : 'ltr'}
               >
                 <option value="low">{t("workflows.editor.properties.chat.priorityLow")}</option>
@@ -2389,7 +2389,7 @@ const PropertiesPanel = ({ selectedNode, nodes, setNodes, deleteNode, workflowId
               <select
                 value={currentNode.data.status || 'active'}
                 onChange={(e) => handleDataChange('status', e.target.value)}
-                className="w-full px-3 py-2.5 rounded-lg border border-border bg-background text-foreground text-xs focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-400 dark:focus:border-amber-500 transition-all"
+                className="w-full px-3 py-2.5 rounded-lg border border-border bg-background text-foreground text-xs focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-400 dark:focus:border-violet-500 transition-all"
                 dir={isRTL ? 'rtl' : 'ltr'}
               >
                 <option value="active">{t("workflows.editor.properties.chat.statusActive")}</option>
@@ -2416,7 +2416,7 @@ const PropertiesPanel = ({ selectedNode, nodes, setNodes, deleteNode, workflowId
                 type="number"
                 value={currentNode.data.auto_close_minutes || ''}
                 onChange={(e) => handleDataChange('auto_close_minutes', e.target.value ? parseInt(e.target.value) : '')}
-                className="w-full px-3 py-2.5 rounded-lg border border-border bg-background text-foreground text-xs focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-400 dark:focus:border-amber-500 transition-all"
+                className="w-full px-3 py-2.5 rounded-lg border border-border bg-background text-foreground text-xs focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-400 dark:focus:border-violet-500 transition-all"
                 placeholder={t("workflows.editor.properties.chat.autoCloseAfterPlaceholder")}
                 min="0"
                 dir={isRTL ? 'rtl' : 'ltr'}
@@ -2443,7 +2443,7 @@ const PropertiesPanel = ({ selectedNode, nodes, setNodes, deleteNode, workflowId
               <select
                 value={currentNode.data.target_channel || 'whatsapp'}
                 onChange={(e) => handleDataChange('target_channel', e.target.value)}
-                className="w-full px-3 py-2.5 rounded-lg border border-border bg-background text-foreground text-xs focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-400 dark:focus:border-amber-500 transition-all"
+                className="w-full px-3 py-2.5 rounded-lg border border-border bg-background text-foreground text-xs focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-400 dark:focus:border-violet-500 transition-all"
                 dir={isRTL ? 'rtl' : 'ltr'}
               >
                 <option value="whatsapp">WhatsApp</option>
@@ -2461,7 +2461,7 @@ const PropertiesPanel = ({ selectedNode, nodes, setNodes, deleteNode, workflowId
               <select
                 value={currentNode.data.redirect_type || 'invite_link'}
                 onChange={(e) => handleDataChange('redirect_type', e.target.value)}
-                className="w-full px-3 py-2.5 rounded-lg border border-border bg-background text-foreground text-xs focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-400 dark:focus:border-amber-500 transition-all"
+                className="w-full px-3 py-2.5 rounded-lg border border-border bg-background text-foreground text-xs focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-400 dark:focus:border-violet-500 transition-all"
                 dir={isRTL ? 'rtl' : 'ltr'}
               >
                 <option value="invite_link">{t("workflows.editor.properties.channelRedirect.inviteLink") || "Invite Link - Send message to target channel"}</option>
@@ -2480,7 +2480,7 @@ const PropertiesPanel = ({ selectedNode, nodes, setNodes, deleteNode, workflowId
               <select
                 value={currentNode.data.contact_info_source || 'auto'}
                 onChange={(e) => handleDataChange('contact_info_source', e.target.value)}
-                className="w-full px-3 py-2.5 rounded-lg border border-border bg-background text-foreground text-xs focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-400 dark:focus:border-amber-500 transition-all"
+                className="w-full px-3 py-2.5 rounded-lg border border-border bg-background text-foreground text-xs focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-400 dark:focus:border-violet-500 transition-all"
                 dir={isRTL ? 'rtl' : 'ltr'}
               >
                 <option value="auto">{t("workflows.editor.properties.channelRedirect.sourceAuto") || "Auto (Contact first, then variable)"}</option>
@@ -2516,7 +2516,7 @@ const PropertiesPanel = ({ selectedNode, nodes, setNodes, deleteNode, workflowId
               <select
                 value={currentNode.data.original_session_behavior || 'keep_active'}
                 onChange={(e) => handleDataChange('original_session_behavior', e.target.value)}
-                className="w-full px-3 py-2.5 rounded-lg border border-border bg-background text-foreground text-xs focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-400 dark:focus:border-amber-500 transition-all"
+                className="w-full px-3 py-2.5 rounded-lg border border-border bg-background text-foreground text-xs focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-400 dark:focus:border-violet-500 transition-all"
                 dir={isRTL ? 'rtl' : 'ltr'}
               >
                 <option value="keep_active">{t("workflows.editor.properties.channelRedirect.keepActive") || "Keep Active (parallel sessions)"}</option>
@@ -2533,7 +2533,7 @@ const PropertiesPanel = ({ selectedNode, nodes, setNodes, deleteNode, workflowId
               <select
                 value={currentNode.data.workflow_continuation || 'original'}
                 onChange={(e) => handleDataChange('workflow_continuation', e.target.value)}
-                className="w-full px-3 py-2.5 rounded-lg border border-border bg-background text-foreground text-xs focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-400 dark:focus:border-amber-500 transition-all"
+                className="w-full px-3 py-2.5 rounded-lg border border-border bg-background text-foreground text-xs focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-400 dark:focus:border-violet-500 transition-all"
                 dir={isRTL ? 'rtl' : 'ltr'}
               >
                 <option value="original">{t("workflows.editor.properties.channelRedirect.continueOriginal") || "Continue on original channel"}</option>
@@ -2589,7 +2589,7 @@ const PropertiesPanel = ({ selectedNode, nodes, setNodes, deleteNode, workflowId
                       type="text"
                       value={(currentNode.data.context_variables_to_copy || []).join(', ')}
                       onChange={(e) => handleDataChange('context_variables_to_copy', e.target.value.split(',').map(v => v.trim()).filter(v => v))}
-                      className="w-full px-3 py-2.5 rounded-lg border border-border bg-background text-foreground text-xs focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-400 dark:focus:border-amber-500 transition-all"
+                      className="w-full px-3 py-2.5 rounded-lg border border-border bg-background text-foreground text-xs focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-400 dark:focus:border-violet-500 transition-all"
                       placeholder="customer_name, order_id, preferences"
                       dir={isRTL ? 'rtl' : 'ltr'}
                     />
@@ -2619,7 +2619,7 @@ const PropertiesPanel = ({ selectedNode, nodes, setNodes, deleteNode, workflowId
               <select
                 value={currentNode.data.fallback_on_failure || 'continue'}
                 onChange={(e) => handleDataChange('fallback_on_failure', e.target.value)}
-                className="w-full px-3 py-2.5 rounded-lg border border-border bg-background text-foreground text-xs focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-400 dark:focus:border-amber-500 transition-all"
+                className="w-full px-3 py-2.5 rounded-lg border border-border bg-background text-foreground text-xs focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-400 dark:focus:border-violet-500 transition-all"
                 dir={isRTL ? 'rtl' : 'ltr'}
               >
                 <option value="continue">{t("workflows.editor.properties.channelRedirect.continueFlow") || "Continue Flow"}</option>
@@ -2666,7 +2666,7 @@ const PropertiesPanel = ({ selectedNode, nodes, setNodes, deleteNode, workflowId
                 type="text"
                 value={currentNode.data.item_variable || 'item'}
                 onChange={(e) => handleDataChange('item_variable', e.target.value)}
-                className="w-full px-3 py-2.5 rounded-lg border border-border bg-background text-foreground text-xs focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-400 dark:focus:border-amber-500 transition-all"
+                className="w-full px-3 py-2.5 rounded-lg border border-border bg-background text-foreground text-xs focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-400 dark:focus:border-violet-500 transition-all"
                 placeholder="item"
                 dir={isRTL ? 'rtl' : 'ltr'}
               />
@@ -2683,7 +2683,7 @@ const PropertiesPanel = ({ selectedNode, nodes, setNodes, deleteNode, workflowId
                 type="text"
                 value={currentNode.data.index_variable || 'index'}
                 onChange={(e) => handleDataChange('index_variable', e.target.value)}
-                className="w-full px-3 py-2.5 rounded-lg border border-border bg-background text-foreground text-xs focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-400 dark:focus:border-amber-500 transition-all"
+                className="w-full px-3 py-2.5 rounded-lg border border-border bg-background text-foreground text-xs focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-400 dark:focus:border-violet-500 transition-all"
                 placeholder="index"
                 dir={isRTL ? 'rtl' : 'ltr'}
               />
@@ -2753,7 +2753,7 @@ const PropertiesPanel = ({ selectedNode, nodes, setNodes, deleteNode, workflowId
                       newConditions[index] = { ...newConditions[index], operator: e.target.value };
                       handleDataChange('conditions', newConditions);
                     }}
-                    className="w-full px-2 py-1.5 text-xs rounded-md border border-border bg-background text-foreground focus:outline-none focus:ring-1 focus:ring-amber-500/30 focus:border-amber-400 dark:focus:border-amber-500"
+                    className="w-full px-2 py-1.5 text-xs rounded-md border border-border bg-background text-foreground focus:outline-none focus:ring-1 focus:ring-violet-500/30 focus:border-violet-400 dark:focus:border-violet-500"
                     dir={isRTL ? 'rtl' : 'ltr'}
                   >
                     <option value="equals">{t("workflows.editor.properties.operators.equals")}</option>
@@ -2775,7 +2775,7 @@ const PropertiesPanel = ({ selectedNode, nodes, setNodes, deleteNode, workflowId
                       newConditions[index] = { ...newConditions[index], value: e.target.value };
                       handleDataChange('conditions', newConditions);
                     }}
-                    className="w-full px-2 py-1.5 text-xs rounded-md border border-border bg-background text-foreground focus:outline-none focus:ring-1 focus:ring-amber-500/30 focus:border-amber-400 dark:focus:border-amber-500 disabled:opacity-50"
+                    className="w-full px-2 py-1.5 text-xs rounded-md border border-border bg-background text-foreground focus:outline-none focus:ring-1 focus:ring-violet-500/30 focus:border-violet-400 dark:focus:border-violet-500 disabled:opacity-50"
                     placeholder={t("workflows.editor.properties.valuePlaceholder")}
                     disabled={['is_set', 'is_not_set'].includes(condition.operator)}
                     dir={isRTL ? 'rtl' : 'ltr'}
@@ -2816,8 +2816,8 @@ const PropertiesPanel = ({ selectedNode, nodes, setNodes, deleteNode, workflowId
       {/* Header */}
       <div className="sticky top-0 z-10 px-4 py-2.5 bg-card border-b border-border">
         <div className="flex items-center gap-2">
-          <div className="p-1 rounded-md bg-amber-500/10 border border-amber-500/20">
-            <Cog className="h-3.5 w-3.5 text-amber-600 dark:text-amber-400" />
+          <div className="p-1 rounded-md bg-violet-500/10 border border-violet-500/20">
+            <Cog className="h-3.5 w-3.5 text-violet-600 dark:text-violet-400" />
           </div>
           <span className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground font-mono">{t("workflows.editor.properties.nodeSettings")}</span>
         </div>

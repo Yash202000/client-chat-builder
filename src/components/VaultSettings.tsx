@@ -280,12 +280,12 @@ export const VaultSettings = () => {
       </div>
 
       {isManaged && (
-        <Alert className="mb-6 border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-900/20">
-          <Info className="h-4 w-4 text-amber-600 dark:text-amber-400" />
-          <AlertTitle className="text-amber-800 dark:text-amber-300">
+        <Alert className="mb-6 border-violet-200 dark:border-violet-800 bg-violet-50 dark:bg-violet-900/20">
+          <Info className="h-4 w-4 text-violet-600 dark:text-violet-400" />
+          <AlertTitle className="text-violet-800 dark:text-violet-300">
             {t('vault.managedMode') || 'System-Managed Credentials'}
           </AlertTitle>
-          <AlertDescription className="text-amber-700 dark:text-amber-400">
+          <AlertDescription className="text-violet-700 dark:text-violet-400">
             {t('vault.managedModeDesc') || 'API credentials are configured at the system level by your administrator. Contact your system administrator to update credentials.'}
           </AlertDescription>
         </Alert>

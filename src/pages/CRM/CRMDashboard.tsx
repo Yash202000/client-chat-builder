@@ -47,7 +47,7 @@ const STAGE_COLORS: Record<string, string> = {
   lead: 'from-slate-500 to-slate-600',
   mql: 'from-blue-500 to-blue-600',
   sql: 'from-purple-500 to-purple-600',
-  opportunity: 'from-amber-500 to-amber-600',
+  opportunity: 'from-violet-500 to-violet-600',
   customer: 'from-green-500 to-green-600',
   lost: 'from-red-500 to-red-600',
 };
@@ -56,7 +56,7 @@ const STAGE_BG_COLORS: Record<string, string> = {
   lead: 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300',
   mql: 'bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300',
   sql: 'bg-purple-100 text-purple-700 dark:bg-purple-900/50 dark:text-purple-300',
-  opportunity: 'bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-300',
+  opportunity: 'bg-violet-100 text-violet-700 dark:bg-violet-900/50 dark:text-violet-300',
   customer: 'bg-green-100 text-green-700 dark:bg-green-900/50 dark:text-green-300',
   lost: 'bg-red-100 text-red-700 dark:bg-red-900/50 dark:text-red-300',
 };

@@ -41,7 +41,7 @@ const AGENT_PALETTES = [
   { gradient: 'from-orange-500 to-rose-600', ring: 'ring-orange-500/20', badge: 'bg-orange-50 dark:bg-orange-950/30 text-orange-700 dark:text-orange-300 border-orange-200 dark:border-orange-800' },
   { gradient: 'from-sky-500 to-cyan-700', ring: 'ring-sky-500/20', badge: 'bg-sky-50 dark:bg-sky-950/30 text-sky-700 dark:text-sky-300 border-sky-200 dark:border-sky-800' },
   { gradient: 'from-fuchsia-500 to-pink-700', ring: 'ring-fuchsia-500/20', badge: 'bg-fuchsia-50 dark:bg-fuchsia-950/30 text-fuchsia-700 dark:text-fuchsia-300 border-fuchsia-200 dark:border-fuchsia-800' },
-  { gradient: 'from-amber-500 to-yellow-600', ring: 'ring-amber-500/20', badge: 'bg-amber-50 dark:bg-amber-950/30 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-800' },
+  { gradient: 'from-violet-500 to-yellow-600', ring: 'ring-violet-500/20', badge: 'bg-violet-50 dark:bg-violet-950/30 text-violet-700 dark:text-violet-300 border-violet-200 dark:border-violet-800' },
   { gradient: 'from-lime-500 to-green-700', ring: 'ring-lime-500/20', badge: 'bg-lime-50 dark:bg-lime-950/30 text-lime-700 dark:text-lime-300 border-lime-200 dark:border-lime-800' },
 ];
 
@@ -184,7 +184,7 @@ export const AgentList = () => {
       active:   { bg: 'bg-emerald-50 dark:bg-emerald-950/30', text: 'text-emerald-700 dark:text-emerald-400', dot: 'bg-emerald-500' },
       inactive: { bg: 'bg-muted', text: 'text-muted-foreground', dot: 'bg-muted-foreground' },
       assigned: { bg: 'bg-blue-50 dark:bg-blue-950/30', text: 'text-blue-700 dark:text-blue-400', dot: 'bg-blue-500' },
-      pending:  { bg: 'bg-amber-50 dark:bg-amber-950/30', text: 'text-amber-700 dark:text-amber-400', dot: 'bg-amber-500' },
+      pending:  { bg: 'bg-violet-50 dark:bg-violet-950/30', text: 'text-violet-700 dark:text-violet-400', dot: 'bg-violet-500' },
       resolved: { bg: 'bg-violet-50 dark:bg-violet-950/30', text: 'text-violet-700 dark:text-violet-400', dot: 'bg-violet-500' },
       archived: { bg: 'bg-muted', text: 'text-muted-foreground', dot: 'bg-muted-foreground' },
     };

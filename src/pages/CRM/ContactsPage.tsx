@@ -379,7 +379,7 @@ export default function ContactsPage() {
             <UserCheck className="h-3.5 w-3.5" />
             {stats?.contacts_with_leads || 0} With Leads
           </span>
-          <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-amber-500/10 border border-amber-500/20 text-xs font-semibold text-amber-600 dark:text-amber-400">
+          <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-violet-500/10 border border-violet-500/20 text-xs font-semibold text-violet-600 dark:text-violet-400">
             <UserPlus className="h-3.5 w-3.5" />
             {stats?.contacts_without_leads || 0} Without Leads
           </span>
@@ -526,7 +526,7 @@ export default function ContactsPage() {
                           <CheckCircle2 className="h-3 w-3" />{t('crm.contacts.hasLead')}
                         </span>
                       ) : (
-                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-500/10 border border-amber-500/20 text-xs font-medium text-amber-600 dark:text-amber-400">
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-violet-500/10 border border-violet-500/20 text-xs font-medium text-violet-600 dark:text-violet-400">
                           <UserPlus className="h-3 w-3" />{t('crm.contacts.noLead')}
                         </span>
                       )}
@@ -715,7 +715,7 @@ export default function ContactsPage() {
                 {viewingContact?.has_lead ? (
                   <Badge className="bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">{t('crm.contacts.hasLead')}</Badge>
                 ) : (
-                  <Badge className="bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">{t('crm.contacts.noLead')}</Badge>
+                  <Badge className="bg-violet-500/10 text-violet-600 dark:text-violet-400 border border-violet-500/20">{t('crm.contacts.noLead')}</Badge>
                 )}
               </div>
               {/* Tags Section */}

@@ -72,7 +72,7 @@ export const LicenseErrorPage = () => {
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center p-4">
       <Card className={`max-w-md w-full ${config.bgColor} ${config.borderColor} border-2`}>
         <CardHeader className="text-center pb-2">
-          <div className="mx-auto w-16 h-16 bg-gradient-to-br from-amber-500 to-orange-500 rounded-full flex items-center justify-center mb-4">
+          <div className="mx-auto w-16 h-16 bg-gradient-to-br from-violet-500 to-orange-500 rounded-full flex items-center justify-center mb-4">
             <Key className="w-8 h-8 text-white" />
           </div>
           <CardTitle className={`text-2xl font-bold ${config.color}`}>
@@ -81,7 +81,7 @@ export const LicenseErrorPage = () => {
         </CardHeader>
         <CardContent className="space-y-6">
           <div className="flex items-start gap-3 p-4 bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700">
-            <AlertTriangle className="w-5 h-5 text-amber-500 flex-shrink-0 mt-0.5" />
+            <AlertTriangle className="w-5 h-5 text-violet-500 flex-shrink-0 mt-0.5" />
             <p className="text-sm text-slate-600 dark:text-slate-300">
               {errorInfo?.message || 'Your license has expired or is invalid. Please contact the administrator to renew your license.'}
             </p>
@@ -99,10 +99,10 @@ export const LicenseErrorPage = () => {
                 href={`mailto:${contact.email}`}
                 className="flex items-center gap-3 p-3 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors group"
               >
-                <div className="w-10 h-10 bg-amber-100 dark:bg-amber-900/50 rounded-full flex items-center justify-center">
-                  <Mail className="w-5 h-5 text-amber-600" />
+                <div className="w-10 h-10 bg-violet-100 dark:bg-violet-900/50 rounded-full flex items-center justify-center">
+                  <Mail className="w-5 h-5 text-violet-600" />
                 </div>
-                <span className="text-slate-600 dark:text-slate-300 group-hover:text-amber-600 transition-colors">
+                <span className="text-slate-600 dark:text-slate-300 group-hover:text-violet-600 transition-colors">
                   {contact.email}
                 </span>
               </a>
@@ -110,10 +110,10 @@ export const LicenseErrorPage = () => {
                 href={`tel:${contact.phone}`}
                 className="flex items-center gap-3 p-3 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors group"
               >
-                <div className="w-10 h-10 bg-amber-100 dark:bg-amber-900/50 rounded-full flex items-center justify-center">
-                  <Phone className="w-5 h-5 text-amber-600" />
+                <div className="w-10 h-10 bg-violet-100 dark:bg-violet-900/50 rounded-full flex items-center justify-center">
+                  <Phone className="w-5 h-5 text-violet-600" />
                 </div>
-                <span className="text-slate-600 dark:text-slate-300 group-hover:text-amber-600 transition-colors">
+                <span className="text-slate-600 dark:text-slate-300 group-hover:text-violet-600 transition-colors">
                   {contact.phone}
                 </span>
               </a>
@@ -129,7 +129,7 @@ export const LicenseErrorPage = () => {
               Logout
             </Button>
             <Button
-              className="flex-1 bg-amber-600 hover:bg-amber-700"
+              className="flex-1 bg-violet-600 hover:bg-violet-700"
               onClick={handleRetry}
             >
               <RefreshCw className="w-4 h-4 mr-2" />
@@ -138,7 +138,7 @@ export const LicenseErrorPage = () => {
           </div>
 
           <p className="text-center text-xs text-slate-400">
-            Powered by <span className="font-semibold text-amber-500">HeyGenAlly</span>
+            Powered by <span className="font-semibold text-violet-500">HeyGenAlly</span>
           </p>
         </CardContent>
       </Card>

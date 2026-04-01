@@ -362,7 +362,7 @@ export default function CampaignsPage() {
           const colorMap = {
             'text-blue-600 dark:text-blue-400': { bg: 'bg-white dark:bg-slate-800', border: 'border-blue-200/80 dark:border-blue-800/60', icon: 'from-blue-500 to-blue-600' },
             'text-purple-600 dark:text-purple-400': { bg: 'bg-white dark:bg-slate-800', border: 'border-purple-200/80 dark:border-purple-800/60', icon: 'from-purple-500 to-indigo-600' },
-            'text-yellow-600 dark:text-yellow-400': { bg: 'bg-white dark:bg-slate-800', border: 'border-yellow-200/80 dark:border-yellow-800/60', icon: 'from-yellow-500 to-amber-600' },
+            'text-yellow-600 dark:text-yellow-400': { bg: 'bg-white dark:bg-slate-800', border: 'border-yellow-200/80 dark:border-yellow-800/60', icon: 'from-yellow-500 to-violet-600' },
             'text-green-600 dark:text-green-400': { bg: 'bg-white dark:bg-slate-800', border: 'border-green-200/80 dark:border-green-800/60', icon: 'from-green-500 to-emerald-600' },
           };
           const colors = colorMap[metric.iconColor] || { bg: 'bg-white dark:bg-slate-800', border: 'border-slate-200/80 dark:border-slate-700/60', icon: 'from-slate-500 to-slate-600' };

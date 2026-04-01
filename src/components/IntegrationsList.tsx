@@ -166,10 +166,10 @@ export const IntegrationsList: React.FC = () => {
       icon: <Linkedin className="h-5 w-5" />
     },
     google_calendar: {
-      border: 'border-amber-200/80 dark:border-amber-700/60',
-      bg: 'from-white to-amber-50 dark:from-slate-800 dark:to-slate-900',
-      badge: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400',
-      iconBg: 'bg-gradient-to-br from-amber-500 to-orange-500',
+      border: 'border-violet-200/80 dark:border-violet-700/60',
+      bg: 'from-white to-violet-50 dark:from-slate-800 dark:to-slate-900',
+      badge: 'bg-violet-100 text-violet-700 dark:bg-violet-900/30 dark:text-violet-400',
+      iconBg: 'bg-gradient-to-br from-violet-500 to-orange-500',
       iconColor: 'text-white',
       icon: <GoogleCalendarIcon />
     },

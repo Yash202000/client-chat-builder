@@ -936,11 +936,14 @@ export const ConversationDetail: React.FC<ConversationDetailProps> = ({ sessionI
           initial={{ y: -20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ duration: 0.4, ease: "easeOut" }}
-          className="flex-shrink-0 border-b border-border bg-card relative overflow-hidden"
+          className="flex-shrink-0 bg-card relative overflow-hidden"
         >
+          {/* Aurora bloom + gradient bottom border */}
+          <div className="pointer-events-none absolute -top-10 -right-10 w-48 h-48 rounded-full bg-violet-600/[0.04] dark:bg-violet-500/[0.06] blur-3xl" />
+          <div className="pointer-events-none absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-violet-500/20 via-border to-cyan-500/10 z-10" />
 
           {/* Top Row - Title and Quick Actions */}
-          <div className={`flex items-center justify-between px-4 py-3 ${!readOnly ? 'border-b border-border/50' : ''}`}>
+          <div className={`flex items-center justify-between px-4 py-3 ${!readOnly ? 'border-b border-violet-500/10' : ''}`}>
             <div className="flex items-center gap-4">
               {/* Back button for read-only mode */}
               {readOnly && onBack && (
@@ -949,7 +952,7 @@ export const ConversationDetail: React.FC<ConversationDetailProps> = ({ sessionI
                     variant="ghost"
                     size="icon"
                     onClick={onBack}
-                    className="hover:bg-slate-100 dark:hover:bg-slate-700 rounded-xl"
+                    className="hover:bg-violet-500/[0.08] rounded-xl"
                   >
                     <ArrowLeft className="h-5 w-5" />
                   </Button>
@@ -982,7 +985,7 @@ export const ConversationDetail: React.FC<ConversationDetailProps> = ({ sessionI
                   <h2 className="text-[15px] font-semibold text-foreground">
                     {contact?.name || (readOnly ? t('conversations.detail.viewConversation', { defaultValue: 'View Conversation' }) : t('conversations.detail.conversation'))}
                   </h2>
-                  <span className="px-2 py-0.5 bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 text-[10px] font-medium rounded-full">
+                  <span className="px-2 py-0.5 bg-violet-100 dark:bg-violet-900/30 text-violet-600 dark:text-violet-400 text-[10px] font-medium rounded-full">
                     Customer
                   </span>
                 </div>
@@ -1082,7 +1085,7 @@ export const ConversationDetail: React.FC<ConversationDetailProps> = ({ sessionI
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.2 }}
-              className="flex items-center gap-2 px-4 py-2 bg-card border-t border-border/50"
+              className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-violet-500/[0.04] to-transparent border-t border-violet-500/10"
             >
               {/* AI Toggle */}
               <div className="flex items-center gap-1.5 bg-muted rounded-lg px-2.5 py-1.5 border border-border">
@@ -1265,18 +1268,18 @@ export const ConversationDetail: React.FC<ConversationDetailProps> = ({ sessionI
                           animate={{ opacity: 1, scale: 1 }}
                           className="flex justify-center my-6"
                         >
-                          <div className="max-w-2xl w-full bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700/50 rounded-xl p-5">
+                          <div className="max-w-2xl w-full bg-violet-50 dark:bg-violet-900/20 border border-violet-200 dark:border-violet-700/50 rounded-xl p-5">
                             <div className="flex items-start gap-4">
-                              <div className="h-10 w-10 rounded-xl bg-amber-100 dark:bg-amber-800/30 flex items-center justify-center flex-shrink-0">
+                              <div className="h-10 w-10 rounded-xl bg-violet-100 dark:bg-violet-800/30 flex items-center justify-center flex-shrink-0">
                                 <Book className="h-5 w-5 text-white" />
                               </div>
                               <div className="flex-grow">
                                 <div className="flex items-center gap-2 mb-2">
-                                  <span className="text-sm font-bold text-amber-700 dark:text-amber-400">{t('conversations.detail.privateNote')}</span>
-                                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-200/50 dark:bg-amber-800/30 text-amber-700 dark:text-amber-400 font-medium">Internal Only</span>
+                                  <span className="text-sm font-bold text-violet-700 dark:text-violet-400">{t('conversations.detail.privateNote')}</span>
+                                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-violet-200/50 dark:bg-violet-800/30 text-violet-700 dark:text-violet-400 font-medium">Internal Only</span>
                                 </div>
                                 <p className="text-sm text-foreground leading-relaxed">{msg.message}</p>
-                                <p className="text-xs text-amber-600/70 dark:text-amber-400/70 mt-3 flex items-center gap-1.5">
+                                <p className="text-xs text-violet-600/70 dark:text-violet-400/70 mt-3 flex items-center gap-1.5">
                                   <Clock className="h-3 w-3" />
                                   {new Date(msg.timestamp).toLocaleString()}
                                 </p>
@@ -1468,12 +1471,12 @@ export const ConversationDetail: React.FC<ConversationDetailProps> = ({ sessionI
               onValueChange={(v) => setActiveComposerTab(v as 'reply' | 'note')}
               className="w-full"
             >
-              {/* Floating composer card — tints amber in note mode */}
+              {/* Floating composer card — tints violet in note mode */}
               <motion.div
                 animate={{ opacity: 1 }}
                 className={`rounded-xl border shadow-sm transition-colors duration-200 ${
                   activeComposerTab === 'note'
-                    ? 'bg-amber-50/60 dark:bg-amber-900/10 border-amber-200/70 dark:border-amber-700/30'
+                    ? 'bg-violet-50/60 dark:bg-violet-900/10 border-violet-200/70 dark:border-violet-700/30'
                     : 'bg-card border-border'
                 }`}
               >
@@ -1488,7 +1491,7 @@ export const ConversationDetail: React.FC<ConversationDetailProps> = ({ sessionI
                     </TabsTrigger>
                     <TabsTrigger
                       value="note"
-                      className="h-5 px-2.5 text-[11px] font-medium rounded-md data-[state=active]:bg-amber-100 dark:data-[state=active]:bg-amber-800/50 data-[state=active]:text-amber-700 dark:data-[state=active]:text-amber-300 data-[state=active]:shadow-sm text-muted-foreground transition-all flex items-center gap-1"
+                      className="h-5 px-2.5 text-[11px] font-medium rounded-md data-[state=active]:bg-violet-100 dark:data-[state=active]:bg-violet-800/50 data-[state=active]:text-violet-700 dark:data-[state=active]:text-violet-300 data-[state=active]:shadow-sm text-muted-foreground transition-all flex items-center gap-1"
                     >
                       <Book className="h-2.5 w-2.5" />
                       {t('conversations.detail.privateNoteTab')}
@@ -1639,10 +1642,10 @@ export const ConversationDetail: React.FC<ConversationDetailProps> = ({ sessionI
                   </div>
 
                   {/* Toolbar */}
-                  <div className={`flex items-center justify-between px-2 pb-1.5 pt-1 border-t border-amber-200/40 dark:border-amber-700/20 mt-0.5 ${isRTL ? 'flex-row-reverse' : ''}`}>
-                    <div className={`flex items-center gap-1.5 px-2.5 py-1 bg-amber-100/70 dark:bg-amber-800/20 rounded-full ${isRTL ? 'flex-row-reverse' : ''}`}>
-                      <div className="w-1.5 h-1.5 bg-amber-500 rounded-full animate-pulse" />
-                      <span className="text-[10px] text-amber-700 dark:text-amber-400 font-medium whitespace-nowrap">Team only · not visible to customer</span>
+                  <div className={`flex items-center justify-between px-2 pb-1.5 pt-1 border-t border-violet-200/40 dark:border-violet-700/20 mt-0.5 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                    <div className={`flex items-center gap-1.5 px-2.5 py-1 bg-violet-100/70 dark:bg-violet-800/20 rounded-full ${isRTL ? 'flex-row-reverse' : ''}`}>
+                      <div className="w-1.5 h-1.5 bg-violet-500 rounded-full animate-pulse" />
+                      <span className="text-[10px] text-violet-700 dark:text-violet-400 font-medium whitespace-nowrap">Team only · not visible to customer</span>
                     </div>
 
                     <motion.div whileTap={{ scale: 0.94 }}>
@@ -1652,8 +1655,8 @@ export const ConversationDetail: React.FC<ConversationDetailProps> = ({ sessionI
                         size="sm"
                         className={`h-7 px-3 rounded-md text-xs font-medium gap-1.5 transition-all ${
                           note.trim()
-                            ? 'bg-amber-500 hover:bg-amber-600 text-white shadow-sm'
-                            : 'bg-amber-100/50 dark:bg-amber-900/20 text-amber-400 dark:text-amber-600 cursor-not-allowed'
+                            ? 'bg-violet-500 hover:bg-violet-600 text-white shadow-sm'
+                            : 'bg-violet-100/50 dark:bg-violet-900/20 text-violet-400 dark:text-violet-600 cursor-not-allowed'
                         }`}
                       >
                         {sendMessageMutation.isPending ? (

@@ -846,7 +846,7 @@ export const Reports = () => {
                       </div>
                       <div className={`flex-1 bg-muted rounded-full h-3.5 ${isRTL ? 'rotate-180' : ''}`}>
                         <div
-                          className="h-3.5 bg-gradient-to-r from-yellow-400 to-amber-500 rounded-full transition-all shadow-sm"
+                          className="h-3.5 bg-gradient-to-r from-yellow-400 to-violet-500 rounded-full transition-all shadow-sm"
                           style={{ width: `${item.percentage}%` }}
                         />
                       </div>
@@ -929,7 +929,7 @@ export const Reports = () => {
           <div className="rounded-xl border border-border bg-card p-4">
             <div className={`flex items-center gap-3 mb-4 ${isRTL ? 'flex-row-reverse' : ''}`}>
               <div className="p-2 rounded-lg bg-muted">
-                <Bell className="h-4 w-4 text-amber-500" />
+                <Bell className="h-4 w-4 text-violet-500" />
               </div>
               <div>
                 <h3 className="text-sm font-semibold text-foreground">{t("reports.alerts.alerts")}</h3>

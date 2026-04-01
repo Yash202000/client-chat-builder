@@ -149,7 +149,7 @@ export const WebChatCustomizer: React.FC<WebChatCustomizerPropsExtended> = ({
               <span className={`px-3 py-1.5 rounded-full text-xs font-semibold ${
                 publishStatus.is_active
                   ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400'
-                  : 'bg-amber-50 text-amber-700 dark:bg-amber-500/10 dark:text-amber-400'
+                  : 'bg-violet-50 text-violet-700 dark:bg-violet-500/10 dark:text-violet-400'
               }`}>
                 {publishStatus.is_active ? 'Published' : 'Unpublished'}
               </span>
@@ -414,7 +414,7 @@ export const WebChatCustomizer: React.FC<WebChatCustomizerPropsExtended> = ({
               <div className="bg-gradient-to-br from-slate-50 to-white dark:from-slate-900/50 dark:to-slate-800/50 rounded-xl p-2.5 border border-slate-200/80 dark:border-slate-700/80">
                 <div className={`flex items-center justify-between mb-1.5 ${isRTL ? 'flex-row-reverse' : ''}`}>
                   <div className="flex items-center gap-1.5">
-                    <div className="h-5 w-5 rounded bg-gradient-to-br from-amber-500 to-orange-500 flex items-center justify-center">
+                    <div className="h-5 w-5 rounded bg-gradient-to-br from-violet-500 to-orange-500 flex items-center justify-center">
                       <svg className="h-3 w-3 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                         <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
                       </svg>

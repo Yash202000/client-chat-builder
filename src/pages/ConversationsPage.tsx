@@ -14,7 +14,7 @@ import {
   MessageSquare, Phone, Globe, Instagram, Mail, Send, Search, Filter,
   Archive, PanelLeftClose, PanelRightOpen, AlertTriangle, ArrowUp, Minus,
   ArrowDown, Inbox, Users, CheckCircle2, LayoutGrid, Sparkles, Clock,
-  User as UserIcon, Loader2, ChevronLeft, ChevronRight
+  User as UserIcon, Loader2
 } from 'lucide-react';
 import SLATimer from '@/components/SLATimer';
 import { getWebSocketUrl } from '@/config/api';
@@ -333,7 +333,7 @@ const ConversationsPage: React.FC<ConversationsPageProps> = ({ channel }) => {
                       setActiveTab('mine');
                       setUnreadAssignments(0);
                     }}
-                    className="mt-2 text-xs bg-amber-500 text-white px-3 py-1 rounded hover:bg-amber-600"
+                    className="mt-2 text-xs bg-violet-500 text-white px-3 py-1 rounded hover:bg-violet-600"
                   >
                     {t('conversations.notifications.viewConversation')}
                   </button>
@@ -419,7 +419,7 @@ const ConversationsPage: React.FC<ConversationsPageProps> = ({ channel }) => {
                     <p>{t('conversations.notifications.contactName', { name: eventData.contact_name })}</p>
                   )}
                   {isAssignedToCurrentUser && (
-                    <p className="text-amber-600 dark:text-amber-400 font-semibold">{t('conversations.notifications.assignedToYou')}</p>
+                    <p className="text-violet-600 dark:text-violet-400 font-semibold">{t('conversations.notifications.assignedToYou')}</p>
                   )}
                 </div>
                 <div className="flex gap-2 mt-3">
@@ -724,9 +724,9 @@ const ConversationsPage: React.FC<ConversationsPageProps> = ({ channel }) => {
 
     // Left border strip color
     const borderColor = isSelected
-      ? 'border-l-primary'
+      ? 'border-l-violet-400'
       : assignedToMe
-      ? 'border-l-amber-500'
+      ? 'border-l-violet-500'
       : session.status === 'active'
       ? 'border-l-green-500'
       : session.status === 'inactive'
@@ -739,10 +739,10 @@ const ConversationsPage: React.FC<ConversationsPageProps> = ({ channel }) => {
 
     // Card background
     const cardBg = isSelected
-      ? 'bg-primary/[0.06]'
+      ? 'bg-gradient-to-r from-violet-500/[0.10] to-transparent'
       : assignedToMe
-      ? 'bg-amber-50/40 dark:bg-amber-950/20'
-      : 'bg-card hover:bg-muted/40';
+      ? 'bg-violet-50/40 dark:bg-violet-950/20'
+      : 'bg-card hover:bg-violet-500/[0.04]';
 
     // Status badge classes
     const statusBadgeClass =
@@ -755,7 +755,7 @@ const ConversationsPage: React.FC<ConversationsPageProps> = ({ channel }) => {
         : session.status === 'pending'
         ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
         : assignedToMe
-        ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300'
+        ? 'bg-violet-100 text-violet-700 dark:bg-violet-900/30 dark:text-violet-300'
         : 'bg-muted text-muted-foreground';
 
     const contactName = session.contact_name || session.contact_phone || t('conversations.card.unknownContact');
@@ -824,7 +824,7 @@ const ConversationsPage: React.FC<ConversationsPageProps> = ({ channel }) => {
                 session.status === 'resolved'
                   ? 'text-muted-foreground'
                   : assignedToMe
-                  ? 'text-amber-900 dark:text-amber-100'
+                  ? 'text-violet-900 dark:text-violet-100'
                   : 'text-foreground'
               }`}>
                 {contactName}
@@ -900,7 +900,7 @@ const ConversationsPage: React.FC<ConversationsPageProps> = ({ channel }) => {
   // ─── Tab config ───────────────────────────────────────────────────────────────
   const tabs = [
     { id: 'open',     label: t('conversations.tabs.open'),     count: sessionCounts?.open     ?? 0, countClass: 'text-blue-600 dark:text-blue-400' },
-    { id: 'mine',     label: t('conversations.tabs.mine'),     count: sessionCounts?.mine     ?? 0, countClass: 'text-amber-600 dark:text-amber-400' },
+    { id: 'mine',     label: t('conversations.tabs.mine'),     count: sessionCounts?.mine     ?? 0, countClass: 'text-violet-600 dark:text-violet-400' },
     { id: 'resolved', label: t('conversations.tabs.resolved'), count: sessionCounts?.resolved ?? 0, countClass: 'text-green-600 dark:text-green-400' },
     { id: 'all',      label: t('conversations.tabs.all'),      count: sessionCounts?.all      ?? 0, countClass: 'text-muted-foreground' },
   ] as const;
@@ -910,7 +910,11 @@ const ConversationsPage: React.FC<ConversationsPageProps> = ({ channel }) => {
     <div className="h-full flex bg-background overflow-hidden">
 
       {/* ── LEFT PANEL ───────────────────────────────────────────────────────── */}
-      <div className={`flex-shrink-0 flex flex-col bg-card border-r border-border transition-all duration-300 relative ${isSidebarCollapsed ? 'w-14' : 'w-80'}`}>
+      <div className={`flex-shrink-0 flex flex-col bg-card transition-all duration-300 relative overflow-hidden ${isSidebarCollapsed ? 'w-14' : 'w-80'}`}>
+        {/* Aurora gradient right border */}
+        <div className="pointer-events-none absolute right-0 top-0 bottom-0 w-px z-10 bg-gradient-to-b from-violet-500/20 via-border to-cyan-500/10" />
+        {/* Subtle bloom */}
+        <div className="pointer-events-none absolute -bottom-20 -left-20 w-64 h-64 rounded-full bg-violet-600/[0.04] dark:bg-violet-500/[0.06] blur-[70px]" />
 
         <AnimatePresence mode="wait">
           {!isSidebarCollapsed ? (
@@ -1162,7 +1166,7 @@ const ConversationsPage: React.FC<ConversationsPageProps> = ({ channel }) => {
                     )}
                     {assigned.length > 0 && (
                       <>
-                        <GroupHeader label={t('conversations.statusGroups.assigned')} count={assigned.length} dotColor="bg-amber-500" />
+                        <GroupHeader label={t('conversations.statusGroups.assigned')} count={assigned.length} dotColor="bg-violet-500" />
                         {assigned.map((s, i) => <ConversationCard key={s.conversation_id} session={s} index={i} />)}
                       </>
                     )}
@@ -1310,18 +1314,16 @@ const ConversationsPage: React.FC<ConversationsPageProps> = ({ channel }) => {
 
       {/* ── RIGHT PANEL ──────────────────────────────────────────────────────── */}
       <div className={`flex-shrink-0 relative flex flex-col border-l border-border bg-card transition-all duration-300 ${isRightSidebarCollapsed ? 'w-10' : 'w-72'}`}>
-        {/* Collapse toggle — absolute so it doesn't push content down */}
-        <button
-          onClick={() => setIsRightSidebarCollapsed(!isRightSidebarCollapsed)}
-          className="absolute top-2 left-1.5 z-10 p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
-          title={isRightSidebarCollapsed ? t('conversations.expandSidebar') : t('conversations.collapseSidebar')}
-        >
-          {isRightSidebarCollapsed ? (
-            <ChevronLeft className="w-3.5 h-3.5" />
-          ) : (
-            <ChevronRight className="w-3.5 h-3.5" />
-          )}
-        </button>
+        {/* Collapse toggle — only shown when collapsed */}
+        {isRightSidebarCollapsed && (
+          <button
+            onClick={() => setIsRightSidebarCollapsed(false)}
+            className="absolute top-2 left-1.5 z-10 p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+            title={t('conversations.expandSidebar')}
+          >
+            <PanelRightOpen className="w-3.5 h-3.5" />
+          </button>
+        )}
 
         <AnimatePresence mode="wait">
           {selectedSessionId ? (
@@ -1360,7 +1362,7 @@ const ConversationsPage: React.FC<ConversationsPageProps> = ({ channel }) => {
                     onBack={() => setSidebarView('contact')}
                   />
                 ) : (
-                  <ContactProfile sessionId={selectedSessionId} />
+                  <ContactProfile sessionId={selectedSessionId} onToggle={() => setIsRightSidebarCollapsed(true)} />
                 )}
               </motion.div>
             )

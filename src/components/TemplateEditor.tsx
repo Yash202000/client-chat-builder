@@ -412,12 +412,12 @@ export default function TemplateEditor({
             <CardContent className="space-y-4">
               {/* API Key & Model Selection */}
               {aiCredentials.length === 0 ? (
-                <div className="p-4 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg">
-                  <div className="flex items-center gap-2 text-amber-700 dark:text-amber-400">
+                <div className="p-4 bg-violet-50 dark:bg-violet-900/20 border border-violet-200 dark:border-violet-800 rounded-lg">
+                  <div className="flex items-center gap-2 text-violet-700 dark:text-violet-400">
                     <Key className="h-5 w-5" />
                     <span className="font-medium">{t('crm.templates.ai.noApiKeys', 'No API Keys Found')}</span>
                   </div>
-                  <p className="text-sm text-amber-600 dark:text-amber-500 mt-1">
+                  <p className="text-sm text-violet-600 dark:text-violet-500 mt-1">
                     {t('crm.templates.ai.addApiKey', 'Please add a Groq or OpenAI API key in the Vault to use AI features.')}
                   </p>
                 </div>

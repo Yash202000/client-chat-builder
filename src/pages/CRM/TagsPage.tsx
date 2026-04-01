@@ -66,7 +66,7 @@ interface Tag {
 const COLOR_OPTIONS = [
   { value: '#EF4444', label: 'Red' },
   { value: '#F97316', label: 'Orange' },
-  { value: '#F59E0B', label: 'Amber' },
+  { value: '#F59E0B', label: 'violet' },
   { value: '#EAB308', label: 'Yellow' },
   { value: '#84CC16', label: 'Lime' },
   { value: '#22C55E', label: 'Green' },

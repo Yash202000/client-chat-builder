@@ -163,17 +163,15 @@ export const EntityNotes: React.FC<EntityNotesProps> = ({ contactId, leadId, com
 
   return (
     <>
-      <Card className={cn('h-full flex flex-col rounded-xl', compact ? 'border-0 shadow-none bg-transparent' : 'shadow-lg shadow-slate-200/50 dark:shadow-slate-900/50 border-slate-200/80 dark:border-slate-700/60 dark:bg-slate-800/90')}>
-        <CardHeader className={cn('flex flex-row items-center justify-between pb-3', compact ? 'px-0 pt-2' : 'border-b border-slate-200/80 dark:border-slate-700/60')}>
-          <CardTitle className="text-sm font-semibold flex items-center gap-2.5 dark:text-white">
-            <div className="p-1.5 rounded-lg bg-gradient-to-br from-amber-100 to-orange-100 dark:from-amber-900/40 dark:to-orange-900/40">
-              <StickyNote className="h-4 w-4 text-amber-600 dark:text-amber-400" />
-            </div>
-            <span className="bg-gradient-to-r from-amber-700 to-orange-600 dark:from-amber-400 dark:to-orange-400 bg-clip-text text-transparent font-bold">
+      <Card className={cn('h-full flex flex-col rounded-xl', compact ? 'border-0 shadow-none bg-transparent' : 'shadow-lg border-border dark:bg-card')}>
+        <CardHeader className={cn('flex flex-row items-center justify-between pb-3', compact ? 'px-0 pt-2' : 'border-b border-border')}>
+          <CardTitle className="flex items-center gap-2">
+            <StickyNote className="h-3.5 w-3.5 text-muted-foreground" />
+            <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
               {t('notes.title')}
             </span>
             {data?.total ? (
-              <span className="text-xs bg-gradient-to-r from-amber-100 to-orange-100 dark:from-amber-900/40 dark:to-orange-900/40 text-amber-700 dark:text-amber-300 px-2.5 py-0.5 rounded-full font-medium">
+              <span className="text-[10px] bg-muted text-muted-foreground px-1.5 py-0.5 rounded-full font-medium">
                 {data.total}
               </span>
             ) : null}
@@ -182,7 +180,7 @@ export const EntityNotes: React.FC<EntityNotesProps> = ({ contactId, leadId, com
             variant="outline"
             size="sm"
             onClick={handleAddNote}
-            className="rounded-lg dark:border-slate-600 dark:text-white dark:hover:bg-slate-700 hover:border-amber-300 hover:bg-amber-50 dark:hover:border-amber-700 dark:hover:bg-amber-900/30 transition-colors"
+            className="rounded-lg hover:border-violet-300 hover:bg-violet-50 dark:hover:border-violet-700 dark:hover:bg-violet-900/30 transition-colors"
           >
             <Plus className="h-4 w-4 mr-1" />
             {t('notes.add')}
@@ -193,27 +191,27 @@ export const EntityNotes: React.FC<EntityNotesProps> = ({ contactId, leadId, com
           {isLoading ? (
             <div className="flex flex-col items-center justify-center py-8 gap-3">
               <div className="relative">
-                <div className="relative w-12 h-12 bg-gradient-to-br from-amber-500 to-orange-600 rounded-full flex items-center justify-center shadow-lg shadow-amber-500/25">
+                <div className="relative w-12 h-12 bg-gradient-to-br from-violet-500 to-cyan-500 rounded-full flex items-center justify-center shadow-lg shadow-violet-500/25">
                   <Loader2 className="h-6 w-6 text-white animate-spin" />
                 </div>
               </div>
             </div>
           ) : notes.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-8 text-center border-2 border-dashed border-slate-200 dark:border-slate-700 rounded-xl bg-slate-50/50 dark:bg-slate-900/30">
+            <div className="flex flex-col items-center justify-center py-8 text-center border-2 border-dashed border-border rounded-xl bg-muted/30">
               <div className="relative mb-4">
-                <div className="relative w-14 h-14 bg-gradient-to-br from-amber-500 to-orange-600 rounded-full flex items-center justify-center shadow-lg shadow-amber-500/25">
+                <div className="relative w-14 h-14 bg-gradient-to-br from-violet-500 to-cyan-500 rounded-full flex items-center justify-center shadow-lg shadow-violet-500/25">
                   <StickyNote className="h-7 w-7 text-white" />
                 </div>
               </div>
-              <p className="text-sm font-medium text-gray-800 dark:text-white">{t('notes.empty')}</p>
+              <p className="text-sm font-medium text-foreground">{t('notes.empty')}</p>
               <p className="text-xs text-muted-foreground mt-1">{t('notes.emptySubtitle')}</p>
             </div>
           ) : (
             <div className="space-y-4">
               {Object.entries(groupedNotes).map(([date, dateNotes]) => (
                 <div key={date}>
-                  <h4 className="text-xs font-semibold text-amber-700 dark:text-amber-400 mb-3 uppercase tracking-wide flex items-center gap-2">
-                    <div className="h-1 w-1 rounded-full bg-amber-500" />
+                  <h4 className="text-xs font-semibold text-violet-700 dark:text-violet-400 mb-3 uppercase tracking-wide flex items-center gap-2">
+                    <div className="h-1 w-1 rounded-full bg-violet-500" />
                     {date}
                   </h4>
                   <div className="space-y-2">
@@ -223,8 +221,8 @@ export const EntityNotes: React.FC<EntityNotesProps> = ({ contactId, leadId, com
                         <div
                           key={note.id}
                           className={cn(
-                            'border border-slate-200/80 dark:border-slate-700/60 rounded-xl p-3.5 transition-all hover:shadow-md hover:border-amber-200 dark:hover:border-amber-800/50',
-                            'bg-white dark:bg-slate-900/50'
+                            'border border-border rounded-xl p-3.5 transition-all hover:shadow-md hover:border-violet-200 dark:hover:border-violet-800/50',
+                            'bg-card'
                           )}
                         >
                           <div className="flex items-start justify-between gap-2">
@@ -246,7 +244,7 @@ export const EntityNotes: React.FC<EntityNotesProps> = ({ contactId, leadId, com
                                     {t(`notes.types.${note.note_type}`)}
                                   </span>
                                   {note.title && (
-                                    <span className="text-sm font-medium truncate dark:text-white">
+                                    <span className="text-sm font-medium truncate text-foreground">
                                       {note.title}
                                     </span>
                                   )}
@@ -256,11 +254,11 @@ export const EntityNotes: React.FC<EntityNotesProps> = ({ contactId, leadId, com
 
                             <DropdownMenu>
                               <DropdownMenuTrigger asChild>
-                                <Button variant="ghost" size="sm" className="h-7 w-7 p-0 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800">
+                                <Button variant="ghost" size="sm" className="h-7 w-7 p-0 rounded-lg hover:bg-muted">
                                   <MoreVertical className="h-3.5 w-3.5" />
                                 </Button>
                               </DropdownMenuTrigger>
-                              <DropdownMenuContent align="end" className="rounded-xl dark:bg-slate-800 dark:border-slate-700">
+                              <DropdownMenuContent align="end" className="rounded-xl">
                                 <DropdownMenuItem onClick={() => handleEditNote(note)} className="rounded-lg">
                                   <Edit className="h-4 w-4 mr-2" />
                                   {t('notes.edit')}
@@ -276,13 +274,13 @@ export const EntityNotes: React.FC<EntityNotesProps> = ({ contactId, leadId, com
                             </DropdownMenu>
                           </div>
 
-                          <p className="text-sm mt-2.5 whitespace-pre-wrap line-clamp-3 dark:text-gray-300">
+                          <p className="text-sm mt-2.5 whitespace-pre-wrap line-clamp-3 text-foreground/80">
                             {note.content}
                           </p>
 
                           {/* Activity metadata for calls/meetings */}
                           {(note.note_type === 'call' || note.note_type === 'meeting') && (
-                            <div className="flex flex-wrap gap-x-4 gap-y-1 mt-2.5 text-xs text-muted-foreground bg-slate-50 dark:bg-slate-800/50 rounded-lg p-2">
+                            <div className="flex flex-wrap gap-x-4 gap-y-1 mt-2.5 text-xs text-muted-foreground bg-muted/50 rounded-lg p-2">
                               {note.duration_minutes && (
                                 <span className="flex items-center gap-1">
                                   <Clock className="h-3 w-3 text-blue-500" />
