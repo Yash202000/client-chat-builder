@@ -1,0 +1,23 @@
+{
+  "name": "HeyGenAlly",
+  "short_name": "HeyGenAlly",
+  "description": "AI Agent Builder & Chatbot Platform",
+  "start_url": "/dashboard",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#0f0f14",
+  "theme_color": "#8B5CF6",
+  "icons": [
+    {
+      "src": "/favicon.ico",
+      "sizes": "48x48",
+      "type": "image/x-icon"
+    }
+  ],
+  "screenshots": [],
+  "categories": ["business", "productivity"],
+  "lang": "en",
+  "dir": "ltr",
+  "scope": "/",
+  "prefer_related_applications": false
+}

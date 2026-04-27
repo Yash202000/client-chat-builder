@@ -4,13 +4,16 @@ import { useTheme } from "@/hooks/useTheme";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { CircleUser, Moon, Sun, PanelLeftClose, PanelLeftOpen, ChevronDown, ChevronRight } from "lucide-react";
 import { useState, useEffect } from "react";
-import { Outlet, NavLink, useNavigate, useLocation } from "react-router-dom";
+import { Outlet, NavLink, useLocation } from "react-router-dom";
 import { useToast } from "@/components/ui/use-toast";
 import { useNotifications } from "@/hooks/useNotifications";
 import { useWebSocket } from "@/hooks/use-websocket";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
 import IncomingCallModal from "@/components/IncomingCallModal";
+import { VideoCallModal } from "@/components/VideoCallModal";
+import InternalVideoCallModal from "@/components/InternalVideoCallModal";
+import { useVideoCall } from "@/contexts/VideoCallContext";
 import { BACKEND_URL } from "@/config/env";
 import { API_BASE_URL } from "@/config/api";
 import {
@@ -21,7 +24,7 @@ import {
   Bot,
   Users,
   Inbox,
-  FileText,
+
   Sparkles,
   WorkflowIcon as WorkflowIcon,
   Zap,
@@ -31,7 +34,6 @@ import {
   Key,
   BookOpen,
   CreditCard,
-  Mic,
   Building,
   Target,
   Send,
@@ -43,6 +45,7 @@ import {
   Images,
   Mail,
   Phone,
+  PhoneCall,
   Globe,
   Share2,
   PenLine,
@@ -50,6 +53,11 @@ import {
   Megaphone,
   Settings2,
   Linkedin,
+  Radio,
+  Headphones,
+  LayoutDashboard,
+  Calendar,
+  BookUser,
 } from "lucide-react";
 import { CreateAgentDialog } from "@/components/CreateAgentDialog";
 import { Permission } from "./Permission";
@@ -62,6 +70,10 @@ import NotificationBell from "@/components/NotificationBell";
 import { useTranslation } from "react-i18next";
 import { useI18n } from "@/hooks/useI18n";
 import { useBranding } from "@/hooks/BrandingProvider";
+import { useSystemConfig } from "@/hooks/useSystemConfig";
+import { CommandPalette, CommandPaletteTrigger } from "@/components/CommandPalette";
+import { GreetingBar } from "@/components/GreetingBar";
+import { AccentPicker } from "@/components/AccentPicker";
 
 const WhatsAppIcon = ({ className }: { className?: string }) => (
   <svg viewBox="0 0 24 24" className={className} fill="currentColor">
@@ -104,11 +116,11 @@ const AppLayout = () => {
   const { t } = useTranslation();
   const { isRTL } = useI18n();
   const branding = useBranding();
+  const { data: systemConfig } = useSystemConfig();
+  const isManagedCredentials = systemConfig?.managed_credentials ?? false;
   const { toast } = useToast();
   const { soundEnabled, enableSound, showNotification } = useNotifications();
-  const navigate = useNavigate();
   const queryClient = useQueryClient();
-  console.log("Logged in user:", user);
 
   const { data: integrations = [] } = useQuery<{ type: string }[]>({
     queryKey: ['integrations', user?.company_id],
@@ -159,7 +171,25 @@ const AppLayout = () => {
     livekitUrl: string;
     agentToken: string;
     userToken: string;
+    botAgentId?: number;
   } | null>(null);
+
+  // Active calls — stored in context so they persist across navigation
+  const { activeCall: activeHandoffCall, startCall: setActiveHandoffCallCtx, endCall: clearActiveHandoffCall, startInternalCall } = useVideoCall();
+  const setActiveHandoffCall = (call: { sessionId: string; token: string; livekitUrl: string; botAgentId?: number; } | null) => {
+    if (call) {
+      setActiveHandoffCallCtx({
+        sessionId: call.sessionId,
+        userId: 'agent',
+        preloadedToken: call.token,
+        livekitServerUrl: call.livekitUrl,
+        conversationSessionId: call.sessionId,
+        conversationAgentId: call.botAgentId,
+      });
+    } else {
+      clearActiveHandoffCall();
+    }
+  };
 
   // Global WebSocket connection for company-wide notifications
   const companyWsUrl = user?.company_id
@@ -172,12 +202,9 @@ const AppLayout = () => {
 
       if (wsMessage.type === 'incoming_call') {
         // Handoff call from customer to agent
-        const { agent_id, session_id, customer_name, summary, priority, room_name, livekit_url, agent_token, user_token } = wsMessage;
-        console.log('[AppLayout] Handoff call notification received:', { agent_id, session_id, customer_name });
-
+        const { agent_id, session_id, customer_name, summary, priority, room_name, livekit_url, agent_token, user_token, bot_agent_id } = wsMessage;
         // Only show notification if this call is for the current user
         if (user && agent_id === user.id) {
-          console.log('[AppLayout] Showing handoff call notification for agent:', user.id);
           setHandoffCall({
             sessionId: session_id,
             customerName: customer_name || 'Customer',
@@ -187,6 +214,7 @@ const AppLayout = () => {
             livekitUrl: livekit_url,
             agentToken: agent_token,
             userToken: user_token,
+            botAgentId: bot_agent_id ?? undefined,
           });
 
           // Show browser notification
@@ -195,13 +223,9 @@ const AppLayout = () => {
             body: `${customer_name} needs assistance`,
             tag: `handoff-${session_id}`,
           });
-        } else {
-          console.log('[AppLayout] Ignoring handoff call - not for this agent. Target:', agent_id, 'Current:', user?.id);
         }
       } else if (wsMessage.type === 'video_call_initiated') {
         const { call_id, room_name, livekit_token, livekit_url, channel_id, channel_member_ids, caller_id, caller_name, caller_avatar } = wsMessage;
-        console.log('[AppLayout] Global video call notification received:', { call_id, caller_id, channel_id, channel_member_ids });
-
         // Check if current user is a member of this channel
         const isChannelMember = channel_member_ids && user && channel_member_ids.includes(user.id);
 
@@ -299,13 +323,15 @@ const AppLayout = () => {
 
       const { room_name, livekit_token, livekit_url } = response.data;
 
-      // Clear incoming call state
+      // Clear incoming call state and open floating modal (agent stays on current page)
       setIncomingCall(null);
-
-      // Navigate to video call page
-      navigate(
-        `/internal-video-call?roomName=${encodeURIComponent(room_name)}&livekitToken=${encodeURIComponent(livekit_token)}&livekitUrl=${encodeURIComponent(livekit_url)}&channelId=${incomingCall.channelId}&callId=${incomingCall.callId}`
-      );
+      startInternalCall({
+        roomName: room_name,
+        livekitToken: livekit_token,
+        livekitUrl: livekit_url,
+        channelId: incomingCall.channelId ? Number(incomingCall.channelId) : undefined,
+        callId: incomingCall.callId ? String(incomingCall.callId) : undefined,
+      });
     } catch (error) {
       console.error('Error accepting call:', error);
       toast({
@@ -357,13 +383,14 @@ const AppLayout = () => {
         headers: { Authorization: `Bearer ${token}` },
       });
 
-      // Clear handoff call state
+      // Clear handoff call state and open floating modal (keeps agent on current page)
       setHandoffCall(null);
-
-      // Navigate to LiveKit call page with agent token
-      navigate(
-        `/internal-video-call?roomName=${encodeURIComponent(handoffCall.roomName)}&livekitToken=${encodeURIComponent(handoffCall.agentToken)}&livekitUrl=${encodeURIComponent(handoffCall.livekitUrl)}&sessionId=${handoffCall.sessionId}`
-      );
+      setActiveHandoffCall({
+        sessionId: handoffCall.sessionId,
+        token: handoffCall.agentToken,
+        livekitUrl: handoffCall.livekitUrl,
+        botAgentId: handoffCall.botAgentId,
+      });
 
       toast({
         title: 'Call accepted',
@@ -480,6 +507,26 @@ const AppLayout = () => {
 
   const sidebarGroups: SidebarGroup[] = [
     {
+      id: 'home',
+      label: 'Home',
+      labelKey: 'navigation.home',
+      icon: LayoutDashboard,
+      collapsible: false,
+      items: [
+        { titleKey: "navigation.dashboard", url: "/dashboard", icon: LayoutDashboard },
+      ],
+    },
+    {
+      id: 'workspace',
+      label: 'Workspace',
+      labelKey: 'navigation.workspaceGroup',
+      icon: Calendar,
+      collapsible: true,
+      items: [
+        { title: "Calendar",   url: "/dashboard/calendar",          icon: Calendar },
+      ],
+    },
+    {
       id: 'inbox',
       label: 'Inbox',
       labelKey: 'navigation.inbox',
@@ -488,14 +535,26 @@ const AppLayout = () => {
       items: [
         { titleKey: "navigation.activeClients", url: "/dashboard/conversations", icon: Globe, permission: "page:conversations" },
         ...channelInboxItems,
-        { titleKey: "navigation.emailInbox", url: "/dashboard/inbox/email", icon: Mail },
-        { titleKey: "navigation.smsInbox", url: "/dashboard/inbox/sms", icon: MessageSquare },
+        ...(integrationTypes.has('gmail') ? [{ titleKey: "navigation.emailInbox", url: "/dashboard/inbox/email", icon: Mail }] : []),
+        ...(integrationTypes.has('twilio_voice') ? [{ titleKey: "navigation.smsInbox", url: "/dashboard/inbox/sms", icon: MessageSquare }] : []),
         { titleKey: "navigation.teamChat", url: "/dashboard/team-chat", icon: MessageSquare, permission: "page:team_chat" },
         { titleKey: "navigation.contactHub", url: "/dashboard/contacts", icon: Users },
-        { titleKey: "navigation.aiChat", url: "/dashboard/ai-chat", icon: MessageSquare, permission: "page:ai_chat" },
-        { titleKey: "navigation.messageTemplates", url: "/dashboard/message-templates", icon: Sparkles, permission: "page:message_templates" },
       ],
     },
+    ...(integrationTypes.has('twilio_voice') ? [{
+      id: 'voice',
+      label: 'Voice Center',
+      labelKey: 'navigation.voiceCenter',
+      icon: Headphones,
+      collapsible: true,
+      items: [
+        { titleKey: "navigation.callQueue", url: "/dashboard/call-queue", icon: Phone },
+        { titleKey: "navigation.voiceCallLog", url: "/dashboard/voice-calls", icon: Phone },
+        { titleKey: "navigation.supervisor", url: "/dashboard/supervisor", icon: Radio },
+        { titleKey: "navigation.predictiveDialer", url: "/dashboard/dialer", icon: PhoneCall },
+        { titleKey: "navigation.callAnalytics", url: "/dashboard/call-analytics", icon: BarChart3 },
+      ],
+    }] : []),
     {
       id: 'agents',
       label: 'Builder',
@@ -506,8 +565,10 @@ const AppLayout = () => {
         { titleKey: "navigation.agents", url: "/dashboard/agents", icon: Bot, permission: "page:agents" },
         { titleKey: "navigation.widget", url: "/dashboard/designer", icon: Palette, permission: "page:widget_designer" },
         { titleKey: "navigation.content", url: "/dashboard/knowledge-base/manage", icon: BookOpen, permission: "page:knowledge_base" },
+        { titleKey: "navigation.cms", url: "/dashboard/cms", icon: LayoutTemplate, permission: "page:knowledge_base" },
         { titleKey: "navigation.tools", url: "/dashboard/tools", icon: Zap, permission: "page:tools" },
         { titleKey: "navigation.workflows", url: "/dashboard/workflows", icon: WorkflowIcon, permission: "page:workflows" },
+        { titleKey: "navigation.messageTemplates", url: "/dashboard/message-templates", icon: Sparkles, permission: "page:message_templates" },
       ],
     },
     {
@@ -520,9 +581,8 @@ const AppLayout = () => {
         { titleKey: "navigation.teamManagement", url: "/dashboard/team", icon: Users, permission: "page:team_management" },
         { titleKey: "navigation.reports", url: "/dashboard/reports", icon: BarChart3, permission: "page:reports" },
         { titleKey: "navigation.settings", url: "/dashboard/settings", icon: Settings, permission: "page:settings" },
-        { titleKey: "navigation.apiVault", url: "/dashboard/vault", icon: Key, permission: "page:api_vault" },
+        ...(!isManagedCredentials ? [{ titleKey: "navigation.apiVault", url: "/dashboard/vault", icon: Key, permission: "page:api_vault" }] : []),
         { titleKey: "navigation.billing", url: "/dashboard/billing", icon: CreditCard, permission: "page:billing" },
-        { titleKey: "navigation.voices", url: "/dashboard/voices", icon: Mic, permission: "page:voices" },
         { titleKey: "navigation.managePlans", url: "/dashboard/admin/subscriptions", icon: Sparkles, admin: true },
         { titleKey: "navigation.companies", url: "/dashboard/companies", icon: Building, admin: true },
       ],
@@ -565,6 +625,7 @@ const AppLayout = () => {
       icon: Sparkles,
       collapsible: true,
       items: [
+        { titleKey: "navigation.aiChat", url: "/dashboard/ai-chat", icon: MessageSquare, permission: "page:ai_chat" },
         { titleKey: "navigation.aiTools", url: "/dashboard/ai-tools", icon: Zap, permission: "page:ai_tools" },
         { titleKey: "navigation.aiImageGenerator", url: "/dashboard/ai-image-generator", icon: Wand2, permission: "page:ai_image_generator" },
         { titleKey: "navigation.aiImageGallery", url: "/dashboard/ai-image-gallery", icon: Images, permission: "page:ai_image_gallery" },
@@ -720,7 +781,7 @@ const AppLayout = () => {
                           {({ isActive }) => (
                             <>
                               {isActive && !sidebarCollapsed && (
-                                <span className={`absolute ${isRTL ? 'right-0' : 'left-0'} top-1/2 -translate-y-1/2 w-0.5 h-4 rounded-full bg-gradient-to-b from-violet-400 to-cyan-400 shadow-[0_0_6px_hsl(263_78%_68%/0.6)]`} />
+                                <span className={`sidebar-active-bar absolute ${isRTL ? 'right-0' : 'left-0'} top-1/2 -translate-y-1/2 w-0.5 h-4 rounded-full bg-gradient-to-b from-violet-400 to-cyan-400 shadow-[0_0_6px_hsl(263_78%_68%/0.6)]`} />
                               )}
                               <item.icon className={`flex-shrink-0 h-3.5 w-3.5 ${isActive ? 'text-violet-400 drop-shadow-[0_0_4px_hsl(263_78%_68%/0.7)]' : ''}`} />
                               {!sidebarCollapsed && (
@@ -741,6 +802,19 @@ const AppLayout = () => {
               );
             })}
           </nav>
+
+          {/* ── ⌘K hint (only when sidebar expanded) ── */}
+          {!sidebarCollapsed && (
+            <button
+              type="button"
+              onClick={() => window.dispatchEvent(new KeyboardEvent('keydown', { key: 'k', metaKey: true }))}
+              className="sidebar-search-hint relative z-10"
+              title="Open command palette"
+            >
+              <span>Search anywhere</span>
+              <kbd>{typeof navigator !== 'undefined' && /Mac|iPhone|iPad/.test(navigator.platform) ? '⌘K' : 'Ctrl+K'}</kbd>
+            </button>
+          )}
 
           {/* ── User profile (bottom) ── */}
           <div className="flex-shrink-0 relative p-2 z-10">
@@ -804,6 +878,8 @@ const AppLayout = () => {
                   <PresenceSelector currentStatus={user?.presence_status} showLabel={true} />
                 </div>
                 <DropdownMenuSeparator className="my-1" />
+                <AccentPicker />
+                <DropdownMenuSeparator className="my-1" />
                 <DropdownMenuItem asChild className="rounded-lg cursor-pointer text-[13px]">
                   <NavLink to="/dashboard/profile" className="flex items-center gap-2">
                     <CircleUser className="h-4 w-4" />
@@ -851,7 +927,10 @@ const AppLayout = () => {
             </div>
 
             {/* Right: utility actions */}
-            <div className="flex items-center gap-0.5 ml-auto">
+            <div className="flex items-center gap-2 ml-auto">
+              <div className="hidden md:block mr-1">
+                <CommandPaletteTrigger />
+              </div>
               <NotificationBell />
               <LanguageSwitcher />
               <button
@@ -889,6 +968,8 @@ const AppLayout = () => {
                     <PresenceSelector currentStatus={user?.presence_status} showLabel={true} />
                   </div>
                   <DropdownMenuSeparator className="my-1" />
+                  <AccentPicker />
+                  <DropdownMenuSeparator className="my-1" />
                   <DropdownMenuItem asChild className="rounded-lg cursor-pointer text-[13px]">
                     <NavLink to="/dashboard/profile" className="flex items-center gap-2">
                       <CircleUser className="h-4 w-4" />
@@ -907,6 +988,7 @@ const AppLayout = () => {
           </header>
 
           <main className="flex-1 overflow-y-auto bg-background transition-colors">
+            <GreetingBar />
             <Outlet />
           </main>
         </div>
@@ -938,7 +1020,24 @@ const AppLayout = () => {
         />
       )}
 
+      <InternalVideoCallModal />
+
+      {activeHandoffCall && (
+        <VideoCallModal
+          sessionId={activeHandoffCall.sessionId}
+          userId={activeHandoffCall.userId ?? String(user?.id ?? '')}
+          preloadedToken={activeHandoffCall.preloadedToken}
+          livekitServerUrl={activeHandoffCall.livekitServerUrl}
+          conversationSessionId={activeHandoffCall.conversationSessionId}
+          conversationAgentId={activeHandoffCall.conversationAgentId}
+          onClose={clearActiveHandoffCall}
+        />
+      )}
+
       <CallWidget />
+
+      {/* ⌘K — global command palette, always mounted */}
+      <CommandPalette />
     </div>
   );
 };

@@ -18,7 +18,14 @@ import {
   Plus,
   Badge,
   Check,
-  Send
+  Send,
+  Tag,
+  X,
+  Phone,
+  Hash,
+  PhoneForwarded,
+  Voicemail,
+  Building2,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -78,6 +85,38 @@ export const TeamManagement = () => {
   const [editUserFirstName, setEditUserFirstName] = useState("");
   const [editUserLastName, setEditUserLastName] = useState("");
   const [editUserPassword, setEditUserPassword] = useState("");
+  const [editUserSkills, setEditUserSkills] = useState<string[]>([]);
+  const [editUserSkillInput, setEditUserSkillInput] = useState("");
+
+  // ── Extension config (localStorage, keyed by userId) ──────────────────────
+  const EXT_LS_KEY = 'phone_ext_configs';
+  const loadExtConfigs = (): Record<number, ExtConfig> => {
+    try { return JSON.parse(localStorage.getItem(EXT_LS_KEY) ?? '{}'); } catch { return {}; }
+  };
+  interface ExtConfig {
+    ext: string; department: string; directNumber: string;
+    status: 'active' | 'inactive'; voicemailEnabled: boolean; forwardTo: string;
+  }
+  const BLANK_EXT: ExtConfig = { ext: '', department: 'Support', directNumber: '', status: 'active', voicemailEnabled: true, forwardTo: '' };
+  const EXT_DEPTS = ['Sales', 'Support', 'Engineering', 'Management', 'Other'];
+  const [extConfigs, setExtConfigs] = useState<Record<number, ExtConfig>>(loadExtConfigs);
+  const [extDialogUser, setExtDialogUser] = useState<User | null>(null);
+  const [extForm, setExtForm] = useState<ExtConfig>(BLANK_EXT);
+  const saveExtConfig = (userId: number, cfg: ExtConfig) => {
+    const next = { ...extConfigs, [userId]: cfg };
+    setExtConfigs(next);
+    localStorage.setItem(EXT_LS_KEY, JSON.stringify(next));
+  };
+  const removeExtConfig = (userId: number) => {
+    const next = { ...extConfigs };
+    delete next[userId];
+    setExtConfigs(next);
+    localStorage.setItem(EXT_LS_KEY, JSON.stringify(next));
+  };
+  const openExtDialog = (user: User) => {
+    setExtDialogUser(user);
+    setExtForm(extConfigs[user.id] ?? BLANK_EXT);
+  };
   const [selectedUserIds, setSelectedUserIds] = useState<number[]>([]);
   const [selectedMemberRole, setSelectedMemberRole] = useState("member");
   const [roleName, setRoleName] = useState("");
@@ -401,29 +440,32 @@ export const TeamManagement = () => {
     setEditUserEmail(user.email);
     setEditUserFirstName(user.first_name || "");
     setEditUserLastName(user.last_name || "");
-    setEditUserPassword(""); // Reset password field
+    setEditUserPassword("");
+    setEditUserSkills(Array.isArray((user as any).skills) ? (user as any).skills : []);
+    setEditUserSkillInput("");
     setEditUserModalOpen(true);
   };
 
-  const handleUpdateUser = () => {
-    if (selectedUserForEdit) {
-      const updateData: any = {
-        email: editUserEmail,
-        first_name: editUserFirstName,
-        last_name: editUserLastName,
-      };
-
-      // Only include password if it's been changed
-      if (editUserPassword && editUserPassword.trim() !== "") {
-        updateData.password = editUserPassword;
-      }
-
-      updateUserMutation.mutate({
-        userId: selectedUserForEdit.id,
-        updateData,
-      });
-      setEditUserModalOpen(false);
+  const handleUpdateUser = async () => {
+    if (!selectedUserForEdit) return;
+    const updateData: any = {
+      email: editUserEmail,
+      first_name: editUserFirstName,
+      last_name: editUserLastName,
+    };
+    if (editUserPassword && editUserPassword.trim() !== "") {
+      updateData.password = editUserPassword;
     }
+    updateUserMutation.mutate({ userId: selectedUserForEdit.id, updateData });
+    // Save skills separately
+    try {
+      await authFetch(`/api/v1/agent-skills/${selectedUserForEdit.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ skills: editUserSkills }),
+      });
+    } catch (_) { /* non-critical */ }
+    setEditUserModalOpen(false);
   };
 
   const handleDeleteUser = (userId: number) => {
@@ -623,7 +665,14 @@ export const TeamManagement = () => {
                                   )}
                                 </div>
                                 <div>
-                                  <div className="font-medium text-foreground text-sm">{user.first_name} {user.last_name}</div>
+                                  <div className="flex items-center gap-1.5">
+                                    <span className="font-medium text-foreground text-sm">{user.first_name} {user.last_name}</span>
+                                    {extConfigs[user.id] && (
+                                      <span className="font-mono text-[10px] font-bold text-violet-400 bg-violet-500/10 px-1 py-0.5 rounded border border-violet-500/20">
+                                        #{extConfigs[user.id].ext}
+                                      </span>
+                                    )}
+                                  </div>
                                   <div className="text-xs text-muted-foreground">{user.email}</div>
                                 </div>
                               </div>
@@ -670,6 +719,15 @@ export const TeamManagement = () => {
                                     >
                                       <Edit className={`h-3.5 w-3.5 ${isRTL ? 'ml-2' : 'mr-2'}`} />
                                       {t('common.edit')}
+                                    </DropdownMenuItem>
+                                  </Permission>
+                                  <Permission permission="user:update">
+                                    <DropdownMenuItem
+                                      className="text-foreground text-xs"
+                                      onClick={() => openExtDialog(user)}
+                                    >
+                                      <Phone className={`h-3.5 w-3.5 ${isRTL ? 'ml-2' : 'mr-2'}`} />
+                                      {extConfigs[user.id] ? 'Edit Extension' : 'Assign Extension'}
                                     </DropdownMenuItem>
                                   </Permission>
                                   <Permission permission="user:update">
@@ -1206,6 +1264,55 @@ export const TeamManagement = () => {
               />
               <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{t('teamManagement.dialogs.editUser.passwordHint')}</p>
             </div>
+
+            {/* Skills section */}
+            <div>
+              <Label className="text-sm dark:text-gray-300 mb-1.5 flex items-center gap-1.5 block">
+                <Tag className="h-3.5 w-3.5 text-emerald-500" />
+                Skills (for call routing)
+              </Label>
+              <div className="flex gap-2 mb-2">
+                <Input
+                  placeholder="e.g. billing, spanish, technical"
+                  value={editUserSkillInput}
+                  onChange={e => setEditUserSkillInput(e.target.value)}
+                  onKeyDown={e => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      const s = editUserSkillInput.trim().toLowerCase();
+                      if (s && !editUserSkills.includes(s)) setEditUserSkills(prev => [...prev, s]);
+                      setEditUserSkillInput('');
+                    }
+                  }}
+                  className="dark:bg-slate-900 dark:border-slate-600 dark:text-white rounded-xl h-9 text-sm"
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    const s = editUserSkillInput.trim().toLowerCase();
+                    if (s && !editUserSkills.includes(s)) setEditUserSkills(prev => [...prev, s]);
+                    setEditUserSkillInput('');
+                  }}
+                  className="h-9 px-3 rounded-xl dark:border-slate-600"
+                >
+                  <Plus className="h-3.5 w-3.5" />
+                </Button>
+              </div>
+              {editUserSkills.length > 0 && (
+                <div className="flex flex-wrap gap-1.5">
+                  {editUserSkills.map(skill => (
+                    <span key={skill} className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400">
+                      {skill}
+                      <button type="button" onClick={() => setEditUserSkills(prev => prev.filter(s => s !== skill))}>
+                        <X className="h-3 w-3" />
+                      </button>
+                    </span>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
           <DialogFooter className="pt-4 border-t border-slate-200/80 dark:border-slate-700/60">
             <Button variant="outline" onClick={() => setEditUserModalOpen(false)} className="dark:border-slate-600 dark:text-white dark:hover:bg-slate-700 rounded-xl">
@@ -1385,6 +1492,96 @@ export const TeamManagement = () => {
         isOpen={isInviteUserModalOpen}
         onClose={() => setInviteUserModalOpen(false)}
       />
+
+      {/* ── Extension Config Dialog ──────────────────────────────────────── */}
+      <Dialog open={!!extDialogUser} onOpenChange={open => { if (!open) setExtDialogUser(null); }}>
+        <DialogContent className="sm:max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="text-sm font-semibold flex items-center gap-2">
+              <Phone className="h-4 w-4 text-violet-400" />
+              {extDialogUser && extConfigs[extDialogUser.id] ? 'Edit Extension' : 'Assign Extension'}
+              {extDialogUser && (
+                <span className="font-normal text-muted-foreground">
+                  — {extDialogUser.first_name || extDialogUser.email}
+                </span>
+              )}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3 py-1">
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="text-xs font-medium text-muted-foreground block mb-1">Extension #</label>
+                <div className="relative">
+                  <Hash className="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-muted-foreground" />
+                  <Input value={extForm.ext} onChange={e => setExtForm(f => ({ ...f, ext: e.target.value }))}
+                    placeholder="101" className="pl-8 h-8 text-sm font-mono" />
+                </div>
+              </div>
+              <div>
+                <label className="text-xs font-medium text-muted-foreground block mb-1">Department</label>
+                <select
+                  value={extForm.department}
+                  onChange={e => setExtForm(f => ({ ...f, department: e.target.value }))}
+                  className="w-full h-8 rounded-md border border-input bg-background px-2 text-sm text-foreground"
+                >
+                  {EXT_DEPTS.map(d => <option key={d} value={d}>{d}</option>)}
+                </select>
+              </div>
+            </div>
+            <div>
+              <label className="text-xs font-medium text-muted-foreground block mb-1">Direct DID (optional)</label>
+              <div className="relative">
+                <Phone className="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-muted-foreground" />
+                <Input value={extForm.directNumber} onChange={e => setExtForm(f => ({ ...f, directNumber: e.target.value }))}
+                  placeholder="+1 (415) 555-0100" className="pl-8 h-8 text-sm font-mono" />
+              </div>
+            </div>
+            <div>
+              <label className="text-xs font-medium text-muted-foreground block mb-1">Forward To (ext, optional)</label>
+              <div className="relative">
+                <PhoneForwarded className="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-muted-foreground" />
+                <Input value={extForm.forwardTo} onChange={e => setExtForm(f => ({ ...f, forwardTo: e.target.value }))}
+                  placeholder="201" className="pl-8 h-8 text-sm font-mono" />
+              </div>
+            </div>
+            <div className="flex items-center justify-between pt-1">
+              <label className="flex items-center gap-2 cursor-pointer">
+                <button type="button"
+                  onClick={() => setExtForm(f => ({ ...f, status: f.status === 'active' ? 'inactive' : 'active' }))}
+                  className={`relative h-5 w-9 rounded-full transition-colors ${extForm.status === 'active' ? 'bg-emerald-500' : 'bg-muted-foreground/30'}`}
+                >
+                  <span className={`absolute top-0.5 h-4 w-4 rounded-full bg-white shadow transition-transform ${extForm.status === 'active' ? 'translate-x-4' : 'translate-x-0.5'}`} />
+                </button>
+                <span className="text-xs text-muted-foreground">Active</span>
+              </label>
+              <label className="flex items-center gap-2 cursor-pointer">
+                <button type="button"
+                  onClick={() => setExtForm(f => ({ ...f, voicemailEnabled: !f.voicemailEnabled }))}
+                  className={`relative h-5 w-9 rounded-full transition-colors ${extForm.voicemailEnabled ? 'bg-violet-500' : 'bg-muted-foreground/30'}`}
+                >
+                  <span className={`absolute top-0.5 h-4 w-4 rounded-full bg-white shadow transition-transform ${extForm.voicemailEnabled ? 'translate-x-4' : 'translate-x-0.5'}`} />
+                </button>
+                <span className="text-xs text-muted-foreground">Voicemail</span>
+              </label>
+            </div>
+          </div>
+          <DialogFooter className="gap-2 pt-2">
+            {extDialogUser && extConfigs[extDialogUser.id] && (
+              <Button variant="ghost" size="sm" className="text-red-400 hover:text-red-500 hover:bg-red-500/5 text-xs h-8 mr-auto"
+                onClick={() => { removeExtConfig(extDialogUser!.id); setExtDialogUser(null); }}>
+                Remove
+              </Button>
+            )}
+            <Button variant="outline" size="sm" className="h-8 text-xs" onClick={() => setExtDialogUser(null)}>Cancel</Button>
+            <Button size="sm" disabled={!extForm.ext}
+              className="h-8 text-xs gap-1.5 bg-violet-600 hover:bg-violet-700 text-white"
+              onClick={() => { saveExtConfig(extDialogUser!.id, extForm); setExtDialogUser(null); }}>
+              <Check className="h-3.5 w-3.5" />
+              Save
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

@@ -10,6 +10,7 @@ import {
   AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 import { useToast } from '@/components/ui/use-toast';
+import { BACKEND_URL } from '@/config/env';
 
 /* ─── fonts + keyframes ──────────────────────────────────────── */
 const FONTS = `
@@ -125,7 +126,7 @@ function AccountRow({ account, cfg, onDisconnect }: {
       {/* Avatar */}
       <div className="relative shrink-0">
         {account.metadata_?.avatar_url
-          ? <img src={account.metadata_.avatar_url} alt=""
+          ? <img src={account.metadata_.avatar_url.startsWith('data:') ? account.metadata_.avatar_url : `${BACKEND_URL}/api/v1/proxy/image-proxy?url=${encodeURIComponent(account.metadata_.avatar_url)}`} alt=""
               className="h-8 w-8 rounded-full object-cover ring-2 ring-background" />
           : <div className="h-8 w-8 rounded-full flex items-center justify-center text-sm font-bold text-white"
               style={{ background: cfg.gradient }}>
@@ -174,7 +175,7 @@ function AccountRow({ account, cfg, onDisconnect }: {
         )}
         <AlertDialog>
           <AlertDialogTrigger asChild>
-            <button className="opacity-0 group-hover:opacity-100 h-6 w-6 rounded-md flex items-center justify-center transition-all
+            <button className="h-6 w-6 rounded-md flex items-center justify-center transition-all
               text-muted-foreground hover:text-destructive hover:bg-destructive/10">
               <Trash2 className="h-3 w-3" />
             </button>
@@ -182,14 +183,18 @@ function AccountRow({ account, cfg, onDisconnect }: {
           <AlertDialogContent>
             <AlertDialogHeader>
               <AlertDialogTitle>Disconnect account?</AlertDialogTitle>
-              <AlertDialogDescription>
-                This removes <strong>{account.account_name}</strong> from HeyGenAlly. Scheduled posts using this account will fail.
+              <AlertDialogDescription asChild>
+                <div className="space-y-2 text-sm text-muted-foreground">
+                  <p>You are about to disconnect <strong className="text-foreground">{account.account_name}</strong> from HeyGenAlly.</p>
+                  <p className="text-destructive font-medium">⚠ All posts associated with this account will be permanently deleted and cannot be recovered.</p>
+                  <p>Are you sure you want to continue?</p>
+                </div>
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
               <AlertDialogCancel>Cancel</AlertDialogCancel>
               <AlertDialogAction className="bg-destructive hover:bg-destructive/90 text-destructive-foreground"
-                onClick={onDisconnect}>Disconnect</AlertDialogAction>
+                onClick={onDisconnect}>Yes, disconnect & delete</AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>

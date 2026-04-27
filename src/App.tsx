@@ -7,9 +7,12 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "./hooks/useAuth";
 import { BrandingProvider } from "./hooks/BrandingProvider";
 import { ThemeProvider } from "./hooks/useTheme";
+import { VideoCallProvider } from "./contexts/VideoCallContext";
+import { PersonalizationProvider } from "./contexts/PersonalizationContext";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 import { LoginPage } from "./pages/LoginPage";
 import { SignupPage } from "./pages/SignupPage";
+import { OnboardingPage } from "./pages/OnboardingPage";
 import { DashboardPage } from "./pages/DashboardPage";
 import Index from "./pages/Index";
 import AppLayout from "./components/AppLayout";
@@ -34,7 +37,6 @@ import LicenseErrorPage from "./pages/LicenseErrorPage";
 import UserVideoCallPage from "./pages/UserVideoCallPage";
 import InternalVideoCallPage from "./pages/InternalVideoCallPage";
 import InternalChatPage from "./pages/InternalChatPage";
-import VoicesPage from "./pages/VoicesPage";
 import { CompaniesPage } from "./pages/CompaniesPage";
 import { useAuth } from "./hooks/useAuth";
 import WorkflowBuilderPage from "./pages/WorkflowBuilderPage";
@@ -105,6 +107,12 @@ import TrendingPostsPage from "./pages/Social/TrendingPostsPage";
 import SocialAccountsPage from "./pages/Social/SocialAccountsPage";
 import SocialAnalyticsPage from "./pages/Social/SocialAnalyticsPage";
 import LinkedInLeadsPage from "./pages/CRM/LinkedInLeadsPage";
+import CallQueuePage from "./pages/CallQueuePage";
+import VoiceCallLogPage from "./pages/VoiceCallLogPage";
+import SupervisorDashboardPage from "./pages/SupervisorDashboardPage";
+import CallAnalyticsPage from "./pages/CallAnalyticsPage";
+import DialerPage from "./pages/DialerPage";
+import CalendarPage from "./pages/CalendarPage";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -140,8 +148,9 @@ const AppRoutes = () => {
       <Route path="/chat/:publishId" element={<PublishedPreviewPage mode="fullpage" />} />
       <Route path="/embed/:publishId" element={<PublishedPreviewPage mode="iframe" />} />
       <Route path="/dashboard" element={<ProtectedRoute />}>
+        <Route path="onboarding" element={<OnboardingPage />} />
         <Route element={<AppLayout />}>
-          <Route index element={<Navigate to="/dashboard/conversations" replace />} />
+          <Route index element={<DashboardPage />} />
           <Route path="conversations" element={<ConversationsPage channel="web_chat" />} />
           <Route path="inbox/whatsapp" element={<ConversationsPage channel="whatsapp" />} />
           <Route path="inbox/instagram" element={<ConversationsPage channel="instagram" />} />
@@ -176,10 +185,8 @@ const AppRoutes = () => {
           <Route path="knowledge-base/:id/content/:typeSlug/:itemId" element={<KBContentItemEditPage />} />
           <Route path="workflows" element={<WorkflowManagementPage />} />
           <Route path="workflows/:workflowId" element={<WorkflowBuilderPage />} />
-          <Route path="voices" element={<VoicesPage />} />
           <Route path="profile" element={<ProfilePage />} />
           <Route path="billing" element={<ClientBillingPage />} />
-          <Route path="users" element={<Navigate to="/dashboard/team" replace />} />
           {user?.is_super_admin && <Route path="companies" element={<CompaniesPage />} />}
           <Route path="admin/subscriptions" element={<SubscriptionManagementPage />} />
           <Route path="ai-image-generator" element={<AIImageGeneratorPage />} />
@@ -206,6 +213,11 @@ const AppRoutes = () => {
           <Route path="message-templates" element={<MessageTemplatesPage />} />
           <Route path="inbox/email" element={<EmailInboxPage />} />
           <Route path="inbox/sms" element={<SMSInboxPage />} />
+          <Route path="call-queue" element={<CallQueuePage />} />
+          <Route path="voice-calls" element={<VoiceCallLogPage />} />
+          <Route path="supervisor" element={<SupervisorDashboardPage />} />
+          <Route path="call-analytics" element={<CallAnalyticsPage />} />
+          <Route path="dialer" element={<DialerPage />} />
           <Route path="crm/analytics" element={<AnalyticsPage />} />
           <Route path="crm/linkedin-leads" element={<LinkedInLeadsPage />} />
           {/* Marketing Hub / Social Routes */}
@@ -215,6 +227,8 @@ const AppRoutes = () => {
           <Route path="social/trending" element={<TrendingPostsPage />} />
           <Route path="social/accounts" element={<SocialAccountsPage />} />
           <Route path="social/analytics" element={<SocialAnalyticsPage />} />
+          {/* Work Calendar */}
+          <Route path="calendar" element={<CalendarPage />} />
           {/* CMS Routes */}
           <Route path="cms" element={<CMSDashboardPage />} />
           <Route path="cms/types" element={<ContentTypesPage />} />
@@ -252,7 +266,11 @@ const App = () => (
           <BrowserRouter>
             <AuthProvider>
               <BrandingProvider>
-                <AppRoutes />
+                <PersonalizationProvider>
+                  <VideoCallProvider>
+                    <AppRoutes />
+                  </VideoCallProvider>
+                </PersonalizationProvider>
               </BrandingProvider>
             </AuthProvider>
           </BrowserRouter>

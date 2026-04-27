@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
+import { createContext, useContext, useState, useEffect, ReactNode, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { User } from '@/types';
 import { getApiUrl } from '@/lib/api';
@@ -9,7 +9,7 @@ interface AuthContextType {
   user: User | null;
   companyId: number | null;
   isLoading: boolean;
-  login: (token: string) => void;
+  login: (token: string) => Promise<void>;
   logout: () => void;
   authFetch: (url: string, options?: RequestInit) => Promise<Response>;
   setCompanyIdGlobaly: (companyId: number | null) => void;
@@ -17,6 +17,17 @@ interface AuthContextType {
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
+
+const TOKEN_REFRESH_BEFORE_EXPIRY_MS = 60 * 60 * 1000; // refresh 1 hour before expiry
+
+function getTokenExpiry(token: string): number | null {
+  try {
+    const payload = JSON.parse(atob(token.split('.')[1]));
+    return typeof payload.exp === 'number' ? payload.exp * 1000 : null;
+  } catch {
+    return null;
+  }
+}
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [token, setToken] = useState<string | null>(() => localStorage.getItem('accessToken'));
@@ -27,8 +38,38 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   });
   const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
+  const refreshTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const authFetch = useCallback(async (url: string, options: RequestInit = {}) => {
+  const clearAuth = useCallback(() => {
+    setToken(null);
+    setUser(null);
+    setCompanyId(null);
+    localStorage.removeItem('accessToken');
+    localStorage.removeItem('companyId');
+  }, []);
+
+  // Attempt to refresh the token silently. Returns the new token or null on failure.
+  const attemptTokenRefresh = useCallback(async (): Promise<string | null> => {
+    const currentToken = localStorage.getItem('accessToken');
+    if (!currentToken) return null;
+    try {
+      const response = await fetch(getApiUrl('/api/v1/auth/refresh'), {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${currentToken}` },
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setToken(data.access_token);
+        localStorage.setItem('accessToken', data.access_token);
+        return data.access_token;
+      }
+    } catch {
+      // network error — leave token as-is, will fail on next real request
+    }
+    return null;
+  }, []);
+
+  const authFetch = useCallback(async (url: string, options: RequestInit = {}, isRetry = false): Promise<Response> => {
     const currentToken = localStorage.getItem('accessToken');
     const headers: HeadersInit = {
       ...options.headers,
@@ -40,14 +81,21 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       headers['Content-Type'] = 'application/json';
     }
 
+    // Super admin company context override
+    const storedCompanyId = localStorage.getItem('companyId');
+    if (storedCompanyId) {
+      headers['X-Company-ID'] = storedCompanyId;
+    }
+
     const response = await fetch(getApiUrl(url), { ...options, headers });
 
-    if (response.status === 401) {
-      setToken(null);
-      setUser(null);
-      setCompanyId(null);
-      localStorage.removeItem('accessToken');
-      localStorage.removeItem('companyId');
+    if (response.status === 401 && !isRetry) {
+      // Try to refresh once before giving up
+      const newToken = await attemptTokenRefresh();
+      if (newToken) {
+        return authFetch(url, options, true);
+      }
+      clearAuth();
       navigate('/login');
       throw new Error('Unauthorized');
     }
@@ -58,7 +106,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         const clonedResponse = response.clone();
         const errorData = await clonedResponse.json();
         if (errorData.error_type === 'license_error') {
-          // Store error info and redirect to license error page
           sessionStorage.setItem('licenseError', JSON.stringify({
             status: errorData.license_status,
             message: errorData.detail,
@@ -68,15 +115,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           throw new Error('License error');
         }
       } catch (e) {
-        // If parsing fails, it's not a license error - continue normally
-        if ((e as Error).message === 'License error') {
-          throw e;
-        }
+        if ((e as Error).message === 'License error') throw e;
       }
     }
 
     return response;
-  }, [navigate]);
+  }, [navigate, attemptTokenRefresh, clearAuth]);
 
   const fetchAndSetUser = useCallback(async () => {
     const storedToken = localStorage.getItem('accessToken');
@@ -95,63 +139,74 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           throw new Error('Invalid token');
         }
       } catch (error) {
-        // Don't clear token for license errors - user stays logged in but blocked
         if ((error as Error).message === 'License error') {
           console.warn("License error - user blocked but still authenticated");
           setIsLoading(false);
           return;
         }
         console.error("Failed to fetch user", error);
-        setToken(null);
-        setUser(null);
-        setCompanyId(null);
-        localStorage.removeItem('accessToken');
-        localStorage.removeItem('companyId');
+        clearAuth();
       }
     }
     setIsLoading(false);
-  }, [authFetch]);
+  }, [authFetch, clearAuth]);
 
   useEffect(() => {
     fetchAndSetUser();
   }, [fetchAndSetUser]);
 
-  // Session validation on page visibility change
+  // Proactive token refresh: schedule a refresh 1 hour before expiry
+  useEffect(() => {
+    if (!token) return;
+
+    if (refreshTimerRef.current) clearTimeout(refreshTimerRef.current);
+
+    const expiry = getTokenExpiry(token);
+    if (!expiry) return;
+
+    const refreshAt = expiry - TOKEN_REFRESH_BEFORE_EXPIRY_MS;
+    const delay = refreshAt - Date.now();
+
+    if (delay <= 0) {
+      // Token already past refresh window — try immediately
+      attemptTokenRefresh();
+      return;
+    }
+
+    refreshTimerRef.current = setTimeout(() => {
+      attemptTokenRefresh();
+    }, delay);
+
+    return () => {
+      if (refreshTimerRef.current) clearTimeout(refreshTimerRef.current);
+    };
+  }, [token, attemptTokenRefresh]);
+
+  // Re-validate session when user returns to the tab
   useEffect(() => {
     const handleVisibilityChange = async () => {
       if (document.visibilityState === 'visible' && token && user) {
         try {
-          // Validate the session is still active when user returns to the page
-          const response = await authFetch('/api/v1/users/me');
-          if (!response.ok) {
-            console.warn('Session validation failed on visibility change');
-          }
+          await authFetch('/api/v1/users/me');
         } catch (error) {
           console.error('Failed to validate session on visibility change:', error);
-          // authFetch will handle 401 errors and redirect to login
         }
       }
     };
 
     document.addEventListener('visibilitychange', handleVisibilityChange);
-    return () => {
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
-    };
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
   }, [token, user, authFetch]);
 
-  const login = (newToken: string) => {
+  const login = async (newToken: string) => {
     setToken(newToken);
     localStorage.setItem('accessToken', newToken);
     setIsLoading(true);
-    fetchAndSetUser();
+    await fetchAndSetUser();
   };
 
   const logout = () => {
-    setToken(null);
-    setUser(null);
-    setCompanyId(null);
-    localStorage.removeItem('accessToken');
-    localStorage.removeItem('companyId');
+    clearAuth();
     navigate('/login');
   };
 
@@ -162,7 +217,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     } else {
       localStorage.removeItem('companyId');
     }
-    // window.location.reload();
   };
 
   const value = {
@@ -175,7 +229,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     logout,
     authFetch,
     setCompanyIdGlobaly,
-    refetchUser: fetchAndSetUser
+    refetchUser: fetchAndSetUser,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

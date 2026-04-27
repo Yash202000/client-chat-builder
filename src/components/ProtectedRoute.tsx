@@ -5,7 +5,11 @@ export const ProtectedRoute = () => {
   const { isAuthenticated, isLoading, user } = useAuth();
 
   if (isLoading) {
-    return <div>Loading...</div>; // Or a more sophisticated loading spinner
+    return (
+      <div className="flex h-screen w-full items-center justify-center bg-background">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+      </div>
+    );
   }
 
   if (!isAuthenticated) {

@@ -59,17 +59,130 @@ const VisualWorkflowBuilder = () => {
 
   // AI Sidebar ref
   const sidebarRef = useRef<WorkflowAISidebarHandle>(null);
-  const [highlightedNodeIds, setHighlightedNodeIds] = useState<Set<string>>(new Set());
 
-  // Nodes with AI-highlight class applied temporarily
+  // Simulation visual state — accumulates across turns, cleared only on reset
+  const [simNodeStates, setSimNodeStates] = useState<Map<string, string>>(new Map());
+  const [simEdgeIds, setSimEdgeIds] = useState<Set<string>>(new Set());
+  const [animatingEdgeId, setAnimatingEdgeId] = useState<string | null>(null);
+  const simTimers = useRef<ReturnType<typeof setTimeout>[]>([]);
+
+  // box-shadow: border hug (0 0 0 2px) + outer bloom + inset interior tint
+  const SIM_STYLE: Record<string, React.CSSProperties> = {
+    running: { boxShadow: '0 0 0 2px #facc15, 0 0 18px 6px rgba(250,204,21,0.55), inset 0 0 28px rgba(250,204,21,0.14)' },
+    success: { boxShadow: '0 0 0 2px #22c55e, 0 0 14px 4px rgba(34,197,94,0.50), inset 0 0 24px rgba(34,197,94,0.12)' },
+    error:   { boxShadow: '0 0 0 2px #ef4444, 0 0 14px 4px rgba(239,68,68,0.50), inset 0 0 24px rgba(239,68,68,0.12)' },
+    warning: { boxShadow: '0 0 0 2px #fb923c, 0 0 14px 4px rgba(251,146,60,0.50), inset 0 0 24px rgba(251,146,60,0.12)' },
+    paused:  { boxShadow: '0 0 0 2px #60a5fa, 0 0 18px 6px rgba(96,165,250,0.55), inset 0 0 28px rgba(96,165,250,0.14)' },
+    skipped: {},
+  };
+  // Extra CSS classes per sim status (no ring/offset — visuals live in SIM_STYLE)
+  const SIM_ANIM: Record<string, string> = {
+    running: 'node-sim-running',   // shimmer scan sweep (defined in index.css)
+    paused:  'animate-pulse',
+    skipped: 'opacity-40 grayscale',
+  };
+
+  // Nodes with simulation glow applied
   const displayNodes = useMemo(
-    () => nodes.map((n) =>
-      highlightedNodeIds.has(n.id)
-        ? { ...n, className: (n.className ? n.className + ' ' : '') + 'ring-2 ring-green-400 ring-offset-2' }
-        : n
-    ),
-    [nodes, highlightedNodeIds]
+    () => nodes.map((n) => {
+      const simStatus = simNodeStates.get(n.id);
+      if (!simStatus) return n;
+      const animCls = SIM_ANIM[simStatus] ?? '';
+      const simStyle = SIM_STYLE[simStatus] ?? {};
+      return {
+        ...n,
+        className: (n.className ? n.className + ' ' : '') + animCls,
+        style: { ...n.style, ...simStyle },
+      };
+    }),
+    [nodes, simNodeStates] // eslint-disable-line react-hooks/exhaustive-deps
   );
+
+  // Edges:
+  //   • traversed edges → persistent green glow (no animation)
+  //   • currently animating edge → brighter green with dash animation
+  const displayEdges = useMemo(
+    () => edges.map(e => {
+      if (e.id === animatingEdgeId) {
+        // Active traversal — animated bright green
+        return { ...e, animated: true, style: { stroke: '#22c55e', strokeWidth: 3, filter: 'drop-shadow(0 0 6px #22c55e)' } };
+      }
+      if (simEdgeIds.has(e.id)) {
+        // Already traversed — steady green glow, not animated
+        return { ...e, animated: false, style: { stroke: '#22c55e', strokeWidth: 2.5, opacity: 0.85, filter: 'drop-shadow(0 0 4px rgba(34,197,94,0.6))' } };
+      }
+      return e;
+    }),
+    [edges, simEdgeIds, animatingEdgeId]
+  );
+
+  // Clear all simulation visuals (called on test reset)
+  const clearSimulation = useCallback(() => {
+    simTimers.current.forEach(clearTimeout);
+    simTimers.current = [];
+    setSimNodeStates(new Map());
+    setSimEdgeIds(new Set());
+    setAnimatingEdgeId(null);
+  }, []);
+
+  // Run simulation canvas animation — accumulates on top of existing state (multi-turn)
+  const runSimAnimation = useCallback((
+    steps: Array<{ node_id: string; status: string }>
+  ) => {
+    // Cancel any in-flight animation timers (but keep already-settled states)
+    simTimers.current.forEach(clearTimeout);
+    simTimers.current = [];
+
+    // Build a lookup: "sourceId:targetId" → edge id
+    const edgeLookup = new Map<string, string>();
+    edges.forEach(e => edgeLookup.set(`${e.source}:${e.target}`, e.id));
+
+    const RUNNING_MS = 520;
+    const SETTLE_MS  = 220;
+    let delay = 60;
+
+    steps.forEach((step, i) => {
+      const nodeId = step.node_id;
+      if (nodeId.startsWith('__')) return;
+
+      // 1. Flash the connecting edge as "animating" just before the node lights up
+      if (i > 0) {
+        const prevId = steps[i - 1].node_id;
+        if (!prevId.startsWith('__')) {
+          const edgeId = edgeLookup.get(`${prevId}:${nodeId}`);
+          if (edgeId) {
+            // Start animating this edge
+            const tStart = setTimeout(() => setAnimatingEdgeId(edgeId), Math.max(0, delay - 80));
+            simTimers.current.push(tStart);
+            // Settle it into persistent green once the node starts
+            const tSettle = setTimeout(() => {
+              setSimEdgeIds(prev => new Set([...prev, edgeId]));
+              setAnimatingEdgeId(null);
+            }, delay + RUNNING_MS);
+            simTimers.current.push(tSettle);
+          }
+        }
+      }
+
+      // 2. "Running" glow on the node
+      const t1 = setTimeout(() => {
+        setSimNodeStates(prev => new Map([...prev, [nodeId, 'running']]));
+      }, delay);
+      simTimers.current.push(t1);
+      delay += RUNNING_MS;
+
+      // 3. Settle to final status — PERSISTS (no cleanup timer)
+      const t2 = setTimeout(() => {
+        setSimNodeStates(prev => new Map([...prev, [nodeId, step.status]]));
+      }, delay);
+      simTimers.current.push(t2);
+      delay += SETTLE_MS;
+    });
+
+    // Clear the "animating" edge indicator after everything settles
+    const tDone = setTimeout(() => setAnimatingEdgeId(null), delay + 100);
+    simTimers.current.push(tDone);
+  }, [edges]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Properties Panel resize state
   const propertiesPanelRef = useRef<ImperativePanelHandle>(null);
@@ -707,7 +820,7 @@ const VisualWorkflowBuilder = () => {
                 <div className="h-full workflow-canvas" ref={reactFlowWrapper}>
                   <ReactFlow
                     nodes={displayNodes}
-                    edges={edges}
+                    edges={displayEdges}
                     onNodesChange={onNodesChange}
                     onEdgesChange={onEdgesChange}
                     onConnect={onConnect}
@@ -782,9 +895,17 @@ const VisualWorkflowBuilder = () => {
                     deleteNode={deleteNode}
                     workflowId={workflowId}
                     workflowDbId={workflow?.id}
-                    onNodesUpdated={(ids) => {
-                      setHighlightedNodeIds(new Set(ids));
-                      setTimeout(() => setHighlightedNodeIds(new Set()), 2000);
+                    onNodesUpdated={(ids, simSteps) => {
+                      if (simSteps !== undefined && ids.length === 0 && simSteps.length === 0) {
+                        clearSimulation(); // reset signal from sidebar
+                      } else if (simSteps && simSteps.length > 0) {
+                        runSimAnimation(simSteps);
+                      } else {
+                        // AI-edit flash: brief green ring
+                        setSimNodeStates(new Map(ids.map(id => [id, 'success'] as [string, string])));
+                        const t = setTimeout(() => setSimNodeStates(new Map()), 2000);
+                        simTimers.current.push(t);
+                      }
                     }}
                   />
                 </div>

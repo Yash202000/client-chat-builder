@@ -17,6 +17,7 @@ import remarkGfm from 'remark-gfm';
 import { useWebSocket } from '@/hooks/use-websocket';
 import { getWebSocketUrl, API_BASE_URL } from '@/config/api';
 import { BACKEND_URL } from '@/config/env';
+import { useTheme } from '@/hooks/useTheme';
 import axios from 'axios';
 
 interface ChatMessage {
@@ -35,6 +36,7 @@ interface ChatMessage {
 const InternalVideoCallPage: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
+  const returnTo = (location.state as { returnTo?: string } | null)?.returnTo || '/dashboard/conversations';
   const queryParams = new URLSearchParams(location.search);
   const livekitToken = queryParams.get('livekitToken');
   const livekitUrl = queryParams.get('livekitUrl');
@@ -62,6 +64,7 @@ const InternalVideoCallPage: React.FC = () => {
     console.error('[Video Call] URL params received:', location.search);
   }
 
+  const { theme } = useTheme();
   const [isChatOpen, setChatOpen] = useState(true);
   const [inputValue, setInputValue] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -97,10 +100,10 @@ const InternalVideoCallPage: React.FC = () => {
           return [...oldMessages, newMessage];
         });
       } else if (wsMessage.type === 'call_ended') {
-        // Call ended - play sound and navigate back to chat
-        console.log('[Video Call] Call ended via WebSocket - navigating back to chat');
+        // Call ended - play sound and navigate back to where user came from
+        console.log('[Video Call] Call ended via WebSocket - navigating back');
         playCallEndSound();
-        navigate(`/dashboard/internal-chat${channelId ? `?channelId=${channelId}` : ''}`);
+        navigate(returnTo);
       } else if (wsMessage.type === 'user_left_call') {
         // Someone left the call (but call continues)
         console.log('[Video Call] User left call:', wsMessage.left_by_name);
@@ -220,9 +223,8 @@ const InternalVideoCallPage: React.FC = () => {
       console.error('[Video Call] Failed to restore previous status:', statusError);
     }
 
-    console.log('[Video Call] Navigating back to chat...');
-    // Navigate back to the internal chat page with the same channel selected
-    navigate(`/dashboard/internal-chat${channelId ? `?channelId=${channelId}` : ''}`);
+    console.log('[Video Call] Navigating back to:', returnTo);
+    navigate(returnTo);
   };
 
   const scrollToBottom = () => {
@@ -235,12 +237,20 @@ const InternalVideoCallPage: React.FC = () => {
 
   if (!livekitToken || !livekitUrl || !roomName) {
     console.error('Missing required parameters for video call:', { livekitToken: !!livekitToken, livekitUrl: !!livekitUrl, roomName: !!roomName });
-    return <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>Loading internal video call...</div>;
+    return (
+      <div className="flex items-center justify-center h-screen bg-white dark:bg-gray-900 text-gray-900 dark:text-white">
+        Loading internal video call...
+      </div>
+    );
   }
 
   if (!isRoomReady) {
     console.log('Waiting for room to be ready...');
-    return <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>Connecting to video call...</div>;
+    return (
+      <div className="flex items-center justify-center h-screen bg-white dark:bg-gray-900 text-gray-900 dark:text-white">
+        Connecting to video call...
+      </div>
+    );
   }
 
   console.log('Rendering LiveKitRoom with:', {
@@ -250,7 +260,7 @@ const InternalVideoCallPage: React.FC = () => {
   });
 
   return (
-    <div className="flex h-screen bg-black text-white">
+    <div className={`flex h-screen bg-white dark:bg-black text-gray-900 dark:text-white ${theme}`}>
       <div className="flex-1 flex flex-col relative">
         <LiveKitRoom
           video={true}
@@ -284,8 +294,8 @@ const InternalVideoCallPage: React.FC = () => {
         </LiveKitRoom>
       </div>
       {isChatOpen && (
-        <div className="w-[350px] bg-gray-900 border-l border-gray-700 flex flex-col">
-          <div className="p-4 border-b border-gray-700">
+        <div className="w-[350px] bg-gray-50 dark:bg-gray-900 border-l border-gray-200 dark:border-gray-700 flex flex-col">
+          <div className="p-4 border-b border-gray-200 dark:border-gray-700">
             <h2 className="text-lg font-semibold">Chat</h2>
           </div>
           <ScrollArea className="flex-1 p-4">
@@ -294,7 +304,7 @@ const InternalVideoCallPage: React.FC = () => {
             ) : (
               messages?.map((msg) => (
                 <div key={msg.id} className={cn('flex w-full mb-2', msg.sender_id === user?.id ? 'justify-end' : 'justify-start')}>
-                  <div className={cn('max-w-[85%] p-2 rounded-lg', msg.sender_id === user?.id ? 'bg-blue-600' : 'bg-gray-700')}>
+                  <div className={cn('max-w-[85%] p-2 rounded-lg', msg.sender_id === user?.id ? 'bg-blue-600 text-white' : 'bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white')}>
                     <div className="text-xs font-semibold">
                       {msg.sender.first_name || msg.sender.email}
                     </div>
@@ -307,14 +317,14 @@ const InternalVideoCallPage: React.FC = () => {
             )}
             <div ref={messagesEndRef} />
           </ScrollArea>
-          <div className="p-4 border-t border-gray-700">
+          <div className="p-4 border-t border-gray-200 dark:border-gray-700">
             <div className="flex items-center gap-2">
               <Input
                 placeholder="Type a message..."
                 value={inputValue}
                 onChange={(e) => setInputValue(e.target.value)}
                 onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
-                className="bg-gray-800 border-gray-600"
+                className="bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600"
               />
               <Button onClick={handleSendMessage}>
                 <Send className="h-4 w-4" />
@@ -323,8 +333,8 @@ const InternalVideoCallPage: React.FC = () => {
           </div>
         </div>
       )}
-      <Button 
-        onClick={() => setChatOpen(!isChatOpen)} 
+      <Button
+        onClick={() => setChatOpen(!isChatOpen)}
         className="absolute top-4 right-4"
         style={{ right: isChatOpen ? '370px' : '1rem' }}
       >

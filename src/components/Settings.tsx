@@ -1,11 +1,27 @@
 
 import { useState, useEffect } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
+import { Badge } from "@/components/ui/badge";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   Settings as SettingsIcon,
   Globe,
@@ -19,7 +35,13 @@ import {
   Database,
   Building,
   ChevronsUpDown,
-  PhoneCall
+  PhoneCall,
+  ShieldCheck,
+  UserPlus,
+  Archive,
+  Copy,
+  RefreshCw,
+  Download,
 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/components/ui/use-toast";
@@ -45,6 +67,7 @@ export const Settings = () => {
   const { toast } = useToast();
   const { playSuccessSound } = useNotifications();
   const { user, companyId, setCompanyIdGlobaly, authFetch } = useAuth();
+  const queryClient = useQueryClient();
 
   const [settings, setSettings] = useState({
     companyName: "",
@@ -297,7 +320,7 @@ export const Settings = () => {
       <div className="px-6 py-6 space-y-6">
 
       <Tabs defaultValue="general" className="space-y-6" dir={isRTL ? 'rtl' : 'ltr'}>
-        <TabsList className="grid w-full grid-cols-4 lg:grid-cols-8 bg-slate-100 dark:bg-slate-800 p-1 rounded-xl border border-slate-200 dark:border-slate-700">
+        <TabsList className="grid w-full grid-cols-4 lg:grid-cols-11 bg-slate-100 dark:bg-slate-800 p-1 rounded-xl border border-slate-200 dark:border-slate-700">
           <TabsTrigger value="general" className="rounded-lg data-[state=active]:bg-white dark:data-[state=active]:bg-slate-900 data-[state=active]:text-cyan-600 dark:data-[state=active]:text-cyan-400 data-[state=active]:shadow-sm transition-all flex items-center gap-1.5 text-xs lg:text-sm">
             <Globe className="h-3.5 w-3.5" />
             <span className="hidden lg:inline">{t('settings.general')}</span>
@@ -330,6 +353,18 @@ export const Settings = () => {
             <Database className="h-3.5 w-3.5" />
             <span className="hidden lg:inline">{t('settings.developer')}</span>
           </TabsTrigger>
+          <TabsTrigger value="identity" className="rounded-lg data-[state=active]:bg-white dark:data-[state=active]:bg-slate-900 data-[state=active]:text-indigo-600 dark:data-[state=active]:text-indigo-400 data-[state=active]:shadow-sm transition-all flex items-center gap-1.5 text-xs lg:text-sm">
+            <ShieldCheck className="h-3.5 w-3.5" />
+            <span className="hidden lg:inline">Identity</span>
+          </TabsTrigger>
+          <TabsTrigger value="guests" className="rounded-lg data-[state=active]:bg-white dark:data-[state=active]:bg-slate-900 data-[state=active]:text-emerald-600 dark:data-[state=active]:text-emerald-400 data-[state=active]:shadow-sm transition-all flex items-center gap-1.5 text-xs lg:text-sm">
+            <UserPlus className="h-3.5 w-3.5" />
+            <span className="hidden lg:inline">Guest Access</span>
+          </TabsTrigger>
+          <TabsTrigger value="retention" className="rounded-lg data-[state=active]:bg-white dark:data-[state=active]:bg-slate-900 data-[state=active]:text-amber-600 dark:data-[state=active]:text-amber-400 data-[state=active]:shadow-sm transition-all flex items-center gap-1.5 text-xs lg:text-sm">
+            <Archive className="h-3.5 w-3.5" />
+            <span className="hidden lg:inline">Retention</span>
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="general" className="space-y-4" dir={isRTL ? 'rtl' : 'ltr'}>
@@ -358,7 +393,7 @@ export const Settings = () => {
                     <DropdownMenuContent className="w-full dark:bg-slate-800 dark:border-slate-700 rounded-xl">
                       <DropdownMenuLabel className="dark:text-white">{t('settings.switchCompany')}</DropdownMenuLabel>
                       {companies.map(c => (
-                        <DropdownMenuItem key={c.id} onSelect={() => setCompanyIdGlobaly(c.id)} className="dark:text-white dark:focus:bg-slate-700 rounded-lg">
+                        <DropdownMenuItem key={c.id} onSelect={() => { setCompanyIdGlobaly(c.id); queryClient.invalidateQueries(); }} className="dark:text-white dark:focus:bg-slate-700 rounded-lg">
                           {c.name}
                         </DropdownMenuItem>
                       ))}
@@ -689,16 +724,18 @@ export const Settings = () => {
                 <div>
                   <Label className="dark:text-white font-medium">{t('settings.requireAuth')}</Label>
                   <p className="text-sm text-gray-600 dark:text-gray-400">{t('settings.requireAuthDesc')}</p>
+                  <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5">System-enforced — always enabled</p>
                 </div>
-                <Switch checked={true} />
+                <Switch checked={true} disabled />
               </div>
 
               <div className="flex items-center justify-between p-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50">
                 <div>
                   <Label className="dark:text-white font-medium">{t('settings.allowFileUploads')}</Label>
                   <p className="text-sm text-gray-600 dark:text-gray-400">{t('settings.allowFileUploadsDesc')}</p>
+                  <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5">System-enforced — always enabled</p>
                 </div>
-                <Switch checked={true} />
+                <Switch checked={true} disabled />
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-3 border-t border-slate-200 dark:border-slate-700">
@@ -879,6 +916,642 @@ export const Settings = () => {
               </TabsContent>
             </Tabs>
           </div>
+        </TabsContent>
+
+        {/* ── Identity / SAML Tab ─────────────────────────────────────── */}
+        <TabsContent value="identity" className="space-y-6" dir={isRTL ? 'rtl' : 'ltr'}>
+          {(() => {
+            const [ssoEnabled, setSsoEnabled] = useState(false);
+            const [scimEnabled, setScimEnabled] = useState(false);
+            const [entityId, setEntityId] = useState("");
+            const [ssoUrl, setSsoUrl] = useState("");
+            const [sloUrl, setSloUrl] = useState("");
+            const [certificate, setCertificate] = useState("");
+            const [bearerToken, setBearerToken] = useState("scim_tok_xxxxxxxxxxxxxxxxxxxxxxxx");
+
+            const copyToClipboard = (text: string, label: string) => {
+              navigator.clipboard.writeText(text);
+              toast({ title: "Copied", description: `${label} copied to clipboard.` });
+            };
+
+            const spInfo = [
+              { label: "ACS URL", value: "https://app.yourdomain.com/auth/saml/callback" },
+              { label: "Entity ID", value: "https://app.yourdomain.com" },
+              { label: "Metadata URL", value: "https://app.yourdomain.com/auth/saml/metadata" },
+            ];
+
+            return (
+              <>
+                {/* Enable SSO */}
+                <div className="rounded-xl border border-indigo-200 dark:border-indigo-800/50 bg-white dark:bg-slate-900 shadow-sm">
+                  <div className="p-6 border-b border-indigo-100 dark:border-indigo-800/30">
+                    <h3 className="flex items-center gap-3 dark:text-white text-base font-semibold">
+                      <div className="p-1.5 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600">
+                        <ShieldCheck className="h-4 w-4 text-white" />
+                      </div>
+                      SAML 2.0 / Single Sign-On
+                    </h3>
+                    <p className="text-slate-500 dark:text-gray-400 text-sm mt-1">Configure SAML 2.0 SSO so your team can log in via your identity provider.</p>
+                  </div>
+                  <div className="p-6 space-y-6">
+                    {/* SSO Toggle */}
+                    <div className="flex items-center justify-between p-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50">
+                      <div>
+                        <Label className="dark:text-white font-medium">Enable Single Sign-On (SAML 2.0)</Label>
+                        <p className="text-sm text-gray-600 dark:text-gray-400">Allow users to authenticate via your IdP instead of username/password.</p>
+                      </div>
+                      <Switch checked={ssoEnabled} onCheckedChange={setSsoEnabled} />
+                    </div>
+
+                    {/* Identity Provider Settings */}
+                    <div className="rounded-xl border border-slate-200 dark:border-slate-700">
+                      <div className="px-5 py-4 border-b border-slate-200 dark:border-slate-700">
+                        <h4 className="font-semibold dark:text-white text-sm">Identity Provider Settings</h4>
+                      </div>
+                      <div className="p-5 space-y-4">
+                        <div>
+                          <Label htmlFor="saml-entity-id" className="dark:text-gray-300">Entity ID / Issuer URL</Label>
+                          <Input
+                            id="saml-entity-id"
+                            value={entityId}
+                            onChange={(e) => setEntityId(e.target.value)}
+                            placeholder="https://your-idp.com/metadata"
+                            className="dark:bg-slate-900 dark:border-slate-600 dark:text-white mt-1.5 rounded-xl"
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor="saml-sso-url" className="dark:text-gray-300">SSO URL (Login)</Label>
+                          <Input
+                            id="saml-sso-url"
+                            value={ssoUrl}
+                            onChange={(e) => setSsoUrl(e.target.value)}
+                            placeholder="https://your-idp.com/sso/saml"
+                            className="dark:bg-slate-900 dark:border-slate-600 dark:text-white mt-1.5 rounded-xl"
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor="saml-slo-url" className="dark:text-gray-300">SLO URL (Logout) <span className="text-slate-400 font-normal">— optional</span></Label>
+                          <Input
+                            id="saml-slo-url"
+                            value={sloUrl}
+                            onChange={(e) => setSloUrl(e.target.value)}
+                            placeholder="https://your-idp.com/slo/saml"
+                            className="dark:bg-slate-900 dark:border-slate-600 dark:text-white mt-1.5 rounded-xl"
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor="saml-cert" className="dark:text-gray-300">X.509 Certificate</Label>
+                          <textarea
+                            id="saml-cert"
+                            value={certificate}
+                            onChange={(e) => setCertificate(e.target.value)}
+                            rows={6}
+                            placeholder="-----BEGIN CERTIFICATE-----&#10;MIICpDCCAYwCCQD...&#10;-----END CERTIFICATE-----"
+                            className="w-full rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-900 text-sm text-slate-800 dark:text-white px-3 py-2.5 resize-none focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 mt-1.5 font-mono"
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Service Provider Info */}
+                    <div className="rounded-xl border border-slate-200 dark:border-slate-700">
+                      <div className="px-5 py-4 border-b border-slate-200 dark:border-slate-700">
+                        <h4 className="font-semibold dark:text-white text-sm">Service Provider Info <span className="text-slate-400 font-normal text-xs ml-1">(provide these to your IdP)</span></h4>
+                      </div>
+                      <div className="p-5 space-y-3">
+                        {spInfo.map(({ label, value }) => (
+                          <div key={label} className="flex items-center gap-3">
+                            <div className="flex-1">
+                              <p className="text-xs text-slate-500 dark:text-slate-400 mb-0.5">{label}</p>
+                              <p className="text-sm font-mono dark:text-white text-slate-800 bg-slate-50 dark:bg-slate-800 px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 select-all">{value}</p>
+                            </div>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="rounded-xl flex-shrink-0 dark:border-slate-600 dark:text-slate-300"
+                              onClick={() => copyToClipboard(value, label)}
+                            >
+                              <Copy className="h-3.5 w-3.5" />
+                            </Button>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* SCIM Provisioning */}
+                    <div className="rounded-xl border border-slate-200 dark:border-slate-700">
+                      <div className="px-5 py-4 border-b border-slate-200 dark:border-slate-700">
+                        <h4 className="font-semibold dark:text-white text-sm">SCIM Provisioning</h4>
+                      </div>
+                      <div className="p-5 space-y-4">
+                        <div className="flex items-center justify-between p-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50">
+                          <div>
+                            <Label className="dark:text-white font-medium">Enable SCIM</Label>
+                            <p className="text-sm text-gray-600 dark:text-gray-400">Automatically provision and deprovision users from your IdP.</p>
+                          </div>
+                          <Switch checked={scimEnabled} onCheckedChange={setScimEnabled} />
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <div className="flex-1">
+                            <Label className="dark:text-gray-300">SCIM Endpoint URL</Label>
+                            <p className="text-sm font-mono dark:text-white text-slate-800 bg-slate-50 dark:bg-slate-800 px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 mt-1.5 select-all">https://app.yourdomain.com/scim/v2</p>
+                          </div>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="rounded-xl flex-shrink-0 mt-6 dark:border-slate-600 dark:text-slate-300"
+                            onClick={() => copyToClipboard("https://app.yourdomain.com/scim/v2", "SCIM Endpoint URL")}
+                          >
+                            <Copy className="h-3.5 w-3.5" />
+                          </Button>
+                        </div>
+                        <div>
+                          <Label className="dark:text-gray-300">Bearer Token</Label>
+                          <div className="flex items-center gap-2 mt-1.5">
+                            <Input
+                              type="password"
+                              value={bearerToken}
+                              readOnly
+                              className="flex-1 dark:bg-slate-900 dark:border-slate-600 dark:text-white rounded-xl font-mono"
+                            />
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="rounded-xl flex-shrink-0 dark:border-slate-600 dark:text-slate-300"
+                              onClick={() => {
+                                const newToken = "scim_tok_" + Math.random().toString(36).substring(2, 26);
+                                setBearerToken(newToken);
+                                toast({ title: "Token regenerated", description: "Copy the new bearer token now — it won't be shown again." });
+                              }}
+                            >
+                              <RefreshCw className="h-3.5 w-3.5 mr-1" /> Regenerate
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="flex justify-end">
+                      <Button
+                        className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white rounded-xl px-8"
+                        onClick={() => {
+                          console.log("Saving identity/SAML settings", { ssoEnabled, entityId, ssoUrl, sloUrl, scimEnabled });
+                          toast({ title: "Identity settings saved", description: "Your SAML / SSO configuration has been updated." });
+                          playSuccessSound();
+                        }}
+                      >
+                        Save Identity Settings
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              </>
+            );
+          })()}
+        </TabsContent>
+
+        {/* ── Guest Access Tab ────────────────────────────────────────── */}
+        <TabsContent value="guests" className="space-y-6" dir={isRTL ? 'rtl' : 'ltr'}>
+          {(() => {
+            const sampleGuests = [
+              { email: "alice@partnerco.com", permission: "Collaborate", invitedBy: "admin@yourco.com", expires: "2026-05-27", status: "active" as const },
+              { email: "bob@agency.io", permission: "View Only", invitedBy: "sarah@yourco.com", expires: "2026-04-15", status: "expired" as const },
+              { email: "carol@client.com", permission: "Comment", invitedBy: "admin@yourco.com", expires: "2026-07-27", status: "pending" as const },
+            ];
+
+            const [inviteEmail, setInviteEmail] = useState("");
+            const [invitePermission, setInvitePermission] = useState("View Only");
+            const [inviteExpiry, setInviteExpiry] = useState("30 days");
+            const [allowGuestInvite, setAllowGuestInvite] = useState(false);
+            const [requireApproval, setRequireApproval] = useState(true);
+            const [notifyAdmins, setNotifyAdmins] = useState(true);
+
+            const statusColor: Record<string, string> = {
+              active: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400",
+              expired: "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400",
+              pending: "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400",
+            };
+
+            return (
+              <>
+                {/* Invite form */}
+                <div className="rounded-xl border border-emerald-200 dark:border-emerald-800/50 bg-white dark:bg-slate-900 shadow-sm">
+                  <div className="p-6 border-b border-emerald-100 dark:border-emerald-800/30">
+                    <h3 className="flex items-center gap-3 dark:text-white text-base font-semibold">
+                      <div className="p-1.5 rounded-lg bg-gradient-to-br from-emerald-500 to-teal-600">
+                        <UserPlus className="h-4 w-4 text-white" />
+                      </div>
+                      Invite Guest
+                    </h3>
+                    <p className="text-slate-500 dark:text-gray-400 text-sm mt-1">Send a time-limited access invite to an external collaborator.</p>
+                  </div>
+                  <div className="p-6 space-y-4">
+                    <div className="flex flex-col md:flex-row gap-3">
+                      <Input
+                        type="email"
+                        value={inviteEmail}
+                        onChange={(e) => setInviteEmail(e.target.value)}
+                        placeholder="guest@example.com"
+                        className="flex-1 dark:bg-slate-900 dark:border-slate-600 dark:text-white rounded-xl"
+                      />
+                      <Select value={invitePermission} onValueChange={setInvitePermission}>
+                        <SelectTrigger className="w-full md:w-40 dark:bg-slate-900 dark:border-slate-600 dark:text-white rounded-xl">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent className="dark:bg-slate-800 dark:border-slate-700">
+                          <SelectItem value="View Only">View Only</SelectItem>
+                          <SelectItem value="Comment">Comment</SelectItem>
+                          <SelectItem value="Collaborate">Collaborate</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <Select value={inviteExpiry} onValueChange={setInviteExpiry}>
+                        <SelectTrigger className="w-full md:w-36 dark:bg-slate-900 dark:border-slate-600 dark:text-white rounded-xl">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent className="dark:bg-slate-800 dark:border-slate-700">
+                          <SelectItem value="7 days">7 days</SelectItem>
+                          <SelectItem value="30 days">30 days</SelectItem>
+                          <SelectItem value="90 days">90 days</SelectItem>
+                          <SelectItem value="Never">Never</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <Button
+                        className="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white rounded-xl"
+                        onClick={() => {
+                          if (!inviteEmail) {
+                            toast({ title: "Email required", description: "Please enter the guest's email address.", variant: "destructive" });
+                            return;
+                          }
+                          console.log("Sending guest invite", { inviteEmail, invitePermission, inviteExpiry });
+                          toast({ title: "Invite sent", description: `Invite sent to ${inviteEmail}.` });
+                          playSuccessSound();
+                          setInviteEmail("");
+                        }}
+                      >
+                        <UserPlus className="h-4 w-4 mr-1.5" /> Send Invite
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Active Guests table */}
+                <div className="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-sm overflow-hidden">
+                  <div className="px-6 py-4 border-b border-slate-200 dark:border-slate-700">
+                    <h4 className="font-semibold dark:text-white">Active Guests</h4>
+                  </div>
+                  {sampleGuests.length === 0 ? (
+                    <div className="p-12 text-center text-slate-400 dark:text-slate-500">
+                      <UserPlus className="h-10 w-10 mx-auto mb-3 opacity-40" />
+                      <p className="text-sm">No guests invited yet.</p>
+                    </div>
+                  ) : (
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-sm">
+                        <thead>
+                          <tr className="bg-slate-50 dark:bg-slate-800/50 border-b border-slate-200 dark:border-slate-700">
+                            <th className="text-left px-5 py-3 font-medium text-slate-600 dark:text-slate-400">Email</th>
+                            <th className="text-left px-5 py-3 font-medium text-slate-600 dark:text-slate-400">Permission</th>
+                            <th className="text-left px-5 py-3 font-medium text-slate-600 dark:text-slate-400">Invited By</th>
+                            <th className="text-left px-5 py-3 font-medium text-slate-600 dark:text-slate-400">Expires</th>
+                            <th className="text-left px-5 py-3 font-medium text-slate-600 dark:text-slate-400">Status</th>
+                            <th className="text-left px-5 py-3 font-medium text-slate-600 dark:text-slate-400">Actions</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {sampleGuests.map((g, i) => (
+                            <tr key={i} className="border-b border-slate-100 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors">
+                              <td className="px-5 py-3 dark:text-white font-medium">{g.email}</td>
+                              <td className="px-5 py-3 text-slate-600 dark:text-slate-300">{g.permission}</td>
+                              <td className="px-5 py-3 text-slate-500 dark:text-slate-400 text-xs">{g.invitedBy}</td>
+                              <td className="px-5 py-3 text-slate-500 dark:text-slate-400">{g.expires}</td>
+                              <td className="px-5 py-3">
+                                <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium capitalize ${statusColor[g.status]}`}>
+                                  {g.status}
+                                </span>
+                              </td>
+                              <td className="px-5 py-3">
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg text-xs h-7"
+                                  onClick={() => {
+                                    console.log("Revoking guest access", g.email);
+                                    toast({ title: "Access revoked", description: `Guest access for ${g.email} has been revoked.` });
+                                  }}
+                                >
+                                  Revoke
+                                </Button>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+                </div>
+
+                {/* Guest Access Settings */}
+                <div className="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-sm">
+                  <div className="px-6 py-4 border-b border-slate-200 dark:border-slate-700">
+                    <h4 className="font-semibold dark:text-white">Guest Access Settings</h4>
+                  </div>
+                  <div className="p-6 space-y-3">
+                    {[
+                      { label: "Allow guests to invite others", desc: "Guests can share their access link with additional people.", value: allowGuestInvite, setter: setAllowGuestInvite },
+                      { label: "Require approval for guest invites", desc: "An admin must approve before a guest invite is activated.", value: requireApproval, setter: setRequireApproval },
+                      { label: "Notify admins on guest login", desc: "Send an email alert whenever a guest signs in.", value: notifyAdmins, setter: setNotifyAdmins },
+                    ].map(({ label, desc, value, setter }) => (
+                      <div key={label} className="flex items-center justify-between p-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50">
+                        <div>
+                          <Label className="dark:text-white font-medium">{label}</Label>
+                          <p className="text-sm text-gray-600 dark:text-gray-400">{desc}</p>
+                        </div>
+                        <Switch checked={value} onCheckedChange={setter} />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </>
+            );
+          })()}
+        </TabsContent>
+
+        {/* ── Retention Policy Tab ────────────────────────────────────── */}
+        <TabsContent value="retention" className="space-y-6" dir={isRTL ? 'rtl' : 'ltr'}>
+          {(() => {
+            const initialPolicies = [
+              { category: "Conversations", period: "1 year", action: "Archive", status: "Active" as const },
+              { category: "Messages", period: "1 year", action: "Archive", status: "Active" as const },
+              { category: "Leads", period: "2 years", action: "Archive", status: "Active" as const },
+              { category: "Contacts", period: "5 years", action: "Archive", status: "Active" as const },
+              { category: "Call Recordings", period: "90 days", action: "Delete", status: "Active" as const },
+              { category: "Audit Logs", period: "5 years", action: "Archive", status: "Draft" as const },
+            ];
+
+            const [policies, setPolicies] = useState(initialPolicies);
+            const [editIdx, setEditIdx] = useState<number | null>(null);
+            const [editPeriod, setEditPeriod] = useState("");
+            const [editAction, setEditAction] = useState("");
+            const [auditFrom, setAuditFrom] = useState("");
+            const [auditTo, setAuditTo] = useState("");
+            const [exportFormat, setExportFormat] = useState("JSON");
+            const [legalHoldOpen, setLegalHoldOpen] = useState(false);
+            const [holdCase, setHoldCase] = useState("");
+            const [holdPatterns, setHoldPatterns] = useState("");
+            const [holdFrom, setHoldFrom] = useState("");
+            const [holdTo, setHoldTo] = useState("");
+            const [holdNotes, setHoldNotes] = useState("");
+
+            const periodOptions = ["30 days", "90 days", "1 year", "2 years", "5 years", "Forever"];
+
+            const statusColor: Record<string, string> = {
+              Active: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400",
+              Draft: "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400",
+            };
+
+            return (
+              <>
+                {/* Data Retention Rules */}
+                <div className="rounded-xl border border-amber-200 dark:border-amber-800/50 bg-white dark:bg-slate-900 shadow-sm overflow-hidden">
+                  <div className="p-6 border-b border-amber-100 dark:border-amber-800/30">
+                    <h3 className="flex items-center gap-3 dark:text-white text-base font-semibold">
+                      <div className="p-1.5 rounded-lg bg-gradient-to-br from-amber-500 to-orange-600">
+                        <Archive className="h-4 w-4 text-white" />
+                      </div>
+                      Data Retention Rules
+                    </h3>
+                    <p className="text-slate-500 dark:text-gray-400 text-sm mt-1">Define how long each data category is retained before archiving or deletion.</p>
+                  </div>
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-sm">
+                      <thead>
+                        <tr className="bg-slate-50 dark:bg-slate-800/50 border-b border-slate-200 dark:border-slate-700">
+                          <th className="text-left px-5 py-3 font-medium text-slate-600 dark:text-slate-400">Category</th>
+                          <th className="text-left px-5 py-3 font-medium text-slate-600 dark:text-slate-400">Retention Period</th>
+                          <th className="text-left px-5 py-3 font-medium text-slate-600 dark:text-slate-400">Action</th>
+                          <th className="text-left px-5 py-3 font-medium text-slate-600 dark:text-slate-400">Status</th>
+                          <th className="text-left px-5 py-3 font-medium text-slate-600 dark:text-slate-400">Last Run</th>
+                          <th className="text-left px-5 py-3 font-medium text-slate-600 dark:text-slate-400"></th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {policies.map((p, i) => (
+                          <tr key={p.category} className="border-b border-slate-100 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors">
+                            <td className="px-5 py-3 dark:text-white font-medium">{p.category}</td>
+                            <td className="px-5 py-3 text-slate-600 dark:text-slate-300">{p.period}</td>
+                            <td className="px-5 py-3 text-slate-600 dark:text-slate-300">{p.action}</td>
+                            <td className="px-5 py-3">
+                              <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${statusColor[p.status]}`}>
+                                {p.status}
+                              </span>
+                            </td>
+                            <td className="px-5 py-3 text-slate-400 dark:text-slate-500 text-xs">2026-04-01 02:00</td>
+                            <td className="px-5 py-3">
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="text-indigo-500 hover:text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 rounded-lg text-xs h-7"
+                                onClick={() => { setEditIdx(i); setEditPeriod(p.period); setEditAction(p.action); }}
+                              >
+                                Edit
+                              </Button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+
+                {/* Inline edit row (appears when editing) */}
+                {editIdx !== null && (
+                  <div className="rounded-xl border border-indigo-200 dark:border-indigo-700 bg-indigo-50 dark:bg-indigo-900/20 p-5 space-y-3">
+                    <p className="text-sm font-semibold dark:text-white">Editing: {policies[editIdx].category}</p>
+                    <div className="flex flex-wrap gap-3 items-end">
+                      <div>
+                        <Label className="dark:text-gray-300 text-xs">Retention Period</Label>
+                        <Select value={editPeriod} onValueChange={setEditPeriod}>
+                          <SelectTrigger className="w-36 dark:bg-slate-900 dark:border-slate-600 dark:text-white rounded-xl mt-1">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent className="dark:bg-slate-800 dark:border-slate-700">
+                            {periodOptions.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div>
+                        <Label className="dark:text-gray-300 text-xs">Action</Label>
+                        <Select value={editAction} onValueChange={setEditAction}>
+                          <SelectTrigger className="w-32 dark:bg-slate-900 dark:border-slate-600 dark:text-white rounded-xl mt-1">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent className="dark:bg-slate-800 dark:border-slate-700">
+                            <SelectItem value="Archive">Archive</SelectItem>
+                            <SelectItem value="Delete">Delete</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <Button
+                        size="sm"
+                        className="bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl"
+                        onClick={() => {
+                          setPolicies(prev => prev.map((p, i) => i === editIdx ? { ...p, period: editPeriod, action: editAction, status: "Active" as const } : p));
+                          setEditIdx(null);
+                          toast({ title: "Policy updated", description: `${policies[editIdx].category} retention policy saved.` });
+                          playSuccessSound();
+                        }}
+                      >
+                        Save
+                      </Button>
+                      <Button variant="ghost" size="sm" className="rounded-xl dark:text-slate-300" onClick={() => setEditIdx(null)}>Cancel</Button>
+                    </div>
+                  </div>
+                )}
+
+                {/* Audit Log Export */}
+                <div className="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-sm">
+                  <div className="px-6 py-4 border-b border-slate-200 dark:border-slate-700">
+                    <h4 className="font-semibold dark:text-white flex items-center gap-2">
+                      <Download className="h-4 w-4 text-amber-500" />
+                      Audit Log Export
+                    </h4>
+                  </div>
+                  <div className="p-6 space-y-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <Label htmlFor="audit-from" className="dark:text-gray-300">From</Label>
+                        <Input id="audit-from" type="date" value={auditFrom} onChange={(e) => setAuditFrom(e.target.value)} className="dark:bg-slate-900 dark:border-slate-600 dark:text-white mt-1.5 rounded-xl" />
+                      </div>
+                      <div>
+                        <Label htmlFor="audit-to" className="dark:text-gray-300">To</Label>
+                        <Input id="audit-to" type="date" value={auditTo} onChange={(e) => setAuditTo(e.target.value)} className="dark:bg-slate-900 dark:border-slate-600 dark:text-white mt-1.5 rounded-xl" />
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <Label className="dark:text-gray-300">Category</Label>
+                        <div className="grid grid-cols-2 gap-2 mt-1.5">
+                          {["Conversations", "Messages", "Auth Events", "Admin Actions"].map(cat => (
+                            <label key={cat} className="flex items-center gap-2 text-sm dark:text-slate-300 cursor-pointer">
+                              <input type="checkbox" defaultChecked className="rounded accent-amber-500" />
+                              {cat}
+                            </label>
+                          ))}
+                        </div>
+                      </div>
+                      <div>
+                        <Label className="dark:text-gray-300">Export Format</Label>
+                        <Select value={exportFormat} onValueChange={setExportFormat}>
+                          <SelectTrigger className="dark:bg-slate-900 dark:border-slate-600 dark:text-white rounded-xl mt-1.5">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent className="dark:bg-slate-800 dark:border-slate-700">
+                            <SelectItem value="JSON">JSON</SelectItem>
+                            <SelectItem value="CSV">CSV</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+                    <div className="flex justify-end pt-2">
+                      <Button
+                        className="bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700 text-white rounded-xl"
+                        onClick={() => {
+                          console.log("Exporting audit log", { auditFrom, auditTo, exportFormat });
+                          toast({ title: "Export started", description: "Export started — you'll receive an email when your download is ready." });
+                        }}
+                      >
+                        <Download className="h-4 w-4 mr-1.5" /> Export Audit Log
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Legal Hold */}
+                <div className="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-sm">
+                  <div className="px-6 py-4 border-b border-slate-200 dark:border-slate-700">
+                    <h4 className="font-semibold dark:text-white flex items-center gap-2">
+                      <Lock className="h-4 w-4 text-red-500" />
+                      Legal Hold
+                    </h4>
+                  </div>
+                  <div className="p-6 flex items-center justify-between">
+                    <div>
+                      <p className="dark:text-white font-medium">Active holds: <span className="text-amber-600 dark:text-amber-400">0</span></p>
+                      <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">Legal holds prevent data from being deleted or archived during litigation.</p>
+                    </div>
+                    <Button
+                      variant="outline"
+                      className="rounded-xl border-red-300 text-red-600 hover:bg-red-50 dark:border-red-800 dark:text-red-400 dark:hover:bg-red-900/20"
+                      onClick={() => setLegalHoldOpen(true)}
+                    >
+                      <Lock className="h-4 w-4 mr-1.5" /> Create Legal Hold
+                    </Button>
+                  </div>
+                </div>
+
+                {/* Legal Hold Dialog */}
+                <Dialog open={legalHoldOpen} onOpenChange={setLegalHoldOpen}>
+                  <DialogContent className="dark:bg-slate-900 dark:border-slate-700 rounded-2xl sm:max-w-lg">
+                    <DialogHeader>
+                      <DialogTitle className="dark:text-white flex items-center gap-2">
+                        <Lock className="h-4 w-4 text-red-500" /> Create Legal Hold
+                      </DialogTitle>
+                    </DialogHeader>
+                    <div className="space-y-4 py-2">
+                      <div>
+                        <Label htmlFor="hold-case" className="dark:text-gray-300">Case Name</Label>
+                        <Input id="hold-case" value={holdCase} onChange={(e) => setHoldCase(e.target.value)} placeholder="e.g. Litigation 2026-01" className="dark:bg-slate-800 dark:border-slate-600 dark:text-white mt-1.5 rounded-xl" />
+                      </div>
+                      <div>
+                        <Label htmlFor="hold-patterns" className="dark:text-gray-300">Email Patterns <span className="text-slate-400 font-normal">(comma-separated)</span></Label>
+                        <Input id="hold-patterns" value={holdPatterns} onChange={(e) => setHoldPatterns(e.target.value)} placeholder="@example.com, john.doe@client.com" className="dark:bg-slate-800 dark:border-slate-600 dark:text-white mt-1.5 rounded-xl" />
+                      </div>
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <Label htmlFor="hold-from" className="dark:text-gray-300">From Date</Label>
+                          <Input id="hold-from" type="date" value={holdFrom} onChange={(e) => setHoldFrom(e.target.value)} className="dark:bg-slate-800 dark:border-slate-600 dark:text-white mt-1.5 rounded-xl" />
+                        </div>
+                        <div>
+                          <Label htmlFor="hold-to" className="dark:text-gray-300">To Date</Label>
+                          <Input id="hold-to" type="date" value={holdTo} onChange={(e) => setHoldTo(e.target.value)} className="dark:bg-slate-800 dark:border-slate-600 dark:text-white mt-1.5 rounded-xl" />
+                        </div>
+                      </div>
+                      <div>
+                        <Label htmlFor="hold-notes" className="dark:text-gray-300">Notes</Label>
+                        <textarea
+                          id="hold-notes"
+                          value={holdNotes}
+                          onChange={(e) => setHoldNotes(e.target.value)}
+                          rows={3}
+                          placeholder="Optional notes for this legal hold..."
+                          className="w-full rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 text-sm text-slate-800 dark:text-white px-3 py-2.5 resize-none focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500 mt-1.5"
+                        />
+                      </div>
+                    </div>
+                    <DialogFooter>
+                      <Button variant="ghost" className="rounded-xl dark:text-slate-300" onClick={() => setLegalHoldOpen(false)}>Cancel</Button>
+                      <Button
+                        className="bg-red-600 hover:bg-red-700 text-white rounded-xl"
+                        onClick={() => {
+                          if (!holdCase) {
+                            toast({ title: "Case name required", variant: "destructive" });
+                            return;
+                          }
+                          console.log("Creating legal hold", { holdCase, holdPatterns, holdFrom, holdTo, holdNotes });
+                          toast({ title: "Legal hold created", description: `Hold "${holdCase}" is now active.` });
+                          playSuccessSound();
+                          setLegalHoldOpen(false);
+                          setHoldCase(""); setHoldPatterns(""); setHoldFrom(""); setHoldTo(""); setHoldNotes("");
+                        }}
+                      >
+                        Create Hold
+                      </Button>
+                    </DialogFooter>
+                  </DialogContent>
+                </Dialog>
+              </>
+            );
+          })()}
         </TabsContent>
       </Tabs>
 

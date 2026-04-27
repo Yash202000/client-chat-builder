@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useMemo, useEffect, createContext } from 'react';
+import React, { useState, useCallback, useMemo, useEffect, createContext, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import ReactFlow, {
   ReactFlowProvider,
@@ -16,12 +16,24 @@ import { useTranslation } from 'react-i18next';
 import { Agent, Tool, KnowledgeBase } from '@/types';
 import { AgentComponentSidebar } from './AgentComponentSidebar';
 import { AgentPropertiesPanel } from './AgentPropertiesPanel';
+import { AgentTesterPanel } from './AgentTesterPanel';
 import { AgentNode, ToolsNode, KnowledgeNode, WorkflowNode, McpSubToolNode, ChatMessageNode } from './AgentCustomNodes';
 import { useAuth } from '@/hooks/useAuth';
+import { cn } from '@/lib/utils';
 
 interface AgentBuilderProps {
   agent: Agent;
+  showTester?: boolean;
 }
+
+const SIM_STYLE: Record<string, React.CSSProperties> = {
+  running: { boxShadow: '0 0 0 2px #facc15, 0 0 18px 6px rgba(250,204,21,0.55), inset 0 0 28px rgba(250,204,21,0.14)', zIndex: 10 },
+  success: { boxShadow: '0 0 0 2px #22c55e, 0 0 14px 4px rgba(34,197,94,0.50), inset 0 0 24px rgba(34,197,94,0.12)', zIndex: 10 },
+  error:   { boxShadow: '0 0 0 2px #ef4444, 0 0 14px 4px rgba(239,68,68,0.50), inset 0 0 24px rgba(239,68,68,0.12)', zIndex: 10 },
+};
+const SIM_CLASS: Record<string, string> = {
+  running: 'node-sim-running',
+};
 
 // Layout constants for better organization
 const LAYOUT = {
@@ -54,7 +66,7 @@ const initialNodes = (agentName) => [
 
 export const AgentBuilderContext = createContext(null);
 
-export const AgentBuilder = ({ agent }: AgentBuilderProps) => {
+export const AgentBuilder = ({ agent, showTester = false }: AgentBuilderProps) => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes(agent.name));
@@ -66,6 +78,21 @@ export const AgentBuilder = ({ agent }: AgentBuilderProps) => {
   const [inspectedMcpTools, setInspectedMcpTools] = useState<number[]>([]);
   const [leftSidebarCollapsed, setLeftSidebarCollapsed] = useState(false);
   const [rightSidebarCollapsed, setRightSidebarCollapsed] = useState(false);
+  const [simStates, setSimStates] = useState<Record<string, string>>({});
+  const simClearTimer = useRef<ReturnType<typeof setTimeout>>();
+
+  const handleExecution = useCallback((steps: Array<{ node_id: string; status: string }>) => {
+    if (simClearTimer.current) clearTimeout(simClearTimer.current);
+    if (steps.length === 0) { setSimStates({}); return; }
+    // Cascade: reveal each step 350ms apart so the flow is visible
+    steps.forEach((step, i) => {
+      setTimeout(() => {
+        setSimStates(prev => ({ ...prev, [step.node_id]: step.status }));
+      }, i * 350);
+    });
+    // Auto-clear 2.5s after the last step
+    simClearTimer.current = setTimeout(() => setSimStates({}), steps.length * 350 + 2500);
+  }, []);
 
   useEffect(() => {
     const nodesToAdd = [];
@@ -147,6 +174,16 @@ export const AgentBuilder = ({ agent }: AgentBuilderProps) => {
     mcp_sub_tool: McpSubToolNode,
     chat_message: ChatMessageNode,
   }), []);
+
+  const displayNodes = useMemo(() => nodes.map(n => {
+    const state = simStates[n.id];
+    if (!state) return n;
+    return {
+      ...n,
+      style: { ...n.style, ...SIM_STYLE[state] },
+      className: cn(n.className, SIM_CLASS[state] ?? ''),
+    };
+  }), [nodes, simStates]);
 
   const mutation = useMutation({
     mutationFn: (updatedAgent: Partial<Agent>) => {
@@ -442,52 +479,59 @@ export const AgentBuilder = ({ agent }: AgentBuilderProps) => {
     <div className="flex h-[calc(100vh-11rem)] w-full rounded-xl overflow-hidden border border-border bg-card">
       <AgentBuilderContext.Provider value={contextValue}>
         <ReactFlowProvider>
-          <AgentComponentSidebar
-            agent={agent}
-            isCollapsed={leftSidebarCollapsed}
-            onToggle={() => setLeftSidebarCollapsed(!leftSidebarCollapsed)}
-          />
-          <div className="flex-grow workflow-canvas relative">
-            {/* Gradient overlay at top */}
-            <div className="absolute top-0 left-0 right-0 h-12 bg-gradient-to-b from-card/60 to-transparent pointer-events-none z-10" />
-            <ReactFlow
-              nodes={nodes}
-              edges={edges}
-              onNodesChange={handleNodesChange}
-              onEdgesChange={handleEdgesChange}
-              onConnect={onConnect}
-              onInit={setReactFlowInstance}
-              onDrop={onDrop}
-              onDragOver={onDragOver}
-              onNodeClick={onNodeClick}
-              onPaneClick={onPaneClick}
-              nodeTypes={nodeTypes}
-              fitView
-              fitViewOptions={{ maxZoom: 0.75, padding: 0.3 }}
-              defaultEdgeOptions={{
-                type: 'smoothstep',
-                animated: true,
-                style: { stroke: '#8b5cf6', strokeWidth: 2 },
-              }}
-              className="bg-background"
-            >
-              <Background
-                variant="dots"
-                gap={24}
-                size={1.5}
-                color="hsl(var(--muted-foreground))"
-                className="dark:opacity-20"
+            <AgentComponentSidebar
+              agent={agent}
+              isCollapsed={leftSidebarCollapsed}
+              onToggle={() => setLeftSidebarCollapsed(!leftSidebarCollapsed)}
+            />
+            <div className="flex-grow workflow-canvas relative">
+              {/* Gradient overlay at top */}
+              <div className="absolute top-0 left-0 right-0 h-12 bg-gradient-to-b from-card/60 to-transparent pointer-events-none z-10" />
+              <ReactFlow
+                nodes={displayNodes}
+                edges={edges}
+                onNodesChange={handleNodesChange}
+                onEdgesChange={handleEdgesChange}
+                onConnect={onConnect}
+                onInit={setReactFlowInstance}
+                onDrop={onDrop}
+                onDragOver={onDragOver}
+                onNodeClick={onNodeClick}
+                onPaneClick={onPaneClick}
+                nodeTypes={nodeTypes}
+                fitView
+                fitViewOptions={{ maxZoom: 0.75, padding: 0.3 }}
+                defaultEdgeOptions={{
+                  type: 'smoothstep',
+                  animated: true,
+                  style: { stroke: '#8b5cf6', strokeWidth: 2 },
+                }}
+                className="bg-background"
+              >
+                <Background
+                  variant="dots"
+                  gap={24}
+                  size={1.5}
+                  color="hsl(var(--muted-foreground))"
+                  className="dark:opacity-20"
+                />
+                <Controls className="bg-white/90 dark:bg-slate-800/90 backdrop-blur-sm rounded-xl shadow-lg border border-slate-200 dark:border-slate-700 overflow-hidden" />
+              </ReactFlow>
+            </div>
+            {showTester ? (
+              <div className="w-72 flex-shrink-0 overflow-hidden">
+                <AgentTesterPanel agentId={agent.id} agentName={agent.name} onExecution={handleExecution} />
+              </div>
+            ) : (
+              <AgentPropertiesPanel
+                agent={agent}
+                selectedNode={selectedNode}
+                onNodeDelete={onNodeDelete}
+                isCollapsed={rightSidebarCollapsed}
+                onToggle={() => setRightSidebarCollapsed(!rightSidebarCollapsed)}
+                onTestExecution={handleExecution}
               />
-              <Controls className="bg-white/90 dark:bg-slate-800/90 backdrop-blur-sm rounded-xl shadow-lg border border-slate-200 dark:border-slate-700 overflow-hidden" />
-            </ReactFlow>
-          </div>
-          <AgentPropertiesPanel
-            agent={agent}
-            selectedNode={selectedNode}
-            onNodeDelete={onNodeDelete}
-            isCollapsed={rightSidebarCollapsed}
-            onToggle={() => setRightSidebarCollapsed(!rightSidebarCollapsed)}
-          />
+            )}
         </ReactFlowProvider>
       </AgentBuilderContext.Provider>
     </div>

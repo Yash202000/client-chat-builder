@@ -12,8 +12,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
 
-import { VideoCallModal } from './VideoCallModal';
 import { useTwilioCall } from '@/contexts/TwilioCallContext';
+import { useVideoCall } from '@/contexts/VideoCallContext';
 import { ConversationSidebar } from './ConversationSidebar';
 import { useAuth } from "@/hooks/useAuth";
 import { useNotifications } from "@/hooks/useNotifications";
@@ -287,7 +287,7 @@ export const ConversationDetail: React.FC<ConversationDetailProps> = ({ sessionI
   const companyId = 1; // Hardcoded company ID
   const [message, setMessage] = useState('');
   const [note, setNote] = useState('');
-  const [isCallModalOpen, setCallModalOpen] = useState(false);
+  const { startCall: startVideoCall } = useVideoCall();
   const [isAiEnabled, setIsAiEnabled] = useState(true);
   const [suggestedReplies, setSuggestedReplies] = useState<string[]>([]);
   const [isAgentTyping, setIsAgentTyping] = useState(false);
@@ -313,6 +313,9 @@ export const ConversationDetail: React.FC<ConversationDetailProps> = ({ sessionI
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const ws = useRef<WebSocket | null>(null);
+  const reconnectAttemptRef = useRef(0);
+  const reconnectTimeoutRef = useRef<NodeJS.Timeout>();
+  const isNearBottomRef = useRef(true);
   const replyEditorRef = useRef<RichTextEditorHandle | null>(null);
   const noteEditorRef = useRef<RichTextEditorHandle | null>(null);
   const previousScrollHeight = useRef<number>(0);
@@ -529,9 +532,20 @@ export const ConversationDetail: React.FC<ConversationDetailProps> = ({ sessionI
   useEffect(() => {
     // Skip WebSocket connection in read-only mode
     if (readOnly) return;
+    if (!sessionId || !agentId || !token) return;
 
-    if (sessionId && agentId && token) {
+    let destroyed = false;
+
+    const connect = () => {
+      if (destroyed) return;
+
       ws.current = new WebSocket(`${getWebSocketUrl()}/api/v1/ws/${agentId}/${sessionId}?user_type=agent&token=${token}`);
+
+      ws.current.onopen = () => {
+        reconnectAttemptRef.current = 0;
+        console.log('[WebSocket] Connected');
+      };
+
       ws.current.onmessage = (event) => {
         const rawMessage = JSON.parse(event.data);
 
@@ -543,7 +557,6 @@ export const ConversationDetail: React.FC<ConversationDetailProps> = ({ sessionI
         // Handle contact update messages
         if (rawMessage.type === 'contact_updated') {
           console.log('[WebSocket] Contact updated:', rawMessage);
-          // Refresh session details to get updated contact info
           queryClient.invalidateQueries({ queryKey: ['sessionDetails', sessionId] });
           return;
         }
@@ -551,8 +564,8 @@ export const ConversationDetail: React.FC<ConversationDetailProps> = ({ sessionI
         // Unwrap message if it's wrapped in { type: "message", message: {...} }
         const newMessage = rawMessage.type === 'message' && rawMessage.message ? rawMessage.message : rawMessage;
 
-        // Filter out typing indicator messages - they should not appear as messages
-        if (newMessage.message_type === 'typing') {
+        // Filter out ephemeral messages - typing indicators and tool-use events
+        if (newMessage.message_type === 'typing' || newMessage.message_type === 'tool_use') {
           return;
         }
 
@@ -564,24 +577,36 @@ export const ConversationDetail: React.FC<ConversationDetailProps> = ({ sessionI
             return oldData;
           }
 
-          // Add the new message to the last page
           const newPages = [...oldData.pages];
           newPages[newPages.length - 1] = [...lastPage, newMessage];
 
-          return {
-            ...oldData,
-            pages: newPages
-          };
+          return { ...oldData, pages: newPages };
         });
       };
-      return () => {
-        // Clear typing timeout on unmount
-        if (typingTimeoutRef.current) {
-          clearTimeout(typingTimeoutRef.current);
-        }
+
+      ws.current.onerror = () => {
         ws.current?.close();
       };
-    }
+
+      ws.current.onclose = (event) => {
+        if (destroyed) return;
+        if (!event.wasClean) {
+          const delay = Math.min(1000 * 2 ** reconnectAttemptRef.current, 30000);
+          console.log(`[WebSocket] Disconnected — reconnecting in ${delay}ms (attempt ${reconnectAttemptRef.current + 1})`);
+          reconnectAttemptRef.current += 1;
+          reconnectTimeoutRef.current = setTimeout(connect, delay);
+        }
+      };
+    };
+
+    connect();
+
+    return () => {
+      destroyed = true;
+      clearTimeout(reconnectTimeoutRef.current);
+      if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+      ws.current?.close();
+    };
   }, [sessionId, agentId, companyId, queryClient, token, readOnly]);
 
   const { data: users } = useQuery<User[]>({
@@ -590,10 +615,12 @@ export const ConversationDetail: React.FC<ConversationDetailProps> = ({ sessionI
   });
 
   const scrollToBottom = (smooth = true) => {
+    const container = messagesContainerRef.current;
+    if (!container) return;
     if (smooth) {
-      messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+      container.scrollTo({ top: container.scrollHeight, behavior: 'smooth' });
     } else {
-      messagesEndRef.current?.scrollIntoView({ behavior: "auto" });
+      container.scrollTop = container.scrollHeight;
     }
   };
 
@@ -605,30 +632,24 @@ export const ConversationDetail: React.FC<ConversationDetailProps> = ({ sessionI
   // Scroll to bottom on initial load
   useEffect(() => {
     if (!isLoading && messages.length > 0 && !hasInitiallyLoaded) {
-      // Use setTimeout to ensure DOM is fully rendered
-      setTimeout(() => {
-        scrollToBottom(false); // Instant scroll on initial load
-        setHasInitiallyLoaded(true);
-      }, 100);
+      // Double rAF ensures the browser has painted the new messages before scrolling
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          scrollToBottom(false);
+          setHasInitiallyLoaded(true);
+        });
+      });
     }
   }, [isLoading, messages.length, hasInitiallyLoaded]);
 
-  // Scroll to bottom when new messages arrive (only if user is near bottom)
+  // Scroll to bottom when new messages arrive (only if user was near the bottom before the message rendered)
   useEffect(() => {
-    if (!hasInitiallyLoaded) return; // Skip on initial load
+    if (!hasInitiallyLoaded) return;
+    if (!isNearBottomRef.current) return;
 
-    const container = messagesContainerRef.current;
-    if (!container) return;
-
-    const isNearBottom = container.scrollHeight - container.scrollTop - container.clientHeight < 100;
-
-    // Only auto-scroll if user is already near the bottom
-    if (isNearBottom) {
-      // Small delay to ensure DOM has updated with new message
-      setTimeout(() => {
-        scrollToBottom(true); // Smooth scroll for new messages
-      }, 50);
-    }
+    requestAnimationFrame(() => {
+      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    });
   }, [messages, hasInitiallyLoaded]);
 
   // Handle scroll to load more messages (only after initial load)
@@ -637,6 +658,9 @@ export const ConversationDetail: React.FC<ConversationDetailProps> = ({ sessionI
     if (!container || !hasInitiallyLoaded) return;
 
     const handleScroll = () => {
+      // Track whether user is near the bottom so new-message auto-scroll knows what to do
+      isNearBottomRef.current = container.scrollHeight - container.scrollTop - container.clientHeight < 150;
+
       // Check if user has scrolled to top (within 100px from top)
       if (container.scrollTop < 100 && hasNextPage && !isFetchingNextPage) {
         console.log('[Scroll] Loading more messages...', { scrollTop: container.scrollTop, hasNextPage, isFetchingNextPage });
@@ -718,7 +742,12 @@ export const ConversationDetail: React.FC<ConversationDetailProps> = ({ sessionI
       return tokenData.token;
     },
     onSuccess: (userToken) => {
-      setCallModalOpen(true);
+      startVideoCall({
+        sessionId,
+        userId: 'agent',
+        conversationSessionId: sessionId,
+        conversationAgentId: agentId,
+      });
       sendMessageMutation.mutate({
         message: t('conversations.detail.videoCallMessage'),
         message_type: 'video_call_invitation',
@@ -1677,13 +1706,6 @@ export const ConversationDetail: React.FC<ConversationDetailProps> = ({ sessionI
         )}
       </div>
 
-      {isCallModalOpen && (
-        <VideoCallModal
-          sessionId={sessionId}
-          userId="agent"
-          onClose={() => setCallModalOpen(false)}
-        />
-      )}
     </motion.div>
   );
 };

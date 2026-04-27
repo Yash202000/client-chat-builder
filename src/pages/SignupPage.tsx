@@ -13,6 +13,7 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { UserPlus, Mail, Lock, Loader2, Sparkles } from "lucide-react";
 import { apiFetch } from "@/lib/api";
+import { useAuth } from "@/hooks/useAuth";
 
 export const SignupPage = () => {
   const [email, setEmail] = useState("");
@@ -20,6 +21,7 @@ export const SignupPage = () => {
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { login } = useAuth();
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -32,11 +34,21 @@ export const SignupPage = () => {
       });
 
       if (response.ok) {
-        toast({
-          title: "Account created!",
-          description: "You can now sign in with your credentials.",
+        // Auto-login after signup
+        const loginRes = await apiFetch("/api/v1/auth/login", {
+          method: "POST",
+          headers: { "Content-Type": "application/x-www-form-urlencoded" },
+          body: new URLSearchParams({ username: email, password }),
         });
-        navigate("/login");
+        if (loginRes.ok) {
+          const { access_token } = await loginRes.json();
+          await login(access_token);
+          toast({ title: "Account created!", description: "Welcome! Let's get you set up." });
+          navigate("/dashboard/onboarding");
+        } else {
+          toast({ title: "Account created!", description: "You can now sign in with your credentials." });
+          navigate("/login");
+        }
       } else {
         const errorData = await response.json();
         throw new Error(errorData.detail || "Failed to sign up");

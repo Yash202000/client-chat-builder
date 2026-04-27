@@ -6,6 +6,10 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
+    <!-- Premium typography — Inter (body) + Syne (display) + JetBrains Mono (numerics) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+
     <!-- Primary SEO -->
     <title>HeyGenAlly – AI Agent Builder & Chatbot Platform | Build, Deploy & Automate</title>
     <meta name="description" content="HeyGenAlly is the all-in-one AI agent platform to build, deploy, and manage intelligent chatbots. No-code visual workflow builder, multi-LLM support, knowledge bases, CRM, voice AI, and embeddable web widgets — for businesses of every size." />
@@ -13,6 +17,14 @@
     <meta name="author" content="HeyGenAlly" />
     <meta name="robots" content="index, follow" />
     <link rel="canonical" href="https://heygenally.com/" />
+
+    <!-- PWA -->
+    <link rel="manifest" href="/manifest.json" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="HeyGenAlly" />
+    <meta name="theme-color" content="#8B5CF6" />
 
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website" />
@@ -77,5 +89,13 @@
     <script src="/env-config.js"></script>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
+    <script>
+      // Skip service worker on localhost — it would cache-bust dev hot-reloads
+      if ('serviceWorker' in navigator && location.hostname !== 'localhost') {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('/sw.js').catch(() => {});
+        });
+      }
+    </script>
   </body>
 </html>

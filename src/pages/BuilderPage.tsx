@@ -8,7 +8,7 @@ import { AgentBuilder } from "@/components/AgentBuilder";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Agent } from "@/types";
 import { toast } from "@/hooks/use-toast";
-import { History, PlusCircle, Workflow, Paintbrush } from "lucide-react";
+import { History, PlusCircle, Workflow, Paintbrush, FlaskConical } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Comments } from "@/components/Comments";
@@ -24,6 +24,7 @@ const BuilderPage = () => {
   const navigate = useNavigate();
   const [isCreateAgentDialogOpen, setIsCreateAgentDialogOpen] = useState(false);
   const [isHistoryDialogOpen, setIsHistoryDialogOpen] = useState(false);
+  const [showTester, setShowTester] = useState(false);
   const companyId = localStorage.getItem("companyId");
   const { authFetch } = useAuth();
   const queryClient = useQueryClient();
@@ -177,6 +178,20 @@ const BuilderPage = () => {
             <Button
               size="sm"
               variant="outline"
+              onClick={() => setShowTester(v => !v)}
+              className={showTester
+                ? "h-8 px-3 text-xs border-emerald-500/50 text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 hover:bg-emerald-500/15"
+                : "h-8 px-3 text-xs border-emerald-500/30 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/10 hover:border-emerald-500/50"
+              }
+            >
+              <FlaskConical className="h-3.5 w-3.5 mr-1.5" />
+              Test Agent
+            </Button>
+          )}
+          {agentId && agent && (
+            <Button
+              size="sm"
+              variant="outline"
               onClick={() => createNewVersionMutation.mutate(agent.id)}
               disabled={createNewVersionMutation.isPending}
               className="h-8 px-3 text-xs"
@@ -219,6 +234,7 @@ const BuilderPage = () => {
         {agentId && agent ? (
           <AgentBuilder
             agent={agent}
+            showTester={showTester}
             onSave={() => {}}
             onCancel={() => {}}
           />

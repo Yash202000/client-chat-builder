@@ -619,7 +619,7 @@ export const AdvancedChatPreview = ({ selectedAgentId: initialAgentId }: { selec
         </div>
 
         {/* ── RIGHT: Live preview panel ─────────────────────────────────── */}
-        <div className="w-[360px] flex-shrink-0 flex flex-col gap-3 sticky top-0 self-start">
+        <div className="w-[580px] flex-shrink-0 flex flex-col gap-3 sticky top-0 self-start">
 
           {/* Preview panel header */}
           <div className="rounded-xl border border-border bg-card overflow-hidden">

@@ -19,8 +19,26 @@ export default {
 		},
 		extend: {
 			fontFamily: {
+				sans: ['Inter', 'InterVariable', 'system-ui', 'sans-serif'],
+				display: ['Syne', 'Inter', 'system-ui', 'sans-serif'],
 				syne: ['Syne', 'sans-serif'],
+				inter: ['Inter', 'InterVariable', 'system-ui', 'sans-serif'],
 				mono: ['JetBrains Mono', 'monospace'],
+			},
+			boxShadow: {
+				'xs': '0 1px 1px rgb(0 0 0 / 0.04)',
+				'sm': '0 1px 2px rgb(0 0 0 / 0.06), 0 1px 1px rgb(0 0 0 / 0.04)',
+				'soft': '0 1px 1px rgb(0 0 0 / 0.04), 0 4px 8px rgb(0 0 0 / 0.04), 0 16px 24px rgb(0 0 0 / 0.04)',
+				'lifted': '0 1px 1px rgb(0 0 0 / 0.04), 0 6px 12px rgb(0 0 0 / 0.06), 0 24px 40px rgb(0 0 0 / 0.06)',
+				'aurora-sm': '0 1px 2px rgb(0 0 0 / 0.06), 0 0 0 1px hsl(var(--border) / 0.5), 0 4px 12px hsl(var(--aurora-violet) / 0.04)',
+				'aurora-md': '0 2px 4px rgb(0 0 0 / 0.06), 0 8px 24px hsl(var(--aurora-violet) / 0.08), 0 0 0 1px hsl(var(--border) / 0.4)',
+				'aurora-glow': '0 0 0 1px hsl(var(--aurora-violet) / 0.15), 0 0 24px hsl(var(--aurora-violet) / 0.18), 0 12px 32px rgb(0 0 0 / 0.12)',
+				'inset-top': 'inset 0 1px 0 hsl(0 0% 100% / 0.06)',
+			},
+			transitionTimingFunction: {
+				'premium': 'cubic-bezier(0.32, 0.72, 0, 1)',
+				'spring': 'cubic-bezier(0.34, 1.56, 0.64, 1)',
+				'glide': 'cubic-bezier(0.4, 0, 0.2, 1)',
 			},
 			colors: {
 				border: 'hsl(var(--border))',

@@ -1034,67 +1034,68 @@ const McpToolForm = ({ tool, onSubmit, onBack }: { tool?: Tool, onSubmit: (value
   );
 };
 
-const TestToolDialog = ({ tool, companyId }: { tool: Tool, companyId: number }) => {
-  const [parameters, setParameters] = useState<Record<string, any>>({});
-  const [result, setResult] = useState<any | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
+const TestToolDialog = ({ tool }: { tool: Tool, companyId: number }) => {
   const { authFetch } = useAuth();
 
-  const executeMutation = useMutation({
-    mutationFn: async (params: Record<string, any>) => {
-      const response = await authFetch(`/api/v1/tools/${tool.id}/execute`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(params),
-        }
-      );
-      if (!response.ok) {
-        throw new Error("Failed to execute tool");
-      }
-      return response.json();
-    },
-    onSuccess: (data) => {
-      setResult(data);
-      setIsLoading(false);
-    },
-    onError: (error) => {
-      setResult({ error: error.message });
-      setIsLoading(false);
-    },
-  });
+  const rawParams = tool.parameters?.properties ?? tool.parameters ?? null;
+  const defaultJson = rawParams
+    ? JSON.stringify(Object.fromEntries(Object.keys(rawParams).map(k => [k, ''])), null, 2)
+    : '{}';
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const [paramsJson, setParamsJson] = useState(defaultJson);
+  const [jsonError, setJsonError] = useState('');
+  const [result, setResult] = useState<any | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+
+  const handleChange = (val: string) => {
+    setParamsJson(val);
+    try { JSON.parse(val); setJsonError(''); } catch { setJsonError('Invalid JSON'); }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    let parsed: any;
+    try { parsed = JSON.parse(paramsJson); } catch { setJsonError('Invalid JSON'); return; }
     setIsLoading(true);
-    executeMutation.mutate(parameters);
+    setResult(null);
+    try {
+      const response = await authFetch(`/api/v1/tools/${tool.id}/execute?session_id=tool-test-${tool.id}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(parsed),
+      });
+      const data = await response.json();
+      setResult(data);
+    } catch (error) {
+      setResult({ error: String(error) });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
     <div className="space-y-4 py-4">
       <form onSubmit={handleSubmit} className="space-y-4">
-        {tool.parameters && Object.keys(tool.parameters).map((paramName) => (
-          <div key={paramName} className="space-y-2">
-            <Label htmlFor={paramName} className="dark:text-gray-300 text-sm font-medium">{tool.parameters[paramName].description}</Label>
-            <Input
-              id={paramName}
-              type={tool.parameters[paramName].type === "integer" ? "number" : "text"}
-              value={parameters[paramName] || ""}
-              onChange={(e) => setParameters({ ...parameters, [paramName]: e.target.value })}
-              className="rounded-xl h-11 dark:bg-emerald-900 dark:border-emerald-600 dark:text-white"
-            />
-          </div>
-        ))}
-        <Button type="submit" disabled={isLoading} className="rounded-xl bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white w-full shadow-lg shadow-blue-500/25 h-11">
+        <div className="space-y-2">
+          <Label className="dark:text-gray-300 text-sm font-medium">Parameters (JSON)</Label>
+          <Textarea
+            value={paramsJson}
+            onChange={e => handleChange(e.target.value)}
+            rows={6}
+            className="rounded-xl font-mono text-xs dark:bg-emerald-900 dark:border-emerald-600 dark:text-white resize-none"
+            placeholder="{}"
+            spellCheck={false}
+          />
+          {jsonError && <p className="text-xs text-red-500">{jsonError}</p>}
+        </div>
+        <Button type="submit" disabled={isLoading || !!jsonError} className="rounded-xl bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white w-full shadow-lg shadow-blue-500/25 h-11">
           {isLoading ? <><Loader2 className="h-4 w-4 animate-spin mr-2" />Executing...</> : <><Play className="h-4 w-4 mr-2" />Run Test</>}
         </Button>
       </form>
       {result && (
         <div className="pt-4 border-t border-emerald-200/80 dark:border-emerald-700/60">
           <h4 className="font-semibold mb-3 dark:text-white text-sm uppercase tracking-wide">Result:</h4>
-          <pre className="bg-emerald-50 dark:bg-emerald-900 p-4 rounded-xl overflow-x-auto text-sm dark:text-gray-300 border border-emerald-200/80 dark:border-emerald-700/60 max-h-64">
+          <pre className="bg-emerald-50 dark:bg-emerald-900 p-4 rounded-xl overflow-x-auto text-sm dark:text-gray-300 border border-emerald-200/80 dark:border-emerald-700/60 max-h-64 whitespace-pre-wrap break-words">
             {JSON.stringify(result, null, 2)}
           </pre>
         </div>

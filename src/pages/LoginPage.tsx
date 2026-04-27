@@ -38,7 +38,7 @@ export const LoginPage = () => {
 
       if (response.ok) {
         const data = await response.json();
-        login(data.access_token);
+        await login(data.access_token);
         toast({ title: "Login successful!", description: "Welcome back!" });
         navigate("/dashboard");
       } else {

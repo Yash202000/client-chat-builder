@@ -75,7 +75,7 @@ export const AddNodeButton: React.FC<AddNodeButtonProps> = ({
   };
 
   return (
-    <div className="add-node-btn-wrapper" style={getPositionStyles()}>
+    <div className={cn("add-node-btn-wrapper", isOpen && "is-open")} style={getPositionStyles()}>
       <AddNodePopover
         isOpen={isOpen}
         onOpenChange={setIsOpen}

@@ -99,19 +99,51 @@ const channelAvatarBg = (ch?: string) => {
   }
 };
 
+// ─── Avatar color derived from contact name ───────────────────────────────────
+const getAvatarColor = (name: string) => {
+  const palette = [
+    'bg-violet-100 text-violet-700 dark:bg-violet-900/40 dark:text-violet-300',
+    'bg-cyan-100 text-cyan-700 dark:bg-cyan-900/40 dark:text-cyan-300',
+    'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300',
+    'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300',
+    'bg-rose-100 text-rose-700 dark:bg-rose-900/40 dark:text-rose-300',
+    'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300',
+    'bg-sky-100 text-sky-700 dark:bg-sky-900/40 dark:text-sky-300',
+    'bg-orange-100 text-orange-700 dark:bg-orange-900/40 dark:text-orange-300',
+  ];
+  let hash = 0;
+  for (let i = 0; i < name.length; i++) hash = name.charCodeAt(i) + ((hash << 5) - hash);
+  return palette[Math.abs(hash) % palette.length];
+};
+
+// ─── Channel badge config ─────────────────────────────────────────────────────
+const CHANNEL_BADGE_MAP: Record<string, { label: string; cls: string }> = {
+  web_chat:     { label: 'Web',   cls: 'conv-channel-badge-web' },
+  web:          { label: 'Web',   cls: 'conv-channel-badge-web' },
+  websocket:    { label: 'Web',   cls: 'conv-channel-badge-web' },
+  whatsapp:     { label: 'WA',    cls: 'conv-channel-badge-whatsapp' },
+  instagram:    { label: 'IG',    cls: 'conv-channel-badge-instagram' },
+  messenger:    { label: 'FB',    cls: 'conv-channel-badge-messenger' },
+  telegram:     { label: 'TG',    cls: 'conv-channel-badge-telegram' },
+  twilio_voice: { label: 'Voice', cls: 'conv-channel-badge-voice' },
+  freeswitch:   { label: 'Voice', cls: 'conv-channel-badge-voice' },
+  gmail:        { label: 'Email', cls: 'conv-channel-badge-email' },
+  api:          { label: 'API',   cls: 'conv-channel-badge-api' },
+};
+
 // ─── Skeleton ─────────────────────────────────────────────────────────────────
 const ConversationSkeleton = () => (
-  <div className="flex items-start gap-3 px-3 py-3 border-l-[3px] border-transparent">
-    <div className="w-9 h-9 rounded-full animate-pulse bg-muted rounded-lg flex-shrink-0" />
+  <div className="conv-skeleton">
+    <div className="conv-skeleton-avatar" />
     <div className="flex-1 space-y-2 pt-0.5">
-      <div className="flex justify-between">
-        <div className="h-3.5 w-2/5 animate-pulse bg-muted rounded-lg" />
-        <div className="h-3 w-10 animate-pulse bg-muted rounded-lg" />
+      <div className="flex justify-between gap-2">
+        <div className="conv-skeleton-line h-3 w-2/5" />
+        <div className="conv-skeleton-line h-2.5 w-10" />
       </div>
-      <div className="h-3 w-3/4 animate-pulse bg-muted rounded-lg" />
+      <div className="conv-skeleton-line h-2.5 w-3/4" />
       <div className="flex gap-1.5">
-        <div className="h-4 w-14 animate-pulse bg-muted rounded-lg" />
-        <div className="h-4 w-10 animate-pulse bg-muted rounded-lg" />
+        <div className="conv-skeleton-line h-4 w-12" />
+        <div className="conv-skeleton-line h-4 w-10" />
       </div>
     </div>
   </div>
@@ -716,184 +748,132 @@ const ConversationsPage: React.FC<ConversationsPageProps> = ({ channel }) => {
   const ConversationCard = ({ session, index }: { session: Session; index: number }) => {
     const isChecked = selectedIds.has(session.conversation_id);
     const assignedToMe = isAssignedToMe(session);
-    const isDisconnected = assignedToMe && !session.is_client_connected;
     const isRecentlyReopened = reopenedSessions.has(session.conversation_id);
     const hasBeenReopened = (session.reopen_count ?? 0) > 0;
     const hasPriority = (session.priority || 0) > 0;
     const isSelected = selectedSessionId === session.conversation_id;
 
-    // Left border strip color
-    const borderColor = isSelected
-      ? 'border-l-violet-400'
-      : assignedToMe
-      ? 'border-l-violet-500'
-      : session.status === 'active'
-      ? 'border-l-green-500'
-      : session.status === 'inactive'
-      ? 'border-l-slate-300'
-      : session.status === 'pending'
-      ? 'border-l-red-500'
-      : session.status === 'resolved'
-      ? 'border-l-blue-400'
-      : 'border-l-border';
-
-    // Card background
-    const cardBg = isSelected
-      ? 'bg-gradient-to-r from-violet-500/[0.10] to-transparent'
-      : assignedToMe
-      ? 'bg-violet-50/40 dark:bg-violet-950/20'
-      : 'bg-card hover:bg-violet-500/[0.04]';
-
-    // Status badge classes
-    const statusBadgeClass =
-      session.status === 'active'
-        ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
-        : session.status === 'inactive'
-        ? 'bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400'
-        : session.status === 'resolved'
-        ? 'bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400'
-        : session.status === 'pending'
-        ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
-        : assignedToMe
-        ? 'bg-violet-100 text-violet-700 dark:bg-violet-900/30 dark:text-violet-300'
-        : 'bg-muted text-muted-foreground';
-
     const contactName = session.contact_name || session.contact_phone || t('conversations.card.unknownContact');
     const avatarLetter = contactName.charAt(0).toUpperCase();
+    const avatarColorClass = getAvatarColor(contactName);
+
+    const channelKey = session.channel ?? 'web';
+    const channelBadge = CHANNEL_BADGE_MAP[channelKey] ?? CHANNEL_BADGE_MAP['web'];
+
+    const cardClass = [
+      'conv-card',
+      isSelected && 'conv-card-active',
+      !isSelected && assignedToMe && 'conv-card-assigned',
+      isRecentlyReopened && 'ring-1 ring-inset ring-orange-300 dark:ring-orange-700',
+    ].filter(Boolean).join(' ');
+
+    const statusClass = assignedToMe
+      ? 'conv-status-badge conv-status-mine'
+      : session.status === 'active'   ? 'conv-status-badge conv-status-active'
+      : session.status === 'inactive' ? 'conv-status-badge conv-status-inactive'
+      : session.status === 'pending'  ? 'conv-status-badge conv-status-pending'
+      : session.status === 'resolved' ? 'conv-status-badge conv-status-resolved'
+      : 'conv-status-badge conv-status-inactive';
 
     return (
-      <motion.button
-        variants={cardVariants}
-        initial="hidden"
-        animate="visible"
-        whileHover="hover"
-        whileTap="tap"
+      <button
+        type="button"
         onClick={() => setSelectedSessionId(session.conversation_id)}
-        className={`w-full text-left border-l-[3px] transition-colors duration-150 ${borderColor} ${cardBg} ${isRecentlyReopened ? 'ring-1 ring-inset ring-orange-300 dark:ring-orange-700' : ''}`}
+        className={cardClass}
       >
-        <div className="flex items-start gap-2.5 px-3 py-2.5">
-          {/* Checkbox */}
-          <div
-            onClick={(e) => toggleSelect(session.conversation_id, e)}
-            className={`flex-shrink-0 mt-1 w-3.5 h-3.5 rounded border-[1.5px] flex items-center justify-center transition-all cursor-pointer ${
-              isChecked
-                ? 'bg-primary border-primary'
-                : 'border-border hover:border-primary/60'
-            }`}
-          >
-            {isChecked && (
-              <svg className="w-2 h-2 text-primary-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3.5}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-              </svg>
+        {/* Checkbox */}
+        <div
+          onClick={(e) => toggleSelect(session.conversation_id, e)}
+          className={`conv-checkbox ${isChecked ? 'conv-checkbox-checked' : ''}`}
+        >
+          {isChecked && (
+            <svg className="w-2 h-2 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+            </svg>
+          )}
+        </div>
+
+        {/* Avatar */}
+        <div className="conv-avatar">
+          <div className={`conv-avatar-ring ${avatarColorClass}`}>
+            {avatarLetter}
+          </div>
+          <AnimatePresence>
+            {isWebChannel(session.channel) && session.is_client_connected && (
+              <motion.span
+                key="online"
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                exit={{ scale: 0 }}
+                className="conv-status-dot conv-status-online"
+              />
+            )}
+            {isWebChannel(session.channel) && !session.is_client_connected && assignedToMe && (
+              <motion.span
+                key="offline"
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                exit={{ scale: 0 }}
+                className="conv-status-dot conv-status-offline"
+              />
+            )}
+          </AnimatePresence>
+        </div>
+
+        {/* Content */}
+        <div className="conv-card-content">
+          {/* Row 1: name + time */}
+          <div className="conv-card-row1">
+            <span className="conv-card-name">{contactName}</span>
+            {session.last_message_timestamp && (
+              <span className="conv-card-time">
+                {formatDistanceToNow(parseUTCDate(session.last_message_timestamp), { addSuffix: false })}
+              </span>
             )}
           </div>
 
-          {/* Avatar circle */}
-          <div className="relative flex-shrink-0">
-            <div className={`w-9 h-9 rounded-full flex items-center justify-center text-[13px] font-semibold ${channelAvatarBg(session.channel)}`}>
-              {avatarLetter}
-            </div>
-            {/* Online / offline dot */}
-            <AnimatePresence>
-              {isWebChannel(session.channel) && session.is_client_connected && (
-                <motion.span
-                  key="online"
-                  initial={{ scale: 0 }}
-                  animate={{ scale: 1 }}
-                  exit={{ scale: 0 }}
-                  className="absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full bg-green-500 border-2 border-card animate-pulse"
-                />
-              )}
-              {isWebChannel(session.channel) && !session.is_client_connected && assignedToMe && (
-                <motion.span
-                  key="offline"
-                  initial={{ scale: 0 }}
-                  animate={{ scale: 1 }}
-                  exit={{ scale: 0 }}
-                  className="absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full bg-red-500 border-2 border-card"
-                />
-              )}
-            </AnimatePresence>
-          </div>
-
-          {/* Content */}
-          <div className="flex-1 min-w-0">
-            {/* Row 1: name + time */}
-            <div className="flex items-baseline justify-between gap-1 mb-0.5">
-              <span className={`text-[13px] font-semibold truncate leading-snug ${
-                session.status === 'resolved'
-                  ? 'text-muted-foreground'
-                  : assignedToMe
-                  ? 'text-violet-900 dark:text-violet-100'
-                  : 'text-foreground'
-              }`}>
-                {contactName}
-              </span>
-              {session.last_message_timestamp && (
-                <span className="flex-shrink-0 text-[10px] text-muted-foreground/70 tabular-nums">
-                  {formatDistanceToNow(parseUTCDate(session.last_message_timestamp), { addSuffix: false })}
-                </span>
-              )}
-            </div>
-
-            {/* Row 2: last message preview */}
-            <p className="text-[11px] text-muted-foreground truncate leading-relaxed mb-1.5">
+          {/* Row 2: message preview */}
+          <p className="conv-card-preview">
               {session.first_message_content || '\u00A0'}
             </p>
 
-            {/* Row 3: badges */}
-            <div className="flex items-center gap-1.5 flex-wrap">
-              {/* Status badge */}
-              <span className={`inline-flex items-center text-[10px] font-medium px-1.5 py-0.5 rounded-full ${statusBadgeClass}`}>
-                {assignedToMe ? t('conversations.status.mine') : session.status}
-              </span>
-
-              {/* Priority badge */}
-              {hasPriority && <PriorityBadge priority={session.priority || 0} />}
-
-              {/* SLA */}
-              <SLATimer lastMessageTimestamp={session.last_message_timestamp} />
-
-              {/* Assignee (if not mine) */}
-              {session.assignee_id && !assignedToMe && (
-                <span className="inline-flex items-center gap-0.5 text-[10px] text-blue-600 dark:text-blue-400">
-                  <UserIcon className="w-2.5 h-2.5" />
-                  <span className="truncate max-w-[80px]">{getAssigneeEmail(session.assignee_id)}</span>
-                </span>
-              )}
-
-              {/* Reopen count */}
-              {hasBeenReopened && (
-                <span className="inline-flex items-center text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300">
-                  {session.reopen_count}x
-                </span>
-              )}
-            </div>
-
-            {/* Reopened timestamp */}
-            {hasBeenReopened && session.last_reopened_at && (
-              <motion.p
-                initial={{ opacity: 0, x: -6 }}
-                animate={{ opacity: 1, x: 0 }}
-                className="text-[10px] text-orange-600 dark:text-orange-400 mt-1.5 flex items-center gap-1"
-              >
-                <span className="w-1.5 h-1.5 rounded-full bg-orange-500 animate-pulse flex-shrink-0" />
-                Reopened {formatDistanceToNow(parseUTCDate(session.last_reopened_at), { addSuffix: true })}
-              </motion.p>
+          {/* Row 3: badges */}
+          <div className="conv-card-row3">
+            <span className={`conv-channel-badge ${channelBadge.cls}`}>
+              {channelBadge.label}
+            </span>
+            <span className={statusClass}>
+              {assignedToMe ? t('conversations.status.mine') : session.status}
+            </span>
+            {hasPriority && <PriorityBadge priority={session.priority || 0} />}
+            {hasBeenReopened && (
+              <span className="conv-reopen-badge">{session.reopen_count}×</span>
             )}
           </div>
+
+          {/* Reopened label */}
+          {hasBeenReopened && session.last_reopened_at && (
+            <motion.p
+              initial={{ opacity: 0, x: -6 }}
+              animate={{ opacity: 1, x: 0 }}
+              className="conv-reopened-label"
+            >
+              <span className="conv-reopened-dot" />
+              Reopened {formatDistanceToNow(parseUTCDate(session.last_reopened_at), { addSuffix: true })}
+            </motion.p>
+          )}
         </div>
-      </motion.button>
+      </button>
     );
   };
 
   // ─── Group separator header ───────────────────────────────────────────────────
   const GroupHeader = ({ label, count, dotColor }: { label: string; count: number; dotColor: string }) => (
-    <div className="flex items-center gap-2 px-3 py-1.5 mt-2 mb-1 sticky top-0 bg-card/95 backdrop-blur-sm z-10">
-      <span className={`h-1.5 w-1.5 rounded-full flex-shrink-0 ${dotColor}`} />
-      <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/60">{label}</span>
-      <div className="flex-1 h-px bg-border/60" />
-      <span className="text-[10px] font-bold text-muted-foreground/60">{count}</span>
+    <div className="conv-group-header">
+      <span className={`conv-group-dot ${dotColor}`} />
+      <span className="conv-group-label">{label}</span>
+      <div className="conv-group-line" />
+      <span className="conv-group-count">{count}</span>
     </div>
   );
 
@@ -938,7 +918,7 @@ const ConversationsPage: React.FC<ConversationsPageProps> = ({ channel }) => {
                     </div>
                   );
                 })()}
-                <span className="text-sm font-semibold text-foreground truncate flex-1">
+                <span className="font-display text-[15px] font-bold text-foreground truncate flex-1 tracking-tight">
                   {channel ? t(CHANNEL_CONFIG[channel]?.titleKey ?? 'conversations.inbox') : t('conversations.inbox')}
                 </span>
                 <motion.span
@@ -981,23 +961,19 @@ const ConversationsPage: React.FC<ConversationsPageProps> = ({ channel }) => {
               </div>
 
               {/* Row 3: Quick filter chips */}
-              <div className="flex flex-wrap gap-1 px-3 pb-2">
+              <div className="flex flex-wrap gap-1.5 px-3 pb-2">
                 {[
-                  { id: 'unassigned',   label: 'Unassigned' },
-                  { id: 'high_priority',label: '🔥 Priority' },
-                  { id: 'connected',    label: '🟢 Online' },
-                  { id: 'my_team',      label: '⭐ Mine' },
+                  { id: 'unassigned',    label: 'Unassigned' },
+                  { id: 'high_priority', label: '🔥 Priority' },
+                  { id: 'connected',     label: '🟢 Online' },
+                  { id: 'my_team',       label: '⭐ Mine' },
                 ].map(f => {
                   const active = quickFilters.has(f.id);
                   return (
                     <button
                       key={f.id}
                       onClick={() => toggleQuickFilter(f.id)}
-                      className={`text-[11px] rounded-full border px-2 py-0.5 transition-all ${
-                        active
-                          ? 'bg-primary text-primary-foreground border-primary'
-                          : 'bg-background text-muted-foreground border-border hover:text-foreground hover:border-border/80'
-                      }`}
+                      className={`conv-chip ${active ? 'conv-chip-active' : ''}`}
                     >
                       {f.label}
                     </button>
@@ -1006,7 +982,7 @@ const ConversationsPage: React.FC<ConversationsPageProps> = ({ channel }) => {
                 {quickFilters.size > 0 && (
                   <button
                     onClick={() => setQuickFilters(new Set())}
-                    className="text-[11px] rounded-full border border-border px-2 py-0.5 text-muted-foreground hover:text-foreground transition-all"
+                    className="conv-chip"
                   >
                     ✕ Clear
                   </button>
@@ -1015,29 +991,24 @@ const ConversationsPage: React.FC<ConversationsPageProps> = ({ channel }) => {
 
               {/* Row 4: Tab bar */}
               <div className="px-3 pb-3">
-                <div className="bg-muted rounded-xl p-1 flex gap-0.5">
+                <div className="conv-tabs">
                   {tabs.map(tab => {
                     const isActive = activeTab === tab.id;
                     return (
                       <button
                         key={tab.id}
                         onClick={() => { setActiveTab(tab.id); clearSelection(); }}
-                        className={`flex-1 flex items-center justify-center gap-1 rounded-lg py-1.5 text-xs font-medium transition-all duration-150 relative ${
-                          isActive
-                            ? 'bg-background shadow-sm text-foreground'
-                            : 'text-muted-foreground hover:text-foreground'
-                        }`}
+                        className={`conv-tab ${isActive ? 'conv-tab-active' : ''}`}
                       >
                         <span>{tab.label}</span>
                         <motion.span
                           key={tab.count}
                           initial={{ scale: 0.7 }}
                           animate={{ scale: 1 }}
-                          className={`text-[10px] font-bold ${isActive ? tab.countClass : 'text-muted-foreground/60'}`}
+                          className={`conv-tab-count ${isActive ? tab.countClass : 'text-muted-foreground/60'}`}
                         >
                           {tab.count}
                         </motion.span>
-                        {/* Unread dot on Mine tab */}
                         {tab.id === 'mine' && unreadAssignments > 0 && (
                           <AnimatePresence>
                             <motion.span
@@ -1135,13 +1106,13 @@ const ConversationsPage: React.FC<ConversationsPageProps> = ({ channel }) => {
         </AnimatePresence>
 
         {/* Session list */}
-        <div className="flex-1 overflow-y-auto">
+        <div className="conv-list">
           {isLoadingSessions ? (
             <div className="divide-y divide-border/50">
               {[...Array(6)].map((_, i) => <ConversationSkeleton key={i} />)}
             </div>
           ) : filteredSessions.length > 0 && !isSidebarCollapsed ? (
-            <motion.div variants={listVariants} initial="hidden" animate="visible">
+            <div>
               {(() => {
                 const activeUnassigned  = filteredSessions.filter(s => s.status === 'active'   && !s.assignee_id);
                 const inactiveUnassigned= filteredSessions.filter(s => s.status === 'inactive' && !s.assignee_id);
@@ -1191,7 +1162,7 @@ const ConversationsPage: React.FC<ConversationsPageProps> = ({ channel }) => {
                   </>
                 );
               })()}
-            </motion.div>
+            </div>
           ) : isSidebarCollapsed && filteredSessions.length > 0 ? (
             <motion.div
               initial={{ opacity: 0 }}
@@ -1201,6 +1172,7 @@ const ConversationsPage: React.FC<ConversationsPageProps> = ({ channel }) => {
               {filteredSessions.slice(0, 10).map((session, idx) => {
                 const assignedToMe = session.assignee_id === user?.id;
                 const contactName = session.contact_name || session.contact_phone || '?';
+                const avatarColor = getAvatarColor(contactName);
                 return (
                   <motion.button
                     key={session.conversation_id}
@@ -1210,7 +1182,7 @@ const ConversationsPage: React.FC<ConversationsPageProps> = ({ channel }) => {
                     whileHover={{ scale: 1.08 }}
                     whileTap={{ scale: 0.95 }}
                     onClick={() => setSelectedSessionId(session.conversation_id)}
-                    className={`relative w-10 h-10 rounded-full flex items-center justify-center text-[12px] font-semibold transition-all ${channelAvatarBg(session.channel)} ${
+                    className={`relative w-10 h-10 rounded-full flex items-center justify-center text-[12px] font-semibold transition-all ${avatarColor} ${
                       selectedSessionId === session.conversation_id
                         ? 'ring-2 ring-primary ring-offset-1 ring-offset-card'
                         : 'hover:ring-2 hover:ring-border hover:ring-offset-1 hover:ring-offset-card'
@@ -1232,17 +1204,19 @@ const ConversationsPage: React.FC<ConversationsPageProps> = ({ channel }) => {
             <motion.div
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
-              className="flex flex-col items-center justify-center h-full p-6 text-center"
+              className="conv-empty"
             >
-              <div className="w-14 h-14 rounded-2xl bg-muted flex items-center justify-center mb-3">
+              <div className="conv-empty-orb">
                 <MessageSquare className="w-7 h-7 text-muted-foreground/50" />
               </div>
-              <p className="text-sm font-medium text-foreground mb-1">
-                {searchQuery ? t('conversations.emptyState.noMatches') : 'No conversations'}
-              </p>
-              <p className="text-xs text-muted-foreground">
-                {searchQuery ? 'Try adjusting your search' : `No ${activeTab} conversations`}
-              </p>
+              <div>
+                <p className="conv-empty-title">
+                  {searchQuery ? t('conversations.emptyState.noMatches') : 'No conversations'}
+                </p>
+                <p className="conv-empty-desc">
+                  {searchQuery ? 'Try adjusting your search' : `No ${activeTab} conversations`}
+                </p>
+              </div>
             </motion.div>
           )}
         </div>

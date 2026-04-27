@@ -10,30 +10,31 @@ interface ThemeContextType {
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
+const getSystemTheme = (): Theme =>
+  window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+
 export const ThemeProvider = ({ children }: { children: React.ReactNode }) => {
   const [theme, setThemeState] = useState<Theme>(() => {
-    // Check localStorage first
     const stored = localStorage.getItem('theme') as Theme;
-    if (stored) return stored;
-
-    // Check system preference
-    if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
-      return 'dark';
-    }
-
-    return 'light';
+    return stored || getSystemTheme();
   });
+
+  // Follow system theme changes when the user hasn't set a manual preference
+  useEffect(() => {
+    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+    const handleChange = (e: MediaQueryListEvent) => {
+      if (!localStorage.getItem('theme')) {
+        setThemeState(e.matches ? 'dark' : 'light');
+      }
+    };
+    mediaQuery.addEventListener('change', handleChange);
+    return () => mediaQuery.removeEventListener('change', handleChange);
+  }, []);
 
   useEffect(() => {
     const root = window.document.documentElement;
-
-    // Remove both classes first
     root.classList.remove('light', 'dark');
-
-    // Add the current theme class
     root.classList.add(theme);
-
-    // Save to localStorage
     localStorage.setItem('theme', theme);
   }, [theme]);
 

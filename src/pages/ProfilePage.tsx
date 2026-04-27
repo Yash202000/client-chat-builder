@@ -12,7 +12,7 @@ import { Separator } from "@/components/ui/separator";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
   User, Mail, Phone, Briefcase, Lock, Camera, Upload,
-  Loader2, CheckCircle2, Info, Shield, Building2
+  Loader2, CheckCircle2, Info, Shield, Building2, Tag, X, Plus,
 } from "lucide-react";
 import { useI18n } from "@/hooks/useI18n";
 
@@ -25,6 +25,10 @@ export const ProfilePage = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [hasChanges, setHasChanges] = useState(false);
+
+  const [skills, setSkills] = useState<string[]>([]);
+  const [skillInput, setSkillInput] = useState('');
+  const [isSavingSkills, setIsSavingSkills] = useState(false);
 
   const [formData, setFormData] = useState({
     email: "",
@@ -46,6 +50,7 @@ export const ProfilePage = () => {
         }
         const data = await response.json();
         setUser(data);
+        if (Array.isArray(data.skills)) setSkills(data.skills);
         setFormData({
           email: data.email || "",
           password: "",
@@ -64,6 +69,32 @@ export const ProfilePage = () => {
     };
     fetchUser();
   }, []);
+
+  const addSkill = () => {
+    const s = skillInput.trim().toLowerCase();
+    if (s && !skills.includes(s)) setSkills(prev => [...prev, s]);
+    setSkillInput('');
+  };
+
+  const removeSkill = (skill: string) => setSkills(prev => prev.filter(s => s !== skill));
+
+  const handleSaveSkills = async () => {
+    if (!user) return;
+    setIsSavingSkills(true);
+    try {
+      const res = await authFetch(`/api/v1/agent-skills/${(user as any).id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ skills }),
+      });
+      if (!res.ok) throw new Error(await res.text());
+      toast({ title: 'Skills updated' });
+    } catch (e: any) {
+      toast({ title: 'Failed to update skills', description: e.message, variant: 'destructive' });
+    } finally {
+      setIsSavingSkills(false);
+    }
+  };
 
   const handleChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -321,6 +352,65 @@ export const ProfilePage = () => {
                 </div>
               </div>
             </CardContent>
+          </Card>
+
+          {/* Skills Card */}
+          <Card className="border-border dark:bg-card rounded-2xl shadow-lg overflow-hidden">
+            <CardHeader className="bg-gradient-to-r from-violet-500/[0.06] to-transparent border-b border-border">
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-lg bg-gradient-to-br from-emerald-500 to-teal-600 shadow-lg shadow-emerald-500/25">
+                  <Tag className="h-5 w-5 text-white" />
+                </div>
+                <div>
+                  <CardTitle className="text-xl dark:text-white">Skills</CardTitle>
+                  <CardDescription className="text-sm dark:text-gray-400">
+                    Skills used for routing calls to the right agent
+                  </CardDescription>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent className="p-6 space-y-4">
+              <div className="flex gap-2">
+                <Input
+                  value={skillInput}
+                  onChange={e => setSkillInput(e.target.value)}
+                  onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); addSkill(); } }}
+                  placeholder="e.g. billing, spanish, technical"
+                  className="rounded-xl h-10 text-sm"
+                />
+                <Button type="button" variant="outline" onClick={addSkill} className="rounded-xl px-3 h-10 flex-shrink-0">
+                  <Plus className="h-4 w-4" />
+                </Button>
+              </div>
+              {skills.length > 0 ? (
+                <div className="flex flex-wrap gap-2">
+                  {skills.map(skill => (
+                    <span
+                      key={skill}
+                      className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400"
+                    >
+                      {skill}
+                      <button type="button" onClick={() => removeSkill(skill)} className="hover:text-emerald-900 dark:hover:text-emerald-200">
+                        <X className="h-3 w-3" />
+                      </button>
+                    </span>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-xs text-muted-foreground">No skills added yet. Type a skill above and press Enter.</p>
+              )}
+            </CardContent>
+            <CardFooter className="px-6 pb-5 pt-0">
+              <Button
+                type="button"
+                onClick={handleSaveSkills}
+                disabled={isSavingSkills}
+                className="rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white shadow-lg"
+              >
+                {isSavingSkills ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <CheckCircle2 className="h-4 w-4 mr-2" />}
+                Save Skills
+              </Button>
+            </CardFooter>
           </Card>
 
           {/* Security Card */}

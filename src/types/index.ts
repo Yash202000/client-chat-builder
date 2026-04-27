@@ -227,11 +227,32 @@ export interface Role {
 
 export interface Contact {
   id: number;
+  company_id: number;
   email?: string;
   name?: string;
   phone_number?: string;
   custom_attributes?: Record<string, any>;
-  company_id: number;
+  lead_source?: string;
+  lifecycle_stage?: string;
+  do_not_contact?: boolean;
+  opt_in_status?: string;
+  opt_in_date?: string;
+  opt_out_date?: string;
+  created_at?: string;
+  updated_at?: string;
+  last_contacted_at?: string;
+  tags?: Array<{ id: number; name: string; color: string }>;
+  profile_picture_url?: string;
+  // Profile fields
+  job_title?: string;
+  company_name?: string;
+  location?: string;
+  website?: string;
+  linkedin_url?: string;
+  instagram_handle?: string;
+  facebook_url?: string;
+  // Channel the conversation came through (populated by by_session endpoint)
+  channel?: string;
 }
 
 export interface SubscriptionPlan {

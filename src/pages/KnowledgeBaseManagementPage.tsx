@@ -6,8 +6,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Plus, Trash2, Edit, LinkIcon, Brain, Eye, ExternalLink, Database, BookOpen, Sparkles, Loader2, HardDrive, Cloud, Search } from "lucide-react";
+import { Plus, Trash2, Edit, LinkIcon, Brain, Eye, ExternalLink, Database, BookOpen, Sparkles, Loader2, HardDrive, Cloud, Search, FlaskConical } from "lucide-react";
+import { KbChatPanel } from '@/components/KbChatPanel';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
@@ -207,6 +209,7 @@ const KnowledgeBaseManagementPage = () => {
   const [isImportUrlDialogOpen, setIsImportUrlDialogOpen] = useState(false);
   const [isGenerateQnADialogOpen, setIsGenerateQnADialogOpen] = useState(false);
   const [isPreviewDialogOpen, setIsPreviewDialogOpen] = useState(false);
+  const [isTestDialogOpen, setIsTestDialogOpen] = useState(false);
   const [selectedKb, setSelectedKb] = useState<KnowledgeBase | null>(null);
 
   const { data: previewContent, isLoading: isLoadingPreview } = useQuery<{ content: string }>({
@@ -445,6 +448,28 @@ const KnowledgeBaseManagementPage = () => {
                       )}
                     </DialogContent>
                   </Dialog>
+
+                  <Sheet open={isTestDialogOpen && selectedKb?.id === kb.id} onOpenChange={(isOpen) => { if (!isOpen) setSelectedKb(null); setIsTestDialogOpen(isOpen); }}>
+                    <button onClick={() => { setSelectedKb(kb); setIsTestDialogOpen(true); }} className="h-7 w-7 inline-flex items-center justify-center rounded-md text-muted-foreground hover:text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 transition-colors" title="Test KB">
+                      <FlaskConical className="h-3.5 w-3.5" />
+                    </button>
+                    <SheetContent side="right" className="p-0 flex flex-col w-[480px] sm:max-w-[480px]">
+                      <SheetHeader className="px-5 py-4 border-b border-border flex-shrink-0">
+                        <div className="flex items-center gap-3">
+                          <div className="p-2 rounded-xl bg-gradient-to-br from-emerald-500 to-green-600 shadow-sm">
+                            <FlaskConical className="h-4 w-4 text-white" />
+                          </div>
+                          <div>
+                            <SheetTitle className="text-base font-semibold">{selectedKb?.name}</SheetTitle>
+                            <SheetDescription className="text-xs">Query this KB and see what chunks are retrieved</SheetDescription>
+                          </div>
+                        </div>
+                      </SheetHeader>
+                      {selectedKb && (
+                        <KbChatPanel key={selectedKb.id} kb={selectedKb} authFetch={authFetch} />
+                      )}
+                    </SheetContent>
+                  </Sheet>
 
                   <Permission permission="knowledgebase:update">
                     <Dialog open={isGenerateQnADialogOpen && selectedKb?.id === kb.id} onOpenChange={(isOpen) => { if (!isOpen) setSelectedKb(null); setIsGenerateQnADialogOpen(isOpen); }}>
@@ -731,5 +756,6 @@ const GenerateQnAForm = ({ kb, onSubmit }: { kb: KnowledgeBase | null; onSubmit:
     </form>
   );
 };
+
 
 export default KnowledgeBaseManagementPage;

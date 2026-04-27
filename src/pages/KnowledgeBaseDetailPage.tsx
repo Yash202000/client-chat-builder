@@ -1,4 +1,6 @@
 import { useState, useRef } from 'react';
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from '@/components/ui/sheet';
+import { KbChatPanel } from '@/components/KbChatPanel';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -64,6 +66,7 @@ import {
   Loader2,
   FolderOpen,
   Settings,
+  FlaskConical,
   Image,
   Music,
   Video,
@@ -2118,6 +2121,7 @@ const KnowledgeBaseDetailPage = () => {
   const { authFetch } = useAuth();
   const { t, isRTL } = useI18n();
   const navigate = useNavigate();
+  const [isTestPanelOpen, setIsTestPanelOpen] = useState(false);
 
   const { data: kb, isLoading, error } = useQuery<KnowledgeBase>({
     queryKey: ['knowledge-base', id],
@@ -2207,6 +2211,18 @@ const KnowledgeBaseDetailPage = () => {
                   {label}
                 </TabsTrigger>
               ))}
+              {/* Test — opens side panel, not a real tab */}
+              <button
+                onClick={() => setIsTestPanelOpen(true)}
+                className={`flex items-center gap-1.5 px-4 py-3 text-xs font-medium rounded-none border-b-2 transition-colors ${
+                  isTestPanelOpen
+                    ? 'border-emerald-500 text-emerald-600 dark:text-emerald-400'
+                    : 'border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
+                }`}
+              >
+                <FlaskConical className="w-3.5 h-3.5" />
+                Test
+              </button>
             </TabsList>
           </div>
         </div>
@@ -2233,6 +2249,24 @@ const KnowledgeBaseDetailPage = () => {
           </TabsContent>
         </div>
       </Tabs>
+
+      {/* Test KB side panel */}
+      <Sheet open={isTestPanelOpen} onOpenChange={setIsTestPanelOpen}>
+        <SheetContent side="right" className="p-0 flex flex-col w-[480px] sm:max-w-[480px]">
+          <SheetHeader className="px-5 py-4 border-b border-border flex-shrink-0">
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-xl bg-gradient-to-br from-emerald-500 to-green-600 shadow-sm">
+                <FlaskConical className="h-4 w-4 text-white" />
+              </div>
+              <div>
+                <SheetTitle className="text-base font-semibold">{kb.name}</SheetTitle>
+                <SheetDescription className="text-xs">Query this KB and see what chunks are retrieved</SheetDescription>
+              </div>
+            </div>
+          </SheetHeader>
+          <KbChatPanel kb={kb} authFetch={authFetch} />
+        </SheetContent>
+      </Sheet>
     </div>
   );
 };

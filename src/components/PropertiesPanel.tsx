@@ -410,7 +410,6 @@ const PropertiesPanel = ({ selectedNode, nodes, setNodes, deleteNode, workflowId
                   <option value="groq/llama-3.3-70b-versatile">Llama 3.3 70B Versatile</option>
                   <option value="groq/llama-3.1-70b-versatile">Llama 3.1 70B Versatile</option>
                   <option value="groq/llama-3.1-8b-instant">Llama 3.1 8B Instant</option>
-                  <option value="groq/llama3-8b-8192">Llama3 8B</option>
                   <option value="groq/mixtral-8x7b-32768">Mixtral 8x7B</option>
                 </optgroup>
                 <optgroup label="OpenAI">

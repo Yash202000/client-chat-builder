@@ -14,6 +14,7 @@ import {
   addReaction,
   removeReaction,
 } from '@/services/chatService';
+import { getUsers } from '@/services/userService';
 import {
   Card,
   CardContent,
@@ -24,7 +25,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Bot, User, Send, Loader2, Video, Plus, Users, MessageSquare, Search, History, PanelLeftClose, Clock, X, Pencil, Check } from 'lucide-react';
+import { Bot, User, Send, Loader2, Video, Plus, Users, MessageSquare, Search, History, PanelLeftClose, Clock, X, Pencil, Check, Phone, PhoneCall, Hash, Voicemail } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -36,7 +37,7 @@ import NewChatModal from '@/components/NewChatModal';
 import ManageChannelMembersModal from '@/components/ManageChannelMembersModal';
 import FileUpload from '@/components/FileUpload';
 import FileAttachment from '@/components/FileAttachment';
-import MessageThreadModal from '@/components/MessageThreadModal';
+import ThreadPanel from '@/components/ThreadPanel';
 import MessageReactions from '@/components/MessageReactions';
 import MentionInput from '@/components/MentionInput';
 import MentionText from '@/components/MentionText';
@@ -186,7 +187,6 @@ const InternalChatPage: React.FC = () => {
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [isUploadingFiles, setIsUploadingFiles] = useState(false);
   const [threadParentMessage, setThreadParentMessage] = useState<ChatMessage | null>(null);
-  const [isThreadModalOpen, setIsThreadModalOpen] = useState(false);
   const [replyingTo, setReplyingTo] = useState<ChatMessage | null>(null);
   const chatInputAreaRef = useRef<HTMLDivElement>(null);
   const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
@@ -211,6 +211,12 @@ const InternalChatPage: React.FC = () => {
     status: 'calling' | 'ringing' | 'connecting';
   } | null>(null);
   const [isCallHistoryOpen, setIsCallHistoryOpen] = useState(false);
+  const [isPhoneDirectoryOpen, setIsPhoneDirectoryOpen] = useState(false);
+
+  // Extension configs from localStorage (written by TeamManagement)
+  const [extConfigs, setExtConfigs] = useState<Record<number, { ext: string; department: string; directNumber: string; status: string; voicemailEnabled: boolean; forwardTo: string }>>(() => {
+    try { return JSON.parse(localStorage.getItem('phone_ext_configs') ?? '{}'); } catch { return {}; }
+  });
   const [channelSidebarCollapsed, setChannelSidebarCollapsed] = useState(false);
   const { toast } = useToast();
   const { showNotification, requestPermission, permission, playCallEndSound } = useNotifications();
@@ -237,6 +243,11 @@ const InternalChatPage: React.FC = () => {
           }
           return [...oldMessages, newMessage];
         });
+
+        // If a reply lands for the currently-open thread panel, refresh it live
+        if (newMessage.parent_message_id && newMessage.parent_message_id === threadParentMessage?.id) {
+          queryClient.invalidateQueries({ queryKey: ['messageReplies', newMessage.parent_message_id] });
+        }
 
         // Show notification if message mentions current user or is a reply to their message
         if (user && newMessage.sender_id !== user.id) {
@@ -540,6 +551,9 @@ const InternalChatPage: React.FC = () => {
     isLoading: isLoadingChannels,
     error: channelsError,
   } = useQuery<ChatChannel[], Error>({ queryKey: ['chatChannels'], queryFn: getChannels });
+
+  // Fetch all users for phone directory panel
+  const { data: allUsers = [] } = useQuery({ queryKey: ['users'], queryFn: getUsers, enabled: isPhoneDirectoryOpen });
 
   const { data: channelMembers } = useQuery<any[], Error>({
     queryKey: ['channelMembers', selectedChannel?.id],
@@ -885,8 +899,7 @@ const InternalChatPage: React.FC = () => {
   };
 
   const handleOpenThread = (message: ChatMessage) => {
-    setThreadParentMessage(message);
-    setIsThreadModalOpen(true);
+    setThreadParentMessage((prev) => prev?.id === message.id ? null : message);
   };
 
   const handleSendReply = async (content: string, parentMessageId: number) => {
@@ -1429,7 +1442,16 @@ const InternalChatPage: React.FC = () => {
                   </Tooltip>
                   <Tooltip>
                     <TooltipTrigger asChild>
-                      <Button variant="ghost" size="icon" onClick={() => setIsCallHistoryOpen(true)}
+                      <Button variant="ghost" size="icon" onClick={() => { setIsPhoneDirectoryOpen(o => !o); setIsCallHistoryOpen(false); }}
+                        className={`h-8 w-8 rounded-md hover:bg-muted ${isPhoneDirectoryOpen ? 'text-violet-400 bg-violet-500/10' : 'text-muted-foreground hover:text-foreground'}`}>
+                        <Phone className="h-4 w-4" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent><p>Phone directory</p></TooltipContent>
+                  </Tooltip>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button variant="ghost" size="icon" onClick={() => { setIsCallHistoryOpen(o => !o); setIsPhoneDirectoryOpen(false); }}
                         className="h-8 w-8 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted">
                         <History className="h-4 w-4" />
                       </Button>
@@ -1780,6 +1802,113 @@ const InternalChatPage: React.FC = () => {
           />
         )}
 
+        {/* ── PHONE DIRECTORY PANEL ────────────────────────────────────────── */}
+        <div className={cn(
+          'h-full flex-shrink-0 flex flex-col border-l border-border bg-card overflow-hidden transition-all duration-300 ease-in-out',
+          isPhoneDirectoryOpen ? 'w-72' : 'w-0 border-l-0'
+        )}>
+          {isPhoneDirectoryOpen && (
+            <>
+              <div className="flex items-center justify-between px-4 h-[52px] border-b border-border flex-shrink-0">
+                <div className="flex items-center gap-2">
+                  <Phone className="h-4 w-4 text-violet-400" />
+                  <span className="text-sm font-semibold text-foreground font-display">Phone Directory</span>
+                </div>
+                <button onClick={() => setIsPhoneDirectoryOpen(false)}
+                  className="h-7 w-7 rounded-md flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-colors">
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+              <div className="flex-1 overflow-y-auto">
+                {(() => {
+                  const usersWithExt = Object.entries(extConfigs).map(([uid, cfg]) => {
+                    const u = allUsers.find(u => u.id === Number(uid));
+                    return { userId: Number(uid), cfg, user: u };
+                  }).filter(e => e.cfg.ext);
+
+                  if (usersWithExt.length === 0) {
+                    return (
+                      <div className="flex flex-col items-center justify-center h-full gap-3 text-muted-foreground px-4 text-center">
+                        <div className="h-10 w-10 rounded-xl bg-muted flex items-center justify-center">
+                          <Phone className="h-5 w-5 opacity-40" />
+                        </div>
+                        <p className="text-xs font-medium">No extensions configured</p>
+                        <p className="text-[11px] text-muted-foreground/60">Assign extensions in Team Management</p>
+                      </div>
+                    );
+                  }
+
+                  return (
+                    <div className="divide-y divide-border/40 py-1">
+                      {usersWithExt.map(({ userId, cfg, user }) => {
+                        const name = user ? (`${user.first_name ?? ''} ${user.last_name ?? ''}`.trim() || user.email) : `Ext ${cfg.ext}`;
+                        const initials = name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase();
+                        return (
+                          <div key={userId} className="flex items-center gap-2.5 px-3 py-2.5 hover:bg-muted/30 transition-colors group">
+                            <div className="relative flex-shrink-0">
+                              <div className="h-8 w-8 rounded-full bg-violet-500/10 flex items-center justify-center text-xs font-semibold text-violet-400">
+                                {initials}
+                              </div>
+                              <span className="absolute -bottom-1 -right-1 h-4 min-w-4 px-0.5 rounded-md bg-gradient-to-br from-violet-500 to-cyan-500 flex items-center justify-center text-[9px] font-bold text-white font-mono leading-none">
+                                {cfg.ext}
+                              </span>
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-xs font-semibold text-foreground truncate">{name}</p>
+                              <p className="text-[10px] text-muted-foreground">{cfg.department}</p>
+                            </div>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <button
+                                  onClick={async () => {
+                                    // Find existing DM channel with this user, or create one
+                                    let dmChannel = channels?.find(c =>
+                                      c.channel_type?.toUpperCase() === 'DM' &&
+                                      c.participants?.some(p => p.user_id === userId)
+                                    );
+                                    if (!dmChannel) {
+                                      try {
+                                        dmChannel = await newChatMutation.mutateAsync({
+                                          channel_type: 'DM',
+                                          member_ids: [userId],
+                                        });
+                                        await queryClient.invalidateQueries({ queryKey: ['chatChannels'] });
+                                      } catch {
+                                        toast({ title: 'Could not reach user', variant: 'destructive' });
+                                        return;
+                                      }
+                                    }
+                                    // Switch to that channel and initiate call
+                                    handleChannelSelect(dmChannel);
+                                    initiateVideoCallMutation.mutate(dmChannel.id);
+                                  }}
+                                  className="h-7 w-7 rounded-full flex items-center justify-center bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500 hover:text-white transition-all opacity-0 group-hover:opacity-100 flex-shrink-0"
+                                >
+                                  <PhoneCall className="h-3.5 w-3.5" />
+                                </button>
+                              </TooltipTrigger>
+                              <TooltipContent><p>Call ext {cfg.ext}</p></TooltipContent>
+                            </Tooltip>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  );
+                })()}
+              </div>
+            </>
+          )}
+        </div>
+
+        {/* ── THREAD PANEL ─────────────────────────────────────────────────── */}
+        <ThreadPanel
+          parentMessage={threadParentMessage}
+          currentUserId={user?.id}
+          onClose={() => setThreadParentMessage(null)}
+          onSendReply={handleSendReply}
+          onDownloadFile={handleDownloadFile}
+        />
+
         {/* ── CALL HISTORY PANEL ───────────────────────────────────────────── */}
         <div className={cn(
           'h-full flex-shrink-0 flex flex-col border-l border-border bg-card overflow-hidden transition-all duration-300 ease-in-out',
@@ -1829,16 +1958,6 @@ const InternalChatPage: React.FC = () => {
         }}
         isLoading={newChatMutation.isLoading}
       />
-      {threadParentMessage && (
-        <MessageThreadModal
-          isOpen={isThreadModalOpen}
-          onClose={() => setIsThreadModalOpen(false)}
-          parentMessage={threadParentMessage}
-          currentUserId={user?.id}
-          onSendReply={handleSendReply}
-          onDownloadFile={handleDownloadFile}
-        />
-      )}
       {incomingCall && (
         <IncomingCallModal
           isOpen={true}

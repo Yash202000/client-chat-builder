@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Trash2, ChevronDown, ChevronRight, Save, PanelRightClose, PanelRight, Plus, X } from 'lucide-react';
+import { Trash2, ChevronDown, ChevronRight, Save, PanelRightClose, PanelRight, Plus, X, Play, Loader2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useI18n } from '@/hooks/useI18n';
 import { useAuth } from '@/hooks/useAuth';
@@ -17,10 +17,7 @@ const PROVIDER_MODELS: Record<string, Array<{ value: string; label: string }>> =
     { value: 'llama-3.3-70b-versatile', label: 'Llama 3.3 70B Versatile' },
     { value: 'llama-3.1-70b-versatile', label: 'Llama 3.1 70B Versatile' },
     { value: 'llama-3.1-8b-instant', label: 'Llama 3.1 8B Instant' },
-    { value: 'llama3-70b-8192', label: 'Llama 3 70B' },
-    { value: 'llama3-8b-8192', label: 'Llama 3 8B' },
     { value: 'mixtral-8x7b-32768', label: 'Mixtral 8x7B' },
-    { value: 'gemma2-9b-it', label: 'Gemma 2 9B' },
   ],
   gemini: [
     { value: 'gemini-1.5-pro', label: 'Gemini 1.5 Pro' },
@@ -61,15 +58,244 @@ const CollapsibleSection = ({ title, children, defaultOpen = false }: { title: s
   );
 };
 
+// ── Inline Tool Tester ────────────────────────────────────────────────────────
+
+interface ToolTesterProps {
+  tool: any;
+  onExecution?: (steps: Array<{ node_id: string; status: string }>) => void;
+  authFetch: (url: string, opts?: RequestInit) => Promise<Response>;
+}
+
+const ToolTester = ({ tool, onExecution, authFetch }: ToolTesterProps) => {
+  const defaultJson = tool.parameters
+    ? JSON.stringify(
+        Object.fromEntries(
+          Object.keys(tool.parameters.properties ?? tool.parameters).map(k => [k, ''])
+        ),
+        null, 2
+      )
+    : '{}';
+
+  const [paramsJson, setParamsJson] = useState(defaultJson);
+  const [jsonError, setJsonError] = useState('');
+  const [result, setResult] = useState<any>(null);
+  const [isTesting, setIsTesting] = useState(false);
+  const nodeId = `tools-${tool.id}`;
+
+  const handleChange = (val: string) => {
+    setParamsJson(val);
+    try { JSON.parse(val); setJsonError(''); } catch { setJsonError('Invalid JSON'); }
+  };
+
+  const handleTest = async () => {
+    let parsed: any;
+    try { parsed = JSON.parse(paramsJson); } catch { setJsonError('Invalid JSON'); return; }
+    setIsTesting(true);
+    setResult(null);
+    onExecution?.([{ node_id: nodeId, status: 'running' }]);
+    try {
+      const res = await authFetch(`/api/v1/tools/${tool.id}/execute?session_id=builder-test-${tool.id}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(parsed),
+      });
+      const data = await res.json();
+      setResult(data);
+      onExecution?.([{ node_id: nodeId, status: res.ok ? 'success' : 'error' }]);
+    } catch (e) {
+      setResult({ error: String(e) });
+      onExecution?.([{ node_id: nodeId, status: 'error' }]);
+    } finally {
+      setIsTesting(false);
+    }
+  };
+
+  return (
+    <div className="space-y-3">
+      <div>
+        <Label className="text-xs font-medium dark:text-gray-300">Parameters (JSON)</Label>
+        <Textarea
+          value={paramsJson}
+          onChange={e => handleChange(e.target.value)}
+          rows={6}
+          className="mt-1 text-xs font-mono dark:bg-slate-800 dark:border-slate-600 dark:text-white resize-none"
+          placeholder="{}"
+          spellCheck={false}
+        />
+        {jsonError && <p className="text-xs text-red-500 mt-1">{jsonError}</p>}
+      </div>
+      <Button
+        onClick={handleTest}
+        disabled={isTesting || !!jsonError}
+        className="w-full bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white"
+        size="sm"
+      >
+        {isTesting
+          ? <><Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" />Running...</>
+          : <><Play className="h-3.5 w-3.5 mr-1.5" />Run Test</>}
+      </Button>
+      {result !== null && (
+        <div className="pt-2 border-t border-slate-200 dark:border-slate-700">
+          <p className="text-xs font-semibold text-slate-600 dark:text-slate-400 mb-2 uppercase tracking-wide">Result</p>
+          <pre className="text-xs bg-slate-50 dark:bg-slate-800 p-3 rounded-lg border border-slate-200 dark:border-slate-600 overflow-x-auto overflow-y-auto max-h-48 dark:text-gray-300 whitespace-pre-wrap break-words">
+            {JSON.stringify(result, null, 2)}
+          </pre>
+        </div>
+      )}
+    </div>
+  );
+};
+
+// ── Inline KB Chat Tester ─────────────────────────────────────────────────────
+
+interface KbTesterProps {
+  kb: any;
+  onExecution?: (steps: Array<{ node_id: string; status: string }>) => void;
+  authFetch: (url: string, opts?: RequestInit) => Promise<Response>;
+}
+
+interface KbChatMsg { id: number; type: 'user' | 'kb'; text?: string; results?: any[] }
+
+const KbTester = ({ kb, onExecution, authFetch }: KbTesterProps) => {
+  const [messages, setMessages] = useState<KbChatMsg[]>([]);
+  const [input, setInput] = useState('');
+  const [topK, setTopK] = useState(3);
+  const [isLoading, setIsLoading] = useState(false);
+  const bottomRef = useRef<HTMLDivElement>(null);
+  const nodeId = `knowledge-${kb.id}`;
+
+  useEffect(() => {
+    bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages, isLoading]);
+
+  const handleSend = async () => {
+    const q = input.trim();
+    if (!q || isLoading) return;
+    setInput('');
+    setMessages(prev => [...prev, { id: Date.now(), type: 'user', text: q }]);
+    setIsLoading(true);
+    onExecution?.([{ node_id: nodeId, status: 'running' }]);
+    try {
+      const res = await authFetch(`/api/v1/knowledge-bases/${kb.id}/search`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ query: q, top_k: topK }),
+      });
+      const data = await res.json();
+      const results = data.results ?? [];
+      setMessages(prev => [...prev, { id: Date.now() + 1, type: 'kb', results }]);
+      onExecution?.([{ node_id: nodeId, status: res.ok ? 'success' : 'error' }]);
+    } catch {
+      setMessages(prev => [...prev, { id: Date.now() + 1, type: 'kb', results: [] }]);
+      onExecution?.([{ node_id: nodeId, status: 'error' }]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  return (
+    <div className="flex flex-col gap-2" style={{ minHeight: 0 }}>
+      {/* Mini chat history */}
+      <div className="flex flex-col gap-2 max-h-64 overflow-y-auto pr-1">
+        {messages.length === 0 && (
+          <p className="text-xs text-slate-400 dark:text-slate-500 text-center py-3">Ask something to test retrieval</p>
+        )}
+        {messages.map(msg => (
+          <div key={msg.id}>
+            {msg.type === 'user' ? (
+              <div className="flex justify-end">
+                <span className="bg-emerald-600 text-white text-xs rounded-xl rounded-tr-sm px-3 py-1.5 max-w-[85%] leading-relaxed">
+                  {msg.text}
+                </span>
+              </div>
+            ) : (
+              <div className="flex gap-1.5 items-start">
+                <div className="h-5 w-5 rounded-full bg-gradient-to-br from-emerald-500 to-green-600 flex-shrink-0 flex items-center justify-center mt-0.5">
+                  <Loader2 className="h-2.5 w-2.5 text-white hidden" />
+                  <svg className="h-2.5 w-2.5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><ellipse cx="12" cy="12" rx="10" ry="6"/><line x1="12" y1="2" x2="12" y2="22"/><line x1="2" y1="12" x2="22" y2="12"/></svg>
+                </div>
+                <div className="flex-1 space-y-1.5">
+                  {!msg.results || msg.results.length === 0 ? (
+                    <span className="text-xs text-slate-400 bg-slate-100 dark:bg-slate-800 rounded-xl rounded-tl-sm px-3 py-1.5 block">No matching chunks.</span>
+                  ) : msg.results.map((r, i) => (
+                    <div key={i} className="bg-slate-100 dark:bg-slate-800 rounded-xl rounded-tl-sm p-2.5 space-y-1">
+                      <div className="flex items-center justify-between">
+                        <span className="text-[10px] text-slate-400">Chunk {i + 1}</span>
+                        {r.score !== undefined && (
+                          <span className="text-[10px] font-mono font-bold text-emerald-600 dark:text-emerald-400">
+                            {typeof r.score === 'number' ? r.score.toFixed(3) : r.score}
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-xs dark:text-gray-300 line-clamp-3 leading-relaxed">
+                        {typeof r === 'string' ? r : r.text}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        ))}
+        {isLoading && (
+          <div className="flex gap-1.5 items-center">
+            <div className="h-5 w-5 rounded-full bg-gradient-to-br from-emerald-500 to-green-600 flex-shrink-0 flex items-center justify-center">
+              <Loader2 className="h-2.5 w-2.5 text-white animate-spin" />
+            </div>
+            <div className="bg-slate-100 dark:bg-slate-800 rounded-xl rounded-tl-sm px-3 py-2">
+              <div className="flex gap-1">
+                {[0, 150, 300].map(d => (
+                  <span key={d} className="h-1 w-1 bg-slate-400 rounded-full animate-bounce" style={{ animationDelay: `${d}ms` }} />
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+        <div ref={bottomRef} />
+      </div>
+
+      {/* Input row */}
+      <div className="flex gap-1.5 items-center pt-1 border-t border-slate-100 dark:border-slate-700">
+        <select
+          value={topK}
+          onChange={e => setTopK(Number(e.target.value))}
+          className="text-[10px] border rounded-md px-1 py-1 bg-white dark:bg-slate-800 dark:border-slate-600 dark:text-white flex-shrink-0"
+        >
+          {[3, 5, 10].map(n => <option key={n} value={n}>Top {n}</option>)}
+        </select>
+        <Input
+          value={input}
+          onChange={e => setInput(e.target.value)}
+          onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(); } }}
+          placeholder="Ask something..."
+          disabled={isLoading}
+          className="flex-1 h-8 text-xs dark:bg-slate-800 dark:border-slate-600 dark:text-white"
+        />
+        <Button
+          onClick={handleSend}
+          disabled={isLoading || !input.trim()}
+          size="icon"
+          className="h-8 w-8 flex-shrink-0 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg"
+        >
+          <Play className="h-3 w-3" />
+        </Button>
+      </div>
+    </div>
+  );
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
+
 interface AgentPropertiesPanelProps {
   agent: any;
   selectedNode: any;
   onNodeDelete: (nodeId: string) => void;
   isCollapsed?: boolean;
   onToggle?: () => void;
+  onTestExecution?: (steps: Array<{ node_id: string; status: string }>) => void;
 }
 
-export const AgentPropertiesPanel = ({ agent, selectedNode, onNodeDelete, isCollapsed = false, onToggle }: AgentPropertiesPanelProps) => {
+export const AgentPropertiesPanel = ({ agent, selectedNode, onNodeDelete, isCollapsed = false, onToggle, onTestExecution }: AgentPropertiesPanelProps) => {
   const { t } = useTranslation();
   const { isRTL } = useI18n();
   const { authFetch } = useAuth();
@@ -643,6 +869,15 @@ export const AgentPropertiesPanel = ({ agent, selectedNode, onNodeDelete, isColl
                 </pre>
               </div>
             )}
+
+            <CollapsibleSection title="Test Tool" defaultOpen={true}>
+              <ToolTester
+                key={selectedTool.id}
+                tool={selectedTool}
+                onExecution={onTestExecution}
+                authFetch={authFetch}
+              />
+            </CollapsibleSection>
           </div>
         )}
 
@@ -657,6 +892,14 @@ export const AgentPropertiesPanel = ({ agent, selectedNode, onNodeDelete, isColl
               <p className="text-xs font-semibold text-gray-600 dark:text-gray-400 mb-1">{t('builder.description')}</p>
               <p className="text-sm dark:text-white">{selectedKb.description}</p>
             </div>
+            <CollapsibleSection title="Test Knowledge Base" defaultOpen={true}>
+              <KbTester
+                key={selectedKb.id}
+                kb={selectedKb}
+                onExecution={onTestExecution}
+                authFetch={authFetch}
+              />
+            </CollapsibleSection>
           </div>
         )}
       </div>

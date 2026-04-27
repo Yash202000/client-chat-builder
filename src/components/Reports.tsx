@@ -18,7 +18,6 @@ import {
   Users,
   Star,
   Download,
-  Filter,
   CheckCircle2,
   UserCheck,
   AlertCircle,
@@ -41,7 +40,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
 import { ReopenAnalytics } from "@/components/ReopenAnalytics";
 import { SecurityLogs } from "@/components/SecurityLogs";
@@ -88,6 +87,7 @@ function DatePicker({ date, setDate, placeholder, isRTL }) {
 export const Reports = () => {
   const { authFetch, companyId } = useAuth();
   const { t, isRTL } = useI18n();
+  const queryClient = useQueryClient();
   const [dateRange, setDateRange] = useState({
     from: new Date(),
     to: new Date(),
@@ -426,7 +426,7 @@ export const Reports = () => {
 
   const optimizationSuggestions = optimizationSuggestionsData || [];
 
-  if (isLoadingMetrics || isLoadingAgentPerformance || isLoadingCustomerSatisfaction || isLoadingTopIssues || isLoadingErrorRates || isLoadingLatency || isLoadingAlerts || isLoadingOptimizationSuggestions || isLoadingConversationStatus || isLoadingConversationTrends || isLoadingChannelDistribution) {
+  if (isLoadingMetrics || isLoadingAgentPerformance || isLoadingCustomerSatisfaction || isLoadingTopIssues || isLoadingLatency || isLoadingConversationStatus || isLoadingConversationTrends || isLoadingChannelDistribution) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
         <div className="text-center">
@@ -439,7 +439,7 @@ export const Reports = () => {
     );
   }
 
-  if (isErrorMetrics || isErrorAgentPerformance || isErrorCustomerSatisfaction || isErrorTopIssues || isErrorErrorRates || isErrorLatency || isErrorAlerts || isErrorOptimizationSuggestions || isErrorConversationStatus || isErrorConversationTrends || isErrorChannelDistribution) {
+  if (isErrorMetrics || isErrorAgentPerformance || isErrorCustomerSatisfaction || isErrorTopIssues || isErrorLatency || isErrorConversationStatus || isErrorConversationTrends || isErrorChannelDistribution) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
         <div className="text-center">
