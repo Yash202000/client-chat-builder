@@ -1,4 +1,9 @@
 import React, { useState, useMemo, useCallback } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import {
+  listCalendarEvents, createCalendarEvent, updateCalendarEvent, deleteCalendarEvent,
+} from '@/services/calendarService';
+import type { ApiCalEvent, CreateEventDto } from '@/services/calendarService';
 import {
   startOfMonth, endOfMonth, startOfWeek, endOfWeek,
   eachDayOfInterval, format, isSameDay, isSameMonth, addMonths,
@@ -86,63 +91,22 @@ const HOURS = Array.from({ length: 14 }, (_, i) => i + 7); // 7am – 8pm
 const WEEK_DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 const HOUR_HEIGHT = 64; // px per hour in week/day view
 
-// ─── Sample seed events (relative to today) ──────────────────────────────────
+// ─── API → local type converter ───────────────────────────────────────────────
 
-function buildSeedEvents(): CalEvent[] {
-  const now = new Date();
-  const y = now.getFullYear();
-  const m = now.getMonth();
-
-  const make = (
-    id: string,
-    title: string,
-    type: EventType,
-    dOffset: number,
-    startH: number,
-    endH: number,
-    description?: string,
-    attendees?: string[],
-  ): CalEvent => {
-    const base = new Date(y, m, now.getDate() + dOffset);
-    return {
-      id,
-      title,
-      type,
-      start: setMinutes(setHours(base, startH), 0),
-      end: setMinutes(setHours(base, endH), 0),
-      description,
-      attendees,
-      color: EVENT_TYPE_META[type].dot,
-    };
+function apiToCalEvent(e: ApiCalEvent): CalEvent {
+  return {
+    id: String(e.id),
+    title: e.title,
+    type: (e.event_type as EventType) ?? 'meeting',
+    start: new Date(e.start_time),
+    end: new Date(e.end_time),
+    description: e.description,
+    attendees: e.attendees ?? [],
+    color: EVENT_TYPE_META[(e.event_type as EventType) ?? 'meeting']?.dot ?? '',
   };
-
-  return [
-    make('1', 'Q2 Planning Meeting', 'meeting', 0, 10, 11,
-      'Review OKRs and set priorities for the next quarter.',
-      ['alex@company.com', 'sara@company.com']),
-    make('2', 'Client Demo Call', 'call', 1, 14, 15,
-      'Product walkthrough with Acme Corp stakeholders.',
-      ['client@acme.com', 'sales@company.com']),
-    make('3', 'API Integration Deadline', 'task', 3, 9, 10,
-      'Final submission of webhook integration docs.'),
-    make('4', 'Sync with Design Team', 'meeting', -1, 11, 12,
-      'Review new component library mockups.',
-      ['design@company.com']),
-    make('5', 'Conference Travel', 'out-of-office', 5, 8, 20,
-      'DevSummit annual conference.'),
-    make('6', 'Weekly Standup', 'reminder', 2, 9, 9,
-      '15-min async standup via Slack.'),
-    make('7', 'Investor Update Call', 'call', 7, 16, 17,
-      'Monthly metrics review with Series A investors.',
-      ['investor@vc.com']),
-  ];
 }
 
 // ─── Utilities ────────────────────────────────────────────────────────────────
-
-function genId() {
-  return Math.random().toString(36).slice(2, 9);
-}
 
 function formatTimeRange(start: Date, end: Date) {
   return `${format(start, 'h:mm a')} – ${format(end, 'h:mm a')}`;
@@ -583,7 +547,7 @@ function CreateEventModal({
     const end = fromDatetimeLocal(form.endStr);
     const meta = EVENT_TYPE_META[form.type];
     onSave({
-      id: editing?.id ?? genId(),
+      id: editing?.id ?? '',
       title: form.title.trim(),
       type: form.type,
       start,
@@ -831,10 +795,37 @@ export default function CalendarPage() {
       'My'
     : 'My';
 
+  const queryClient = useQueryClient();
   const [currentDate, setCurrentDate] = useState<Date>(new Date());
   const [view, setView] = useState<ViewMode>('month');
-  const [events, setEvents] = useState<CalEvent[]>(() => buildSeedEvents());
   const [selectedEvent, setSelectedEvent] = useState<CalEvent | null>(null);
+
+  const rangeStart = startOfMonth(currentDate);
+  const rangeEnd = endOfMonth(currentDate);
+
+  const { data: rawEvents = [], isLoading: eventsLoading } = useQuery({
+    queryKey: ['calendarEvents', format(rangeStart, 'yyyy-MM')],
+    queryFn: () => listCalendarEvents(rangeStart, rangeEnd),
+  });
+
+  const events = rawEvents.map(apiToCalEvent);
+
+  const createMutation = useMutation({
+    mutationFn: (dto: CreateEventDto) => createCalendarEvent(dto),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['calendarEvents'] }),
+  });
+
+  const updateMutation = useMutation({
+    mutationFn: ({ id, dto }: { id: number; dto: Partial<CreateEventDto> }) =>
+      updateCalendarEvent(id, dto),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['calendarEvents'] }),
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: (id: number) => deleteCalendarEvent(id),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['calendarEvents'] }),
+  });
+
   const [popoverAnchor, setPopoverAnchor] = useState<{ x: number; y: number } | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
   const [editingEvent, setEditingEvent] = useState<CalEvent | null>(null);
@@ -894,19 +885,24 @@ export default function CalendarPage() {
   };
 
   const handleSaveEvent = (ev: CalEvent) => {
-    setEvents((prev) => {
-      const exists = prev.findIndex((e) => e.id === ev.id);
-      if (exists >= 0) {
-        const next = [...prev];
-        next[exists] = ev;
-        return next;
-      }
-      return [...prev, ev];
-    });
+    const dto: CreateEventDto = {
+      title: ev.title,
+      event_type: ev.type,
+      start_time: ev.start.toISOString(),
+      end_time: ev.end.toISOString(),
+      description: ev.description,
+      attendees: ev.attendees,
+    };
+    if (editingEvent?.id && !editingEvent.id.startsWith('new-')) {
+      updateMutation.mutate({ id: Number(editingEvent.id), dto });
+    } else {
+      createMutation.mutate(dto);
+    }
   };
 
   const handleDeleteEvent = (id: string) => {
-    setEvents((prev) => prev.filter((e) => e.id !== id));
+    deleteMutation.mutate(Number(id));
+    setSelectedEvent(null);
   };
 
   // Legend items
@@ -1007,7 +1003,15 @@ export default function CalendarPage() {
       </div>
 
       {/* ── Calendar body ────────────────────────────────────────────── */}
-      <div className="flex-1 flex flex-col overflow-hidden">
+      <div className="relative flex-1 flex flex-col overflow-hidden">
+        {eventsLoading && (
+          <div className="absolute inset-0 flex items-center justify-center bg-background/60 z-10">
+            <div className="flex items-center gap-2 text-muted-foreground text-sm">
+              <div className="h-4 w-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+              Loading events…
+            </div>
+          </div>
+        )}
         {view === 'month' && (
           <MonthView
             currentDate={currentDate}
