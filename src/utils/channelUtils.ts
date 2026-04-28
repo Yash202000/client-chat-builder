@@ -68,6 +68,11 @@ export const getChannelAvatar = (channel: Channel, currentUserId?: number) => {
     }
   }
 
+  // For MEETING channels
+  if (channel.channel_type?.toUpperCase() === 'MEETING') {
+    return { url: undefined, fallback: 'MEETING_ICON', isUser: false, isMeeting: true };
+  }
+
   // For TEAM channels
   return {
     url: undefined,

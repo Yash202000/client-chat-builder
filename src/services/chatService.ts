@@ -42,10 +42,12 @@ export const getChannelMessages = async (channelId: number) => {
   return response.data;
 };
 
-export const createChannelMessage = async (channelId: number, content: string) => {
-  const response = await axios.post(`${API_URL}/api/v1/chat/channels/${channelId}/messages`, { content }, {
-    headers: getAuthHeaders(),
-  });
+export const createChannelMessage = async (channelId: number, content: string, isActivity = false) => {
+  const response = await axios.post(
+    `${API_URL}/api/v1/chat/channels/${channelId}/messages`,
+    { content, is_activity: isActivity },
+    { headers: getAuthHeaders() },
+  );
   return response.data;
 };
 
@@ -184,6 +186,78 @@ export const searchMessages = async (channelId: number, query: string) => {
       params: { query },
       headers: getAuthHeaders(),
     }
+  );
+  return response.data;
+};
+
+// Scheduled messages
+export const createScheduledMessage = async (channelId: number, content: string, scheduledAt: Date) => {
+  const response = await axios.post(
+    `${API_URL}/api/v1/chat/channels/${channelId}/messages`,
+    { content, scheduled_at: scheduledAt.toISOString() },
+    { headers: getAuthHeaders() }
+  );
+  return response.data;
+};
+
+export const getScheduledMessages = async () => {
+  const response = await axios.get(`${API_URL}/api/v1/chat/scheduled`, { headers: getAuthHeaders() });
+  return response.data;
+};
+
+export const cancelScheduledMessage = async (messageId: number) => {
+  const response = await axios.delete(`${API_URL}/api/v1/chat/scheduled/${messageId}`, { headers: getAuthHeaders() });
+  return response.data;
+};
+
+// Pinned messages
+export const getPinnedMessages = async (channelId: number) => {
+  const response = await axios.get(`${API_URL}/api/v1/chat/channels/${channelId}/pins`, { headers: getAuthHeaders() });
+  return response.data;
+};
+
+export const pinMessage = async (channelId: number, messageId: number) => {
+  const response = await axios.post(
+    `${API_URL}/api/v1/chat/channels/${channelId}/pins`,
+    null,
+    { params: { message_id: messageId }, headers: getAuthHeaders() }
+  );
+  return response.data;
+};
+
+export const unpinMessage = async (channelId: number, messageId: number) => {
+  const response = await axios.delete(`${API_URL}/api/v1/chat/channels/${channelId}/pins/${messageId}`, { headers: getAuthHeaders() });
+  return response.data;
+};
+
+// Read receipts
+export const markChannelRead = async (channelId: number) => {
+  const response = await axios.post(`${API_URL}/api/v1/chat/channels/${channelId}/read`, null, { headers: getAuthHeaders() });
+  return response.data;
+};
+
+export const getChannelReadSummary = async (channelId: number): Promise<Record<string, { id: number; first_name?: string; last_name?: string; email: string; profile_picture_url?: string }[]>> => {
+  const response = await axios.get(`${API_URL}/api/v1/chat/channels/${channelId}/read-summary`, { headers: getAuthHeaders() });
+  return response.data;
+};
+
+// User status / DND
+export const updateUserStatus = async (params: {
+  presence_status?: string;
+  status_message?: string;
+  dnd_minutes?: number;
+}) => {
+  const response = await axios.patch(`${API_URL}/api/v1/chat/status`, params, { headers: getAuthHeaders() });
+  return response.data;
+};
+
+// Forward a message to another channel (sends new message with attribution)
+export const forwardMessage = async (targetChannelId: number, originalContent: string, originalSenderName: string) => {
+  const content = `> Forwarded from **${originalSenderName}**:\n> ${originalContent.split('\n').join('\n> ')}`;
+  const response = await axios.post(
+    `${API_URL}/api/v1/chat/channels/${targetChannelId}/messages`,
+    { content },
+    { headers: getAuthHeaders() }
   );
   return response.data;
 };

@@ -13,6 +13,7 @@ import axios from "axios";
 import IncomingCallModal from "@/components/IncomingCallModal";
 import { VideoCallModal } from "@/components/VideoCallModal";
 import InternalVideoCallModal from "@/components/InternalVideoCallModal";
+import EventReminderBanner from "@/components/EventReminderBanner";
 import { useVideoCall } from "@/contexts/VideoCallContext";
 import { BACKEND_URL } from "@/config/env";
 import { API_BASE_URL } from "@/config/api";
@@ -58,6 +59,7 @@ import {
   LayoutDashboard,
   Calendar,
   BookUser,
+  HardDrive,
 } from "lucide-react";
 import { CreateAgentDialog } from "@/components/CreateAgentDialog";
 import { Permission } from "./Permission";
@@ -523,7 +525,9 @@ const AppLayout = () => {
       icon: Calendar,
       collapsible: true,
       items: [
-        { title: "Calendar",   url: "/dashboard/calendar",          icon: Calendar },
+        { title: "Calendar",   url: "/dashboard/calendar",   icon: Calendar },
+        { title: "Drive",      url: "/dashboard/drive",      icon: HardDrive },
+        { titleKey: "navigation.teamChat", url: "/dashboard/team-chat", icon: MessageSquare, permission: "page:team_chat" },
       ],
     },
     {
@@ -537,7 +541,6 @@ const AppLayout = () => {
         ...channelInboxItems,
         ...(integrationTypes.has('gmail') ? [{ titleKey: "navigation.emailInbox", url: "/dashboard/inbox/email", icon: Mail }] : []),
         ...(integrationTypes.has('twilio_voice') ? [{ titleKey: "navigation.smsInbox", url: "/dashboard/inbox/sms", icon: MessageSquare }] : []),
-        { titleKey: "navigation.teamChat", url: "/dashboard/team-chat", icon: MessageSquare, permission: "page:team_chat" },
         { titleKey: "navigation.contactHub", url: "/dashboard/contacts", icon: Users },
       ],
     },
@@ -611,7 +614,6 @@ const AppLayout = () => {
       items: [
         { title: "Social Hub", url: "/dashboard/social", icon: Share2 },
         { title: "Post Composer", url: "/dashboard/social/compose", icon: PenLine },
-        { title: "Content Calendar", url: "/dashboard/social/calendar", icon: CalendarDays },
         { title: "Trending Posts", url: "/dashboard/social/trending", icon: TrendingUp },
         { title: "LinkedIn Leads", url: "/dashboard/crm/linkedin-leads", icon: Linkedin },
         { title: "Social Analytics", url: "/dashboard/social/analytics", icon: BarChart3 },
@@ -1038,6 +1040,9 @@ const AppLayout = () => {
 
       {/* ⌘K — global command palette, always mounted */}
       <CommandPalette />
+
+      {/* Calendar event reminders — shown globally like Teams notifications */}
+      <EventReminderBanner />
     </div>
   );
 };

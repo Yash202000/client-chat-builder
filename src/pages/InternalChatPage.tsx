@@ -13,6 +13,13 @@ import {
   createMessageReply,
   addReaction,
   removeReaction,
+  pinMessage,
+  unpinMessage,
+  markChannelRead,
+  createScheduledMessage,
+  getScheduledMessages,
+  cancelScheduledMessage,
+  getChannelReadSummary,
 } from '@/services/chatService';
 import { getUsers } from '@/services/userService';
 import {
@@ -25,7 +32,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Bot, User, Send, Loader2, Video, Plus, Users, MessageSquare, Search, History, PanelLeftClose, Clock, X, Pencil, Check, Phone, PhoneCall, Hash, Voicemail } from 'lucide-react';
+import { Bot, User, Send, Loader2, Video, Plus, Users, MessageSquare, Search, History, PanelLeftClose, Clock, X, Pencil, Check, Phone, PhoneCall, Hash, Voicemail, Pin, Forward, MoreHorizontal, BellOff, UserPlus, UserMinus, VideoOff } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -46,6 +53,10 @@ import SearchModal from '@/components/SearchModal';
 import IncomingCallModal from '@/components/IncomingCallModal';
 import CallingModal from '@/components/CallingModal';
 import CallHistory from '@/components/CallHistory';
+import PinnedMessagesPanel from '@/components/PinnedMessagesPanel';
+import ForwardMessageModal from '@/components/ForwardMessageModal';
+import ScheduleMessagePicker from '@/components/ScheduleMessagePicker';
+import UserStatusPicker from '@/components/UserStatusPicker';
 import { convertMentionsToApiFormat } from '@/utils/mentions';
 import { getChannelDisplayName, getChannelAvatar, getChannelDescription } from '@/utils/channelUtils';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
@@ -145,6 +156,7 @@ interface ChatMessage {
   content: string;
   created_at: string;
   parent_message_id?: number | null;
+  is_activity?: boolean;
   sender: {
     id: number;
     email: string;
@@ -212,6 +224,11 @@ const InternalChatPage: React.FC = () => {
   } | null>(null);
   const [isCallHistoryOpen, setIsCallHistoryOpen] = useState(false);
   const [isPhoneDirectoryOpen, setIsPhoneDirectoryOpen] = useState(false);
+  const [isPinnedPanelOpen, setIsPinnedPanelOpen] = useState(false);
+  const [forwardingMessage, setForwardingMessage] = useState<ChatMessage | null>(null);
+  const [messageActionMenuId, setMessageActionMenuId] = useState<number | null>(null);
+  const [userStatus, setUserStatus] = useState<string | undefined>(undefined);
+  const [userStatusMessage, setUserStatusMessage] = useState<string | undefined>(undefined);
 
   // Extension configs from localStorage (written by TeamManagement)
   const [extConfigs, setExtConfigs] = useState<Record<number, { ext: string; department: string; directNumber: string; status: string; voicemailEnabled: boolean; forwardTo: string }>>(() => {
@@ -219,7 +236,13 @@ const InternalChatPage: React.FC = () => {
   });
   const [channelSidebarCollapsed, setChannelSidebarCollapsed] = useState(false);
   const { toast } = useToast();
-  const { showNotification, requestPermission, permission, playCallEndSound } = useNotifications();
+  const { showNotification: _showNotification, requestPermission, permission, playCallEndSound } = useNotifications();
+
+  // Suppress notifications when user has DND active
+  const showNotification = (opts: Parameters<typeof _showNotification>[0]) => {
+    if (userStatus === 'dnd') return;
+    _showNotification(opts);
+  };
 
   // Request notification permission on mount
   useEffect(() => {
@@ -247,6 +270,11 @@ const InternalChatPage: React.FC = () => {
         // If a reply lands for the currently-open thread panel, refresh it live
         if (newMessage.parent_message_id && newMessage.parent_message_id === threadParentMessage?.id) {
           queryClient.invalidateQueries({ queryKey: ['messageReplies', newMessage.parent_message_id] });
+        }
+
+        // Auto-mark as read if the channel is currently open and message is from someone else
+        if (user && newMessage.sender_id !== user.id && selectedChannel?.id) {
+          markChannelRead(selectedChannel.id).catch(() => {});
         }
 
         // Show notification if message mentions current user or is a reply to their message
@@ -280,6 +308,12 @@ const InternalChatPage: React.FC = () => {
             }
           }
         }
+      } else if (wsMessage.type === 'channel_read') {
+        // Someone read the channel — refresh read summary so sender sees double tick immediately
+        const { channel_id } = wsMessage.payload;
+        queryClient.invalidateQueries({ queryKey: ['channelReadSummary', channel_id] });
+      } else if (wsMessage.type === 'message_pinned' || wsMessage.type === 'message_unpinned') {
+        queryClient.invalidateQueries({ queryKey: ['pinnedMessages', wsMessage.payload?.channel_id] });
       } else if (wsMessage.type === 'presence_update') {
         const { user_id, status } = wsMessage.payload;
         setUserPresences(prevPresences => ({
@@ -593,6 +627,14 @@ const InternalChatPage: React.FC = () => {
   useEffect(() => {
     console.log('[Active Call State] activeCallExists changed to:', activeCallExists);
   }, [activeCallExists]);
+
+  // Fetch read receipts for selected channel
+  const { data: readSummary = {} } = useQuery<Record<string, { id: number; first_name?: string; last_name?: string; email: string; profile_picture_url?: string }[]>>({
+    queryKey: ['channelReadSummary', selectedChannel?.id],
+    queryFn: () => getChannelReadSummary(selectedChannel!.id),
+    enabled: !!selectedChannel?.id,
+    refetchInterval: 15000, // refresh every 15s to pick up new reads
+  });
 
   // Fetch messages for selected channel
   const {
@@ -1098,8 +1140,13 @@ const InternalChatPage: React.FC = () => {
     console.log('[Channel Select] Changing to channel:', channel.id);
     setSelectedChannel(channel);
     setIsRenamingChannel(false);
+    setIsPinnedPanelOpen(false);
     // Update URL parameter to keep it in sync
     setSearchParams({ channelId: channel.id.toString() });
+    // Mark channel as read, then refresh the read summary
+    markChannelRead(channel.id)
+      .then(() => queryClient.invalidateQueries({ queryKey: ['channelReadSummary', channel.id] }))
+      .catch(() => {});
   };
 
   // Auto-select channel from URL params (e.g., when returning from video call)
@@ -1223,25 +1270,35 @@ const InternalChatPage: React.FC = () => {
                             isRTL ? 'right-0' : 'left-0'
                           )} />
                         )}
-                        <Avatar className={cn('flex-shrink-0', channelSidebarCollapsed ? 'h-8 w-8' : 'h-7 w-7')}>
-                          {avatar.url && <AvatarImage src={avatar.url} />}
-                          <AvatarFallback className={cn(
-                            'text-xs font-semibold',
-                            isSelected ? 'bg-primary/20 text-primary' : 'bg-muted text-muted-foreground'
+                        {(avatar as any).isMeeting ? (
+                          <div className={cn(
+                            'flex-shrink-0 flex items-center justify-center rounded-lg',
+                            channelSidebarCollapsed ? 'h-8 w-8' : 'h-7 w-7',
+                            isSelected ? 'bg-primary/20' : 'bg-muted'
                           )}>
-                            {avatar.fallback}
-                          </AvatarFallback>
-                        </Avatar>
+                            <Video className={cn('w-3.5 h-3.5', isSelected ? 'text-primary' : 'text-muted-foreground')} />
+                          </div>
+                        ) : (
+                          <Avatar className={cn('flex-shrink-0', channelSidebarCollapsed ? 'h-8 w-8' : 'h-7 w-7')}>
+                            {avatar.url && <AvatarImage src={avatar.url} />}
+                            <AvatarFallback className={cn(
+                              'text-xs font-semibold',
+                              isSelected ? 'bg-primary/20 text-primary' : 'bg-muted text-muted-foreground'
+                            )}>
+                              {avatar.fallback}
+                            </AvatarFallback>
+                          </Avatar>
+                        )}
                         {!channelSidebarCollapsed && (
                           <span className="text-[13px] font-medium truncate leading-tight">
-                            # {displayName}
+                            {displayName}
                           </span>
                         )}
                       </motion.button>
                     </TooltipTrigger>
                     {channelSidebarCollapsed && (
                       <TooltipContent side={isRTL ? 'left' : 'right'}>
-                        <p className="font-medium"># {displayName}</p>
+                        <p className="font-medium">{displayName}</p>
                       </TooltipContent>
                     )}
                   </Tooltip>
@@ -1329,6 +1386,22 @@ const InternalChatPage: React.FC = () => {
             </div>
           </ScrollArea>
 
+          {/* User status footer */}
+          {!channelSidebarCollapsed && (
+            <div className="flex-shrink-0 border-t border-border px-2 py-2">
+              <UserStatusPicker
+                user={{
+                  ...user,
+                  presence_status: userStatus ?? user?.presence_status,
+                  status_message: userStatusMessage ?? user?.status_message,
+                }}
+                onStatusChange={(status, msg) => {
+                  setUserStatus(status);
+                  setUserStatusMessage(msg);
+                }}
+              />
+            </div>
+          )}
         </div>
 
         {/* ── MAIN CHAT AREA ────────────────────────────────────────────────── */}
@@ -1344,6 +1417,13 @@ const InternalChatPage: React.FC = () => {
                 <div className={cn('flex items-center gap-3 min-w-0', isRTL ? 'flex-row-reverse' : '')}>
                   {(() => {
                     const avatar = getChannelAvatar(selectedChannel, user?.id);
+                    if ((avatar as any).isMeeting) {
+                      return (
+                        <div className="h-8 w-8 flex-shrink-0 flex items-center justify-center rounded-lg bg-primary/10">
+                          <Video className="w-4 h-4 text-primary" />
+                        </div>
+                      );
+                    }
                     return (
                       <Avatar className="h-8 w-8 flex-shrink-0">
                         {avatar.url && <AvatarImage src={avatar.url} />}
@@ -1387,9 +1467,9 @@ const InternalChatPage: React.FC = () => {
                       ) : (
                         <>
                           <h2 className="text-sm font-semibold text-foreground truncate">
-                            {selectedChannel.channel_type?.toUpperCase() !== 'DM' ? `# ` : ''}{getChannelDisplayName(selectedChannel, user?.id)}
+                            {selectedChannel.channel_type?.toUpperCase() === 'TEAM' ? '# ' : ''}{getChannelDisplayName(selectedChannel, user?.id)}
                           </h2>
-                          {selectedChannel.channel_type?.toUpperCase() !== 'DM' && (
+                          {selectedChannel.channel_type?.toUpperCase() === 'TEAM' && (
                             <button
                               onClick={() => { setRenameValue(selectedChannel.name || ''); setIsRenamingChannel(true); }}
                               className="text-muted-foreground/40 hover:text-muted-foreground transition-colors"
@@ -1442,12 +1522,13 @@ const InternalChatPage: React.FC = () => {
                   </Tooltip>
                   <Tooltip>
                     <TooltipTrigger asChild>
-                      <Button variant="ghost" size="icon" onClick={() => { setIsPhoneDirectoryOpen(o => !o); setIsCallHistoryOpen(false); }}
-                        className={`h-8 w-8 rounded-md hover:bg-muted ${isPhoneDirectoryOpen ? 'text-violet-400 bg-violet-500/10' : 'text-muted-foreground hover:text-foreground'}`}>
-                        <Phone className="h-4 w-4" />
+                      <Button variant="ghost" size="icon"
+                        onClick={() => { setIsPinnedPanelOpen(o => !o); setIsCallHistoryOpen(false); setIsPhoneDirectoryOpen(false); }}
+                        className={`h-8 w-8 rounded-md hover:bg-muted ${isPinnedPanelOpen ? 'text-amber-400 bg-amber-500/10' : 'text-muted-foreground hover:text-foreground'}`}>
+                        <Pin className="h-4 w-4" />
                       </Button>
                     </TooltipTrigger>
-                    <TooltipContent><p>Phone directory</p></TooltipContent>
+                    <TooltipContent><p>Pinned messages</p></TooltipContent>
                   </Tooltip>
                   <Tooltip>
                     <TooltipTrigger asChild>
@@ -1531,6 +1612,20 @@ const InternalChatPage: React.FC = () => {
                         className="space-y-0.5"
                       >
                         {messages?.map((msg) => {
+                          if (msg.is_activity || (msg as any).extra_data?.is_activity) {
+                            const c = msg.content.toLowerCase();
+                            const Icon = c.includes('joined') ? UserPlus
+                              : c.includes('left') ? UserMinus
+                              : c.includes('ended') || c.includes('end') ? VideoOff
+                              : Video;
+                            return (
+                              <div key={msg.id} className="flex items-center gap-2 py-0.5 px-1 my-0.5">
+                                <Icon className="w-3.5 h-3.5 text-muted-foreground/50 flex-shrink-0" />
+                                <span className="text-[12px] text-muted-foreground/70">{msg.content}</span>
+                              </div>
+                            );
+                          }
+
                           if ((msg as any).extra_data?.is_system) {
                             return (
                               <div key={msg.id} className="flex w-full justify-center my-3">
@@ -1621,6 +1716,39 @@ const InternalChatPage: React.FC = () => {
                                   )}
                                 </div>
 
+                                {/* Group read receipts — reader avatars below last own message */}
+                                {isOwn && selectedChannel?.channel_type?.toUpperCase() !== 'DM' && (() => {
+                                  const readers = readSummary[String(msg.id)] ?? [];
+                                  const isLastOwn = messages && messages.filter(m => m.sender_id === user?.id).at(-1)?.id === msg.id;
+                                  const isRecent = (Date.now() - new Date(msg.created_at).getTime()) < 48 * 60 * 60 * 1000;
+                                  if (!isLastOwn || !isRecent || readers.length === 0) return null;
+                                  return (
+                                    <div className="flex items-center gap-1 mt-1 px-1 justify-end">
+                                      <span className="text-[10px] text-muted-foreground/60">Seen</span>
+                                      <div className="flex -space-x-1">
+                                        {readers.slice(0, 5).map((r) => (
+                                          <Tooltip key={r.id}>
+                                            <TooltipTrigger asChild>
+                                              <Avatar className="h-4 w-4 ring-1 ring-background cursor-default">
+                                                {r.profile_picture_url && <AvatarImage src={r.profile_picture_url} />}
+                                                <AvatarFallback className="text-[7px] bg-muted text-muted-foreground">
+                                                  {(r.first_name?.[0] || r.email[0]).toUpperCase()}
+                                                </AvatarFallback>
+                                              </Avatar>
+                                            </TooltipTrigger>
+                                            <TooltipContent side="top">
+                                              <p className="text-xs">{r.first_name || r.email}</p>
+                                            </TooltipContent>
+                                          </Tooltip>
+                                        ))}
+                                        {readers.length > 5 && (
+                                          <span className="text-[10px] text-muted-foreground/60 ml-1">+{readers.length - 5}</span>
+                                        )}
+                                      </div>
+                                    </div>
+                                  );
+                                })()}
+
                                 {/* Actions + timestamp — visible on hover */}
                                 <div className={cn(
                                   'flex items-center gap-1 mt-0.5 px-1 opacity-0 group-hover:opacity-100 transition-opacity',
@@ -1647,6 +1775,26 @@ const InternalChatPage: React.FC = () => {
                                       {msg.reply_count} {msg.reply_count === 1 ? 'reply' : 'replies'}
                                     </button>
                                   ) : null}
+                                  {/* Pin */}
+                                  <button
+                                    onClick={() => {
+                                      if (selectedChannel) pinMessage(selectedChannel.id, msg.id)
+                                        .then(() => queryClient.invalidateQueries({ queryKey: ['pinnedMessages', selectedChannel.id] }))
+                                        .catch(() => {});
+                                    }}
+                                    title="Pin message"
+                                    className="h-5 w-5 rounded flex items-center justify-center text-muted-foreground hover:text-amber-400 hover:bg-muted transition-colors"
+                                  >
+                                    <Pin className="h-3 w-3" />
+                                  </button>
+                                  {/* Forward */}
+                                  <button
+                                    onClick={() => setForwardingMessage(msg)}
+                                    title="Forward message"
+                                    className="h-5 w-5 rounded flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                                  >
+                                    <Forward className="h-3 w-3" />
+                                  </button>
                                   {(!msg.reactions || msg.reactions.length === 0) && (
                                     <MessageReactions
                                       reactions={[]}
@@ -1658,15 +1806,36 @@ const InternalChatPage: React.FC = () => {
                                 </div>
                               </div>
 
-                              {/* Avatar — own */}
-                              {isOwn && (
-                                <Avatar className="h-7 w-7 flex-shrink-0 self-end mb-5">
-                                  <AvatarImage src={user?.profile_picture_url} />
-                                  <AvatarFallback className="text-xs font-semibold bg-primary/10 text-primary">
-                                    {user?.first_name?.[0] || user?.email?.[0]?.toUpperCase() || 'U'}
-                                  </AvatarFallback>
-                                </Avatar>
-                              )}
+                              {/* Tick slot — replaces own avatar in DM; empty spacer in groups */}
+                              {isOwn && (() => {
+                                const isDM = selectedChannel?.channel_type?.toUpperCase() === 'DM';
+                                const readers = readSummary[String(msg.id)] ?? [];
+                                const isLastOwn = messages && messages.filter(m => m.sender_id === user?.id).at(-1)?.id === msg.id;
+                                const isRecent = (Date.now() - new Date(msg.created_at).getTime()) < 48 * 60 * 60 * 1000;
+                                const showTick = isDM && isLastOwn && isRecent;
+                                const isRead = readers.length > 0;
+                                return (
+                                  <div className="h-7 w-7 flex-shrink-0 self-end mb-5 flex items-center justify-center overflow-hidden">
+                                    <AnimatePresence mode="wait" initial={false}>
+                                      {showTick && (
+                                        <motion.span
+                                          key={isRead ? 'double' : 'single'}
+                                          initial={{ opacity: 0, scale: 0.6, y: 4 }}
+                                          animate={{ opacity: 1, scale: 1, y: 0 }}
+                                          exit={{ opacity: 0, scale: 0.6, y: -4 }}
+                                          transition={{ duration: 0.25, ease: 'easeOut' }}
+                                          className={cn(
+                                            'text-sm font-bold leading-none select-none',
+                                            isRead ? 'text-primary' : 'text-muted-foreground/40'
+                                          )}
+                                        >
+                                          {isRead ? '✓✓' : '✓'}
+                                        </motion.span>
+                                      )}
+                                    </AnimatePresence>
+                                  </div>
+                                );
+                              })()}
                             </motion.div>
                           );
                         })}
@@ -1742,6 +1911,22 @@ const InternalChatPage: React.FC = () => {
                         disabled={isUploadingFiles}
                       />
                     </div>
+                    {/* Schedule message */}
+                    {inputValue.trim() && (
+                      <ScheduleMessagePicker
+                        disabled={!inputValue.trim() || isUploadingFiles}
+                        onSchedule={async (date) => {
+                          if (!selectedChannel?.id || !inputValue.trim()) return;
+                          try {
+                            await createScheduledMessage(selectedChannel.id, inputValue.trim(), date);
+                            setInputValue('');
+                            toast({ title: 'Message scheduled', description: `Will send on ${date.toLocaleString()}` });
+                          } catch {
+                            toast({ title: 'Failed to schedule', variant: 'destructive' });
+                          }
+                        }}
+                      />
+                    )}
                     <motion.button
                       whileTap={{ scale: 0.92 }}
                       onClick={handleSendMessage}
@@ -1900,6 +2085,15 @@ const InternalChatPage: React.FC = () => {
           )}
         </div>
 
+        {/* ── PINNED MESSAGES PANEL ────────────────────────────────────────── */}
+        {isPinnedPanelOpen && selectedChannel && (
+          <PinnedMessagesPanel
+            channelId={selectedChannel.id}
+            currentUserId={user?.id}
+            onClose={() => setIsPinnedPanelOpen(false)}
+          />
+        )}
+
         {/* ── THREAD PANEL ─────────────────────────────────────────────────── */}
         <ThreadPanel
           parentMessage={threadParentMessage}
@@ -1977,6 +2171,14 @@ const InternalChatPage: React.FC = () => {
           status={outgoingCall.status}
         />
       )}
+
+      <ForwardMessageModal
+        isOpen={!!forwardingMessage}
+        onClose={() => setForwardingMessage(null)}
+        message={forwardingMessage}
+        channels={channels || []}
+        currentUserId={user?.id}
+      />
 
     </TooltipProvider>
   );

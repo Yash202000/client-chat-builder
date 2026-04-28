@@ -102,7 +102,6 @@ import {
 // Social / Marketing Hub Pages
 import SocialHubPage from "./pages/Social/SocialHubPage";
 import PostComposerPage from "./pages/Social/PostComposerPage";
-import ContentCalendarPage from "./pages/Social/ContentCalendarPage";
 import TrendingPostsPage from "./pages/Social/TrendingPostsPage";
 import SocialAccountsPage from "./pages/Social/SocialAccountsPage";
 import SocialAnalyticsPage from "./pages/Social/SocialAnalyticsPage";
@@ -113,6 +112,7 @@ import SupervisorDashboardPage from "./pages/SupervisorDashboardPage";
 import CallAnalyticsPage from "./pages/CallAnalyticsPage";
 import DialerPage from "./pages/DialerPage";
 import CalendarPage from "./pages/CalendarPage";
+import DrivePage from "./pages/DrivePage";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -223,12 +223,13 @@ const AppRoutes = () => {
           {/* Marketing Hub / Social Routes */}
           <Route path="social" element={<SocialHubPage />} />
           <Route path="social/compose" element={<PostComposerPage />} />
-          <Route path="social/calendar" element={<ContentCalendarPage />} />
+          <Route path="social/calendar" element={<Navigate to="/dashboard/calendar" replace />} />
           <Route path="social/trending" element={<TrendingPostsPage />} />
           <Route path="social/accounts" element={<SocialAccountsPage />} />
           <Route path="social/analytics" element={<SocialAnalyticsPage />} />
           {/* Work Calendar */}
           <Route path="calendar" element={<CalendarPage />} />
+          <Route path="drive" element={<DrivePage />} />
           {/* CMS Routes */}
           <Route path="cms" element={<CMSDashboardPage />} />
           <Route path="cms/types" element={<ContentTypesPage />} />

@@ -70,7 +70,7 @@ const CallingModal: React.FC<CallingModalProps> = ({
       {/* Outgoing call ringtone */}
       <audio
         ref={audioRef}
-        src="https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3"
+        src="/microsoft_teams_default.mp3"
         loop
       />
 

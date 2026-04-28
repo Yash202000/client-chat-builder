@@ -58,7 +58,7 @@ const PAGES: PageItem[] = [
 
   { title: 'Social Hub',         subtitle: 'All social accounts',     route: '/dashboard/social',                icon: Share2,          group: 'marketing', keywords: 'social hub overview accounts marketing' },
   { title: 'Post Composer',      subtitle: 'Create social posts',     route: '/dashboard/social/compose',        icon: PenLine,         group: 'marketing', keywords: 'compose write post social marketing' },
-  { title: 'Content Calendar',   subtitle: 'Schedule posts',          route: '/dashboard/social/calendar',       icon: CalendarDays,    group: 'marketing', keywords: 'calendar schedule social posts marketing' },
+  { title: 'Content Calendar',   subtitle: 'Schedule posts',          route: '/dashboard/calendar',              icon: CalendarDays,    group: 'marketing', keywords: 'calendar schedule social posts marketing' },
   { title: 'LinkedIn Leads',     subtitle: 'B2B prospecting',         route: '/dashboard/crm/linkedin-leads',    icon: Linkedin,        group: 'marketing', keywords: 'linkedin leads b2b prospecting outreach' },
   { title: 'Social Analytics',   subtitle: 'Marketing metrics',       route: '/dashboard/social/analytics',      icon: BarChart3,       group: 'marketing', keywords: 'social analytics marketing metrics' },
   { title: 'Social Accounts',    subtitle: 'Connect accounts',        route: '/dashboard/social/accounts',       icon: Settings2,       group: 'marketing', keywords: 'social accounts connect linkedin twitter' },

@@ -159,7 +159,7 @@ export default function SocialHubPage() {
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
               <CardTitle className="text-base">Recent Posts</CardTitle>
-              <Button variant="ghost" size="sm" className="gap-1 text-xs" onClick={() => navigate('/dashboard/social/calendar')}>
+              <Button variant="ghost" size="sm" className="gap-1 text-xs" onClick={() => navigate('/dashboard/calendar')}>
                 View all <ArrowRight className="h-3 w-3" />
               </Button>
             </div>
@@ -209,7 +209,7 @@ export default function SocialHubPage() {
           {[
             { label: 'Compose New Post', description: 'Write and schedule posts for all platforms', icon: Plus, url: '/dashboard/social/compose', color: 'bg-purple-500' },
             { label: 'Find Trending Topics', description: 'Discover viral content and generate AI posts', icon: TrendingUp, url: '/dashboard/social/trending', color: 'bg-blue-500' },
-            { label: 'Content Calendar', description: 'View and manage your publishing schedule', icon: Calendar, url: '/dashboard/social/calendar', color: 'bg-green-500' },
+            { label: 'Content Calendar', description: 'View and manage your publishing schedule', icon: Calendar, url: '/dashboard/calendar',        color: 'bg-green-500' },
             { label: 'Import LinkedIn Leads', description: 'Turn LinkedIn profiles into CRM leads', icon: Linkedin, url: '/dashboard/crm/linkedin-leads', color: 'bg-blue-600' },
           ].map(action => {
             const Icon = action.icon;

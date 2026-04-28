@@ -337,7 +337,7 @@ const ConversationsPage: React.FC<ConversationsPageProps> = ({ channel }) => {
             setUnreadAssignments(prev => prev + 1);
 
             // Play notification sound (optional)
-            const audio = new Audio('/notification.mp3');
+            const audio = new Audio('/teams_notification.mp3');
             audio.play().catch(() => {
               // Silently fail if audio doesn't play (user interaction required)
             });
