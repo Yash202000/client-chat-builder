@@ -97,3 +97,8 @@ export const joinMeeting = async (eventId: number): Promise<{ token: string; roo
   const r = await axios.post(`${BASE}/events/${eventId}/join-meeting`, {}, { headers: headers() });
   return r.data;
 };
+
+export const inviteToMeeting = async (eventId: number, userIds: number[]): Promise<{ notified: number }> => {
+  const r = await axios.post(`${BASE}/events/${eventId}/invite`, { user_ids: userIds }, { headers: headers() });
+  return r.data;
+};

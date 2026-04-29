@@ -1256,7 +1256,8 @@ html.light .lk-participant-tile .lk-participant-placeholder svg {
   align-items: center;
   gap: 8px;
   height: 28px;
-  padding: 0 8px 0 10px;
+  width: 400px;
+  padding: 0 10px 0 12px;
   border-radius: 6px;
   background: hsl(var(--muted) / 0.4);
   border: 1px solid hsl(var(--border) / 0.6);
@@ -1275,6 +1276,7 @@ html.light .lk-participant-tile .lk-participant-placeholder svg {
 }
 .cmd-palette-trigger-label {
   font-family: 'Inter', system-ui, sans-serif;
+  flex: 1;
 }
 .cmd-palette-trigger-kbd {
   font-family: 'JetBrains Mono', monospace;

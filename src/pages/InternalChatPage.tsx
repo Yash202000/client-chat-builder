@@ -20,8 +20,13 @@ import {
   getScheduledMessages,
   cancelScheduledMessage,
   getChannelReadSummary,
+  shareDriveFile,
 } from '@/services/chatService';
+import { listFolder, searchItems } from '@/services/driveService';
+import type { DriveItem } from '@/services/driveService';
 import { getUsers } from '@/services/userService';
+import { joinMeeting } from '@/services/calendarService';
+import { useVideoCall } from '@/contexts/VideoCallContext';
 import {
   Card,
   CardContent,
@@ -32,7 +37,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Bot, User, Send, Loader2, Video, Plus, Users, MessageSquare, Search, History, PanelLeftClose, Clock, X, Pencil, Check, Phone, PhoneCall, Hash, Voicemail, Pin, Forward, MoreHorizontal, BellOff, UserPlus, UserMinus, VideoOff } from 'lucide-react';
+import { Bot, User, Send, Loader2, Video, Plus, Users, MessageSquare, Search, History, PanelLeftClose, Clock, X, Pencil, Check, Phone, PhoneCall, Hash, Voicemail, Pin, Forward, MoreHorizontal, BellOff, UserPlus, UserMinus, VideoOff, HardDrive, FileIcon, Folder } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -56,7 +61,6 @@ import CallHistory from '@/components/CallHistory';
 import PinnedMessagesPanel from '@/components/PinnedMessagesPanel';
 import ForwardMessageModal from '@/components/ForwardMessageModal';
 import ScheduleMessagePicker from '@/components/ScheduleMessagePicker';
-import UserStatusPicker from '@/components/UserStatusPicker';
 import { convertMentionsToApiFormat } from '@/utils/mentions';
 import { getChannelDisplayName, getChannelAvatar, getChannelDescription } from '@/utils/channelUtils';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
@@ -180,9 +184,74 @@ interface ActiveVideoCall {
   livekit_url: string;
 }
 
+// ── Drive File Picker ──────────────────────────────────────────────────────────
+function DriveFilePicker({ search, onSearchChange, onSelect, onClose }: {
+  search: string;
+  onSearchChange: (v: string) => void;
+  onSelect: (item: DriveItem) => void;
+  onClose: () => void;
+}) {
+  const { data: rootItems = [] } = useQuery({
+    queryKey: ['driveRootFiles'],
+    queryFn: async () => {
+      const res = await listFolder(null);
+      return res.items.filter((i: DriveItem) => !i.is_folder);
+    },
+    staleTime: 30_000,
+  });
+
+  const { data: searchRes } = useQuery({
+    queryKey: ['driveSearch', search],
+    queryFn: () => searchItems(search),
+    enabled: search.length >= 2,
+    staleTime: 15_000,
+  });
+
+  const items: DriveItem[] = search.length >= 2 ? (searchRes?.items ?? []) : rootItems;
+
+  return (
+    <div className="mx-3 mb-1 rounded-xl border border-border bg-popover shadow-lg overflow-hidden">
+      <div className="flex items-center gap-2 px-3 py-2 border-b border-border">
+        <HardDrive className="h-3.5 w-3.5 text-primary flex-shrink-0" />
+        <span className="text-xs font-semibold text-foreground">Attach from Drive</span>
+        <div className="flex-1" />
+        <button onClick={onClose} className="text-muted-foreground hover:text-foreground">
+          <X className="h-3.5 w-3.5" />
+        </button>
+      </div>
+      <div className="px-3 py-2 border-b border-border">
+        <input
+          autoFocus
+          value={search}
+          onChange={(e) => onSearchChange(e.target.value)}
+          placeholder="Search files…"
+          className="w-full text-xs bg-background border border-border rounded-md px-2.5 py-1.5 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+        />
+      </div>
+      <div className="max-h-48 overflow-y-auto">
+        {items.length === 0 ? (
+          <p className="text-xs text-muted-foreground text-center py-6">{search.length >= 2 ? 'No files found' : 'No files in root'}</p>
+        ) : (
+          items.slice(0, 20).map((item) => (
+            <button key={item.id} onClick={() => onSelect(item)}
+              className="w-full flex items-center gap-2.5 px-3 py-2 hover:bg-muted transition-colors text-left">
+              <FileIcon className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+              <div className="flex-1 min-w-0">
+                <p className="text-xs font-medium text-foreground truncate">{item.name}</p>
+                {item.file_size && <p className="text-[10px] text-muted-foreground">{(item.file_size / 1024).toFixed(0)} KB</p>}
+              </div>
+            </button>
+          ))
+        )}
+      </div>
+    </div>
+  );
+}
+
 const InternalChatPage: React.FC = () => {
   const { t, isRTL } = useI18n();
   const { user } = useAuth();
+  const { startInternalCall } = useVideoCall();
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -198,6 +267,9 @@ const InternalChatPage: React.FC = () => {
   const [userPresences, setUserPresences] = useState<UserPresence>({});
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [isUploadingFiles, setIsUploadingFiles] = useState(false);
+  const [driveAttachments, setDriveAttachments] = useState<DriveItem[]>([]);
+  const [isDrivePickerOpen, setIsDrivePickerOpen] = useState(false);
+  const [drivePickerSearch, setDrivePickerSearch] = useState('');
   const [threadParentMessage, setThreadParentMessage] = useState<ChatMessage | null>(null);
   const [replyingTo, setReplyingTo] = useState<ChatMessage | null>(null);
   const chatInputAreaRef = useRef<HTMLDivElement>(null);
@@ -596,37 +668,25 @@ const InternalChatPage: React.FC = () => {
   });
 
   // Check for active video call when channel is selected (no polling, only on mount/channel change)
-  const { data: activeCallExists } = useQuery<boolean, Error>({
+  type ActiveCallInfo = { room_name: string; livekit_url: string; source: 'channel' | 'calendar'; event_id?: number } | null;
+  const { data: activeCallInfo } = useQuery<ActiveCallInfo, Error>({
     queryKey: ['activeVideoCall', selectedChannel?.id],
     queryFn: async () => {
-      console.log('[Active Call Query] Fetching active call status for channel:', selectedChannel?.id);
       try {
         const token = localStorage.getItem('accessToken');
         const response = await axios.get(
           `${API_BASE_URL}/api/v1/video-calls/channels/${selectedChannel!.id}/active`,
           { headers: { Authorization: `Bearer ${token}` } }
         );
-        console.log('[Active Call Query] Active call found:', response.data);
-        // If no error, active call exists
-        return true;
+        return response.data as ActiveCallInfo;
       } catch (error: any) {
-        if (error.response?.status === 404) {
-          console.log('[Active Call Query] No active call (404) - returning false');
-          // No active call
-          return false;
-        }
-        console.error('[Active Call Query] Error checking active call:', error);
+        if (error.response?.status === 404) return null;
         throw error;
       }
     },
     enabled: !!selectedChannel?.id,
-    // No refetchInterval - rely on WebSocket events to invalidate this query
   });
-
-  // Debug: Log activeCallExists value
-  useEffect(() => {
-    console.log('[Active Call State] activeCallExists changed to:', activeCallExists);
-  }, [activeCallExists]);
+  const activeCallExists = !!activeCallInfo;
 
   // Fetch read receipts for selected channel
   const { data: readSummary = {} } = useQuery<Record<string, { id: number; first_name?: string; last_name?: string; email: string; profile_picture_url?: string }[]>>({
@@ -856,7 +916,7 @@ const InternalChatPage: React.FC = () => {
 
   const handleSendMessage = async () => {
     if (!selectedChannel?.id) return;
-    if (!inputValue.trim() && selectedFiles.length === 0) return;
+    if (!inputValue.trim() && selectedFiles.length === 0 && driveAttachments.length === 0) return;
 
     let messageContent = inputValue.trim() || '📎 File attachment';
 
@@ -871,25 +931,31 @@ const InternalChatPage: React.FC = () => {
         ? await createMessageReply(replyingTo.id, messageContent, selectedChannel.id)
         : await createChannelMessage(selectedChannel.id, messageContent);
 
-      // If there are files, upload them and attach to the message
+      // Upload regular file attachments
       if (selectedFiles.length > 0) {
         setIsUploadingFiles(true);
-
         for (const file of selectedFiles) {
           try {
             await uploadFile(file, newMessage.id, selectedChannel.id);
           } catch (error) {
             console.error('Failed to upload file:', error);
-            toast({
-              title: 'Upload failed',
-              description: `Failed to upload ${file.name}`,
-              variant: 'destructive',
-            });
+            toast({ title: 'Upload failed', description: `Failed to upload ${file.name}`, variant: 'destructive' });
           }
         }
-
         setIsUploadingFiles(false);
         setSelectedFiles([]);
+      }
+
+      // Share Drive file attachments (each creates its own message)
+      if (driveAttachments.length > 0) {
+        for (const item of driveAttachments) {
+          try {
+            await shareDriveFile(selectedChannel.id, item.id, '');
+          } catch (error) {
+            console.error('Failed to share Drive file:', error);
+          }
+        }
+        setDriveAttachments([]);
       }
 
       // Clear input and reply context, refresh messages
@@ -991,14 +1057,26 @@ const InternalChatPage: React.FC = () => {
     createChannelMutation.mutate({ name, description });
   };
 
-  const handleVideoCallAction = () => {
+  const handleVideoCallAction = async () => {
     if (!selectedChannel?.id) return;
 
-    if (activeCallExists) {
-      // Join existing call
+    if (activeCallInfo?.source === 'calendar' && activeCallInfo.event_id) {
+      // Calendar meeting already running — join it via the calendar flow
+      try {
+        const result = await joinMeeting(activeCallInfo.event_id);
+        startInternalCall({
+          roomName: result.room_name,
+          livekitToken: result.token,
+          livekitUrl: result.livekit_url,
+          channelId: result.channel_id,
+          eventId: activeCallInfo.event_id,
+        });
+      } catch { /* silently fail */ }
+    } else if (activeCallInfo?.source === 'channel') {
+      // Direct channel call already running — join it
       joinVideoCallMutation.mutate(selectedChannel.id);
     } else {
-      // Initiate new call
+      // No active call — start a new channel call
       initiateVideoCallMutation.mutate(selectedChannel.id);
     }
   };
@@ -1386,22 +1464,6 @@ const InternalChatPage: React.FC = () => {
             </div>
           </ScrollArea>
 
-          {/* User status footer */}
-          {!channelSidebarCollapsed && (
-            <div className="flex-shrink-0 border-t border-border px-2 py-2">
-              <UserStatusPicker
-                user={{
-                  ...user,
-                  presence_status: userStatus ?? user?.presence_status,
-                  status_message: userStatusMessage ?? user?.status_message,
-                }}
-                onStatusChange={(status, msg) => {
-                  setUserStatus(status);
-                  setUserStatusMessage(msg);
-                }}
-              />
-            </div>
-          )}
         </div>
 
         {/* ── MAIN CHAT AREA ────────────────────────────────────────────────── */}
@@ -1611,7 +1673,18 @@ const InternalChatPage: React.FC = () => {
                         animate="visible"
                         className="space-y-0.5"
                       >
-                        {messages?.map((msg) => {
+                        {messages?.map((msg, msgIdx) => {
+                          const prevMsg = msgIdx > 0 ? messages[msgIdx - 1] : null;
+                          const isSameSender = !!(
+                            prevMsg &&
+                            !prevMsg.is_activity &&
+                            !(prevMsg as any).extra_data?.is_activity &&
+                            !(prevMsg as any).extra_data?.is_system &&
+                            prevMsg.sender_id === msg.sender_id &&
+                            !msg.parent_message_id &&
+                            (new Date(msg.created_at).getTime() - new Date(prevMsg.created_at).getTime()) < 5 * 60 * 1000
+                          );
+
                           if (msg.is_activity || (msg as any).extra_data?.is_activity) {
                             const c = msg.content.toLowerCase();
                             const Icon = c.includes('joined') ? UserPlus
@@ -1645,76 +1718,144 @@ const InternalChatPage: React.FC = () => {
                               key={msg.id}
                               variants={messageVariants}
                               className={cn(
-                                'group flex w-full items-end gap-2.5 py-0.5',
+                                'group flex w-full items-end gap-2.5',
+                                isSameSender ? 'py-0' : 'py-0.5',
                                 isOwn ? 'justify-end' : 'justify-start'
                               )}
                             >
                               {/* Avatar — other */}
                               {!isOwn && (
-                                <Avatar className="h-7 w-7 flex-shrink-0 self-end mb-5">
-                                  <AvatarImage src={msg.sender?.profile_picture_url} />
-                                  <AvatarFallback className="text-xs font-semibold bg-muted text-muted-foreground">
-                                    {msg.sender?.first_name?.[0] || 'U'}
-                                  </AvatarFallback>
-                                </Avatar>
+                                isSameSender
+                                  ? <div className="h-7 w-7 flex-shrink-0" />
+                                  : (
+                                    <Avatar className="h-7 w-7 flex-shrink-0 self-end">
+                                      <AvatarImage src={msg.sender?.profile_picture_url} />
+                                      <AvatarFallback className="text-xs font-semibold bg-muted text-muted-foreground">
+                                        {msg.sender?.first_name?.[0] || 'U'}
+                                      </AvatarFallback>
+                                    </Avatar>
+                                  )
                               )}
 
                               <div className={cn('flex flex-col max-w-[58%]', isOwn ? 'items-end' : 'items-start')}>
-                                {!isOwn && (
-                                  <span className="text-[11px] font-semibold text-muted-foreground mb-0.5 px-1">
-                                    {msg.sender?.first_name || msg.sender?.email}
-                                  </span>
+                                {/* Name + time above bubble — hidden for grouped messages */}
+                                {!isSameSender && (
+                                  <div className={cn('flex items-center gap-1.5 mb-0.5 px-1', isOwn ? 'flex-row-reverse' : '')}>
+                                    {!isOwn && (
+                                      <span className="text-[11px] font-semibold text-muted-foreground">
+                                        {msg.sender?.first_name || msg.sender?.email}
+                                      </span>
+                                    )}
+                                    <span className="text-[10px] text-muted-foreground/70">
+                                      {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                    </span>
+                                  </div>
                                 )}
 
-                                {/* Bubble */}
-                                <div className={cn(
-                                  'px-3.5 py-2 text-sm leading-relaxed',
-                                  isOwn
-                                    ? `bg-primary text-primary-foreground rounded-2xl ${isRTL ? 'rounded-bl-md' : 'rounded-br-md'}`
-                                    : `bg-card border border-border text-foreground rounded-2xl ${isRTL ? 'rounded-br-md' : 'rounded-bl-md'}`
-                                )}>
+                                {/* Bubble wrapper — relative so toolbar can float above */}
+                                <div className="relative">
+                                  {/* Hover toolbar — floats above the bubble (Teams style) */}
                                   <div className={cn(
-                                    'prose prose-sm max-w-full prose-p:my-0.5 prose-p:leading-relaxed',
-                                    isOwn ? 'prose-invert' : 'dark:prose-invert'
+                                    'absolute -top-8 z-20 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none group-hover:pointer-events-auto',
+                                    'flex items-center gap-0.5 bg-card border border-border shadow-lg rounded-full px-1.5 py-0.5',
+                                    isOwn ? 'right-0' : 'left-0'
                                   )}>
-                                    <MentionText
-                                      content={msg.content}
-                                      users={channelMembers?.reduce((acc, member) => {
-                                        if (member && member.id) {
-                                          acc[member.id] = {
-                                            id: member.id,
-                                            first_name: member.first_name,
-                                            last_name: member.last_name,
-                                            email: member.email
-                                          };
-                                        }
-                                        return acc;
-                                      }, {} as any) || {}}
-                                      className={isOwn ? 'text-primary-foreground' : ''}
+                                    <button
+                                      onClick={() => {
+                                        setReplyingTo(msg);
+                                        setTimeout(() => chatInputAreaRef.current?.querySelector('input')?.focus(), 50);
+                                      }}
+                                      title="Reply"
+                                      className="h-6 w-6 rounded-full flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                                    >
+                                      <MessageSquare className="h-3.5 w-3.5" />
+                                    </button>
+                                    <button
+                                      onClick={() => {
+                                        if (selectedChannel) pinMessage(selectedChannel.id, msg.id)
+                                          .then(() => queryClient.invalidateQueries({ queryKey: ['pinnedMessages', selectedChannel.id] }))
+                                          .catch(() => {});
+                                      }}
+                                      title="Pin"
+                                      className="h-6 w-6 rounded-full flex items-center justify-center text-muted-foreground hover:text-amber-400 hover:bg-muted transition-colors"
+                                    >
+                                      <Pin className="h-3.5 w-3.5" />
+                                    </button>
+                                    <button
+                                      onClick={() => setForwardingMessage(msg)}
+                                      title="Forward"
+                                      className="h-6 w-6 rounded-full flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                                    >
+                                      <Forward className="h-3.5 w-3.5" />
+                                    </button>
+                                    <MessageReactions
+                                      reactions={[]}
+                                      currentUserId={user?.id}
+                                      onAddReaction={(emoji) => handleAddReaction(msg.id, emoji)}
+                                      onRemoveReaction={(emoji) => handleRemoveReaction(msg.id, emoji)}
                                     />
                                   </div>
-                                  {msg.attachments && msg.attachments.length > 0 && (
-                                    <div className="mt-2 space-y-1.5">
-                                      {msg.attachments.map((attachment) => (
-                                        <FileAttachment key={attachment.id} attachment={attachment} onDownload={handleDownloadFile} />
-                                      ))}
-                                    </div>
-                                  )}
-                                  {msg.reactions && msg.reactions.length > 0 && (
-                                    <div className="mt-1.5">
-                                      <MessageReactions
-                                        reactions={msg.reactions}
-                                        currentUserId={user?.id}
-                                        onAddReaction={(emoji) => handleAddReaction(msg.id, emoji)}
-                                        onRemoveReaction={(emoji) => handleRemoveReaction(msg.id, emoji)}
-                                        users={messages?.reduce((acc, m) => {
-                                          acc[m.sender_id] = { first_name: m.sender.first_name, email: m.sender.email };
+
+                                  {/* Bubble */}
+                                  <div className={cn(
+                                    'px-3.5 py-2 text-sm leading-relaxed',
+                                    isOwn
+                                      ? `bg-primary text-primary-foreground rounded-2xl ${isRTL ? 'rounded-bl-md' : 'rounded-br-md'}`
+                                      : `bg-card border border-border text-foreground rounded-2xl ${isRTL ? 'rounded-br-md' : 'rounded-bl-md'}`
+                                  )}>
+                                    <div className={cn(
+                                      'prose prose-sm max-w-full prose-p:my-0.5 prose-p:leading-relaxed',
+                                      isOwn ? 'prose-invert' : 'dark:prose-invert'
+                                    )}>
+                                      <MentionText
+                                        content={msg.content}
+                                        users={channelMembers?.reduce((acc, member) => {
+                                          if (member && member.id) {
+                                            acc[member.id] = {
+                                              id: member.id,
+                                              first_name: member.first_name,
+                                              last_name: member.last_name,
+                                              email: member.email
+                                            };
+                                          }
                                           return acc;
-                                        }, {} as any)}
+                                        }, {} as any) || {}}
+                                        className={isOwn ? 'text-primary-foreground' : ''}
                                       />
                                     </div>
-                                  )}
+                                    {msg.attachments && msg.attachments.length > 0 && (
+                                      <div className="mt-2 space-y-1.5">
+                                        {msg.attachments.map((attachment) => (
+                                          <FileAttachment key={attachment.id} attachment={attachment} onDownload={handleDownloadFile} />
+                                        ))}
+                                      </div>
+                                    )}
+                                    {msg.reactions && msg.reactions.length > 0 && (
+                                      <div className="mt-1.5">
+                                        <MessageReactions
+                                          reactions={msg.reactions}
+                                          currentUserId={user?.id}
+                                          onAddReaction={(emoji) => handleAddReaction(msg.id, emoji)}
+                                          onRemoveReaction={(emoji) => handleRemoveReaction(msg.id, emoji)}
+                                          users={messages?.reduce((acc, m) => {
+                                            acc[m.sender_id] = { first_name: m.sender.first_name, email: m.sender.email };
+                                            return acc;
+                                          }, {} as any)}
+                                        />
+                                      </div>
+                                    )}
+                                  </div>
                                 </div>
+
+                                {/* Thread reply count — below bubble */}
+                                {msg.reply_count && msg.reply_count > 0 ? (
+                                  <button
+                                    onClick={() => handleOpenThread(msg)}
+                                    className="mt-0.5 px-1.5 h-5 rounded text-[10px] gap-1 flex items-center text-primary hover:bg-primary/10 transition-colors"
+                                  >
+                                    {msg.reply_count} {msg.reply_count === 1 ? 'reply' : 'replies'}
+                                  </button>
+                                ) : null}
 
                                 {/* Group read receipts — reader avatars below last own message */}
                                 {isOwn && selectedChannel?.channel_type?.toUpperCase() !== 'DM' && (() => {
@@ -1748,90 +1889,31 @@ const InternalChatPage: React.FC = () => {
                                     </div>
                                   );
                                 })()}
-
-                                {/* Actions + timestamp — visible on hover */}
-                                <div className={cn(
-                                  'flex items-center gap-1 mt-0.5 px-1 opacity-0 group-hover:opacity-100 transition-opacity',
-                                  isOwn ? 'flex-row-reverse' : ''
-                                )}>
-                                  <span className="text-[10px] text-muted-foreground">
-                                    {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                                  </span>
-                                  <button
-                                    onClick={() => {
-                                      setReplyingTo(msg);
-                                      setTimeout(() => chatInputAreaRef.current?.querySelector('input')?.focus(), 50);
-                                    }}
-                                    className="h-5 px-1.5 rounded text-[10px] gap-1 flex items-center text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
-                                  >
-                                    <MessageSquare className="h-3 w-3" />
-                                    Reply
-                                  </button>
-                                  {msg.reply_count && msg.reply_count > 0 ? (
-                                    <button
-                                      onClick={() => handleOpenThread(msg)}
-                                      className="h-5 px-1.5 rounded text-[10px] gap-1 flex items-center text-primary hover:bg-primary/10 transition-colors"
-                                    >
-                                      {msg.reply_count} {msg.reply_count === 1 ? 'reply' : 'replies'}
-                                    </button>
-                                  ) : null}
-                                  {/* Pin */}
-                                  <button
-                                    onClick={() => {
-                                      if (selectedChannel) pinMessage(selectedChannel.id, msg.id)
-                                        .then(() => queryClient.invalidateQueries({ queryKey: ['pinnedMessages', selectedChannel.id] }))
-                                        .catch(() => {});
-                                    }}
-                                    title="Pin message"
-                                    className="h-5 w-5 rounded flex items-center justify-center text-muted-foreground hover:text-amber-400 hover:bg-muted transition-colors"
-                                  >
-                                    <Pin className="h-3 w-3" />
-                                  </button>
-                                  {/* Forward */}
-                                  <button
-                                    onClick={() => setForwardingMessage(msg)}
-                                    title="Forward message"
-                                    className="h-5 w-5 rounded flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
-                                  >
-                                    <Forward className="h-3 w-3" />
-                                  </button>
-                                  {(!msg.reactions || msg.reactions.length === 0) && (
-                                    <MessageReactions
-                                      reactions={[]}
-                                      currentUserId={user?.id}
-                                      onAddReaction={(emoji) => handleAddReaction(msg.id, emoji)}
-                                      onRemoveReaction={(emoji) => handleRemoveReaction(msg.id, emoji)}
-                                    />
-                                  )}
-                                </div>
                               </div>
 
-                              {/* Tick slot — replaces own avatar in DM; empty spacer in groups */}
+                              {/* Tick slot — shows on ALL own messages in DMs (WhatsApp-style) */}
                               {isOwn && (() => {
                                 const isDM = selectedChannel?.channel_type?.toUpperCase() === 'DM';
+                                if (!isDM) return <div className="h-7 w-7 flex-shrink-0" />;
                                 const readers = readSummary[String(msg.id)] ?? [];
-                                const isLastOwn = messages && messages.filter(m => m.sender_id === user?.id).at(-1)?.id === msg.id;
-                                const isRecent = (Date.now() - new Date(msg.created_at).getTime()) < 48 * 60 * 60 * 1000;
-                                const showTick = isDM && isLastOwn && isRecent;
                                 const isRead = readers.length > 0;
                                 return (
-                                  <div className="h-7 w-7 flex-shrink-0 self-end mb-5 flex items-center justify-center overflow-hidden">
+                                  <div className="h-7 w-7 flex-shrink-0 self-end flex items-center justify-center">
                                     <AnimatePresence mode="wait" initial={false}>
-                                      {showTick && (
-                                        <motion.span
-                                          key={isRead ? 'double' : 'single'}
-                                          initial={{ opacity: 0, scale: 0.6, y: 4 }}
-                                          animate={{ opacity: 1, scale: 1, y: 0 }}
-                                          exit={{ opacity: 0, scale: 0.6, y: -4 }}
-                                          transition={{ duration: 0.25, ease: 'easeOut' }}
-                                          className={cn(
-                                            'text-sm font-bold leading-none select-none',
-                                            isRead ? 'text-primary' : 'text-muted-foreground/40'
-                                          )}
-                                        >
-                                          {isRead ? '✓✓' : '✓'}
-                                        </motion.span>
-                                      )}
+                                      <motion.span
+                                        key={isRead ? 'double' : 'single'}
+                                        initial={{ opacity: 0, scale: 0.6 }}
+                                        animate={{ opacity: 1, scale: 1 }}
+                                        exit={{ opacity: 0, scale: 0.6 }}
+                                        transition={{ duration: 0.2 }}
+                                        title={isRead ? 'Seen' : 'Sent'}
+                                        className={cn(
+                                          'text-sm font-bold leading-none select-none',
+                                          isRead ? 'text-primary' : 'text-muted-foreground/40'
+                                        )}
+                                      >
+                                        {isRead ? '✓✓' : '✓'}
+                                      </motion.span>
                                     </AnimatePresence>
                                   </div>
                                 );
@@ -1892,6 +1974,36 @@ const InternalChatPage: React.FC = () => {
                     </div>
                   )}
 
+                  {/* Drive file attachments preview */}
+                  {driveAttachments.length > 0 && (
+                    <div className="px-3 pt-2 flex flex-wrap gap-2">
+                      {driveAttachments.map((item) => (
+                        <div key={item.id} className="flex items-center gap-1.5 bg-muted rounded-lg px-2.5 py-1.5 text-xs">
+                          <HardDrive className="h-3 w-3 text-primary flex-shrink-0" />
+                          <span className="text-foreground max-w-[140px] truncate">{item.name}</span>
+                          <button onClick={() => setDriveAttachments(p => p.filter(d => d.id !== item.id))}
+                            className="text-muted-foreground hover:text-foreground ml-1">
+                            <X className="h-3 w-3" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Drive file picker dropdown */}
+                  {isDrivePickerOpen && (
+                    <DriveFilePicker
+                      search={drivePickerSearch}
+                      onSearchChange={setDrivePickerSearch}
+                      onSelect={(item) => {
+                        setDriveAttachments(p => p.some(d => d.id === item.id) ? p : [...p, item]);
+                        setIsDrivePickerOpen(false);
+                        setDrivePickerSearch('');
+                      }}
+                      onClose={() => { setIsDrivePickerOpen(false); setDrivePickerSearch(''); }}
+                    />
+                  )}
+
                   {/* Input row */}
                   <div className={cn('flex items-center gap-2 px-3 py-2', isRTL ? 'flex-row-reverse' : '')}>
                     <FileUpload
@@ -1901,6 +2013,17 @@ const InternalChatPage: React.FC = () => {
                       isUploading={isUploadingFiles}
                       multiple={true}
                     />
+                    {/* Attach from Drive */}
+                    <button
+                      onClick={() => setIsDrivePickerOpen(p => !p)}
+                      title="Attach from Drive"
+                      className={cn(
+                        'h-7 w-7 flex items-center justify-center rounded-md transition-colors flex-shrink-0',
+                        isDrivePickerOpen ? 'text-primary bg-primary/10' : 'text-muted-foreground hover:text-foreground hover:bg-muted'
+                      )}
+                    >
+                      <HardDrive className="h-4 w-4" />
+                    </button>
                     <div className="flex-1" ref={chatInputAreaRef}>
                       <SlashCommandInput
                         placeholder={t('teamChat.typeMessage')}
@@ -1930,10 +2053,10 @@ const InternalChatPage: React.FC = () => {
                     <motion.button
                       whileTap={{ scale: 0.92 }}
                       onClick={handleSendMessage}
-                      disabled={(!inputValue.trim() && selectedFiles.length === 0) || isUploadingFiles}
+                      disabled={(!inputValue.trim() && selectedFiles.length === 0 && driveAttachments.length === 0) || isUploadingFiles}
                       className={cn(
                         'h-7 w-7 rounded-md flex items-center justify-center flex-shrink-0 transition-all',
-                        (inputValue.trim() || selectedFiles.length > 0)
+                        (inputValue.trim() || selectedFiles.length > 0 || driveAttachments.length > 0)
                           ? 'bg-primary text-primary-foreground hover:bg-primary/90'
                           : 'bg-muted text-muted-foreground/40 cursor-not-allowed'
                       )}
@@ -1975,7 +2098,13 @@ const InternalChatPage: React.FC = () => {
             isOpen={isSearchModalOpen}
             onClose={() => setIsSearchModalOpen(false)}
             channelId={selectedChannel.id}
-            onMessageClick={(messageId) => { console.log('Navigate to message:', messageId); }}
+            onMessageClick={(messageId, targetChannelId) => {
+              if (targetChannelId && targetChannelId !== selectedChannel.id) {
+                const ch = channels?.find(c => c.id === targetChannelId);
+                if (ch) setSelectedChannel(ch);
+              }
+              setIsSearchModalOpen(false);
+            }}
           />
         )}
         {selectedChannel && (

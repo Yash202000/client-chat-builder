@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useCallback, useRef } from 'react';
+import React, { useState, useMemo, useCallback, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useVideoCall } from '@/contexts/VideoCallContext';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -186,6 +186,25 @@ function CurrentTimeIndicator() {
   );
 }
 
+function WeekCurrentTimeIndicator({ days }: { days: Date[] }) {
+  const now = new Date();
+  const h = getHours(now) + getMinutes(now) / 60;
+  return (
+    <div className="absolute left-0 right-0 z-20 pointer-events-none flex" style={{ top: h * HOUR_HEIGHT }}>
+      {days.map((day) => (
+        isToday(day) ? (
+          <div key={day.toISOString()} className="flex-1 flex items-center">
+            <div className="w-2 h-2 rounded-full bg-primary flex-shrink-0" />
+            <div className="flex-1 h-px bg-primary/70" />
+          </div>
+        ) : (
+          <div key={day.toISOString()} className="flex-1 h-px border-t border-dashed border-muted-foreground/25 self-center" />
+        )
+      ))}
+    </div>
+  );
+}
+
 // ─── Event components ─────────────────────────────────────────────────────────
 
 function EventPill({ event, onClick }: { event: CalEvent; onClick: (e: React.MouseEvent, ev: CalEvent) => void }) {
@@ -322,6 +341,13 @@ function WeekView({ currentDate, events, onEventClick, onDayClick, onSlotDoubleC
   const weekStart = startOfWeek(currentDate);
   const days = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
   const eventsOnDay = useCallback((day: Date) => events.filter((ev) => isSameDay(ev.start, day)), [events]);
+  const scrollRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!scrollRef.current) return;
+    const now = new Date();
+    const nowTop = (getHours(now) + getMinutes(now) / 60) * HOUR_HEIGHT;
+    scrollRef.current.scrollTop = Math.max(0, nowTop - scrollRef.current.clientHeight / 2);
+  }, []);
   return (
     <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
       {/* Fixed day-name header — sits above the scroll area */}
@@ -337,21 +363,24 @@ function WeekView({ currentDate, events, onEventClick, onDayClick, onSlotDoubleC
         </div>
       </div>
       {/* Scrollable body — TimeColumn scrolls together with the event grid */}
-      <div className="flex-1 min-h-0 overflow-auto">
+      <div ref={scrollRef} className="flex-1 min-h-0 overflow-auto">
         <div className="flex">
           <TimeColumn />
-          <div className="flex-1 grid grid-cols-7">
-            {days.map((day) => (
-              <div key={day.toISOString()} className="relative border-r border-border/20">
-                {HOURS.map((h, idx) => (
-                  <div key={h} className="border-b border-border/15 cursor-cell hover:bg-primary/5 transition-colors" style={{ height: HOUR_HEIGHT }}
-                    onDoubleClick={(e) => { const s = Math.round((e.nativeEvent.offsetY / HOUR_HEIGHT) * 60 / 15) * 15; onSlotDoubleClick(setMinutes(setHours(day, 7 + idx), s >= 60 ? 59 : s)); }} />
-                ))}
-                <div className="absolute inset-0 pointer-events-none">
-                  {eventsOnDay(day).map((ev) => <div key={ev.id} className="pointer-events-auto"><TimeEventBlock event={ev} onEventClick={onEventClick} /></div>)}
+          <div className="relative flex-1">
+            <div className="grid grid-cols-7">
+              {days.map((day) => (
+                <div key={day.toISOString()} className="relative border-r border-border/20">
+                  {HOURS.map((h, idx) => (
+                    <div key={h} className="border-b border-border/15 cursor-cell hover:bg-primary/5 transition-colors" style={{ height: HOUR_HEIGHT }}
+                      onDoubleClick={(e) => { const s = Math.round((e.nativeEvent.offsetY / HOUR_HEIGHT) * 60 / 15) * 15; onSlotDoubleClick(setMinutes(setHours(day, h), s >= 60 ? 59 : s)); }} />
+                  ))}
+                  <div className="absolute inset-0 pointer-events-none">
+                    {eventsOnDay(day).map((ev) => <div key={ev.id} className="pointer-events-auto"><TimeEventBlock event={ev} onEventClick={onEventClick} /></div>)}
+                  </div>
                 </div>
-              </div>
-            ))}
+              ))}
+            </div>
+            <WeekCurrentTimeIndicator days={days} />
           </div>
         </div>
       </div>
@@ -365,6 +394,13 @@ function DayView({ currentDate, events, onEventClick, onSlotDoubleClick }: {
   onSlotDoubleClick: (date: Date) => void;
 }) {
   const dayEvents = useMemo(() => events.filter((ev) => isSameDay(ev.start, currentDate)).sort((a, b) => a.start.getTime() - b.start.getTime()), [events, currentDate]);
+  const scrollRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!scrollRef.current) return;
+    const now = new Date();
+    const nowTop = (getHours(now) + getMinutes(now) / 60) * HOUR_HEIGHT;
+    scrollRef.current.scrollTop = Math.max(0, nowTop - scrollRef.current.clientHeight / 2);
+  }, []);
   return (
     <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
       {/* Fixed header */}
@@ -373,13 +409,13 @@ function DayView({ currentDate, events, onEventClick, onSlotDoubleClick }: {
         {isToday(currentDate) && <Badge className="ml-2 text-[10px] bg-primary/20 text-primary border-primary/30">Today</Badge>}
       </div>
       {/* Scrollable body */}
-      <div className="flex-1 min-h-0 overflow-auto">
+      <div ref={scrollRef} className="flex-1 min-h-0 overflow-auto">
         <div className="flex">
           <TimeColumn />
           <div className="relative flex-1">
             {HOURS.map((h, idx) => (
               <div key={h} className="border-b border-border/20 cursor-cell hover:bg-primary/5 transition-colors" style={{ height: HOUR_HEIGHT }}
-                onDoubleClick={(e) => { const s = Math.round((e.nativeEvent.offsetY / HOUR_HEIGHT) * 60 / 15) * 15; onSlotDoubleClick(setMinutes(setHours(currentDate, 7 + idx), s >= 60 ? 59 : s)); }} />
+                onDoubleClick={(e) => { const s = Math.round((e.nativeEvent.offsetY / HOUR_HEIGHT) * 60 / 15) * 15; onSlotDoubleClick(setMinutes(setHours(currentDate, h), s >= 60 ? 59 : s)); }} />
             ))}
             <div className="absolute inset-0 pointer-events-none">
               {dayEvents.map((ev) => <div key={ev.id} className="pointer-events-auto"><TimeEventBlock event={ev} onEventClick={onEventClick} /></div>)}
@@ -974,10 +1010,12 @@ export default function CalendarPage() {
 
   const handleEventClick = (e: React.MouseEvent, ev: CalEvent) => { e.stopPropagation(); setSelectedEvent(ev); setPopoverAnchor({ x: e.clientX, y: e.clientY }); };
   const handleDayClick = (day: Date) => { setDefaultModalDate(day); if (view === 'month') { setCurrentDate(day); setView('day'); } };
-  const handleNewEvent = () => { setEditingEvent(null); setDefaultModalDate(setMinutes(setHours(currentDate, 9), 0)); setModalOpen(true); };
+  const handleNewEvent = () => { setEditingEvent(null); setDefaultModalDate(new Date()); setModalOpen(true); };
   const handleSlotDoubleClick = (date: Date) => { setEditingEvent(null); setDefaultModalDate(date); setModalOpen(true); };
   const handleEditEvent = (ev: CalEvent) => { setEditingEvent(ev); setModalOpen(true); };
-  const handleDeleteEvent = (id: string) => { deleteMutation.mutate(Number(id)); setSelectedEvent(null); };
+  const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
+  const handleDeleteEvent = (id: string) => { setDeleteConfirmId(id); setPopoverAnchor(null); };
+  const confirmDelete = () => { if (deleteConfirmId) { deleteMutation.mutate(Number(deleteConfirmId)); setSelectedEvent(null); } setDeleteConfirmId(null); };
 
   const handleSaveEvent = (ev: CalEvent) => {
     const dto: CreateEventDto = {
@@ -1007,6 +1045,7 @@ export default function CalendarPage() {
         livekitToken: result.token,
         livekitUrl: result.livekit_url,
         channelId: result.channel_id,
+        eventId: Number(ev.id),
       });
     } catch (err) {
       console.error('Failed to join meeting', err);
@@ -1195,6 +1234,22 @@ export default function CalendarPage() {
 
       <EventDetailPopover event={selectedEvent} anchor={popoverAnchor} onClose={() => { setSelectedEvent(null); setPopoverAnchor(null); }} onEdit={handleEditEvent} onDelete={handleDeleteEvent} onJoin={handleJoinMeeting} />
       <CreateEventModal open={modalOpen} onClose={() => { setModalOpen(false); setEditingEvent(null); }} onSave={handleSaveEvent} editing={editingEvent} defaultStart={defaultModalDate} />
+
+      {/* Delete confirmation */}
+      <Dialog open={!!deleteConfirmId} onOpenChange={(o) => !o && setDeleteConfirmId(null)}>
+        <DialogContent className="sm:max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Delete event?</DialogTitle>
+          </DialogHeader>
+          <p className="text-sm text-muted-foreground">This event will be permanently deleted and cannot be recovered.</p>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDeleteConfirmId(null)}>Cancel</Button>
+            <Button variant="destructive" onClick={confirmDelete} disabled={deleteMutation.isPending}>
+              {deleteMutation.isPending ? 'Deleting…' : 'Delete'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

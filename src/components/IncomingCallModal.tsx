@@ -1,9 +1,9 @@
-import React, { useEffect, useRef, useState } from 'react';
-import { Dialog, DialogContent } from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
+import React, { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Phone, PhoneOff, Video } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { useTheme } from '@/hooks/useTheme';
+import { startRingtone, stopRingtone } from '@/utils/ringtone';
 
 interface IncomingCallModalProps {
   isOpen: boolean;
@@ -24,135 +24,96 @@ const IncomingCallModal: React.FC<IncomingCallModalProps> = ({
   onReject,
   callType = 'video',
 }) => {
-  const audioRef = useRef<HTMLAudioElement>(null);
-  const [isRinging, setIsRinging] = useState(false);
+  const { theme } = useTheme();
+  const [secondsLeft, setSecondsLeft] = useState(30);
 
   useEffect(() => {
-    if (isOpen) {
-      setIsRinging(true);
-      // Play ringing sound
-      if (audioRef.current) {
-        audioRef.current.loop = true;
-        audioRef.current.play().catch(err => {
-          console.log('Could not play ringtone:', err);
-        });
-      }
+    if (!isOpen) return;
+    setSecondsLeft(30);
+    startRingtone();
 
-      // Auto-reject after 30 seconds
-      const timeout = setTimeout(() => {
-        handleReject();
-      }, 30000);
+    const countdown = setInterval(() => {
+      setSecondsLeft((s) => {
+        if (s <= 1) { clearInterval(countdown); handleReject(); return 0; }
+        return s - 1;
+      });
+    }, 1000);
 
-      return () => {
-        clearTimeout(timeout);
-        if (audioRef.current) {
-          audioRef.current.pause();
-          audioRef.current.currentTime = 0;
-        }
-        setIsRinging(false);
-      };
-    }
+    return () => {
+      clearInterval(countdown);
+      stopRingtone();
+    };
   }, [isOpen]);
 
-  const handleAccept = () => {
-    if (audioRef.current) {
-      audioRef.current.pause();
-      audioRef.current.currentTime = 0;
-    }
-    setIsRinging(false);
-    onAccept();
-  };
+  const handleAccept = () => { stopRingtone(); onAccept(); };
+  const handleReject = () => { stopRingtone(); onReject(); };
 
-  const handleReject = () => {
-    if (audioRef.current) {
-      audioRef.current.pause();
-      audioRef.current.currentTime = 0;
-    }
-    setIsRinging(false);
-    onReject();
-  };
+  if (!isOpen) return null;
 
-  return (
-    <>
-      {/* Ring tone audio - Incoming call ringtone */}
-      <audio
-        ref={audioRef}
-        src="/microsoft_teams_default.mp3"
-      />
+  return createPortal(
+    <div className={`fixed bottom-6 right-6 z-[9999] w-[380px] animate-in slide-in-from-bottom-4 fade-in duration-200 ${theme}`}>
+      <div className="rounded-2xl overflow-hidden shadow-2xl border border-border bg-card">
 
-      <Dialog open={isOpen} onOpenChange={handleReject}>
-        <DialogContent className="sm:max-w-md" hideClose>
-          <div className="flex flex-col items-center justify-center py-8">
-            {/* Pulsing Avatar */}
-            <div className="relative mb-6">
-              <div
-                className={cn(
-                  "absolute inset-0 rounded-full bg-green-400",
-                  isRinging && "animate-ping opacity-75"
-                )}
-              />
-              <Avatar className="h-32 w-32 relative border-4 border-white shadow-xl">
-                {callerAvatar && <AvatarImage src={callerAvatar} />}
-                <AvatarFallback className="text-4xl bg-gradient-to-br from-green-400 to-emerald-500 text-white">
+        {/* Accent bar */}
+        <div className="h-1 bg-gradient-to-r from-violet-500 via-blue-400 to-cyan-400" />
+
+        <div className="p-6">
+          {/* Avatar + info row */}
+          <div className="flex items-center gap-5 mb-6">
+            <div className="relative flex-shrink-0">
+              <span className="absolute inset-0 rounded-full bg-green-400/25 animate-ping" />
+              <span className="absolute inset-[-7px] rounded-full border-2 border-green-400/30 animate-pulse" />
+              <Avatar className="h-16 w-16 relative ring-2 ring-green-400/50 shadow-lg">
+                <AvatarImage src={callerAvatar} />
+                <AvatarFallback className="text-2xl font-bold bg-gradient-to-br from-violet-600 to-blue-600 text-white">
                   {callerName[0]?.toUpperCase()}
                 </AvatarFallback>
               </Avatar>
             </div>
 
-            {/* Caller Info */}
-            <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-2">
-              {callerName}
-            </h2>
-            <p className="text-slate-600 dark:text-slate-400 mb-2">
-              Incoming {callType} call
-            </p>
-            {channelName && (
-              <p className="text-sm text-slate-500 dark:text-slate-500">
-                in {channelName}
+            <div className="flex-1 min-w-0">
+              <p className="text-[11px] font-semibold text-primary/80 uppercase tracking-widest mb-1">
+                Incoming {callType === 'video' ? 'video' : 'audio'} call
               </p>
-            )}
-
-            {/* Call Actions */}
-            <div className="flex items-center gap-8 mt-8">
-              {/* Reject Button */}
-              <button
-                onClick={handleReject}
-                className="flex flex-col items-center gap-2 group"
-              >
-                <div className="w-16 h-16 rounded-full bg-red-500 hover:bg-red-600 flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
-                  <PhoneOff className="h-8 w-8 text-white" />
-                </div>
-                <span className="text-sm text-slate-600 dark:text-slate-400">
-                  Decline
-                </span>
-              </button>
-
-              {/* Accept Button */}
-              <button
-                onClick={handleAccept}
-                className="flex flex-col items-center gap-2 group"
-              >
-                <div className="w-16 h-16 rounded-full bg-green-500 hover:bg-green-600 flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform animate-pulse">
-                  {callType === 'video' ? (
-                    <Video className="h-8 w-8 text-white" />
-                  ) : (
-                    <Phone className="h-8 w-8 text-white" />
-                  )}
-                </div>
-                <span className="text-sm text-slate-600 dark:text-slate-400">
-                  Accept
-                </span>
-              </button>
+              <p className="text-foreground font-bold text-lg truncate leading-tight">{callerName}</p>
+              {channelName && (
+                <p className="text-muted-foreground text-xs truncate mt-0.5">{channelName}</p>
+              )}
             </div>
 
-            {/* Auto-reject warning */}
-            <p className="text-xs text-slate-400 dark:text-slate-500 mt-6">
-              Call will automatically end in 30 seconds
-            </p>
+            {/* Countdown ring */}
+            <div className="relative flex-shrink-0 w-11 h-11">
+              <svg className="absolute inset-0 -rotate-90" viewBox="0 0 44 44">
+                <circle cx="22" cy="22" r="18" fill="none" stroke="hsl(var(--muted))" strokeWidth="3" />
+                <circle cx="22" cy="22" r="18" fill="none" stroke="hsl(var(--primary))" strokeWidth="3"
+                  strokeDasharray={`${(secondsLeft / 30) * 113} 113`}
+                  strokeLinecap="round" style={{ transition: 'stroke-dasharray 1s linear' }} />
+              </svg>
+              <span className="absolute inset-0 flex items-center justify-center text-xs font-mono font-semibold text-foreground">
+                {secondsLeft}
+              </span>
+            </div>
           </div>
-        </DialogContent>
-      </Dialog>
-    </>
+
+          {/* Action buttons */}
+          <div className="flex gap-3">
+            <button onClick={handleReject}
+              className="flex-1 flex items-center justify-center gap-2 py-3.5 rounded-xl bg-red-500/10 hover:bg-red-500 border border-red-500/30 hover:border-red-500 text-red-500 hover:text-white text-sm font-semibold transition-all duration-150 group">
+              <PhoneOff className="w-5 h-5 group-hover:scale-110 transition-transform" />
+              Decline
+            </button>
+            <button onClick={handleAccept}
+              className="flex-1 flex items-center justify-center gap-2 py-3.5 rounded-xl bg-green-500 hover:bg-green-400 border border-green-500 text-white text-sm font-semibold transition-all duration-150 shadow-lg shadow-green-500/25 group">
+              {callType === 'video'
+                ? <Video className="w-5 h-5 group-hover:scale-110 transition-transform" />
+                : <Phone className="w-5 h-5 group-hover:scale-110 transition-transform" />}
+              Accept
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>,
+    document.body
   );
 };
 

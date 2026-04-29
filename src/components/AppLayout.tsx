@@ -2,7 +2,7 @@
 import { useAuth } from "@/hooks/useAuth";
 import { useTheme } from "@/hooks/useTheme";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { CircleUser, Moon, Sun, PanelLeftClose, PanelLeftOpen, ChevronDown, ChevronRight } from "lucide-react";
+import { CircleUser, Moon, Sun, PanelLeftClose, PanelLeftOpen, ChevronDown, ChevronRight, MoreHorizontal } from "lucide-react";
 import { useState, useEffect } from "react";
 import { Outlet, NavLink, useLocation } from "react-router-dom";
 import { useToast } from "@/components/ui/use-toast";
@@ -76,6 +76,7 @@ import { useSystemConfig } from "@/hooks/useSystemConfig";
 import { CommandPalette, CommandPaletteTrigger } from "@/components/CommandPalette";
 import { GreetingBar } from "@/components/GreetingBar";
 import { AccentPicker } from "@/components/AccentPicker";
+import UserStatusPicker from "@/components/UserStatusPicker";
 
 const WhatsAppIcon = ({ className }: { className?: string }) => (
   <svg viewBox="0 0 24 24" className={className} fill="currentColor">
@@ -651,6 +652,27 @@ const AppLayout = () => {
     });
   }, [location.pathname]);
 
+  // Unlock the global ringtone audio element on first user gesture so it can
+  // play later without a gesture (e.g. incoming call after hard refresh + idle)
+  useEffect(() => {
+    const unlock = () => {
+      const el = document.getElementById('global-ringtone') as HTMLAudioElement | null;
+      if (!el) return;
+      el.volume = 0;
+      el.play().then(() => {
+        el.pause();
+        el.currentTime = 0;
+        el.volume = 1;
+      }).catch(() => {});
+    };
+    window.addEventListener('click', unlock, { once: true });
+    window.addEventListener('keydown', unlock, { once: true });
+    return () => {
+      window.removeEventListener('click', unlock);
+      window.removeEventListener('keydown', unlock);
+    };
+  }, []);
+
   return (
     <div className="h-screen w-screen flex bg-background overflow-hidden">
 
@@ -818,88 +840,6 @@ const AppLayout = () => {
             </button>
           )}
 
-          {/* ── User profile (bottom) ── */}
-          <div className="flex-shrink-0 relative p-2 z-10">
-            {/* Aurora top border */}
-            <div className="pointer-events-none absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-violet-500/20 via-border/60 to-cyan-500/15" />
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <button className={`w-full flex items-center rounded-lg hover:bg-violet-500/[0.07] transition-colors ${sidebarCollapsed ? 'justify-center p-2' : 'gap-2.5 px-2.5 py-2'}`}>
-                  <div className="relative flex-shrink-0">
-                    <div className="h-7 w-7 rounded-full bg-gradient-to-br from-violet-500 to-cyan-500 flex items-center justify-center text-white text-xs font-bold shadow-[0_0_8px_hsl(263_78%_68%/0.3)]">
-                      {user?.email?.charAt(0).toUpperCase() || 'U'}
-                    </div>
-                    <span className={`absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 border-2 border-card rounded-full ${
-                      user?.presence_status === 'online' ? 'bg-emerald-500' :
-                      user?.presence_status === 'away' ? 'bg-yellow-400' :
-                      user?.presence_status === 'busy' ? 'bg-red-500' :
-                      user?.presence_status === 'do_not_disturb' ? 'bg-red-600' :
-                      user?.presence_status === 'in_call' ? 'bg-blue-500' :
-                      'bg-muted-foreground'
-                    }`} />
-                  </div>
-                  {!sidebarCollapsed && (
-                    <>
-                      <div className="flex-1 min-w-0 text-left">
-                        <p className="text-[13px] font-medium text-foreground truncate leading-none">{user?.email?.split('@')[0] || 'User'}</p>
-                        <p className="text-[11px] text-muted-foreground truncate mt-0.5 leading-none">{user?.company_name || 'AgentConnect'}</p>
-                      </div>
-                      <ChevronDown className="h-3 w-3 text-muted-foreground flex-shrink-0" />
-                    </>
-                  )}
-                </button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent
-                side="right"
-                align="end"
-                sideOffset={8}
-                className="w-64 rounded-xl p-2 shadow-xl border-border"
-              >
-                <div className="px-3 py-2.5 bg-muted rounded-lg mb-2">
-                  <div className="flex items-center gap-2.5">
-                    <div className="relative flex-shrink-0">
-                      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-violet-500 to-cyan-500 flex items-center justify-center text-white font-bold shadow-[0_0_12px_hsl(263_78%_68%/0.3)]">
-                        {user?.email?.charAt(0).toUpperCase() || 'U'}
-                      </div>
-                      <span className={`absolute -bottom-0.5 -right-0.5 w-3 h-3 border-2 border-muted rounded-full ${
-                        user?.presence_status === 'online' ? 'bg-emerald-500' :
-                        user?.presence_status === 'away' ? 'bg-yellow-400' :
-                        user?.presence_status === 'busy' ? 'bg-red-500' :
-                        'bg-muted-foreground'
-                      }`} />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-xs font-semibold text-foreground truncate">{user?.email}</p>
-                      <p className="text-[10px] text-muted-foreground truncate">{user?.company_name || 'AgentConnect'}</p>
-                    </div>
-                  </div>
-                </div>
-                <DropdownMenuSeparator className="my-1" />
-                <div className="px-1 py-1.5">
-                  <p className="text-[10px] font-semibold text-muted-foreground mb-1.5 px-1 uppercase tracking-wider">Status</p>
-                  <PresenceSelector currentStatus={user?.presence_status} showLabel={true} />
-                </div>
-                <DropdownMenuSeparator className="my-1" />
-                <AccentPicker />
-                <DropdownMenuSeparator className="my-1" />
-                <DropdownMenuItem asChild className="rounded-lg cursor-pointer text-[13px]">
-                  <NavLink to="/dashboard/profile" className="flex items-center gap-2">
-                    <CircleUser className="h-4 w-4" />
-                    {t('navigation.profile')}
-                  </NavLink>
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                  onClick={logout}
-                  className="rounded-lg cursor-pointer text-[13px] text-destructive focus:text-destructive focus:bg-destructive/10"
-                >
-                  <svg className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                  </svg>
-                  {t('common.logout')}
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
         </aside>
 
         {/* ── Right column: header + main content ── */}
@@ -928,11 +868,13 @@ const AppLayout = () => {
               </div>
             </div>
 
+            {/* Centre: search */}
+            <div className="absolute left-1/2 -translate-x-1/2 hidden md:block">
+              <CommandPaletteTrigger />
+            </div>
+
             {/* Right: utility actions */}
             <div className="flex items-center gap-2 ml-auto">
-              <div className="hidden md:block mr-1">
-                <CommandPaletteTrigger />
-              </div>
               <NotificationBell />
               <LanguageSwitcher />
               <button
@@ -945,47 +887,17 @@ const AppLayout = () => {
                   : <Moon className="h-4 w-4" />
                 }
               </button>
-              {/* Mobile user menu */}
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <button className="lg:hidden h-7 w-7 rounded-md flex items-center justify-center text-muted-foreground hover:bg-muted transition-colors">
-                    <CircleUser className="h-4 w-4" />
-                  </button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-64 rounded-xl p-2 shadow-xl border-border">
-                  <div className="px-3 py-2.5 bg-muted rounded-lg mb-2">
-                    <div className="flex items-center gap-2.5">
-                      <div className="w-9 h-9 rounded-full bg-primary flex items-center justify-center text-primary-foreground font-bold text-sm">
-                        {user?.email?.charAt(0).toUpperCase() || 'U'}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-xs font-semibold text-foreground truncate">{user?.email}</p>
-                        <p className="text-[10px] text-muted-foreground truncate">{user?.company_name || 'AgentConnect'}</p>
-                      </div>
-                    </div>
-                  </div>
-                  <DropdownMenuSeparator className="my-1" />
-                  <div className="px-1 py-1.5">
-                    <p className="text-[10px] font-semibold text-muted-foreground mb-1.5 px-1 uppercase tracking-wider">Status</p>
-                    <PresenceSelector currentStatus={user?.presence_status} showLabel={true} />
-                  </div>
-                  <DropdownMenuSeparator className="my-1" />
-                  <AccentPicker />
-                  <DropdownMenuSeparator className="my-1" />
-                  <DropdownMenuItem asChild className="rounded-lg cursor-pointer text-[13px]">
-                    <NavLink to="/dashboard/profile" className="flex items-center gap-2">
-                      <CircleUser className="h-4 w-4" />
-                      {t('navigation.profile')}
-                    </NavLink>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={logout} className="rounded-lg cursor-pointer text-[13px] text-destructive focus:text-destructive focus:bg-destructive/10">
-                    <svg className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                    </svg>
-                    {t('common.logout')}
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
+              {/* User status — visible on all screen sizes */}
+              <UserStatusPicker
+                user={{
+                  ...user,
+                  presence_status: user?.presence_status,
+                  status_message: (user as any)?.status_message,
+                }}
+                onStatusChange={() => refetchUser()}
+                onLogout={logout}
+                compact
+              />
             </div>
           </header>
 
@@ -1043,6 +955,9 @@ const AppLayout = () => {
 
       {/* Calendar event reminders — shown globally like Teams notifications */}
       <EventReminderBanner />
+
+      {/* Global ringtone — pre-loaded at app level so it's always ready to play */}
+      <audio id="global-ringtone" src="/microsoft_teams_default.mp3" preload="auto" loop style={{ display: 'none' }} />
     </div>
   );
 };

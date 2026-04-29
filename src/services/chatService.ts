@@ -182,10 +182,24 @@ export const removeReaction = async (messageId: number, emoji: string) => {
 export const searchMessages = async (channelId: number, query: string) => {
   const response = await axios.get(
     `${API_URL}/api/v1/chat/channels/${channelId}/search`,
-    {
-      params: { query },
-      headers: getAuthHeaders(),
-    }
+    { params: { query }, headers: getAuthHeaders() }
+  );
+  return response.data;
+};
+
+export const searchAllChannels = async (query: string, limit = 30): Promise<any[]> => {
+  const response = await axios.get(
+    `${API_URL}/api/v1/chat/search`,
+    { params: { query, limit }, headers: getAuthHeaders() }
+  );
+  return response.data;
+};
+
+export const shareDriveFile = async (channelId: number, driveItemId: number, content = '') => {
+  const response = await axios.post(
+    `${API_URL}/api/v1/chat/channels/${channelId}/share-drive-file`,
+    { drive_item_id: driveItemId, content },
+    { headers: getAuthHeaders() }
   );
   return response.data;
 };

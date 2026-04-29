@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { createPortal } from 'react-dom';
-import { LiveKitRoom, VideoConference } from '@livekit/components-react';
+import { LiveKitRoom, VideoConference, useRoomContext } from '@livekit/components-react';
+import { RoomEvent } from 'livekit-client';
 import '@livekit/components-styles';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { getChannelMessages, createChannelMessage } from '@/services/chatService';
@@ -16,8 +17,9 @@ import { useTheme } from '@/hooks/useTheme';
 import { cn } from '@/lib/utils';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-import { X, Minimize2, Maximize2, GripHorizontal, MessageSquare, Send, ChevronDown, Expand, Shrink, UserPlus, UserMinus, Video, VideoOff } from 'lucide-react';
+import { X, Minimize2, Maximize2, GripHorizontal, MessageSquare, Send, ChevronDown, Expand, Shrink, UserPlus, UserMinus, Video, VideoOff, UserRoundPlus, Search, Check } from 'lucide-react';
 import axios from 'axios';
+import { inviteToMeeting, getCompanyUsers } from '@/services/calendarService';
 
 interface ChatMessage {
   id: number;
@@ -60,6 +62,40 @@ const useDraggable = (initialPosition: { x: number; y: number }) => {
   return { position, isDragging, handleMouseDown, setPosition };
 };
 
+// ── Participant activity tracker (must live inside <LiveKitRoom>) ─────────────
+function ParticipantActivityTracker({ channelId, displayName }: { channelId: number; displayName: string }) {
+  const room = useRoomContext();
+
+  useEffect(() => {
+    if (!room) return;
+
+    // Post our own "joined" message when we connect
+    createChannelMessage(channelId, `${displayName} joined the meeting`, true).catch(() => {});
+
+    const onJoined = (participant: { name?: string; identity?: string }) => {
+      const name = participant.name || participant.identity || 'Someone';
+      createChannelMessage(channelId, `${name} joined the meeting`, true).catch(() => {});
+    };
+
+    const onLeft = (participant: { name?: string; identity?: string }) => {
+      const name = participant.name || participant.identity || 'Someone';
+      createChannelMessage(channelId, `${name} left the meeting`, true).catch(() => {});
+    };
+
+    room.on(RoomEvent.ParticipantConnected, onJoined);
+    room.on(RoomEvent.ParticipantDisconnected, onLeft);
+
+    return () => {
+      room.off(RoomEvent.ParticipantConnected, onJoined);
+      room.off(RoomEvent.ParticipantDisconnected, onLeft);
+      // Post our own "left" message on unmount
+      createChannelMessage(channelId, `${displayName} left the meeting`, true).catch(() => {});
+    };
+  }, [room, channelId, displayName]);
+
+  return null;
+}
+
 // ── Main modal ────────────────────────────────────────────────────────────────
 const InternalVideoCallModal: React.FC = () => {
   const { activeInternalCall, endInternalCall } = useVideoCall();
@@ -71,13 +107,17 @@ const InternalVideoCallModal: React.FC = () => {
   const [isMinimized, setIsMinimized] = useState(false);
   const [isMaximized, setIsMaximized] = useState(false);
   const [isChatOpen, setIsChatOpen] = useState(false);
+  const [isInviteOpen, setIsInviteOpen] = useState(false);
+  const [inviteSearch, setInviteSearch] = useState('');
+  const [selectedInvitees, setSelectedInvitees] = useState<number[]>([]);
+  const [isSendingInvite, setIsSendingInvite] = useState(false);
   const [draft, setDraft] = useState('');
   const [showScrollBtn, setShowScrollBtn] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const isAtBottomRef = useRef(true);
 
-  const { roomName, livekitToken, livekitUrl, channelId, callId } = activeInternalCall ?? {};
+  const { roomName, livekitToken, livekitUrl, channelId, callId, eventId } = activeInternalCall ?? {};
 
   const { position, isDragging, handleMouseDown, setPosition } = useDraggable({
     x: window.innerWidth - 340,
@@ -109,6 +149,31 @@ const InternalVideoCallModal: React.FC = () => {
     queryFn: () => getChannelMessages(Number(channelId)),
     enabled: !!channelId,
   });
+
+  const { data: companyUsers = [] } = useQuery({
+    queryKey: ['companyUsers'],
+    queryFn: getCompanyUsers,
+    enabled: isInviteOpen,
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const filteredUsers = companyUsers.filter((u) => {
+    if (u.id === user?.id) return false;
+    const q = inviteSearch.toLowerCase();
+    return !q || (u.first_name || '').toLowerCase().includes(q) || (u.email || '').toLowerCase().includes(q);
+  });
+
+  const handleSendInvites = async () => {
+    if (!eventId || selectedInvitees.length === 0) return;
+    setIsSendingInvite(true);
+    try {
+      await inviteToMeeting(eventId, selectedInvitees);
+      setSelectedInvitees([]);
+      setIsInviteOpen(false);
+    } catch { /* ignore */ } finally {
+      setIsSendingInvite(false);
+    }
+  };
 
   const sendMutation = useMutation({
     mutationFn: (text: string) => createChannelMessage(Number(channelId!), text),
@@ -219,6 +284,7 @@ const InternalVideoCallModal: React.FC = () => {
             <div className="w-full h-full">
               <LiveKitRoom video={true} audio={true} token={livekitToken} serverUrl={livekitUrl}
                 data-lk-theme="default" style={{ height: '100%', width: '100%' }} onDisconnected={handleLeave}>
+                {channelId && <ParticipantActivityTracker channelId={channelId} displayName={user?.first_name || user?.email || 'Someone'} />}
                 <VideoConference />
               </LiveKitRoom>
             </div>
@@ -255,6 +321,17 @@ const InternalVideoCallModal: React.FC = () => {
           </div>
         </div>
         <div className="flex items-center gap-2">
+          {eventId && (
+            <button onClick={() => setIsInviteOpen(p => !p)}
+              className={cn('px-4 py-2 rounded-xl border transition-all flex items-center gap-2 text-sm font-medium group',
+                isInviteOpen
+                  ? 'bg-green-500 border-green-500 text-white'
+                  : 'bg-green-500/20 hover:bg-green-500/30 border-green-500/30 text-green-600 dark:text-green-300 hover:text-white'
+              )} title="Invite people">
+              <UserRoundPlus className="w-4 h-4 group-hover:scale-110 transition-transform" />
+              <span className="hidden sm:inline">Invite</span>
+            </button>
+          )}
           {channelId && (
             <button onClick={() => setIsChatOpen(p => !p)}
               className={cn('px-4 py-2 rounded-xl border transition-all flex items-center gap-2 text-sm font-medium group',
@@ -294,9 +371,57 @@ const InternalVideoCallModal: React.FC = () => {
           <LiveKitRoom video={true} audio={true} token={livekitToken} serverUrl={livekitUrl}
             data-lk-theme="default" style={{ height: '100%', width: '100%' }} onDisconnected={handleLeave}
             onError={(e) => console.error('[InternalVideoCallModal]', e)}>
+            {channelId && <ParticipantActivityTracker channelId={channelId} displayName={user?.first_name || user?.email || 'Someone'} />}
             <VideoConference />
           </LiveKitRoom>
         </div>
+
+        {/* Invite sidebar */}
+        {eventId && isInviteOpen && (
+          <div className="w-[280px] flex flex-col border-l border-green-500/20 bg-white dark:bg-slate-900">
+            <div className="px-4 py-3 border-b border-green-500/20 flex items-center gap-2">
+              <UserRoundPlus className="w-4 h-4 text-green-500" />
+              <span className="text-sm font-semibold text-gray-900 dark:text-white">Invite People</span>
+            </div>
+            <div className="p-3 border-b border-green-500/10">
+              <div className="relative">
+                <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400" />
+                <input
+                  value={inviteSearch}
+                  onChange={(e) => setInviteSearch(e.target.value)}
+                  placeholder="Search people…"
+                  className="w-full pl-8 pr-3 py-1.5 text-xs rounded-lg border border-gray-200 dark:border-slate-700 bg-gray-50 dark:bg-slate-800 text-gray-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-green-500"
+                />
+              </div>
+            </div>
+            <div className="flex-1 overflow-y-auto py-1">
+              {filteredUsers.length === 0 ? (
+                <p className="text-center text-xs text-gray-400 mt-6">No users found</p>
+              ) : filteredUsers.map((u) => {
+                const selected = selectedInvitees.includes(u.id);
+                return (
+                  <button key={u.id} onClick={() => setSelectedInvitees(p => selected ? p.filter(id => id !== u.id) : [...p, u.id])}
+                    className="w-full flex items-center gap-2.5 px-3 py-2 hover:bg-gray-50 dark:hover:bg-slate-800 transition-colors text-left">
+                    <div className="w-7 h-7 rounded-full bg-gradient-to-br from-violet-500 to-cyan-500 flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
+                      {(u.first_name?.[0] || u.email[0]).toUpperCase()}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs font-medium text-gray-900 dark:text-white truncate">{u.first_name || u.email}</p>
+                      <p className="text-[10px] text-gray-400 truncate">{u.email}</p>
+                    </div>
+                    {selected && <Check className="w-3.5 h-3.5 text-green-500 flex-shrink-0" />}
+                  </button>
+                );
+              })}
+            </div>
+            <div className="p-3 border-t border-green-500/20">
+              <button onClick={handleSendInvites} disabled={selectedInvitees.length === 0 || isSendingInvite}
+                className="w-full py-2 rounded-lg bg-green-500 hover:bg-green-600 disabled:opacity-40 text-white text-xs font-semibold transition-colors">
+                {isSendingInvite ? 'Sending…' : `Invite ${selectedInvitees.length > 0 ? `(${selectedInvitees.length})` : ''}`}
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* Channel chat sidebar */}
         {channelId && isChatOpen && (

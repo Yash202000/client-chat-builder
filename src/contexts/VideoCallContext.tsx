@@ -15,6 +15,7 @@ export interface ActiveInternalCall {
   livekitUrl: string;
   channelId?: number;
   callId?: string;
+  eventId?: number;
 }
 
 interface VideoCallContextValue {
