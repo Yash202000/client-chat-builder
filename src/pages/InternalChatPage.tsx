@@ -344,6 +344,12 @@ const InternalChatPage: React.FC = () => {
           queryClient.invalidateQueries({ queryKey: ['messageReplies', newMessage.parent_message_id] });
         }
 
+        // Activity messages that signal a meeting started — flip button to "Join" instantly
+        if ((newMessage.is_activity || newMessage.extra_data?.is_activity) &&
+            newMessage.content?.toLowerCase().includes('joined')) {
+          queryClient.invalidateQueries({ queryKey: ['activeVideoCall', selectedChannel?.id] });
+        }
+
         // Auto-mark as read if the channel is currently open and message is from someone else
         if (user && newMessage.sender_id !== user.id && selectedChannel?.id) {
           markChannelRead(selectedChannel.id).catch(() => {});
