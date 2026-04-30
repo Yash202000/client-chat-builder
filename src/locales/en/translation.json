@@ -111,6 +111,7 @@
     "twilioInbox": "Twilio Calls",
     "callQueue": "Call Queue",
     "voiceCallLog": "Call Log",
+    "callLog": "Call Log",
     "apiInbox": "API Chat",
     "contactHub": "Contacts",
     "supervisor": "Supervisor",

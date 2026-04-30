@@ -553,7 +553,7 @@ const AppLayout = () => {
       collapsible: true,
       items: [
         { titleKey: "navigation.callQueue", url: "/dashboard/call-queue", icon: Phone },
-        { titleKey: "navigation.voiceCallLog", url: "/dashboard/voice-calls", icon: Phone },
+        { titleKey: "navigation.callLog", url: "/dashboard/voice-calls", icon: Phone },
         { titleKey: "navigation.supervisor", url: "/dashboard/supervisor", icon: Radio },
         { titleKey: "navigation.predictiveDialer", url: "/dashboard/dialer", icon: PhoneCall },
         { titleKey: "navigation.callAnalytics", url: "/dashboard/call-analytics", icon: BarChart3 },
