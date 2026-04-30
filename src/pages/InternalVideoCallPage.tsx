@@ -15,10 +15,19 @@ import { cn } from '@/lib/utils';
 import axios from 'axios';
 
 // Silently records join/leave activity to the backend channel
-function MeetingActivityTracker({ channelId, displayName }: { channelId: number; displayName: string }) {
+function MeetingActivityTracker({
+  channelId,
+  displayName,
+  isLastInRoomRef,
+}: {
+  channelId: number;
+  displayName: string;
+  isLastInRoomRef: React.MutableRefObject<boolean>;
+}) {
   const room = useRoomContext();
   const queryClient = useQueryClient();
   const postedJoin = useRef(false);
+  const remoteCountRef = useRef(0);
 
   const postActivity = useCallback(async (text: string) => {
     try {
@@ -30,17 +39,36 @@ function MeetingActivityTracker({ channelId, displayName }: { channelId: number;
   useEffect(() => {
     if (!room || postedJoin.current) return;
     postedJoin.current = true;
-    const timer = setTimeout(() => postActivity(`${displayName} joined the meeting`), 1500);
-    const onJoin  = (p: RemoteParticipant) => postActivity(`${p.name || p.identity} joined the meeting`);
-    const onLeave = (p: RemoteParticipant) => postActivity(`${p.name || p.identity} left the meeting`);
+
+    // Track remote participant count for isLastInRoomRef — no message posting here
+    // (each participant posts their own join/leave via the timer below and handleLeave)
+    const onJoin = (_p: RemoteParticipant) => {
+      remoteCountRef.current++;
+      isLastInRoomRef.current = false;
+    };
+    const onLeave = (_p: RemoteParticipant) => {
+      remoteCountRef.current = Math.max(0, remoteCountRef.current - 1);
+      isLastInRoomRef.current = remoteCountRef.current === 0;
+    };
+
     room.on(RoomEvent.ParticipantConnected, onJoin);
     room.on(RoomEvent.ParticipantDisconnected, onLeave);
+
+    // Delay the initial snapshot so the room has time to sync existing participants.
+    // Also posts this user's own join message after confirming room state.
+    const timer = setTimeout(() => {
+      const currentCount = room.remoteParticipants.size;
+      remoteCountRef.current = currentCount;
+      isLastInRoomRef.current = currentCount === 0;
+      postActivity(`${displayName} joined the meeting`);
+    }, 1500);
+
     return () => {
       clearTimeout(timer);
       room.off(RoomEvent.ParticipantConnected, onJoin);
       room.off(RoomEvent.ParticipantDisconnected, onLeave);
     };
-  }, [room, displayName, postActivity]);
+  }, [room, displayName, postActivity, isLastInRoomRef]);
 
   return null;
 }
@@ -180,12 +208,14 @@ const InternalVideoCallPage: React.FC = () => {
   const { theme } = useTheme();
   const { user }  = useAuth();
   const { playCallEndSound } = useNotifications();
+  const isLastInRoomRef = useRef(false);
 
   const queryParams  = new URLSearchParams(location.search);
   const livekitToken = queryParams.get('livekitToken');
   const livekitUrl   = queryParams.get('livekitUrl');
   const channelId    = queryParams.get('channelId');
   const callId       = queryParams.get('callId');
+  const eventId      = queryParams.get('eventId');
   const sessionId    = queryParams.get('sessionId');
   const returnTo     = (location.state as { returnTo?: string } | null)?.returnTo || '/dashboard/conversations';
 
@@ -195,6 +225,13 @@ const InternalVideoCallPage: React.FC = () => {
       try { await createChannelMessage(Number(channelId), `${name} left the meeting`, true); } catch { /* ignore */ }
     }
     playCallEndSound();
+    // Last participant out — clear the meeting room so others see "Start Call"
+    if (isLastInRoomRef.current && eventId) {
+      try {
+        await axios.post(`${API_BASE_URL}/api/v1/calendar/events/${eventId}/end-meeting`, {},
+          { headers: { Authorization: `Bearer ${localStorage.getItem('accessToken')}` } });
+      } catch { /* ignore */ }
+    }
     if (callId) {
       try {
         await axios.post(`${API_BASE_URL}/api/v1/video-calls/${callId}/end`, {},
@@ -241,6 +278,7 @@ const InternalVideoCallPage: React.FC = () => {
           <MeetingActivityTracker
             channelId={Number(channelId)}
             displayName={user?.first_name || user?.email || 'Someone'}
+            isLastInRoomRef={isLastInRoomRef}
           />
         )}
       </LiveKitRoom>

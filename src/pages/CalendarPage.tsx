@@ -51,6 +51,7 @@ interface CalEvent {
   attendees?: string[];
   color: string;
   livekit_room_name?: string;
+  video_enabled?: boolean;
   recurrence_rule?: string;
   recurrence_interval?: number;
   recurrence_end_date?: string;
@@ -144,6 +145,7 @@ function apiToCalEvent(e: ApiCalEvent): CalEvent {
     attendees: e.attendees ?? [],
     color: EVENT_TYPE_META[(e.event_type as EventType) ?? 'meeting']?.dot ?? '',
     livekit_room_name: e.livekit_room_name,
+    video_enabled: e.video_enabled,
     recurrence_rule: e.recurrence_rule,
     recurrence_interval: e.recurrence_interval,
     recurrence_end_date: e.recurrence_end_date,
@@ -927,7 +929,7 @@ function EventDetailPopover({ event, anchor, onClose, onEdit, onDelete, onJoin }
           </div>
         )}
         <div className="space-y-2 pt-1 border-t border-border/30">
-          {event.livekit_room_name && onJoin && (
+          {(event.video_enabled || event.livekit_room_name || event.type === 'meeting' || event.type === 'call') && onJoin && (
             <Button size="sm" className="w-full text-xs gap-1.5 bg-primary hover:bg-primary/90 text-primary-foreground"
               onClick={() => { onJoin(event); onClose(); }}>
               <Video className="w-3.5 h-3.5" /> Join Meeting
@@ -1037,9 +1039,10 @@ export default function CalendarPage() {
   };
 
   const handleJoinMeeting = async (ev: CalEvent) => {
-    if (!ev.livekit_room_name) return;
     try {
       const result = await joinMeeting(Number(ev.id));
+      // Refresh calendar cache so video_enabled=True (set by backend) is reflected
+      queryClient.invalidateQueries({ queryKey: ['calendarEvents'] });
       startInternalCall({
         roomName: result.room_name,
         livekitToken: result.token,

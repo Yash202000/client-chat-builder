@@ -100,8 +100,9 @@ export const useWebSocket = (url: string | null, options: WebSocketOptions = {})
       };
 
       ws.current.onmessage = (event) => {
-        if (currentOptions.onMessage) {
-          currentOptions.onMessage(event);
+        // Always read from the ref so we get the latest callback without reconnecting
+        if (optionsRef.current.onMessage) {
+          optionsRef.current.onMessage(event);
         }
       };
 

@@ -16,6 +16,7 @@ export interface ApiCalEvent {
   description?: string;
   attendees?: string[];
   livekit_room_name?: string;
+  video_enabled?: boolean;
   recurrence_rule?: string;
   recurrence_interval?: number;
   recurrence_end_date?: string;

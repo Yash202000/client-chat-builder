@@ -691,6 +691,8 @@ const InternalChatPage: React.FC = () => {
       }
     },
     enabled: !!selectedChannel?.id,
+    refetchInterval: 8000,
+    staleTime: 0,
   });
   const activeCallExists = !!activeCallInfo;
 
