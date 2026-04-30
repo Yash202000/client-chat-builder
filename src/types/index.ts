@@ -14,6 +14,9 @@ export interface Session {
   first_message_content?: string;
   contact_identifier?: string;
   priority?: number; // 0=None, 1=Low, 2=Medium, 3=High, 4=Urgent
+  last_message_content?: string;
+  last_message_sender?: string; // 'user' or 'agent'
+  unread_count?: number;
 }
 
 // Priority level constants

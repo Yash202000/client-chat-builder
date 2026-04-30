@@ -624,21 +624,33 @@ export const ConversationDetail: React.FC<ConversationDetailProps> = ({ sessionI
     }
   };
 
-  // Reset initial load flag when session changes
+  // Reset initial load flag and jump to bottom placeholder when session changes
   useEffect(() => {
     setHasInitiallyLoaded(false);
+    if (messagesContainerRef.current) {
+      messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight;
+    }
   }, [sessionId]);
 
   // Scroll to bottom on initial load
   useEffect(() => {
     if (!isLoading && messages.length > 0 && !hasInitiallyLoaded) {
-      // Double rAF ensures the browser has painted the new messages before scrolling
+      const doScroll = () => {
+        if (messagesEndRef.current) {
+          messagesEndRef.current.scrollIntoView({ behavior: 'instant', block: 'end' });
+        } else if (messagesContainerRef.current) {
+          messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight;
+        }
+        setHasInitiallyLoaded(true);
+      };
+
       requestAnimationFrame(() => {
         requestAnimationFrame(() => {
-          scrollToBottom(false);
-          setHasInitiallyLoaded(true);
+          doScroll();
         });
       });
+      const fallback = setTimeout(doScroll, 150);
+      return () => clearTimeout(fallback);
     }
   }, [isLoading, messages.length, hasInitiallyLoaded]);
 

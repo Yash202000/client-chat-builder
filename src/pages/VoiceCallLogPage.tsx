@@ -49,13 +49,13 @@ interface CallLogResponse {
 
 type QuickFilter = 'all' | 'missed' | 'incoming' | 'outgoing' | 'internal' | 'meetings';
 
-const QUICK_FILTERS: { id: QuickFilter; label: string; color: string; activeColor: string }[] = [
-  { id: 'all',      label: 'All',      color: 'text-muted-foreground', activeColor: 'bg-foreground text-background' },
-  { id: 'missed',   label: 'Missed',   color: 'text-red-500',          activeColor: 'bg-red-500 text-white' },
-  { id: 'incoming', label: 'Incoming', color: 'text-emerald-600',      activeColor: 'bg-emerald-500 text-white' },
-  { id: 'outgoing', label: 'Outgoing', color: 'text-blue-600',         activeColor: 'bg-blue-500 text-white' },
-  { id: 'internal', label: 'Internal', color: 'text-violet-600',       activeColor: 'bg-violet-500 text-white' },
-  { id: 'meetings', label: 'Meetings', color: 'text-amber-600',        activeColor: 'bg-amber-500 text-white' },
+const QUICK_FILTERS: { id: QuickFilter; label: string; iconColor: string }[] = [
+  { id: 'all',      label: 'All',      iconColor: '' },
+  { id: 'missed',   label: 'Missed',   iconColor: 'text-red-500' },
+  { id: 'incoming', label: 'Incoming', iconColor: 'text-emerald-500' },
+  { id: 'outgoing', label: 'Outgoing', iconColor: 'text-blue-500' },
+  { id: 'internal', label: 'Internal', iconColor: 'text-violet-500' },
+  { id: 'meetings', label: 'Meetings', iconColor: 'text-amber-500' },
 ];
 
 function filterToParams(qf: QuickFilter): Record<string, string> {
@@ -163,18 +163,11 @@ function CallAvatar({ entry }: { entry: CallLogEntry }) {
 // ── Status pill ───────────────────────────────────────────────────────────────
 
 function StatusPill({ status }: { status: string }) {
-  const map: Record<string, string> = {
-    completed:   'bg-emerald-50 text-emerald-700 dark:bg-emerald-900/20 dark:text-emerald-400',
-    failed:      'bg-red-50 text-red-700 dark:bg-red-900/20 dark:text-red-400',
-    missed:      'bg-red-50 text-red-700 dark:bg-red-900/20 dark:text-red-400',
-    no_answer:   'bg-red-50 text-red-700 dark:bg-red-900/20 dark:text-red-400',
-    busy:        'bg-orange-50 text-orange-700 dark:bg-orange-900/20 dark:text-orange-400',
-    in_progress: 'bg-blue-50 text-blue-700 dark:bg-blue-900/20 dark:text-blue-400',
-    active:      'bg-blue-50 text-blue-700 dark:bg-blue-900/20 dark:text-blue-400',
-    ringing:     'bg-yellow-50 text-yellow-700 dark:bg-yellow-900/20 dark:text-yellow-400',
-    rejected:    'bg-red-50 text-red-700 dark:bg-red-900/20 dark:text-red-400',
-    cancelled:   'bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-400',
-    scheduled:   'bg-indigo-50 text-indigo-700 dark:bg-indigo-900/20 dark:text-indigo-400',
+  const dotColor: Record<string, string> = {
+    completed: 'bg-emerald-500', failed: 'bg-red-500', missed: 'bg-red-500',
+    no_answer: 'bg-red-500', busy: 'bg-orange-500', in_progress: 'bg-blue-500',
+    active: 'bg-blue-500', ringing: 'bg-yellow-500', rejected: 'bg-red-500',
+    cancelled: 'bg-muted-foreground', scheduled: 'bg-indigo-500',
   };
   const labels: Record<string, string> = {
     no_answer: 'No answer', in_progress: 'In progress',
@@ -183,7 +176,8 @@ function StatusPill({ status }: { status: string }) {
     rejected: 'Rejected', cancelled: 'Cancelled', scheduled: 'Scheduled',
   };
   return (
-    <span className={cn('text-[10px] font-medium px-2 py-0.5 rounded-full whitespace-nowrap', map[status] ?? 'bg-muted text-muted-foreground')}>
+    <span className="inline-flex items-center gap-1 text-[10px] font-medium px-2 py-0.5 rounded-full bg-muted text-foreground whitespace-nowrap">
+      <span className={cn('w-1.5 h-1.5 rounded-full flex-shrink-0', dotColor[status] ?? 'bg-muted-foreground')} />
       {labels[status] ?? status}
     </span>
   );
@@ -392,10 +386,7 @@ function EntryRow({ entry, isExpanded, onToggle }: {
         {/* Main content */}
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
-            <span className={cn(
-              'text-sm font-semibold truncate',
-              missed ? 'text-red-600 dark:text-red-400' : 'text-foreground',
-            )}>
+            <span className="text-sm font-semibold truncate text-foreground">
               {entry.title}
             </span>
             <StatusPill status={entry.status} />
@@ -415,7 +406,7 @@ function EntryRow({ entry, isExpanded, onToggle }: {
               </span>
             )}
             {entry.csat_score != null && (
-              <span className="flex items-center gap-0.5 text-[10px] font-medium text-amber-600 dark:text-amber-400">
+              <span className="flex items-center gap-0.5 text-[10px] font-medium text-muted-foreground">
                 ★ {entry.csat_score}/5
               </span>
             )}
@@ -543,28 +534,35 @@ export default function VoiceCallLogPage() {
 
       {/* ── Quick filter pills ─────────────────────────────────────────────── */}
       <div className="flex items-center gap-2 px-6 py-3 border-b border-border/40 overflow-x-auto scrollbar-none">
-        {QUICK_FILTERS.map(f => (
-          <button
-            key={f.id}
-            onClick={() => { setQuickFilter(f.id); setExpanded(null); }}
-            className={cn(
-              'inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-sm font-medium whitespace-nowrap transition-all',
-              quickFilter === f.id
-                ? f.activeColor
-                : `bg-muted/50 hover:bg-muted ${f.color}`,
-            )}
-          >
-            {f.label}
-            {f.id !== 'all' && stats[f.id] > 0 && (
-              <span className={cn(
-                'text-[10px] font-bold rounded-full w-4 h-4 flex items-center justify-center',
-                quickFilter === f.id ? 'bg-white/20' : 'bg-muted',
-              )}>
-                {stats[f.id] > 99 ? '99+' : stats[f.id]}
-              </span>
-            )}
-          </button>
-        ))}
+        {QUICK_FILTERS.map(f => {
+          const isActive = quickFilter === f.id;
+          return (
+            <button
+              key={f.id}
+              onClick={() => { setQuickFilter(f.id); setExpanded(null); }}
+              className={cn(
+                'inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-sm font-medium whitespace-nowrap transition-all',
+                isActive
+                  ? 'bg-primary text-primary-foreground'
+                  : 'bg-muted/50 hover:bg-muted text-foreground',
+              )}
+            >
+              {/* colored dot only on non-all pills, hidden when active */}
+              {f.id !== 'all' && !isActive && (
+                <span className={cn('w-1.5 h-1.5 rounded-full flex-shrink-0', f.iconColor.replace('text-', 'bg-'))} />
+              )}
+              {f.label}
+              {f.id !== 'all' && stats[f.id] > 0 && (
+                <span className={cn(
+                  'text-[10px] font-bold rounded-full w-4 h-4 flex items-center justify-center flex-shrink-0',
+                  isActive ? 'bg-white/20 text-primary-foreground' : 'bg-background text-muted-foreground',
+                )}>
+                  {stats[f.id] > 99 ? '99+' : stats[f.id]}
+                </span>
+              )}
+            </button>
+          );
+        })}
       </div>
 
       {/* ── List ───────────────────────────────────────────────────────────── */}

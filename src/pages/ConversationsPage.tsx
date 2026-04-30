@@ -752,6 +752,7 @@ const ConversationsPage: React.FC<ConversationsPageProps> = ({ channel }) => {
     const hasBeenReopened = (session.reopen_count ?? 0) > 0;
     const hasPriority = (session.priority || 0) > 0;
     const isSelected = selectedSessionId === session.conversation_id;
+    const hasUnread = (session.unread_count ?? 0) > 0 && !isSelected && session.last_message_sender === 'user';
 
     const contactName = session.contact_name || session.contact_phone || t('conversations.card.unknownContact');
     const avatarLetter = contactName.charAt(0).toUpperCase();
@@ -760,10 +761,13 @@ const ConversationsPage: React.FC<ConversationsPageProps> = ({ channel }) => {
     const channelKey = session.channel ?? 'web';
     const channelBadge = CHANNEL_BADGE_MAP[channelKey] ?? CHANNEL_BADGE_MAP['web'];
 
+    const previewText = session.last_message_content || session.first_message_content || ' ';
+
     const cardClass = [
       'conv-card',
       isSelected && 'conv-card-active',
-      !isSelected && assignedToMe && 'conv-card-assigned',
+      !isSelected && hasUnread && 'bg-muted/60',
+      !isSelected && !hasUnread && assignedToMe && 'conv-card-assigned',
       isRecentlyReopened && 'ring-1 ring-inset ring-orange-300 dark:ring-orange-700',
     ].filter(Boolean).join(' ');
 
@@ -822,20 +826,27 @@ const ConversationsPage: React.FC<ConversationsPageProps> = ({ channel }) => {
 
         {/* Content */}
         <div className="conv-card-content">
-          {/* Row 1: name + time */}
+          {/* Row 1: name + time + unread badge */}
           <div className="conv-card-row1">
-            <span className="conv-card-name">{contactName}</span>
-            {session.last_message_timestamp && (
-              <span className="conv-card-time">
-                {formatDistanceToNow(parseUTCDate(session.last_message_timestamp), { addSuffix: false })}
-              </span>
-            )}
+            <span className={`conv-card-name ${hasUnread ? 'font-semibold text-foreground' : ''}`}>{contactName}</span>
+            <div className="flex items-center gap-1.5 flex-shrink-0">
+              {session.last_message_timestamp && (
+                <span className={`conv-card-time ${hasUnread ? 'font-medium text-foreground/80' : ''}`}>
+                  {parseUTCDate(session.last_message_timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                </span>
+              )}
+              {hasUnread && (
+                <span className="min-w-[18px] h-[18px] px-1 flex items-center justify-center rounded-full bg-primary text-primary-foreground text-[10px] font-bold leading-none">
+                  {(session.unread_count ?? 0) > 99 ? '99+' : session.unread_count}
+                </span>
+              )}
+            </div>
           </div>
 
           {/* Row 2: message preview */}
-          <p className="conv-card-preview">
-              {session.first_message_content || '\u00A0'}
-            </p>
+          <p className={`conv-card-preview ${hasUnread ? 'text-foreground/80' : ''}`}>
+            {previewText}
+          </p>
 
           {/* Row 3: badges */}
           <div className="conv-card-row3">

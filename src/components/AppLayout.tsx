@@ -108,11 +108,12 @@ const AppLayout = () => {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const location = useLocation();
   const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({
-    inbox: true,
+    workspace: true,
+    crm: true,
+    marketing: true,
     agents: true,
+    ai: true,
     admin: true,
-    crm: false,
-    ai: false,
   });
   const { user, logout, refetchUser, authFetch } = useAuth();
   const { theme, toggleTheme } = useTheme();
@@ -509,6 +510,7 @@ const AppLayout = () => {
   ];
 
   const sidebarGroups: SidebarGroup[] = [
+    // 1. Home — always first
     {
       id: 'home',
       label: 'Home',
@@ -519,78 +521,35 @@ const AppLayout = () => {
         { titleKey: "navigation.dashboard", url: "/dashboard", icon: LayoutDashboard },
       ],
     },
+    // 2. Workspace — inbox + voice + team collaboration all in one
     {
       id: 'workspace',
       label: 'Workspace',
       labelKey: 'navigation.workspaceGroup',
-      icon: Calendar,
-      collapsible: true,
-      items: [
-        { title: "Calendar",   url: "/dashboard/calendar",   icon: Calendar },
-        { title: "Drive",      url: "/dashboard/drive",      icon: HardDrive },
-        { titleKey: "navigation.teamChat", url: "/dashboard/team-chat", icon: MessageSquare, permission: "page:team_chat" },
-      ],
-    },
-    {
-      id: 'inbox',
-      label: 'Inbox',
-      labelKey: 'navigation.inbox',
       icon: Inbox,
       collapsible: true,
       items: [
+        // Inbox
         { titleKey: "navigation.activeClients", url: "/dashboard/conversations", icon: Globe, permission: "page:conversations" },
         ...channelInboxItems,
         ...(integrationTypes.has('gmail') ? [{ titleKey: "navigation.emailInbox", url: "/dashboard/inbox/email", icon: Mail }] : []),
         ...(integrationTypes.has('twilio_voice') ? [{ titleKey: "navigation.smsInbox", url: "/dashboard/inbox/sms", icon: MessageSquare }] : []),
         { titleKey: "navigation.contactHub", url: "/dashboard/contacts", icon: Users },
+        // Voice Center
+        ...(integrationTypes.has('twilio_voice') ? [
+          { titleKey: "navigation.callQueue",        url: "/dashboard/call-queue",     icon: Phone },
+          { titleKey: "navigation.callLog",          url: "/dashboard/voice-calls",    icon: PhoneCall },
+          { titleKey: "navigation.supervisor",       url: "/dashboard/supervisor",     icon: Radio },
+          { titleKey: "navigation.predictiveDialer", url: "/dashboard/dialer",         icon: Headphones },
+          { titleKey: "navigation.callAnalytics",    url: "/dashboard/call-analytics", icon: BarChart3 },
+        ] : []),
+        // Team & files
+        { titleKey: "navigation.teamChat", url: "/dashboard/team-chat", icon: MessageSquare, permission: "page:team_chat" },
+        { title: "Calendar", url: "/dashboard/calendar", icon: Calendar },
+        { title: "Drive",    url: "/dashboard/drive",    icon: HardDrive },
       ],
     },
-    ...(integrationTypes.has('twilio_voice') ? [{
-      id: 'voice',
-      label: 'Voice Center',
-      labelKey: 'navigation.voiceCenter',
-      icon: Headphones,
-      collapsible: true,
-      items: [
-        { titleKey: "navigation.callQueue", url: "/dashboard/call-queue", icon: Phone },
-        { titleKey: "navigation.callLog", url: "/dashboard/voice-calls", icon: Phone },
-        { titleKey: "navigation.supervisor", url: "/dashboard/supervisor", icon: Radio },
-        { titleKey: "navigation.predictiveDialer", url: "/dashboard/dialer", icon: PhoneCall },
-        { titleKey: "navigation.callAnalytics", url: "/dashboard/call-analytics", icon: BarChart3 },
-      ],
-    }] : []),
-    {
-      id: 'agents',
-      label: 'Builder',
-      labelKey: 'navigation.builderGroup',
-      icon: Bot,
-      collapsible: true,
-      items: [
-        { titleKey: "navigation.agents", url: "/dashboard/agents", icon: Bot, permission: "page:agents" },
-        { titleKey: "navigation.widget", url: "/dashboard/designer", icon: Palette, permission: "page:widget_designer" },
-        { titleKey: "navigation.content", url: "/dashboard/knowledge-base/manage", icon: BookOpen, permission: "page:knowledge_base" },
-        { titleKey: "navigation.cms", url: "/dashboard/cms", icon: LayoutTemplate, permission: "page:knowledge_base" },
-        { titleKey: "navigation.tools", url: "/dashboard/tools", icon: Zap, permission: "page:tools" },
-        { titleKey: "navigation.workflows", url: "/dashboard/workflows", icon: WorkflowIcon, permission: "page:workflows" },
-        { titleKey: "navigation.messageTemplates", url: "/dashboard/message-templates", icon: Sparkles, permission: "page:message_templates" },
-      ],
-    },
-    {
-      id: 'admin',
-      label: 'Admin',
-      labelKey: 'navigation.adminGroup',
-      icon: Settings,
-      collapsible: true,
-      items: [
-        { titleKey: "navigation.teamManagement", url: "/dashboard/team", icon: Users, permission: "page:team_management" },
-        { titleKey: "navigation.reports", url: "/dashboard/reports", icon: BarChart3, permission: "page:reports" },
-        { titleKey: "navigation.settings", url: "/dashboard/settings", icon: Settings, permission: "page:settings" },
-        ...(!isManagedCredentials ? [{ titleKey: "navigation.apiVault", url: "/dashboard/vault", icon: Key, permission: "page:api_vault" }] : []),
-        { titleKey: "navigation.billing", url: "/dashboard/billing", icon: CreditCard, permission: "page:billing" },
-        { titleKey: "navigation.managePlans", url: "/dashboard/admin/subscriptions", icon: Sparkles, admin: true },
-        { titleKey: "navigation.companies", url: "/dashboard/companies", icon: Building, admin: true },
-      ],
-    },
+    // 3. CRM — update contacts/leads after every interaction
     {
       id: 'crm',
       label: 'CRM',
@@ -607,20 +566,39 @@ const AppLayout = () => {
         { titleKey: "navigation.templates", url: "/dashboard/crm/templates", icon: LayoutTemplate, permission: "page:crm_templates" },
       ],
     },
+    // 6. Marketing Hub — campaigns and social
     {
       id: 'marketing',
       label: 'Marketing Hub',
       icon: Megaphone,
       collapsible: true,
       items: [
-        { title: "Social Hub", url: "/dashboard/social", icon: Share2 },
-        { title: "Post Composer", url: "/dashboard/social/compose", icon: PenLine },
-        { title: "Trending Posts", url: "/dashboard/social/trending", icon: TrendingUp },
-        { title: "LinkedIn Leads", url: "/dashboard/crm/linkedin-leads", icon: Linkedin },
+        { title: "Social Hub",       url: "/dashboard/social",          icon: Share2 },
+        { title: "Post Composer",    url: "/dashboard/social/compose",  icon: PenLine },
+        { title: "Trending Posts",   url: "/dashboard/social/trending", icon: TrendingUp },
+        { title: "LinkedIn Leads",   url: "/dashboard/crm/linkedin-leads", icon: Linkedin },
         { title: "Social Analytics", url: "/dashboard/social/analytics", icon: BarChart3 },
-        { title: "Social Accounts", url: "/dashboard/social/accounts", icon: Settings2 },
+        { title: "Social Accounts",  url: "/dashboard/social/accounts", icon: Settings2 },
       ],
     },
+    // 7. Builder — configure agents, workflows, knowledge
+    {
+      id: 'agents',
+      label: 'Builder',
+      labelKey: 'navigation.builderGroup',
+      icon: Bot,
+      collapsible: true,
+      items: [
+        { titleKey: "navigation.agents", url: "/dashboard/agents", icon: Bot, permission: "page:agents" },
+        { titleKey: "navigation.widget", url: "/dashboard/designer", icon: Palette, permission: "page:widget_designer" },
+        { titleKey: "navigation.content", url: "/dashboard/knowledge-base/manage", icon: BookOpen, permission: "page:knowledge_base" },
+        { titleKey: "navigation.cms", url: "/dashboard/cms", icon: LayoutTemplate, permission: "page:knowledge_base" },
+        { titleKey: "navigation.tools", url: "/dashboard/tools", icon: Zap, permission: "page:tools" },
+        { titleKey: "navigation.workflows", url: "/dashboard/workflows", icon: WorkflowIcon, permission: "page:workflows" },
+        { titleKey: "navigation.messageTemplates", url: "/dashboard/message-templates", icon: Sparkles, permission: "page:message_templates" },
+      ],
+    },
+    // 8. AI — on-demand tools
     {
       id: 'ai',
       label: 'AI',
@@ -632,6 +610,23 @@ const AppLayout = () => {
         { titleKey: "navigation.aiTools", url: "/dashboard/ai-tools", icon: Zap, permission: "page:ai_tools" },
         { titleKey: "navigation.aiImageGenerator", url: "/dashboard/ai-image-generator", icon: Wand2, permission: "page:ai_image_generator" },
         { titleKey: "navigation.aiImageGallery", url: "/dashboard/ai-image-gallery", icon: Images, permission: "page:ai_image_gallery" },
+      ],
+    },
+    // 9. Admin — settings, reports, billing (least daily)
+    {
+      id: 'admin',
+      label: 'Admin',
+      labelKey: 'navigation.adminGroup',
+      icon: Settings,
+      collapsible: true,
+      items: [
+        { titleKey: "navigation.reports", url: "/dashboard/reports", icon: BarChart3, permission: "page:reports" },
+        { titleKey: "navigation.teamManagement", url: "/dashboard/team", icon: Users, permission: "page:team_management" },
+        { titleKey: "navigation.settings", url: "/dashboard/settings", icon: Settings, permission: "page:settings" },
+        ...(!isManagedCredentials ? [{ titleKey: "navigation.apiVault", url: "/dashboard/vault", icon: Key, permission: "page:api_vault" }] : []),
+        { titleKey: "navigation.billing", url: "/dashboard/billing", icon: CreditCard, permission: "page:billing" },
+        { titleKey: "navigation.managePlans", url: "/dashboard/admin/subscriptions", icon: Sparkles, admin: true },
+        { titleKey: "navigation.companies", url: "/dashboard/companies", icon: Building, admin: true },
       ],
     },
   ];

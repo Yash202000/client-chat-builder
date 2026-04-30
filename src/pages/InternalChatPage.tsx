@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import {
   getChannels,
+  getChannelsSummary,
   createChannel,
   renameChannel,
   getChannelMessages,
@@ -117,6 +118,15 @@ const containerVariants = {
 };
 
 // Define types for chat data
+interface LastMessagePreview {
+  id: number;
+  content: string;
+  sender_id: number;
+  sender_name: string;
+  created_at: string;
+  is_activity: boolean;
+}
+
 interface ChatChannel {
   id: number;
   name: string | null;
@@ -136,6 +146,8 @@ interface ChatChannel {
     };
   }[];
   messages: ChatMessage[];
+  last_message?: LastMessagePreview;
+  unread_count?: number;
 }
 
 interface ChatAttachment {
@@ -662,7 +674,7 @@ const InternalChatPage: React.FC = () => {
     data: channels,
     isLoading: isLoadingChannels,
     error: channelsError,
-  } = useQuery<ChatChannel[], Error>({ queryKey: ['chatChannels'], queryFn: getChannels });
+  } = useQuery<ChatChannel[], Error>({ queryKey: ['chatChannels'], queryFn: getChannelsSummary, refetchInterval: 10_000 });
 
   // Fetch all users for phone directory panel
   const { data: allUsers = [] } = useQuery({ queryKey: ['users'], queryFn: getUsers, enabled: isPhoneDirectoryOpen });
@@ -1231,7 +1243,10 @@ const InternalChatPage: React.FC = () => {
     setSearchParams({ channelId: channel.id.toString() });
     // Mark channel as read, then refresh the read summary
     markChannelRead(channel.id)
-      .then(() => queryClient.invalidateQueries({ queryKey: ['channelReadSummary', channel.id] }))
+      .then(() => {
+        queryClient.invalidateQueries({ queryKey: ['channelReadSummary', channel.id] });
+        queryClient.invalidateQueries({ queryKey: ['chatChannels'] });
+      })
       .catch(() => {});
   };
 
@@ -1336,6 +1351,8 @@ const InternalChatPage: React.FC = () => {
                 const displayName = getChannelDisplayName(channel, user?.id);
                 const avatar = getChannelAvatar(channel, user?.id);
                 const isSelected = selectedChannel?.id === channel.id;
+                const unread = (channel.unread_count ?? 0) > 0 && !isSelected;
+                const lastMsg = channel.last_message;
                 return (
                   <Tooltip key={channel.id}>
                     <TooltipTrigger asChild>
@@ -1344,47 +1361,69 @@ const InternalChatPage: React.FC = () => {
                         onClick={() => handleChannelSelect(channel)}
                         className={cn(
                           'w-full flex items-center gap-2.5 rounded-lg text-left transition-all duration-150 relative group',
-                          channelSidebarCollapsed ? 'p-1.5 justify-center' : 'px-2 py-1.5',
+                          channelSidebarCollapsed ? 'p-1.5 justify-center' : 'px-2 py-2',
                           isSelected
                             ? 'bg-primary/10 text-foreground'
+                            : unread
+                            ? 'bg-muted/60 text-foreground hover:bg-muted'
                             : 'text-muted-foreground hover:bg-muted hover:text-foreground'
                         )}
                       >
                         {isSelected && (
-                          <span className={cn(
-                            'absolute inset-y-1 w-0.5 bg-primary rounded-full',
-                            isRTL ? 'right-0' : 'left-0'
-                          )} />
+                          <span className={cn('absolute inset-y-1 w-0.5 bg-primary rounded-full', isRTL ? 'right-0' : 'left-0')} />
                         )}
+                        {/* Avatar */}
                         {(avatar as any).isMeeting ? (
-                          <div className={cn(
-                            'flex-shrink-0 flex items-center justify-center rounded-lg',
-                            channelSidebarCollapsed ? 'h-8 w-8' : 'h-7 w-7',
-                            isSelected ? 'bg-primary/20' : 'bg-muted'
-                          )}>
+                          <div className={cn('flex-shrink-0 flex items-center justify-center rounded-lg', channelSidebarCollapsed ? 'h-8 w-8' : 'h-8 w-8', isSelected ? 'bg-primary/20' : 'bg-muted')}>
                             <Video className={cn('w-3.5 h-3.5', isSelected ? 'text-primary' : 'text-muted-foreground')} />
                           </div>
                         ) : (
-                          <Avatar className={cn('flex-shrink-0', channelSidebarCollapsed ? 'h-8 w-8' : 'h-7 w-7')}>
+                          <Avatar className="flex-shrink-0 h-8 w-8">
                             {avatar.url && <AvatarImage src={avatar.url} />}
-                            <AvatarFallback className={cn(
-                              'text-xs font-semibold',
-                              isSelected ? 'bg-primary/20 text-primary' : 'bg-muted text-muted-foreground'
-                            )}>
+                            <AvatarFallback className={cn('text-xs font-semibold', isSelected ? 'bg-primary/20 text-primary' : 'bg-muted text-muted-foreground')}>
                               {avatar.fallback}
                             </AvatarFallback>
                           </Avatar>
                         )}
+                        {/* Text content */}
                         {!channelSidebarCollapsed && (
-                          <span className="text-[13px] font-medium truncate leading-tight">
-                            {displayName}
-                          </span>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center justify-between gap-1">
+                              <span className={cn('text-[13px] truncate leading-tight', unread ? 'font-semibold text-foreground' : 'font-medium')}>
+                                {displayName}
+                              </span>
+                              {lastMsg && (
+                                <span className="text-[10px] text-muted-foreground flex-shrink-0">
+                                  {new Date(lastMsg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                </span>
+                              )}
+                            </div>
+                            <div className="flex items-center justify-between gap-1 mt-0.5">
+                              {lastMsg ? (
+                                <span className={cn('text-[11px] truncate', unread ? 'text-foreground/80' : 'text-muted-foreground')}>
+                                  {lastMsg.is_activity ? lastMsg.content : `${lastMsg.sender_name}: ${lastMsg.content}`}
+                                </span>
+                              ) : (
+                                <span className="text-[11px] text-muted-foreground/50 italic">No messages yet</span>
+                              )}
+                              {unread && (
+                                <span className="flex-shrink-0 min-w-[18px] h-[18px] rounded-full bg-primary text-primary-foreground text-[10px] font-bold flex items-center justify-center px-1">
+                                  {(channel.unread_count ?? 0) > 99 ? '99+' : channel.unread_count}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        )}
+                        {/* Collapsed: unread dot */}
+                        {channelSidebarCollapsed && unread && (
+                          <span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-primary" />
                         )}
                       </motion.button>
                     </TooltipTrigger>
                     {channelSidebarCollapsed && (
                       <TooltipContent side={isRTL ? 'left' : 'right'}>
                         <p className="font-medium">{displayName}</p>
+                        {(channel.unread_count ?? 0) > 0 && <p className="text-xs text-muted-foreground">{channel.unread_count} unread</p>}
                       </TooltipContent>
                     )}
                   </Tooltip>
@@ -1403,6 +1442,8 @@ const InternalChatPage: React.FC = () => {
                 const isSelected = selectedChannel?.id === channel.id;
                 const otherUser = channel.participants?.find(p => p.user_id !== user?.id)?.user;
                 const isOnline = otherUser && userPresences[otherUser.id] === 'online';
+                const unread = (channel.unread_count ?? 0) > 0 && !isSelected;
+                const lastMsg = channel.last_message;
                 return (
                   <Tooltip key={channel.id}>
                     <TooltipTrigger asChild>
@@ -1411,42 +1452,63 @@ const InternalChatPage: React.FC = () => {
                         onClick={() => handleChannelSelect(channel)}
                         className={cn(
                           'w-full flex items-center gap-2.5 rounded-lg text-left transition-all duration-150 relative',
-                          channelSidebarCollapsed ? 'p-1.5 justify-center' : 'px-2 py-1.5',
+                          channelSidebarCollapsed ? 'p-1.5 justify-center' : 'px-2 py-2',
                           isSelected
                             ? 'bg-primary/10 text-foreground'
+                            : unread
+                            ? 'bg-muted/60 text-foreground hover:bg-muted'
                             : 'text-muted-foreground hover:bg-muted hover:text-foreground'
                         )}
                       >
                         {isSelected && (
-                          <span className={cn(
-                            'absolute inset-y-1 w-0.5 bg-primary rounded-full',
-                            isRTL ? 'right-0' : 'left-0'
-                          )} />
+                          <span className={cn('absolute inset-y-1 w-0.5 bg-primary rounded-full', isRTL ? 'right-0' : 'left-0')} />
                         )}
                         <div className="relative flex-shrink-0">
-                          <Avatar className={cn(channelSidebarCollapsed ? 'h-8 w-8' : 'h-7 w-7')}>
+                          <Avatar className="h-8 w-8">
                             {avatar.url && <AvatarImage src={avatar.url} />}
-                            <AvatarFallback className={cn(
-                              'text-xs font-semibold',
-                              isSelected ? 'bg-primary/20 text-primary' : 'bg-muted text-muted-foreground'
-                            )}>
+                            <AvatarFallback className={cn('text-xs font-semibold', isSelected ? 'bg-primary/20 text-primary' : 'bg-muted text-muted-foreground')}>
                               {avatar.fallback}
                             </AvatarFallback>
                           </Avatar>
-                          {isOnline && (
-                            <span className="absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full bg-green-500 border-2 border-card" />
-                          )}
+                          {isOnline && <span className="absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full bg-green-500 border-2 border-card" />}
                         </div>
                         {!channelSidebarCollapsed && (
-                          <span className="text-[13px] font-medium truncate leading-tight">
-                            {displayName}
-                          </span>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center justify-between gap-1">
+                              <span className={cn('text-[13px] truncate leading-tight', unread ? 'font-semibold text-foreground' : 'font-medium')}>
+                                {displayName}
+                              </span>
+                              {lastMsg && (
+                                <span className="text-[10px] text-muted-foreground flex-shrink-0">
+                                  {new Date(lastMsg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                </span>
+                              )}
+                            </div>
+                            <div className="flex items-center justify-between gap-1 mt-0.5">
+                              {lastMsg ? (
+                                <span className={cn('text-[11px] truncate', unread ? 'text-foreground/80' : 'text-muted-foreground')}>
+                                  {lastMsg.is_activity ? lastMsg.content : lastMsg.content}
+                                </span>
+                              ) : (
+                                <span className="text-[11px] text-muted-foreground/50 italic">No messages yet</span>
+                              )}
+                              {unread && (
+                                <span className="flex-shrink-0 min-w-[18px] h-[18px] rounded-full bg-primary text-primary-foreground text-[10px] font-bold flex items-center justify-center px-1">
+                                  {(channel.unread_count ?? 0) > 99 ? '99+' : channel.unread_count}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        )}
+                        {channelSidebarCollapsed && unread && (
+                          <span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-primary" />
                         )}
                       </motion.button>
                     </TooltipTrigger>
                     {channelSidebarCollapsed && (
                       <TooltipContent side={isRTL ? 'left' : 'right'}>
                         <p className="font-medium">{displayName}</p>
+                        {(channel.unread_count ?? 0) > 0 && <p className="text-xs text-muted-foreground">{channel.unread_count} unread</p>}
                       </TooltipContent>
                     )}
                   </Tooltip>
