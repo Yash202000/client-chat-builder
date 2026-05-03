@@ -13,6 +13,7 @@ import { toast } from "sonner";
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 
+import { PanelLeft, PanelRight } from 'lucide-react';
 import { Agent, Tool, KnowledgeBase } from '@/types';
 import { AgentComponentSidebar } from './AgentComponentSidebar';
 import { AgentPropertiesPanel } from './AgentPropertiesPanel';
@@ -76,8 +77,8 @@ export const AgentBuilder = ({ agent, showTester = false }: AgentBuilderProps) =
   const { authFetch } = useAuth();
   const queryClient = useQueryClient();
   const [inspectedMcpTools, setInspectedMcpTools] = useState<number[]>([]);
-  const [leftSidebarCollapsed, setLeftSidebarCollapsed] = useState(false);
-  const [rightSidebarCollapsed, setRightSidebarCollapsed] = useState(false);
+  const [leftSidebarCollapsed, setLeftSidebarCollapsed] = useState(() => window.innerWidth < 768);
+  const [rightSidebarCollapsed, setRightSidebarCollapsed] = useState(() => window.innerWidth < 768);
   const [simStates, setSimStates] = useState<Record<string, string>>({});
   const simClearTimer = useRef<ReturnType<typeof setTimeout>>();
 
@@ -476,15 +477,44 @@ export const AgentBuilder = ({ agent, showTester = false }: AgentBuilderProps) =
   const contextValue = { handleInspect: () => {} }; // handleInspect is not used anymore
 
   return (
-    <div className="flex h-[calc(100vh-11rem)] w-full rounded-xl overflow-hidden border border-border bg-card">
+    <div className="relative flex h-[calc(100vh-9rem)] sm:h-[calc(100vh-11rem)] w-full rounded-xl overflow-hidden border border-border bg-card">
       <AgentBuilderContext.Provider value={contextValue}>
         <ReactFlowProvider>
+
+            {/* Mobile backdrop — closes both sidebars when tapped */}
+            {(!leftSidebarCollapsed || !rightSidebarCollapsed) && (
+              <div
+                className="md:hidden fixed inset-0 bg-black/50 z-40"
+                onClick={() => { setLeftSidebarCollapsed(true); setRightSidebarCollapsed(true); }}
+              />
+            )}
+
             <AgentComponentSidebar
               agent={agent}
               isCollapsed={leftSidebarCollapsed}
               onToggle={() => setLeftSidebarCollapsed(!leftSidebarCollapsed)}
             />
             <div className="flex-grow workflow-canvas relative">
+              {/* Mobile floating sidebar toggles */}
+              {leftSidebarCollapsed && (
+                <button
+                  onClick={() => { setLeftSidebarCollapsed(false); setRightSidebarCollapsed(true); }}
+                  className="md:hidden absolute left-2 top-2 z-10 h-8 w-8 rounded-lg bg-card/90 backdrop-blur border border-border shadow-sm flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors"
+                  title="Components"
+                >
+                  <PanelLeft className="h-4 w-4" />
+                </button>
+              )}
+              {rightSidebarCollapsed && !showTester && (
+                <button
+                  onClick={() => { setRightSidebarCollapsed(false); setLeftSidebarCollapsed(true); }}
+                  className="md:hidden absolute right-2 top-2 z-10 h-8 w-8 rounded-lg bg-card/90 backdrop-blur border border-border shadow-sm flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors"
+                  title="Properties"
+                >
+                  <PanelRight className="h-4 w-4" />
+                </button>
+              )}
+
               {/* Gradient overlay at top */}
               <div className="absolute top-0 left-0 right-0 h-12 bg-gradient-to-b from-card/60 to-transparent pointer-events-none z-10" />
               <ReactFlow
@@ -519,7 +549,7 @@ export const AgentBuilder = ({ agent, showTester = false }: AgentBuilderProps) =
               </ReactFlow>
             </div>
             {showTester ? (
-              <div className="w-72 flex-shrink-0 overflow-hidden">
+              <div className="w-64 sm:w-72 flex-shrink-0 overflow-hidden">
                 <AgentTesterPanel agentId={agent.id} agentName={agent.name} onExecution={handleExecution} />
               </div>
             ) : (

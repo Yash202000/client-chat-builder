@@ -12,7 +12,7 @@ import ReactFlow, {
 import 'reactflow/dist/style.css';
 import { toast } from "sonner";
 import { Button } from '@/components/ui/button';
-import { Edit, ArrowLeft, Workflow as WorkflowIcon, Sparkles, Settings, LayoutTemplate, Layers, AlertTriangle, PanelRightClose, PanelRightOpen } from 'lucide-react';
+import { Edit, ArrowLeft, Workflow as WorkflowIcon, Sparkles, Settings, LayoutTemplate, Layers, AlertTriangle, PanelRightClose, PanelRightOpen, PanelLeft, PanelRight, X } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from '@/components/ui/resizable';
 import { ImperativePanelHandle } from 'react-resizable-panels';
@@ -184,11 +184,16 @@ const VisualWorkflowBuilder = () => {
     simTimers.current.push(tDone);
   }, [edges]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // Mobile overlay state
+  const [mobileNodePaletteOpen, setMobileNodePaletteOpen] = useState(false);
+  const [mobilePropsPanelOpen, setMobilePropsPanelOpen] = useState(false);
+
   // Properties Panel resize state
   const propertiesPanelRef = useRef<ImperativePanelHandle>(null);
   const [isPropertiesPanelCollapsed, setIsPropertiesPanelCollapsed] = useState(() => {
     const saved = localStorage.getItem('workflowBuilder.propertiesPanel.collapsed');
-    return saved === 'true';
+    if (saved !== null) return saved === 'true';
+    return window.innerWidth < 768; // auto-collapse on mobile
   });
 
   // Properties Panel constants
@@ -197,8 +202,9 @@ const VisualWorkflowBuilder = () => {
   const MIN_PANEL_SIZE = 15;
   const MAX_PANEL_SIZE = 40;
 
-  // Get saved panel size
+  // Get saved panel size — always 0 on mobile (panel is handled via overlay)
   const getSavedPanelSize = useCallback(() => {
+    if (window.innerWidth < 768) return 0;
     const saved = localStorage.getItem(PROPERTIES_PANEL_STORAGE_KEY);
     return saved ? parseFloat(saved) : DEFAULT_PANEL_SIZE;
   }, []);
@@ -206,6 +212,13 @@ const VisualWorkflowBuilder = () => {
   // Handle panel resize
   const handlePanelResize = useCallback((size: number) => {
     localStorage.setItem(PROPERTIES_PANEL_STORAGE_KEY, String(size));
+  }, []);
+
+  // Collapse the panel on mobile after mount
+  useEffect(() => {
+    if (window.innerWidth < 768 && propertiesPanelRef.current) {
+      propertiesPanelRef.current.collapse();
+    }
   }, []);
 
   // Toggle properties panel collapse/expand
@@ -712,33 +725,33 @@ const VisualWorkflowBuilder = () => {
       )}
       <div className="dndflow h-screen flex flex-col bg-background">
         {/* Toolbar */}
-        <div className="flex-shrink-0 px-4 py-2.5 border-b border-border bg-card" dir={isRTL ? 'rtl' : 'ltr'}>
-          <div className="flex items-center gap-3 flex-wrap">
+        <div className="flex-shrink-0 px-3 sm:px-4 py-2.5 border-b border-border bg-card" dir={isRTL ? 'rtl' : 'ltr'}>
+          <div className="flex items-center gap-2 sm:gap-3">
             <Button
               onClick={() => navigate('/dashboard/workflows')}
               variant="ghost"
               size="sm"
-              className="h-8 px-2.5 text-xs text-muted-foreground hover:text-foreground gap-1.5"
+              className="h-8 px-2 sm:px-2.5 text-xs text-muted-foreground hover:text-foreground gap-1.5 flex-shrink-0"
             >
               <ArrowLeft className="h-3.5 w-3.5" />
-              {t("workflows.editor.backButton")}
+              <span className="hidden sm:inline">{t("workflows.editor.backButton")}</span>
             </Button>
 
             <div className="w-px h-5 bg-border flex-shrink-0" />
 
             <div className="flex-grow min-w-0">
-              <div className="flex items-center gap-2.5">
-                <div className="h-8 w-8 rounded-lg bg-violet-500/10 border border-violet-500/20 flex items-center justify-center flex-shrink-0">
-                  <WorkflowIcon className="h-4 w-4 text-violet-600 dark:text-violet-400" />
+              <div className="flex items-center gap-2">
+                <div className="h-7 w-7 sm:h-8 sm:w-8 rounded-lg bg-violet-500/10 border border-violet-500/20 flex items-center justify-center flex-shrink-0">
+                  <WorkflowIcon className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-violet-600 dark:text-violet-400" />
                 </div>
                 <div className="min-w-0">
-                  <h2 className="text-sm font-semibold truncate text-foreground font-mono leading-tight">{workflow.name}</h2>
+                  <h2 className="text-xs sm:text-sm font-semibold truncate text-foreground font-mono leading-tight">{workflow.name}</h2>
                   <div className="flex items-center gap-1.5 mt-0.5">
                     <Badge variant="outline" className="text-[10px] font-mono border-border text-muted-foreground h-4 px-1.5">{t("workflows.editor.versionBadge", { version: workflow.version })}</Badge>
                     {workflow.is_active && (
                       <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-emerald-600 dark:text-emerald-400">
                         <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                        {t("workflows.editor.activebadge")}
+                        <span className="hidden sm:inline">{t("workflows.editor.activebadge")}</span>
                       </span>
                     )}
                   </div>
@@ -746,40 +759,43 @@ const VisualWorkflowBuilder = () => {
               </div>
             </div>
 
-            <div className="flex items-center gap-1.5">
+            <div className="flex items-center gap-1 sm:gap-1.5 flex-shrink-0">
               <Button
                 onClick={() => setDetailsDialogOpen(true)}
                 variant="outline"
                 size="sm"
-                className="h-8 px-3 text-xs border-border text-muted-foreground hover:text-foreground gap-1.5"
+                className="h-8 px-2 sm:px-3 text-xs border-border text-muted-foreground hover:text-foreground gap-1.5"
+                title={t("workflows.editor.editDetailsButton")}
               >
                 <Edit className="h-3 w-3" />
-                {t("workflows.editor.editDetailsButton")}
+                <span className="hidden sm:inline">{t("workflows.editor.editDetailsButton")}</span>
               </Button>
               <Button
                 onClick={() => setShowSettings(true)}
                 variant="outline"
                 size="sm"
-                className="h-8 px-3 text-xs border-border text-muted-foreground hover:text-foreground gap-1.5"
+                className="h-8 px-2 sm:px-3 text-xs border-border text-muted-foreground hover:text-foreground gap-1.5"
+                title={t("workflows.editor.settingsButton")}
               >
                 <Settings className="h-3 w-3" />
-                {t("workflows.editor.settingsButton")}
+                <span className="hidden sm:inline">{t("workflows.editor.settingsButton")}</span>
               </Button>
               {workflow?.id && (
                 <Button
                   onClick={() => setSaveAsTemplateOpen(true)}
                   variant="outline"
                   size="sm"
-                  className="h-8 px-3 text-xs border-border text-muted-foreground hover:text-foreground gap-1.5"
+                  className="h-8 px-2 sm:px-3 text-xs border-border text-muted-foreground hover:text-foreground gap-1.5 hidden sm:inline-flex"
+                  title={t("workflowTemplates.saveAsTemplate")}
                 >
                   <LayoutTemplate className="h-3 w-3" />
-                  {t("workflowTemplates.saveAsTemplate")}
+                  <span className="hidden lg:inline">{t("workflowTemplates.saveAsTemplate")}</span>
                 </Button>
               )}
               <Button
                 onClick={() => saveWorkflow()}
                 size="sm"
-                className="h-8 px-4 text-xs bg-violet-500 hover:bg-violet-600 text-white shadow-sm font-medium"
+                className="h-8 px-3 sm:px-4 text-xs bg-violet-500 hover:bg-violet-600 text-white shadow-sm font-medium"
               >
                 {t("workflows.editor.saveButton")}
               </Button>
@@ -812,12 +828,46 @@ const VisualWorkflowBuilder = () => {
         <div className="flex-grow flex overflow-hidden relative">
           <ReactFlowProvider>
             <WorkflowBuilderContext.Provider value={{ addNodeWithConnection, nodes, edges }}>
-            <Sidebar />
+
+            {/* Mobile backdrops */}
+            {(mobileNodePaletteOpen || mobilePropsPanelOpen) && (
+              <div
+                className="md:hidden fixed inset-0 bg-black/50 z-40"
+                onClick={() => {
+                  setMobileNodePaletteOpen(false);
+                  setMobilePropsPanelOpen(false);
+                }}
+              />
+            )}
+
+            <Sidebar
+              mobileOpen={mobileNodePaletteOpen}
+              onMobileClose={() => setMobileNodePaletteOpen(false)}
+            />
             <ResizablePanelGroup direction="horizontal" className="flex-grow">
 
               {/* ReactFlow Canvas Panel */}
               <ResizablePanel defaultSize={100 - getSavedPanelSize()} minSize={50}>
-                <div className="h-full workflow-canvas" ref={reactFlowWrapper}>
+                <div className="h-full workflow-canvas relative" ref={reactFlowWrapper}>
+                  {/* Mobile floating toggles */}
+                  {!mobileNodePaletteOpen && (
+                    <button
+                      onClick={() => { setMobileNodePaletteOpen(true); setMobilePropsPanelOpen(false); }}
+                      className="md:hidden absolute left-2 top-2 z-10 h-8 w-8 rounded-lg bg-card/90 backdrop-blur border border-border shadow-sm flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors"
+                      title="Node Palette"
+                    >
+                      <PanelLeft className="h-4 w-4" />
+                    </button>
+                  )}
+                  {!mobilePropsPanelOpen && (
+                    <button
+                      onClick={() => { setMobilePropsPanelOpen(true); setMobileNodePaletteOpen(false); }}
+                      className="md:hidden absolute right-2 top-2 z-10 h-8 w-8 rounded-lg bg-card/90 backdrop-blur border border-border shadow-sm flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors"
+                      title="Properties"
+                    >
+                      <PanelRight className="h-4 w-4" />
+                    </button>
+                  )}
                   <ReactFlow
                     nodes={displayNodes}
                     edges={displayEdges}
@@ -848,7 +898,7 @@ const VisualWorkflowBuilder = () => {
                   >
                     <Controls className="bg-card border-border rounded-lg shadow-sm overflow-hidden [&_button]:text-foreground [&_button]:hover:bg-muted [&_button]:transition-colors [&_button_svg]:fill-foreground" />
                     <MiniMap
-                      className="bg-card border-border rounded-lg shadow-sm overflow-hidden"
+                      className="hidden sm:block bg-card border-border rounded-lg shadow-sm overflow-hidden"
                       nodeColor={(node) => {
                         if (node.type === 'start') return '#10b981';
                         if (node.type === 'response') return '#ef4444';
@@ -863,8 +913,8 @@ const VisualWorkflowBuilder = () => {
                 </div>
               </ResizablePanel>
 
-              {/* Resize Handle */}
-              <ResizableHandle withHandle className="bg-border hover:bg-violet-400 dark:hover:bg-violet-500 transition-colors" />
+              {/* Resize Handle — hidden on mobile */}
+              <ResizableHandle withHandle className="hidden md:flex bg-border hover:bg-violet-400 dark:hover:bg-violet-500 transition-colors" />
 
               {/* Properties Panel */}
               <ResizablePanel
@@ -884,7 +934,11 @@ const VisualWorkflowBuilder = () => {
                   localStorage.setItem('workflowBuilder.propertiesPanel.collapsed', 'false');
                 }}
               >
-                <div className="h-full overflow-hidden">
+                <div className={mobilePropsPanelOpen
+                    ? 'fixed top-0 right-0 bottom-0 w-[min(90vw,400px)] z-50 shadow-2xl md:relative md:top-auto md:right-auto md:bottom-auto md:w-auto md:z-auto md:shadow-none h-full overflow-hidden'
+                    : 'relative h-full overflow-hidden'
+                  }
+                >
                   <WorkflowAISidebar
                     ref={sidebarRef}
                     selectedNode={selectedNode}
@@ -895,6 +949,7 @@ const VisualWorkflowBuilder = () => {
                     deleteNode={deleteNode}
                     workflowId={workflowId}
                     workflowDbId={workflow?.id}
+                    onMobileClose={mobilePropsPanelOpen ? () => setMobilePropsPanelOpen(false) : undefined}
                     onNodesUpdated={(ids, simSteps) => {
                       if (simSteps !== undefined && ids.length === 0 && simSteps.length === 0) {
                         clearSimulation(); // reset signal from sidebar
@@ -912,12 +967,12 @@ const VisualWorkflowBuilder = () => {
               </ResizablePanel>
             </ResizablePanelGroup>
 
-            {/* Collapse Toggle Button - Always visible on the edge */}
+            {/* Collapse Toggle Button - Desktop only */}
             <Button
               variant="ghost"
               size="icon"
               onClick={togglePropertiesPanel}
-              className={`absolute top-4 z-20 h-8 w-8 bg-card border border-border shadow-sm hover:bg-muted transition-colors ${isRTL ? 'left-0 rounded-r-md rounded-l-none' : 'right-0 rounded-l-md rounded-r-none'}`}
+              className={`hidden md:flex absolute top-4 z-20 h-8 w-8 bg-card border border-border shadow-sm hover:bg-muted transition-colors ${isRTL ? 'left-0 rounded-r-md rounded-l-none' : 'right-0 rounded-l-md rounded-r-none'}`}
               title={isPropertiesPanelCollapsed ? t("workflows.editor.properties.expand") : t("workflows.editor.properties.collapse")}
             >
               {isRTL

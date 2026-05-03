@@ -10,6 +10,7 @@ import { Agent, Session, User } from '@/types';
 import { useAuth } from "@/hooks/useAuth";
 import { getWebSocketUrl } from '@/config/api';
 import { BACKEND_URL } from '@/config/env';
+import { ChevronLeft } from 'lucide-react';
 
 const ConversationsPage: React.FC = () => {
   const queryClient = useQueryClient();
@@ -85,7 +86,7 @@ const ConversationsPage: React.FC = () => {
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-4 gap-6 h-[calc(100vh-4rem)]">
-      <div className="md:col-span-1 flex flex-col gap-4">
+      <div className={`md:col-span-1 flex flex-col gap-4 ${selectedSessionId ? 'hidden md:block' : 'block'}`}>
         <Card>
           <CardHeader>
             <CardTitle>Agents</CardTitle>
@@ -135,9 +136,12 @@ const ConversationsPage: React.FC = () => {
           </CardContent>
         </Card>
       </div>
-      <div className="md:col-span-3">
+      <div className={`md:col-span-3 ${selectedSessionId ? 'block' : 'hidden md:block'}`}>
         {selectedSessionId && selectedAgentId ? (
-          <ConversationDetail sessionId={selectedSessionId} agentId={selectedAgentId} />
+          <>
+            <button className="md:hidden flex items-center gap-1 text-sm text-muted-foreground p-2" onClick={() => setSelectedSessionId(null)}><ChevronLeft className="h-4 w-4" />Back</button>
+            <ConversationDetail sessionId={selectedSessionId} agentId={selectedAgentId} />
+          </>
         ) : (
           <div className="flex items-center justify-center h-full">
             <p className="text-gray-500">Select a session to view the conversation.</p>

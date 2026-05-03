@@ -165,18 +165,18 @@ const ContentTypeFormPage = ({ mode }: ContentTypeFormPageProps) => {
   }
 
   return (
-    <div className="p-6 max-w-4xl mx-auto space-y-6">
-      <div className="flex items-center gap-4">
+    <div className="px-4 sm:px-6 py-4 sm:py-6 max-w-4xl mx-auto space-y-6">
+      <div className="flex items-center gap-3 sm:gap-4">
         <Link to="/dashboard/cms/types">
           <Button variant="ghost" size="icon">
             <ArrowLeft className="w-4 h-4" />
           </Button>
         </Link>
         <div>
-          <h1 className="text-2xl font-bold">
+          <h1 className="text-xl sm:text-2xl font-bold">
             {isEdit ? 'Edit Content Type' : 'Create Content Type'}
           </h1>
-          <p className="text-muted-foreground">
+          <p className="text-muted-foreground hidden sm:block">
             {isEdit ? 'Modify the schema for this content type' : 'Define a new content schema'}
           </p>
         </div>
@@ -191,7 +191,7 @@ const ContentTypeFormPage = ({ mode }: ContentTypeFormPageProps) => {
               <CardDescription>General settings for this content type</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <FormField
                   control={form.control}
                   name="name"
@@ -301,8 +301,8 @@ const ContentTypeFormPage = ({ mode }: ContentTypeFormPageProps) => {
                     <GripVertical className="w-4 h-4" />
                   </div>
 
-                  <div className="flex-1 grid grid-cols-12 gap-3">
-                    <div className="col-span-3">
+                  <div className="flex-1 grid grid-cols-2 sm:grid-cols-12 gap-3">
+                    <div className="col-span-2 sm:col-span-3">
                       <FormField
                         control={form.control}
                         name={`field_schema.${index}.name`}
@@ -331,7 +331,7 @@ const ContentTypeFormPage = ({ mode }: ContentTypeFormPageProps) => {
                       />
                     </div>
 
-                    <div className="col-span-2">
+                    <div className="col-span-2 sm:col-span-2">
                       <FormField
                         control={form.control}
                         name={`field_schema.${index}.slug`}
@@ -347,7 +347,7 @@ const ContentTypeFormPage = ({ mode }: ContentTypeFormPageProps) => {
                       />
                     </div>
 
-                    <div className="col-span-3">
+                    <div className="col-span-2 sm:col-span-3">
                       <FormField
                         control={form.control}
                         name={`field_schema.${index}.type`}
@@ -376,7 +376,7 @@ const ContentTypeFormPage = ({ mode }: ContentTypeFormPageProps) => {
                       />
                     </div>
 
-                    <div className="col-span-2 flex items-end gap-4 pb-2">
+                    <div className="col-span-1 sm:col-span-2 flex items-end gap-2 sm:gap-4 pb-2">
                       <FormField
                         control={form.control}
                         name={`field_schema.${index}.required`}
@@ -394,7 +394,7 @@ const ContentTypeFormPage = ({ mode }: ContentTypeFormPageProps) => {
                       />
                     </div>
 
-                    <div className="col-span-2 flex items-end gap-4 pb-2">
+                    <div className="col-span-1 sm:col-span-2 flex items-end gap-2 sm:gap-4 pb-2">
                       <FormField
                         control={form.control}
                         name={`field_schema.${index}.searchable`}

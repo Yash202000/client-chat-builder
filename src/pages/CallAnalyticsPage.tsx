@@ -60,16 +60,16 @@ function StatCard({
     <motion.div
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
-      className="bg-card border border-border rounded-xl p-5"
+      className="bg-card border border-border rounded-xl p-3.5 sm:p-5"
     >
-      <div className="flex items-start justify-between">
-        <div>
-          <p className="text-xs text-muted-foreground font-medium mb-1">{label}</p>
-          <p className="text-2xl font-bold text-foreground">{value}</p>
-          {sub && <p className="text-xs text-muted-foreground mt-0.5">{sub}</p>}
+      <div className="flex items-start justify-between gap-2">
+        <div className="min-w-0">
+          <p className="text-[11px] sm:text-xs text-muted-foreground font-medium mb-1 leading-tight">{label}</p>
+          <p className="text-xl sm:text-2xl font-bold text-foreground">{value}</p>
+          {sub && <p className="text-[11px] sm:text-xs text-muted-foreground mt-0.5 leading-tight">{sub}</p>}
         </div>
-        <div className={`h-10 w-10 rounded-xl ${color} flex items-center justify-center`}>
-          <Icon className="h-5 w-5 text-white" />
+        <div className={`h-8 w-8 sm:h-10 sm:w-10 rounded-xl ${color} flex items-center justify-center flex-shrink-0`}>
+          <Icon className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
         </div>
       </div>
     </motion.div>
@@ -103,21 +103,21 @@ export default function CallAnalyticsPage() {
   return (
     <div className="flex flex-col h-full overflow-hidden">
       {/* Header */}
-      <div className="flex items-center justify-between px-6 py-4 border-b border-border/60 flex-shrink-0">
-        <div className="flex items-center gap-3">
-          <BarChart3 className="h-5 w-5 text-primary" />
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-4 px-4 sm:px-6 py-3 sm:py-4 border-b border-border/60 flex-shrink-0">
+        <div className="flex items-center gap-2.5">
+          <BarChart3 className="h-4 w-4 sm:h-5 sm:w-5 text-primary flex-shrink-0" />
           <div>
-            <h1 className="text-lg font-semibold text-foreground">{t('analytics.title')}</h1>
-            <p className="text-xs text-muted-foreground">{t('analytics.subtitle')}</p>
+            <h1 className="text-base sm:text-lg font-semibold text-foreground">{t('analytics.title')}</h1>
+            <p className="text-xs text-muted-foreground hidden sm:block">{t('analytics.subtitle')}</p>
           </div>
         </div>
-        {/* Day range selector */}
-        <div className="flex items-center gap-1 bg-muted rounded-lg p-1">
+        {/* Day range selector — scrollable on mobile */}
+        <div className="flex items-center gap-1 bg-muted rounded-lg p-1 self-start sm:self-auto overflow-x-auto scrollbar-none">
           {RANGE_OPTIONS.map(opt => (
             <button
               key={opt.days}
               onClick={() => setDays(opt.days)}
-              className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${
+              className={`px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-md text-xs font-medium transition-colors whitespace-nowrap flex-shrink-0 ${
                 days === opt.days
                   ? 'bg-background text-foreground shadow-sm'
                   : 'text-muted-foreground hover:text-foreground'
@@ -129,7 +129,7 @@ export default function CallAnalyticsPage() {
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto p-6 space-y-6">
+      <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4 sm:space-y-6">
         {isLoading ? (
           <div className="text-center text-sm text-muted-foreground py-16">{t('analytics.loading')}</div>
         ) : data ? (
@@ -156,12 +156,12 @@ export default function CallAnalyticsPage() {
             </div>
 
             {/* Charts row */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
               {/* Bar chart: calls by day */}
-              <div className="lg:col-span-2 bg-card border border-border rounded-xl p-5">
-                <h3 className="text-sm font-semibold text-foreground mb-4">{t('analytics.callsByDay')}</h3>
-                <ResponsiveContainer width="100%" height={220}>
-                  <BarChart data={data.by_day} margin={{ top: 4, right: 8, left: -16, bottom: 0 }}>
+              <div className="lg:col-span-2 bg-card border border-border rounded-xl p-4 sm:p-5">
+                <h3 className="text-sm font-semibold text-foreground mb-3 sm:mb-4">{t('analytics.callsByDay')}</h3>
+                <ResponsiveContainer width="100%" height={200}>
+                  <BarChart data={data.by_day} margin={{ top: 4, right: 4, left: -20, bottom: 0 }}>
                     <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                     <XAxis
                       dataKey="date"
@@ -179,10 +179,10 @@ export default function CallAnalyticsPage() {
               </div>
 
               {/* Pie chart: status breakdown */}
-              <div className="bg-card border border-border rounded-xl p-5">
-                <h3 className="text-sm font-semibold text-foreground mb-4">{t('analytics.statusBreakdown')}</h3>
+              <div className="bg-card border border-border rounded-xl p-4 sm:p-5">
+                <h3 className="text-sm font-semibold text-foreground mb-3 sm:mb-4">{t('analytics.statusBreakdown')}</h3>
                 {pieData.length > 0 ? (
-                  <ResponsiveContainer width="100%" height={220}>
+                  <ResponsiveContainer width="100%" height={200}>
                     <PieChart>
                       <Pie
                         data={pieData}
@@ -204,7 +204,7 @@ export default function CallAnalyticsPage() {
                     </PieChart>
                   </ResponsiveContainer>
                 ) : (
-                  <div className="h-[220px] flex items-center justify-center text-sm text-muted-foreground">
+                  <div className="h-[200px] flex items-center justify-center text-sm text-muted-foreground">
                     {t('analytics.noData')}
                   </div>
                 )}
@@ -213,7 +213,7 @@ export default function CallAnalyticsPage() {
 
             {/* Per-agent table */}
             <div className="bg-card border border-border rounded-xl overflow-hidden">
-              <div className="flex items-center gap-2 px-5 py-4 border-b border-border/60">
+              <div className="flex items-center gap-2 px-4 sm:px-5 py-3 sm:py-4 border-b border-border/60">
                 <Users className="h-4 w-4 text-primary" />
                 <h3 className="text-sm font-semibold text-foreground">{t('analytics.byAgent')}</h3>
               </div>
@@ -224,17 +224,17 @@ export default function CallAnalyticsPage() {
                   <table className="w-full text-sm">
                     <thead>
                       <tr className="border-b border-border/60 bg-muted/30">
-                        <th className="text-left px-5 py-3 text-xs font-semibold text-muted-foreground">{t('analytics.agent')}</th>
-                        <th className="text-right px-5 py-3 text-xs font-semibold text-muted-foreground">{t('analytics.calls')}</th>
-                        <th className="text-right px-5 py-3 text-xs font-semibold text-muted-foreground">{t('analytics.avgDuration')}</th>
+                        <th className="text-left px-3 sm:px-5 py-2.5 sm:py-3 text-xs font-semibold text-muted-foreground">{t('analytics.agent')}</th>
+                        <th className="text-right px-3 sm:px-5 py-2.5 sm:py-3 text-xs font-semibold text-muted-foreground">{t('analytics.calls')}</th>
+                        <th className="text-right px-3 sm:px-5 py-2.5 sm:py-3 text-xs font-semibold text-muted-foreground">{t('analytics.avgDuration')}</th>
                       </tr>
                     </thead>
                     <tbody>
                       {data.by_agent.map(row => (
                         <tr key={row.agent_id} className="border-b border-border/40 hover:bg-muted/20 transition-colors">
-                          <td className="px-5 py-3 font-medium text-foreground">{row.agent_name || `Agent ${row.agent_id}`}</td>
-                          <td className="px-5 py-3 text-right text-muted-foreground">{row.calls}</td>
-                          <td className="px-5 py-3 text-right text-muted-foreground font-mono">{fmt(row.avg_duration)}</td>
+                          <td className="px-3 sm:px-5 py-2.5 sm:py-3 font-medium text-foreground text-xs sm:text-sm">{row.agent_name || `Agent ${row.agent_id}`}</td>
+                          <td className="px-3 sm:px-5 py-2.5 sm:py-3 text-right text-muted-foreground text-xs sm:text-sm">{row.calls}</td>
+                          <td className="px-3 sm:px-5 py-2.5 sm:py-3 text-right text-muted-foreground font-mono text-xs sm:text-sm">{fmt(row.avg_duration)}</td>
                         </tr>
                       ))}
                     </tbody>

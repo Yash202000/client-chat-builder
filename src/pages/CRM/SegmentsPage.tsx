@@ -416,6 +416,7 @@ export default function SegmentsPage() {
 
       {/* Segments Table */}
       <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm overflow-hidden">
+        <div className="overflow-x-auto">
         <Table>
           <TableHeader>
             <TableRow className="border-b border-slate-200/80 dark:border-slate-700/60 bg-slate-50/50 dark:bg-slate-800/50">
@@ -523,6 +524,7 @@ export default function SegmentsPage() {
             )}
           </TableBody>
         </Table>
+        </div>
       </div>
 
       </div>
@@ -538,7 +540,7 @@ export default function SegmentsPage() {
           }
         }}
       >
-        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto rounded-2xl border-slate-200/80 dark:border-slate-700/60 dark:bg-slate-800">
+        <DialogContent className="w-full max-w-3xl max-h-[90vh] overflow-y-auto rounded-2xl border-slate-200/80 dark:border-slate-700/60 dark:bg-slate-800">
           <DialogHeader>
             <DialogTitle className="text-xl font-semibold text-slate-900 dark:text-white">
               {isEditDialogOpen
@@ -664,7 +666,7 @@ export default function SegmentsPage() {
 
       {/* View Members Dialog */}
       <Dialog open={isViewDialogOpen} onOpenChange={setIsViewDialogOpen}>
-        <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto rounded-2xl border-slate-200/80 dark:border-slate-700/60 dark:bg-slate-800">
+        <DialogContent className="w-full max-w-3xl max-h-[80vh] overflow-y-auto rounded-2xl border-slate-200/80 dark:border-slate-700/60 dark:bg-slate-800">
           <DialogHeader>
             <DialogTitle className="text-xl font-semibold text-slate-900 dark:text-white">
               {selectedSegment?.name} - {t('crm.segments.members', 'Members')}

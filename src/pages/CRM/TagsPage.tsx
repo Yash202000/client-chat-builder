@@ -233,34 +233,33 @@ export default function TagsPage() {
   return (
     <div className="min-h-full bg-slate-50 dark:bg-slate-950">
       {/* Header */}
-      <div className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 px-6 py-6">
-        <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
+      <div className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 px-4 sm:px-6 py-4 sm:py-6">
+        <div className="flex items-center justify-between gap-3">
           <div className="flex items-center gap-3">
-            <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-orange-500 to-red-600 flex items-center justify-center flex-shrink-0">
-              <TagIcon className="h-6 w-6 text-white" />
+            <div className="h-9 w-9 sm:h-12 sm:w-12 rounded-xl bg-gradient-to-br from-orange-500 to-red-600 flex items-center justify-center flex-shrink-0">
+              <TagIcon className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
             </div>
             <div>
-              <h1 className="text-2xl font-bold text-slate-900 dark:text-white leading-tight">
+              <h1 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white leading-tight">
                 {t('crm.tags.title')}
               </h1>
-              <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">
+              <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-0.5">
                 {t('crm.tags.subtitle')}
               </p>
             </div>
           </div>
           <Button
             onClick={openCreateDialog}
-            className="bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-700 hover:to-red-700 text-white rounded-xl h-9 px-4 text-sm"
+            className="bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-700 hover:to-red-700 text-white rounded-xl h-9 px-3 sm:px-4 text-sm flex-shrink-0"
           >
-            <Plus className="h-4 w-4 mr-2" />
-            {t('crm.tags.addTag')}
+            <Plus className="h-4 w-4 sm:mr-2" /><span className="hidden sm:inline">{t('crm.tags.addTag')}</span>
           </Button>
         </div>
       </div>
-      <div className="px-6 py-6 space-y-6">
+      <div className="px-4 sm:px-6 py-4 sm:py-6 space-y-4 sm:space-y-6">
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-5">
         <div className="p-5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm hover:shadow-md transition-all duration-300">
           <div className="flex items-start justify-between">
             <div>
@@ -337,7 +336,7 @@ export default function TagsPage() {
           </div>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
           {filteredTags.map((tag) => (
             <div
               key={tag.id}

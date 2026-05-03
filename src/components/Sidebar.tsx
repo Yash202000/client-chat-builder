@@ -65,7 +65,7 @@ const AccordionSection = ({ title, children, isRTL, isCollapsed = false }) => {
 }
 
 
-const Sidebar = () => {
+const Sidebar = ({ mobileOpen = false, onMobileClose }: { mobileOpen?: boolean; onMobileClose?: () => void }) => {
   const { t, isRTL } = useI18n();
   const [prebuiltTools, setPrebuiltTools] = useState([]);
   const [customTools, setCustomTools] = useState([]);
@@ -94,7 +94,13 @@ const Sidebar = () => {
 
   return (
     <aside
-      className={`${isCollapsed ? 'w-14' : 'w-60'} flex-shrink-0 border-r border-border bg-card overflow-y-auto transition-all duration-300 ease-in-out`}
+      className={`
+        fixed inset-y-0 ${isRTL ? 'right-0' : 'left-0'} z-50
+        md:relative md:inset-auto md:z-auto
+        ${mobileOpen ? 'translate-x-0' : isRTL ? 'translate-x-full md:translate-x-0' : '-translate-x-full md:translate-x-0'}
+        ${isCollapsed ? 'w-14' : 'w-60'}
+        flex-shrink-0 border-r border-border bg-card overflow-y-auto transition-all duration-300 ease-in-out
+      `}
       dir={isRTL ? 'rtl' : 'ltr'}
     >
       {/* Header */}
@@ -109,16 +115,30 @@ const Sidebar = () => {
             </span>
           </div>
         )}
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={() => setIsCollapsed(!isCollapsed)}
-          className="h-7 w-7 rounded-md hover:bg-muted transition-colors text-muted-foreground hover:text-foreground"
-          title={isCollapsed ? t("workflows.editor.sidebar.expand") || "Expand sidebar" : t("workflows.editor.sidebar.collapse") || "Collapse sidebar"}
-        >
-          {isCollapsed ? <PanelLeft className="h-3.5 w-3.5" /> : <PanelLeftClose className="h-3.5 w-3.5" />}
-          <span className="sr-only">{isCollapsed ? "Expand" : "Collapse"} Sidebar</span>
-        </Button>
+        <div className="flex items-center gap-1">
+          {/* Mobile close button */}
+          {onMobileClose && (
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={onMobileClose}
+              className="md:hidden h-7 w-7 rounded-md hover:bg-muted transition-colors text-muted-foreground hover:text-foreground"
+            >
+              <PanelLeftClose className="h-3.5 w-3.5" />
+            </Button>
+          )}
+          {/* Desktop collapse toggle */}
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setIsCollapsed(!isCollapsed)}
+            className="hidden md:flex h-7 w-7 rounded-md hover:bg-muted transition-colors text-muted-foreground hover:text-foreground"
+            title={isCollapsed ? t("workflows.editor.sidebar.expand") || "Expand sidebar" : t("workflows.editor.sidebar.collapse") || "Collapse sidebar"}
+          >
+            {isCollapsed ? <PanelLeft className="h-3.5 w-3.5" /> : <PanelLeftClose className="h-3.5 w-3.5" />}
+            <span className="sr-only">{isCollapsed ? "Expand" : "Collapse"} Sidebar</span>
+          </Button>
+        </div>
       </div>
 
       <div className={`${isCollapsed ? 'px-1.5' : 'px-3'} py-3 space-y-0`}>

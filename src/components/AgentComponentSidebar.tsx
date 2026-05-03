@@ -98,7 +98,7 @@ export const AgentComponentSidebar = ({ agent, isCollapsed = false, onToggle }: 
   const attachedWorkflowIds = new Set(agent.workflows?.map(w => w.id) || []);
 
   return (
-    <aside className={`${isCollapsed ? 'w-12' : 'w-[232px]'} bg-gradient-to-b from-slate-50 to-white dark:from-slate-900 dark:to-slate-900 ${isRTL ? 'border-l' : 'border-r'} border-slate-200 dark:border-slate-700 overflow-y-auto transition-all duration-300 ease-in-out scrollbar-thin scrollbar-thumb-slate-200 dark:scrollbar-thumb-slate-700`}>
+    <aside className={`${isCollapsed ? 'w-0 overflow-hidden md:w-12' : 'overflow-y-auto fixed md:relative inset-y-0 left-0 z-50 md:inset-auto w-[280px] md:w-[232px] shadow-2xl md:shadow-none'} bg-gradient-to-b from-slate-50 to-white dark:from-slate-900 dark:to-slate-900 ${isRTL ? 'border-l' : 'border-r'} border-slate-200 dark:border-slate-700 transition-all duration-300 ease-in-out scrollbar-thin scrollbar-thumb-slate-200 dark:scrollbar-thumb-slate-700`}>
       {/* Header with toggle button */}
       <div className={`sticky top-0 z-10 flex items-center ${isCollapsed ? 'justify-center' : 'justify-between'} p-4 bg-gradient-to-b from-slate-50 via-slate-50 to-transparent dark:from-slate-900 dark:via-slate-900`}>
         {!isCollapsed && (

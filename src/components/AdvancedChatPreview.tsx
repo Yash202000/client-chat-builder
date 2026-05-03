@@ -111,6 +111,7 @@ export const AdvancedChatPreview = ({ selectedAgentId: initialAgentId }: { selec
   const [shouldConnect, setShouldConnect] = useState(false);
   const [publishedUrl, setPublishedUrl] = useState<string | null>(null);
   const [isPublishDialogOpen, setIsPublishDialogOpen] = useState(false);
+  const [mobileTab, setMobileTab] = useState<'customize' | 'preview'>('customize');
   const [publishStatus, setPublishStatus] = useState<{
     is_published: boolean;
     publish_id: string | null;
@@ -594,11 +595,34 @@ export const AdvancedChatPreview = ({ selectedAgentId: initialAgentId }: { selec
 
   return (
     <>
-      {/* ── Two-column studio layout ──────────────────────────────────────── */}
-      <div className="flex gap-5 h-full min-h-0">
+      {/* ── Studio layout ──────────────────────────────────────────────── */}
+      <div className="flex flex-col h-full min-h-0">
+
+        {/* Mobile tab switcher */}
+        <div className="lg:hidden flex mb-3 bg-muted rounded-xl p-1 gap-1 flex-shrink-0">
+          <button
+            onClick={() => setMobileTab('customize')}
+            className={cn('flex-1 py-1.5 text-sm font-medium rounded-lg transition-colors',
+              mobileTab === 'customize' ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'
+            )}
+          >
+            Customize
+          </button>
+          <button
+            onClick={() => setMobileTab('preview')}
+            className={cn('flex-1 py-1.5 text-sm font-medium rounded-lg transition-colors',
+              mobileTab === 'preview' ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'
+            )}
+          >
+            Preview
+          </button>
+        </div>
+
+        {/* Two-column panels */}
+        <div className="flex flex-col lg:flex-row gap-4 lg:gap-5 flex-1 min-h-0">
 
         {/* ── LEFT: Customizer panel ────────────────────────────────────── */}
-        <div className="flex-1 min-w-0 overflow-y-auto rounded-xl border border-border bg-card">
+        <div className={cn('flex-1 min-w-0 overflow-y-auto rounded-xl border border-border bg-card', mobileTab === 'customize' ? 'block' : 'hidden lg:block')}>
           {previewType === 'web' && (
             <WebChatCustomizer
               customization={customization}
@@ -619,7 +643,7 @@ export const AdvancedChatPreview = ({ selectedAgentId: initialAgentId }: { selec
         </div>
 
         {/* ── RIGHT: Live preview panel ─────────────────────────────────── */}
-        <div className="w-[580px] flex-shrink-0 flex flex-col gap-3 sticky top-0 self-start">
+        <div className={cn('w-full lg:w-[440px] xl:w-[540px] lg:flex-shrink-0 flex flex-col gap-3 overflow-y-auto', mobileTab === 'preview' ? 'flex' : 'hidden lg:flex')}>
 
           {/* Preview panel header */}
           <div className="rounded-xl border border-border bg-card overflow-hidden">
@@ -644,17 +668,17 @@ export const AdvancedChatPreview = ({ selectedAgentId: initialAgentId }: { selec
             </div>
 
             {/* Position picker */}
-            <div className="px-4 py-3 flex items-center justify-between gap-4">
-              <p className="text-xs font-medium text-muted-foreground whitespace-nowrap">{t('designer.widgetPosition')}</p>
+            <div className="px-3 sm:px-4 py-2.5 sm:py-3 flex items-center gap-2 sm:gap-4">
+              <p className="text-xs font-medium text-muted-foreground whitespace-nowrap flex-shrink-0">{t('designer.widgetPosition')}</p>
               {/* Visual 2×2 position grid */}
-              <div className="relative h-10 w-16 rounded-lg border-2 border-border bg-muted flex-shrink-0" title="Widget position">
+              <div className="relative h-9 w-14 sm:h-10 sm:w-16 rounded-lg border-2 border-border bg-muted flex-shrink-0" title="Widget position">
                 {POSITIONS.map(({ key, label, row, col }) => (
                   <button
                     key={key}
                     onClick={() => updateCustomization('meta', { ...customization.meta, position: key })}
                     title={label}
                     className={cn(
-                      'absolute w-3.5 h-3.5 rounded-sm transition-all duration-150',
+                      'absolute w-3 h-3 sm:w-3.5 sm:h-3.5 rounded-sm transition-all duration-150',
                       row === 0 ? 'top-1.5' : 'bottom-1.5',
                       col === 0 ? 'left-1.5' : 'right-1.5',
                       currentPosition === key
@@ -665,16 +689,16 @@ export const AdvancedChatPreview = ({ selectedAgentId: initialAgentId }: { selec
                 ))}
               </div>
               {/* Text label for selected */}
-              <span className="text-xs text-foreground font-medium min-w-[72px]">
+              <span className="text-xs text-foreground font-medium truncate">
                 {POSITIONS.find(p => p.key === currentPosition)?.label}
               </span>
             </div>
           </div>
 
           {/* Device frame */}
-          <div className="rounded-xl border border-border bg-card overflow-hidden">
+          <div className="rounded-xl border border-border bg-card overflow-auto">
             {/* Simulated browser chrome */}
-            <div className="flex items-center gap-1.5 px-3 py-2.5 bg-muted border-b border-border">
+            <div className="flex items-center gap-1.5 px-3 py-2.5 bg-muted border-b border-border min-w-[340px]">
               <span className="h-2.5 w-2.5 rounded-full bg-red-400/70" />
               <span className="h-2.5 w-2.5 rounded-full bg-violet-400/70" />
               <span className="h-2.5 w-2.5 rounded-full bg-emerald-400/70" />
@@ -686,7 +710,7 @@ export const AdvancedChatPreview = ({ selectedAgentId: initialAgentId }: { selec
             {/* Canvas */}
             <div
               className="relative overflow-hidden bg-gradient-to-br from-slate-50 via-white to-slate-100 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900"
-              style={{ fontFamily: customization.font_family, width: '100%', height: height + 80 }}
+              style={{ fontFamily: customization.font_family, width: '100%', minWidth: width + 32, height: height + 80 }}
             >
               {customization.client_website_url && (
                 <iframe
@@ -819,11 +843,12 @@ export const AdvancedChatPreview = ({ selectedAgentId: initialAgentId }: { selec
             </div>
           </div>
         </div>
-      </div>
+        </div>{/* end flex-col lg:flex-row */}
+      </div>{/* end flex-col h-full */}
 
       {/* ── Publish success dialog ─────────────────────────────────────────── */}
       <Dialog open={isPublishDialogOpen} onOpenChange={setIsPublishDialogOpen}>
-        <DialogContent className="max-w-lg">
+        <DialogContent className="max-w-lg w-[calc(100vw-2rem)] sm:w-auto">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <div className="h-8 w-8 rounded-lg bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800 flex items-center justify-center">

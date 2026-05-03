@@ -220,7 +220,7 @@ export const DashboardPage = () => {
 
       <div className="flex-1 overflow-y-auto p-6 space-y-6">
         {/* Stat cards */}
-        <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {statCards.map((card, i) => (
             <motion.div key={card.label} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}>
               <StatCard

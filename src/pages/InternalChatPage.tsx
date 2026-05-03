@@ -38,13 +38,14 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Bot, User, Send, Loader2, Video, Plus, Users, MessageSquare, Search, History, PanelLeftClose, Clock, X, Pencil, Check, Phone, PhoneCall, Hash, Voicemail, Pin, Forward, MoreHorizontal, BellOff, UserPlus, UserMinus, VideoOff, HardDrive, FileIcon, Folder } from 'lucide-react';
+import { Bot, User, Send, Loader2, Video, Plus, Users, MessageSquare, Search, History, PanelLeftClose, Clock, X, Pencil, Check, Phone, PhoneCall, Hash, Voicemail, Pin, Forward, MoreHorizontal, BellOff, UserPlus, UserMinus, VideoOff, HardDrive, FileIcon, Folder, ChevronLeft } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { useAuth } from '@/hooks/useAuth';
 import axios from 'axios';
 import { useToast } from '@/components/ui/use-toast';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import CreateChannelModal from '@/components/CreateChannelModal';
 import NewChatModal from '@/components/NewChatModal';
 import ManageChannelMembersModal from '@/components/ManageChannelMembersModal';
@@ -1288,12 +1289,19 @@ const InternalChatPage: React.FC = () => {
 
   return (
     <TooltipProvider>
-      <div className="flex h-full bg-background overflow-hidden" dir={isRTL ? 'rtl' : 'ltr'}>
+      <div className="relative flex h-full bg-background overflow-hidden" dir={isRTL ? 'rtl' : 'ltr'}>
 
         {/* ── LEFT SIDEBAR ─────────────────────────────────────────────────── */}
         <div className={cn(
-          'flex-shrink-0 flex flex-col h-full bg-card border-r border-border transition-all duration-300 relative',
-          channelSidebarCollapsed ? 'w-[52px]' : 'w-64'
+          'flex flex-col bg-card border-r border-border transition-all duration-300',
+          // Mobile: absolute overlay within the page container (doesn't cover AppLayout header)
+          'absolute top-0 left-0 bottom-0 w-full z-20',
+          // Desktop: inline sidebar
+          'md:relative md:top-auto md:left-auto md:bottom-auto md:z-auto md:h-full md:flex-shrink-0',
+          // Desktop widths
+          channelSidebarCollapsed ? 'md:w-[52px]' : 'md:w-56 lg:w-64',
+          // Mobile: slide off-screen when channel selected; desktop: always visible
+          selectedChannel ? '-translate-x-full md:translate-x-0' : 'translate-x-0'
         )}>
           {/* Header */}
           <div className={cn(
@@ -1324,7 +1332,7 @@ const InternalChatPage: React.FC = () => {
                 <TooltipTrigger asChild>
                   <button
                     onClick={() => setChannelSidebarCollapsed(!channelSidebarCollapsed)}
-                    className="h-7 w-7 rounded-md flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                    className="hidden md:flex h-7 w-7 rounded-md items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
                   >
                     <motion.div animate={{ rotate: channelSidebarCollapsed ? 180 : 0 }} transition={{ duration: 0.25 }}>
                       <PanelLeftClose className="h-3.5 w-3.5" />
@@ -1545,6 +1553,15 @@ const InternalChatPage: React.FC = () => {
                 'flex-shrink-0 flex items-center justify-between h-[52px] border-b border-border px-4',
                 isRTL ? 'flex-row-reverse' : ''
               )}>
+                {/* Mobile back button */}
+                <button
+                  className="md:hidden flex items-center gap-1 text-sm p-2 text-muted-foreground hover:text-foreground transition-colors flex-shrink-0"
+                  onClick={() => { setSelectedChannel(null); setSearchParams({}); }}
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                  <span className="text-xs">Channels</span>
+                </button>
+
                 {/* Left: channel info */}
                 <div className={cn('flex items-center gap-3 min-w-0', isRTL ? 'flex-row-reverse' : '')}>
                   {(() => {
@@ -1613,8 +1630,8 @@ const InternalChatPage: React.FC = () => {
                         </>
                       )}
                     </div>
-                    {/* Members row */}
-                    <div className={cn('flex items-center gap-2 mt-0.5', isRTL ? 'flex-row-reverse' : '')}>
+                    {/* Members row — hidden on mobile */}
+                    <div className={cn('hidden sm:flex items-center gap-2 mt-0.5', isRTL ? 'flex-row-reverse' : '')}>
                       <div className={cn('flex -space-x-1.5', isRTL ? 'space-x-reverse' : '')}>
                         {channelMembers?.slice(0, 4).map((member: any, index: number) => (
                           <Avatar key={member?.id || `m-${index}`} className="h-4 w-4 ring-1 ring-background">
@@ -1643,69 +1660,86 @@ const InternalChatPage: React.FC = () => {
 
                 {/* Right: action buttons */}
                 <div className={cn('flex items-center gap-1 flex-shrink-0', isRTL ? 'flex-row-reverse' : '')}>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button variant="ghost" size="icon" onClick={() => setIsSearchModalOpen(true)}
-                        className="h-8 w-8 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted">
-                        <Search className="h-4 w-4" />
+                  {/* Search — always visible */}
+                  <Button variant="ghost" size="icon" onClick={() => setIsSearchModalOpen(true)}
+                    className="h-8 w-8 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted">
+                    <Search className="h-4 w-4" />
+                  </Button>
+
+                  {/* Secondary actions — visible on md+, collapsed to ⋯ on mobile */}
+                  <div className="hidden md:flex items-center gap-1">
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button variant="ghost" size="icon"
+                          onClick={() => { setIsPinnedPanelOpen(o => !o); setIsCallHistoryOpen(false); setIsPhoneDirectoryOpen(false); }}
+                          className={`h-8 w-8 rounded-md hover:bg-muted ${isPinnedPanelOpen ? 'text-amber-400 bg-amber-500/10' : 'text-muted-foreground hover:text-foreground'}`}>
+                          <Pin className="h-4 w-4" />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent><p>Pinned messages</p></TooltipContent>
+                    </Tooltip>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button variant="ghost" size="icon" onClick={() => { setIsCallHistoryOpen(o => !o); setIsPhoneDirectoryOpen(false); }}
+                          className="h-8 w-8 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted">
+                          <History className="h-4 w-4" />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent><p>Call history</p></TooltipContent>
+                    </Tooltip>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button variant="ghost" size="icon" onClick={() => setManageMembersModalOpen(true)}
+                          className="h-8 w-8 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted">
+                          <Users className="h-4 w-4" />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent><p>{t('teamChat.manageMembers')}</p></TooltipContent>
+                    </Tooltip>
+                    <div className="w-px h-4 bg-border mx-1" />
+                  </div>
+
+                  {/* Mobile ⋯ overflow menu */}
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" size="icon" className="md:hidden h-8 w-8 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted">
+                        <MoreHorizontal className="h-4 w-4" />
                       </Button>
-                    </TooltipTrigger>
-                    <TooltipContent><p>Search messages</p></TooltipContent>
-                  </Tooltip>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button variant="ghost" size="icon"
-                        onClick={() => { setIsPinnedPanelOpen(o => !o); setIsCallHistoryOpen(false); setIsPhoneDirectoryOpen(false); }}
-                        className={`h-8 w-8 rounded-md hover:bg-muted ${isPinnedPanelOpen ? 'text-amber-400 bg-amber-500/10' : 'text-muted-foreground hover:text-foreground'}`}>
-                        <Pin className="h-4 w-4" />
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent><p>Pinned messages</p></TooltipContent>
-                  </Tooltip>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button variant="ghost" size="icon" onClick={() => { setIsCallHistoryOpen(o => !o); setIsPhoneDirectoryOpen(false); }}
-                        className="h-8 w-8 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted">
-                        <History className="h-4 w-4" />
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent><p>Call history</p></TooltipContent>
-                  </Tooltip>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button variant="ghost" size="icon" onClick={() => setManageMembersModalOpen(true)}
-                        className="h-8 w-8 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted">
-                        <Users className="h-4 w-4" />
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent><p>{t('teamChat.manageMembers')}</p></TooltipContent>
-                  </Tooltip>
-                  <div className="w-px h-4 bg-border mx-1" />
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button
-                        size="sm"
-                        onClick={handleVideoCallAction}
-                        disabled={initiateVideoCallMutation.isLoading || joinVideoCallMutation.isLoading}
-                        className={cn(
-                          'h-8 px-3 rounded-md text-xs font-medium gap-1.5 transition-all',
-                          activeCallExists
-                            ? 'bg-green-500 hover:bg-green-600 text-white'
-                            : 'bg-primary hover:bg-primary/90 text-primary-foreground'
-                        )}
-                      >
-                        {(initiateVideoCallMutation.isLoading || joinVideoCallMutation.isLoading) ? (
-                          <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                        ) : (
-                          <Video className="h-3.5 w-3.5" />
-                        )}
-                        {activeCallExists === true ? t('teamChat.joinCall') : t('teamChat.startCall')}
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p>{activeCallExists === true ? t('teamChat.joinCall') : t('teamChat.startCall')}</p>
-                    </TooltipContent>
-                  </Tooltip>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-48">
+                      <DropdownMenuItem onClick={() => { setIsPinnedPanelOpen(o => !o); setIsCallHistoryOpen(false); }}>
+                        <Pin className="h-3.5 w-3.5 mr-2" /> Pinned messages
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => { setIsCallHistoryOpen(o => !o); setIsPhoneDirectoryOpen(false); }}>
+                        <History className="h-3.5 w-3.5 mr-2" /> Call history
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => setManageMembersModalOpen(true)}>
+                        <Users className="h-3.5 w-3.5 mr-2" /> {t('teamChat.manageMembers')}
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+
+                  {/* Video call — icon only on mobile, icon+text on md+ */}
+                  <Button
+                    size="sm"
+                    onClick={handleVideoCallAction}
+                    disabled={initiateVideoCallMutation.isLoading || joinVideoCallMutation.isLoading}
+                    className={cn(
+                      'h-8 rounded-md text-xs font-medium transition-all px-2 md:px-3 gap-1.5',
+                      activeCallExists
+                        ? 'bg-green-500 hover:bg-green-600 text-white'
+                        : 'bg-primary hover:bg-primary/90 text-primary-foreground'
+                    )}
+                  >
+                    {(initiateVideoCallMutation.isLoading || joinVideoCallMutation.isLoading) ? (
+                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                    ) : (
+                      <Video className="h-3.5 w-3.5" />
+                    )}
+                    <span className="hidden md:inline">
+                      {activeCallExists === true ? t('teamChat.joinCall') : t('teamChat.startCall')}
+                    </span>
+                  </Button>
                 </div>
               </div>
 
@@ -2187,9 +2221,12 @@ const InternalChatPage: React.FC = () => {
         )}
 
         {/* ── PHONE DIRECTORY PANEL ────────────────────────────────────────── */}
+        {isPhoneDirectoryOpen && <div className="fixed inset-0 bg-black/40 z-30 md:hidden" onClick={() => setIsPhoneDirectoryOpen(false)} />}
         <div className={cn(
-          'h-full flex-shrink-0 flex flex-col border-l border-border bg-card overflow-hidden transition-all duration-300 ease-in-out',
-          isPhoneDirectoryOpen ? 'w-72' : 'w-0 border-l-0'
+          'flex-shrink-0 flex flex-col border-l border-border bg-card overflow-hidden transition-all duration-300 ease-in-out',
+          isPhoneDirectoryOpen
+            ? 'fixed inset-y-0 right-0 w-[85vw] sm:w-80 md:relative md:w-72 h-full z-40 md:z-auto'
+            : 'w-0 border-l-0 md:relative'
         )}>
           {isPhoneDirectoryOpen && (
             <>
@@ -2303,9 +2340,12 @@ const InternalChatPage: React.FC = () => {
         />
 
         {/* ── CALL HISTORY PANEL ───────────────────────────────────────────── */}
+        {isCallHistoryOpen && <div className="fixed inset-0 bg-black/40 z-30 md:hidden" onClick={() => setIsCallHistoryOpen(false)} />}
         <div className={cn(
-          'h-full flex-shrink-0 flex flex-col border-l border-border bg-card overflow-hidden transition-all duration-300 ease-in-out',
-          isCallHistoryOpen ? 'w-72' : 'w-0 border-l-0'
+          'flex-shrink-0 flex flex-col border-l border-border bg-card overflow-hidden transition-all duration-300 ease-in-out',
+          isCallHistoryOpen
+            ? 'fixed inset-y-0 right-0 w-[85vw] sm:w-80 md:relative md:w-72 h-full z-40 md:z-auto'
+            : 'w-0 border-l-0 md:relative'
         )}>
           <div className="flex items-center justify-between px-4 h-[52px] border-b border-border flex-shrink-0">
             <div className="flex items-center gap-2">

@@ -27,6 +27,7 @@ import {
   User as UserIcon,
   X,
   ChevronDown,
+  ChevronLeft,
   Pen,
 } from 'lucide-react';
 import { getEmailSessions, composeEmail } from '@/services/emailInboxService';
@@ -584,7 +585,7 @@ const EmailInboxPage: React.FC = () => {
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.4, ease: 'easeOut' }}
-          className={`h-full overflow-hidden transition-all duration-500 ease-out ${isSidebarCollapsed ? 'md:col-span-1' : 'md:col-span-3'}`}
+          className={`h-full overflow-hidden transition-all duration-500 ease-out ${isSidebarCollapsed ? 'md:col-span-1' : 'md:col-span-3'} ${(selectedSessionId || centerView === 'compose') ? 'hidden md:block' : 'block'}`}
         >
           <Card className="h-full flex flex-col shadow-sm bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 relative overflow-hidden">
             <motion.button
@@ -730,11 +731,12 @@ const EmailInboxPage: React.FC = () => {
             isSidebarCollapsed ? 'md:col-span-8' :
             isRightCollapsed ? 'md:col-span-8' :
             'md:col-span-6'
-          }`}
+          } ${(selectedSessionId || centerView === 'compose') ? 'block' : 'hidden md:block'}`}
         >
           <AnimatePresence mode="wait">
             {centerView === 'thread' && selectedSessionId ? (
               <motion.div key={selectedSessionId} initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.98 }} transition={{ duration: 0.3 }} className="h-full">
+                <button className="md:hidden flex items-center gap-1 text-sm text-muted-foreground p-2" onClick={() => { setSelectedSessionId(null); setCenterView('empty'); }}><ChevronLeft className="h-4 w-4" />Back</button>
                 <ConversationDetail
                   sessionId={selectedSessionId}
                   agentId={1}
@@ -743,6 +745,7 @@ const EmailInboxPage: React.FC = () => {
               </motion.div>
             ) : centerView === 'compose' ? (
               <motion.div key="compose" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 10 }} transition={{ duration: 0.25 }} className="h-full">
+                <button className="md:hidden flex items-center gap-1 text-sm text-muted-foreground p-2" onClick={() => setCenterView('empty')}><ChevronLeft className="h-4 w-4" />Back</button>
                 <ComposePanel
                   contacts={contacts}
                   signature={signature}
@@ -783,7 +786,7 @@ const EmailInboxPage: React.FC = () => {
           initial={{ opacity: 0, x: 20 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.4, delay: 0.2 }}
-          className={`h-full overflow-hidden transition-all duration-500 ease-out ${isRightCollapsed ? 'md:col-span-1' : 'md:col-span-3'}`}
+          className={`h-full overflow-hidden transition-all duration-500 ease-out ${isRightCollapsed ? 'md:col-span-1' : 'md:col-span-3'} hidden md:block`}
         >
           <Card className="h-full flex flex-col shadow-sm bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 relative overflow-hidden">
             <motion.button

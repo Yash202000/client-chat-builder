@@ -155,47 +155,108 @@ export default function DrivePage() {
     <div className="flex flex-col h-full bg-background overflow-hidden">
 
       {/* Top Bar */}
-      <div className="flex-shrink-0 flex items-center gap-2 px-4 py-3 border-b border-border">
-        {/* Breadcrumb */}
-        <div className="flex items-center gap-1 min-w-0 flex-1">
-          <button
-            onClick={() => setCurrentFolderId(null)}
-            className={cn(
-              'flex items-center gap-1 text-sm font-medium transition-colors px-1.5 py-0.5 rounded',
-              currentFolderId === null
-                ? 'text-foreground bg-muted'
-                : 'text-muted-foreground hover:text-foreground hover:bg-muted',
-            )}
-          >
-            <Home className="w-3.5 h-3.5" />
-            <span>Drive</span>
-          </button>
-          {breadcrumb.map((crumb, i) => (
-            <React.Fragment key={crumb.id}>
-              <ChevronRight className="w-3.5 h-3.5 text-muted-foreground/50 flex-shrink-0" />
-              <button
-                onClick={() => setCurrentFolderId(crumb.id)}
-                className={cn(
-                  'text-sm font-medium truncate max-w-[120px] transition-colors px-1.5 py-0.5 rounded',
-                  i === breadcrumb.length - 1
-                    ? 'text-foreground bg-muted cursor-default'
-                    : 'text-muted-foreground hover:text-foreground hover:bg-muted',
-                )}
-              >
-                {crumb.name}
+      <div className="flex-shrink-0 px-3 sm:px-4 py-2.5 sm:py-3 border-b border-border space-y-2 sm:space-y-0">
+        {/* Row 1: Breadcrumb + action buttons */}
+        <div className="flex items-center gap-1.5 sm:gap-2">
+          {/* Breadcrumb — scrollable on mobile */}
+          <div className="flex items-center gap-1 min-w-0 flex-1 overflow-x-auto scrollbar-none">
+            <button
+              onClick={() => setCurrentFolderId(null)}
+              className={cn(
+                'flex items-center gap-1 text-sm font-medium transition-colors px-1.5 py-0.5 rounded flex-shrink-0',
+                currentFolderId === null
+                  ? 'text-foreground bg-muted'
+                  : 'text-muted-foreground hover:text-foreground hover:bg-muted',
+              )}
+            >
+              <Home className="w-3.5 h-3.5" />
+              <span>Drive</span>
+            </button>
+            {breadcrumb.map((crumb, i) => (
+              <React.Fragment key={crumb.id}>
+                <ChevronRight className="w-3.5 h-3.5 text-muted-foreground/50 flex-shrink-0" />
+                <button
+                  onClick={() => setCurrentFolderId(crumb.id)}
+                  className={cn(
+                    'text-sm font-medium truncate max-w-[100px] sm:max-w-[120px] transition-colors px-1.5 py-0.5 rounded flex-shrink-0',
+                    i === breadcrumb.length - 1
+                      ? 'text-foreground bg-muted cursor-default'
+                      : 'text-muted-foreground hover:text-foreground hover:bg-muted',
+                  )}
+                >
+                  {crumb.name}
+                </button>
+              </React.Fragment>
+            ))}
+          </div>
+
+          {/* Search — inline on sm+, hidden here (shown in row 2 on mobile) */}
+          <div className="relative hidden sm:block">
+            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
+            <Input
+              placeholder="Search files…"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-8 h-8 w-44 text-sm"
+            />
+            {searchQuery && (
+              <button onClick={() => setSearchQuery('')} className="absolute right-2 top-1/2 -translate-y-1/2">
+                <X className="w-3 h-3 text-muted-foreground" />
               </button>
-            </React.Fragment>
-          ))}
+            )}
+          </div>
+
+          {/* Sort */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="sm" className="h-8 gap-1 sm:gap-1.5 text-xs px-2 sm:px-3 flex-shrink-0">
+                <ArrowUpDown className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">{sortBy === 'name' ? 'Name' : sortBy === 'date' ? 'Date' : 'Size'}</span>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-36">
+              {(['name', 'date', 'size'] as const).map(s => (
+                <DropdownMenuItem key={s} onClick={() => { if (sortBy === s) setSortDir(d => d === 'asc' ? 'desc' : 'asc'); else { setSortBy(s); setSortDir('asc'); } }}
+                  className={cn('capitalize', sortBy === s && 'font-semibold text-primary')}>
+                  {s} {sortBy === s && (sortDir === 'asc' ? '↑' : '↓')}
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+
+          {/* View toggle */}
+          <div className="flex rounded-md border border-border overflow-hidden flex-shrink-0">
+            <button onClick={() => setViewMode('grid')}
+              className={cn('p-1.5 transition-colors', viewMode === 'grid' ? 'bg-muted text-foreground' : 'text-muted-foreground hover:text-foreground')}>
+              <LayoutGrid className="w-3.5 h-3.5" />
+            </button>
+            <button onClick={() => setViewMode('list')}
+              className={cn('p-1.5 transition-colors', viewMode === 'list' ? 'bg-muted text-foreground' : 'text-muted-foreground hover:text-foreground')}>
+              <List className="w-3.5 h-3.5" />
+            </button>
+          </div>
+
+          <Button variant="outline" size="sm" className="h-8 gap-1 sm:gap-1.5 text-xs px-2 sm:px-3 flex-shrink-0" onClick={() => setNewFolderOpen(true)}>
+            <FolderPlus className="w-3.5 h-3.5" />
+            <span className="hidden sm:inline">New Folder</span>
+          </Button>
+
+          <Button size="sm" className="h-8 gap-1 sm:gap-1.5 text-xs px-2 sm:px-3 flex-shrink-0" onClick={() => uploadInputRef.current?.click()}>
+            <Upload className="w-3.5 h-3.5" />
+            <span className="hidden sm:inline">Upload</span>
+          </Button>
+          <input ref={uploadInputRef} type="file" multiple className="hidden"
+            onChange={(e) => e.target.files && handleFiles(e.target.files)} />
         </div>
 
-        {/* Search */}
-        <div className="relative">
+        {/* Row 2: Search — mobile only, full width */}
+        <div className="relative sm:hidden">
           <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
           <Input
             placeholder="Search files…"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-8 h-8 w-48 text-sm"
+            className="pl-8 h-8 w-full text-sm"
           />
           {searchQuery && (
             <button onClick={() => setSearchQuery('')} className="absolute right-2 top-1/2 -translate-y-1/2">
@@ -203,48 +264,6 @@ export default function DrivePage() {
             </button>
           )}
         </div>
-
-        {/* Sort */}
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="outline" size="sm" className="h-8 gap-1.5 text-xs">
-              <ArrowUpDown className="w-3.5 h-3.5" />
-              {sortBy === 'name' ? 'Name' : sortBy === 'date' ? 'Date' : 'Size'}
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-36">
-            {(['name', 'date', 'size'] as const).map(s => (
-              <DropdownMenuItem key={s} onClick={() => { if (sortBy === s) setSortDir(d => d === 'asc' ? 'desc' : 'asc'); else { setSortBy(s); setSortDir('asc'); } }}
-                className={cn('capitalize', sortBy === s && 'font-semibold text-primary')}>
-                {s} {sortBy === s && (sortDir === 'asc' ? '↑' : '↓')}
-              </DropdownMenuItem>
-            ))}
-          </DropdownMenuContent>
-        </DropdownMenu>
-
-        {/* View toggle */}
-        <div className="flex rounded-md border border-border overflow-hidden">
-          <button onClick={() => setViewMode('grid')}
-            className={cn('p-1.5 transition-colors', viewMode === 'grid' ? 'bg-muted text-foreground' : 'text-muted-foreground hover:text-foreground')}>
-            <LayoutGrid className="w-3.5 h-3.5" />
-          </button>
-          <button onClick={() => setViewMode('list')}
-            className={cn('p-1.5 transition-colors', viewMode === 'list' ? 'bg-muted text-foreground' : 'text-muted-foreground hover:text-foreground')}>
-            <List className="w-3.5 h-3.5" />
-          </button>
-        </div>
-
-        <Button variant="outline" size="sm" className="h-8 gap-1.5 text-xs" onClick={() => setNewFolderOpen(true)}>
-          <FolderPlus className="w-3.5 h-3.5" />
-          New Folder
-        </Button>
-
-        <Button size="sm" className="h-8 gap-1.5 text-xs" onClick={() => uploadInputRef.current?.click()}>
-          <Upload className="w-3.5 h-3.5" />
-          Upload
-        </Button>
-        <input ref={uploadInputRef} type="file" multiple className="hidden"
-          onChange={(e) => e.target.files && handleFiles(e.target.files)} />
       </div>
 
       {/* Storage Bar */}
@@ -315,7 +334,10 @@ export default function DrivePage() {
 
         {/* Preview Panel */}
         {previewItem && (
-          <FilePreviewPanel item={previewItem} onClose={() => setPreviewItem(null)} />
+          <>
+            <div className="fixed inset-0 bg-black/40 z-30 sm:hidden" onClick={() => setPreviewItem(null)} />
+            <FilePreviewPanel item={previewItem} onClose={() => setPreviewItem(null)} />
+          </>
         )}
       </div>
 
@@ -404,12 +426,12 @@ function GridCard({ item, onNavigate, onPreview, onRename, onDelete }: {
   onRename: (item: DriveItem) => void;
   onDelete: (item: DriveItem) => void;
 }) {
-  const handleDoubleClick = () => item.is_folder ? onNavigate(item.id) : onPreview(item);
+  const handleClick = () => item.is_folder ? onNavigate(item.id) : onPreview(item);
 
   return (
     <div
       className="group relative flex flex-col items-center gap-2 p-3 rounded-xl border border-border hover:border-primary/30 hover:bg-muted/50 cursor-pointer transition-all select-none"
-      onDoubleClick={handleDoubleClick}
+      onClick={handleClick}
     >
       <FileIcon mime={item.mime_type} isFolder={item.is_folder} size="lg" />
       <span className="text-xs font-medium text-foreground text-center line-clamp-2 w-full leading-tight">
@@ -419,8 +441,8 @@ function GridCard({ item, onNavigate, onPreview, onRename, onDelete }: {
         <span className="text-[10px] text-muted-foreground">{formatBytes(item.file_size)}</span>
       )}
 
-      {/* Three-dot menu */}
-      <div className="absolute top-1.5 right-1.5 opacity-0 group-hover:opacity-100 transition-opacity" onClick={(e) => e.stopPropagation()}>
+      {/* Three-dot menu — always visible on touch, hover-only on desktop */}
+      <div className="absolute top-1.5 right-1.5 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity" onClick={(e) => e.stopPropagation()}>
         <ItemMenu item={item} onRename={onRename} onDelete={onDelete} />
       </div>
     </div>
@@ -452,22 +474,22 @@ function FileListView({ items, onNavigate, onPreview, onRename, onDelete }: {
             <tr
               key={item.id}
               className="border-b border-border/50 last:border-0 hover:bg-muted/40 cursor-pointer transition-colors group"
-              onDoubleClick={() => item.is_folder ? onNavigate(item.id) : onPreview(item)}
+              onClick={() => item.is_folder ? onNavigate(item.id) : onPreview(item)}
             >
-              <td className="px-4 py-2.5">
-                <div className="flex items-center gap-2.5">
+              <td className="px-3 sm:px-4 py-2.5">
+                <div className="flex items-center gap-2 sm:gap-2.5">
                   <FileIcon mime={item.mime_type} isFolder={item.is_folder} size="sm" />
-                  <span className="font-medium text-foreground truncate max-w-[240px]">{item.name}</span>
+                  <span className="font-medium text-foreground truncate max-w-[140px] sm:max-w-[240px] text-xs sm:text-sm">{item.name}</span>
                 </div>
               </td>
-              <td className="px-4 py-2.5 text-muted-foreground hidden md:table-cell">
+              <td className="px-4 py-2.5 text-muted-foreground hidden md:table-cell text-sm">
                 {item.file_size !== null ? formatBytes(item.file_size) : '—'}
               </td>
-              <td className="px-4 py-2.5 text-muted-foreground hidden md:table-cell">
+              <td className="px-4 py-2.5 text-muted-foreground hidden md:table-cell text-sm">
                 {formatDate(item.updated_at)}
               </td>
               <td className="px-2 py-2.5" onClick={(e) => e.stopPropagation()}>
-                <div className="opacity-0 group-hover:opacity-100 transition-opacity">
+                <div className="opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
                   <ItemMenu item={item} onRename={onRename} onDelete={onDelete} />
                 </div>
               </td>
@@ -535,7 +557,11 @@ function FilePreviewPanel({ item, onClose }: { item: DriveItem; onClose: () => v
   const isPdf = item.mime_type === 'application/pdf';
 
   return (
-    <div className="w-72 flex-shrink-0 border-l border-border flex flex-col bg-background overflow-hidden">
+    <div className={cn(
+      'flex flex-col bg-background border-l border-border overflow-hidden',
+      'fixed inset-y-0 right-0 w-[85vw] z-40',
+      'sm:relative sm:inset-auto sm:w-72 sm:flex-shrink-0 sm:z-auto',
+    )}>
       <div className="flex items-center justify-between px-4 py-3 border-b border-border">
         <span className="text-sm font-semibold text-foreground truncate">{item.name}</span>
         <button onClick={onClose} className="text-muted-foreground hover:text-foreground transition-colors ml-2 flex-shrink-0">

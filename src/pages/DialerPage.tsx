@@ -156,7 +156,7 @@ export default function DialerPage() {
 
       <div className="flex-1 overflow-hidden flex gap-0">
         {/* Left: Contact selector */}
-        <div className="w-80 border-r border-border/60 flex flex-col flex-shrink-0">
+        <div className="hidden md:flex md:w-80 border-r border-border/60 flex-col flex-shrink-0">
           <div className="p-4 border-b border-border/40">
             <Input
               placeholder={t('dialer.searchContacts')}

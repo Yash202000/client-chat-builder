@@ -72,6 +72,10 @@ import CRMDashboard from "./pages/CRM/CRMDashboard";
 import LeadsPage from "./pages/CRM/LeadsPage";
 import LeadDetailPage from "./pages/CRM/LeadDetailPage";
 import ContactsPage from "./pages/CRM/ContactsPage";
+import DealsPage from "./pages/CRM/DealsPage";
+import DealDetailPage from "./pages/CRM/DealDetailPage";
+import AccountsPage from "./pages/CRM/AccountsPage";
+import AccountDetailPage from "./pages/CRM/AccountDetailPage";
 import CampaignsPage from "./pages/CRM/CampaignsPage";
 import CampaignCreatePage from "./pages/CRM/CampaignCreatePage";
 import CampaignDetailPage from "./pages/CRM/CampaignDetailPage";
@@ -106,6 +110,13 @@ import TrendingPostsPage from "./pages/Social/TrendingPostsPage";
 import SocialAccountsPage from "./pages/Social/SocialAccountsPage";
 import SocialAnalyticsPage from "./pages/Social/SocialAnalyticsPage";
 import LinkedInLeadsPage from "./pages/CRM/LinkedInLeadsPage";
+import BookingLinksPage from "./pages/CRM/BookingLinksPage";
+import BookingPage from "./pages/BookingPage";
+import SequencesPage from "./pages/CRM/SequencesPage";
+import SequenceEditorPage from "./pages/CRM/SequenceEditorPage";
+import FormsPage from "./pages/CRM/FormsPage";
+import FormEditorPage from "./pages/CRM/FormEditorPage";
+import PublicFormPage from "./pages/PublicFormPage";
 import CallQueuePage from "./pages/CallQueuePage";
 import VoiceCallLogPage from "./pages/VoiceCallLogPage";
 import SupervisorDashboardPage from "./pages/SupervisorDashboardPage";
@@ -113,6 +124,7 @@ import CallAnalyticsPage from "./pages/CallAnalyticsPage";
 import DialerPage from "./pages/DialerPage";
 import CalendarPage from "./pages/CalendarPage";
 import DrivePage from "./pages/DrivePage";
+import AuditLogsPage from "./pages/AuditLogsPage";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -147,6 +159,8 @@ const AppRoutes = () => {
       <Route path="/preview/:publishId" element={<PublishedPreviewPage mode="widget" />} />
       <Route path="/chat/:publishId" element={<PublishedPreviewPage mode="fullpage" />} />
       <Route path="/embed/:publishId" element={<PublishedPreviewPage mode="iframe" />} />
+      <Route path="/book/:slug" element={<BookingPage />} />
+      <Route path="/f/:slug" element={<PublicFormPage />} />
       <Route path="/dashboard" element={<ProtectedRoute />}>
         <Route path="onboarding" element={<OnboardingPage />} />
         <Route element={<AppLayout />}>
@@ -202,6 +216,10 @@ const AppRoutes = () => {
           <Route path="crm/leads" element={<LeadsPage />} />
           <Route path="crm/leads/:id" element={<LeadDetailPage />} />
           <Route path="crm/contacts" element={<ContactsPage />} />
+          <Route path="crm/deals" element={<DealsPage />} />
+          <Route path="crm/deals/:id" element={<DealDetailPage />} />
+          <Route path="crm/accounts" element={<AccountsPage />} />
+          <Route path="crm/accounts/:id" element={<AccountDetailPage />} />
           <Route path="crm/campaigns" element={<CampaignsPage />} />
           <Route path="crm/campaigns/new" element={<CampaignCreatePage />} />
           <Route path="crm/campaigns/:id" element={<CampaignDetailPage />} />
@@ -220,6 +238,11 @@ const AppRoutes = () => {
           <Route path="dialer" element={<DialerPage />} />
           <Route path="crm/analytics" element={<AnalyticsPage />} />
           <Route path="crm/linkedin-leads" element={<LinkedInLeadsPage />} />
+          <Route path="crm/booking-links" element={<BookingLinksPage />} />
+          <Route path="crm/sequences" element={<SequencesPage />} />
+          <Route path="crm/sequences/:id" element={<SequenceEditorPage />} />
+          <Route path="crm/forms" element={<FormsPage />} />
+          <Route path="crm/forms/:id" element={<FormEditorPage />} />
           {/* Marketing Hub / Social Routes */}
           <Route path="social" element={<SocialHubPage />} />
           <Route path="social/compose" element={<PostComposerPage />} />
@@ -230,6 +253,8 @@ const AppRoutes = () => {
           {/* Work Calendar */}
           <Route path="calendar" element={<CalendarPage />} />
           <Route path="drive" element={<DrivePage />} />
+          {/* Audit Logs */}
+          <Route path="audit-logs" element={<AuditLogsPage />} />
           {/* CMS Routes */}
           <Route path="cms" element={<CMSDashboardPage />} />
           <Route path="cms/types" element={<ContentTypesPage />} />

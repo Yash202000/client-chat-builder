@@ -291,7 +291,7 @@ export default function TrendingPostsPage() {
       <div className="h-full flex flex-col bg-background overflow-hidden">
 
         {/* ── Masthead ── */}
-        <div className="shrink-0 flex items-center justify-between px-6 py-3 bg-card border-b border-border">
+        <div className="shrink-0 flex items-center justify-between px-4 sm:px-6 py-2.5 sm:py-3 bg-card border-b border-border">
           <div className="flex items-center gap-3">
             <div>
               <div className="flex items-center gap-2">
@@ -312,10 +312,11 @@ export default function TrendingPostsPage() {
         </div>
 
         {/* ── Main layout ── */}
-        <div className="flex-1 flex overflow-hidden">
+        <div className="flex-1 overflow-hidden">
+          <div className="flex h-full overflow-x-auto">
 
           {/* ══ LEFT — Trend Discovery ══ */}
-          <div className="w-72 shrink-0 flex flex-col border-r border-border bg-card overflow-hidden">
+          <div className="w-72 min-w-[288px] shrink-0 flex flex-col border-r border-border bg-card overflow-hidden">
 
             {/* Tab switcher */}
             <div className="flex border-b border-border">
@@ -529,7 +530,7 @@ export default function TrendingPostsPage() {
           </div>
 
           {/* ══ CENTER — Studio Controls ══ */}
-          <div className="w-64 shrink-0 flex flex-col border-r border-border bg-background overflow-y-auto">
+          <div className="w-64 min-w-[256px] shrink-0 flex flex-col border-r border-border bg-background overflow-y-auto">
             <div className="p-4 space-y-4">
               {/* Mode toggle */}
               <div className="flex rounded-xl border border-border overflow-hidden bg-card p-0.5 gap-0.5">
@@ -627,7 +628,7 @@ export default function TrendingPostsPage() {
           </div>
 
           {/* ══ RIGHT — Preview / Results ══ */}
-          <div className="flex-1 overflow-y-auto p-5">
+          <div className="flex-1 min-w-[320px] overflow-y-auto p-5">
             {isGenerating ? (
               <div className="flex flex-col items-center justify-center h-full gap-4">
                 <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
@@ -780,6 +781,7 @@ export default function TrendingPostsPage() {
                 </div>
               </div>
             )}
+          </div>
           </div>
         </div>
       </div>

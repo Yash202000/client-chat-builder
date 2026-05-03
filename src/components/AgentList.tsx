@@ -259,7 +259,7 @@ export const AgentList = () => {
   if (selectedAgent) {
     const palette = getAgentPalette(selectedAgent.name);
     return (
-      <div className="space-y-5">
+      <div className="space-y-4 sm:space-y-5">
         {/* Header */}
         <div className="flex items-center gap-3">
           <button
@@ -283,7 +283,7 @@ export const AgentList = () => {
 
         {/* Filters */}
         <div className="flex flex-wrap gap-2 items-center p-3 rounded-xl border border-border bg-card">
-          <div className="relative flex-1 min-w-[180px]">
+          <div className="relative w-full sm:flex-1 sm:min-w-[180px]">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
             <Input
               placeholder={t('conversations.search')}
@@ -293,7 +293,7 @@ export const AgentList = () => {
             />
           </div>
           <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger className="w-[130px] h-8 text-sm bg-background border-border">
+            <SelectTrigger className="flex-1 sm:flex-none sm:w-[130px] h-8 text-sm bg-background border-border">
               <SelectValue placeholder="Status" />
             </SelectTrigger>
             <SelectContent>
@@ -302,7 +302,7 @@ export const AgentList = () => {
             </SelectContent>
           </Select>
           <Select value={channelFilter} onValueChange={setChannelFilter}>
-            <SelectTrigger className="w-[130px] h-8 text-sm bg-background border-border">
+            <SelectTrigger className="flex-1 sm:flex-none sm:w-[130px] h-8 text-sm bg-background border-border">
               <SelectValue placeholder="Channel" />
             </SelectTrigger>
             <SelectContent>
@@ -311,7 +311,7 @@ export const AgentList = () => {
             </SelectContent>
           </Select>
           <Select value={assigneeFilter} onValueChange={setAssigneeFilter}>
-            <SelectTrigger className="w-[150px] h-8 text-sm bg-background border-border">
+            <SelectTrigger className="flex-1 sm:flex-none sm:w-[150px] h-8 text-sm bg-background border-border">
               <SelectValue placeholder="Assignee" />
             </SelectTrigger>
             <SelectContent>
@@ -367,17 +367,17 @@ export const AgentList = () => {
                     <div className="flex items-center gap-2 flex-shrink-0">
                       <span className={cn('inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-medium', sc.bg, sc.text)}>
                         <span className={cn('h-1.5 w-1.5 rounded-full', sc.dot)} />
-                        {session.status}
+                        <span className="hidden sm:inline">{session.status}</span>
                       </span>
                       {assignee && (
                         <span className="text-xs text-muted-foreground hidden sm:block">
                           {assignee.first_name || assignee.email}
                         </span>
                       )}
-                      <span className="text-xs text-muted-foreground">
+                      <span className="text-xs text-muted-foreground hidden sm:block">
                         {session.last_message_timestamp && formatDistanceToNow(new Date(session.last_message_timestamp), { addSuffix: true })}
                       </span>
-                      <ChevronRight className="h-3.5 w-3.5 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+                      <ChevronRight className="h-3.5 w-3.5 text-muted-foreground sm:opacity-0 sm:group-hover:opacity-100 transition-opacity" />
                     </div>
                   </div>
                 );
@@ -411,7 +411,7 @@ export const AgentList = () => {
       <CreateAgentDialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen} />
 
       {/* ── Stats + actions bar ─────────────────────────────────────────────── */}
-      <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-5 sm:mb-6">
         {/* Stats pills */}
         <div className="flex items-center gap-2">
           <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-muted border border-border">
@@ -432,14 +432,14 @@ export const AgentList = () => {
         </div>
 
         {/* Search + create */}
-        <div className="flex items-center gap-2">
-          <div className="relative">
+        <div className="flex items-center gap-2 w-full sm:w-auto">
+          <div className="relative flex-1 sm:flex-none">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
             <Input
               placeholder="Search agents…"
               value={agentSearch}
               onChange={(e) => setAgentSearch(e.target.value)}
-              className="pl-8 h-9 w-52 text-sm bg-background border-border"
+              className="pl-8 h-9 w-full sm:w-52 text-sm bg-background border-border"
             />
             {agentSearch && (
               <button onClick={() => setAgentSearch('')} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
@@ -451,10 +451,10 @@ export const AgentList = () => {
             <Button
               onClick={() => setIsCreateDialogOpen(true)}
               size="sm"
-              className="h-9 gap-1.5 bg-primary hover:bg-primary/90 text-primary-foreground shadow-sm"
+              className="h-9 gap-1.5 bg-primary hover:bg-primary/90 text-primary-foreground shadow-sm shrink-0"
             >
               <PlusCircle className="h-4 w-4" />
-              {t('agents.createAgent')}
+              <span className="hidden sm:inline">{t('agents.createAgent')}</span>
             </Button>
           </Permission>
         </div>

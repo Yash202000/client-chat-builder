@@ -60,6 +60,11 @@ import {
   Calendar,
   BookUser,
   HardDrive,
+  Building2,
+  KanbanSquare,
+  GitBranch,
+  FormInput,
+  ClipboardList,
 } from "lucide-react";
 import { CreateAgentDialog } from "@/components/CreateAgentDialog";
 import { Permission } from "./Permission";
@@ -104,8 +109,8 @@ const TelegramIcon = ({ className }: { className?: string }) => (
 
 const AppLayout = () => {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
-  const [sidebarOpen, setSidebarOpen] = useState(true);
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(() => window.innerWidth >= 768);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(() => window.innerWidth >= 768 && window.innerWidth < 1024);
   const location = useLocation();
   const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({
     workspace: true,
@@ -560,6 +565,11 @@ const AppLayout = () => {
         { titleKey: "navigation.crm", url: "/dashboard/crm", icon: TrendingUp, permission: "page:crm_dashboard" },
         { titleKey: "navigation.contacts", url: "/dashboard/crm/contacts", icon: Users, permission: "page:contacts" },
         { titleKey: "navigation.leads", url: "/dashboard/crm/leads", icon: Target, permission: "page:leads" },
+        { title: "Deals", url: "/dashboard/crm/deals", icon: KanbanSquare },
+        { title: "Companies", url: "/dashboard/crm/accounts", icon: Building2 },
+        { title: "Booking Links", url: "/dashboard/crm/booking-links", icon: Calendar },
+        { title: "Sequences", url: "/dashboard/crm/sequences", icon: GitBranch },
+        { title: "Forms", url: "/dashboard/crm/forms", icon: FormInput },
         { titleKey: "navigation.campaigns", url: "/dashboard/crm/campaigns", icon: Send, permission: "page:campaigns" },
         { titleKey: "navigation.tags", url: "/dashboard/crm/tags", icon: Tag, permission: "page:tags" },
         { titleKey: "navigation.segments", url: "/dashboard/crm/segments", icon: Layers, permission: "page:segments" },
@@ -621,6 +631,7 @@ const AppLayout = () => {
       collapsible: true,
       items: [
         { titleKey: "navigation.reports", url: "/dashboard/reports", icon: BarChart3, permission: "page:reports" },
+        { titleKey: "navigation.auditLogs", url: "/dashboard/audit-logs", icon: ClipboardList, permission: "page:settings" },
         { titleKey: "navigation.teamManagement", url: "/dashboard/team", icon: Users, permission: "page:team_management" },
         { titleKey: "navigation.settings", url: "/dashboard/settings", icon: Settings, permission: "page:settings" },
         ...(!isManagedCredentials ? [{ titleKey: "navigation.apiVault", url: "/dashboard/vault", icon: Key, permission: "page:api_vault" }] : []),
@@ -671,10 +682,20 @@ const AppLayout = () => {
   return (
     <div className="h-screen w-screen flex bg-background overflow-hidden">
 
+        {/* Mobile sidebar backdrop */}
+        {sidebarOpen && (
+          <div
+            className="fixed inset-0 bg-black/40 z-30 md:hidden"
+            onClick={() => setSidebarOpen(false)}
+          />
+        )}
+
         {/* ─── SIDEBAR — full height, aurora atmosphere ─── */}
         <aside
-          className={`flex-shrink-0 flex flex-col bg-sidebar transition-all duration-300 relative overflow-hidden ${
-            sidebarOpen ? '' : (isRTL ? 'mr-[-240px] lg:mr-0' : '-ml-[240px] lg:ml-0')
+          className={`flex flex-col bg-sidebar transition-all duration-300 overflow-hidden z-40 ${
+            sidebarOpen
+              ? `fixed inset-y-0 ${isRTL ? 'right-0' : 'left-0'} translate-x-0 md:relative md:flex-shrink-0`
+              : `fixed inset-y-0 ${isRTL ? 'right-0 translate-x-full' : 'left-0 -translate-x-full'} md:relative md:flex-shrink-0 md:translate-x-0`
           } ${sidebarCollapsed ? 'w-[60px]' : 'w-[240px]'}`}
         >
           {/* Aurora bloom — very subtle backlit atmosphere */}
@@ -703,7 +724,7 @@ const AppLayout = () => {
                 </div>
                 <button
                   onClick={() => setSidebarCollapsed(true)}
-                  className="hidden lg:flex h-6 w-6 rounded-md items-center justify-center text-muted-foreground hover:text-violet-400 hover:bg-violet-500/[0.08] transition-colors flex-shrink-0"
+                  className="hidden md:flex h-6 w-6 rounded-md items-center justify-center text-muted-foreground hover:text-violet-400 hover:bg-violet-500/[0.08] transition-colors flex-shrink-0"
                   title={t('navigation.collapseSidebar')}
                 >
                   {isRTL ? <PanelLeftOpen className="h-3.5 w-3.5 scale-x-[-1]" /> : <PanelLeftClose className="h-3.5 w-3.5" />}
@@ -846,10 +867,23 @@ const AppLayout = () => {
             {/* Mobile: hamburger + brand */}
             <div className="flex items-center gap-2">
               <button
-                onClick={() => setSidebarOpen(!sidebarOpen)}
+                onClick={() => {
+                  if (window.innerWidth < 768) {
+                    setSidebarOpen(prev => !prev);
+                  } else {
+                    setSidebarCollapsed(prev => !prev);
+                  }
+                }}
                 className="lg:hidden h-7 w-7 rounded-md flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
               >
-                {sidebarOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
+                {/* Mobile: X closes overlay, Menu opens it */}
+                <span className="md:hidden">
+                  {sidebarOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
+                </span>
+                {/* Tablet: collapse/expand icon-rail ↔ full sidebar */}
+                <span className="hidden md:block">
+                  {sidebarCollapsed ? <Menu className="h-4 w-4" /> : <PanelLeftClose className="h-4 w-4" />}
+                </span>
               </button>
               <div className="flex items-center gap-2 lg:hidden">
                 {branding.logoUrl ? (

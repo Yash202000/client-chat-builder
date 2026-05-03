@@ -3,6 +3,7 @@ import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { ConversationDetail } from '@/components/ConversationDetail';
 import { ContactProfile } from '@/components/ContactProfile';
 import { ConversationSummary } from '@/components/ConversationSummary';
@@ -14,7 +15,7 @@ import {
   MessageSquare, Phone, Globe, Instagram, Mail, Send, Search, Filter,
   Archive, PanelLeftClose, PanelRightOpen, AlertTriangle, ArrowUp, Minus,
   ArrowDown, Inbox, Users, CheckCircle2, LayoutGrid, Sparkles, Clock,
-  User as UserIcon, Loader2
+  User as UserIcon, Loader2, ChevronLeft
 } from 'lucide-react';
 import SLATimer from '@/components/SLATimer';
 import { getWebSocketUrl } from '@/config/api';
@@ -163,9 +164,10 @@ const ConversationsPage: React.FC<ConversationsPageProps> = ({ channel }) => {
   const [activeTab, setActiveTab] = useState<'mine' | 'open' | 'resolved' | 'all'>('open');
   const [unreadAssignments, setUnreadAssignments] = useState(0);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
-  const [isRightSidebarCollapsed, setIsRightSidebarCollapsed] = useState(false);
+  const [isRightSidebarCollapsed, setIsRightSidebarCollapsed] = useState(() => window.innerWidth < 1024);
   const [reopenedSessions, setReopenedSessions] = useState<Set<string>>(new Set());
   const [sidebarView, setSidebarView] = useState<'contact' | 'summary'>('contact');
+  const [mobileContactOpen, setMobileContactOpen] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [bulkAssigneeId, setBulkAssigneeId] = useState<string>('');
   const [quickFilters, setQuickFilters] = useState<Set<string>>(new Set());
@@ -901,7 +903,7 @@ const ConversationsPage: React.FC<ConversationsPageProps> = ({ channel }) => {
     <div className="h-full flex bg-background overflow-hidden">
 
       {/* ── LEFT PANEL ───────────────────────────────────────────────────────── */}
-      <div className={`flex-shrink-0 flex flex-col bg-card transition-all duration-300 relative overflow-hidden ${isSidebarCollapsed ? 'w-14' : 'w-80'}`}>
+      <div className={`${selectedSessionId ? 'hidden md:flex' : 'flex'} md:flex-shrink-0 flex-col bg-card transition-all duration-300 relative overflow-hidden ${isSidebarCollapsed ? 'w-14' : 'w-80 md:w-64 lg:w-80'}`}>
         {/* Aurora gradient right border */}
         <div className="pointer-events-none absolute right-0 top-0 bottom-0 w-px z-10 bg-gradient-to-b from-violet-500/20 via-border to-cyan-500/10" />
         {/* Subtle bloom */}
@@ -1243,13 +1245,22 @@ const ConversationsPage: React.FC<ConversationsPageProps> = ({ channel }) => {
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.99 }}
               transition={{ duration: 0.2 }}
-              className="h-full"
+              className="h-full flex flex-col"
             >
-              <ConversationDetail
-                sessionId={selectedSessionId}
-                agentId={1}
-                onSummaryClick={() => setSidebarView(sidebarView === 'summary' ? 'contact' : 'summary')}
-              />
+              <button
+                className="md:hidden flex items-center gap-1 text-sm text-muted-foreground px-3 pt-2 pb-1 flex-shrink-0"
+                onClick={() => setSelectedSessionId(null)}
+              >
+                <ChevronLeft className="h-4 w-4" /> Back
+              </button>
+              <div className="flex-1 overflow-hidden min-h-0">
+                <ConversationDetail
+                  sessionId={selectedSessionId}
+                  agentId={1}
+                  onSummaryClick={() => setSidebarView(sidebarView === 'summary' ? 'contact' : 'summary')}
+                  onContactClick={() => setMobileContactOpen(true)}
+                />
+              </div>
             </motion.div>
           ) : (
             <motion.div
@@ -1298,7 +1309,7 @@ const ConversationsPage: React.FC<ConversationsPageProps> = ({ channel }) => {
       </div>
 
       {/* ── RIGHT PANEL ──────────────────────────────────────────────────────── */}
-      <div className={`flex-shrink-0 relative flex flex-col border-l border-border bg-card transition-all duration-300 ${isRightSidebarCollapsed ? 'w-10' : 'w-72'}`}>
+      <div className={`hidden md:flex flex-shrink-0 relative flex-col border-l border-border bg-card transition-all duration-300 ${isRightSidebarCollapsed ? 'w-10' : 'md:w-52 lg:w-72'}`}>
         {/* Collapse toggle — only shown when collapsed */}
         {isRightSidebarCollapsed && (
           <button
@@ -1539,6 +1550,22 @@ const ConversationsPage: React.FC<ConversationsPageProps> = ({ channel }) => {
           </>
         )}
       </AnimatePresence>
+
+      {/* ── MOBILE CONTACT SHEET ─────────────────────────────────────────────── */}
+      <Sheet open={mobileContactOpen} onOpenChange={setMobileContactOpen}>
+        <SheetContent side="right" className="w-full sm:w-[360px] p-0 flex flex-col md:hidden">
+          <SheetHeader className="px-4 py-3 border-b border-border flex-shrink-0">
+            <SheetTitle className="text-sm font-semibold">Contact Details</SheetTitle>
+          </SheetHeader>
+          <div className="flex-1 overflow-y-auto min-h-0">
+            {selectedSessionId && (
+              sidebarView === 'summary'
+                ? <ConversationSummary sessionId={selectedSessionId} onBack={() => setSidebarView('contact')} />
+                : <ContactProfile sessionId={selectedSessionId} onToggle={() => setMobileContactOpen(false)} />
+            )}
+          </div>
+        </SheetContent>
+      </Sheet>
     </div>
   );
 };

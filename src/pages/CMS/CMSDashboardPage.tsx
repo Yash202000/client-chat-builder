@@ -21,16 +21,16 @@ const CMSDashboardPage = () => {
   ];
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="px-4 sm:px-6 py-4 sm:py-6 space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold">Content Management</h1>
-          <p className="text-muted-foreground">Manage your dynamic content with flexible schemas</p>
+          <h1 className="text-xl sm:text-2xl font-bold">Content Management</h1>
+          <p className="text-muted-foreground hidden sm:block">Manage your dynamic content with flexible schemas</p>
         </div>
         <Link to="/dashboard/cms/types/new">
           <Button>
-            <Plus className="w-4 h-4 mr-2" />
-            New Content Type
+            <Plus className="w-4 h-4 sm:mr-2" />
+            <span className="hidden sm:inline">New Content Type</span>
           </Button>
         </Link>
       </div>

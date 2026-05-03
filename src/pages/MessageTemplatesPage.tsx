@@ -66,8 +66,8 @@ function TemplateCard({
             </span>
           </div>
 
-          {/* Action buttons — show on hover */}
-          <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
+          {/* Action buttons — always visible on touch, hover on desktop */}
+          <div className="flex items-center gap-1 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity shrink-0">
             <button
               onClick={onEdit}
               className="h-7 w-7 rounded-lg flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
@@ -178,7 +178,7 @@ function TemplateForm({
   return (
     <form onSubmit={handleSubmit} className="flex flex-col h-full">
       {/* Panel header */}
-      <div className="flex items-center justify-between px-6 py-4 border-b border-border shrink-0">
+      <div className="flex items-center justify-between px-4 sm:px-6 py-3 sm:py-4 border-b border-border shrink-0">
         <div>
           <p className="text-sm font-semibold text-foreground">
             {template ? 'Edit template' : 'New template'}
@@ -195,10 +195,10 @@ function TemplateForm({
 
       {/* Scrollable body */}
       <ScrollArea className="flex-1">
-        <div className="p-6 space-y-5">
+        <div className="p-4 sm:p-6 space-y-5">
 
           {/* Name + Shortcut */}
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-1.5">
               <Label className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Name</Label>
               <input
@@ -318,7 +318,7 @@ function TemplateForm({
       </ScrollArea>
 
       {/* Footer */}
-      <div className="px-6 py-4 border-t border-border flex items-center justify-end gap-2 shrink-0">
+      <div className="px-4 sm:px-6 py-3 sm:py-4 border-t border-border flex items-center justify-end gap-2 shrink-0">
         <button type="button" onClick={onCancel} disabled={isLoading}
           className="h-9 px-4 rounded-xl text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted border border-border transition-colors disabled:opacity-50">
           Cancel
@@ -337,7 +337,7 @@ function TemplateForm({
 function VariablesPanel({ variables, onClose }: { variables?: AvailableVariables; onClose: () => void }) {
   return (
     <div className="panel-enter flex flex-col h-full">
-      <div className="flex items-center justify-between px-6 py-4 border-b border-border shrink-0">
+      <div className="flex items-center justify-between px-4 sm:px-6 py-3 sm:py-4 border-b border-border shrink-0">
         <div className="flex items-center gap-2">
           <Sparkles className="h-4 w-4 text-muted-foreground" />
           <p className="text-sm font-semibold text-foreground">Template variables</p>
@@ -348,7 +348,7 @@ function VariablesPanel({ variables, onClose }: { variables?: AvailableVariables
         </button>
       </div>
       <ScrollArea className="flex-1">
-        <div className="p-6 space-y-6">
+        <div className="p-4 sm:p-6 space-y-6">
           <p className="text-xs text-muted-foreground leading-relaxed">
             Use these variables in your templates — they're replaced with real values when you send a message.
           </p>
@@ -441,42 +441,44 @@ export default function MessageTemplatesPage() {
       <div className="flex h-full bg-background overflow-hidden">
 
         {/* ── Main content ── */}
-        <div className={`flex flex-col flex-1 min-w-0 transition-all duration-300 ${panelOpen ? 'mr-[420px]' : ''}`}>
+        <div className={`flex flex-col flex-1 min-w-0 transition-all duration-300 ${panelOpen ? 'sm:mr-[420px]' : ''}`}>
 
           {/* Header */}
-          <div className="shrink-0 flex items-center justify-between px-6 py-4 border-b border-border bg-card">
-            <div className="flex items-center gap-3">
-              <div className="h-8 w-8 rounded-xl bg-muted flex items-center justify-center">
+          <div className="shrink-0 flex items-center justify-between px-4 sm:px-6 py-3 sm:py-4 border-b border-border bg-card">
+            <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+              <div className="h-8 w-8 rounded-xl bg-muted flex items-center justify-center shrink-0">
                 <MessageSquare className="h-4 w-4 text-muted-foreground" />
               </div>
-              <div>
+              <div className="min-w-0">
                 <h1 className="text-base font-semibold text-foreground tracking-tight">Message Templates</h1>
-                <p className="text-[11px] text-muted-foreground mt-0.5">Type / in chat to use a shortcut</p>
+                <p className="text-[11px] text-muted-foreground mt-0.5 hidden sm:block">Type / in chat to use a shortcut</p>
               </div>
             </div>
 
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 shrink-0">
               <button
                 onClick={() => setPanel(p => p === 'variables' ? null : 'variables')}
-                className={`flex items-center gap-1.5 h-8 px-3 rounded-lg text-xs font-medium border transition-colors ${
+                className={`flex items-center gap-1.5 h-8 px-2 sm:px-3 rounded-lg text-xs font-medium border transition-colors ${
                   panel === 'variables'
                     ? 'border-primary/30 bg-primary/5 text-primary'
                     : 'border-border bg-card text-muted-foreground hover:text-foreground hover:bg-muted'
                 }`}
               >
-                <Info className="h-3.5 w-3.5" /> Variables
+                <Info className="h-3.5 w-3.5" />
+                <span className="hidden sm:inline">Variables</span>
               </button>
               <button
                 onClick={() => { setEditingTemplate(null); setPanel('create'); }}
-                className="flex items-center gap-1.5 h-8 px-3.5 rounded-lg text-xs font-semibold bg-primary text-primary-foreground hover:opacity-90 transition-opacity"
+                className="flex items-center gap-1.5 h-8 px-2.5 sm:px-3.5 rounded-lg text-xs font-semibold bg-primary text-primary-foreground hover:opacity-90 transition-opacity"
               >
-                <Plus className="h-3.5 w-3.5" /> New template
+                <Plus className="h-3.5 w-3.5" />
+                <span className="hidden sm:inline">New template</span>
               </button>
             </div>
           </div>
 
           {/* Search bar */}
-          <div className="shrink-0 px-6 py-3 border-b border-border bg-background">
+          <div className="shrink-0 px-4 sm:px-6 py-3 border-b border-border bg-background">
             <div className="relative max-w-sm">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
               <input
@@ -495,7 +497,7 @@ export default function MessageTemplatesPage() {
           </div>
 
           {/* Content */}
-          <div className="flex-1 overflow-y-auto p-6">
+          <div className="flex-1 overflow-y-auto px-4 sm:p-6 py-4 sm:py-6">
             {isLoading ? (
               <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
                 {Array.from({ length: 6 }).map((_, i) => (
@@ -570,7 +572,13 @@ export default function MessageTemplatesPage() {
 
         {/* ── Slide-in right panel ── */}
         {panelOpen && (
-          <div className="panel-enter fixed right-0 top-0 bottom-0 w-[420px] border-l border-border bg-card flex flex-col z-40 shadow-xl">
+          <>
+            {/* Mobile backdrop */}
+            <div className="sm:hidden fixed inset-0 bg-black/40 z-30" onClick={closePanel} />
+          </>
+        )}
+        {panelOpen && (
+          <div className="panel-enter fixed right-0 top-0 bottom-0 w-full sm:w-[420px] border-l border-border bg-card flex flex-col z-40 shadow-xl">
             {panel === 'create' && (
               <TemplateForm
                 variables={variables}

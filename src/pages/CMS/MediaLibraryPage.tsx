@@ -148,27 +148,27 @@ const MediaLibraryPage = () => {
   const items = data?.items || [];
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="px-4 sm:px-6 py-4 sm:py-6 space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-3 sm:gap-4">
           <Link to="/dashboard/cms">
             <Button variant="ghost" size="icon">
               <ArrowLeft className="w-4 h-4" />
             </Button>
           </Link>
           <div>
-            <h1 className="text-2xl font-bold">Media Library</h1>
-            <p className="text-muted-foreground">Manage your images, audio, and files</p>
+            <h1 className="text-xl sm:text-2xl font-bold">Media Library</h1>
+            <p className="text-muted-foreground hidden sm:block">Manage your images, audio, and files</p>
           </div>
         </div>
         <Button onClick={() => fileInputRef.current?.click()} disabled={uploading}>
           {uploading ? (
-            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+            <Loader2 className="w-4 h-4 sm:mr-2 animate-spin" />
           ) : (
-            <Upload className="w-4 h-4 mr-2" />
+            <Upload className="w-4 h-4 sm:mr-2" />
           )}
-          Upload
+          <span className="hidden sm:inline">Upload</span>
         </Button>
         <input
           ref={fileInputRef}
@@ -181,8 +181,8 @@ const MediaLibraryPage = () => {
       </div>
 
       {/* Filters */}
-      <div className="flex items-center gap-4">
-        <div className="relative flex-1 max-w-sm">
+      <div className="flex flex-wrap items-center gap-2 sm:gap-4">
+        <div className="relative flex-1 min-w-[160px] sm:max-w-sm">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <Input
             placeholder="Search files..."
@@ -208,7 +208,7 @@ const MediaLibraryPage = () => {
 
       {/* Upload Zone */}
       <div
-        className="border-2 border-dashed rounded-lg p-8 text-center hover:border-primary/50 transition-colors"
+        className="border-2 border-dashed rounded-lg p-4 sm:p-8 text-center hover:border-primary/50 transition-colors"
         onDragOver={(e) => e.preventDefault()}
         onDrop={handleDrop}
       >
@@ -234,7 +234,7 @@ const MediaLibraryPage = () => {
           <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
         </div>
       ) : items.length > 0 ? (
-        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
           {items.map((media) => (
             <Card
               key={media.id}
@@ -279,7 +279,7 @@ const MediaLibraryPage = () => {
 
       {/* Media Detail Dialog */}
       <Dialog open={!!selectedMedia} onOpenChange={(open) => !open && setSelectedMedia(null)}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-2xl w-[calc(100vw-2rem)] sm:w-auto">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <MediaIcon type={selectedMedia?.media_type || 'file'} />
@@ -314,7 +314,7 @@ const MediaLibraryPage = () => {
               </div>
 
               {/* Details */}
-              <div className="grid grid-cols-2 gap-4 text-sm">
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 text-sm">
                 <div>
                   <p className="text-muted-foreground">Size</p>
                   <p>{formatFileSize(selectedMedia.file_size)}</p>

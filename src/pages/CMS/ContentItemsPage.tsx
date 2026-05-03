@@ -145,38 +145,38 @@ const ContentItemsPage = () => {
   const totalPages = Math.ceil(total / limit);
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="px-4 sm:px-6 py-4 sm:py-6 space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
+      <div className="flex items-center justify-between gap-2">
+        <div className="flex items-center gap-3 sm:gap-4 min-w-0">
           <Link to="/dashboard/cms">
-            <Button variant="ghost" size="icon">
+            <Button variant="ghost" size="icon" className="flex-shrink-0">
               <ArrowLeft className="w-4 h-4" />
             </Button>
           </Link>
-          <div>
-            <h1 className="text-2xl font-bold">{contentType?.name || 'Content'}</h1>
-            <p className="text-muted-foreground">
+          <div className="min-w-0">
+            <h1 className="text-xl sm:text-2xl font-bold truncate">{contentType?.name || 'Content'}</h1>
+            <p className="text-muted-foreground hidden sm:block truncate">
               {contentType?.description || `Manage ${typeSlug} items`}
             </p>
           </div>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1.5 sm:gap-2 flex-shrink-0">
           <Link to={`/dashboard/cms/types/${typeSlug}`}>
-            <Button variant="outline">Edit Schema</Button>
+            <Button variant="outline" size="sm" className="hidden sm:flex">Edit Schema</Button>
           </Link>
           <Link to={`/dashboard/cms/content/${typeSlug}/new`}>
-            <Button>
-              <Plus className="w-4 h-4 mr-2" />
-              Add Item
+            <Button size="sm">
+              <Plus className="w-4 h-4 sm:mr-2" />
+              <span className="hidden sm:inline">Add Item</span>
             </Button>
           </Link>
         </div>
       </div>
 
       {/* Filters */}
-      <div className="flex items-center gap-4">
-        <div className="relative flex-1 max-w-sm">
+      <div className="flex flex-wrap items-center gap-2 sm:gap-4">
+        <div className="relative flex-1 min-w-[160px] sm:max-w-sm">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <Input
             placeholder="Search..."
@@ -187,7 +187,7 @@ const ContentItemsPage = () => {
         </div>
 
         <Select value={status || 'all'} onValueChange={(v) => handleFilterChange('status', v)}>
-          <SelectTrigger className="w-[140px]">
+          <SelectTrigger className="w-[120px] sm:w-[140px]">
             <SelectValue placeholder="Status" />
           </SelectTrigger>
           <SelectContent>
@@ -199,7 +199,7 @@ const ContentItemsPage = () => {
         </Select>
 
         <Select value={visibility || 'all'} onValueChange={(v) => handleFilterChange('visibility', v)}>
-          <SelectTrigger className="w-[140px]">
+          <SelectTrigger className="w-[120px] sm:w-[140px]">
             <SelectValue placeholder="Visibility" />
           </SelectTrigger>
           <SelectContent>
@@ -219,13 +219,14 @@ const ContentItemsPage = () => {
         </div>
       ) : items.length > 0 ? (
         <Card>
+          <div className="overflow-x-auto">
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead className="w-[40%]">Title</TableHead>
+                <TableHead>Title</TableHead>
                 <TableHead>Status</TableHead>
-                <TableHead>Visibility</TableHead>
-                <TableHead>Updated</TableHead>
+                <TableHead className="hidden sm:table-cell">Visibility</TableHead>
+                <TableHead className="hidden md:table-cell">Updated</TableHead>
                 <TableHead className="w-[50px]"></TableHead>
               </TableRow>
             </TableHeader>
@@ -248,12 +249,12 @@ const ContentItemsPage = () => {
                       {STATUS_INFO[item.status]?.label || item.status}
                     </Badge>
                   </TableCell>
-                  <TableCell>
+                  <TableCell className="hidden sm:table-cell">
                     <span className="text-sm text-muted-foreground">
                       {VISIBILITY_INFO[item.visibility]?.label || item.visibility}
                     </span>
                   </TableCell>
-                  <TableCell className="text-muted-foreground text-sm">
+                  <TableCell className="hidden md:table-cell text-muted-foreground text-sm">
                     {new Date(item.updated_at).toLocaleDateString()}
                   </TableCell>
                   <TableCell>
@@ -296,6 +297,7 @@ const ContentItemsPage = () => {
               ))}
             </TableBody>
           </Table>
+          </div>
         </Card>
       ) : (
         <Card>
@@ -317,9 +319,12 @@ const ContentItemsPage = () => {
 
       {/* Pagination */}
       {totalPages > 1 && (
-        <div className="flex items-center justify-between">
-          <p className="text-sm text-muted-foreground">
+        <div className="flex items-center justify-between gap-2">
+          <p className="text-sm text-muted-foreground hidden sm:block">
             Showing {(page - 1) * limit + 1} to {Math.min(page * limit, total)} of {total} items
+          </p>
+          <p className="text-sm text-muted-foreground sm:hidden">
+            {page}/{totalPages}
           </p>
           <div className="flex gap-2">
             <Button

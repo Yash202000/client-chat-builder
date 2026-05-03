@@ -75,7 +75,7 @@ const CategoryItem = ({ category, level, onEdit, onDelete, onAddChild }: Categor
         <span className="flex-1 font-medium">{category.name}</span>
         <span className="text-xs text-muted-foreground font-mono">/{category.slug}</span>
 
-        <div className="opacity-0 group-hover:opacity-100 flex items-center gap-1">
+        <div className="opacity-100 sm:opacity-0 sm:group-hover:opacity-100 flex items-center gap-1">
           <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => onAddChild(category.id)}>
             <Plus className="w-3 h-3" />
           </Button>
@@ -227,23 +227,23 @@ const CategoriesPage = () => {
   };
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="px-4 sm:px-6 py-4 sm:py-6 space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-3 sm:gap-4">
           <Link to="/dashboard/cms">
             <Button variant="ghost" size="icon">
               <ArrowLeft className="w-4 h-4" />
             </Button>
           </Link>
           <div>
-            <h1 className="text-2xl font-bold">Categories</h1>
-            <p className="text-muted-foreground">Organize your content with hierarchical categories</p>
+            <h1 className="text-xl sm:text-2xl font-bold">Categories</h1>
+            <p className="text-muted-foreground hidden sm:block">Organize your content with hierarchical categories</p>
           </div>
         </div>
         <Button onClick={() => openCreateDialog()}>
-          <Plus className="w-4 h-4 mr-2" />
-          Add Category
+          <Plus className="w-4 h-4 sm:mr-2" />
+          <span className="hidden sm:inline">Add Category</span>
         </Button>
       </div>
 

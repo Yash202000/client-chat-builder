@@ -111,7 +111,7 @@ function PostRow({ post, rank }: { post: any; rank: number }) {
   const date = post.published_at ? new Date(post.published_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : '—';
 
   return (
-    <div className="fade-up grid grid-cols-[28px_24px_1fr_repeat(4,60px)] items-center gap-3 px-4 py-3 rounded-xl hover:bg-muted/50 transition-colors group border border-transparent hover:border-border">
+    <div className="fade-up grid grid-cols-[28px_24px_1fr] sm:grid-cols-[28px_24px_1fr_repeat(4,60px)] items-center gap-3 px-4 py-3 rounded-xl hover:bg-muted/50 transition-colors group border border-transparent hover:border-border">
       {/* Rank */}
       <span className="text-xs font-bold text-muted-foreground/40 tabular-nums text-center">
         {rank <= 3 ? ['🥇','🥈','🥉'][rank - 1] : `#${rank}`}
@@ -146,7 +146,7 @@ function PostRow({ post, rank }: { post: any; rank: number }) {
         { icon: Share2,        val: post.shares      ?? 0 },
         { icon: Eye,           val: post.impressions ?? 0 },
       ].map(({ icon: SIcon, val }, i) => (
-        <div key={i} className="flex items-center justify-end gap-1">
+        <div key={i} className="hidden sm:flex items-center justify-end gap-1">
           <SIcon className="h-2.5 w-2.5 text-muted-foreground/50 shrink-0" />
           <span className="text-[11px] font-medium text-foreground tabular-nums">{fmt(val)}</span>
         </div>
@@ -224,7 +224,7 @@ export default function SocialAnalyticsPage() {
       <div className="h-full flex flex-col bg-background overflow-hidden">
 
         {/* ── Top bar ── */}
-        <div className="shrink-0 flex items-center justify-between px-6 py-3 border-b border-border bg-card">
+        <div className="shrink-0 flex flex-wrap items-center justify-between gap-2 px-4 sm:px-6 py-2.5 sm:py-3 border-b border-border bg-card">
           <div>
             <div className="flex items-center gap-2">
               <BarChart3 className="h-4 w-4 text-primary" />
@@ -235,7 +235,7 @@ export default function SocialAnalyticsPage() {
             </p>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             {/* Sync from platform button — only when a LinkedIn account is selected */}
             {selectedAccountId && activeAccount?.platform === 'linkedin' && (
               <div className="relative group">
@@ -298,7 +298,7 @@ export default function SocialAnalyticsPage() {
         </div>
 
         {/* ── Account tabs ── */}
-        <div className="shrink-0 flex items-center gap-1 px-6 py-2.5 border-b border-border bg-background overflow-x-auto">
+        <div className="shrink-0 flex items-center gap-1 px-4 sm:px-6 py-2.5 border-b border-border bg-background overflow-x-auto">
           <button
             onClick={() => setSelectedAccountId(null)}
             className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-medium whitespace-nowrap transition-all ${
@@ -337,7 +337,7 @@ export default function SocialAnalyticsPage() {
         </div>
 
         {/* ── Content ── */}
-        <div className="flex-1 overflow-y-auto p-6 space-y-6">
+        <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4 sm:space-y-6">
 
           {/* Stat cards */}
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
@@ -465,12 +465,12 @@ export default function SocialAnalyticsPage() {
             </div>
 
             {/* Column headers */}
-            <div className="grid grid-cols-[28px_24px_1fr_repeat(4,60px)] gap-3 px-4 py-2 border-b border-border">
+            <div className="grid grid-cols-[28px_24px_1fr] sm:grid-cols-[28px_24px_1fr_repeat(4,60px)] gap-3 px-4 py-2 border-b border-border">
               <span className="text-[9px] font-semibold uppercase tracking-widest text-muted-foreground/60 text-center">#</span>
               <span className="text-[9px] font-semibold uppercase tracking-widest text-muted-foreground/60">Plat</span>
               <span className="text-[9px] font-semibold uppercase tracking-widest text-muted-foreground/60">Content</span>
               {['Likes','Cmts','Shares','Views'].map(h => (
-                <span key={h} className="text-[9px] font-semibold uppercase tracking-widest text-muted-foreground/60 text-right">{h}</span>
+                <span key={h} className="hidden sm:block text-[9px] font-semibold uppercase tracking-widest text-muted-foreground/60 text-right">{h}</span>
               ))}
             </div>
 

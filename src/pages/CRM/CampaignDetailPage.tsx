@@ -24,6 +24,12 @@ import {
   FileText,
   Sparkles,
   RefreshCw,
+  GitBranch,
+  Plus,
+  Zap,
+  ToggleLeft,
+  ToggleRight,
+  Loader2,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -46,6 +52,13 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
+} from '@/components/ui/dialog';
+import { Label } from '@/components/ui/label';
+import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import axios from 'axios';
 import { useToast } from '@/hooks/use-toast';
@@ -114,6 +127,30 @@ const CAMPAIGN_TYPE_ICONS: Record<string, any> = {
   multi_channel: Layers,
 };
 
+interface SequenceTrigger {
+  id: number;
+  campaign_id: number;
+  sequence_id: number;
+  trigger_condition: string;
+  delay_hours: number;
+  is_active: boolean;
+  last_fired_at?: string;
+  enrolled_count: number;
+  created_at: string;
+  sequence?: { id: number; name: string; status: string };
+}
+
+const TRIGGER_CONDITIONS = [
+  { value: 'on_send',        label: 'When campaign sends — enroll all' },
+  { value: 'on_completion',  label: 'When contact completes campaign' },
+  { value: 'if_opened',      label: 'If contact opened an email' },
+  { value: 'if_not_opened',  label: 'If contact never opened' },
+  { value: 'if_clicked',     label: 'If contact clicked a link' },
+  { value: 'if_not_clicked', label: 'If contact never clicked' },
+  { value: 'if_replied',     label: 'If contact replied' },
+  { value: 'if_not_replied', label: 'If contact never replied' },
+];
+
 const STATUS_COLORS: Record<string, string> = {
   draft: 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300',
   scheduled: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
@@ -134,6 +171,14 @@ export default function CampaignDetailPage() {
   const [loading, setLoading] = useState(true);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [actionLoading, setActionLoading] = useState(false);
+
+  // Sequence triggers
+  const [triggers, setTriggers] = useState<SequenceTrigger[]>([]);
+  const [sequences, setSequences] = useState<{ id: number; name: string }[]>([]);
+  const [triggerDialogOpen, setTriggerDialogOpen] = useState(false);
+  const [triggerForm, setTriggerForm] = useState({ sequence_id: '', trigger_condition: 'on_completion', delay_hours: 0 });
+  const [savingTrigger, setSavingTrigger] = useState(false);
+  const [firingTrigger, setFiringTrigger] = useState<number | null>(null);
 
   useEffect(() => {
     fetchCampaign();
@@ -177,6 +222,76 @@ export default function CampaignDetailPage() {
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchTriggers = async () => {
+    try {
+      const headers = getAuthHeaders();
+      const res = await axios.get(`/api/v1/campaigns/${id}/sequence-triggers`, { headers });
+      setTriggers(res.data);
+    } catch {}
+  };
+
+  const fetchSequences = async () => {
+    if (sequences.length > 0) return;
+    try {
+      const headers = getAuthHeaders();
+      const res = await axios.get('/api/v1/sequences/', { headers });
+      setSequences(res.data.map((s: any) => ({ id: s.id, name: s.name })));
+    } catch {}
+  };
+
+  const handleAddTrigger = async () => {
+    if (!triggerForm.sequence_id) return;
+    setSavingTrigger(true);
+    try {
+      const headers = getAuthHeaders();
+      const res = await axios.post(`/api/v1/campaigns/${id}/sequence-triggers`, {
+        sequence_id: parseInt(triggerForm.sequence_id),
+        trigger_condition: triggerForm.trigger_condition,
+        delay_hours: triggerForm.delay_hours,
+      }, { headers });
+      setTriggers(prev => [...prev, res.data]);
+      setTriggerDialogOpen(false);
+      setTriggerForm({ sequence_id: '', trigger_condition: 'on_completion', delay_hours: 0 });
+      toast({ title: 'Trigger added', description: 'Sequence trigger configured' });
+    } catch {
+      toast({ title: 'Error', description: 'Failed to add trigger', variant: 'destructive' });
+    } finally { setSavingTrigger(false); }
+  };
+
+  const handleFireTrigger = async (triggerId: number) => {
+    setFiringTrigger(triggerId);
+    try {
+      const headers = getAuthHeaders();
+      const res = await axios.post(`/api/v1/campaigns/${id}/sequence-triggers/${triggerId}/fire`, {}, { headers });
+      toast({ title: 'Fired', description: res.data.message });
+      fetchTriggers();
+    } catch {
+      toast({ title: 'Error', description: 'Failed to fire trigger', variant: 'destructive' });
+    } finally { setFiringTrigger(null); }
+  };
+
+  const handleDeleteTrigger = async (triggerId: number) => {
+    try {
+      const headers = getAuthHeaders();
+      await axios.delete(`/api/v1/campaigns/${id}/sequence-triggers/${triggerId}`, { headers });
+      setTriggers(prev => prev.filter(t => t.id !== triggerId));
+      toast({ title: 'Deleted' });
+    } catch {
+      toast({ title: 'Error', description: 'Failed to delete trigger', variant: 'destructive' });
+    }
+  };
+
+  const handleToggleTrigger = async (trigger: SequenceTrigger) => {
+    try {
+      const headers = getAuthHeaders();
+      const res = await axios.put(`/api/v1/campaigns/${id}/sequence-triggers/${trigger.id}`,
+        { is_active: !trigger.is_active }, { headers });
+      setTriggers(prev => prev.map(t => t.id === trigger.id ? res.data : t));
+    } catch {
+      toast({ title: 'Error', description: 'Failed to update trigger', variant: 'destructive' });
     }
   };
 
@@ -617,11 +732,14 @@ export default function CampaignDetailPage() {
       </div>
 
       {/* Details Tabs */}
-      <Tabs defaultValue="overview" className="space-y-4">
+      <Tabs defaultValue="overview" className="space-y-4" onValueChange={v => { if (v === 'sequences') { fetchTriggers(); fetchSequences(); } }}>
         <TabsList className="bg-slate-100 dark:bg-slate-800">
           <TabsTrigger value="overview">{t('crm.campaigns.detail.overview')}</TabsTrigger>
           <TabsTrigger value="analytics">{t('crm.campaigns.detail.analytics')}</TabsTrigger>
           <TabsTrigger value="contacts">{t('crm.campaigns.detail.contacts')}</TabsTrigger>
+          <TabsTrigger value="sequences" className="flex items-center gap-1.5">
+            <GitBranch className="h-3.5 w-3.5" /> Sequences
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="overview" className="space-y-4">
@@ -848,7 +966,202 @@ export default function CampaignDetailPage() {
             </CardContent>
           </Card>
         </TabsContent>
+
+        {/* ── Sequences tab ── */}
+        <TabsContent value="sequences" className="space-y-4">
+          <Card className="border-slate-200 dark:border-slate-700 dark:bg-slate-800">
+            <CardHeader className="flex flex-row items-center justify-between">
+              <div>
+                <CardTitle className="text-lg dark:text-white flex items-center gap-2">
+                  <GitBranch className="h-5 w-5 text-violet-500" />
+                  Sequence Triggers
+                </CardTitle>
+                <CardDescription className="mt-1">
+                  Automatically enroll contacts into sales sequences based on how they engage with this campaign.
+                </CardDescription>
+              </div>
+              <Button
+                size="sm"
+                className="gap-1.5 bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white"
+                onClick={() => setTriggerDialogOpen(true)}
+              >
+                <Plus className="h-3.5 w-3.5" /> Add Trigger
+              </Button>
+            </CardHeader>
+            <CardContent>
+              {triggers.length === 0 ? (
+                <div className="text-center py-10">
+                  <div className="h-12 w-12 rounded-full bg-violet-50 dark:bg-violet-900/20 flex items-center justify-center mx-auto mb-3">
+                    <GitBranch className="h-6 w-6 text-violet-500" />
+                  </div>
+                  <p className="font-medium text-sm text-foreground">No triggers configured</p>
+                  <p className="text-xs text-muted-foreground mt-1 mb-4">
+                    Add a trigger to auto-enroll contacts into a sequence based on campaign behavior
+                  </p>
+                  <Button variant="outline" size="sm" className="gap-1.5" onClick={() => setTriggerDialogOpen(true)}>
+                    <Plus className="h-3.5 w-3.5" /> Add first trigger
+                  </Button>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {triggers.map(trigger => {
+                    const condLabel = TRIGGER_CONDITIONS.find(c => c.value === trigger.trigger_condition)?.label ?? trigger.trigger_condition;
+                    return (
+                      <div key={trigger.id} className="flex items-center gap-4 p-4 rounded-xl border border-border bg-muted/20">
+                        {/* Condition icon */}
+                        <div className={`h-9 w-9 rounded-full flex items-center justify-center flex-shrink-0 ${trigger.is_active ? 'bg-violet-100 dark:bg-violet-900/30' : 'bg-muted'}`}>
+                          <Zap className={`h-4 w-4 ${trigger.is_active ? 'text-violet-500' : 'text-muted-foreground'}`} />
+                        </div>
+
+                        {/* Info */}
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 mb-0.5">
+                            <span className="text-sm font-medium text-foreground">{condLabel}</span>
+                            {!trigger.is_active && (
+                              <span className="text-[10px] px-1.5 py-0.5 rounded bg-muted text-muted-foreground">Paused</span>
+                            )}
+                          </div>
+                          <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                            <span className="flex items-center gap-1">
+                              <GitBranch className="h-3 w-3" />
+                              {trigger.sequence?.name ?? `Sequence #${trigger.sequence_id}`}
+                            </span>
+                            {trigger.delay_hours > 0 && (
+                              <span className="flex items-center gap-1">
+                                <Clock className="h-3 w-3" /> after {trigger.delay_hours}h
+                              </span>
+                            )}
+                            {trigger.enrolled_count > 0 && (
+                              <span className="flex items-center gap-1">
+                                <Users className="h-3 w-3" /> {trigger.enrolled_count} enrolled
+                              </span>
+                            )}
+                            {trigger.last_fired_at && (
+                              <span>Last fired {new Date(trigger.last_fired_at).toLocaleDateString()}</span>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Actions */}
+                        <div className="flex items-center gap-1.5 flex-shrink-0">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="h-8 text-xs gap-1.5"
+                            disabled={firingTrigger === trigger.id}
+                            onClick={() => handleFireTrigger(trigger.id)}
+                            title="Apply now — enroll matching contacts"
+                          >
+                            {firingTrigger === trigger.id
+                              ? <Loader2 className="h-3 w-3 animate-spin" />
+                              : <Play className="h-3 w-3 text-emerald-500" />
+                            }
+                            Apply now
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8"
+                            title={trigger.is_active ? 'Pause trigger' : 'Enable trigger'}
+                            onClick={() => handleToggleTrigger(trigger)}
+                          >
+                            {trigger.is_active
+                              ? <ToggleRight className="h-4 w-4 text-violet-500" />
+                              : <ToggleLeft className="h-4 w-4 text-muted-foreground" />
+                            }
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 text-destructive hover:text-destructive"
+                            onClick={() => handleDeleteTrigger(trigger.id)}
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </Button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* How it works */}
+          <Card className="border-slate-200 dark:border-slate-700 dark:bg-slate-800 bg-violet-50/30 dark:bg-violet-900/10">
+            <CardContent className="p-4">
+              <p className="text-xs font-medium text-violet-700 dark:text-violet-400 mb-2">How triggers work</p>
+              <div className="space-y-1 text-xs text-muted-foreground">
+                <p>• <strong>Add a trigger</strong> — pick a condition and a sequence to enroll contacts into</p>
+                <p>• <strong>Apply now</strong> — immediately checks campaign contacts and enrolls those matching the condition</p>
+                <p>• <strong>Contacts already active</strong> in the sequence are skipped automatically</p>
+                <p>• Triggers can be paused/re-enabled without losing configuration</p>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
       </Tabs>
+
+      {/* Add trigger dialog */}
+      <Dialog open={triggerDialogOpen} onOpenChange={setTriggerDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <GitBranch className="h-4 w-4 text-violet-500" /> Add Sequence Trigger
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div className="space-y-1.5">
+              <Label className="text-sm">Condition <span className="text-destructive">*</span></Label>
+              <Select value={triggerForm.trigger_condition} onValueChange={v => setTriggerForm(p => ({ ...p, trigger_condition: v }))}>
+                <SelectTrigger className="text-sm"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {TRIGGER_CONDITIONS.map(c => (
+                    <SelectItem key={c.value} value={c.value} className="text-sm">{c.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-sm">Enroll into sequence <span className="text-destructive">*</span></Label>
+              <Select value={triggerForm.sequence_id} onValueChange={v => setTriggerForm(p => ({ ...p, sequence_id: v }))}>
+                <SelectTrigger className="text-sm">
+                  <SelectValue placeholder="Select a sequence…" />
+                </SelectTrigger>
+                <SelectContent>
+                  {sequences.map(s => (
+                    <SelectItem key={s.id} value={s.id.toString()} className="text-sm">{s.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-sm">Delay (hours)</Label>
+              <input
+                type="number"
+                min={0}
+                value={triggerForm.delay_hours}
+                onChange={e => setTriggerForm(p => ({ ...p, delay_hours: parseInt(e.target.value) || 0 }))}
+                className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+              />
+              <p className="text-[11px] text-muted-foreground">
+                0 = enroll immediately when condition is met
+              </p>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setTriggerDialogOpen(false)}>Cancel</Button>
+            <Button
+              disabled={!triggerForm.sequence_id || savingTrigger}
+              onClick={handleAddTrigger}
+              className="gap-1.5 bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white"
+            >
+              {savingTrigger ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Plus className="h-3.5 w-3.5" />}
+              Add Trigger
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Delete Dialog */}
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>

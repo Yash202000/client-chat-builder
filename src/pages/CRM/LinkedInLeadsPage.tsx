@@ -137,20 +137,19 @@ export default function LinkedInLeadsPage() {
   const isImporting = bulkImportMutation.isPending || csvImportMutation.isPending;
 
   return (
-    <div className="p-6 max-w-7xl mx-auto space-y-6">
-      <div className="flex items-center justify-between">
+    <div className="px-4 sm:px-6 py-4 sm:py-6 max-w-7xl mx-auto space-y-4 sm:space-y-6">
+      <div className="flex items-center justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
-            <Linkedin className="h-6 w-6 text-blue-600" />
+          <h1 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
+            <Linkedin className="h-5 w-5 sm:h-6 sm:w-6 text-blue-600" />
             LinkedIn Lead Machine
           </h1>
-          <p className="text-slate-500 dark:text-slate-400 mt-1">
+          <p className="text-sm text-slate-500 dark:text-slate-400 mt-1 hidden sm:block">
             Paste LinkedIn profile URLs to auto-enrich and import as leads.
           </p>
         </div>
-        <Button onClick={() => navigate('/dashboard/crm/campaigns/new')} className="gap-2">
-          <Plus className="h-4 w-4" />
-          Start Outreach Campaign
+        <Button onClick={() => navigate('/dashboard/crm/campaigns/new')} className="gap-2 flex-shrink-0">
+          <Plus className="h-4 w-4" /><span className="hidden sm:inline">Start Outreach Campaign</span>
         </Button>
       </div>
 

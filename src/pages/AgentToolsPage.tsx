@@ -65,7 +65,7 @@ export const AgentToolsPage = () => {
   if (isLoadingAgent) return <div>Loading...</div>;
 
   return (
-    <div className="p-6">
+    <div className="px-4 sm:px-6 py-4 sm:py-6">
       <Button variant="outline" onClick={() => navigate(`/dashboard/builder/${agentId}`)} className="mb-6">
         <ArrowLeft className="h-4 w-4 mr-2" />
         Back to Agent Hub

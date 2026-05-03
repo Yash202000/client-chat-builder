@@ -80,20 +80,19 @@ export default function SocialHubPage() {
   ];
 
   return (
-    <div className="p-6 max-w-6xl mx-auto space-y-6">
-      <div className="flex items-center justify-between">
+    <div className="px-4 sm:px-6 py-4 sm:py-6 max-w-6xl mx-auto space-y-4 sm:space-y-6">
+      <div className="flex items-center justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
-            <Megaphone className="h-6 w-6 text-purple-600" />
+          <h1 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
+            <Megaphone className="h-5 w-5 sm:h-6 sm:w-6 text-purple-600" />
             Marketing Hub
           </h1>
-          <p className="text-slate-500 dark:text-slate-400 mt-1">
+          <p className="text-sm text-slate-500 dark:text-slate-400 mt-1 hidden sm:block">
             Manage your social presence, create content, and track performance.
           </p>
         </div>
-        <Button onClick={() => navigate('/dashboard/social/compose')} className="gap-2">
-          <Plus className="h-4 w-4" />
-          New Post
+        <Button onClick={() => navigate('/dashboard/social/compose')} className="gap-2 flex-shrink-0">
+          <Plus className="h-4 w-4" /><span className="hidden sm:inline">New Post</span>
         </Button>
       </div>
 

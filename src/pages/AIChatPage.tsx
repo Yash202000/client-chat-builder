@@ -12,7 +12,7 @@ import { formatDistanceToNow } from 'date-fns';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Send, Bot, MessageCircle, Loader2, Sparkles,
-  Plus, Search, ChevronDown,
+  Plus, Search, ChevronDown, ChevronLeft, Menu,
 } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -167,6 +167,7 @@ const AIChatPage: React.FC = () => {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [inputValue, setInputValue] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
+  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -215,6 +216,7 @@ const AIChatPage: React.FC = () => {
   const handleLoadSession = async (session: SessionSummary) => {
     setConversationId(session.conversation_id);
     setMessages([]);
+    setMobileSidebarOpen(false);
     if (session.agent_id && agents) {
       setSelectedAgent(agents.find(a => a.id === session.agent_id) || null);
     } else {
@@ -239,6 +241,7 @@ const AIChatPage: React.FC = () => {
     setConversationId(undefined);
     setMessages([]);
     setSelectedAgent(null);
+    setMobileSidebarOpen(false);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
@@ -277,7 +280,14 @@ const AIChatPage: React.FC = () => {
       >
 
         {/* ══════════════════ LEFT SIDEBAR ══════════════════ */}
-        <aside className="w-[268px] flex-shrink-0 flex flex-col h-full bg-card border-r border-border">
+        <aside className={cn(
+          'flex-shrink-0 flex-col h-full bg-card border-r border-border',
+          'md:flex md:w-[268px]',
+          // On mobile: show as full-width overlay when open, or when no conversation is active
+          (!conversationId || mobileSidebarOpen)
+            ? 'flex w-full absolute inset-0 z-10 md:relative md:w-[268px] md:z-auto'
+            : 'hidden md:flex',
+        )}>
 
           {/* Sidebar header */}
           <div className="px-4 pt-4 pb-3 border-b border-border space-y-3 flex-shrink-0">
@@ -295,17 +305,33 @@ const AIChatPage: React.FC = () => {
                   </p>
                 </div>
               </div>
-              <button
-                onClick={handleNewChat}
-                className={cn(
-                  'h-7 w-7 rounded-lg flex items-center justify-center',
-                  'text-muted-foreground hover:text-foreground hover:bg-muted',
-                  'transition-colors duration-150',
+              <div className="flex items-center gap-1">
+                {/* Mobile: close sidebar overlay */}
+                {mobileSidebarOpen && (
+                  <button
+                    onClick={() => setMobileSidebarOpen(false)}
+                    className={cn(
+                      'md:hidden h-7 w-7 rounded-lg flex items-center justify-center',
+                      'text-muted-foreground hover:text-foreground hover:bg-muted',
+                      'transition-colors duration-150',
+                    )}
+                    title="Close"
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                  </button>
                 )}
-                title="New chat"
-              >
-                <Plus className="h-4 w-4" />
-              </button>
+                <button
+                  onClick={handleNewChat}
+                  className={cn(
+                    'h-7 w-7 rounded-lg flex items-center justify-center',
+                    'text-muted-foreground hover:text-foreground hover:bg-muted',
+                    'transition-colors duration-150',
+                  )}
+                  title="New chat"
+                >
+                  <Plus className="h-4 w-4" />
+                </button>
+              </div>
             </div>
 
             {/* Search */}
@@ -432,7 +458,17 @@ const AIChatPage: React.FC = () => {
         <div className="flex-1 flex flex-col overflow-hidden bg-background">
 
           {/* Chat header */}
-          <header className="flex-shrink-0 px-5 py-3 border-b border-border flex items-center gap-3 bg-background/95 backdrop-blur-sm">
+          <header className="flex-shrink-0 px-3 md:px-5 py-3 border-b border-border flex items-center gap-3 bg-background/95 backdrop-blur-sm">
+            {/* Mobile sidebar toggle — only visible when a conversation is active */}
+            {conversationId && (
+              <button
+                className="md:hidden flex items-center justify-center h-8 w-8 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors flex-shrink-0"
+                onClick={() => setMobileSidebarOpen(true)}
+                title="Show conversations"
+              >
+                <Menu className="h-4 w-4" />
+              </button>
+            )}
             <div className={cn(
               'h-8 w-8 rounded-full flex items-center justify-center text-xs font-semibold flex-shrink-0',
               selectedAgent ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground',

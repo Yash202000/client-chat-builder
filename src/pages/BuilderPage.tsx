@@ -136,42 +136,42 @@ const BuilderPage = () => {
   }
 
   return (
-    <div className="flex flex-col h-full p-5 gap-4">
+    <div className="flex flex-col h-full px-4 sm:px-5 py-3 sm:py-5 gap-3 sm:gap-4">
       {/* Header bar */}
       <motion.div
         initial={{ opacity: 0, y: -8 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.22 }}
-        className="flex items-center justify-between gap-3"
+        className="flex items-center justify-between gap-2 sm:gap-3"
       >
-        <div className="flex items-center gap-3">
-          <div className="h-9 w-9 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center flex-shrink-0">
-            <Workflow className="h-4.5 w-4.5 text-emerald-500" />
+        <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+          <div className="h-8 w-8 sm:h-9 sm:w-9 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center flex-shrink-0">
+            <Workflow className="h-4 w-4 text-emerald-500" />
           </div>
-          <div>
-            <h1 className="text-base font-semibold text-foreground leading-tight">
+          <div className="min-w-0">
+            <h1 className="text-sm sm:text-base font-semibold text-foreground leading-tight truncate">
               {agentId && agent ? agent.name : t('builder.title')}
             </h1>
             {agentId && agent ? (
-              <p className="text-xs text-muted-foreground font-mono">
+              <p className="text-xs text-muted-foreground font-mono hidden sm:block">
                 agent #{agentId} · v{agent.version_number ?? 1}
               </p>
             ) : (
-              <p className="text-xs text-muted-foreground">{t('builder.subtitle')}</p>
+              <p className="text-xs text-muted-foreground hidden sm:block">{t('builder.subtitle')}</p>
             )}
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1.5 sm:gap-2 flex-shrink-0">
           {agentId && (
             <Button
               size="sm"
               variant="outline"
               onClick={() => navigate(`/dashboard/designer?agentId=${agentId}`)}
-              className="h-8 px-3 text-xs border-violet-500/30 text-violet-500 hover:bg-violet-500/10 hover:border-violet-500/50"
+              className="h-8 px-2 sm:px-3 text-xs border-violet-500/30 text-violet-500 hover:bg-violet-500/10 hover:border-violet-500/50"
             >
-              <Paintbrush className="h-3.5 w-3.5 mr-1.5" />
-              {t('builder.design')}
+              <Paintbrush className="h-3.5 w-3.5 sm:mr-1.5" />
+              <span className="hidden sm:inline">{t('builder.design')}</span>
             </Button>
           )}
           {agentId && agent && (
@@ -180,12 +180,12 @@ const BuilderPage = () => {
               variant="outline"
               onClick={() => setShowTester(v => !v)}
               className={showTester
-                ? "h-8 px-3 text-xs border-emerald-500/50 text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 hover:bg-emerald-500/15"
-                : "h-8 px-3 text-xs border-emerald-500/30 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/10 hover:border-emerald-500/50"
+                ? "h-8 px-2 sm:px-3 text-xs border-emerald-500/50 text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 hover:bg-emerald-500/15"
+                : "h-8 px-2 sm:px-3 text-xs border-emerald-500/30 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/10 hover:border-emerald-500/50"
               }
             >
-              <FlaskConical className="h-3.5 w-3.5 mr-1.5" />
-              Test Agent
+              <FlaskConical className="h-3.5 w-3.5 sm:mr-1.5" />
+              <span className="hidden sm:inline">Test Agent</span>
             </Button>
           )}
           {agentId && agent && (
@@ -194,10 +194,10 @@ const BuilderPage = () => {
               variant="outline"
               onClick={() => createNewVersionMutation.mutate(agent.id)}
               disabled={createNewVersionMutation.isPending}
-              className="h-8 px-3 text-xs"
+              className="h-8 px-2 sm:px-3 text-xs hidden sm:flex"
             >
-              <PlusCircle className="h-3.5 w-3.5 mr-1.5" />
-              {createNewVersionMutation.isPending ? t('builder.creating') : t('builder.newVersion')}
+              <PlusCircle className="h-3.5 w-3.5 sm:mr-1.5" />
+              <span className="hidden sm:inline">{createNewVersionMutation.isPending ? t('builder.creating') : t('builder.newVersion')}</span>
             </Button>
           )}
           {agentId && (
@@ -205,20 +205,20 @@ const BuilderPage = () => {
               size="sm"
               variant="outline"
               onClick={() => setIsHistoryDialogOpen(true)}
-              className="h-8 px-3 text-xs"
+              className="h-8 px-2 sm:px-3 text-xs"
             >
-              <History className="h-3.5 w-3.5 mr-1.5" />
-              {t('builder.history')}
+              <History className="h-3.5 w-3.5 sm:mr-1.5" />
+              <span className="hidden sm:inline">{t('builder.history')}</span>
             </Button>
           )}
           {!agentId && (
             <Button
               size="sm"
               onClick={() => setIsCreateAgentDialogOpen(true)}
-              className="h-8 px-3 text-xs bg-emerald-600 hover:bg-emerald-700 text-white"
+              className="h-8 px-2 sm:px-3 text-xs bg-emerald-600 hover:bg-emerald-700 text-white"
             >
-              <PlusCircle className="h-3.5 w-3.5 mr-1.5" />
-              {t('builder.createNewAgent')}
+              <PlusCircle className="h-3.5 w-3.5 sm:mr-1.5" />
+              <span className="hidden sm:inline">{t('builder.createNewAgent')}</span>
             </Button>
           )}
         </div>
@@ -277,7 +277,7 @@ const BuilderPage = () => {
 
       {/* Version History Dialog */}
       <Dialog open={isHistoryDialogOpen} onOpenChange={setIsHistoryDialogOpen}>
-        <DialogContent className="max-w-2xl bg-card border-border">
+        <DialogContent className="max-w-2xl w-[calc(100vw-2rem)] sm:w-auto bg-card border-border overflow-x-auto">
           <DialogHeader>
             <DialogTitle className="text-base font-semibold text-foreground flex items-center gap-2">
               <History className="h-4 w-4 text-muted-foreground" />

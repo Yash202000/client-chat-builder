@@ -267,7 +267,7 @@ const WorkflowManagementPage = () => {
         onClose={() => setTemplateModalOpen(false)}
       />
 
-      <div className="p-6" dir={isRTL ? 'rtl' : 'ltr'}>
+      <div className="px-4 sm:px-6 py-4 sm:py-6" dir={isRTL ? 'rtl' : 'ltr'}>
 
         {/* ── Stats + actions bar ─────────────────────────────────────────── */}
         <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
@@ -276,47 +276,47 @@ const WorkflowManagementPage = () => {
             <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-muted border border-border">
               <WorkflowIcon className="h-3.5 w-3.5 text-muted-foreground" />
               <span className="text-sm font-semibold text-foreground tabular-nums">{workflows.length}</span>
-              <span className="text-xs text-muted-foreground">{t("workflows.totalWorkflows")}</span>
+              <span className="text-xs text-muted-foreground hidden sm:inline">{t("workflows.totalWorkflows")}</span>
             </div>
             <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800">
               <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
               <span className="text-sm font-semibold text-emerald-700 dark:text-emerald-400 tabular-nums">{activeVersionCount}</span>
-              <span className="text-xs text-emerald-600 dark:text-emerald-500">{t("workflows.activeVersions")}</span>
+              <span className="text-xs text-emerald-600 dark:text-emerald-500 hidden sm:inline">{t("workflows.activeVersions")}</span>
             </div>
             <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-violet-50 dark:bg-violet-950/30 border border-violet-200 dark:border-violet-800">
               <GitBranch className="h-3 w-3 text-violet-600 dark:text-violet-400" />
               <span className="text-sm font-semibold text-violet-700 dark:text-violet-400 tabular-nums">{totalVersionCount}</span>
-              <span className="text-xs text-violet-600 dark:text-violet-500">{t("workflows.totalVersions")}</span>
+              <span className="text-xs text-violet-600 dark:text-violet-500 hidden sm:inline">{t("workflows.totalVersions")}</span>
             </div>
           </div>
 
           {/* Actions */}
           <div className="flex items-center gap-2 flex-wrap">
-            <div className="relative">
+            <div className="relative flex-1 min-w-[140px] sm:flex-none">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
               <Input
                 placeholder="Search workflows…"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-8 h-9 w-48 text-sm bg-background border-border"
+                className="pl-8 h-9 w-full sm:w-48 text-sm bg-background border-border"
               />
             </div>
             <Permission permission="workflow:create">
-              <Button onClick={openImportDialog} variant="outline" size="sm" className="h-9 gap-1.5 border-border text-muted-foreground hover:text-foreground">
+              <Button onClick={openImportDialog} variant="outline" size="sm" className="h-9 gap-1.5 border-border text-muted-foreground hover:text-foreground px-2 sm:px-3">
                 <Upload className="h-3.5 w-3.5" />
-                {t("workflows.importWorkflow") || "Import"}
+                <span className="hidden sm:inline">{t("workflows.importWorkflow") || "Import"}</span>
               </Button>
             </Permission>
             <Permission permission="workflow:create">
-              <Button onClick={() => setTemplateModalOpen(true)} variant="outline" size="sm" className="h-9 gap-1.5 border-violet-200 dark:border-violet-800 text-violet-700 dark:text-violet-300 hover:bg-violet-50 dark:hover:bg-violet-950/30">
+              <Button onClick={() => setTemplateModalOpen(true)} variant="outline" size="sm" className="h-9 gap-1.5 border-violet-200 dark:border-violet-800 text-violet-700 dark:text-violet-300 hover:bg-violet-50 dark:hover:bg-violet-950/30 px-2 sm:px-3">
                 <LayoutTemplate className="h-3.5 w-3.5" />
-                {t("workflowTemplates.newFromTemplate") || "From Template"}
+                <span className="hidden sm:inline">{t("workflowTemplates.newFromTemplate") || "From Template"}</span>
               </Button>
             </Permission>
             <Permission permission="workflow:create">
-              <Button onClick={() => setCreateDialogOpen(true)} size="sm" className="h-9 gap-1.5 bg-violet-500 hover:bg-violet-600 text-white shadow-sm">
+              <Button onClick={() => setCreateDialogOpen(true)} size="sm" className="h-9 gap-1.5 bg-violet-500 hover:bg-violet-600 text-white shadow-sm px-2 sm:px-3">
                 <PlusCircle className="h-4 w-4" />
-                {t("workflows.createWorkflow")}
+                <span className="hidden sm:inline">{t("workflows.createWorkflow")}</span>
               </Button>
             </Permission>
           </div>
@@ -394,26 +394,26 @@ const WorkflowManagementPage = () => {
                               </div>
 
                               {/* Right: meta badges + actions + chevron */}
-                              <div className="flex items-center gap-2.5 flex-shrink-0">
+                              <div className="flex items-center gap-1.5 sm:gap-2.5 flex-shrink-0">
                                 {usedBy.length > 0 && (
-                                  <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full bg-violet-50 dark:bg-violet-950/30 text-violet-700 dark:text-violet-400 border border-violet-200 dark:border-violet-800" title={`Used by: ${usedBy.map(w => w.name).join(', ')}`}>
+                                  <span className="hidden sm:inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full bg-violet-50 dark:bg-violet-950/30 text-violet-700 dark:text-violet-400 border border-violet-200 dark:border-violet-800" title={`Used by: ${usedBy.map(w => w.name).join(', ')}`}>
                                     <Layers className="h-2.5 w-2.5" />
                                     {usedBy.length} parent{usedBy.length !== 1 ? 's' : ''}
                                   </span>
                                 )}
-                                <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                                <div className="hidden sm:flex items-center gap-1 text-xs text-muted-foreground">
                                   <GitBranch className="h-3.5 w-3.5" />
                                   <span className="tabular-nums">{versionCount}</span>
                                 </div>
                                 {activeCount > 0 ? (
                                   <span className="inline-flex items-center gap-1.5 text-[10px] font-semibold px-2 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800">
                                     <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                                    {t("workflows.active")}
+                                    <span className="hidden sm:inline">{t("workflows.active")}</span>
                                   </span>
                                 ) : (
                                   <span className="inline-flex items-center gap-1.5 text-[10px] font-medium px-2 py-0.5 rounded-full bg-muted text-muted-foreground border border-border">
                                     <Circle className="h-2.5 w-2.5" />
-                                    {t("workflows.inactive")}
+                                    <span className="hidden sm:inline">{t("workflows.inactive")}</span>
                                   </span>
                                 )}
 
@@ -461,88 +461,141 @@ const WorkflowManagementPage = () => {
                                 </Permission>
                               </div>
 
-                              {/* Versions table */}
-                              <div className="rounded-lg border border-border overflow-hidden bg-card">
-                                {/* Header row */}
-                                <div className="grid grid-cols-[72px_1fr_110px_160px] text-[10px] font-semibold text-muted-foreground uppercase tracking-wider px-4 py-2 border-b border-border bg-muted/50">
+                              {/* Versions list */}
+                              <div className="rounded-lg border border-border bg-card divide-y divide-border">
+                                {/* Table header — desktop only */}
+                                <div className="hidden sm:grid sm:grid-cols-[72px_1fr_110px_160px] text-[10px] font-semibold text-muted-foreground uppercase tracking-wider px-4 py-2 bg-muted/50">
                                   <span>Ver.</span>
                                   <span>Description</span>
                                   <span>Status</span>
                                   <span className="text-right">Actions</span>
                                 </div>
+
                                 {[workflow, ...(workflow.versions || [])]
                                   .sort((a, b) => b.version - a.version)
-                                  .map((version, idx, arr) => (
-                                    <div
-                                      key={version.id}
-                                      className={cn(
-                                        'grid grid-cols-[72px_1fr_110px_160px] items-center px-4 py-2.5 transition-colors hover:bg-muted/40',
-                                        idx < arr.length - 1 && 'border-b border-border'
-                                      )}
-                                    >
-                                      {/* Version pill */}
-                                      <div>
-                                        <span className={cn(
-                                          'inline-flex items-center justify-center h-5 px-2 rounded text-[10px] font-bold tabular-nums font-mono',
-                                          version.is_active
-                                            ? 'bg-emerald-500 text-white'
-                                            : 'bg-muted text-muted-foreground border border-border'
-                                        )}>
-                                          v{version.version}
+                                  .map((version) => (
+                                    <div key={version.id} className="transition-colors hover:bg-muted/40">
+
+                                      {/* ── Mobile layout ── */}
+                                      <div className="sm:hidden px-3 py-3 flex flex-col gap-2">
+                                        <div className="flex items-center justify-between gap-2">
+                                          <div className="flex items-center gap-2 min-w-0">
+                                            <span className={cn(
+                                              'inline-flex items-center justify-center h-5 px-2 rounded text-[10px] font-bold tabular-nums font-mono flex-shrink-0',
+                                              version.is_active
+                                                ? 'bg-emerald-500 text-white'
+                                                : 'bg-muted text-muted-foreground border border-border'
+                                            )}>
+                                              v{version.version}
+                                            </span>
+                                            {version.is_active ? (
+                                              <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-emerald-600 dark:text-emerald-400">
+                                                <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                                                {t("workflows.active")}
+                                              </span>
+                                            ) : (
+                                              <span className="inline-flex items-center gap-1 text-[10px] text-muted-foreground">
+                                                <Circle className="h-2.5 w-2.5" />
+                                                {t("workflows.inactive")}
+                                              </span>
+                                            )}
+                                          </div>
+                                          <div className="flex items-center gap-1.5 flex-shrink-0">
+                                            <Permission permission="workflow:update">
+                                              <button
+                                                onClick={() => navigate(`/dashboard/workflows/${version.id}`)}
+                                                className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-medium text-muted-foreground hover:text-foreground hover:bg-muted border border-border transition-colors"
+                                              >
+                                                <Edit className="h-3 w-3" />
+                                                {t("workflows.edit")}
+                                              </button>
+                                            </Permission>
+                                            {version.is_active ? (
+                                              <Permission permission="workflow:update">
+                                                <button
+                                                  onClick={() => deactivateWorkflowVersion(version.id)}
+                                                  className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-medium text-violet-600 dark:text-violet-500 hover:bg-violet-50 dark:hover:bg-violet-950/30 border border-violet-200 dark:border-violet-800 transition-colors"
+                                                >
+                                                  {t("workflows.deactivate")}
+                                                </button>
+                                              </Permission>
+                                            ) : (
+                                              <Permission permission="workflow:update">
+                                                <button
+                                                  onClick={() => activateWorkflowVersion(version.id)}
+                                                  className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-medium bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
+                                                >
+                                                  {t("workflows.activate")}
+                                                </button>
+                                              </Permission>
+                                            )}
+                                          </div>
+                                        </div>
+                                        {version.description && (
+                                          <p className="text-xs text-muted-foreground">{version.description}</p>
+                                        )}
+                                      </div>
+
+                                      {/* ── Desktop layout ── */}
+                                      <div className="hidden sm:grid sm:grid-cols-[72px_1fr_110px_160px] items-center px-4 py-2.5">
+                                        <div>
+                                          <span className={cn(
+                                            'inline-flex items-center justify-center h-5 px-2 rounded text-[10px] font-bold tabular-nums font-mono',
+                                            version.is_active
+                                              ? 'bg-emerald-500 text-white'
+                                              : 'bg-muted text-muted-foreground border border-border'
+                                          )}>
+                                            v{version.version}
+                                          </span>
+                                        </div>
+                                        <span className="text-xs text-muted-foreground truncate pr-3">
+                                          {version.description || <em className="text-muted-foreground/50 not-italic">{t("workflows.noDescription")}</em>}
                                         </span>
-                                      </div>
-
-                                      {/* Description */}
-                                      <span className="text-xs text-muted-foreground truncate pr-3">
-                                        {version.description || <em className="text-muted-foreground/50 not-italic">{t("workflows.noDescription")}</em>}
-                                      </span>
-
-                                      {/* Status */}
-                                      <div>
-                                        {version.is_active ? (
-                                          <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-emerald-600 dark:text-emerald-400">
-                                            <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                                            {t("workflows.active")}
-                                          </span>
-                                        ) : (
-                                          <span className="inline-flex items-center gap-1 text-[10px] text-muted-foreground">
-                                            <Circle className="h-2.5 w-2.5" />
-                                            {t("workflows.inactive")}
-                                          </span>
-                                        )}
-                                      </div>
-
-                                      {/* Actions */}
-                                      <div className="flex items-center justify-end gap-1.5">
-                                        <Permission permission="workflow:update">
-                                          <button
-                                            onClick={() => navigate(`/dashboard/workflows/${version.id}`)}
-                                            className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-medium text-muted-foreground hover:text-foreground hover:bg-muted border border-border transition-colors"
-                                          >
-                                            <Edit className="h-3 w-3" />
-                                            {t("workflows.edit")}
-                                          </button>
-                                        </Permission>
-                                        {version.is_active ? (
+                                        <div>
+                                          {version.is_active ? (
+                                            <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-emerald-600 dark:text-emerald-400">
+                                              <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                                              {t("workflows.active")}
+                                            </span>
+                                          ) : (
+                                            <span className="inline-flex items-center gap-1 text-[10px] text-muted-foreground">
+                                              <Circle className="h-2.5 w-2.5" />
+                                              {t("workflows.inactive")}
+                                            </span>
+                                          )}
+                                        </div>
+                                        <div className="flex items-center justify-end gap-1.5">
                                           <Permission permission="workflow:update">
                                             <button
-                                              onClick={() => deactivateWorkflowVersion(version.id)}
-                                              className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-medium text-violet-600 dark:text-violet-500 hover:bg-violet-50 dark:hover:bg-violet-950/30 border border-violet-200 dark:border-violet-800 transition-colors"
+                                              onClick={() => navigate(`/dashboard/workflows/${version.id}`)}
+                                              className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-medium text-muted-foreground hover:text-foreground hover:bg-muted border border-border transition-colors"
                                             >
-                                              {t("workflows.deactivate")}
+                                              <Edit className="h-3 w-3" />
+                                              {t("workflows.edit")}
                                             </button>
                                           </Permission>
-                                        ) : (
-                                          <Permission permission="workflow:update">
-                                            <button
-                                              onClick={() => activateWorkflowVersion(version.id)}
-                                              className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-medium bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
-                                            >
-                                              {t("workflows.activate")}
-                                            </button>
-                                          </Permission>
-                                        )}
+                                          {version.is_active ? (
+                                            <Permission permission="workflow:update">
+                                              <button
+                                                onClick={() => deactivateWorkflowVersion(version.id)}
+                                                className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-medium text-violet-600 dark:text-violet-500 hover:bg-violet-50 dark:hover:bg-violet-950/30 border border-violet-200 dark:border-violet-800 transition-colors"
+                                              >
+                                                {t("workflows.deactivate")}
+                                              </button>
+                                            </Permission>
+                                          ) : (
+                                            <Permission permission="workflow:update">
+                                              <button
+                                                onClick={() => activateWorkflowVersion(version.id)}
+                                                className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-medium bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
+                                              >
+                                                {t("workflows.activate")}
+                                              </button>
+                                            </Permission>
+                                          )}
+                                        </div>
                                       </div>
+
                                     </div>
                                   ))}
                               </div>

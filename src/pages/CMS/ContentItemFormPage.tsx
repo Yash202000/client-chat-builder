@@ -353,53 +353,55 @@ const ContentItemFormPage = ({ mode }: ContentItemFormPageProps) => {
   const currentStatus = form.watch('status');
 
   return (
-    <div className="p-6 max-w-4xl mx-auto space-y-6">
+    <div className="px-4 sm:px-6 py-4 sm:py-6 max-w-4xl mx-auto space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
+      <div className="flex items-center justify-between gap-2">
+        <div className="flex items-center gap-3 sm:gap-4 min-w-0">
           <Link to={`/dashboard/cms/content/${typeSlug}`}>
-            <Button variant="ghost" size="icon">
+            <Button variant="ghost" size="icon" className="flex-shrink-0">
               <ArrowLeft className="w-4 h-4" />
             </Button>
           </Link>
-          <div>
-            <h1 className="text-2xl font-bold">
+          <div className="min-w-0">
+            <h1 className="text-xl sm:text-2xl font-bold truncate">
               {isEdit ? 'Edit' : 'New'} {contentType?.name || 'Item'}
             </h1>
-            <p className="text-muted-foreground">
+            <p className="text-muted-foreground hidden sm:block">
               {isEdit ? 'Update this content item' : 'Create a new content item'}
             </p>
           </div>
         </div>
 
         {isEdit && (
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5 sm:gap-2 flex-shrink-0">
             {currentStatus === 'draft' && (
               <Button
                 variant="outline"
+                size="sm"
                 onClick={() => publishMutation.mutate()}
                 disabled={publishMutation.isPending}
               >
                 {publishMutation.isPending ? (
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  <Loader2 className="w-4 h-4 sm:mr-2 animate-spin" />
                 ) : (
-                  <Send className="w-4 h-4 mr-2" />
+                  <Send className="w-4 h-4 sm:mr-2" />
                 )}
-                Publish
+                <span className="hidden sm:inline">Publish</span>
               </Button>
             )}
             {currentStatus === 'published' && (
               <Button
                 variant="outline"
+                size="sm"
                 onClick={() => archiveMutation.mutate()}
                 disabled={archiveMutation.isPending}
               >
                 {archiveMutation.isPending ? (
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  <Loader2 className="w-4 h-4 sm:mr-2 animate-spin" />
                 ) : (
-                  <Archive className="w-4 h-4 mr-2" />
+                  <Archive className="w-4 h-4 sm:mr-2" />
                 )}
-                Archive
+                <span className="hidden sm:inline">Archive</span>
               </Button>
             )}
           </div>
@@ -437,7 +439,7 @@ const ContentItemFormPage = ({ mode }: ContentItemFormPageProps) => {
           <CardHeader>
             <CardTitle>Publishing</CardTitle>
           </CardHeader>
-          <CardContent className="grid grid-cols-2 gap-4">
+          <CardContent className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label>Status</Label>
               <Select
@@ -503,7 +505,7 @@ const ContentItemFormPage = ({ mode }: ContentItemFormPageProps) => {
                     <ChevronDown className="w-4 h-4 opacity-50" />
                   </Button>
                 </PopoverTrigger>
-                <PopoverContent className="w-80 p-0" align="start">
+                <PopoverContent className="w-[min(320px,calc(100vw-2rem))] p-0" align="start">
                   <div className="p-4 space-y-2 max-h-64 overflow-y-auto">
                     {categories.map((category) => (
                       <div key={category.id} className="flex items-center space-x-2">

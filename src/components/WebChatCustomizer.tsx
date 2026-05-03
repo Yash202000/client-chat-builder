@@ -138,15 +138,15 @@ export const WebChatCustomizer: React.FC<WebChatCustomizerPropsExtended> = ({
     <Card className="border-0 shadow-xl shadow-slate-200/50 dark:shadow-none bg-white dark:bg-slate-800 h-fit flex flex-col rounded-2xl overflow-hidden">
       <CardHeader className="border-b border-slate-100 dark:border-slate-700 bg-gradient-to-r from-slate-50 to-white dark:from-slate-800 dark:to-slate-900 flex-shrink-0 py-2 px-4">
         <div className={`flex items-center justify-between mb-2`}>
-          <div className="flex items-center gap-3">
-            <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-pink-500 to-rose-500 flex items-center justify-center shadow-md shadow-pink-500/25">
-              <Palette className="h-4 w-4 text-white" />
+          <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+            <div className="h-7 w-7 sm:h-8 sm:w-8 rounded-lg bg-gradient-to-br from-pink-500 to-rose-500 flex items-center justify-center shadow-md shadow-pink-500/25 flex-shrink-0">
+              <Palette className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-white" />
             </div>
-            <CardTitle className="text-slate-900 dark:text-white text-xl font-semibold">{t('designer.webChatCustomization')}</CardTitle>
+            <CardTitle className="text-slate-900 dark:text-white text-sm sm:text-xl font-semibold truncate">{t('designer.webChatCustomization')}</CardTitle>
           </div>
-          <div className={`flex items-center gap-2`}>
+          <div className={`flex items-center gap-1.5 sm:gap-2 flex-shrink-0`}>
             {publishStatus?.is_published && (
-              <span className={`px-3 py-1.5 rounded-full text-xs font-semibold ${
+              <span className={`hidden sm:inline-flex px-3 py-1.5 rounded-full text-xs font-semibold ${
                 publishStatus.is_active
                   ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400'
                   : 'bg-violet-50 text-violet-700 dark:bg-violet-500/10 dark:text-violet-400'
@@ -154,17 +154,18 @@ export const WebChatCustomizer: React.FC<WebChatCustomizerPropsExtended> = ({
                 {publishStatus.is_active ? 'Published' : 'Unpublished'}
               </span>
             )}
-            <Button onClick={handleSaveChanges} disabled={!selectedAgentId} className="bg-gradient-to-r from-pink-500 to-rose-500 hover:from-pink-600 hover:to-rose-600 text-white shadow-md shadow-pink-500/25 hover:shadow-pink-500/40 transition-all duration-200">
-              <Save className={`h-4 w-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
-              {t('designer.save')}
+            <Button onClick={handleSaveChanges} disabled={!selectedAgentId} className="bg-gradient-to-r from-pink-500 to-rose-500 hover:from-pink-600 hover:to-rose-600 text-white shadow-md shadow-pink-500/25 hover:shadow-pink-500/40 transition-all duration-200 px-2 sm:px-3">
+              <Save className={`h-4 w-4 ${isRTL ? 'sm:ml-2' : 'sm:mr-2'}`} />
+              <span className="hidden sm:inline">{t('designer.save')}</span>
             </Button>
-            <Button onClick={handlePublish} disabled={!selectedAgentId} variant="outline" className="border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 transition-all duration-200">
-              <Send className={`h-4 w-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
-              {publishStatus?.is_published && publishStatus?.is_active ? 'Update' : t('designer.publish')}
+            <Button onClick={handlePublish} disabled={!selectedAgentId} variant="outline" className="border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 transition-all duration-200 px-2 sm:px-3">
+              <Send className={`h-4 w-4 ${isRTL ? 'sm:ml-2' : 'sm:mr-2'}`} />
+              <span className="hidden sm:inline">{publishStatus?.is_published && publishStatus?.is_active ? 'Update' : t('designer.publish')}</span>
             </Button>
             {publishStatus?.is_published && publishStatus?.is_active && handleUnpublish && (
-              <Button onClick={handleUnpublish} variant="outline" className="border-red-200 dark:border-red-800 text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20 transition-all duration-200">
-                Unpublish
+              <Button onClick={handleUnpublish} variant="outline" className="border-red-200 dark:border-red-800 text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20 transition-all duration-200 px-2 sm:px-3">
+                <span className="hidden sm:inline">Unpublish</span>
+                <span className="sm:hidden text-xs">✕</span>
               </Button>
             )}
           </div>
@@ -359,7 +360,7 @@ export const WebChatCustomizer: React.FC<WebChatCustomizerPropsExtended> = ({
             />
 
             {/* URLs + Toggles row */}
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
               {/* URLs */}
               <div className="bg-gradient-to-br from-slate-50 to-white dark:from-slate-900/50 dark:to-slate-800/50 rounded-xl p-2.5 border border-slate-200/80 dark:border-slate-700/80">
                 <div className="flex items-center gap-1.5 mb-1.5">
@@ -409,7 +410,7 @@ export const WebChatCustomizer: React.FC<WebChatCustomizerPropsExtended> = ({
             </div>
 
             {/* Proactive Message + Embed Code row */}
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
               {/* Proactive Message */}
               <div className="bg-gradient-to-br from-slate-50 to-white dark:from-slate-900/50 dark:to-slate-800/50 rounded-xl p-2.5 border border-slate-200/80 dark:border-slate-700/80">
                 <div className={`flex items-center justify-between mb-1.5 ${isRTL ? 'flex-row-reverse' : ''}`}>
@@ -458,7 +459,7 @@ export const WebChatCustomizer: React.FC<WebChatCustomizerPropsExtended> = ({
                     {t('designer.copyEmbedCodeButton')}
                   </Button>
                 </div>
-                <div className="flex-1 p-2 bg-slate-900 dark:bg-slate-950 text-emerald-400 dark:text-emerald-300 rounded-lg font-mono text-xs overflow-auto border border-slate-700 dark:border-slate-800 max-h-24">
+                <div className="flex-1 p-2 bg-slate-900 dark:bg-slate-950 text-emerald-400 dark:text-emerald-300 rounded-lg font-mono text-xs overflow-auto border border-slate-700 dark:border-slate-800 max-h-40 sm:max-h-48">
                   <pre className="whitespace-pre-wrap break-all">{generateEmbedCode()}</pre>
                 </div>
               </div>

@@ -64,6 +64,8 @@ import { cn } from '@/lib/utils';
 import axios from 'axios';
 import { useToast } from '@/hooks/use-toast';
 import { TagSelector } from '@/components/TagSelector';
+import CsvImportDialog from '@/components/CsvImportDialog';
+import { downloadCsv } from '@/utils/csvExport';
 
 interface Lead {
   id: number;
@@ -150,6 +152,7 @@ export default function LeadsPage() {
   const [openCombobox, setOpenCombobox] = useState(false);
   const [showBanner, setShowBanner] = useState(true);
   const [contactsWithoutLeads, setContactsWithoutLeads] = useState(0);
+  const [importOpen, setImportOpen] = useState(false);
   const [newLead, setNewLead] = useState({
     name: '',
     email: '',
@@ -310,6 +313,18 @@ export default function LeadsPage() {
     lead.contact?.email?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
+  const handleExportLeads = () => {
+    downloadCsv('leads.csv', filteredLeads as Record<string, any>[], [
+      { key: 'contact.name', label: 'Contact Name' },
+      { key: 'contact.email', label: 'Email' },
+      { key: 'stage', label: 'Stage' },
+      { key: 'score', label: 'Score' },
+      { key: 'source', label: 'Source' },
+      { key: 'assignee.full_name', label: 'Assignee' },
+      { key: 'created_at', label: 'Created At' },
+    ]);
+  };
+
   const leadsByStage = Object.keys(STAGE_LABELS).reduce((acc, stage) => {
     acc[stage] = filteredLeads.filter((lead) => lead.stage === stage);
     return acc;
@@ -373,14 +388,14 @@ export default function LeadsPage() {
         </div>
         {/* Actions */}
         <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm" className="h-8 px-3 text-xs">
-            <Upload className="h-3.5 w-3.5 mr-1.5" />{t('crm.common.import')}
+          <Button variant="outline" size="sm" className="h-8 px-3 text-xs" onClick={() => setImportOpen(true)}>
+            <Upload className="h-3.5 w-3.5 sm:mr-1.5" /><span className="hidden sm:inline">{t('crm.common.import')}</span>
           </Button>
-          <Button variant="outline" size="sm" className="h-8 px-3 text-xs">
-            <Download className="h-3.5 w-3.5 mr-1.5" />{t('crm.common.export')}
+          <Button variant="outline" size="sm" className="h-8 px-3 text-xs" onClick={() => handleExportLeads()}>
+            <Download className="h-3.5 w-3.5 sm:mr-1.5" /><span className="hidden sm:inline">{t('crm.common.export')}</span>
           </Button>
           <Button size="sm" onClick={() => setCreateDialogOpen(true)} className="h-8 px-3 text-xs">
-            <Plus className="h-3.5 w-3.5 mr-1.5" />{t('crm.leads.addLead')}
+            <Plus className="h-3.5 w-3.5 sm:mr-1.5" /><span className="hidden sm:inline">{t('crm.leads.addLead')}</span>
           </Button>
         </div>
       </div>
@@ -407,17 +422,17 @@ export default function LeadsPage() {
 
       {/* Filter + view toggle bar */}
       <div className="flex items-center gap-2 mb-4 flex-wrap">
-        <div className="relative flex-1 min-w-48">
+        <div className="relative w-full sm:flex-1 sm:min-w-48">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
           <Input
             placeholder={t('crm.leads.searchPlaceholder')}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-8 h-8 text-sm bg-muted/40 border-border"
+            className="pl-8 h-8 text-sm bg-muted/40 border-border w-full"
           />
         </div>
         <Select value={selectedStage} onValueChange={setSelectedStage}>
-          <SelectTrigger className="w-40 h-8 text-sm bg-muted/40 border-border">
+          <SelectTrigger className="w-full sm:w-40 h-8 text-sm bg-muted/40 border-border">
             <SelectValue placeholder={t('crm.leads.filters.byStage')} />
           </SelectTrigger>
           <SelectContent>
@@ -427,7 +442,7 @@ export default function LeadsPage() {
             ))}
           </SelectContent>
         </Select>
-        <div className="flex items-center gap-2 bg-muted/40 border border-border rounded-md px-3 py-1.5">
+        <div className="flex items-center gap-2 bg-muted/40 border border-border rounded-md px-3 py-1.5 w-full sm:w-auto">
           <Tag className="h-3.5 w-3.5 text-muted-foreground" />
           <TagSelector
             entityType="lead"
@@ -447,16 +462,16 @@ export default function LeadsPage() {
           <Button
             variant="ghost" size="sm"
             onClick={() => setView('kanban')}
-            className={cn("h-7 px-3 text-xs rounded-md transition-all", view === 'kanban' ? 'bg-card text-foreground shadow-sm' : 'text-muted-foreground')}
+            className={cn("h-7 px-2 sm:px-3 text-xs rounded-md transition-all", view === 'kanban' ? 'bg-card text-foreground shadow-sm' : 'text-muted-foreground')}
           >
-            <LayoutGrid className="h-3.5 w-3.5 mr-1.5" />{t('crm.leads.views.kanban')}
+            <LayoutGrid className="h-3.5 w-3.5 sm:mr-1.5" /><span className="hidden sm:inline">{t('crm.leads.views.kanban')}</span>
           </Button>
           <Button
             variant="ghost" size="sm"
             onClick={() => setView('table')}
-            className={cn("h-7 px-3 text-xs rounded-md transition-all", view === 'table' ? 'bg-card text-foreground shadow-sm' : 'text-muted-foreground')}
+            className={cn("h-7 px-2 sm:px-3 text-xs rounded-md transition-all", view === 'table' ? 'bg-card text-foreground shadow-sm' : 'text-muted-foreground')}
           >
-            <List className="h-3.5 w-3.5 mr-1.5" />{t('crm.leads.views.list')}
+            <List className="h-3.5 w-3.5 sm:mr-1.5" /><span className="hidden sm:inline">{t('crm.leads.views.list')}</span>
           </Button>
         </div>
       </div>
@@ -559,12 +574,12 @@ export default function LeadsPage() {
             <TableHeader>
               <TableRow className="bg-muted/50 border-border hover:bg-muted/50">
                 <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t('crm.leads.fields.name')}</TableHead>
-                <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t('crm.leads.fields.email')}</TableHead>
+                <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground hidden sm:table-cell">{t('crm.leads.fields.email')}</TableHead>
                 <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t('crm.leads.fields.stage')}</TableHead>
-                <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t('crm.leads.fields.score')}</TableHead>
-                <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t('crm.leads.fields.dealValue')}</TableHead>
-                <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t('crm.leads.fields.source')}</TableHead>
-                <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t('crm.common.status')}</TableHead>
+                <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground hidden sm:table-cell">{t('crm.leads.fields.score')}</TableHead>
+                <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground hidden md:table-cell">{t('crm.leads.fields.dealValue')}</TableHead>
+                <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground hidden md:table-cell">{t('crm.leads.fields.source')}</TableHead>
+                <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground hidden sm:table-cell">{t('crm.common.status')}</TableHead>
                 <TableHead className="w-10"></TableHead>
               </TableRow>
             </TableHeader>
@@ -592,24 +607,29 @@ export default function LeadsPage() {
                       className="border-border hover:bg-muted/40 transition-colors cursor-pointer"
                       onClick={() => navigate(`/dashboard/crm/leads/${lead.id}`)}
                     >
-                      <TableCell className="font-medium text-foreground">{lead.contact?.name}</TableCell>
-                      <TableCell className="text-muted-foreground text-sm">{lead.contact?.email}</TableCell>
+                      <TableCell className="font-medium text-foreground">
+                        <div className="min-w-0">
+                          <span className="block truncate">{lead.contact?.name}</span>
+                          <span className="text-xs text-muted-foreground truncate block sm:hidden">{lead.contact?.email}</span>
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-muted-foreground text-sm hidden sm:table-cell">{lead.contact?.email}</TableCell>
                       <TableCell>
                         <span className={cn("inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium", STAGE_COLORS[lead.stage])}>
                           {STAGE_LABELS[lead.stage]}
                         </span>
                       </TableCell>
-                      <TableCell>
+                      <TableCell className="hidden sm:table-cell">
                         <div className="flex items-center gap-1.5">
                           <Star className="h-3 w-3 fill-violet-400 text-violet-400" />
                           <span className="text-sm text-foreground">{lead.score}/100</span>
                         </div>
                       </TableCell>
-                      <TableCell className="text-emerald-600 dark:text-emerald-400 font-medium text-sm">
+                      <TableCell className="text-emerald-600 dark:text-emerald-400 font-medium text-sm hidden md:table-cell">
                         {lead.deal_value ? `$${lead.deal_value.toLocaleString()}` : '—'}
                       </TableCell>
-                      <TableCell className="text-muted-foreground text-sm">{lead.source || '—'}</TableCell>
-                      <TableCell>
+                      <TableCell className="text-muted-foreground text-sm hidden md:table-cell">{lead.source || '—'}</TableCell>
+                      <TableCell className="hidden sm:table-cell">
                         <span className={cn("inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium",
                           lead.qualification_status === 'qualified' ? 'bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400' : 'bg-muted border border-border text-muted-foreground')}>
                           {lead.qualification_status}
@@ -631,7 +651,7 @@ export default function LeadsPage() {
 
       {/* Create Lead Dialog */}
       <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="w-full max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="text-xl font-bold text-foreground">
               {t('crm.leads.addLead')}
@@ -802,6 +822,13 @@ export default function LeadsPage() {
           </Tabs>
         </DialogContent>
       </Dialog>
+
+      <CsvImportDialog
+        open={importOpen}
+        onOpenChange={setImportOpen}
+        mode="leads"
+        onImported={fetchLeads}
+      />
     </div>
   );
 }

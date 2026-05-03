@@ -239,7 +239,7 @@ export default function SupervisorDashboardPage() {
 
       <div className="flex-1 overflow-y-auto p-6 space-y-6">
         {/* Stats strip */}
-        <div className="grid grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {[
             { label: t('supervisor.activeCalls'), value: activeCalls.length, icon: Phone, color: 'text-blue-600' },
             { label: t('supervisor.inQueue'), value: queue.length, icon: Clock, color: 'text-amber-600' },

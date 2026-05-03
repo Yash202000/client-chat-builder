@@ -230,11 +230,11 @@ function DetailPanel({ entry }: { entry: CallLogEntry }) {
       initial={{ opacity: 0, y: -4 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -4 }}
-      className="mt-3 ml-14 rounded-xl border border-border/60 bg-muted/30 dark:bg-muted/10 p-4 space-y-3"
+      className="mt-3 ml-0 sm:ml-14 rounded-xl border border-border/60 bg-muted/30 dark:bg-muted/10 p-3 sm:p-4 space-y-3"
     >
       {entry.call_type === 'voice' && (
         <>
-          <div className="grid grid-cols-2 gap-3 text-xs">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
             <div>
               <p className="text-muted-foreground font-medium mb-0.5">From</p>
               <p className="text-foreground font-mono">{entry.from_number ?? '—'}</p>
@@ -283,7 +283,7 @@ function DetailPanel({ entry }: { entry: CallLogEntry }) {
       )}
 
       {entry.call_type === 'video' && (
-        <div className="grid grid-cols-2 gap-3 text-xs">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
           {entry.channel_name && (
             <div>
               <p className="text-muted-foreground font-medium mb-0.5">Channel</p>
@@ -318,7 +318,7 @@ function DetailPanel({ entry }: { entry: CallLogEntry }) {
 
       {entry.call_type === 'meeting' && (
         <div className="space-y-3 text-xs">
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <p className="text-muted-foreground font-medium mb-0.5">Start</p>
               <p className="text-foreground">{fmtDate(entry.started_at)}</p>
@@ -377,52 +377,57 @@ function EntryRow({ entry, isExpanded, onToggle }: {
 
   return (
     <div className={cn(
-      'group px-5 py-1 rounded-xl transition-colors cursor-pointer',
+      'group px-3 sm:px-5 py-1 rounded-xl transition-colors cursor-pointer',
       isExpanded ? 'bg-muted/40 dark:bg-muted/20' : 'hover:bg-muted/30 dark:hover:bg-muted/10',
     )} onClick={onToggle}>
-      <div className="flex items-center gap-3 py-2.5">
+      <div className="flex items-center gap-2 sm:gap-3 py-2.5">
         <CallAvatar entry={entry} />
 
         {/* Main content */}
         <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 flex-wrap">
-            <span className="text-sm font-semibold truncate text-foreground">
+          <div className="flex items-center gap-1.5 sm:gap-2 min-w-0">
+            <span className="text-sm font-semibold truncate text-foreground min-w-0">
               {entry.title}
             </span>
             <StatusPill status={entry.status} />
             {entry.recording_url && (
-              <span className="flex items-center gap-0.5 text-[10px] text-muted-foreground bg-muted rounded-full px-1.5 py-0.5" title="Recording">
+              <span className="hidden sm:flex items-center gap-0.5 text-[10px] text-muted-foreground bg-muted rounded-full px-1.5 py-0.5 flex-shrink-0" title="Recording">
                 <Mic className="h-2.5 w-2.5" /> Rec
               </span>
             )}
             {entry.full_transcript && (
-              <span className="flex items-center gap-0.5 text-[10px] text-muted-foreground bg-muted rounded-full px-1.5 py-0.5" title="Transcript">
+              <span className="hidden sm:flex items-center gap-0.5 text-[10px] text-muted-foreground bg-muted rounded-full px-1.5 py-0.5 flex-shrink-0" title="Transcript">
                 <FileText className="h-2.5 w-2.5" /> Transcript
               </span>
             )}
             {entry.participants.length > 0 && (
-              <span className="flex items-center gap-0.5 text-[10px] text-muted-foreground bg-muted rounded-full px-1.5 py-0.5">
+              <span className="hidden sm:flex items-center gap-0.5 text-[10px] text-muted-foreground bg-muted rounded-full px-1.5 py-0.5 flex-shrink-0">
                 <Users className="h-2.5 w-2.5" /> {entry.participants.length}
               </span>
             )}
             {entry.csat_score != null && (
-              <span className="flex items-center gap-0.5 text-[10px] font-medium text-muted-foreground">
+              <span className="hidden sm:flex items-center gap-0.5 text-[10px] font-medium text-muted-foreground flex-shrink-0">
                 ★ {entry.csat_score}/5
               </span>
             )}
           </div>
-          <p className="text-xs text-muted-foreground mt-0.5">
-            {typeLabel} · {fmtTime(entry.started_at)}
+          <p className="text-xs text-muted-foreground mt-0.5 flex items-center gap-1.5">
+            <span>{typeLabel} · {fmtTime(entry.started_at)}</span>
+            {/* Duration shown inline on mobile */}
+            {entry.duration_seconds != null && entry.duration_seconds > 0 && (
+              <span className="sm:hidden flex items-center gap-0.5">
+                <Clock className="h-2.5 w-2.5" />
+                {fmt(entry.duration_seconds)}
+              </span>
+            )}
           </p>
         </div>
 
-        {/* Right side */}
-        <div className="flex items-center gap-3 flex-shrink-0">
-          <div className="text-right">
-            <div className="flex items-center gap-1 text-sm font-medium text-foreground justify-end">
-              <Clock className="h-3 w-3 text-muted-foreground" />
-              {fmt(entry.duration_seconds)}
-            </div>
+        {/* Right side — duration hidden on mobile (shown in subtitle), visible sm+ */}
+        <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
+          <div className="hidden sm:flex items-center gap-1 text-sm font-medium text-foreground">
+            <Clock className="h-3 w-3 text-muted-foreground" />
+            {fmt(entry.duration_seconds)}
           </div>
           <ChevronDown className={cn(
             'h-4 w-4 text-muted-foreground transition-transform duration-200 flex-shrink-0',
@@ -511,9 +516,9 @@ export default function VoiceCallLogPage() {
   return (
     <div className="flex flex-col h-full bg-background">
       {/* ── Header ─────────────────────────────────────────────────────────── */}
-      <div className="flex items-center justify-between gap-4 px-6 py-3 border-b border-border/50">
-        <h1 className="text-base font-semibold text-foreground">Call Log</h1>
-        <div className="relative w-56">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 px-4 sm:px-6 py-3 border-b border-border/50">
+        <h1 className="text-base font-semibold text-foreground flex-shrink-0">Call Log</h1>
+        <div className="relative w-full sm:w-56">
           <Search className="absolute left-3 top-2 h-3.5 w-3.5 text-muted-foreground" />
           <Input
             className="pl-8 pr-8 h-8 text-sm bg-muted/40 border-border/50 focus:bg-background"
@@ -533,7 +538,7 @@ export default function VoiceCallLogPage() {
       </div>
 
       {/* ── Quick filter pills ─────────────────────────────────────────────── */}
-      <div className="flex items-center gap-2 px-6 py-3 border-b border-border/40 overflow-x-auto scrollbar-none">
+      <div className="flex items-center gap-1.5 sm:gap-2 px-4 sm:px-6 py-2 sm:py-3 border-b border-border/40 overflow-x-auto scrollbar-none">
         {QUICK_FILTERS.map(f => {
           const isActive = quickFilter === f.id;
           return (
@@ -541,7 +546,7 @@ export default function VoiceCallLogPage() {
               key={f.id}
               onClick={() => { setQuickFilter(f.id); setExpanded(null); }}
               className={cn(
-                'inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-sm font-medium whitespace-nowrap transition-all',
+                'inline-flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3.5 py-1 sm:py-1.5 rounded-full text-xs sm:text-sm font-medium whitespace-nowrap transition-all flex-shrink-0',
                 isActive
                   ? 'bg-primary text-primary-foreground'
                   : 'bg-muted/50 hover:bg-muted text-foreground',
@@ -583,7 +588,7 @@ export default function VoiceCallLogPage() {
             </p>
           </div>
         ) : (
-          <div className="px-3 py-3 space-y-4">
+          <div className="px-2 sm:px-3 py-3 space-y-4">
             {grouped.map(group => (
               <div key={group.label}>
                 {/* Date section header */}

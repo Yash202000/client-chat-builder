@@ -178,17 +178,17 @@ const CMSSettingsPage = () => {
   };
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="px-4 sm:px-6 py-4 sm:py-6 space-y-6">
       {/* Header */}
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-3 sm:gap-4">
         <Link to="/dashboard/cms">
           <Button variant="ghost" size="icon">
             <ArrowLeft className="w-4 h-4" />
           </Button>
         </Link>
         <div>
-          <h1 className="text-2xl font-bold">CMS Settings</h1>
-          <p className="text-muted-foreground">Manage API access and data exports</p>
+          <h1 className="text-xl sm:text-2xl font-bold">CMS Settings</h1>
+          <p className="text-muted-foreground hidden sm:block">Manage API access and data exports</p>
         </div>
       </div>
 
@@ -216,8 +216,8 @@ const CMSSettingsPage = () => {
                   </CardDescription>
                 </div>
                 <Button onClick={() => setTokenDialog(true)}>
-                  <Plus className="w-4 h-4 mr-2" />
-                  Create Token
+                  <Plus className="w-4 h-4 sm:mr-2" />
+                  <span className="hidden sm:inline">Create Token</span>
                 </Button>
               </div>
             </CardHeader>
@@ -227,15 +227,16 @@ const CMSSettingsPage = () => {
                   <Loader2 className="w-6 h-6 animate-spin" />
                 </div>
               ) : tokens && tokens.length > 0 ? (
+                <div className="overflow-x-auto">
                 <Table>
                   <TableHeader>
                     <TableRow>
                       <TableHead>Name</TableHead>
                       <TableHead>Token</TableHead>
-                      <TableHead>Permissions</TableHead>
-                      <TableHead>Rate Limit</TableHead>
+                      <TableHead className="hidden sm:table-cell">Permissions</TableHead>
+                      <TableHead className="hidden md:table-cell">Rate Limit</TableHead>
                       <TableHead>Status</TableHead>
-                      <TableHead>Usage</TableHead>
+                      <TableHead className="hidden sm:table-cell">Usage</TableHead>
                       <TableHead></TableHead>
                     </TableRow>
                   </TableHeader>
@@ -248,19 +249,19 @@ const CMSSettingsPage = () => {
                             {token.token}
                           </code>
                         </TableCell>
-                        <TableCell>
+                        <TableCell className="hidden sm:table-cell">
                           <div className="flex gap-1">
                             {token.can_read && <Badge variant="secondary">Read</Badge>}
                             {token.can_search && <Badge variant="secondary">Search</Badge>}
                           </div>
                         </TableCell>
-                        <TableCell>{token.rate_limit}/min</TableCell>
+                        <TableCell className="hidden md:table-cell">{token.rate_limit}/min</TableCell>
                         <TableCell>
                           <Badge variant={token.is_active ? 'default' : 'secondary'}>
                             {token.is_active ? 'Active' : 'Inactive'}
                           </Badge>
                         </TableCell>
-                        <TableCell className="text-muted-foreground">
+                        <TableCell className="hidden sm:table-cell text-muted-foreground">
                           {token.request_count} requests
                         </TableCell>
                         <TableCell>
@@ -288,6 +289,7 @@ const CMSSettingsPage = () => {
                     ))}
                   </TableBody>
                 </Table>
+                </div>
               ) : (
                 <div className="text-center py-8 text-muted-foreground">
                   <Key className="w-8 h-8 mx-auto mb-2 opacity-50" />
@@ -306,7 +308,7 @@ const CMSSettingsPage = () => {
               <CardDescription>Download your content as JSON or CSV</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="flex items-end gap-4">
+              <div className="flex flex-wrap items-end gap-2 sm:gap-4">
                 <div className="space-y-2">
                   <Label>Format</Label>
                   <Select
@@ -350,13 +352,14 @@ const CMSSettingsPage = () => {
                     <Loader2 className="w-6 h-6 animate-spin" />
                   </div>
                 ) : exports && exports.length > 0 ? (
+                  <div className="overflow-x-auto">
                   <Table>
                     <TableHeader>
                       <TableRow>
                         <TableHead>Format</TableHead>
                         <TableHead>Status</TableHead>
-                        <TableHead>Items</TableHead>
-                        <TableHead>Size</TableHead>
+                        <TableHead className="hidden sm:table-cell">Items</TableHead>
+                        <TableHead className="hidden sm:table-cell">Size</TableHead>
                         <TableHead>Created</TableHead>
                         <TableHead></TableHead>
                       </TableRow>
@@ -384,8 +387,8 @@ const CMSSettingsPage = () => {
                               {exp.status}
                             </Badge>
                           </TableCell>
-                          <TableCell>{exp.item_count || '-'}</TableCell>
-                          <TableCell>
+                          <TableCell className="hidden sm:table-cell">{exp.item_count || '-'}</TableCell>
+                          <TableCell className="hidden sm:table-cell">
                             {exp.file_size
                               ? `${(exp.file_size / 1024).toFixed(1)} KB`
                               : '-'}
@@ -418,6 +421,7 @@ const CMSSettingsPage = () => {
                       ))}
                     </TableBody>
                   </Table>
+                  </div>
                 ) : (
                   <div className="text-center py-4 text-muted-foreground">
                     <Download className="w-8 h-8 mx-auto mb-2 opacity-50" />

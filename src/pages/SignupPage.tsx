@@ -15,16 +15,41 @@ import { UserPlus, Mail, Lock, Loader2, Sparkles } from "lucide-react";
 import { apiFetch } from "@/lib/api";
 import { useAuth } from "@/hooks/useAuth";
 
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
 export const SignupPage = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [emailError, setEmailError] = useState("");
+  const [passwordError, setPasswordError] = useState("");
   const navigate = useNavigate();
   const { toast } = useToast();
   const { login } = useAuth();
 
+  const validateEmail = (value: string): string => {
+    if (!value) return "Email is required.";
+    if (!EMAIL_REGEX.test(value)) return "Please enter a valid email address.";
+    return "";
+  };
+
+  const validatePassword = (value: string): string => {
+    if (!value) return "Password is required.";
+    if (value.length < 8) return "Password must be at least 8 characters long.";
+    return "";
+  };
+
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    const emailErr = validateEmail(email);
+    const passwordErr = validatePassword(password);
+
+    setEmailError(emailErr);
+    setPasswordError(passwordErr);
+
+    if (emailErr || passwordErr) return;
+
     setIsLoading(true);
     try {
       const response = await apiFetch("/api/v1/auth/signup", {
@@ -56,7 +81,7 @@ export const SignupPage = () => {
     } catch (error) {
       toast({
         title: "Signup Failed",
-        description: error.message,
+        description: (error as Error).message,
         variant: "destructive",
       });
     } finally {
@@ -85,7 +110,7 @@ export const SignupPage = () => {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleSignup} className="grid gap-5">
+          <form onSubmit={handleSignup} className="grid gap-5" noValidate>
             <div className="grid gap-2">
               <Label htmlFor="email" className="dark:text-gray-300 flex items-center gap-2">
                 <Mail className="h-4 w-4" />
@@ -95,12 +120,17 @@ export const SignupPage = () => {
                 id="email"
                 type="email"
                 placeholder="you@example.com"
-                required
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                onChange={(e) => {
+                  setEmail(e.target.value);
+                  if (emailError) setEmailError(validateEmail(e.target.value));
+                }}
                 disabled={isLoading}
                 className="dark:bg-slate-900 dark:border-slate-600 dark:text-white h-11"
               />
+              {emailError && (
+                <p className="text-xs text-destructive mt-1">{emailError}</p>
+              )}
             </div>
             <div className="grid gap-2">
               <Label htmlFor="password" className="dark:text-gray-300 flex items-center gap-2">
@@ -110,16 +140,22 @@ export const SignupPage = () => {
               <Input
                 id="password"
                 type="password"
-                required
                 value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                onChange={(e) => {
+                  setPassword(e.target.value);
+                  if (passwordError) setPasswordError(validatePassword(e.target.value));
+                }}
                 disabled={isLoading}
                 className="dark:bg-slate-900 dark:border-slate-600 dark:text-white h-11"
                 placeholder="Create a strong password"
               />
-              <p className="text-xs text-gray-500 dark:text-gray-400">
-                Must be at least 8 characters long
-              </p>
+              {passwordError ? (
+                <p className="text-xs text-destructive mt-1">{passwordError}</p>
+              ) : (
+                <p className="text-xs text-gray-500 dark:text-gray-400">
+                  Must be at least 8 characters long
+                </p>
+              )}
             </div>
             <Button
               type="submit"

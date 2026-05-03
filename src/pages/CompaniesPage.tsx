@@ -50,32 +50,32 @@ export const CompaniesPage = () => {
   return (
     <div className="min-h-full bg-slate-50 dark:bg-slate-950" dir={isRTL ? 'rtl' : 'ltr'}>
       {/* Header */}
-      <div className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 px-6 py-6">
-        <div className={`flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 ${isRTL ? 'lg:flex-row-reverse' : ''}`}>
+      <div className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 px-4 sm:px-6 py-4 sm:py-6">
+        <div className={`flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 ${isRTL ? 'sm:flex-row-reverse' : ''}`}>
           <div className="flex items-center gap-3">
-            <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center flex-shrink-0">
-              <Building2 className="h-6 w-6 text-white" />
+            <div className="h-9 w-9 sm:h-12 sm:w-12 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center flex-shrink-0">
+              <Building2 className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
             </div>
             <div>
-              <h1 className="text-2xl font-bold text-slate-900 dark:text-white leading-tight">{t('companies.title')}</h1>
-              <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">{t('companies.subtitle')}</p>
+              <h1 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white leading-tight">{t('companies.title')}</h1>
+              <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-0.5">{t('companies.subtitle')}</p>
             </div>
           </div>
           <Button
             onClick={() => setCreateModalOpen(true)}
-            className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white rounded-xl h-9 px-4 text-sm"
+            className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white rounded-xl h-9 px-3 sm:px-4 text-sm self-start sm:self-auto"
           >
-            <PlusCircle className={`${isRTL ? 'ml-2' : 'mr-2'} h-4 w-4`} /> {t('companies.createCompany')}
+            <PlusCircle className={`${isRTL ? 'sm:ml-2' : 'sm:mr-2'} h-4 w-4`} /><span className="hidden sm:inline"> {t('companies.createCompany')}</span>
           </Button>
         </div>
       </div>
-      <div className="px-6 py-6">
+      <div className="px-4 sm:px-6 py-4 sm:py-6">
         <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm overflow-hidden">
-          <div className="p-6 border-b border-slate-200 dark:border-slate-800">
+          <div className="p-4 sm:p-6 border-b border-slate-200 dark:border-slate-800">
             <h3 className="text-base font-semibold text-slate-900 dark:text-white">{t('companies.allCompanies')}</h3>
             <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">{t('companies.viewAndManage')}</p>
           </div>
-          <div className="p-6">
+          <div className="p-4 sm:p-6">
             {isLoading ? (
               <div className="flex items-center justify-center py-8">
                 <Loader2 className="h-6 w-6 animate-spin text-slate-400" />

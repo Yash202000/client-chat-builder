@@ -68,6 +68,7 @@
     "team": "Team",
     "teamManagement": "Team Management",
     "reports": "Reports",
+    "auditLogs": "Audit Logs",
     "settings": "Settings",
     "vault": "Vault",
     "apiVault": "API Vault",

@@ -77,6 +77,7 @@ interface WorkflowAISidebarProps {
   workflowId: string | undefined;
   workflowDbId: number | undefined;
   onNodesUpdated?: (changedIds: string[], simSteps?: Array<{ node_id: string; status: string }>) => void;
+  onMobileClose?: () => void;
 }
 
 export interface WorkflowAISidebarHandle {
@@ -165,6 +166,7 @@ const WorkflowAISidebar = forwardRef<WorkflowAISidebarHandle, WorkflowAISidebarP
       workflowId,
       workflowDbId,
       onNodesUpdated,
+      onMobileClose,
     },
     ref
   ) => {
@@ -470,32 +472,32 @@ const WorkflowAISidebar = forwardRef<WorkflowAISidebarHandle, WorkflowAISidebarP
     // ── Render ──────────────────────────────────────────────────────────────
 
     return (
-      <div className="h-full flex flex-col bg-card border-l border-border">
+      <div className="h-full flex flex-col bg-card border-l border-border overflow-hidden">
 
         {/* Tab bar */}
-        <div className="flex-shrink-0 flex items-center border-b border-border px-2 pt-1.5 gap-0.5 bg-card">
+        <div className="flex-shrink-0 flex items-center border-b border-border px-1.5 pt-1.5 gap-0.5 bg-card min-w-0">
           <button
             onClick={() => setActiveTab("chat")}
             className={cn(
-              "flex items-center gap-1.5 px-3 py-2 text-xs font-semibold rounded-t-lg transition-all",
+              "flex items-center gap-1 px-2 sm:px-3 py-2 text-xs font-semibold rounded-t-lg transition-all flex-shrink-0",
               activeTab === "chat"
                 ? "bg-violet-50 dark:bg-violet-950/30 text-violet-700 dark:text-violet-300 border border-b-0 border-violet-200 dark:border-violet-800"
                 : "text-muted-foreground hover:text-foreground"
             )}
           >
-            <Sparkles className="w-3.5 h-3.5" />
+            <Sparkles className="w-3.5 h-3.5 flex-shrink-0" />
             AI
           </button>
           <button
             onClick={() => setActiveTab("test")}
             className={cn(
-              "flex items-center gap-1.5 px-3 py-2 text-xs font-semibold rounded-t-lg transition-all",
+              "flex items-center gap-1 px-2 sm:px-3 py-2 text-xs font-semibold rounded-t-lg transition-all flex-shrink-0",
               activeTab === "test"
                 ? "bg-emerald-50 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-300 border border-b-0 border-emerald-200 dark:border-emerald-800"
                 : "text-muted-foreground hover:text-foreground"
             )}
           >
-            <FlaskConical className="w-3.5 h-3.5" />
+            <FlaskConical className="w-3.5 h-3.5 flex-shrink-0" />
             Test
             {testMessages.length > 0 && (
               <span className={cn(
@@ -508,18 +510,27 @@ const WorkflowAISidebar = forwardRef<WorkflowAISidebarHandle, WorkflowAISidebarP
           <button
             onClick={() => setActiveTab("properties")}
             className={cn(
-              "flex items-center gap-1.5 px-3 py-2 text-xs font-semibold rounded-t-lg transition-all",
+              "flex items-center gap-1 px-2 sm:px-3 py-2 text-xs font-semibold rounded-t-lg transition-all flex-shrink-0",
               activeTab === "properties"
                 ? "bg-card text-foreground border border-b-0 border-border"
                 : "text-muted-foreground hover:text-foreground"
             )}
           >
-            <Settings2 className="w-3.5 h-3.5" />
+            <Settings2 className="w-3.5 h-3.5 flex-shrink-0" />
             Props
             {selectedNode && (
               <span className="ml-1 w-1.5 h-1.5 rounded-full bg-violet-500 animate-pulse flex-shrink-0" />
             )}
           </button>
+          {onMobileClose && (
+            <button
+              onClick={onMobileClose}
+              className="ml-auto flex-shrink-0 h-7 w-7 flex items-center justify-center rounded-lg bg-muted/80 hover:bg-muted border border-border text-muted-foreground hover:text-foreground transition-colors"
+              title="Close panel"
+            >
+              <XIcon className="w-3.5 h-3.5" />
+            </button>
+          )}
         </div>
 
         {/* ── AI CHAT TAB ── */}
@@ -556,7 +567,7 @@ const WorkflowAISidebar = forwardRef<WorkflowAISidebarHandle, WorkflowAISidebarP
                   <h3 className="text-xs font-semibold text-foreground font-mono mb-1">
                     AI Workflow Assistant
                   </h3>
-                  <p className="text-xs text-muted-foreground mb-4 max-w-[200px] leading-relaxed">
+                  <p className="text-xs text-muted-foreground mb-4 max-w-[280px] leading-relaxed">
                     Describe what you want to build or change and I'll update the canvas instantly.
                   </p>
                   <div className="w-full space-y-1">
@@ -727,7 +738,7 @@ const WorkflowAISidebar = forwardRef<WorkflowAISidebarHandle, WorkflowAISidebarP
                     <div className="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center">
                       <FlaskConical className="w-5 h-5 text-emerald-500" />
                     </div>
-                    <p className="text-xs text-muted-foreground leading-relaxed max-w-[180px]">
+                    <p className="text-xs text-muted-foreground leading-relaxed max-w-[280px]">
                       Type a message below to start testing your workflow — exactly like a real user would.
                     </p>
                   </div>

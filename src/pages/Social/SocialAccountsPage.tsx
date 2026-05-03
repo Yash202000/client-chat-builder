@@ -238,7 +238,7 @@ export default function SocialAccountsPage() {
         style={{ }}>
 
         {/* ── Top bar ── */}
-        <div className="flex items-center justify-between px-6 py-3 shrink-0 bg-card border-b border-border">
+        <div className="flex items-center justify-between px-4 sm:px-6 py-3 shrink-0 bg-card border-b border-border">
           <div className="flex items-center gap-3">
             <span className="text-[11px] font-mono tracking-widest uppercase text-muted-foreground">
               Social Channels
@@ -254,7 +254,7 @@ export default function SocialAccountsPage() {
         </div>
 
         {/* ── Channel grid ── */}
-        <div className="flex-1 grid grid-cols-1 md:grid-cols-3 gap-5 p-6">
+        <div className="flex-1 grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-5 p-4 sm:p-6">
           {(Object.entries(PLATFORMS) as [keyof typeof PLATFORMS, typeof PLATFORMS[keyof typeof PLATFORMS]][]).map(([key, cfg]) => {
             const platformAccounts = accounts.filter(a => a.platform === key);
             const hasActive = platformAccounts.some(a => a.status === 'active');
@@ -372,7 +372,7 @@ export default function SocialAccountsPage() {
         </div>
 
         {/* ── Footer ── */}
-        <div className="flex items-center justify-between px-6 py-2.5 shrink-0 border-t border-border bg-card">
+        <div className="flex items-center justify-between px-4 sm:px-6 py-2.5 shrink-0 border-t border-border bg-card">
           <div className="flex items-center gap-4">
             {(Object.entries(PLATFORMS) as [keyof typeof PLATFORMS, typeof PLATFORMS[keyof typeof PLATFORMS]][]).map(([key, cfg]) => {
               const live = accounts.some(a => a.platform === key && a.status === 'active');

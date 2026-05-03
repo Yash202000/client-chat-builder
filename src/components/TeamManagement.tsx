@@ -538,20 +538,20 @@ export const TeamManagement = () => {
                   />
                 </div>
                 <Permission permission="user:create">
-                  <div className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                  <div className={`flex items-center gap-2 shrink-0 ${isRTL ? 'flex-row-reverse' : ''}`}>
                     <Button
                       onClick={() => setInviteUserModalOpen(true)}
                       size="sm"
-                      className={`flex items-center gap-2 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white rounded-lg shadow-lg shadow-purple-500/25 hover:shadow-xl hover:shadow-purple-500/30 transition-all duration-200 hover:scale-[1.02]`}
+                      className={`flex items-center gap-1.5 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white rounded-lg shadow-lg shadow-purple-500/25 hover:shadow-xl hover:shadow-purple-500/30 transition-all duration-200 hover:scale-[1.02]`}
                     >
                       <Send className="h-3.5 w-3.5" />
-                      {t('teamManagement.inviteUser')}
+                      <span className="hidden sm:inline">{t('teamManagement.inviteUser')}</span>
                     </Button>
                     <Dialog open={isAddUserModalOpen} onOpenChange={setAddUserModalOpen}>
                       <DialogTrigger asChild>
-                        <Button size="sm" className={`flex items-center gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-lg shadow-lg shadow-blue-500/25 hover:shadow-xl hover:shadow-blue-500/30 transition-all duration-200 hover:scale-[1.02]`}>
+                        <Button size="sm" className={`flex items-center gap-1.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-lg shadow-lg shadow-blue-500/25 hover:shadow-xl hover:shadow-blue-500/30 transition-all duration-200 hover:scale-[1.02]`}>
                           <UserPlus className="h-3.5 w-3.5" />
-                          {t('teamManagement.addUser')}
+                          <span className="hidden sm:inline">{t('teamManagement.addUser')}</span>
                         </Button>
                       </DialogTrigger>
                   <DialogContent className="dark:bg-slate-800 dark:border-slate-700 rounded-2xl sm:rounded-2xl" dir={isRTL ? 'rtl' : 'ltr'}>
@@ -604,159 +604,172 @@ export const TeamManagement = () => {
                   </div>
               </Permission>
               </div>
-              <div className="rounded-lg border border-border bg-card overflow-hidden">
-                <div className="overflow-x-auto">
-                  <Table>
-                    <TableHeader>
-                      <TableRow className="border-b border-border bg-muted/50 hover:bg-muted/50">
-                        <TableHead className="text-muted-foreground font-semibold text-xs uppercase tracking-wide">{t('teamManagement.table.user')}</TableHead>
-                        <TableHead className="text-muted-foreground font-semibold text-xs uppercase tracking-wide">{t('teamManagement.table.role')}</TableHead>
-                        <TableHead className="text-muted-foreground font-semibold text-xs uppercase tracking-wide">{t('teamManagement.table.status')}</TableHead>
-                        <TableHead className={`${isRTL ? 'text-left' : 'text-right'} text-muted-foreground font-semibold text-xs uppercase tracking-wide`}>{t('teamManagement.table.actions')}</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {isLoadingUsers ? (
-                        <TableRow className="border-border">
-                          <TableCell colSpan={4} className="text-center py-8 text-muted-foreground">
-                            <div className="flex items-center justify-center gap-2">
-                              <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-primary"></div>
-                              <span>{t('teamManagement.loading.users')}</span>
+              {isLoadingUsers ? (
+                <div className="flex items-center justify-center py-8 text-muted-foreground">
+                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-primary mr-2"></div>
+                  <span className="text-sm">{t('teamManagement.loading.users')}</span>
+                </div>
+              ) : filteredUsers.length === 0 ? (
+                <div className="text-center py-8 text-muted-foreground text-sm">{t('teamManagement.noUsersFound')}</div>
+              ) : (
+                <>
+                  {/* Mobile cards (hidden sm+) */}
+                  <div className="sm:hidden space-y-2">
+                    {filteredUsers.map((user, index) => (
+                      <motion.div
+                        key={user.id}
+                        initial={{ opacity: 0, y: 6 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.18, delay: index * 0.03 }}
+                        className="rounded-lg border border-border bg-card p-3"
+                      >
+                        <div className="flex items-center justify-between gap-2 mb-2">
+                          <div className="flex items-center gap-2.5 min-w-0">
+                            <div className="relative shrink-0">
+                              <Avatar className="h-8 w-8 border border-border">
+                                <AvatarImage src={user.profile_picture_url} />
+                                <AvatarFallback className="bg-muted text-foreground font-semibold text-xs">
+                                  {user.email.charAt(0).toUpperCase()}
+                                </AvatarFallback>
+                              </Avatar>
+                              {user.presence_status && (
+                                <span className={`absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full border-2 border-card ${
+                                  user.presence_status === 'online' ? 'bg-green-500' : user.presence_status === 'busy' ? 'bg-yellow-500' : user.presence_status === 'in_call' ? 'bg-blue-500' : 'bg-gray-400'
+                                }`} />
+                              )}
                             </div>
-                          </TableCell>
-                        </TableRow>
-                      ) : filteredUsers.length === 0 ? (
-                        <TableRow className="border-border">
-                          <TableCell colSpan={4} className="text-center py-8 text-muted-foreground">
-                            {t('teamManagement.noUsersFound')}
-                          </TableCell>
-                        </TableRow>
-                      ) : (
-                        filteredUsers.map((user, index) => (
-                          <motion.tr
-                            key={user.id}
-                            initial={{ opacity: 0, y: 6 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ duration: 0.18, delay: index * 0.03 }}
-                            className="border-b border-border hover:bg-muted/40 transition-colors"
-                          >
-                            <TableCell className="py-3">
-                              <div className="flex items-center gap-3">
-                                <div className="relative">
-                                  <Avatar className="h-8 w-8 border border-border">
-                                    <AvatarImage src={user.profile_picture_url} />
-                                    <AvatarFallback className="bg-muted text-foreground font-semibold text-xs">
-                                      {user.email.charAt(0).toUpperCase()}
-                                    </AvatarFallback>
-                                  </Avatar>
-                                  {user.presence_status && (
-                                    <span
-                                      className={`absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full border-2 border-card ${
-                                        user.presence_status === 'online'
-                                          ? 'bg-green-500'
-                                          : user.presence_status === 'busy'
-                                          ? 'bg-yellow-500'
-                                          : user.presence_status === 'in_call'
-                                          ? 'bg-blue-500'
-                                          : 'bg-gray-400'
-                                      }`}
-                                      title={user.presence_status}
-                                    />
-                                  )}
-                                </div>
-                                <div>
-                                  <div className="flex items-center gap-1.5">
-                                    <span className="font-medium text-foreground text-sm">{user.first_name} {user.last_name}</span>
-                                    {extConfigs[user.id] && (
-                                      <span className="font-mono text-[10px] font-bold text-violet-400 bg-violet-500/10 px-1 py-0.5 rounded border border-violet-500/20">
-                                        #{extConfigs[user.id].ext}
-                                      </span>
+                            <div className="min-w-0">
+                              <div className="flex items-center gap-1.5 flex-wrap">
+                                <span className="font-medium text-foreground text-sm truncate">{user.first_name} {user.last_name}</span>
+                                {extConfigs[user.id] && (
+                                  <span className="font-mono text-[10px] font-bold text-violet-400 bg-violet-500/10 px-1 py-0.5 rounded border border-violet-500/20">#{extConfigs[user.id].ext}</span>
+                                )}
+                              </div>
+                              <div className="text-xs text-muted-foreground truncate">{user.email}</div>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2 shrink-0">
+                            <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
+                              user.is_active ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 border border-green-200 dark:border-green-800' : 'bg-muted text-muted-foreground border border-border'
+                            }`}>
+                              {user.is_active ? t('teamManagement.status.active') : t('teamManagement.status.inactive')}
+                            </span>
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button variant="ghost" size="icon" className="h-7 w-7 hover:bg-muted">
+                                  <MoreHorizontal className="h-3.5 w-3.5 text-muted-foreground" />
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end" className="bg-card border-border">
+                                <Permission permission="user:update"><DropdownMenuItem className="text-foreground text-xs" onClick={() => openEditUserModal(user)}><Edit className="h-3.5 w-3.5 mr-2" />{t('common.edit')}</DropdownMenuItem></Permission>
+                                <Permission permission="user:update"><DropdownMenuItem className="text-foreground text-xs" onClick={() => openExtDialog(user)}><Phone className="h-3.5 w-3.5 mr-2" />{extConfigs[user.id] ? 'Edit Extension' : 'Assign Extension'}</DropdownMenuItem></Permission>
+                                <Permission permission="user:update"><DropdownMenuItem className="text-foreground text-xs" onClick={() => handleToggleUserActive(user.id, user.is_active)}>{user.is_active ? t('teamManagement.deactivate') : t('teamManagement.activate')}</DropdownMenuItem></Permission>
+                                <Permission permission="user:delete"><DropdownMenuItem className="text-red-500 dark:text-red-400 text-xs" onClick={() => handleDeleteUser(user.id)}><Trash2 className="h-3.5 w-3.5 mr-2" />{t('common.delete')}</DropdownMenuItem></Permission>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          </div>
+                        </div>
+                        <Select value={user.role_id?.toString()} onValueChange={(value) => handleRoleChange(user.id, value)} disabled={updateUserMutation.isPending}>
+                          <SelectTrigger className="w-full h-8 text-xs bg-background border-border text-foreground">
+                            <SelectValue placeholder={t('teamManagement.selectRole')} />
+                          </SelectTrigger>
+                          <SelectContent className="bg-card border-border">
+                            {roles?.map((role) => (
+                              <SelectItem key={role.id} value={role.id.toString()} className="text-foreground text-xs">{role.name}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </motion.div>
+                    ))}
+                  </div>
+
+                  {/* Desktop table (hidden below sm) */}
+                  <div className="hidden sm:block rounded-lg border border-border bg-card overflow-hidden">
+                    <div className="overflow-x-auto">
+                      <Table>
+                        <TableHeader>
+                          <TableRow className="border-b border-border bg-muted/50 hover:bg-muted/50">
+                            <TableHead className="text-muted-foreground font-semibold text-xs uppercase tracking-wide">{t('teamManagement.table.user')}</TableHead>
+                            <TableHead className="text-muted-foreground font-semibold text-xs uppercase tracking-wide">{t('teamManagement.table.role')}</TableHead>
+                            <TableHead className="text-muted-foreground font-semibold text-xs uppercase tracking-wide">{t('teamManagement.table.status')}</TableHead>
+                            <TableHead className={`${isRTL ? 'text-left' : 'text-right'} text-muted-foreground font-semibold text-xs uppercase tracking-wide`}>{t('teamManagement.table.actions')}</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {filteredUsers.map((user, index) => (
+                            <motion.tr
+                              key={user.id}
+                              initial={{ opacity: 0, y: 6 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              transition={{ duration: 0.18, delay: index * 0.03 }}
+                              className="border-b border-border hover:bg-muted/40 transition-colors"
+                            >
+                              <TableCell className="py-3">
+                                <div className="flex items-center gap-3">
+                                  <div className="relative">
+                                    <Avatar className="h-8 w-8 border border-border">
+                                      <AvatarImage src={user.profile_picture_url} />
+                                      <AvatarFallback className="bg-muted text-foreground font-semibold text-xs">{user.email.charAt(0).toUpperCase()}</AvatarFallback>
+                                    </Avatar>
+                                    {user.presence_status && (
+                                      <span className={`absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full border-2 border-card ${
+                                        user.presence_status === 'online' ? 'bg-green-500' : user.presence_status === 'busy' ? 'bg-yellow-500' : user.presence_status === 'in_call' ? 'bg-blue-500' : 'bg-gray-400'
+                                      }`} title={user.presence_status} />
                                     )}
                                   </div>
-                                  <div className="text-xs text-muted-foreground">{user.email}</div>
+                                  <div>
+                                    <div className="flex items-center gap-1.5">
+                                      <span className="font-medium text-foreground text-sm">{user.first_name} {user.last_name}</span>
+                                      {extConfigs[user.id] && (
+                                        <span className="font-mono text-[10px] font-bold text-violet-400 bg-violet-500/10 px-1 py-0.5 rounded border border-violet-500/20">#{extConfigs[user.id].ext}</span>
+                                      )}
+                                    </div>
+                                    <div className="text-xs text-muted-foreground">{user.email}</div>
+                                  </div>
                                 </div>
-                              </div>
-                            </TableCell>
-                            <TableCell>
-                              <Select
-                                value={user.role_id?.toString()}
-                                onValueChange={(value) => handleRoleChange(user.id, value)}
-                                disabled={updateUserMutation.isPending}
-                              >
-                                <SelectTrigger className="w-[160px] h-8 text-xs bg-background border-border text-foreground">
-                                  <SelectValue placeholder={t('teamManagement.selectRole')} />
-                                </SelectTrigger>
-                                <SelectContent className="bg-card border-border">
-                                  {roles?.map((role) => (
-                                    <SelectItem key={role.id} value={role.id.toString()} className="text-foreground text-xs">
-                                      {role.name}
-                                    </SelectItem>
-                                  ))}
-                                </SelectContent>
-                              </Select>
-                            </TableCell>
-                            <TableCell>
-                              <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
-                                user.is_active
-                                  ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 border border-green-200 dark:border-green-800'
-                                  : 'bg-muted text-muted-foreground border border-border'
-                              }`}>
-                                {user.is_active ? t('teamManagement.status.active') : t('teamManagement.status.inactive')}
-                              </span>
-                            </TableCell>
-                            <TableCell className={isRTL ? 'text-left' : 'text-right'}>
-                              <DropdownMenu>
-                                <DropdownMenuTrigger asChild>
-                                  <Button variant="ghost" size="icon" className="h-7 w-7 hover:bg-muted">
-                                    <MoreHorizontal className="h-3.5 w-3.5 text-muted-foreground" />
-                                  </Button>
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent align="end" className="bg-card border-border">
-                                  <Permission permission="user:update">
-                                    <DropdownMenuItem
-                                      className="text-foreground text-xs"
-                                      onClick={() => openEditUserModal(user)}
-                                    >
-                                      <Edit className={`h-3.5 w-3.5 ${isRTL ? 'ml-2' : 'mr-2'}`} />
-                                      {t('common.edit')}
-                                    </DropdownMenuItem>
-                                  </Permission>
-                                  <Permission permission="user:update">
-                                    <DropdownMenuItem
-                                      className="text-foreground text-xs"
-                                      onClick={() => openExtDialog(user)}
-                                    >
-                                      <Phone className={`h-3.5 w-3.5 ${isRTL ? 'ml-2' : 'mr-2'}`} />
-                                      {extConfigs[user.id] ? 'Edit Extension' : 'Assign Extension'}
-                                    </DropdownMenuItem>
-                                  </Permission>
-                                  <Permission permission="user:update">
-                                    <DropdownMenuItem
-                                      className="text-foreground text-xs"
-                                      onClick={() => handleToggleUserActive(user.id, user.is_active)}
-                                    >
-                                      {user.is_active ? t('teamManagement.deactivate') : t('teamManagement.activate')}
-                                    </DropdownMenuItem>
-                                  </Permission>
-                                  <Permission permission="user:delete">
-                                    <DropdownMenuItem
-                                      className="text-red-500 dark:text-red-400 text-xs"
-                                      onClick={() => handleDeleteUser(user.id)}
-                                    >
-                                      <Trash2 className={`h-3.5 w-3.5 ${isRTL ? 'ml-2' : 'mr-2'}`} />
-                                      {t('common.delete')}
-                                    </DropdownMenuItem>
-                                  </Permission>
-                                </DropdownMenuContent>
-                              </DropdownMenu>
-                            </TableCell>
-                          </motion.tr>
-                        ))
-                      )}
-                    </TableBody>
-                  </Table>
-                </div>
-              </div>
+                              </TableCell>
+                              <TableCell>
+                                <Select value={user.role_id?.toString()} onValueChange={(value) => handleRoleChange(user.id, value)} disabled={updateUserMutation.isPending}>
+                                  <SelectTrigger className="w-[160px] h-8 text-xs bg-background border-border text-foreground">
+                                    <SelectValue placeholder={t('teamManagement.selectRole')} />
+                                  </SelectTrigger>
+                                  <SelectContent className="bg-card border-border">
+                                    {roles?.map((role) => (
+                                      <SelectItem key={role.id} value={role.id.toString()} className="text-foreground text-xs">{role.name}</SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
+                              </TableCell>
+                              <TableCell>
+                                <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
+                                  user.is_active ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 border border-green-200 dark:border-green-800' : 'bg-muted text-muted-foreground border border-border'
+                                }`}>
+                                  {user.is_active ? t('teamManagement.status.active') : t('teamManagement.status.inactive')}
+                                </span>
+                              </TableCell>
+                              <TableCell className={isRTL ? 'text-left' : 'text-right'}>
+                                <DropdownMenu>
+                                  <DropdownMenuTrigger asChild>
+                                    <Button variant="ghost" size="icon" className="h-7 w-7 hover:bg-muted">
+                                      <MoreHorizontal className="h-3.5 w-3.5 text-muted-foreground" />
+                                    </Button>
+                                  </DropdownMenuTrigger>
+                                  <DropdownMenuContent align="end" className="bg-card border-border">
+                                    <Permission permission="user:update"><DropdownMenuItem className="text-foreground text-xs" onClick={() => openEditUserModal(user)}><Edit className={`h-3.5 w-3.5 ${isRTL ? 'ml-2' : 'mr-2'}`} />{t('common.edit')}</DropdownMenuItem></Permission>
+                                    <Permission permission="user:update"><DropdownMenuItem className="text-foreground text-xs" onClick={() => openExtDialog(user)}><Phone className={`h-3.5 w-3.5 ${isRTL ? 'ml-2' : 'mr-2'}`} />{extConfigs[user.id] ? 'Edit Extension' : 'Assign Extension'}</DropdownMenuItem></Permission>
+                                    <Permission permission="user:update"><DropdownMenuItem className="text-foreground text-xs" onClick={() => handleToggleUserActive(user.id, user.is_active)}>{user.is_active ? t('teamManagement.deactivate') : t('teamManagement.activate')}</DropdownMenuItem></Permission>
+                                    <Permission permission="user:delete"><DropdownMenuItem className="text-red-500 dark:text-red-400 text-xs" onClick={() => handleDeleteUser(user.id)}><Trash2 className={`h-3.5 w-3.5 ${isRTL ? 'ml-2' : 'mr-2'}`} />{t('common.delete')}</DropdownMenuItem></Permission>
+                                  </DropdownMenuContent>
+                                </DropdownMenu>
+                              </TableCell>
+                            </motion.tr>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </div>
+                  </div>
+                </>
+              )}
             </TabsContent>
 
             {/* TEAMS TAB */}
@@ -981,7 +994,7 @@ export const TeamManagement = () => {
                             </div>
                           </div>
                         </div>
-                        <div className={`flex items-center gap-2`}>
+                        <div className={`flex items-center gap-2 shrink-0`}>
                           <Permission permission="role:update">
                             <Button
                               variant="outline"
@@ -990,7 +1003,7 @@ export const TeamManagement = () => {
                               className={`border-border text-muted-foreground hover:text-foreground hover:bg-muted flex items-center gap-1.5 h-7 text-xs`}
                             >
                               <Edit className="h-3 w-3" />
-                              {t('common.edit')}
+                              <span className="hidden sm:inline">{t('common.edit')}</span>
                             </Button>
                           </Permission>
                           <Permission permission="role:delete">
@@ -1001,7 +1014,7 @@ export const TeamManagement = () => {
                               className={`bg-red-600 hover:bg-red-700 flex items-center gap-1.5 h-7 text-xs`}
                             >
                               <Trash2 className="h-3 w-3" />
-                              {t('common.delete')}
+                              <span className="hidden sm:inline">{t('common.delete')}</span>
                             </Button>
                           </Permission>
                         </div>
@@ -1230,7 +1243,7 @@ export const TeamManagement = () => {
                 className="dark:bg-slate-900 dark:border-slate-600 dark:text-white rounded-xl h-11"
               />
             </div>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <Label htmlFor="edit-user-first-name" className="text-sm dark:text-gray-300 mb-1.5 block">{t('teamManagement.dialogs.editUser.firstNameLabel')}</Label>
                 <Input
@@ -1341,7 +1354,7 @@ export const TeamManagement = () => {
             </DialogTitle>
           </DialogHeader>
           <div className="space-y-5 py-4">
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <Label htmlFor="role-name" className="text-sm dark:text-gray-300 mb-1.5 block">
                   {t('teamManagement.dialogs.role.nameLabel')}

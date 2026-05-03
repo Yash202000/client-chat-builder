@@ -306,66 +306,69 @@ export const Settings = () => {
   return (
     <div className="min-h-full bg-slate-50 dark:bg-slate-950" dir={isRTL ? 'rtl' : 'ltr'}>
       {/* Header */}
-      <div className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 px-6 py-6">
+      <div className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 px-4 sm:px-6 py-4 sm:py-6">
         <div className={`flex items-center gap-3 ${isRTL ? 'flex-row-reverse' : ''}`}>
-          <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center flex-shrink-0">
-            <SettingsIcon className="h-6 w-6 text-white" />
+          <div className="h-10 w-10 sm:h-12 sm:w-12 rounded-xl bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center flex-shrink-0">
+            <SettingsIcon className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
           </div>
           <div>
-            <h2 className="text-2xl font-bold text-slate-900 dark:text-white leading-tight">{t('settings.title')}</h2>
-            <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">{t('settings.subtitle')}</p>
+            <h2 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white leading-tight">{t('settings.title')}</h2>
+            <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-0.5">{t('settings.subtitle')}</p>
           </div>
         </div>
       </div>
-      <div className="px-6 py-6 space-y-6">
+      <div className="px-4 sm:px-6 py-4 sm:py-6 space-y-6">
 
       <Tabs defaultValue="general" className="space-y-6" dir={isRTL ? 'rtl' : 'ltr'}>
-        <TabsList className="grid w-full grid-cols-4 lg:grid-cols-11 bg-slate-100 dark:bg-slate-800 p-1 rounded-xl border border-slate-200 dark:border-slate-700">
-          <TabsTrigger value="general" className="rounded-lg data-[state=active]:bg-white dark:data-[state=active]:bg-slate-900 data-[state=active]:text-cyan-600 dark:data-[state=active]:text-cyan-400 data-[state=active]:shadow-sm transition-all flex items-center gap-1.5 text-xs lg:text-sm">
-            <Globe className="h-3.5 w-3.5" />
-            <span className="hidden lg:inline">{t('settings.general')}</span>
-          </TabsTrigger>
-          <TabsTrigger value="email" className="rounded-lg data-[state=active]:bg-white dark:data-[state=active]:bg-slate-900 data-[state=active]:text-blue-600 dark:data-[state=active]:text-blue-400 data-[state=active]:shadow-sm transition-all flex items-center gap-1.5 text-xs lg:text-sm">
-            <Mail className="h-3.5 w-3.5" />
-            <span className="hidden lg:inline">{t('settings.email', 'Email')}</span>
-          </TabsTrigger>
-          <TabsTrigger value="voice" className="rounded-lg data-[state=active]:bg-white dark:data-[state=active]:bg-slate-900 data-[state=active]:text-red-600 dark:data-[state=active]:text-red-400 data-[state=active]:shadow-sm transition-all flex items-center gap-1.5 text-xs lg:text-sm">
-            <PhoneCall className="h-3.5 w-3.5" />
-            <span className="hidden lg:inline">{t('settings.voice', 'Voice')}</span>
-          </TabsTrigger>
-          <TabsTrigger value="notifications" className="rounded-lg data-[state=active]:bg-white dark:data-[state=active]:bg-slate-900 data-[state=active]:text-violet-600 dark:data-[state=active]:text-violet-400 data-[state=active]:shadow-sm transition-all flex items-center gap-1.5 text-xs lg:text-sm">
-            <Bell className="h-3.5 w-3.5" />
-            <span className="hidden lg:inline">{t('settings.notifications')}</span>
-          </TabsTrigger>
-          <TabsTrigger value="security" className="rounded-lg data-[state=active]:bg-white dark:data-[state=active]:bg-slate-900 data-[state=active]:text-emerald-600 dark:data-[state=active]:text-emerald-400 data-[state=active]:shadow-sm transition-all flex items-center gap-1.5 text-xs lg:text-sm">
-            <Shield className="h-3.5 w-3.5" />
-            <span className="hidden lg:inline">{t('settings.security')}</span>
-          </TabsTrigger>
-          <TabsTrigger value="integrations" className="rounded-lg data-[state=active]:bg-white dark:data-[state=active]:bg-slate-900 data-[state=active]:text-violet-600 dark:data-[state=active]:text-violet-400 data-[state=active]:shadow-sm transition-all flex items-center gap-1.5 text-xs lg:text-sm">
-            <Zap className="h-3.5 w-3.5" />
-            <span className="hidden lg:inline">{t('settings.integrations')}</span>
-          </TabsTrigger>
-          <TabsTrigger value="appearance" className="rounded-lg data-[state=active]:bg-white dark:data-[state=active]:bg-slate-900 data-[state=active]:text-purple-600 dark:data-[state=active]:text-purple-400 data-[state=active]:shadow-sm transition-all flex items-center gap-1.5 text-xs lg:text-sm">
-            <Palette className="h-3.5 w-3.5" />
-            <span className="hidden lg:inline">{t('settings.appearance')}</span>
-          </TabsTrigger>
-          <TabsTrigger value="developer" className="rounded-lg data-[state=active]:bg-white dark:data-[state=active]:bg-slate-900 data-[state=active]:text-slate-700 dark:data-[state=active]:text-slate-300 data-[state=active]:shadow-sm transition-all flex items-center gap-1.5 text-xs lg:text-sm">
-            <Database className="h-3.5 w-3.5" />
-            <span className="hidden lg:inline">{t('settings.developer')}</span>
-          </TabsTrigger>
-          <TabsTrigger value="identity" className="rounded-lg data-[state=active]:bg-white dark:data-[state=active]:bg-slate-900 data-[state=active]:text-indigo-600 dark:data-[state=active]:text-indigo-400 data-[state=active]:shadow-sm transition-all flex items-center gap-1.5 text-xs lg:text-sm">
-            <ShieldCheck className="h-3.5 w-3.5" />
-            <span className="hidden lg:inline">Identity</span>
-          </TabsTrigger>
-          <TabsTrigger value="guests" className="rounded-lg data-[state=active]:bg-white dark:data-[state=active]:bg-slate-900 data-[state=active]:text-emerald-600 dark:data-[state=active]:text-emerald-400 data-[state=active]:shadow-sm transition-all flex items-center gap-1.5 text-xs lg:text-sm">
-            <UserPlus className="h-3.5 w-3.5" />
-            <span className="hidden lg:inline">Guest Access</span>
-          </TabsTrigger>
-          <TabsTrigger value="retention" className="rounded-lg data-[state=active]:bg-white dark:data-[state=active]:bg-slate-900 data-[state=active]:text-amber-600 dark:data-[state=active]:text-amber-400 data-[state=active]:shadow-sm transition-all flex items-center gap-1.5 text-xs lg:text-sm">
-            <Archive className="h-3.5 w-3.5" />
-            <span className="hidden lg:inline">Retention</span>
-          </TabsTrigger>
-        </TabsList>
+        {/* Scrollable tab bar — single row with horizontal scroll on mobile */}
+        <div className="overflow-x-auto -mx-1 px-1 pb-px">
+          <TabsList className="flex w-max min-w-full bg-slate-100 dark:bg-slate-800 p-1 rounded-xl border border-slate-200 dark:border-slate-700 gap-0.5">
+            <TabsTrigger value="general" className="flex-shrink-0 rounded-lg data-[state=active]:bg-white dark:data-[state=active]:bg-slate-900 data-[state=active]:text-cyan-600 dark:data-[state=active]:text-cyan-400 data-[state=active]:shadow-sm transition-all flex items-center gap-1.5 text-xs lg:text-sm px-2.5 sm:px-3">
+              <Globe className="h-3.5 w-3.5 flex-shrink-0" />
+              <span className="hidden sm:inline">{t('settings.general')}</span>
+            </TabsTrigger>
+            <TabsTrigger value="email" className="flex-shrink-0 rounded-lg data-[state=active]:bg-white dark:data-[state=active]:bg-slate-900 data-[state=active]:text-blue-600 dark:data-[state=active]:text-blue-400 data-[state=active]:shadow-sm transition-all flex items-center gap-1.5 text-xs lg:text-sm px-2.5 sm:px-3">
+              <Mail className="h-3.5 w-3.5 flex-shrink-0" />
+              <span className="hidden sm:inline">{t('settings.email', 'Email')}</span>
+            </TabsTrigger>
+            <TabsTrigger value="voice" className="flex-shrink-0 rounded-lg data-[state=active]:bg-white dark:data-[state=active]:bg-slate-900 data-[state=active]:text-red-600 dark:data-[state=active]:text-red-400 data-[state=active]:shadow-sm transition-all flex items-center gap-1.5 text-xs lg:text-sm px-2.5 sm:px-3">
+              <PhoneCall className="h-3.5 w-3.5 flex-shrink-0" />
+              <span className="hidden sm:inline">{t('settings.voice', 'Voice')}</span>
+            </TabsTrigger>
+            <TabsTrigger value="notifications" className="flex-shrink-0 rounded-lg data-[state=active]:bg-white dark:data-[state=active]:bg-slate-900 data-[state=active]:text-violet-600 dark:data-[state=active]:text-violet-400 data-[state=active]:shadow-sm transition-all flex items-center gap-1.5 text-xs lg:text-sm px-2.5 sm:px-3">
+              <Bell className="h-3.5 w-3.5 flex-shrink-0" />
+              <span className="hidden sm:inline">{t('settings.notifications')}</span>
+            </TabsTrigger>
+            <TabsTrigger value="security" className="flex-shrink-0 rounded-lg data-[state=active]:bg-white dark:data-[state=active]:bg-slate-900 data-[state=active]:text-emerald-600 dark:data-[state=active]:text-emerald-400 data-[state=active]:shadow-sm transition-all flex items-center gap-1.5 text-xs lg:text-sm px-2.5 sm:px-3">
+              <Shield className="h-3.5 w-3.5 flex-shrink-0" />
+              <span className="hidden sm:inline">{t('settings.security')}</span>
+            </TabsTrigger>
+            <TabsTrigger value="integrations" className="flex-shrink-0 rounded-lg data-[state=active]:bg-white dark:data-[state=active]:bg-slate-900 data-[state=active]:text-violet-600 dark:data-[state=active]:text-violet-400 data-[state=active]:shadow-sm transition-all flex items-center gap-1.5 text-xs lg:text-sm px-2.5 sm:px-3">
+              <Zap className="h-3.5 w-3.5 flex-shrink-0" />
+              <span className="hidden sm:inline">{t('settings.integrations')}</span>
+            </TabsTrigger>
+            <TabsTrigger value="appearance" className="flex-shrink-0 rounded-lg data-[state=active]:bg-white dark:data-[state=active]:bg-slate-900 data-[state=active]:text-purple-600 dark:data-[state=active]:text-purple-400 data-[state=active]:shadow-sm transition-all flex items-center gap-1.5 text-xs lg:text-sm px-2.5 sm:px-3">
+              <Palette className="h-3.5 w-3.5 flex-shrink-0" />
+              <span className="hidden sm:inline">{t('settings.appearance')}</span>
+            </TabsTrigger>
+            <TabsTrigger value="developer" className="flex-shrink-0 rounded-lg data-[state=active]:bg-white dark:data-[state=active]:bg-slate-900 data-[state=active]:text-slate-700 dark:data-[state=active]:text-slate-300 data-[state=active]:shadow-sm transition-all flex items-center gap-1.5 text-xs lg:text-sm px-2.5 sm:px-3">
+              <Database className="h-3.5 w-3.5 flex-shrink-0" />
+              <span className="hidden sm:inline">{t('settings.developer')}</span>
+            </TabsTrigger>
+            <TabsTrigger value="identity" className="flex-shrink-0 rounded-lg data-[state=active]:bg-white dark:data-[state=active]:bg-slate-900 data-[state=active]:text-indigo-600 dark:data-[state=active]:text-indigo-400 data-[state=active]:shadow-sm transition-all flex items-center gap-1.5 text-xs lg:text-sm px-2.5 sm:px-3">
+              <ShieldCheck className="h-3.5 w-3.5 flex-shrink-0" />
+              <span className="hidden sm:inline">Identity</span>
+            </TabsTrigger>
+            <TabsTrigger value="guests" className="flex-shrink-0 rounded-lg data-[state=active]:bg-white dark:data-[state=active]:bg-slate-900 data-[state=active]:text-emerald-600 dark:data-[state=active]:text-emerald-400 data-[state=active]:shadow-sm transition-all flex items-center gap-1.5 text-xs lg:text-sm px-2.5 sm:px-3">
+              <UserPlus className="h-3.5 w-3.5 flex-shrink-0" />
+              <span className="hidden sm:inline">Guests</span>
+            </TabsTrigger>
+            <TabsTrigger value="retention" className="flex-shrink-0 rounded-lg data-[state=active]:bg-white dark:data-[state=active]:bg-slate-900 data-[state=active]:text-amber-600 dark:data-[state=active]:text-amber-400 data-[state=active]:shadow-sm transition-all flex items-center gap-1.5 text-xs lg:text-sm px-2.5 sm:px-3">
+              <Archive className="h-3.5 w-3.5 flex-shrink-0" />
+              <span className="hidden sm:inline">Retention</span>
+            </TabsTrigger>
+          </TabsList>
+        </div>
 
         <TabsContent value="general" className="space-y-4" dir={isRTL ? 'rtl' : 'ltr'}>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
@@ -624,7 +627,7 @@ export const Settings = () => {
 
               <div className="pt-4 border-t border-slate-200 dark:border-slate-700">
                 <h4 className="font-medium dark:text-white mb-3">{t('settings.testSmtp', 'Test Configuration')}</h4>
-                <div className="flex gap-3">
+                <div className="flex flex-col sm:flex-row gap-3">
                   <Input
                     type="email"
                     value={testEmail}
@@ -635,17 +638,17 @@ export const Settings = () => {
                   <Button
                     onClick={handleTestSmtp}
                     disabled={testingSmtp || !settings.smtpHost || !settings.smtpUser}
-                    className="bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white rounded-xl"
+                    className="bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white rounded-xl flex-shrink-0"
                   >
                     {testingSmtp ? (
                       <span className="flex items-center gap-2">
                         <div className="animate-spin rounded-full h-4 w-4 border-2 border-white/30 border-t-white"></div>
-                        {t('settings.sending', 'Sending...')}
+                        <span className="hidden sm:inline">{t('settings.sending', 'Sending...')}</span>
                       </span>
                     ) : (
                       <span className="flex items-center gap-2">
                         <Mail className="h-4 w-4" />
-                        {t('settings.sendTestEmail', 'Send Test Email')}
+                        <span className="hidden sm:inline">{t('settings.sendTestEmail', 'Send Test Email')}</span>
                       </span>
                     )}
                   </Button>
@@ -896,12 +899,14 @@ export const Settings = () => {
               </div>
             </div>
             <Tabs defaultValue="api-keys" className="space-y-6" dir={isRTL ? 'rtl' : 'ltr'}>
-              <TabsList className="bg-slate-100 dark:bg-slate-800 p-1 rounded-xl border border-slate-200 dark:border-slate-700">
-                <TabsTrigger value="api-keys" className="rounded-lg data-[state=active]:bg-white dark:data-[state=active]:bg-slate-800 data-[state=active]:shadow-sm">{t('settings.apiKeys')}</TabsTrigger>
-                <TabsTrigger value="api-integrations" className="rounded-lg data-[state=active]:bg-white dark:data-[state=active]:bg-slate-800 data-[state=active]:shadow-sm">{t('settings.apiIntegrations', 'API Channel')}</TabsTrigger>
-                <TabsTrigger value="tester" className="rounded-lg data-[state=active]:bg-white dark:data-[state=active]:bg-slate-800 data-[state=active]:shadow-sm">{t('settings.tester')}</TabsTrigger>
-                <TabsTrigger value="documentation" className="rounded-lg data-[state=active]:bg-white dark:data-[state=active]:bg-slate-800 data-[state=active]:shadow-sm">{t('settings.documentation')}</TabsTrigger>
-              </TabsList>
+              <div className="overflow-x-auto -mx-1 px-1 pb-px">
+                <TabsList className="flex w-max min-w-full bg-slate-100 dark:bg-slate-800 p-1 rounded-xl border border-slate-200 dark:border-slate-700 gap-0.5">
+                  <TabsTrigger value="api-keys" className="flex-shrink-0 rounded-lg data-[state=active]:bg-white dark:data-[state=active]:bg-slate-800 data-[state=active]:shadow-sm text-xs sm:text-sm px-2.5 sm:px-3">{t('settings.apiKeys')}</TabsTrigger>
+                  <TabsTrigger value="api-integrations" className="flex-shrink-0 rounded-lg data-[state=active]:bg-white dark:data-[state=active]:bg-slate-800 data-[state=active]:shadow-sm text-xs sm:text-sm px-2.5 sm:px-3">{t('settings.apiIntegrations', 'API Channel')}</TabsTrigger>
+                  <TabsTrigger value="tester" className="flex-shrink-0 rounded-lg data-[state=active]:bg-white dark:data-[state=active]:bg-slate-800 data-[state=active]:shadow-sm text-xs sm:text-sm px-2.5 sm:px-3">{t('settings.tester')}</TabsTrigger>
+                  <TabsTrigger value="documentation" className="flex-shrink-0 rounded-lg data-[state=active]:bg-white dark:data-[state=active]:bg-slate-800 data-[state=active]:shadow-sm text-xs sm:text-sm px-2.5 sm:px-3">{t('settings.documentation')}</TabsTrigger>
+                </TabsList>
+              </div>
               <TabsContent value="api-keys">
                 <ApiKeys />
               </TabsContent>
@@ -1205,48 +1210,77 @@ export const Settings = () => {
                       <p className="text-sm">No guests invited yet.</p>
                     </div>
                   ) : (
-                    <div className="overflow-x-auto">
-                      <table className="w-full text-sm">
-                        <thead>
-                          <tr className="bg-slate-50 dark:bg-slate-800/50 border-b border-slate-200 dark:border-slate-700">
-                            <th className="text-left px-5 py-3 font-medium text-slate-600 dark:text-slate-400">Email</th>
-                            <th className="text-left px-5 py-3 font-medium text-slate-600 dark:text-slate-400">Permission</th>
-                            <th className="text-left px-5 py-3 font-medium text-slate-600 dark:text-slate-400">Invited By</th>
-                            <th className="text-left px-5 py-3 font-medium text-slate-600 dark:text-slate-400">Expires</th>
-                            <th className="text-left px-5 py-3 font-medium text-slate-600 dark:text-slate-400">Status</th>
-                            <th className="text-left px-5 py-3 font-medium text-slate-600 dark:text-slate-400">Actions</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {sampleGuests.map((g, i) => (
-                            <tr key={i} className="border-b border-slate-100 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors">
-                              <td className="px-5 py-3 dark:text-white font-medium">{g.email}</td>
-                              <td className="px-5 py-3 text-slate-600 dark:text-slate-300">{g.permission}</td>
-                              <td className="px-5 py-3 text-slate-500 dark:text-slate-400 text-xs">{g.invitedBy}</td>
-                              <td className="px-5 py-3 text-slate-500 dark:text-slate-400">{g.expires}</td>
-                              <td className="px-5 py-3">
-                                <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium capitalize ${statusColor[g.status]}`}>
-                                  {g.status}
-                                </span>
-                              </td>
-                              <td className="px-5 py-3">
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  className="text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg text-xs h-7"
-                                  onClick={() => {
-                                    console.log("Revoking guest access", g.email);
-                                    toast({ title: "Access revoked", description: `Guest access for ${g.email} has been revoked.` });
-                                  }}
-                                >
-                                  Revoke
-                                </Button>
-                              </td>
+                    <>
+                      {/* Mobile cards */}
+                      <div className="sm:hidden divide-y divide-slate-100 dark:divide-slate-800">
+                        {sampleGuests.map((g, i) => (
+                          <div key={i} className="px-5 py-4 space-y-2">
+                            <div className="flex items-start justify-between gap-2">
+                              <span className="text-sm font-medium dark:text-white break-all">{g.email}</span>
+                              <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium capitalize flex-shrink-0 ${statusColor[g.status]}`}>
+                                {g.status}
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-3 text-xs text-slate-500 dark:text-slate-400">
+                              <span>{g.permission}</span>
+                              <span>·</span>
+                              <span>Expires {g.expires}</span>
+                            </div>
+                            <div className="flex items-center justify-between">
+                              <span className="text-xs text-slate-400 dark:text-slate-500">by {g.invitedBy}</span>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg text-xs h-7"
+                                onClick={() => toast({ title: "Access revoked", description: `Guest access for ${g.email} has been revoked.` })}
+                              >
+                                Revoke
+                              </Button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                      {/* Desktop table */}
+                      <div className="hidden sm:block overflow-x-auto">
+                        <table className="w-full text-sm">
+                          <thead>
+                            <tr className="bg-slate-50 dark:bg-slate-800/50 border-b border-slate-200 dark:border-slate-700">
+                              <th className="text-left px-5 py-3 font-medium text-slate-600 dark:text-slate-400">Email</th>
+                              <th className="text-left px-5 py-3 font-medium text-slate-600 dark:text-slate-400">Permission</th>
+                              <th className="text-left px-5 py-3 font-medium text-slate-600 dark:text-slate-400">Invited By</th>
+                              <th className="text-left px-5 py-3 font-medium text-slate-600 dark:text-slate-400">Expires</th>
+                              <th className="text-left px-5 py-3 font-medium text-slate-600 dark:text-slate-400">Status</th>
+                              <th className="text-left px-5 py-3 font-medium text-slate-600 dark:text-slate-400">Actions</th>
                             </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
+                          </thead>
+                          <tbody>
+                            {sampleGuests.map((g, i) => (
+                              <tr key={i} className="border-b border-slate-100 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors">
+                                <td className="px-5 py-3 dark:text-white font-medium">{g.email}</td>
+                                <td className="px-5 py-3 text-slate-600 dark:text-slate-300">{g.permission}</td>
+                                <td className="px-5 py-3 text-slate-500 dark:text-slate-400 text-xs">{g.invitedBy}</td>
+                                <td className="px-5 py-3 text-slate-500 dark:text-slate-400">{g.expires}</td>
+                                <td className="px-5 py-3">
+                                  <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium capitalize ${statusColor[g.status]}`}>
+                                    {g.status}
+                                  </span>
+                                </td>
+                                <td className="px-5 py-3">
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    className="text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg text-xs h-7"
+                                    onClick={() => toast({ title: "Access revoked", description: `Guest access for ${g.email} has been revoked.` })}
+                                  >
+                                    Revoke
+                                  </Button>
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    </>
                   )}
                 </div>
 
@@ -1322,7 +1356,37 @@ export const Settings = () => {
                     </h3>
                     <p className="text-slate-500 dark:text-gray-400 text-sm mt-1">Define how long each data category is retained before archiving or deletion.</p>
                   </div>
-                  <div className="overflow-x-auto">
+                  {/* Mobile cards */}
+                  <div className="sm:hidden divide-y divide-slate-100 dark:divide-slate-800">
+                    {policies.map((p, i) => (
+                      <div key={p.category} className="px-5 py-4 space-y-2">
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="text-sm font-medium dark:text-white">{p.category}</span>
+                          <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${statusColor[p.status]}`}>
+                            {p.status}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-3 text-xs text-slate-500 dark:text-slate-400">
+                          <span>{p.period}</span>
+                          <span>·</span>
+                          <span>{p.action}</span>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs text-slate-400 dark:text-slate-500">Last run: 2026-04-01</span>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="text-indigo-500 hover:text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 rounded-lg text-xs h-7"
+                            onClick={() => { setEditIdx(i); setEditPeriod(p.period); setEditAction(p.action); }}
+                          >
+                            Edit
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  {/* Desktop table */}
+                  <div className="hidden sm:block overflow-x-auto">
                     <table className="w-full text-sm">
                       <thead>
                         <tr className="bg-slate-50 dark:bg-slate-800/50 border-b border-slate-200 dark:border-slate-700">
@@ -1474,14 +1538,14 @@ export const Settings = () => {
                       Legal Hold
                     </h4>
                   </div>
-                  <div className="p-6 flex items-center justify-between">
-                    <div>
+                  <div className="p-6 flex flex-col sm:flex-row sm:items-center gap-4">
+                    <div className="flex-1">
                       <p className="dark:text-white font-medium">Active holds: <span className="text-amber-600 dark:text-amber-400">0</span></p>
                       <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">Legal holds prevent data from being deleted or archived during litigation.</p>
                     </div>
                     <Button
                       variant="outline"
-                      className="rounded-xl border-red-300 text-red-600 hover:bg-red-50 dark:border-red-800 dark:text-red-400 dark:hover:bg-red-900/20"
+                      className="rounded-xl border-red-300 text-red-600 hover:bg-red-50 dark:border-red-800 dark:text-red-400 dark:hover:bg-red-900/20 self-start sm:self-auto flex-shrink-0"
                       onClick={() => setLegalHoldOpen(true)}
                     >
                       <Lock className="h-4 w-4 mr-1.5" /> Create Legal Hold
@@ -1506,7 +1570,7 @@ export const Settings = () => {
                         <Label htmlFor="hold-patterns" className="dark:text-gray-300">Email Patterns <span className="text-slate-400 font-normal">(comma-separated)</span></Label>
                         <Input id="hold-patterns" value={holdPatterns} onChange={(e) => setHoldPatterns(e.target.value)} placeholder="@example.com, john.doe@client.com" className="dark:bg-slate-800 dark:border-slate-600 dark:text-white mt-1.5 rounded-xl" />
                       </div>
-                      <div className="grid grid-cols-2 gap-3">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <div>
                           <Label htmlFor="hold-from" className="dark:text-gray-300">From Date</Label>
                           <Input id="hold-from" type="date" value={holdFrom} onChange={(e) => setHoldFrom(e.target.value)} className="dark:bg-slate-800 dark:border-slate-600 dark:text-white mt-1.5 rounded-xl" />
@@ -1555,7 +1619,68 @@ export const Settings = () => {
         </TabsContent>
       </Tabs>
 
-      <div className={`flex ${isRTL ? 'justify-start' : 'justify-end'}`}>
+      {/* ── Data Export ─────────────────────────────────────────────────── */}
+      {(() => {
+        const [exporting, setExporting] = useState(false);
+
+        const handleExport = async () => {
+          setExporting(true);
+          try {
+            const res = await authFetch("/api/v1/export/data", { method: "POST" });
+            if (!res.ok) throw new Error("Export failed");
+            const blob = await res.blob();
+            const today = new Date().toISOString().slice(0, 10);
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = `export_${today}.zip`;
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            URL.revokeObjectURL(url);
+            toast({ title: "Export ready", description: "Your data has been downloaded as a ZIP file." });
+          } catch {
+            toast({ title: "Export failed", description: "Could not generate data export. Please try again.", variant: "destructive" });
+          } finally {
+            setExporting(false);
+          }
+        };
+
+        return (
+          <div className="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-sm mt-6">
+            <div className="p-6 border-b border-slate-200 dark:border-slate-700">
+              <h3 className="flex items-center gap-3 dark:text-white text-base font-semibold">
+                <div className="p-1.5 rounded-lg bg-gradient-to-br from-emerald-500 to-teal-600">
+                  <Download className="h-4 w-4 text-white" />
+                </div>
+                Data Export
+              </h3>
+              <p className="text-slate-500 dark:text-gray-400 text-sm mt-1">
+                Download a ZIP archive containing all your company data as CSV files — contacts, leads, deals, campaigns, sequences, templates, and more.
+              </p>
+            </div>
+            <div className="p-6 flex flex-col sm:flex-row sm:items-center gap-4">
+              <div className="text-sm text-slate-500 dark:text-slate-400 flex-1">
+                Includes: contacts.csv, leads.csv, deals.csv, campaigns.csv, sequences.csv, templates.csv
+              </div>
+              <Button
+                onClick={handleExport}
+                disabled={exporting}
+                className="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white rounded-xl px-5 flex items-center gap-2 flex-shrink-0 self-start sm:self-auto"
+              >
+                {exporting ? (
+                  <div className="h-4 w-4 rounded-full border-2 border-white border-t-transparent animate-spin" />
+                ) : (
+                  <Download className="h-4 w-4" />
+                )}
+                {exporting ? "Exporting…" : "Export All Data"}
+              </Button>
+            </div>
+          </div>
+        );
+      })()}
+
+      <div className={`flex ${isRTL ? 'justify-start' : 'justify-end'} mt-6`}>
         <Button onClick={handleSaveChanges} className="bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-700 hover:to-blue-700 text-white rounded-xl px-8 py-2.5">
           {t('settings.saveChanges')}
         </Button>

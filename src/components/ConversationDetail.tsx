@@ -5,7 +5,8 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { ChatMessage, User, Contact, PRIORITY_CONFIG, MessageAttachment } from '@/types';
-import { Paperclip, Send, CornerDownRight, Book, CheckCircle, Users, Video, Bot, Mic, MessageSquare, Sparkles, ArrowLeft, AlertTriangle, ArrowUp, Minus, ArrowDown, Flag, FileText, Download, MapPin, Image, File, Clock, Loader2, ChevronUp, User as UserIcon, Phone } from 'lucide-react';
+import { Paperclip, Send, CornerDownRight, Book, CheckCircle, Users, Video, Bot, Mic, MessageSquare, Sparkles, ArrowLeft, AlertTriangle, ArrowUp, Minus, ArrowDown, Flag, FileText, Download, MapPin, Image, File, Clock, Loader2, ChevronUp, User as UserIcon, Phone, MoreHorizontal } from 'lucide-react';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from '@/hooks/use-toast';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -71,7 +72,7 @@ const MessageSkeleton = ({ isUser = false }: { isUser?: boolean }) => (
         <UserIcon className="h-3.5 w-3.5 text-muted-foreground" />
       </div>
     )}
-    <div className={`flex flex-col ${isUser ? 'items-start' : 'items-end'} max-w-[60%]`}>
+    <div className={`flex flex-col ${isUser ? 'items-start' : 'items-end'} max-w-[85%] sm:max-w-[60%]`}>
       <div className={`rounded-2xl px-3.5 py-2.5 animate-pulse bg-muted ${isUser ? 'rounded-bl-md' : 'rounded-br-md'}`}>
         <div className="h-3.5 w-32 rounded bg-muted-foreground/20 mb-2" />
         <div className="h-3.5 w-48 rounded bg-muted-foreground/20" />
@@ -92,6 +93,7 @@ interface ConversationDetailProps {
   readOnly?: boolean;
   onBack?: () => void;
   onSummaryClick?: () => void;
+  onContactClick?: () => void;
 }
 
 // Utility function to format date for separator
@@ -279,7 +281,7 @@ const AttachmentDisplay: React.FC<{ attachments: MessageAttachment[], sender: st
 // localStorage keys for draft auto-save
 const getDraftKey = (sessionId: string, type: 'message' | 'note') => `draft_${type}_${sessionId}`;
 
-export const ConversationDetail: React.FC<ConversationDetailProps> = ({ sessionId, agentId, readOnly = false, onBack, onSummaryClick }) => {
+export const ConversationDetail: React.FC<ConversationDetailProps> = ({ sessionId, agentId, readOnly = false, onBack, onSummaryClick, onContactClick }) => {
   const { t } = useTranslation();
   const { isRTL } = useI18n();
   const queryClient = useQueryClient();
@@ -969,9 +971,9 @@ export const ConversationDetail: React.FC<ConversationDetailProps> = ({ sessionI
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.3 }}
-      className="flex h-full bg-background rounded-xl overflow-hidden border border-border"
+      className="flex h-full w-full min-h-0 min-w-0 bg-background rounded-xl overflow-hidden border border-border"
     >
-      <div className="flex flex-col flex-grow">
+      <div className="flex flex-col flex-grow min-h-0 min-w-0 w-full overflow-hidden">
         {/* Enhanced Header */}
         <motion.header
           initial={{ y: -20, opacity: 0 }}
@@ -984,8 +986,8 @@ export const ConversationDetail: React.FC<ConversationDetailProps> = ({ sessionI
           <div className="pointer-events-none absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-violet-500/20 via-border to-cyan-500/10 z-10" />
 
           {/* Top Row - Title and Quick Actions */}
-          <div className={`flex items-center justify-between px-4 py-3 ${!readOnly ? 'border-b border-violet-500/10' : ''}`}>
-            <div className="flex items-center gap-4">
+          <div className={`flex items-center justify-between gap-2 px-3 sm:px-4 py-2 sm:py-3 ${!readOnly ? 'border-b border-violet-500/10' : ''}`}>
+            <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
               {/* Back button for read-only mode */}
               {readOnly && onBack && (
                 <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
@@ -999,15 +1001,18 @@ export const ConversationDetail: React.FC<ConversationDetailProps> = ({ sessionI
                   </Button>
                 </motion.div>
               )}
-              {/* Contact Avatar */}
-              <div className="relative">
+              {/* Contact Avatar — tappable on mobile to open contact panel */}
+              <div
+                className={`relative ${onContactClick ? 'sm:cursor-default cursor-pointer' : ''}`}
+                onClick={onContactClick}
+              >
                 <motion.div
                   initial={{ scale: 0.8 }}
                   animate={{ scale: 1 }}
                   transition={{ type: "spring", stiffness: 200, damping: 15 }}
                 >
-                  <div className="h-10 w-10 rounded-full bg-muted flex items-center justify-center border border-border">
-                    <UserIcon className="h-5 w-5 text-muted-foreground" />
+                  <div className="h-8 w-8 sm:h-10 sm:w-10 rounded-full bg-muted flex items-center justify-center border border-border hover:ring-2 hover:ring-primary/30 transition-all">
+                    <UserIcon className="h-4 w-4 sm:h-5 sm:w-5 text-muted-foreground" />
                   </div>
                 </motion.div>
                 {/* Online indicator */}
@@ -1021,18 +1026,18 @@ export const ConversationDetail: React.FC<ConversationDetailProps> = ({ sessionI
               </div>
 
               {/* Contact Info */}
-              <div className="flex flex-col">
-                <div className="flex items-center gap-2">
-                  <h2 className="text-[15px] font-semibold text-foreground">
+              <div className="flex flex-col min-w-0">
+                <div className="flex items-center gap-2 min-w-0">
+                  <h2 className="text-[15px] font-semibold text-foreground truncate">
                     {contact?.name || (readOnly ? t('conversations.detail.viewConversation', { defaultValue: 'View Conversation' }) : t('conversations.detail.conversation'))}
                   </h2>
-                  <span className="px-2 py-0.5 bg-violet-100 dark:bg-violet-900/30 text-violet-600 dark:text-violet-400 text-[10px] font-medium rounded-full">
+                  <span className="hidden sm:inline px-2 py-0.5 bg-violet-100 dark:bg-violet-900/30 text-violet-600 dark:text-violet-400 text-[10px] font-medium rounded-full">
                     Customer
                   </span>
                 </div>
-                <div className="flex items-center gap-2 mt-0.5">
+                <div className="hidden sm:flex items-center gap-2 mt-0.5 min-w-0">
                   {contact?.email && (
-                    <span className="text-xs text-muted-foreground">{contact.email}</span>
+                    <span className="text-xs text-muted-foreground truncate max-w-none">{contact.email}</span>
                   )}
                   <span className="text-border">•</span>
                   <span className="text-xs text-muted-foreground/60 font-mono">
@@ -1042,9 +1047,9 @@ export const ConversationDetail: React.FC<ConversationDetailProps> = ({ sessionI
               </div>
             </div>
 
-            <div className="flex items-center gap-2">
-              {/* Status Badge */}
-              <span className={`px-2.5 py-1 rounded-lg text-xs font-semibold flex items-center gap-1.5 ${
+            <div className="flex items-center gap-1.5 flex-shrink-0">
+              {/* Status — dot only on mobile/tablet, dot+label on desktop */}
+              <span className={`rounded-full lg:rounded-lg p-1 lg:px-2.5 lg:py-1 text-[10px] lg:text-xs font-semibold flex items-center gap-1 lg:gap-1.5 ${
                 conversationStatus === 'resolved'
                   ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
                   : conversationStatus === 'active'
@@ -1053,40 +1058,35 @@ export const ConversationDetail: React.FC<ConversationDetailProps> = ({ sessionI
                   ? 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400'
                   : 'bg-slate-100 text-slate-700 dark:bg-slate-700 dark:text-slate-300'
               }`}>
-                <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${
+                <span className={`w-2 h-2 rounded-full flex-shrink-0 ${
                   conversationStatus === 'resolved' ? 'bg-green-500' :
                   conversationStatus === 'active' ? 'bg-blue-500 animate-pulse' :
                   conversationStatus === 'assigned' ? 'bg-purple-500' : 'bg-slate-400'
-                }`} />
-                {conversationStatus.charAt(0).toUpperCase() + conversationStatus.slice(1)}
+                }`} title={conversationStatus.charAt(0).toUpperCase() + conversationStatus.slice(1)} />
+                <span className="hidden lg:inline">{conversationStatus.charAt(0).toUpperCase() + conversationStatus.slice(1)}</span>
               </span>
 
-              {/* AI Summary Button */}
+              {/* AI Summary Button — desktop only (lg+), tablet/mobile use ⋯ menu */}
               {onSummaryClick && (
                 <Button
                   size="sm"
                   onClick={onSummaryClick}
-                  className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-lg h-7 px-2.5 text-xs"
+                  className="hidden lg:flex bg-primary hover:bg-primary/90 text-primary-foreground rounded-lg h-7 px-2.5 text-xs"
                 >
                   <Sparkles className={`h-3.5 w-3.5 ${isRTL ? 'ml-1.5' : 'mr-1.5'}`} />
                   {t('conversations.detail.summary', { defaultValue: 'AI Summary' })}
                 </Button>
               )}
 
-              {/* Action buttons - hidden in read-only mode */}
               {!readOnly && (
                 <>
-                  {/* Twilio Voice outbound call button */}
                   {sessionDetails?.channel === 'twilio_voice' && (contact?.phone_number || sessionDetails?.contact_phone) && (
                     <Button
                       size="sm"
                       variant="outline"
-                      onClick={() => {
-                        const phone = contact?.phone_number || sessionDetails?.contact_phone || '';
-                        makeCall(phone, contact?.id);
-                      }}
+                      onClick={() => { const phone = contact?.phone_number || sessionDetails?.contact_phone || ''; makeCall(phone, contact?.id); }}
                       disabled={callState !== 'idle'}
-                      className="rounded-lg h-7 px-2.5 text-xs border-green-200 text-green-700 hover:bg-green-50 dark:border-green-800 dark:text-green-400 dark:hover:bg-green-900/20"
+                      className="hidden lg:flex rounded-lg h-7 px-2.5 text-xs border-green-200 text-green-700 hover:bg-green-50 dark:border-green-800 dark:text-green-400 dark:hover:bg-green-900/20"
                     >
                       <Phone className={`h-3.5 w-3.5 ${isRTL ? 'ml-1.5' : 'mr-1.5'}`} />
                       {callState === 'idle' ? 'Call' : 'Calling…'}
@@ -1097,23 +1097,57 @@ export const ConversationDetail: React.FC<ConversationDetailProps> = ({ sessionI
                     variant="outline"
                     onClick={() => startCallMutation.mutate()}
                     disabled={startCallMutation.isPending}
-                    className="rounded-lg h-7 px-2.5 text-xs border-border"
+                    className="hidden lg:flex rounded-lg h-7 px-2.5 text-xs border-border"
                   >
                     <Video className={`h-3.5 w-3.5 ${isRTL ? 'ml-1.5' : 'mr-1.5'}`} />
                     {t('conversations.detail.videoCall')}
                   </Button>
+
+                  {/* Mobile + tablet: ⋯ overflow menu (hidden only at lg+) */}
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button size="sm" variant="outline" className="lg:hidden rounded-lg h-7 w-7 p-0 border-border">
+                        <MoreHorizontal className="h-3.5 w-3.5" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-44">
+                      {onSummaryClick && (
+                        <DropdownMenuItem onClick={onSummaryClick}>
+                          <Sparkles className="h-3.5 w-3.5 mr-2 text-primary" />
+                          {t('conversations.detail.summary', { defaultValue: 'AI Summary' })}
+                        </DropdownMenuItem>
+                      )}
+                      <DropdownMenuItem onClick={() => startCallMutation.mutate()} disabled={startCallMutation.isPending}>
+                        <Video className="h-3.5 w-3.5 mr-2" />
+                        {t('conversations.detail.videoCall')}
+                      </DropdownMenuItem>
+                      {sessionDetails?.channel === 'twilio_voice' && (contact?.phone_number || sessionDetails?.contact_phone) && (
+                        <DropdownMenuItem
+                          onClick={() => { const phone = contact?.phone_number || sessionDetails?.contact_phone || ''; makeCall(phone, contact?.id); }}
+                          disabled={callState !== 'idle'}
+                        >
+                          <Phone className="h-3.5 w-3.5 mr-2 text-green-600" />
+                          {callState === 'idle' ? 'Call' : 'Calling…'}
+                        </DropdownMenuItem>
+                      )}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+
                   <Button
                     size="sm"
                     onClick={() => statusMutation.mutate('resolved')}
                     disabled={statusMutation.isPending || conversationStatus === 'resolved'}
-                    className={`rounded-lg h-7 px-2.5 text-xs ${
+                    title={conversationStatus === 'resolved' ? t('conversations.detail.resolved') : t('conversations.detail.resolve')}
+                    className={`rounded-lg h-7 px-2 text-xs ${
                       conversationStatus === 'resolved'
                         ? 'bg-green-100 text-green-700 hover:bg-green-200 border border-green-200 dark:bg-green-900/30 dark:text-green-400 dark:border-green-800'
                         : 'bg-primary hover:bg-primary/90 text-primary-foreground'
                     }`}
                   >
-                    <CheckCircle className={`h-3.5 w-3.5 ${isRTL ? 'ml-1.5' : 'mr-1.5'}`} />
-                    {conversationStatus === 'resolved' ? t('conversations.detail.resolved') : t('conversations.detail.resolve')}
+                    <CheckCircle className={`h-3.5 w-3.5 lg:${isRTL ? 'ml-1' : 'mr-1'}`} />
+                    <span className="hidden lg:inline">
+                      {conversationStatus === 'resolved' ? t('conversations.detail.resolved') : t('conversations.detail.resolve')}
+                    </span>
                   </Button>
                 </>
               )}
@@ -1126,12 +1160,12 @@ export const ConversationDetail: React.FC<ConversationDetailProps> = ({ sessionI
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.2 }}
-              className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-violet-500/[0.04] to-transparent border-t border-violet-500/10"
+              className="flex items-center gap-1 sm:gap-2 px-3 sm:px-4 py-1 sm:py-2 bg-gradient-to-r from-violet-500/[0.04] to-transparent border-t border-violet-500/10 overflow-x-auto w-full min-w-0"
             >
               {/* AI Toggle */}
-              <div className="flex items-center gap-1.5 bg-muted rounded-lg px-2.5 py-1.5 border border-border">
-                <Bot className={`h-3.5 w-3.5 transition-colors flex-shrink-0 ${isAiEnabled ? 'text-blue-500' : 'text-muted-foreground'}`} />
-                <Label htmlFor="ai-toggle" className="text-xs font-medium cursor-pointer text-foreground whitespace-nowrap">
+              <div className="flex items-center gap-1 sm:gap-1.5 bg-muted rounded-md px-1.5 sm:px-2.5 py-1 sm:py-1.5 border border-border flex-shrink-0">
+                <Bot className={`h-3 w-3 sm:h-3.5 sm:w-3.5 transition-colors flex-shrink-0 ${isAiEnabled ? 'text-blue-500' : 'text-muted-foreground'}`} />
+                <Label htmlFor="ai-toggle" className="hidden sm:block text-xs font-medium cursor-pointer text-foreground whitespace-nowrap">
                   {t('conversations.detail.aiReplies')}
                 </Label>
                 <Switch
@@ -1139,19 +1173,19 @@ export const ConversationDetail: React.FC<ConversationDetailProps> = ({ sessionI
                   id="ai-toggle"
                   checked={isAiEnabled}
                   onCheckedChange={toggleAiMutation.mutate}
-                  className="scale-75 data-[state=checked]:bg-blue-500"
+                  className="scale-[0.65] sm:scale-75 data-[state=checked]:bg-blue-500"
                 />
               </div>
 
               {/* Assign To */}
-              <div className="flex items-center gap-1.5 bg-muted rounded-lg px-2.5 py-1.5 border border-border">
-                <Users className="h-3.5 w-3.5 text-muted-foreground flex-shrink-0" />
+              <div className="flex items-center gap-1 sm:gap-1.5 bg-muted rounded-md px-1.5 sm:px-2.5 py-1 sm:py-1.5 border border-border flex-shrink-0">
+                <Users className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-muted-foreground flex-shrink-0" />
                 <Select
                   key={`assignee-${sessionId}`}
                   value={sessionDetails?.assignee_id?.toString() || undefined}
                   onValueChange={(value) => assigneeMutation.mutate(parseInt(value))}
                 >
-                  <SelectTrigger className="border-0 h-auto p-0 focus:ring-0 w-[130px] text-xs font-medium text-foreground">
+                  <SelectTrigger className="border-0 h-auto p-0 focus:ring-0 w-[72px] sm:w-[130px] text-[11px] sm:text-xs font-medium text-foreground">
                     <SelectValue placeholder={t('conversations.detail.assignTo')} />
                   </SelectTrigger>
                   <SelectContent className="rounded-xl">
@@ -1181,14 +1215,14 @@ export const ConversationDetail: React.FC<ConversationDetailProps> = ({ sessionI
               </div>
 
               {/* Priority Selector */}
-              <div className="flex items-center gap-1.5 bg-muted rounded-lg px-2.5 py-1.5 border border-border">
-                <Flag className={`h-3.5 w-3.5 flex-shrink-0 ${conversationPriority > 0 ? PRIORITY_CONFIG[conversationPriority]?.color : 'text-muted-foreground'}`} />
+              <div className="flex items-center gap-1 sm:gap-1.5 bg-muted rounded-md px-1.5 sm:px-2.5 py-1 sm:py-1.5 border border-border flex-shrink-0">
+                <Flag className={`h-3 w-3 sm:h-3.5 sm:w-3.5 flex-shrink-0 ${conversationPriority > 0 ? PRIORITY_CONFIG[conversationPriority]?.color : 'text-muted-foreground'}`} />
                 <Select
                   key={`priority-${sessionId}-${conversationPriority}`}
                   value={conversationPriority.toString()}
                   onValueChange={(value) => priorityMutation.mutate(parseInt(value))}
                 >
-                  <SelectTrigger className="border-0 h-auto p-0 focus:ring-0 w-[90px] text-xs font-medium text-foreground">
+                  <SelectTrigger className="border-0 h-auto p-0 focus:ring-0 w-[58px] sm:w-[90px] text-[11px] sm:text-xs font-medium text-foreground">
                     <SelectValue placeholder={t('conversations.priority.label', { defaultValue: 'Priority' })} />
                   </SelectTrigger>
                   <SelectContent className="rounded-xl">
@@ -1216,7 +1250,7 @@ export const ConversationDetail: React.FC<ConversationDetailProps> = ({ sessionI
         </motion.header>
 
         {/* Enhanced Messages Area */}
-        <main ref={messagesContainerRef} className="flex-grow overflow-y-auto p-4 bg-muted/20 relative">
+        <main ref={messagesContainerRef} className="flex-grow overflow-y-auto min-h-0 p-4 bg-muted/20 relative">
 
           <AnimatePresence mode="wait">
             {isLoading ? (
@@ -1336,7 +1370,7 @@ export const ConversationDetail: React.FC<ConversationDetailProps> = ({ sessionI
                               <UserIcon className="h-3.5 w-3.5 text-muted-foreground" />
                             </div>
                           )}
-                          <div className={`flex flex-col ${msg.sender === 'user' ? 'items-start' : 'items-end'} max-w-[65%]`}>
+                          <div className={`flex flex-col ${msg.sender === 'user' ? 'items-start' : 'items-end'} max-w-[85%] sm:max-w-[65%]`}>
                             <div
                               className={`px-3.5 py-2.5 rounded-2xl ${
                                 msg.sender === 'user'

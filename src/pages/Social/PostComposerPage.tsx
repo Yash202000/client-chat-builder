@@ -209,35 +209,35 @@ export default function PostComposerPage() {
       <div className="flex flex-col flex-1 min-w-0 overflow-hidden">
 
         {/* Top bar */}
-        <div className="flex items-center justify-between px-5 py-2.5 bg-white dark:bg-zinc-900 border-b border-zinc-200 dark:border-zinc-800 shrink-0">
-          <div className="flex items-center gap-4">
-            <div>
-              <h1 className="text-base font-semibold text-zinc-900 dark:text-zinc-100 leading-tight">
+        <div className="flex items-center justify-between px-3 sm:px-5 py-2 sm:py-2.5 bg-white dark:bg-zinc-900 border-b border-zinc-200 dark:border-zinc-800 shrink-0 gap-2">
+          <div className="flex items-center gap-2 sm:gap-4 min-w-0">
+            <div className="shrink-0">
+              <h1 className="text-sm sm:text-base font-semibold text-zinc-900 dark:text-zinc-100 leading-tight">
                 {editId ? 'Edit Post' : 'Compose'}
               </h1>
-              <p className="text-xs text-zinc-400">{editId ? 'Update your post' : 'Create · Schedule · Publish'}</p>
+              <p className="text-[10px] sm:text-xs text-zinc-400 hidden sm:block">{editId ? 'Update your post' : 'Create · Schedule · Publish'}</p>
             </div>
 
             {/* Platform switcher */}
-            <div className="flex items-center gap-1 bg-zinc-100 dark:bg-zinc-800 p-1 rounded-xl">
+            <div className="flex items-center gap-0.5 sm:gap-1 bg-zinc-100 dark:bg-zinc-800 p-0.5 sm:p-1 rounded-xl overflow-x-auto">
               {availablePlatforms.length === 0 ? (
                 <button onClick={() => navigate('/dashboard/social/accounts')}
-                  className="text-xs text-violet-600 px-3 py-1.5 font-medium">
-                  Connect an account →
+                  className="text-xs text-violet-600 px-3 py-1.5 font-medium whitespace-nowrap">
+                  Connect →
                 </button>
               ) : availablePlatforms.map(p => {
                 const Icon = p.Icon;
                 const active = activeTab === p.key;
                 return (
                   <button key={p.key} onClick={() => setActiveTab(p.key)}
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-200"
+                    className="flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-200 whitespace-nowrap"
                     style={active ? {
                       background: p.gradient, color: '#fff',
                       boxShadow: `0 2px 8px ${p.color}40`,
                     } : { color: '#71717a' }}
                   >
                     <Icon className="h-3.5 w-3.5" />
-                    {p.label}
+                    <span className="hidden sm:inline">{p.label}</span>
                   </button>
                 );
               })}
@@ -245,24 +245,24 @@ export default function PostComposerPage() {
           </div>
 
           {/* Right controls */}
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5 shrink-0">
             <button
               onClick={() => setShowPreview(v => !v)}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
+              className="flex items-center gap-1.5 px-2 sm:px-3 py-1.5 rounded-lg text-xs font-medium text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
             >
               {showPreview ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
-              Preview
+              <span className="hidden sm:inline">Preview</span>
             </button>
             <button
               onClick={() => setAiOpen(o => !o)}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-200"
+              className="flex items-center gap-1.5 px-2 sm:px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-200"
               style={aiOpen
                 ? { background: 'linear-gradient(135deg,#7c3aed,#a855f7)', color: '#fff', boxShadow: '0 2px 8px #7c3aed40' }
                 : { color: '#7c3aed', border: '1px solid #e9d5ff', backgroundColor: '#faf5ff' }
               }
             >
               <Sparkles className="h-3.5 w-3.5" />
-              AI Assistant
+              <span className="hidden sm:inline">AI Assistant</span>
             </button>
           </div>
         </div>
@@ -475,7 +475,7 @@ export default function PostComposerPage() {
           </div>
 
           {/* Publish sidebar */}
-          <div className="w-64 shrink-0 border-l border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 flex flex-col overflow-y-auto">
+          <div className="hidden lg:flex lg:w-64 shrink-0 border-l border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 flex-col overflow-y-auto">
 
             {/* Account */}
             <div className="p-4 border-b border-zinc-100 dark:border-zinc-800">
@@ -564,11 +564,48 @@ export default function PostComposerPage() {
 
           </div>
         </div>
+
+        {/* Mobile publish bar — bottom of vertical flex column, visible only on < lg */}
+        <div className="lg:hidden shrink-0 flex items-center gap-2 px-3 py-2.5 border-t border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900">
+          {activeAccounts.length > 1 && (
+            <select
+              className="flex-1 text-xs border border-zinc-200 dark:border-zinc-700 rounded-lg px-2.5 py-2 bg-transparent focus:outline-none text-zinc-700 dark:text-zinc-300 min-w-0"
+              value={selectedAccountId}
+              onChange={e => setSelectedAccountId(e.target.value)}
+            >
+              <option value="">Select account...</option>
+              {activeAccounts.map(a => <option key={a.id} value={String(a.id)}>{a.account_name}</option>)}
+            </select>
+          )}
+          <button
+            disabled={isBusy || !contents[activeTab]}
+            onClick={() => {
+              const payload = buildPayload();
+              if (scheduleMode && scheduledAt) {
+                scheduleMutation.mutate({ ...payload, scheduled_at: toUTCISOString(scheduledAt) });
+              } else {
+                publishMutation.mutate(payload);
+              }
+            }}
+            className="flex items-center justify-center gap-2 py-2 px-4 rounded-xl text-sm font-semibold text-white flex-1 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+            style={{ background: isBusy ? '#9ca3af' : activePlatform.gradient }}
+          >
+            {isBusy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+            Publish
+          </button>
+          <button
+            disabled={isBusy || !contents[activeTab]}
+            onClick={() => saveMutation.mutate({ ...buildPayload(), status: 'draft' })}
+            className="flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl text-sm text-zinc-600 dark:text-zinc-400 border border-zinc-200 dark:border-zinc-700 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors disabled:opacity-40"
+          >
+            <Save className="h-4 w-4" />
+          </button>
+        </div>
       </div>
 
-      {/* ── AI Assistant panel ── */}
+      {/* ── AI Assistant — desktop sidebar (xl+) ── */}
       {aiOpen && (
-        <div className="w-[340px] shrink-0 h-full border-l border-zinc-200 dark:border-zinc-800">
+        <div className="hidden xl:block xl:w-[340px] shrink-0 h-full border-l border-zinc-200 dark:border-zinc-800">
           <PostAIAssistant
             open={aiOpen}
             onClose={() => setAiOpen(false)}
@@ -580,6 +617,27 @@ export default function PostComposerPage() {
                 setHashtags(prev => ({ ...prev, [activeTab]: tags.map(t => t.replace('#', '')) }));
             }}
           />
+        </div>
+      )}
+
+      {/* ── AI Assistant — mobile/tablet bottom sheet (< xl) ── */}
+      {aiOpen && (
+        <div className="xl:hidden fixed inset-0 z-50 flex flex-col justify-end">
+          <div className="absolute inset-0 bg-black/40" onClick={() => setAiOpen(false)} />
+          <div className="relative flex flex-col rounded-t-2xl overflow-hidden shadow-2xl" style={{ height: '78vh' }}>
+            <PostAIAssistant
+              open={aiOpen}
+              onClose={() => setAiOpen(false)}
+              platform={activeTab}
+              currentContent={contents[activeTab]}
+              onApply={(content, tags) => {
+                setContents(prev => ({ ...prev, [activeTab]: content }));
+                if (tags && tags.length > 0)
+                  setHashtags(prev => ({ ...prev, [activeTab]: tags.map(t => t.replace('#', '')) }));
+                setAiOpen(false);
+              }}
+            />
+          </div>
         </div>
       )}
     </div>

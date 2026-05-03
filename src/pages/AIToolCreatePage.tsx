@@ -47,9 +47,9 @@ const AIToolCreatePage = () => {
   };
 
   return (
-    <div className="p-8 grid grid-cols-2 gap-8">
+    <div className="px-4 sm:px-8 py-4 sm:py-8 grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8">
       <div>
-        <h1 className="text-2xl font-bold mb-8">Create AI Tool</h1>
+        <h1 className="text-xl sm:text-2xl font-bold mb-6 sm:mb-8">Create AI Tool</h1>
         <div className="space-y-4">
           <Input placeholder="Tool Name" value={toolName} onChange={(e) => setToolName(e.target.value)} />
           <Textarea placeholder="Tool Description" value={toolDescription} onChange={(e) => setToolDescription(e.target.value)} />
@@ -64,7 +64,7 @@ const AIToolCreatePage = () => {
           <div>
             <h2 className="text-xl font-semibold mb-4">Questions</h2>
             {questions.map((q, index) => (
-              <div key={index} className="flex gap-2 mb-2">
+              <div key={index} className="flex flex-col sm:flex-row gap-2 mb-2">
                 <Input
                   placeholder="Question Text"
                   value={q.question_text}

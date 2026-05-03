@@ -152,7 +152,7 @@ const ToolManagementPage = () => {
   };
 
   return (
-    <div className="p-6" dir={isRTL ? 'rtl' : 'ltr'}>
+    <div className="px-4 sm:px-6 py-4 sm:py-6" dir={isRTL ? 'rtl' : 'ltr'}>
 
       {/* Top bar: stats pills + search + action buttons */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
@@ -178,13 +178,13 @@ const ToolManagementPage = () => {
 
         {/* Search + action buttons */}
         <div className="flex items-center gap-2 flex-wrap">
-          <div className="relative">
+          <div className="relative flex-1 min-w-[140px] sm:flex-none">
             <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
             <Input
               placeholder={t("tools.searchPlaceholder")}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-8 h-8 w-52 text-xs"
+              className="pl-8 h-8 w-full sm:w-52 text-xs"
             />
           </div>
           <Button
@@ -979,7 +979,7 @@ const McpToolForm = ({ tool, onSubmit, onBack }: { tool?: Tool, onSubmit: (value
       </div>
       <div className="space-y-2">
         <Label htmlFor="mcp-url" className="dark:text-gray-300 text-sm font-medium">{t("tools.forms.mcpServerUrl")}</Label>
-        <div className={`flex items-start gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
+        <div className={`flex flex-col sm:flex-row items-stretch sm:items-start gap-2 ${isRTL ? 'sm:flex-row-reverse' : ''}`}>
           <Input
             id="mcp-url"
             placeholder={t("tools.forms.mcpUrlPlaceholder")}
@@ -992,7 +992,7 @@ const McpToolForm = ({ tool, onSubmit, onBack }: { tool?: Tool, onSubmit: (value
             }}
             required
             type="url"
-            className="rounded-xl h-11 dark:bg-emerald-900 dark:border-emerald-600 dark:text-white"
+            className="rounded-xl h-11 dark:bg-emerald-900 dark:border-emerald-600 dark:text-white flex-1"
           />
           <Button type="button" onClick={() => inspect(url)} disabled={isInspecting || !url} variant="outline" className="rounded-xl h-11 dark:border-emerald-600 dark:text-white dark:hover:bg-emerald-700 hover:border-cyan-300 hover:bg-cyan-50 dark:hover:border-cyan-700 dark:hover:bg-cyan-900/20 whitespace-nowrap transition-all">
             {isInspecting ? <><Loader2 className="h-4 w-4 animate-spin mr-2" />{t("tools.forms.inspecting")}</> : t("tools.forms.testInspect")}

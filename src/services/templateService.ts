@@ -19,6 +19,7 @@ export interface Template {
   subject?: string;
   body?: string;
   html_body?: string;
+  design?: Record<string, any>;
   voice_script?: string;
   tts_voice_id?: string;
   whatsapp_template_name?: string;
@@ -37,6 +38,7 @@ export interface TemplateCreate {
   subject?: string;
   body?: string;
   html_body?: string;
+  design?: Record<string, any>;
   voice_script?: string;
   tts_voice_id?: string;
   whatsapp_template_name?: string;

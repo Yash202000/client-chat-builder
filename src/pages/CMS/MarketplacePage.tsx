@@ -93,17 +93,17 @@ const MarketplacePage = () => {
   const items = marketplaceData?.items || [];
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="px-4 sm:px-6 py-4 sm:py-6 space-y-6">
       {/* Header */}
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-3 sm:gap-4">
         <Link to="/dashboard/cms">
           <Button variant="ghost" size="icon">
             <ArrowLeft className="w-4 h-4" />
           </Button>
         </Link>
         <div>
-          <h1 className="text-2xl font-bold">Marketplace</h1>
-          <p className="text-muted-foreground">Browse and copy shared content from other users</p>
+          <h1 className="text-xl sm:text-2xl font-bold">Marketplace</h1>
+          <p className="text-muted-foreground hidden sm:block">Browse and copy shared content from other users</p>
         </div>
       </div>
 
@@ -154,8 +154,8 @@ const MarketplacePage = () => {
       )}
 
       {/* Search & Filters */}
-      <div className="flex items-center gap-4">
-        <div className="relative flex-1 max-w-md">
+      <div className="flex flex-wrap items-center gap-2 sm:gap-4">
+        <div className="relative flex-1 min-w-[160px] sm:max-w-md">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <Input
             placeholder="Search marketplace..."
@@ -169,7 +169,7 @@ const MarketplacePage = () => {
           value={contentTypeSlug || 'all'}
           onValueChange={(v) => setContentTypeSlug(v === 'all' ? '' : v)}
         >
-          <SelectTrigger className="w-[180px]">
+          <SelectTrigger className="w-[140px] sm:w-[180px]">
             <SelectValue placeholder="Content Type" />
           </SelectTrigger>
           <SelectContent>
