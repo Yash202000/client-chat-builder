@@ -284,6 +284,19 @@
   /* Firefox */
   * { scrollbar-width: thin; scrollbar-color: hsl(var(--muted-foreground) / 0.2) transparent; }
 
+  /* Sidebar nav — violet themed scrollbar */
+  .sidebar-nav::-webkit-scrollbar { width: 4px; }
+  .sidebar-nav::-webkit-scrollbar-track { background: transparent; }
+  .sidebar-nav::-webkit-scrollbar-thumb {
+    background: hsl(263 78% 68% / 0.35);
+    border-radius: 99px;
+    transition: background-color 0.2s ease;
+  }
+  .sidebar-nav::-webkit-scrollbar-thumb:hover {
+    background: hsl(263 78% 68% / 0.65);
+  }
+  .sidebar-nav { scrollbar-width: thin; scrollbar-color: hsl(263 78% 68% / 0.35) transparent; }
+
   /* Focus rings — softer, premium feel (no electric glow) */
   *:focus-visible {
     @apply outline-none;

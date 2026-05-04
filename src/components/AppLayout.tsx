@@ -747,7 +747,7 @@ const AppLayout = () => {
           </div>
 
           {/* ── Nav items ── */}
-          <nav className={`flex-1 overflow-y-auto py-2 scrollbar-thin scrollbar-thumb-border ${sidebarCollapsed ? 'px-1.5' : 'px-2'}`}>
+          <nav className={`sidebar-nav flex-1 overflow-y-auto py-2 scrollbar-thin scrollbar-thumb-border ${sidebarCollapsed ? 'px-1.5' : 'px-2'}`}>
             {sidebarGroups.map((group, groupIndex) => {
               const userPermissions = user?.role?.permissions?.map((p: any) => p.name) || [];
               const visibleItems = group.items.filter(item => {
