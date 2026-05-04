@@ -185,7 +185,10 @@ const Index = () => {
             {/* Logo */}
             <Link to="/" onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}>
               <motion.div whileHover={{ scale: 1.02 }} className="flex items-center space-x-3 cursor-pointer">
-                <img src="/logo.png" alt="HeyGenAlly" className="h-9 w-auto" />
+                <img src="/icon.png" alt="HeyGenAlly" className="h-9 w-9 rounded-xl object-contain" />
+                <span className="text-xl font-bold font-syne bg-gradient-to-r from-violet-700 to-purple-600 dark:from-violet-400 dark:to-cyan-400 bg-clip-text text-transparent">
+                  HeyGenAlly
+                </span>
               </motion.div>
             </Link>
 
