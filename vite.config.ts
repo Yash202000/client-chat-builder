@@ -63,9 +63,13 @@ export default defineConfig(({ mode }) => {
         chunkFileNames: 'assets/[name]-[hash].js',
         manualChunks(id) {
           // Core React runtime — always tiny, always cached
+          // react-leaflet must be co-located here: it calls React.forwardRef at
+          // module evaluation time, so it must not land in a separate chunk that
+          // could be evaluated before vendor-react is ready.
           if (id.includes('node_modules/react/') ||
               id.includes('node_modules/react-dom/') ||
               id.includes('node_modules/react-router-dom/') ||
+              id.includes('node_modules/react-leaflet/') ||
               id.includes('node_modules/scheduler/')) {
             return 'vendor-react';
           }
@@ -165,9 +169,8 @@ export default defineConfig(({ mode }) => {
               id.includes('node_modules/y-')) {
             return 'vendor-editor';
           }
-          // Maps
-          if (id.includes('node_modules/leaflet/') ||
-              id.includes('node_modules/react-leaflet/')) {
+          // Maps (leaflet core only — react-leaflet is in vendor-react)
+          if (id.includes('node_modules/leaflet/')) {
             return 'vendor-maps';
           }
           // Everything else in node_modules goes into a general vendor chunk
