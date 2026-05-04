@@ -17,6 +17,7 @@ interface WidgetProps {
   agentId: string;
   companyId: string;
   backendUrl: string;
+  appUrl?: string;
   rtlOverride?: boolean | null;
   languageOverride?: string | null;
   positionOverride?: string | null;
@@ -199,7 +200,7 @@ const isSessionExpired = (timestamp: number, expirationDays: number = 30): boole
 };
 
 // Main Widget Component
-const Widget = ({ agentId, companyId, backendUrl, rtlOverride, languageOverride, positionOverride, displayMode = 'widget' }: WidgetProps) => {
+const Widget = ({ agentId, companyId, backendUrl, appUrl = '', rtlOverride, languageOverride, positionOverride, displayMode = 'widget' }: WidgetProps) => {
   const [settings, setSettings] = useState<WidgetSettings | null>(null);
   // For iframe/fullpage modes, start with widget open
   const [isOpen, setIsOpen] = useState(displayMode !== 'widget');
@@ -2177,6 +2178,31 @@ const Widget = ({ agentId, companyId, backendUrl, rtlOverride, languageOverride,
             </div>
           </div>
         )}
+
+        {/* Powered by footer */}
+        <a
+          href="https://heygenally.com"
+          target="_blank"
+          rel="noopener noreferrer"
+          className={cn(
+            'flex items-center justify-center gap-2 py-2 transition-opacity hover:opacity-75 cursor-pointer no-underline',
+            dark_mode ? 'bg-gray-950 border-t border-white/[0.06]' : 'bg-gray-50 border-t border-gray-100'
+          )}
+        >
+          <span className={cn('text-[10px] tracking-wide', dark_mode ? 'text-gray-500' : 'text-gray-400')}>
+            Powered by
+          </span>
+          {appUrl ? (
+            <img
+              src={`${appUrl}/icon.png`}
+              alt="HeyGenAlly"
+              className="h-3.5 w-3.5 rounded-sm object-contain flex-shrink-0"
+            />
+          ) : null}
+          <span className={cn('text-[10px] font-semibold tracking-tight', dark_mode ? 'text-gray-300' : 'text-gray-600')}>
+            HeyGenAlly
+          </span>
+        </a>
       </div>
     )}
 

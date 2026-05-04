@@ -9,6 +9,9 @@ import tailwindStyles from './index.css?inline';
   const WIDGET_ROOT_ID = 'heygenally-widget';
 
   const scriptTag = document.currentScript || document.getElementById(SCRIPT_ID);
+  const appUrl = scriptTag instanceof HTMLScriptElement && scriptTag.src
+    ? new URL(scriptTag.src).origin
+    : window.location.origin;
   const widgetRoot = document.getElementById(WIDGET_ROOT_ID);
 
   if (!scriptTag) {
@@ -57,6 +60,7 @@ import tailwindStyles from './index.css?inline';
         agentId={agentId}
         companyId={companyId}
         backendUrl={backendUrl}
+        appUrl={appUrl}
         rtlOverride={rtlEnabled}
         languageOverride={language}
         positionOverride={position}
