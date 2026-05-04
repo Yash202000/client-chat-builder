@@ -1415,7 +1415,7 @@ const InternalChatPage: React.FC = () => {
                                 <span className="text-[11px] text-muted-foreground/50 italic">No messages yet</span>
                               )}
                               {unread && (
-                                <span className="flex-shrink-0 min-w-[18px] h-[18px] rounded-full bg-primary text-primary-foreground text-[10px] font-bold flex items-center justify-center px-1">
+                                <span className="flex-shrink-0 min-w-[18px] h-[18px] rounded-full bg-primary dark:bg-violet-500 text-primary-foreground dark:text-white text-[10px] font-bold flex items-center justify-center px-1">
                                   {(channel.unread_count ?? 0) > 99 ? '99+' : channel.unread_count}
                                 </span>
                               )}
@@ -1501,7 +1501,7 @@ const InternalChatPage: React.FC = () => {
                                 <span className="text-[11px] text-muted-foreground/50 italic">No messages yet</span>
                               )}
                               {unread && (
-                                <span className="flex-shrink-0 min-w-[18px] h-[18px] rounded-full bg-primary text-primary-foreground text-[10px] font-bold flex items-center justify-center px-1">
+                                <span className="flex-shrink-0 min-w-[18px] h-[18px] rounded-full bg-primary dark:bg-violet-500 text-primary-foreground dark:text-white text-[10px] font-bold flex items-center justify-center px-1">
                                   {(channel.unread_count ?? 0) > 99 ? '99+' : channel.unread_count}
                                 </span>
                               )}
@@ -1728,7 +1728,7 @@ const InternalChatPage: React.FC = () => {
                       'h-8 rounded-md text-xs font-medium transition-all px-2 md:px-3 gap-1.5',
                       activeCallExists
                         ? 'bg-green-500 hover:bg-green-600 text-white'
-                        : 'bg-primary hover:bg-primary/90 text-primary-foreground'
+                        : 'bg-primary hover:bg-primary/90 text-primary-foreground dark:bg-violet-600 dark:hover:bg-violet-500 dark:text-white'
                     )}
                   >
                     {(initiateVideoCallMutation.isLoading || joinVideoCallMutation.isLoading) ? (
@@ -1745,7 +1745,7 @@ const InternalChatPage: React.FC = () => {
 
               {/* Messages */}
               <div className="flex-1 overflow-hidden min-h-0">
-                <ScrollArea className="h-full">
+                <ScrollArea className="h-full msg-chat-area">
                   <div className="px-4 py-4">
                     {isLoadingMessages ? (
                       <div className="flex justify-center items-center py-20">
@@ -1832,7 +1832,7 @@ const InternalChatPage: React.FC = () => {
                                 isSameSender
                                   ? <div className="h-7 w-7 flex-shrink-0" />
                                   : (
-                                    <Avatar className="h-7 w-7 flex-shrink-0 self-end">
+                                    <Avatar className="h-7 w-7 flex-shrink-0 self-end msg-avatar-user">
                                       <AvatarImage src={msg.sender?.profile_picture_url} />
                                       <AvatarFallback className="text-xs font-semibold bg-muted text-muted-foreground">
                                         {msg.sender?.first_name?.[0] || 'U'}
@@ -1904,8 +1904,8 @@ const InternalChatPage: React.FC = () => {
                                   <div className={cn(
                                     'px-3.5 py-2 text-sm leading-relaxed',
                                     isOwn
-                                      ? `bg-primary text-primary-foreground rounded-2xl ${isRTL ? 'rounded-bl-md' : 'rounded-br-md'}`
-                                      : `bg-card border border-border text-foreground rounded-2xl ${isRTL ? 'rounded-br-md' : 'rounded-bl-md'}`
+                                      ? `bg-primary text-primary-foreground dark:text-white msg-bubble-agent rounded-2xl ${isRTL ? 'rounded-bl-md' : 'rounded-br-md'}`
+                                      : `bg-card border border-border text-foreground msg-bubble-user rounded-2xl ${isRTL ? 'rounded-br-md' : 'rounded-bl-md'}`
                                   )}>
                                     <div className={cn(
                                       'prose prose-sm max-w-full prose-p:my-0.5 prose-p:leading-relaxed',
@@ -1924,7 +1924,7 @@ const InternalChatPage: React.FC = () => {
                                           }
                                           return acc;
                                         }, {} as any) || {}}
-                                        className={isOwn ? 'text-primary-foreground' : ''}
+                                        className={isOwn ? 'text-primary-foreground dark:text-white' : ''}
                                       />
                                     </div>
                                     {msg.attachments && msg.attachments.length > 0 && (
@@ -2161,7 +2161,7 @@ const InternalChatPage: React.FC = () => {
                       className={cn(
                         'h-7 w-7 rounded-md flex items-center justify-center flex-shrink-0 transition-all',
                         (inputValue.trim() || selectedFiles.length > 0 || driveAttachments.length > 0)
-                          ? 'bg-primary text-primary-foreground hover:bg-primary/90'
+                          ? 'bg-primary text-primary-foreground hover:bg-primary/90 dark:bg-violet-600 dark:text-white dark:hover:bg-violet-500'
                           : 'bg-muted text-muted-foreground/40 cursor-not-allowed'
                       )}
                     >
@@ -2186,7 +2186,7 @@ const InternalChatPage: React.FC = () => {
                 <p className="text-sm text-muted-foreground max-w-xs mx-auto mb-5">{t('teamChat.selectChannelDesc')}</p>
                 <button
                   onClick={() => setCreateChannelModalOpen(true)}
-                  className="inline-flex items-center gap-1.5 h-8 px-4 rounded-lg bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 transition-colors"
+                  className="inline-flex items-center gap-1.5 h-8 px-4 rounded-lg bg-primary text-primary-foreground dark:bg-violet-600 dark:text-white dark:hover:bg-violet-500 text-sm font-medium hover:bg-primary/90 transition-colors"
                 >
                   <Plus className="h-3.5 w-3.5" />
                   Create Channel

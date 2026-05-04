@@ -1,6 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Shield, Lock, Server, Eye, RefreshCw, CheckCircle, ExternalLink } from "lucide-react";
+import { SEOHead } from "@/components/SEOHead";
 
 const SUB_PROCESSORS = [
   { name: "Amazon Web Services (AWS)", purpose: "Infrastructure, compute & storage", location: "US / EU (configurable)", dpa: "https://aws.amazon.com/agreement/" },
@@ -29,6 +30,11 @@ const SecurityPage = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+      <SEOHead
+        title="Security – How HeyGenAlly Protects Your Data"
+        description="HeyGenAlly uses AES-256 encryption, TLS 1.2+, role-based access control, and SOC 2-aligned practices to keep your data secure."
+        canonical="/security"
+      />
       <div className="max-w-5xl mx-auto px-4 py-12">
         <Button variant="ghost" onClick={() => navigate(-1)} className="mb-6">
           <ArrowLeft className="h-4 w-4 mr-2" />

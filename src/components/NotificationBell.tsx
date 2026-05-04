@@ -111,11 +111,11 @@ const NotificationBell: React.FC<NotificationBellProps> = ({
           variant="outline"
           size="icon"
           className={cn(
-            'relative hover:bg-purple-50 dark:hover:bg-purple-900/20 dark:border-slate-600 dark:text-white rounded-full',
+            'relative hover:bg-muted dark:border-white/[0.12] dark:text-white rounded-full',
             className
           )}
         >
-          <Bell className="h-5 w-5 text-purple-600 dark:text-purple-400" />
+          <Bell className="h-5 w-5 text-muted-foreground dark:text-white/70" />
           {unreadCount > 0 && (
             <span className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-red-500 text-white text-xs flex items-center justify-center font-semibold">
               {unreadCount > 9 ? '9+' : unreadCount}
@@ -124,7 +124,7 @@ const NotificationBell: React.FC<NotificationBellProps> = ({
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-96 p-0" align={isRTL ? "start" : "end"} dir={isRTL ? "rtl" : "ltr"}>
-        <div className="flex items-center justify-between p-4 border-b border-slate-200 dark:border-slate-700">
+        <div className="flex items-center justify-between p-4 border-b border-border">
           <div className="flex items-center gap-2">
             <h3 className="font-semibold text-lg">{t('conversations.notifications.title', 'Notifications')}</h3>
             <Button
@@ -140,7 +140,7 @@ const NotificationBell: React.FC<NotificationBellProps> = ({
               {soundEnabled ? (
                 <Volume2 className="h-4 w-4 text-green-600 dark:text-green-400" />
               ) : (
-                <VolumeX className="h-4 w-4 text-slate-400" />
+                <VolumeX className="h-4 w-4 text-muted-foreground" />
               )}
             </Button>
           </div>
@@ -161,21 +161,21 @@ const NotificationBell: React.FC<NotificationBellProps> = ({
         <ScrollArea className="h-[400px]">
           {isLoading ? (
             <div className="flex items-center justify-center py-12">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
             </div>
           ) : notifications.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-12 text-slate-500 dark:text-slate-400">
-              <Bell className="h-12 w-12 mb-4 text-slate-300 dark:text-slate-600" />
+            <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
+              <Bell className="h-12 w-12 mb-4 text-muted-foreground/25" />
               <p className="text-sm">{t('conversations.notifications.empty', 'No notifications')}</p>
             </div>
           ) : (
-            <div className="divide-y divide-slate-200 dark:divide-slate-700">
+            <div className="divide-y divide-border">
               {notifications.map((notification) => (
                 <div
                   key={notification.id}
                   className={cn(
-                    'p-4 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors cursor-pointer relative group',
-                    !notification.is_read && 'bg-purple-50 dark:bg-purple-900/10'
+                    'p-4 hover:bg-muted/40 dark:hover:bg-white/[0.04] transition-colors cursor-pointer relative group',
+                    !notification.is_read && 'bg-violet-50/60 dark:bg-white/[0.03]'
                   )}
                   onClick={() => handleNotificationClick(notification)}
                 >
@@ -184,18 +184,18 @@ const NotificationBell: React.FC<NotificationBellProps> = ({
                       {getNotificationIcon(notification.notification_type)}
                     </span>
                     <div className="flex-1 min-w-0">
-                      <p className="font-medium text-sm text-slate-900 dark:text-slate-100 mb-1">
+                      <p className="font-medium text-sm text-foreground mb-1">
                         {notification.title}
                       </p>
-                      <p className="text-sm text-slate-600 dark:text-slate-400 line-clamp-2 mb-2">
+                      <p className="text-sm text-muted-foreground line-clamp-2 mb-2">
                         {notification.message}
                       </p>
-                      <p className="text-xs text-slate-400 dark:text-slate-500">
+                      <p className="text-xs text-muted-foreground/55">
                         {format(new Date(notification.created_at), 'MMM d, h:mm a', { locale: isRTL ? ar : undefined })}
                       </p>
                     </div>
                     {!notification.is_read && (
-                      <div className="w-2 h-2 rounded-full bg-purple-600 dark:bg-purple-400 flex-shrink-0 mt-2"></div>
+                      <div className="w-2 h-2 rounded-full bg-violet-500 dark:bg-violet-400 flex-shrink-0 mt-2"></div>
                     )}
                   </div>
 
@@ -206,11 +206,11 @@ const NotificationBell: React.FC<NotificationBellProps> = ({
                       deleteNotificationMutation.mutate(notification.id);
                     }}
                     className={cn(
-                      "absolute top-2 opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded-full hover:bg-slate-200 dark:hover:bg-slate-700",
+                      "absolute top-2 opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded-full hover:bg-muted dark:hover:bg-white/[0.08]",
                       isRTL ? "left-2" : "right-2"
                     )}
                   >
-                    <X className="h-4 w-4 text-slate-500 dark:text-slate-400" />
+                    <X className="h-4 w-4 text-muted-foreground" />
                   </button>
                 </div>
               ))}

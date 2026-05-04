@@ -11,20 +11,20 @@ import { AddNodeButton } from './workflow/AddNodeButton';
 
 export const LlmNode = ({ id, data }) => (
   <div className="relative group">
-    <div className="px-4 py-3 border border-blue-200/80 dark:border-blue-700/60 rounded-2xl bg-gradient-to-br from-white to-blue-50 dark:from-slate-800 dark:to-blue-950/30 shadow-lg hover:shadow-xl hover:scale-[1.02] transition-all duration-200 backdrop-blur-sm min-w-[160px]">
-      <Handle type="target" position={Position.Left} className="w-3 h-3 !bg-gradient-to-br !from-blue-400 !to-indigo-500 border-2 border-white dark:border-slate-800 shadow-md" />
+    <div className="px-4 py-3 border border-blue-200/80 dark:border-blue-700/60 rounded-2xl bg-gradient-to-br from-white to-blue-50 wf-node dark:from-slate-800 dark:to-blue-950/30 shadow-lg hover:shadow-xl hover:scale-[1.02] transition-all duration-200 backdrop-blur-sm min-w-[160px]">
+      <Handle type="target" position={Position.Left} className="w-3 h-3 !bg-gradient-to-br !from-blue-400 !to-indigo-500 border-2 border-white dark:border-white/[0.15] shadow-md" />
       <div className="flex items-center gap-2.5 mb-2">
         <div className="p-2 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 shadow-md shadow-blue-500/30">
           <Bot size={16} className="text-white" />
         </div>
         <strong className="text-sm font-semibold text-slate-800 dark:text-white">{data.label}</strong>
       </div>
-      <div className="text-xs text-slate-500 dark:text-slate-400 font-medium flex items-center gap-1">
+      <div className="text-xs text-slate-500 dark:text-white/55 font-medium flex items-center gap-1">
         <span className="w-1.5 h-1.5 rounded-full bg-blue-500"></span>
         LLM Prompt
       </div>
-      <Handle type="source" position={Position.Right} id="output" className="w-3 h-3 !bg-slate-500 dark:!bg-slate-400 border-2 border-white dark:border-slate-800 shadow-md" />
-      <Handle type="source" position={Position.Bottom} id="error" className="w-3 h-3 !bg-gradient-to-br !from-red-400 !to-rose-500 border-2 border-white dark:border-slate-800 shadow-md" />
+      <Handle type="source" position={Position.Right} id="output" className="w-3 h-3 !bg-slate-500 dark:!bg-white/50 border-2 border-white dark:border-white/[0.15] shadow-md" />
+      <Handle type="source" position={Position.Bottom} id="error" className="w-3 h-3 !bg-gradient-to-br !from-red-400 !to-rose-500 border-2 border-white dark:border-white/[0.15] shadow-md" />
     </div>
     <AddNodeButton nodeId={id} handleId="output" position="right" />
     <AddNodeButton nodeId={id} handleId="error" position="bottom" />
@@ -33,20 +33,20 @@ export const LlmNode = ({ id, data }) => (
 
 export const ToolNode = ({ id, data }) => (
   <div className="relative group">
-    <div className="px-4 py-3 border border-emerald-200/80 dark:border-emerald-700/60 rounded-2xl bg-gradient-to-br from-white to-emerald-50 dark:from-slate-800 dark:to-emerald-950/30 shadow-lg hover:shadow-xl hover:scale-[1.02] transition-all duration-200 backdrop-blur-sm min-w-[160px]">
-      <Handle type="target" position={Position.Left} className="w-3 h-3 !bg-gradient-to-br !from-emerald-400 !to-green-500 border-2 border-white dark:border-slate-800 shadow-md" />
+    <div className="px-4 py-3 border border-emerald-200/80 dark:border-emerald-700/60 rounded-2xl bg-gradient-to-br from-white to-emerald-50 wf-node dark:from-slate-800 dark:to-emerald-950/30 shadow-lg hover:shadow-xl hover:scale-[1.02] transition-all duration-200 backdrop-blur-sm min-w-[160px]">
+      <Handle type="target" position={Position.Left} className="w-3 h-3 !bg-gradient-to-br !from-emerald-400 !to-green-500 border-2 border-white dark:border-white/[0.15] shadow-md" />
       <div className="flex items-center gap-2.5 mb-2">
         <div className="p-2 rounded-xl bg-gradient-to-br from-emerald-500 to-green-600 shadow-md shadow-emerald-500/30">
           <Cog size={16} className="text-white" />
         </div>
         <strong className="text-sm font-semibold text-slate-800 dark:text-white">{data.label}</strong>
       </div>
-      <div className="text-xs text-slate-500 dark:text-slate-400 font-medium flex items-center gap-1">
+      <div className="text-xs text-slate-500 dark:text-white/55 font-medium flex items-center gap-1">
         <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
         Tool Execution
       </div>
-      <Handle type="source" position={Position.Right} id="output" className="w-3 h-3 !bg-slate-500 dark:!bg-slate-400 border-2 border-white dark:border-slate-800 shadow-md" />
-      <Handle type="source" position={Position.Bottom} id="error" className="w-3 h-3 !bg-gradient-to-br !from-red-400 !to-rose-500 border-2 border-white dark:border-slate-800 shadow-md" />
+      <Handle type="source" position={Position.Right} id="output" className="w-3 h-3 !bg-slate-500 dark:!bg-white/50 border-2 border-white dark:border-white/[0.15] shadow-md" />
+      <Handle type="source" position={Position.Bottom} id="error" className="w-3 h-3 !bg-gradient-to-br !from-red-400 !to-rose-500 border-2 border-white dark:border-white/[0.15] shadow-md" />
     </div>
     <AddNodeButton nodeId={id} handleId="output" position="right" />
     <AddNodeButton nodeId={id} handleId="error" position="bottom" />
@@ -76,16 +76,16 @@ export const ConditionNode = ({ id, data }) => {
 
   return (
     <div className="relative group">
-      <div className={`px-4 py-3 border border-violet-200/80 dark:border-violet-700/60 rounded-2xl bg-gradient-to-br from-white to-violet-50 dark:from-slate-800 dark:to-violet-950/30 shadow-lg hover:shadow-xl hover:scale-[1.02] transition-all duration-200 backdrop-blur-sm ${isMultiCondition ? 'min-w-[180px]' : 'min-w-[160px]'}`}
+      <div className={`px-4 py-3 border border-violet-200/80 dark:border-violet-700/60 rounded-2xl bg-gradient-to-br from-white to-violet-50 wf-node dark:from-slate-800 dark:to-violet-950/30 shadow-lg hover:shadow-xl hover:scale-[1.02] transition-all duration-200 backdrop-blur-sm ${isMultiCondition ? 'min-w-[180px]' : 'min-w-[160px]'}`}
            style={{ minWidth: isMultiCondition ? `${Math.max(180, totalHandles * 50)}px` : undefined }}>
-        <Handle type="target" position={Position.Left} className="w-3 h-3 !bg-gradient-to-br !from-violet-400 !to-orange-500 border-2 border-white dark:border-slate-800 shadow-md" />
+        <Handle type="target" position={Position.Left} className="w-3 h-3 !bg-gradient-to-br !from-violet-400 !to-orange-500 border-2 border-white dark:border-white/[0.15] shadow-md" />
         <div className="flex items-center gap-2.5 mb-2">
           <div className="p-2 rounded-xl bg-gradient-to-br from-violet-500 to-orange-600 shadow-md shadow-violet-500/30">
             <GitBranch size={16} className="text-white" />
           </div>
           <strong className="text-sm font-semibold text-slate-800 dark:text-white">{data.label}</strong>
         </div>
-        <div className="text-xs text-slate-500 dark:text-slate-400 font-medium flex items-center gap-1">
+        <div className="text-xs text-slate-500 dark:text-white/55 font-medium flex items-center gap-1">
           <span className="w-1.5 h-1.5 rounded-full bg-violet-500"></span>
           {isMultiCondition ? `Multi-Condition (${conditions.length})` : 'Conditional Logic'}
         </div>
@@ -100,7 +100,7 @@ export const ConditionNode = ({ id, data }) => {
                 position={Position.Right}
                 id={String(index)}
                 style={{ top: getHandlePosition(index) }}
-                className={`w-3 h-3 ${CONDITION_COLORS[index % CONDITION_COLORS.length].bg} border-2 border-white dark:border-slate-800`}
+                className={`w-3 h-3 ${CONDITION_COLORS[index % CONDITION_COLORS.length].bg} border-2 border-white dark:border-white/[0.15]`}
                 title={`Condition ${index}: ${condition.value || 'not set'}`}
               />
             ))}
@@ -110,7 +110,7 @@ export const ConditionNode = ({ id, data }) => {
               position={Position.Right}
               id="else"
               style={{ top: getHandlePosition(conditions.length) }}
-              className="w-3 h-3 !bg-red-500 dark:!bg-red-400 border-2 border-white dark:border-slate-800"
+              className="w-3 h-3 !bg-red-500 dark:!bg-red-400 border-2 border-white dark:border-white/[0.15]"
               title="Else (no condition matched)"
             />
             {/* Handle labels — vertical strip on right edge */}
@@ -124,8 +124,8 @@ export const ConditionNode = ({ id, data }) => {
         ) : (
           <>
             {/* Legacy true/false handles */}
-            <Handle type="source" position={Position.Right} id="true" style={{ top: '33%' }} className="w-3 h-3 !bg-green-500 dark:!bg-green-400 border-2 border-white dark:border-slate-800" />
-            <Handle type="source" position={Position.Right} id="false" style={{ top: '67%' }} className="w-3 h-3 !bg-red-500 dark:!bg-red-400 border-2 border-white dark:border-slate-800" />
+            <Handle type="source" position={Position.Right} id="true" style={{ top: '33%' }} className="w-3 h-3 !bg-green-500 dark:!bg-green-400 border-2 border-white dark:border-white/[0.15]" />
+            <Handle type="source" position={Position.Right} id="false" style={{ top: '67%' }} className="w-3 h-3 !bg-red-500 dark:!bg-red-400 border-2 border-white dark:border-white/[0.15]" />
             <div className="absolute right-0 top-0 h-full flex flex-col justify-around pr-5 pointer-events-none">
               <span className="text-[9px] font-semibold text-green-600">true</span>
               <span className="text-[9px] font-semibold text-red-500">false</span>
@@ -159,8 +159,8 @@ export const ConditionNode = ({ id, data }) => {
 
 export const OutputNode = ({ id, data }) => (
   <div className="relative group">
-    <div className="px-4 py-3 border border-indigo-200/80 dark:border-indigo-700/60 rounded-2xl bg-gradient-to-br from-white to-indigo-50 dark:from-slate-800 dark:to-indigo-950/30 shadow-lg hover:shadow-xl hover:scale-[1.02] transition-all duration-200 backdrop-blur-sm min-w-[160px]">
-      <Handle type="target" position={Position.Left} className="w-3 h-3 !bg-gradient-to-br !from-indigo-400 !to-violet-500 border-2 border-white dark:border-slate-800 shadow-md" />
+    <div className="px-4 py-3 border border-indigo-200/80 dark:border-indigo-700/60 rounded-2xl bg-gradient-to-br from-white to-indigo-50 wf-node dark:from-slate-800 dark:to-indigo-950/30 shadow-lg hover:shadow-xl hover:scale-[1.02] transition-all duration-200 backdrop-blur-sm min-w-[160px]">
+      <Handle type="target" position={Position.Left} className="w-3 h-3 !bg-gradient-to-br !from-indigo-400 !to-violet-500 border-2 border-white dark:border-white/[0.15] shadow-md" />
       <div className="flex items-center gap-2.5 mb-2">
         <div className="p-2 rounded-xl bg-gradient-to-br from-indigo-500 to-violet-600 shadow-md shadow-indigo-500/30">
           <MessageSquare size={16} className="text-white" />
@@ -168,16 +168,16 @@ export const OutputNode = ({ id, data }) => (
         <strong className="text-sm font-semibold text-slate-800 dark:text-white">{data.label}</strong>
       </div>
       {data.output_value ? (
-        <div className="text-xs text-slate-600 dark:text-slate-300 bg-indigo-50 dark:bg-indigo-950/40 rounded-lg px-2.5 py-1.5 leading-relaxed line-clamp-3">
+        <div className="text-xs text-slate-600 dark:text-white/80 bg-indigo-50 dark:bg-white/[0.07] rounded-lg px-2.5 py-1.5 leading-relaxed line-clamp-3">
           {data.output_value}
         </div>
       ) : (
-        <div className="text-xs text-slate-500 dark:text-slate-400 font-medium flex items-center gap-1">
+        <div className="text-xs text-slate-500 dark:text-white/55 font-medium flex items-center gap-1">
           <span className="w-1.5 h-1.5 rounded-full bg-indigo-500"></span>
           Workflow Output
         </div>
       )}
-      <Handle type="source" position={Position.Right} id="output" className="w-3 h-3 !bg-slate-500 dark:!bg-slate-400 border-2 border-white dark:border-slate-800 shadow-md" />
+      <Handle type="source" position={Position.Right} id="output" className="w-3 h-3 !bg-slate-500 dark:!bg-white/50 border-2 border-white dark:border-white/[0.15] shadow-md" />
     </div>
     <AddNodeButton nodeId={id} handleId="output" position="right" />
   </div>
@@ -185,15 +185,15 @@ export const OutputNode = ({ id, data }) => (
 
 export const StartNode = ({ id, data }) => (
   <div className="relative group">
-    <div className="px-6 py-4 border-2 border-dashed border-emerald-300/80 dark:border-emerald-600/60 rounded-full bg-gradient-to-br from-emerald-50 via-white to-teal-50 dark:from-emerald-950/50 dark:via-slate-800 dark:to-teal-950/50 shadow-md hover:shadow-lg hover:scale-[1.03] transition-all duration-200 backdrop-blur-sm">
+    <div className="px-6 py-4 border-2 border-dashed border-emerald-300/80 dark:border-emerald-600/60 rounded-full bg-gradient-to-br from-emerald-50 via-white to-teal-50 dark:from-emerald-950/50 wf-node-trigger dark:via-slate-800 dark:to-teal-950/50 shadow-md hover:shadow-lg hover:scale-[1.03] transition-all duration-200 backdrop-blur-sm">
       <div className="flex flex-col items-center gap-1.5">
         <div className="flex items-center gap-2">
           <span className="w-2 h-2 rounded-full bg-gradient-to-br from-emerald-400 to-teal-500 animate-pulse"></span>
           <strong className="text-sm font-bold bg-gradient-to-r from-emerald-600 to-teal-600 dark:from-emerald-400 dark:to-teal-400 bg-clip-text text-transparent">{data.label}</strong>
         </div>
-        <div className="text-xs text-slate-500 dark:text-slate-400 font-medium">Workflow Start</div>
+        <div className="text-xs text-slate-500 dark:text-white/55 font-medium">Workflow Start</div>
       </div>
-      <Handle type="source" position={Position.Right} id="output" className="w-3.5 h-3.5 !bg-gradient-to-br !from-emerald-400 !to-teal-500 border-2 border-white dark:border-slate-800 shadow-md" />
+      <Handle type="source" position={Position.Right} id="output" className="w-3.5 h-3.5 !bg-gradient-to-br !from-emerald-400 !to-teal-500 border-2 border-white dark:border-white/[0.15] shadow-md" />
     </div>
     <AddNodeButton nodeId={id} handleId="output" position="right" />
   </div>
@@ -201,20 +201,20 @@ export const StartNode = ({ id, data }) => (
 
 export const ListenNode = ({ id, data }) => (
   <div className="relative group">
-    <div className="px-4 py-3 border border-cyan-200/80 dark:border-cyan-700/60 rounded-2xl bg-gradient-to-br from-white to-cyan-50 dark:from-slate-800 dark:to-cyan-950/30 shadow-lg hover:shadow-xl hover:scale-[1.02] transition-all duration-200 backdrop-blur-sm min-w-[160px]">
-      <Handle type="target" position={Position.Left} className="w-3 h-3 !bg-gradient-to-br !from-cyan-400 !to-sky-500 border-2 border-white dark:border-slate-800 shadow-md" />
+    <div className="px-4 py-3 border border-cyan-200/80 dark:border-cyan-700/60 rounded-2xl bg-gradient-to-br from-white to-cyan-50 wf-node dark:from-slate-800 dark:to-cyan-950/30 shadow-lg hover:shadow-xl hover:scale-[1.02] transition-all duration-200 backdrop-blur-sm min-w-[160px]">
+      <Handle type="target" position={Position.Left} className="w-3 h-3 !bg-gradient-to-br !from-cyan-400 !to-sky-500 border-2 border-white dark:border-white/[0.15] shadow-md" />
       <div className="flex items-center gap-2.5 mb-2">
         <div className="p-2 rounded-xl bg-gradient-to-br from-cyan-500 to-sky-600 shadow-md shadow-cyan-500/30">
           <Ear size={16} className="text-white" />
         </div>
         <strong className="text-sm font-semibold text-slate-800 dark:text-white">{data.label || 'Listen for Input'}</strong>
       </div>
-      <div className="text-xs text-slate-500 dark:text-slate-400 font-medium flex items-center gap-1">
+      <div className="text-xs text-slate-500 dark:text-white/55 font-medium flex items-center gap-1">
         <span className="w-1.5 h-1.5 rounded-full bg-cyan-500"></span>
         Pauses for user input
       </div>
-      <Handle type="source" position={Position.Right} id="output" className="w-3 h-3 !bg-slate-500 dark:!bg-slate-400 border-2 border-white dark:border-slate-800 shadow-md" />
-      <Handle type="source" position={Position.Bottom} id="error" className="w-3 h-3 !bg-gradient-to-br !from-red-400 !to-rose-500 border-2 border-white dark:border-slate-800 shadow-md" />
+      <Handle type="source" position={Position.Right} id="output" className="w-3 h-3 !bg-slate-500 dark:!bg-white/50 border-2 border-white dark:border-white/[0.15] shadow-md" />
+      <Handle type="source" position={Position.Bottom} id="error" className="w-3 h-3 !bg-gradient-to-br !from-red-400 !to-rose-500 border-2 border-white dark:border-white/[0.15] shadow-md" />
     </div>
     <AddNodeButton nodeId={id} handleId="output" position="right" />
     <AddNodeButton nodeId={id} handleId="error" position="bottom" />
@@ -223,19 +223,19 @@ export const ListenNode = ({ id, data }) => (
 
 export const PromptNode = ({ id, data }) => (
   <div className="relative group">
-    <div className="px-4 py-3 border border-yellow-200/80 dark:border-yellow-700/60 rounded-2xl bg-gradient-to-br from-white to-yellow-50 dark:from-slate-800 dark:to-yellow-950/30 shadow-md hover:shadow-lg hover:scale-[1.02] transition-all duration-200 backdrop-blur-sm min-w-[160px]">
-      <Handle type="target" position={Position.Left} className="w-3 h-3 !bg-gradient-to-br !from-yellow-400 !to-violet-500 border-2 border-white dark:border-slate-800 shadow-md" />
+    <div className="px-4 py-3 border border-yellow-200/80 dark:border-yellow-700/60 rounded-2xl bg-gradient-to-br from-white to-yellow-50 wf-node dark:from-slate-800 dark:to-yellow-950/30 shadow-md hover:shadow-lg hover:scale-[1.02] transition-all duration-200 backdrop-blur-sm min-w-[160px]">
+      <Handle type="target" position={Position.Left} className="w-3 h-3 !bg-gradient-to-br !from-yellow-400 !to-violet-500 border-2 border-white dark:border-white/[0.15] shadow-md" />
       <div className="flex items-center gap-2.5 mb-2">
         <div className="p-2 rounded-xl bg-gradient-to-br from-yellow-500 to-violet-600 shadow-md shadow-yellow-500/30">
           <HelpCircle size={16} className="text-white" />
         </div>
         <strong className="text-sm font-semibold text-slate-800 dark:text-white">{data.label || 'Prompt for Input'}</strong>
       </div>
-      <div className="text-xs text-slate-500 dark:text-slate-400 font-medium flex items-center gap-1">
+      <div className="text-xs text-slate-500 dark:text-white/55 font-medium flex items-center gap-1">
         <span className="w-1.5 h-1.5 rounded-full bg-yellow-500"></span>
         Asks user a question
       </div>
-      <Handle type="source" position={Position.Right} id="output" className="w-3 h-3 !bg-slate-500 dark:!bg-slate-400 border-2 border-white dark:border-slate-800 shadow-md" />
+      <Handle type="source" position={Position.Right} id="output" className="w-3 h-3 !bg-slate-500 dark:!bg-white/50 border-2 border-white dark:border-white/[0.15] shadow-md" />
     </div>
     <AddNodeButton nodeId={id} handleId="output" position="right" />
   </div>
@@ -243,20 +243,20 @@ export const PromptNode = ({ id, data }) => (
 
 export const KnowledgeNode = ({ id, data }) => (
   <div className="relative group">
-    <div className="px-4 py-3 border border-violet-200/80 dark:border-violet-700/60 rounded-2xl bg-gradient-to-br from-white to-violet-50 dark:from-slate-800 dark:to-violet-950/30 shadow-lg hover:shadow-xl hover:scale-[1.02] transition-all duration-200 backdrop-blur-sm min-w-[160px]">
-      <Handle type="target" position={Position.Left} className="w-3 h-3 !bg-gradient-to-br !from-violet-400 !to-purple-500 border-2 border-white dark:border-slate-800 shadow-md" />
+    <div className="px-4 py-3 border border-violet-200/80 dark:border-violet-700/60 rounded-2xl bg-gradient-to-br from-white to-violet-50 wf-node dark:from-slate-800 dark:to-violet-950/30 shadow-lg hover:shadow-xl hover:scale-[1.02] transition-all duration-200 backdrop-blur-sm min-w-[160px]">
+      <Handle type="target" position={Position.Left} className="w-3 h-3 !bg-gradient-to-br !from-violet-400 !to-purple-500 border-2 border-white dark:border-white/[0.15] shadow-md" />
       <div className="flex items-center gap-2.5 mb-2">
         <div className="p-2 rounded-xl bg-gradient-to-br from-violet-500 to-purple-600 shadow-md shadow-violet-500/30">
           <BookOpen size={16} className="text-white" />
         </div>
         <strong className="text-sm font-semibold text-slate-800 dark:text-white">{data.label || 'Knowledge Search'}</strong>
       </div>
-      <div className="text-xs text-slate-500 dark:text-slate-400 font-medium flex items-center gap-1">
+      <div className="text-xs text-slate-500 dark:text-white/55 font-medium flex items-center gap-1">
         <span className="w-1.5 h-1.5 rounded-full bg-violet-500"></span>
         Searches knowledge base
       </div>
-      <Handle type="source" position={Position.Right} id="output" className="w-3 h-3 !bg-slate-500 dark:!bg-slate-400 border-2 border-white dark:border-slate-800 shadow-md" />
-      <Handle type="source" position={Position.Bottom} id="error" className="w-3 h-3 !bg-gradient-to-br !from-red-400 !to-rose-500 border-2 border-white dark:border-slate-800 shadow-md" />
+      <Handle type="source" position={Position.Right} id="output" className="w-3 h-3 !bg-slate-500 dark:!bg-white/50 border-2 border-white dark:border-white/[0.15] shadow-md" />
+      <Handle type="source" position={Position.Bottom} id="error" className="w-3 h-3 !bg-gradient-to-br !from-red-400 !to-rose-500 border-2 border-white dark:border-white/[0.15] shadow-md" />
     </div>
     <AddNodeButton nodeId={id} handleId="output" position="right" />
     <AddNodeButton nodeId={id} handleId="error" position="bottom" />
@@ -265,20 +265,20 @@ export const KnowledgeNode = ({ id, data }) => (
 
 export const CodeNode = ({ id, data }) => (
   <div className="relative group">
-    <div className="px-4 py-3 border border-slate-300/80 dark:border-slate-600/60 rounded-2xl bg-gradient-to-br from-white to-slate-100 dark:from-slate-800 dark:to-slate-900/50 shadow-lg hover:shadow-xl hover:scale-[1.02] transition-all duration-200 backdrop-blur-sm min-w-[160px]">
-      <Handle type="target" position={Position.Left} className="w-3 h-3 !bg-gradient-to-br !from-slate-400 !to-gray-500 border-2 border-white dark:border-slate-800 shadow-md" />
+    <div className="px-4 py-3 border border-slate-300/80 dark:border-slate-600/60 rounded-2xl bg-gradient-to-br from-white to-slate-100 wf-node dark:from-slate-800 dark:to-slate-900/50 shadow-lg hover:shadow-xl hover:scale-[1.02] transition-all duration-200 backdrop-blur-sm min-w-[160px]">
+      <Handle type="target" position={Position.Left} className="w-3 h-3 !bg-gradient-to-br !from-slate-400 !to-gray-500 border-2 border-white dark:border-white/[0.15] shadow-md" />
       <div className="flex items-center gap-2.5 mb-2">
         <div className="p-2 rounded-xl bg-gradient-to-br from-slate-600 to-gray-700 shadow-md shadow-slate-500/30">
           <Code size={16} className="text-white" />
         </div>
         <strong className="text-sm font-semibold text-slate-800 dark:text-white">{data.label || 'Code Execution'}</strong>
       </div>
-      <div className="text-xs text-slate-500 dark:text-slate-400 font-medium flex items-center gap-1">
+      <div className="text-xs text-slate-500 dark:text-white/55 font-medium flex items-center gap-1">
         <span className="w-1.5 h-1.5 rounded-full bg-slate-500"></span>
         Executes Python code
       </div>
-      <Handle type="source" position={Position.Right} id="output" className="w-3 h-3 !bg-slate-500 dark:!bg-slate-400 border-2 border-white dark:border-slate-800 shadow-md" />
-      <Handle type="source" position={Position.Bottom} id="error" className="w-3 h-3 !bg-gradient-to-br !from-red-400 !to-rose-500 border-2 border-white dark:border-slate-800 shadow-md" />
+      <Handle type="source" position={Position.Right} id="output" className="w-3 h-3 !bg-slate-500 dark:!bg-white/50 border-2 border-white dark:border-white/[0.15] shadow-md" />
+      <Handle type="source" position={Position.Bottom} id="error" className="w-3 h-3 !bg-gradient-to-br !from-red-400 !to-rose-500 border-2 border-white dark:border-white/[0.15] shadow-md" />
     </div>
     <AddNodeButton nodeId={id} handleId="output" position="right" />
     <AddNodeButton nodeId={id} handleId="error" position="bottom" />
@@ -287,20 +287,20 @@ export const CodeNode = ({ id, data }) => (
 
 export const DataManipulationNode = ({ id, data }) => (
   <div className="relative group">
-    <div className="px-4 py-3 border border-sky-200/80 dark:border-sky-700/60 rounded-2xl bg-gradient-to-br from-white to-sky-50 dark:from-slate-800 dark:to-sky-950/30 shadow-lg hover:shadow-xl hover:scale-[1.02] transition-all duration-200 backdrop-blur-sm min-w-[160px]">
-      <Handle type="target" position={Position.Left} className="w-3 h-3 !bg-gradient-to-br !from-sky-400 !to-blue-500 border-2 border-white dark:border-slate-800 shadow-md" />
+    <div className="px-4 py-3 border border-sky-200/80 dark:border-sky-700/60 rounded-2xl bg-gradient-to-br from-white to-sky-50 wf-node dark:from-slate-800 dark:to-sky-950/30 shadow-lg hover:shadow-xl hover:scale-[1.02] transition-all duration-200 backdrop-blur-sm min-w-[160px]">
+      <Handle type="target" position={Position.Left} className="w-3 h-3 !bg-gradient-to-br !from-sky-400 !to-blue-500 border-2 border-white dark:border-white/[0.15] shadow-md" />
       <div className="flex items-center gap-2.5 mb-2">
         <div className="p-2 rounded-xl bg-gradient-to-br from-sky-500 to-blue-600 shadow-md shadow-sky-500/30">
           <SquareStack size={16} className="text-white" />
         </div>
         <strong className="text-sm font-semibold text-slate-800 dark:text-white">{data.label || 'Data Manipulation'}</strong>
       </div>
-      <div className="text-xs text-slate-500 dark:text-slate-400 font-medium flex items-center gap-1">
+      <div className="text-xs text-slate-500 dark:text-white/55 font-medium flex items-center gap-1">
         <span className="w-1.5 h-1.5 rounded-full bg-sky-500"></span>
         Transforms data
       </div>
-      <Handle type="source" position={Position.Right} id="output" className="w-3 h-3 !bg-slate-500 dark:!bg-slate-400 border-2 border-white dark:border-slate-800 shadow-md" />
-      <Handle type="source" position={Position.Bottom} id="error" className="w-3 h-3 !bg-gradient-to-br !from-red-400 !to-rose-500 border-2 border-white dark:border-slate-800 shadow-md" />
+      <Handle type="source" position={Position.Right} id="output" className="w-3 h-3 !bg-slate-500 dark:!bg-white/50 border-2 border-white dark:border-white/[0.15] shadow-md" />
+      <Handle type="source" position={Position.Bottom} id="error" className="w-3 h-3 !bg-gradient-to-br !from-red-400 !to-rose-500 border-2 border-white dark:border-white/[0.15] shadow-md" />
     </div>
     <AddNodeButton nodeId={id} handleId="output" position="right" />
     <AddNodeButton nodeId={id} handleId="error" position="bottom" />
@@ -309,20 +309,20 @@ export const DataManipulationNode = ({ id, data }) => (
 
 export const HttpRequestNode = ({ id, data }) => (
   <div className="relative group">
-    <div className="px-4 py-3 border border-teal-200/80 dark:border-teal-700/60 rounded-2xl bg-gradient-to-br from-white to-teal-50 dark:from-slate-800 dark:to-teal-950/30 shadow-lg hover:shadow-xl hover:scale-[1.02] transition-all duration-200 backdrop-blur-sm min-w-[160px]">
-      <Handle type="target" position={Position.Left} className="w-3 h-3 !bg-gradient-to-br !from-teal-400 !to-emerald-500 border-2 border-white dark:border-slate-800 shadow-md" />
+    <div className="px-4 py-3 border border-teal-200/80 dark:border-teal-700/60 rounded-2xl bg-gradient-to-br from-white to-teal-50 wf-node dark:from-slate-800 dark:to-teal-950/30 shadow-lg hover:shadow-xl hover:scale-[1.02] transition-all duration-200 backdrop-blur-sm min-w-[160px]">
+      <Handle type="target" position={Position.Left} className="w-3 h-3 !bg-gradient-to-br !from-teal-400 !to-emerald-500 border-2 border-white dark:border-white/[0.15] shadow-md" />
       <div className="flex items-center gap-2.5 mb-2">
         <div className="p-2 rounded-xl bg-gradient-to-br from-teal-500 to-emerald-600 shadow-md shadow-teal-500/30">
           <Globe size={16} className="text-white" />
         </div>
         <strong className="text-sm font-semibold text-slate-800 dark:text-white">{data.label || 'HTTP Request'}</strong>
       </div>
-      <div className="text-xs text-slate-500 dark:text-slate-400 font-medium flex items-center gap-1">
+      <div className="text-xs text-slate-500 dark:text-white/55 font-medium flex items-center gap-1">
         <span className="w-1.5 h-1.5 rounded-full bg-teal-500"></span>
         Makes HTTP request
       </div>
-      <Handle type="source" position={Position.Right} id="output" className="w-3 h-3 !bg-slate-500 dark:!bg-slate-400 border-2 border-white dark:border-slate-800 shadow-md" />
-      <Handle type="source" position={Position.Bottom} id="error" className="w-3 h-3 !bg-gradient-to-br !from-red-400 !to-rose-500 border-2 border-white dark:border-slate-800 shadow-md" />
+      <Handle type="source" position={Position.Right} id="output" className="w-3 h-3 !bg-slate-500 dark:!bg-white/50 border-2 border-white dark:border-white/[0.15] shadow-md" />
+      <Handle type="source" position={Position.Bottom} id="error" className="w-3 h-3 !bg-gradient-to-br !from-red-400 !to-rose-500 border-2 border-white dark:border-white/[0.15] shadow-md" />
     </div>
     <AddNodeButton nodeId={id} handleId="output" position="right" />
     <AddNodeButton nodeId={id} handleId="error" position="bottom" />
@@ -331,19 +331,19 @@ export const HttpRequestNode = ({ id, data }) => (
 
 export const FormNode = ({ id, data }) => (
   <div className="relative group">
-    <div className="px-4 py-3 border border-purple-200/80 dark:border-purple-700/60 rounded-2xl bg-gradient-to-br from-white to-purple-50 dark:from-slate-800 dark:to-purple-950/30 shadow-lg hover:shadow-xl hover:scale-[1.02] transition-all duration-200 backdrop-blur-sm min-w-[160px]">
-      <Handle type="target" position={Position.Left} className="w-3 h-3 !bg-gradient-to-br !from-purple-400 !to-fuchsia-500 border-2 border-white dark:border-slate-800 shadow-md" />
+    <div className="px-4 py-3 border border-purple-200/80 dark:border-purple-700/60 rounded-2xl bg-gradient-to-br from-white to-purple-50 wf-node dark:from-slate-800 dark:to-purple-950/30 shadow-lg hover:shadow-xl hover:scale-[1.02] transition-all duration-200 backdrop-blur-sm min-w-[160px]">
+      <Handle type="target" position={Position.Left} className="w-3 h-3 !bg-gradient-to-br !from-purple-400 !to-fuchsia-500 border-2 border-white dark:border-white/[0.15] shadow-md" />
       <div className="flex items-center gap-2.5 mb-2">
         <div className="p-2 rounded-xl bg-gradient-to-br from-purple-500 to-fuchsia-600 shadow-md shadow-purple-500/30">
           <ClipboardList size={16} className="text-white" />
         </div>
         <strong className="text-sm font-semibold text-slate-800 dark:text-white">{data.label || 'Display Form'}</strong>
       </div>
-      <div className="text-xs text-slate-500 dark:text-slate-400 font-medium flex items-center gap-1">
+      <div className="text-xs text-slate-500 dark:text-white/55 font-medium flex items-center gap-1">
         <span className="w-1.5 h-1.5 rounded-full bg-purple-500"></span>
         Pauses for form input
       </div>
-      <Handle type="source" position={Position.Right} id="output" className="w-3 h-3 !bg-slate-500 dark:!bg-slate-400 border-2 border-white dark:border-slate-800 shadow-md" />
+      <Handle type="source" position={Position.Right} id="output" className="w-3 h-3 !bg-slate-500 dark:!bg-white/50 border-2 border-white dark:border-white/[0.15] shadow-md" />
     </div>
     <AddNodeButton nodeId={id} handleId="output" position="right" />
   </div>
@@ -355,22 +355,22 @@ export const FormNode = ({ id, data }) => (
 
 export const IntentRouterNode = ({ id, data }) => (
   <div className="relative group">
-    <div className="px-4 py-3 border border-violet-200/80 dark:border-violet-700/60 rounded-2xl bg-gradient-to-br from-white to-violet-50 dark:from-slate-800 dark:to-violet-950/30 shadow-lg hover:shadow-xl hover:scale-[1.02] transition-all duration-200 backdrop-blur-sm min-w-[160px]">
-      <Handle type="target" position={Position.Left} className="w-3 h-3 !bg-gradient-to-br !from-violet-400 !to-purple-500 border-2 border-white dark:border-slate-800 shadow-md" />
+    <div className="px-4 py-3 border border-violet-200/80 dark:border-violet-700/60 rounded-2xl bg-gradient-to-br from-white to-violet-50 wf-node dark:from-slate-800 dark:to-violet-950/30 shadow-lg hover:shadow-xl hover:scale-[1.02] transition-all duration-200 backdrop-blur-sm min-w-[160px]">
+      <Handle type="target" position={Position.Left} className="w-3 h-3 !bg-gradient-to-br !from-violet-400 !to-purple-500 border-2 border-white dark:border-white/[0.15] shadow-md" />
       <div className="flex items-center gap-2.5 mb-2">
         <div className="p-2 rounded-xl bg-gradient-to-br from-violet-500 to-purple-600 shadow-md shadow-violet-500/30">
           <Target size={16} className="text-white" />
         </div>
         <strong className="text-sm font-semibold text-slate-800 dark:text-white">{data.label || 'Intent Router'}</strong>
       </div>
-      <div className="text-xs text-slate-500 dark:text-slate-400 font-medium flex items-center gap-1">
+      <div className="text-xs text-slate-500 dark:text-white/55 font-medium flex items-center gap-1">
         <span className="w-1.5 h-1.5 rounded-full bg-violet-500"></span>
         Routes by detected intent
       </div>
       {/* Multiple output handles for different intent routes */}
-      <Handle type="source" position={Position.Right} id="route1" style={{ top: '25%' }} className="w-3 h-3 !bg-gradient-to-br !from-violet-400 !to-purple-500 border-2 border-white dark:border-slate-800 shadow-md" />
-      <Handle type="source" position={Position.Right} id="default" style={{ top: '50%' }} className="w-3 h-3 !bg-slate-500 dark:!bg-slate-400 border-2 border-white dark:border-slate-800 shadow-md" />
-      <Handle type="source" position={Position.Right} id="route2" style={{ top: '75%' }} className="w-3 h-3 !bg-gradient-to-br !from-purple-400 !to-fuchsia-500 border-2 border-white dark:border-slate-800 shadow-md" />
+      <Handle type="source" position={Position.Right} id="route1" style={{ top: '25%' }} className="w-3 h-3 !bg-gradient-to-br !from-violet-400 !to-purple-500 border-2 border-white dark:border-white/[0.15] shadow-md" />
+      <Handle type="source" position={Position.Right} id="default" style={{ top: '50%' }} className="w-3 h-3 !bg-slate-500 dark:!bg-white/50 border-2 border-white dark:border-white/[0.15] shadow-md" />
+      <Handle type="source" position={Position.Right} id="route2" style={{ top: '75%' }} className="w-3 h-3 !bg-gradient-to-br !from-purple-400 !to-fuchsia-500 border-2 border-white dark:border-white/[0.15] shadow-md" />
       <div className="absolute right-0 top-0 h-full flex flex-col justify-around pr-5 pointer-events-none">
         <span className="text-[9px] font-semibold text-violet-500">r1</span>
         <span className="text-[9px] font-semibold text-slate-400">def</span>
@@ -385,20 +385,20 @@ export const IntentRouterNode = ({ id, data }) => (
 
 export const EntityCollectorNode = ({ id, data }) => (
   <div className="relative group">
-    <div className="px-4 py-3 border border-rose-200/80 dark:border-rose-700/60 rounded-2xl bg-gradient-to-br from-white to-rose-50 dark:from-slate-800 dark:to-rose-950/30 shadow-lg hover:shadow-xl hover:scale-[1.02] transition-all duration-200 backdrop-blur-sm min-w-[160px]">
-      <Handle type="target" position={Position.Left} className="w-3 h-3 !bg-gradient-to-br !from-rose-400 !to-pink-500 border-2 border-white dark:border-slate-800 shadow-md" />
+    <div className="px-4 py-3 border border-rose-200/80 dark:border-rose-700/60 rounded-2xl bg-gradient-to-br from-white to-rose-50 wf-node dark:from-slate-800 dark:to-rose-950/30 shadow-lg hover:shadow-xl hover:scale-[1.02] transition-all duration-200 backdrop-blur-sm min-w-[160px]">
+      <Handle type="target" position={Position.Left} className="w-3 h-3 !bg-gradient-to-br !from-rose-400 !to-pink-500 border-2 border-white dark:border-white/[0.15] shadow-md" />
       <div className="flex items-center gap-2.5 mb-2">
         <div className="p-2 rounded-xl bg-gradient-to-br from-rose-500 to-pink-600 shadow-md shadow-rose-500/30">
           <Notebook size={16} className="text-white" />
         </div>
         <strong className="text-sm font-semibold text-slate-800 dark:text-white">{data.label || 'Collect Entities'}</strong>
       </div>
-      <div className="text-xs text-slate-500 dark:text-slate-400 font-medium flex items-center gap-1">
+      <div className="text-xs text-slate-500 dark:text-white/55 font-medium flex items-center gap-1">
         <span className="w-1.5 h-1.5 rounded-full bg-rose-500"></span>
         Gathers required information
       </div>
-      <Handle type="source" position={Position.Right} id="complete" className="w-3 h-3 !bg-gradient-to-br !from-green-400 !to-emerald-500 border-2 border-white dark:border-slate-800 shadow-md" />
-      <Handle type="source" position={Position.Bottom} id="partial" className="w-3 h-3 !bg-gradient-to-br !from-violet-400 !to-orange-500 border-2 border-white dark:border-slate-800 shadow-md" />
+      <Handle type="source" position={Position.Right} id="complete" className="w-3 h-3 !bg-gradient-to-br !from-green-400 !to-emerald-500 border-2 border-white dark:border-white/[0.15] shadow-md" />
+      <Handle type="source" position={Position.Bottom} id="partial" className="w-3 h-3 !bg-gradient-to-br !from-violet-400 !to-orange-500 border-2 border-white dark:border-white/[0.15] shadow-md" />
     </div>
     <AddNodeButton nodeId={id} handleId="complete" position="right" />
     <AddNodeButton nodeId={id} handleId="partial" position="bottom" />
@@ -407,20 +407,20 @@ export const EntityCollectorNode = ({ id, data }) => (
 
 export const CheckEntityNode = ({ id, data }) => (
   <div className="relative group">
-    <div className="px-4 py-3 border border-emerald-200/80 dark:border-emerald-700/60 rounded-2xl bg-gradient-to-br from-white to-emerald-50 dark:from-slate-800 dark:to-emerald-950/30 shadow-lg hover:shadow-xl hover:scale-[1.02] transition-all duration-200 backdrop-blur-sm min-w-[160px]">
-      <Handle type="target" position={Position.Left} className="w-3 h-3 !bg-gradient-to-br !from-emerald-400 !to-teal-500 border-2 border-white dark:border-slate-800 shadow-md" />
+    <div className="px-4 py-3 border border-emerald-200/80 dark:border-emerald-700/60 rounded-2xl bg-gradient-to-br from-white to-emerald-50 wf-node dark:from-slate-800 dark:to-emerald-950/30 shadow-lg hover:shadow-xl hover:scale-[1.02] transition-all duration-200 backdrop-blur-sm min-w-[160px]">
+      <Handle type="target" position={Position.Left} className="w-3 h-3 !bg-gradient-to-br !from-emerald-400 !to-teal-500 border-2 border-white dark:border-white/[0.15] shadow-md" />
       <div className="flex items-center gap-2.5 mb-2">
         <div className="p-2 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 shadow-md shadow-emerald-500/30">
           <CheckCircle size={16} className="text-white" />
         </div>
         <strong className="text-sm font-semibold text-slate-800 dark:text-white">{data.label || 'Check Entity'}</strong>
       </div>
-      <div className="text-xs text-slate-500 dark:text-slate-400 font-medium flex items-center gap-1">
+      <div className="text-xs text-slate-500 dark:text-white/55 font-medium flex items-center gap-1">
         <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
         Validates entity exists
       </div>
-      <Handle type="source" position={Position.Right} id="true" style={{ top: '33%' }} className="w-3 h-3 !bg-gradient-to-br !from-green-400 !to-emerald-500 border-2 border-white dark:border-slate-800 shadow-md" />
-      <Handle type="source" position={Position.Right} id="false" style={{ top: '67%' }} className="w-3 h-3 !bg-gradient-to-br !from-red-400 !to-rose-500 border-2 border-white dark:border-slate-800 shadow-md" />
+      <Handle type="source" position={Position.Right} id="true" style={{ top: '33%' }} className="w-3 h-3 !bg-gradient-to-br !from-green-400 !to-emerald-500 border-2 border-white dark:border-white/[0.15] shadow-md" />
+      <Handle type="source" position={Position.Right} id="false" style={{ top: '67%' }} className="w-3 h-3 !bg-gradient-to-br !from-red-400 !to-rose-500 border-2 border-white dark:border-white/[0.15] shadow-md" />
       <div className="absolute right-0 top-0 h-full flex flex-col justify-around pr-5 pointer-events-none">
         <span className="text-[9px] font-semibold text-green-600">true</span>
         <span className="text-[9px] font-semibold text-red-500">false</span>
@@ -433,19 +433,19 @@ export const CheckEntityNode = ({ id, data }) => (
 
 export const UpdateContextNode = ({ id, data }) => (
   <div className="relative group">
-    <div className="px-4 py-3 border border-blue-200/80 dark:border-blue-700/60 rounded-2xl bg-gradient-to-br from-white to-blue-50 dark:from-slate-800 dark:to-blue-950/30 shadow-lg hover:shadow-xl hover:scale-[1.02] transition-all duration-200 backdrop-blur-sm min-w-[160px]">
-      <Handle type="target" position={Position.Left} className="w-3 h-3 !bg-gradient-to-br !from-blue-400 !to-cyan-500 border-2 border-white dark:border-slate-800 shadow-md" />
+    <div className="px-4 py-3 border border-blue-200/80 dark:border-blue-700/60 rounded-2xl bg-gradient-to-br from-white to-blue-50 wf-node dark:from-slate-800 dark:to-blue-950/30 shadow-lg hover:shadow-xl hover:scale-[1.02] transition-all duration-200 backdrop-blur-sm min-w-[160px]">
+      <Handle type="target" position={Position.Left} className="w-3 h-3 !bg-gradient-to-br !from-blue-400 !to-cyan-500 border-2 border-white dark:border-white/[0.15] shadow-md" />
       <div className="flex items-center gap-2.5 mb-2">
         <div className="p-2 rounded-xl bg-gradient-to-br from-blue-500 to-cyan-600 shadow-md shadow-blue-500/30">
           <Database size={16} className="text-white" />
         </div>
         <strong className="text-sm font-semibold text-slate-800 dark:text-white">{data.label || 'Update Context'}</strong>
       </div>
-      <div className="text-xs text-slate-500 dark:text-slate-400 font-medium flex items-center gap-1">
+      <div className="text-xs text-slate-500 dark:text-white/55 font-medium flex items-center gap-1">
         <span className="w-1.5 h-1.5 rounded-full bg-blue-500"></span>
         Sets context variables
       </div>
-      <Handle type="source" position={Position.Right} id="output" className="w-3 h-3 !bg-slate-500 dark:!bg-slate-400 border-2 border-white dark:border-slate-800 shadow-md" />
+      <Handle type="source" position={Position.Right} id="output" className="w-3 h-3 !bg-slate-500 dark:!bg-white/50 border-2 border-white dark:border-white/[0.15] shadow-md" />
     </div>
     <AddNodeButton nodeId={id} handleId="output" position="right" />
   </div>
@@ -453,19 +453,19 @@ export const UpdateContextNode = ({ id, data }) => (
 
 export const TagConversationNode = ({ id, data }) => (
   <div className="relative group">
-    <div className="px-4 py-3 border border-fuchsia-200/80 dark:border-fuchsia-700/60 rounded-2xl bg-gradient-to-br from-white to-fuchsia-50 dark:from-slate-800 dark:to-fuchsia-950/30 shadow-lg hover:shadow-xl hover:scale-[1.02] transition-all duration-200 backdrop-blur-sm min-w-[160px]">
-      <Handle type="target" position={Position.Left} className="w-3 h-3 !bg-gradient-to-br !from-fuchsia-400 !to-pink-500 border-2 border-white dark:border-slate-800 shadow-md" />
+    <div className="px-4 py-3 border border-fuchsia-200/80 dark:border-fuchsia-700/60 rounded-2xl bg-gradient-to-br from-white to-fuchsia-50 wf-node dark:from-slate-800 dark:to-fuchsia-950/30 shadow-lg hover:shadow-xl hover:scale-[1.02] transition-all duration-200 backdrop-blur-sm min-w-[160px]">
+      <Handle type="target" position={Position.Left} className="w-3 h-3 !bg-gradient-to-br !from-fuchsia-400 !to-pink-500 border-2 border-white dark:border-white/[0.15] shadow-md" />
       <div className="flex items-center gap-2.5 mb-2">
         <div className="p-2 rounded-xl bg-gradient-to-br from-fuchsia-500 to-pink-600 shadow-md shadow-fuchsia-500/30">
           <Tag size={16} className="text-white" />
         </div>
         <strong className="text-sm font-semibold text-slate-800 dark:text-white">{data.label || 'Tag Conversation'}</strong>
       </div>
-      <div className="text-xs text-slate-500 dark:text-slate-400 font-medium flex items-center gap-1">
+      <div className="text-xs text-slate-500 dark:text-white/55 font-medium flex items-center gap-1">
         <span className="w-1.5 h-1.5 rounded-full bg-fuchsia-500"></span>
         Adds organizational tags
       </div>
-      <Handle type="source" position={Position.Right} id="output" className="w-3 h-3 !bg-slate-500 dark:!bg-slate-400 border-2 border-white dark:border-slate-800 shadow-md" />
+      <Handle type="source" position={Position.Right} id="output" className="w-3 h-3 !bg-slate-500 dark:!bg-white/50 border-2 border-white dark:border-white/[0.15] shadow-md" />
     </div>
     <AddNodeButton nodeId={id} handleId="output" position="right" />
   </div>
@@ -473,19 +473,19 @@ export const TagConversationNode = ({ id, data }) => (
 
 export const AssignToAgentNode = ({ id, data }) => (
   <div className="relative group">
-    <div className="px-4 py-3 border border-orange-200/80 dark:border-orange-700/60 rounded-2xl bg-gradient-to-br from-white to-orange-50 dark:from-slate-800 dark:to-orange-950/30 shadow-lg hover:shadow-xl hover:scale-[1.02] transition-all duration-200 backdrop-blur-sm min-w-[160px]">
-      <Handle type="target" position={Position.Left} className="w-3 h-3 !bg-gradient-to-br !from-orange-400 !to-violet-500 border-2 border-white dark:border-slate-800 shadow-md" />
+    <div className="px-4 py-3 border border-orange-200/80 dark:border-orange-700/60 rounded-2xl bg-gradient-to-br from-white to-orange-50 wf-node dark:from-slate-800 dark:to-orange-950/30 shadow-lg hover:shadow-xl hover:scale-[1.02] transition-all duration-200 backdrop-blur-sm min-w-[160px]">
+      <Handle type="target" position={Position.Left} className="w-3 h-3 !bg-gradient-to-br !from-orange-400 !to-violet-500 border-2 border-white dark:border-white/[0.15] shadow-md" />
       <div className="flex items-center gap-2.5 mb-2">
         <div className="p-2 rounded-xl bg-gradient-to-br from-orange-500 to-violet-600 shadow-md shadow-orange-500/30">
           <UserPlus size={16} className="text-white" />
         </div>
         <strong className="text-sm font-semibold text-slate-800 dark:text-white">{data.label || 'Assign to Agent'}</strong>
       </div>
-      <div className="text-xs text-slate-500 dark:text-slate-400 font-medium flex items-center gap-1">
+      <div className="text-xs text-slate-500 dark:text-white/55 font-medium flex items-center gap-1">
         <span className="w-1.5 h-1.5 rounded-full bg-orange-500"></span>
         Transfers to human agent
       </div>
-      <Handle type="source" position={Position.Right} id="output" className="w-3 h-3 !bg-slate-500 dark:!bg-slate-400 border-2 border-white dark:border-slate-800 shadow-md" />
+      <Handle type="source" position={Position.Right} id="output" className="w-3 h-3 !bg-slate-500 dark:!bg-white/50 border-2 border-white dark:border-white/[0.15] shadow-md" />
     </div>
     <AddNodeButton nodeId={id} handleId="output" position="right" />
   </div>
@@ -493,19 +493,19 @@ export const AssignToAgentNode = ({ id, data }) => (
 
 export const SetStatusNode = ({ id, data }) => (
   <div className="relative group">
-    <div className="px-4 py-3 border border-lime-200/80 dark:border-lime-700/60 rounded-2xl bg-gradient-to-br from-white to-lime-50 dark:from-slate-800 dark:to-lime-950/30 shadow-lg hover:shadow-xl hover:scale-[1.02] transition-all duration-200 backdrop-blur-sm min-w-[160px]">
-      <Handle type="target" position={Position.Left} className="w-3 h-3 !bg-gradient-to-br !from-lime-400 !to-green-500 border-2 border-white dark:border-slate-800 shadow-md" />
+    <div className="px-4 py-3 border border-lime-200/80 dark:border-lime-700/60 rounded-2xl bg-gradient-to-br from-white to-lime-50 wf-node dark:from-slate-800 dark:to-lime-950/30 shadow-lg hover:shadow-xl hover:scale-[1.02] transition-all duration-200 backdrop-blur-sm min-w-[160px]">
+      <Handle type="target" position={Position.Left} className="w-3 h-3 !bg-gradient-to-br !from-lime-400 !to-green-500 border-2 border-white dark:border-white/[0.15] shadow-md" />
       <div className="flex items-center gap-2.5 mb-2">
         <div className="p-2 rounded-xl bg-gradient-to-br from-lime-500 to-green-600 shadow-md shadow-lime-500/30">
           <Activity size={16} className="text-white" />
         </div>
         <strong className="text-sm font-semibold text-slate-800 dark:text-white">{data.label || 'Set Status'}</strong>
       </div>
-      <div className="text-xs text-slate-500 dark:text-slate-400 font-medium flex items-center gap-1">
+      <div className="text-xs text-slate-500 dark:text-white/55 font-medium flex items-center gap-1">
         <span className="w-1.5 h-1.5 rounded-full bg-lime-500"></span>
         Changes conversation status
       </div>
-      <Handle type="source" position={Position.Right} id="output" className="w-3 h-3 !bg-slate-500 dark:!bg-slate-400 border-2 border-white dark:border-slate-800 shadow-md" />
+      <Handle type="source" position={Position.Right} id="output" className="w-3 h-3 !bg-slate-500 dark:!bg-white/50 border-2 border-white dark:border-white/[0.15] shadow-md" />
     </div>
     <AddNodeButton nodeId={id} handleId="output" position="right" />
   </div>
@@ -513,20 +513,20 @@ export const SetStatusNode = ({ id, data }) => (
 
 export const ChannelRedirectNode = ({ id, data }) => (
   <div className="relative group">
-    <div className="px-4 py-3 border border-rose-200/80 dark:border-rose-700/60 rounded-2xl bg-gradient-to-br from-white to-rose-50 dark:from-slate-800 dark:to-rose-950/30 shadow-lg hover:shadow-xl hover:scale-[1.02] transition-all duration-200 backdrop-blur-sm min-w-[160px]">
-      <Handle type="target" position={Position.Left} className="w-3 h-3 !bg-gradient-to-br !from-rose-400 !to-pink-500 border-2 border-white dark:border-slate-800 shadow-md" />
+    <div className="px-4 py-3 border border-rose-200/80 dark:border-rose-700/60 rounded-2xl bg-gradient-to-br from-white to-rose-50 wf-node dark:from-slate-800 dark:to-rose-950/30 shadow-lg hover:shadow-xl hover:scale-[1.02] transition-all duration-200 backdrop-blur-sm min-w-[160px]">
+      <Handle type="target" position={Position.Left} className="w-3 h-3 !bg-gradient-to-br !from-rose-400 !to-pink-500 border-2 border-white dark:border-white/[0.15] shadow-md" />
       <div className="flex items-center gap-2.5 mb-2">
         <div className="p-2 rounded-xl bg-gradient-to-br from-rose-500 to-pink-600 shadow-md shadow-rose-500/30">
           <ArrowRightLeft size={16} className="text-white" />
         </div>
         <strong className="text-sm font-semibold text-slate-800 dark:text-white">{data.label || 'Channel Redirect'}</strong>
       </div>
-      <div className="text-xs text-slate-500 dark:text-slate-400 font-medium flex items-center gap-1">
+      <div className="text-xs text-slate-500 dark:text-white/55 font-medium flex items-center gap-1">
         <span className="w-1.5 h-1.5 rounded-full bg-rose-500"></span>
         {data.target_channel ? `Redirect to ${data.target_channel}` : 'Redirects to another channel'}
       </div>
-      <Handle type="source" position={Position.Right} id="output" className="w-3 h-3 !bg-slate-500 dark:!bg-slate-400 border-2 border-white dark:border-slate-800 shadow-md" />
-      <Handle type="source" position={Position.Bottom} id="error" className="w-3 h-3 !bg-gradient-to-br !from-red-400 !to-rose-500 border-2 border-white dark:border-slate-800 shadow-md" />
+      <Handle type="source" position={Position.Right} id="output" className="w-3 h-3 !bg-slate-500 dark:!bg-white/50 border-2 border-white dark:border-white/[0.15] shadow-md" />
+      <Handle type="source" position={Position.Bottom} id="error" className="w-3 h-3 !bg-gradient-to-br !from-red-400 !to-rose-500 border-2 border-white dark:border-white/[0.15] shadow-md" />
     </div>
     <AddNodeButton nodeId={id} handleId="output" position="right" />
     <AddNodeButton nodeId={id} handleId="error" position="bottom" />
@@ -556,16 +556,16 @@ export const QuestionClassifierNode = ({ id, data }) => {
 
   return (
     <div className="relative group">
-      <div className={`px-4 py-3 border border-violet-200/80 dark:border-violet-700/60 rounded-2xl bg-gradient-to-br from-white to-violet-50 dark:from-slate-800 dark:to-violet-950/30 shadow-lg hover:shadow-xl hover:scale-[1.02] transition-all duration-200 backdrop-blur-sm ${hasClasses ? 'min-w-[180px]' : 'min-w-[160px]'}`}
+      <div className={`px-4 py-3 border border-violet-200/80 dark:border-violet-700/60 rounded-2xl bg-gradient-to-br from-white to-violet-50 wf-node dark:from-slate-800 dark:to-violet-950/30 shadow-lg hover:shadow-xl hover:scale-[1.02] transition-all duration-200 backdrop-blur-sm ${hasClasses ? 'min-w-[180px]' : 'min-w-[160px]'}`}
            style={{ minWidth: hasClasses ? `${Math.max(180, totalHandles * 60)}px` : undefined }}>
-        <Handle type="target" position={Position.Left} className="w-3 h-3 !bg-gradient-to-br !from-violet-400 !to-yellow-500 border-2 border-white dark:border-slate-800 shadow-md" />
+        <Handle type="target" position={Position.Left} className="w-3 h-3 !bg-gradient-to-br !from-violet-400 !to-yellow-500 border-2 border-white dark:border-white/[0.15] shadow-md" />
         <div className="flex items-center gap-2.5 mb-2">
           <div className="p-2 rounded-xl bg-gradient-to-br from-violet-500 to-yellow-600 shadow-md shadow-violet-500/30">
             <HelpCircle size={16} className="text-white" />
           </div>
           <strong className="text-sm font-semibold text-slate-800 dark:text-white">{data.label || 'Question Classifier'}</strong>
         </div>
-        <div className="text-xs text-slate-500 dark:text-slate-400 font-medium flex items-center gap-1">
+        <div className="text-xs text-slate-500 dark:text-white/55 font-medium flex items-center gap-1">
           <span className="w-1.5 h-1.5 rounded-full bg-violet-500"></span>
           {hasClasses ? `Classifies into ${classes.length} classes` : 'Classifies using LLM'}
         </div>
@@ -580,7 +580,7 @@ export const QuestionClassifierNode = ({ id, data }) => {
                 position={Position.Right}
                 id={cls.name}
                 style={{ top: getHandlePosition(index) }}
-                className={`w-3 h-3 ${CLASSIFIER_COLORS[index % CLASSIFIER_COLORS.length].bg} border-2 border-white dark:border-slate-800 shadow-md`}
+                className={`w-3 h-3 ${CLASSIFIER_COLORS[index % CLASSIFIER_COLORS.length].bg} border-2 border-white dark:border-white/[0.15] shadow-md`}
                 title={cls.description || cls.name}
               />
             ))}
@@ -590,7 +590,7 @@ export const QuestionClassifierNode = ({ id, data }) => {
               position={Position.Right}
               id="default"
               style={{ top: getHandlePosition(classes.length) }}
-              className="w-3 h-3 !bg-slate-500 dark:!bg-slate-400 border-2 border-white dark:border-slate-800 shadow-md"
+              className="w-3 h-3 !bg-slate-500 dark:!bg-white/50 border-2 border-white dark:border-white/[0.15] shadow-md"
               title="Default (no class matched)"
             />
             {/* Handle labels — vertical strip on right edge */}
@@ -600,13 +600,13 @@ export const QuestionClassifierNode = ({ id, data }) => {
                   {cls.name.length > 7 ? cls.name.substring(0, 5) + '..' : cls.name}
                 </span>
               ))}
-              <span className="text-[9px] font-semibold text-slate-500 dark:text-slate-400">def</span>
+              <span className="text-[9px] font-semibold text-slate-500 dark:text-white/55">def</span>
             </div>
           </>
         ) : (
           <>
             {/* Default output handle when no classes configured */}
-            <Handle type="source" position={Position.Bottom} id="default" className="w-3 h-3 !bg-slate-500 dark:!bg-slate-400 border-2 border-white dark:border-slate-800 shadow-md" />
+            <Handle type="source" position={Position.Bottom} id="default" className="w-3 h-3 !bg-slate-500 dark:!bg-white/50 border-2 border-white dark:border-white/[0.15] shadow-md" />
           </>
         )}
       </div>
@@ -637,20 +637,20 @@ export const ExtractEntitiesNode = ({ id, data }) => {
 
   return (
     <div className="relative group">
-      <div className="px-4 py-3 border border-purple-200/80 dark:border-purple-700/60 rounded-2xl bg-gradient-to-br from-white to-purple-50 dark:from-slate-800 dark:to-purple-950/30 shadow-lg hover:shadow-xl hover:scale-[1.02] transition-all duration-200 backdrop-blur-sm min-w-[160px]">
-        <Handle type="target" position={Position.Left} className="w-3 h-3 !bg-gradient-to-br !from-purple-400 !to-fuchsia-500 border-2 border-white dark:border-slate-800 shadow-md" />
+      <div className="px-4 py-3 border border-purple-200/80 dark:border-purple-700/60 rounded-2xl bg-gradient-to-br from-white to-purple-50 wf-node dark:from-slate-800 dark:to-purple-950/30 shadow-lg hover:shadow-xl hover:scale-[1.02] transition-all duration-200 backdrop-blur-sm min-w-[160px]">
+        <Handle type="target" position={Position.Left} className="w-3 h-3 !bg-gradient-to-br !from-purple-400 !to-fuchsia-500 border-2 border-white dark:border-white/[0.15] shadow-md" />
         <div className="flex items-center gap-2.5 mb-2">
           <div className="p-2 rounded-xl bg-gradient-to-br from-purple-500 to-fuchsia-600 shadow-md shadow-purple-500/30">
             <Target size={16} className="text-white" />
           </div>
           <strong className="text-sm font-semibold text-slate-800 dark:text-white">{data.label || 'Extract Entities'}</strong>
         </div>
-        <div className="text-xs text-slate-500 dark:text-slate-400 font-medium flex items-center gap-1">
+        <div className="text-xs text-slate-500 dark:text-white/55 font-medium flex items-center gap-1">
           <span className="w-1.5 h-1.5 rounded-full bg-purple-500"></span>
           {hasEntities ? `Extract ${entities.length} ${entities.length === 1 ? 'entity' : 'entities'}` : 'LLM-powered extraction'}
         </div>
-        <Handle type="source" position={Position.Right} id="output" className="w-3 h-3 !bg-slate-500 dark:!bg-slate-400 border-2 border-white dark:border-slate-800 shadow-md" />
-        <Handle type="source" position={Position.Bottom} id="error" className="w-3 h-3 !bg-gradient-to-br !from-red-400 !to-rose-500 border-2 border-white dark:border-slate-800 shadow-md" />
+        <Handle type="source" position={Position.Right} id="output" className="w-3 h-3 !bg-slate-500 dark:!bg-white/50 border-2 border-white dark:border-white/[0.15] shadow-md" />
+        <Handle type="source" position={Position.Bottom} id="error" className="w-3 h-3 !bg-gradient-to-br !from-red-400 !to-rose-500 border-2 border-white dark:border-white/[0.15] shadow-md" />
       </div>
       <AddNodeButton nodeId={id} handleId="output" position="right" />
       <AddNodeButton nodeId={id} handleId="error" position="bottom" />
@@ -665,20 +665,20 @@ export const SubworkflowNode = ({ id, data }) => {
 
   return (
     <div className="relative group">
-      <div className="px-4 py-3 border border-violet-200/80 dark:border-violet-700/60 rounded-2xl bg-gradient-to-br from-white to-violet-50 dark:from-slate-800 dark:to-violet-950/30 shadow-lg hover:shadow-xl hover:scale-[1.02] transition-all duration-200 backdrop-blur-sm min-w-[160px]">
-        <Handle type="target" position={Position.Left} className="w-3 h-3 !bg-gradient-to-br !from-violet-400 !to-purple-500 border-2 border-white dark:border-slate-800 shadow-md" />
+      <div className="px-4 py-3 border border-violet-200/80 dark:border-violet-700/60 rounded-2xl bg-gradient-to-br from-white to-violet-50 wf-node dark:from-slate-800 dark:to-violet-950/30 shadow-lg hover:shadow-xl hover:scale-[1.02] transition-all duration-200 backdrop-blur-sm min-w-[160px]">
+        <Handle type="target" position={Position.Left} className="w-3 h-3 !bg-gradient-to-br !from-violet-400 !to-purple-500 border-2 border-white dark:border-white/[0.15] shadow-md" />
         <div className="flex items-center gap-2.5 mb-2">
           <div className="p-2 rounded-xl bg-gradient-to-br from-violet-500 to-purple-600 shadow-md shadow-violet-500/30">
             <Layers size={16} className="text-white" />
           </div>
           <strong className="text-sm font-semibold text-slate-800 dark:text-white">{data.label || 'Subworkflow'}</strong>
         </div>
-        <div className="text-xs text-slate-500 dark:text-slate-400 font-medium truncate max-w-[140px] flex items-center gap-1" title={workflowName}>
+        <div className="text-xs text-slate-500 dark:text-white/55 font-medium truncate max-w-[140px] flex items-center gap-1" title={workflowName}>
           <span className="w-1.5 h-1.5 rounded-full bg-violet-500"></span>
           {workflowName}
         </div>
-        <Handle type="source" position={Position.Right} id="output" className="w-3 h-3 !bg-slate-500 dark:!bg-slate-400 border-2 border-white dark:border-slate-800 shadow-md" />
-        <Handle type="source" position={Position.Bottom} id="error" className="w-3 h-3 !bg-gradient-to-br !from-red-400 !to-rose-500 border-2 border-white dark:border-slate-800 shadow-md" />
+        <Handle type="source" position={Position.Right} id="output" className="w-3 h-3 !bg-slate-500 dark:!bg-white/50 border-2 border-white dark:border-white/[0.15] shadow-md" />
+        <Handle type="source" position={Position.Bottom} id="error" className="w-3 h-3 !bg-gradient-to-br !from-red-400 !to-rose-500 border-2 border-white dark:border-white/[0.15] shadow-md" />
       </div>
       <AddNodeButton nodeId={id} handleId="output" position="right" />
       <AddNodeButton nodeId={id} handleId="error" position="bottom" />
@@ -690,7 +690,7 @@ export const SubworkflowNode = ({ id, data }) => {
 
 export const TriggerWebSocketNode = ({ id, data }) => (
   <div className="relative group">
-    <div className="px-5 py-4 border-2 border-cyan-300/80 dark:border-cyan-600/60 rounded-2xl bg-gradient-to-br from-cyan-50 via-white to-blue-50 dark:from-cyan-950/40 dark:via-slate-800 dark:to-blue-950/40 shadow-md hover:shadow-lg hover:scale-[1.02] transition-all duration-200 backdrop-blur-sm">
+    <div className="px-5 py-4 border-2 border-cyan-300/80 dark:border-cyan-600/60 rounded-2xl bg-gradient-to-br from-cyan-50 via-white to-blue-50 dark:from-cyan-950/40 wf-node-trigger dark:via-slate-800 dark:to-blue-950/40 shadow-md hover:shadow-lg hover:scale-[1.02] transition-all duration-200 backdrop-blur-sm">
       <div className="flex items-center gap-2.5 mb-2">
         <div className="p-2.5 rounded-xl bg-gradient-to-br from-cyan-500 to-blue-600 shadow-lg shadow-cyan-500/30">
           <Wifi size={18} className="text-white" />
@@ -703,14 +703,14 @@ export const TriggerWebSocketNode = ({ id, data }) => (
           </div>
         </div>
       </div>
-      <div className="text-xs text-slate-500 dark:text-slate-400 font-medium mb-1 flex items-center gap-1">
+      <div className="text-xs text-slate-500 dark:text-white/55 font-medium mb-1 flex items-center gap-1">
         <span className="w-1.5 h-1.5 rounded-full bg-cyan-500 animate-pulse"></span>
         Real-time conversations
       </div>
       {data.agent_id && (
         <div className="text-[10px] text-cyan-600 dark:text-cyan-300 font-medium mt-1 bg-cyan-100/50 dark:bg-cyan-900/30 px-2 py-0.5 rounded-md inline-block">Agent: {data.agent_name || `#${data.agent_id}`}</div>
       )}
-      <Handle type="source" position={Position.Right} id="message" className="w-4 h-4 !bg-gradient-to-br !from-cyan-400 !to-blue-500 border-2 border-white dark:border-slate-800 shadow-lg" />
+      <Handle type="source" position={Position.Right} id="message" className="w-4 h-4 !bg-gradient-to-br !from-cyan-400 !to-blue-500 border-2 border-white dark:border-white/[0.15] shadow-lg" />
     </div>
     <AddNodeButton nodeId={id} handleId="message" position="right" />
   </div>
@@ -718,7 +718,7 @@ export const TriggerWebSocketNode = ({ id, data }) => (
 
 export const TriggerWhatsAppNode = ({ id, data }) => (
   <div className="relative group">
-    <div className="px-5 py-4 border-2 border-green-300/80 dark:border-green-600/60 rounded-2xl bg-gradient-to-br from-green-50 via-white to-emerald-50 dark:from-green-950/40 dark:via-slate-800 dark:to-emerald-950/40 shadow-md hover:shadow-lg hover:scale-[1.02] transition-all duration-200 backdrop-blur-sm">
+    <div className="px-5 py-4 border-2 border-green-300/80 dark:border-green-600/60 rounded-2xl bg-gradient-to-br from-green-50 via-white to-emerald-50 dark:from-green-950/40 wf-node-trigger dark:via-slate-800 dark:to-emerald-950/40 shadow-md hover:shadow-lg hover:scale-[1.02] transition-all duration-200 backdrop-blur-sm">
       <div className="flex items-center gap-2.5 mb-2">
         <div className="p-2.5 rounded-xl bg-gradient-to-br from-green-500 to-emerald-600 shadow-lg shadow-green-500/30">
           <Phone size={18} className="text-white" />
@@ -731,14 +731,14 @@ export const TriggerWhatsAppNode = ({ id, data }) => (
           </div>
         </div>
       </div>
-      <div className="text-xs text-slate-500 dark:text-slate-400 font-medium mb-1 flex items-center gap-1">
+      <div className="text-xs text-slate-500 dark:text-white/55 font-medium mb-1 flex items-center gap-1">
         <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></span>
         WhatsApp messages
       </div>
       {data.agent_id && (
         <div className="text-[10px] text-green-600 dark:text-green-300 font-medium mt-1 bg-green-100/50 dark:bg-green-900/30 px-2 py-0.5 rounded-md inline-block">Agent: {data.agent_name || `#${data.agent_id}`}</div>
       )}
-      <Handle type="source" position={Position.Right} id="message" className="w-4 h-4 !bg-gradient-to-br !from-green-400 !to-emerald-500 border-2 border-white dark:border-slate-800 shadow-lg" />
+      <Handle type="source" position={Position.Right} id="message" className="w-4 h-4 !bg-gradient-to-br !from-green-400 !to-emerald-500 border-2 border-white dark:border-white/[0.15] shadow-lg" />
     </div>
     <AddNodeButton nodeId={id} handleId="message" position="right" />
   </div>
@@ -746,7 +746,7 @@ export const TriggerWhatsAppNode = ({ id, data }) => (
 
 export const TriggerTelegramNode = ({ id, data }) => (
   <div className="relative group">
-    <div className="px-5 py-4 border-2 border-sky-300/80 dark:border-sky-600/60 rounded-2xl bg-gradient-to-br from-sky-50 via-white to-blue-50 dark:from-sky-950/40 dark:via-slate-800 dark:to-blue-950/40 shadow-md hover:shadow-lg hover:scale-[1.02] transition-all duration-200 backdrop-blur-sm">
+    <div className="px-5 py-4 border-2 border-sky-300/80 dark:border-sky-600/60 rounded-2xl bg-gradient-to-br from-sky-50 via-white to-blue-50 dark:from-sky-950/40 wf-node-trigger dark:via-slate-800 dark:to-blue-950/40 shadow-md hover:shadow-lg hover:scale-[1.02] transition-all duration-200 backdrop-blur-sm">
       <div className="flex items-center gap-2.5 mb-2">
         <div className="p-2.5 rounded-xl bg-gradient-to-br from-sky-500 to-blue-600 shadow-lg shadow-sky-500/30">
           <Send size={18} className="text-white" />
@@ -759,14 +759,14 @@ export const TriggerTelegramNode = ({ id, data }) => (
           </div>
         </div>
       </div>
-      <div className="text-xs text-slate-500 dark:text-slate-400 font-medium mb-1 flex items-center gap-1">
+      <div className="text-xs text-slate-500 dark:text-white/55 font-medium mb-1 flex items-center gap-1">
         <span className="w-1.5 h-1.5 rounded-full bg-sky-500 animate-pulse"></span>
         Telegram messages
       </div>
       {data.agent_id && (
         <div className="text-[10px] text-sky-600 dark:text-sky-300 font-medium mt-1 bg-sky-100/50 dark:bg-sky-900/30 px-2 py-0.5 rounded-md inline-block">Agent: {data.agent_name || `#${data.agent_id}`}</div>
       )}
-      <Handle type="source" position={Position.Right} id="message" className="w-4 h-4 !bg-gradient-to-br !from-sky-400 !to-blue-500 border-2 border-white dark:border-slate-800 shadow-lg" />
+      <Handle type="source" position={Position.Right} id="message" className="w-4 h-4 !bg-gradient-to-br !from-sky-400 !to-blue-500 border-2 border-white dark:border-white/[0.15] shadow-lg" />
     </div>
     <AddNodeButton nodeId={id} handleId="message" position="right" />
   </div>
@@ -774,7 +774,7 @@ export const TriggerTelegramNode = ({ id, data }) => (
 
 export const TriggerInstagramNode = ({ id, data }) => (
   <div className="relative group">
-    <div className="px-5 py-4 border-2 border-pink-300/80 dark:border-pink-600/60 rounded-2xl bg-gradient-to-br from-pink-50 via-white to-fuchsia-50 dark:from-pink-950/40 dark:via-slate-800 dark:to-fuchsia-950/40 shadow-md hover:shadow-lg hover:scale-[1.02] transition-all duration-200 backdrop-blur-sm">
+    <div className="px-5 py-4 border-2 border-pink-300/80 dark:border-pink-600/60 rounded-2xl bg-gradient-to-br from-pink-50 via-white to-fuchsia-50 dark:from-pink-950/40 wf-node-trigger dark:via-slate-800 dark:to-fuchsia-950/40 shadow-md hover:shadow-lg hover:scale-[1.02] transition-all duration-200 backdrop-blur-sm">
       <div className="flex items-center gap-2.5 mb-2">
         <div className="p-2.5 rounded-xl bg-gradient-to-br from-pink-500 to-fuchsia-600 shadow-lg shadow-pink-500/30">
           <Instagram size={18} className="text-white" />
@@ -787,14 +787,14 @@ export const TriggerInstagramNode = ({ id, data }) => (
           </div>
         </div>
       </div>
-      <div className="text-xs text-slate-500 dark:text-slate-400 font-medium mb-1 flex items-center gap-1">
+      <div className="text-xs text-slate-500 dark:text-white/55 font-medium mb-1 flex items-center gap-1">
         <span className="w-1.5 h-1.5 rounded-full bg-pink-500 animate-pulse"></span>
         Instagram DMs
       </div>
       {data.agent_id && (
         <div className="text-[10px] text-pink-600 dark:text-pink-300 font-medium mt-1 bg-pink-100/50 dark:bg-pink-900/30 px-2 py-0.5 rounded-md inline-block">Agent: {data.agent_name || `#${data.agent_id}`}</div>
       )}
-      <Handle type="source" position={Position.Right} id="message" className="w-4 h-4 !bg-gradient-to-br !from-pink-400 !to-fuchsia-500 border-2 border-white dark:border-slate-800 shadow-lg" />
+      <Handle type="source" position={Position.Right} id="message" className="w-4 h-4 !bg-gradient-to-br !from-pink-400 !to-fuchsia-500 border-2 border-white dark:border-white/[0.15] shadow-lg" />
     </div>
     <AddNodeButton nodeId={id} handleId="message" position="right" />
   </div>
@@ -802,7 +802,7 @@ export const TriggerInstagramNode = ({ id, data }) => (
 
 export const TriggerTwilioVoiceNode = ({ id, data }) => (
   <div className="relative group">
-    <div className="px-5 py-4 border-2 border-red-300/80 dark:border-red-600/60 rounded-2xl bg-gradient-to-br from-red-50 via-white to-orange-50 dark:from-red-950/40 dark:via-slate-800 dark:to-orange-950/40 shadow-md hover:shadow-lg hover:scale-[1.02] transition-all duration-200 backdrop-blur-sm">
+    <div className="px-5 py-4 border-2 border-red-300/80 dark:border-red-600/60 rounded-2xl bg-gradient-to-br from-red-50 via-white to-orange-50 dark:from-red-950/40 wf-node-trigger dark:via-slate-800 dark:to-orange-950/40 shadow-md hover:shadow-lg hover:scale-[1.02] transition-all duration-200 backdrop-blur-sm">
       <div className="flex items-center gap-2.5 mb-2">
         <div className="p-2.5 rounded-xl bg-gradient-to-br from-red-500 to-orange-600 shadow-lg shadow-red-500/30">
           <PhoneCall size={18} className="text-white" />
@@ -815,14 +815,14 @@ export const TriggerTwilioVoiceNode = ({ id, data }) => (
           </div>
         </div>
       </div>
-      <div className="text-xs text-slate-500 dark:text-slate-400 font-medium mb-1 flex items-center gap-1">
+      <div className="text-xs text-slate-500 dark:text-white/55 font-medium mb-1 flex items-center gap-1">
         <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse"></span>
         Voice calls via Twilio
       </div>
       {data.agent_id && (
         <div className="text-[10px] text-red-600 dark:text-red-300 font-medium mt-1 bg-red-100/50 dark:bg-red-900/30 px-2 py-0.5 rounded-md inline-block">Agent: {data.agent_name || `#${data.agent_id}`}</div>
       )}
-      <Handle type="source" position={Position.Right} id="message" className="w-4 h-4 !bg-gradient-to-br !from-red-400 !to-orange-500 border-2 border-white dark:border-slate-800 shadow-lg" />
+      <Handle type="source" position={Position.Right} id="message" className="w-4 h-4 !bg-gradient-to-br !from-red-400 !to-orange-500 border-2 border-white dark:border-white/[0.15] shadow-lg" />
     </div>
     <AddNodeButton nodeId={id} handleId="message" position="right" />
   </div>
@@ -830,7 +830,7 @@ export const TriggerTwilioVoiceNode = ({ id, data }) => (
 
 export const TriggerFreeSwitchNode = ({ id, data }) => (
   <div className="relative group">
-    <div className="px-5 py-4 border-2 border-teal-300/80 dark:border-teal-600/60 rounded-2xl bg-gradient-to-br from-teal-50 via-white to-cyan-50 dark:from-teal-950/40 dark:via-slate-800 dark:to-cyan-950/40 shadow-md hover:shadow-lg hover:scale-[1.02] transition-all duration-200 backdrop-blur-sm">
+    <div className="px-5 py-4 border-2 border-teal-300/80 dark:border-teal-600/60 rounded-2xl bg-gradient-to-br from-teal-50 via-white to-cyan-50 dark:from-teal-950/40 wf-node-trigger dark:via-slate-800 dark:to-cyan-950/40 shadow-md hover:shadow-lg hover:scale-[1.02] transition-all duration-200 backdrop-blur-sm">
       <div className="flex items-center gap-2.5 mb-2">
         <div className="p-2.5 rounded-xl bg-gradient-to-br from-teal-500 to-cyan-600 shadow-lg shadow-teal-500/30">
           <Server size={18} className="text-white" />
@@ -843,14 +843,14 @@ export const TriggerFreeSwitchNode = ({ id, data }) => (
           </div>
         </div>
       </div>
-      <div className="text-xs text-slate-500 dark:text-slate-400 font-medium mb-1 flex items-center gap-1">
+      <div className="text-xs text-slate-500 dark:text-white/55 font-medium mb-1 flex items-center gap-1">
         <span className="w-1.5 h-1.5 rounded-full bg-teal-500 animate-pulse"></span>
         Voice calls via FreeSWITCH
       </div>
       {data.agent_id && (
         <div className="text-[10px] text-teal-600 dark:text-teal-300 font-medium mt-1 bg-teal-100/50 dark:bg-teal-900/30 px-2 py-0.5 rounded-md inline-block">Agent: {data.agent_name || `#${data.agent_id}`}</div>
       )}
-      <Handle type="source" position={Position.Right} id="message" className="w-4 h-4 !bg-gradient-to-br !from-teal-400 !to-cyan-500 border-2 border-white dark:border-slate-800 shadow-lg" />
+      <Handle type="source" position={Position.Right} id="message" className="w-4 h-4 !bg-gradient-to-br !from-teal-400 !to-cyan-500 border-2 border-white dark:border-white/[0.15] shadow-lg" />
     </div>
     <AddNodeButton nodeId={id} handleId="message" position="right" />
   </div>
@@ -860,15 +860,15 @@ export const TriggerFreeSwitchNode = ({ id, data }) => (
 
 export const ForEachLoopNode = ({ id, data }) => (
   <div className="relative group">
-    <div className="px-4 py-3 border border-teal-200/80 dark:border-teal-700/60 rounded-2xl bg-gradient-to-br from-white to-teal-50 dark:from-slate-800 dark:to-teal-950/30 shadow-lg hover:shadow-xl hover:scale-[1.02] transition-all duration-200 backdrop-blur-sm min-w-[160px]">
-      <Handle type="target" position={Position.Left} className="w-3 h-3 !bg-gradient-to-br !from-teal-400 !to-cyan-500 border-2 border-white dark:border-slate-800 shadow-md" />
+    <div className="px-4 py-3 border border-teal-200/80 dark:border-teal-700/60 rounded-2xl bg-gradient-to-br from-white to-teal-50 wf-node dark:from-slate-800 dark:to-teal-950/30 shadow-lg hover:shadow-xl hover:scale-[1.02] transition-all duration-200 backdrop-blur-sm min-w-[160px]">
+      <Handle type="target" position={Position.Left} className="w-3 h-3 !bg-gradient-to-br !from-teal-400 !to-cyan-500 border-2 border-white dark:border-white/[0.15] shadow-md" />
       <div className="flex items-center gap-2.5 mb-2">
         <div className="p-2 rounded-xl bg-gradient-to-br from-teal-500 to-cyan-600 shadow-md shadow-teal-500/30">
           <Repeat size={16} className="text-white" />
         </div>
         <strong className="text-sm font-semibold text-slate-800 dark:text-white">{data.label || 'For Each'}</strong>
       </div>
-      <div className="text-xs text-slate-500 dark:text-slate-400 font-medium flex items-center gap-1">
+      <div className="text-xs text-slate-500 dark:text-white/55 font-medium flex items-center gap-1">
         <span className="w-1.5 h-1.5 rounded-full bg-teal-500"></span>
         Iterate over array
       </div>
@@ -882,18 +882,18 @@ export const ForEachLoopNode = ({ id, data }) => (
         type="source"
         position={Position.Right}
         id="exit"
-        className="w-3 h-3 !bg-slate-500 dark:!bg-slate-400 border-2 border-white dark:border-slate-800 shadow-md"
+        className="w-3 h-3 !bg-slate-500 dark:!bg-white/50 border-2 border-white dark:border-white/[0.15] shadow-md"
       />
       {/* Loop body handle - bottom (loops back) */}
       <Handle
         type="source"
         position={Position.Bottom}
         id="loop"
-        className="w-3 h-3 !bg-gradient-to-br !from-teal-400 !to-cyan-500 border-2 border-white dark:border-slate-800 shadow-md"
+        className="w-3 h-3 !bg-gradient-to-br !from-teal-400 !to-cyan-500 border-2 border-white dark:border-white/[0.15] shadow-md"
       />
       <div className="flex justify-between mt-1 text-[10px] font-semibold">
         <span className="text-teal-600 dark:text-teal-400">↓ loop</span>
-        <span className="text-slate-500 dark:text-slate-400">exit →</span>
+        <span className="text-slate-500 dark:text-white/55">exit →</span>
       </div>
     </div>
     <AddNodeButton nodeId={id} handleId="exit" position="right" />
@@ -903,15 +903,15 @@ export const ForEachLoopNode = ({ id, data }) => (
 
 export const WhileLoopNode = ({ id, data }) => (
   <div className="relative group">
-    <div className="px-4 py-3 border border-violet-200/80 dark:border-violet-700/60 rounded-2xl bg-gradient-to-br from-white to-violet-50 dark:from-slate-800 dark:to-violet-950/30 shadow-lg hover:shadow-xl hover:scale-[1.02] transition-all duration-200 backdrop-blur-sm min-w-[160px]">
-      <Handle type="target" position={Position.Left} className="w-3 h-3 !bg-gradient-to-br !from-violet-400 !to-purple-500 border-2 border-white dark:border-slate-800 shadow-md" />
+    <div className="px-4 py-3 border border-violet-200/80 dark:border-violet-700/60 rounded-2xl bg-gradient-to-br from-white to-violet-50 wf-node dark:from-slate-800 dark:to-violet-950/30 shadow-lg hover:shadow-xl hover:scale-[1.02] transition-all duration-200 backdrop-blur-sm min-w-[160px]">
+      <Handle type="target" position={Position.Left} className="w-3 h-3 !bg-gradient-to-br !from-violet-400 !to-purple-500 border-2 border-white dark:border-white/[0.15] shadow-md" />
       <div className="flex items-center gap-2.5 mb-2">
         <div className="p-2 rounded-xl bg-gradient-to-br from-violet-500 to-purple-600 shadow-md shadow-violet-500/30">
           <RefreshCw size={16} className="text-white" />
         </div>
         <strong className="text-sm font-semibold text-slate-800 dark:text-white">{data.label || 'While Loop'}</strong>
       </div>
-      <div className="text-xs text-slate-500 dark:text-slate-400 font-medium flex items-center gap-1">
+      <div className="text-xs text-slate-500 dark:text-white/55 font-medium flex items-center gap-1">
         <span className="w-1.5 h-1.5 rounded-full bg-violet-500"></span>
         Repeat while true
       </div>
@@ -925,18 +925,18 @@ export const WhileLoopNode = ({ id, data }) => (
         type="source"
         position={Position.Right}
         id="exit"
-        className="w-3 h-3 !bg-slate-500 dark:!bg-slate-400 border-2 border-white dark:border-slate-800 shadow-md"
+        className="w-3 h-3 !bg-slate-500 dark:!bg-white/50 border-2 border-white dark:border-white/[0.15] shadow-md"
       />
       {/* Loop body handle - bottom (loops back) */}
       <Handle
         type="source"
         position={Position.Bottom}
         id="loop"
-        className="w-3 h-3 !bg-gradient-to-br !from-violet-400 !to-purple-500 border-2 border-white dark:border-slate-800 shadow-md"
+        className="w-3 h-3 !bg-gradient-to-br !from-violet-400 !to-purple-500 border-2 border-white dark:border-white/[0.15] shadow-md"
       />
       <div className="flex justify-between mt-1 text-[10px] font-semibold">
         <span className="text-violet-600 dark:text-violet-400">↓ loop</span>
-        <span className="text-slate-500 dark:text-slate-400">exit →</span>
+        <span className="text-slate-500 dark:text-white/55">exit →</span>
       </div>
     </div>
     <AddNodeButton nodeId={id} handleId="exit" position="right" />

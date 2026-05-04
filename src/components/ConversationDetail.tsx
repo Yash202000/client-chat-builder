@@ -1031,7 +1031,7 @@ export const ConversationDetail: React.FC<ConversationDetailProps> = ({ sessionI
                   <h2 className="text-[15px] font-semibold text-foreground truncate">
                     {contact?.name || (readOnly ? t('conversations.detail.viewConversation', { defaultValue: 'View Conversation' }) : t('conversations.detail.conversation'))}
                   </h2>
-                  <span className="hidden sm:inline px-2 py-0.5 bg-violet-100 dark:bg-violet-900/30 text-violet-600 dark:text-violet-400 text-[10px] font-medium rounded-full">
+                  <span className="hidden sm:inline px-2 py-0.5 bg-violet-100 dark:bg-white/[0.07] text-violet-600 dark:text-white/50 text-[10px] font-medium rounded-full">
                     Customer
                   </span>
                 </div>
@@ -1053,10 +1053,10 @@ export const ConversationDetail: React.FC<ConversationDetailProps> = ({ sessionI
                 conversationStatus === 'resolved'
                   ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
                   : conversationStatus === 'active'
-                  ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400'
+                  ? 'bg-blue-100 text-blue-700 dark:bg-white/[0.07] dark:text-blue-300'
                   : conversationStatus === 'assigned'
-                  ? 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400'
-                  : 'bg-slate-100 text-slate-700 dark:bg-slate-700 dark:text-slate-300'
+                  ? 'bg-purple-100 text-purple-700 dark:bg-white/[0.07] dark:text-violet-300'
+                  : 'bg-slate-100 text-slate-700 dark:bg-white/[0.05] dark:text-white/45'
               }`}>
                 <span className={`w-2 h-2 rounded-full flex-shrink-0 ${
                   conversationStatus === 'resolved' ? 'bg-green-500' :
@@ -1071,7 +1071,7 @@ export const ConversationDetail: React.FC<ConversationDetailProps> = ({ sessionI
                 <Button
                   size="sm"
                   onClick={onSummaryClick}
-                  className="hidden lg:flex bg-primary hover:bg-primary/90 text-primary-foreground rounded-lg h-7 px-2.5 text-xs"
+                  className="hidden lg:flex bg-primary hover:bg-primary/90 text-primary-foreground dark:bg-violet-600 dark:hover:bg-violet-500 dark:text-white rounded-lg h-7 px-2.5 text-xs"
                 >
                   <Sparkles className={`h-3.5 w-3.5 ${isRTL ? 'ml-1.5' : 'mr-1.5'}`} />
                   {t('conversations.detail.summary', { defaultValue: 'AI Summary' })}
@@ -1097,7 +1097,7 @@ export const ConversationDetail: React.FC<ConversationDetailProps> = ({ sessionI
                     variant="outline"
                     onClick={() => startCallMutation.mutate()}
                     disabled={startCallMutation.isPending}
-                    className="hidden lg:flex rounded-lg h-7 px-2.5 text-xs border-border"
+                    className="hidden lg:flex rounded-lg h-7 px-2.5 text-xs border-border dark:border-white/[0.12] dark:text-white/65 dark:hover:bg-white/[0.07]"
                   >
                     <Video className={`h-3.5 w-3.5 ${isRTL ? 'ml-1.5' : 'mr-1.5'}`} />
                     {t('conversations.detail.videoCall')}
@@ -1106,7 +1106,7 @@ export const ConversationDetail: React.FC<ConversationDetailProps> = ({ sessionI
                   {/* Mobile + tablet: ⋯ overflow menu (hidden only at lg+) */}
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                      <Button size="sm" variant="outline" className="lg:hidden rounded-lg h-7 w-7 p-0 border-border">
+                      <Button size="sm" variant="outline" className="lg:hidden rounded-lg h-7 w-7 p-0 border-border dark:border-white/[0.12] dark:text-white/65 dark:hover:bg-white/[0.07]">
                         <MoreHorizontal className="h-3.5 w-3.5" />
                       </Button>
                     </DropdownMenuTrigger>
@@ -1141,7 +1141,7 @@ export const ConversationDetail: React.FC<ConversationDetailProps> = ({ sessionI
                     className={`rounded-lg h-7 px-2 text-xs ${
                       conversationStatus === 'resolved'
                         ? 'bg-green-100 text-green-700 hover:bg-green-200 border border-green-200 dark:bg-green-900/30 dark:text-green-400 dark:border-green-800'
-                        : 'bg-primary hover:bg-primary/90 text-primary-foreground'
+                        : 'bg-primary hover:bg-primary/90 text-primary-foreground dark:bg-violet-600 dark:hover:bg-violet-500 dark:text-white'
                     }`}
                   >
                     <CheckCircle className={`h-3.5 w-3.5 lg:${isRTL ? 'ml-1' : 'mr-1'}`} />
@@ -1250,7 +1250,7 @@ export const ConversationDetail: React.FC<ConversationDetailProps> = ({ sessionI
         </motion.header>
 
         {/* Enhanced Messages Area */}
-        <main ref={messagesContainerRef} className="flex-grow overflow-y-auto min-h-0 p-4 bg-muted/20 relative">
+        <main ref={messagesContainerRef} className="flex-grow overflow-y-auto min-h-0 p-4 bg-muted/20 msg-chat-area relative">
 
           <AnimatePresence mode="wait">
             {isLoading ? (
@@ -1343,18 +1343,18 @@ export const ConversationDetail: React.FC<ConversationDetailProps> = ({ sessionI
                           animate={{ opacity: 1, scale: 1 }}
                           className="flex justify-center my-6"
                         >
-                          <div className="max-w-2xl w-full bg-violet-50 dark:bg-violet-900/20 border border-violet-200 dark:border-violet-700/50 rounded-xl p-5">
+                          <div className="max-w-2xl w-full bg-violet-50 dark:bg-transparent msg-private-note border border-violet-200 rounded-xl p-5">
                             <div className="flex items-start gap-4">
-                              <div className="h-10 w-10 rounded-xl bg-violet-100 dark:bg-violet-800/30 flex items-center justify-center flex-shrink-0">
-                                <Book className="h-5 w-5 text-white" />
+                              <div className="h-10 w-10 rounded-xl bg-violet-100 msg-private-note-icon flex items-center justify-center flex-shrink-0">
+                                <Book className="h-5 w-5 text-violet-600 dark:text-white/70" />
                               </div>
                               <div className="flex-grow">
                                 <div className="flex items-center gap-2 mb-2">
-                                  <span className="text-sm font-bold text-violet-700 dark:text-violet-400">{t('conversations.detail.privateNote')}</span>
-                                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-violet-200/50 dark:bg-violet-800/30 text-violet-700 dark:text-violet-400 font-medium">Internal Only</span>
+                                  <span className="text-sm font-bold text-violet-700 msg-private-note-label">{t('conversations.detail.privateNote')}</span>
+                                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-violet-200/50 text-violet-700 msg-private-note-badge font-medium">Internal Only</span>
                                 </div>
                                 <p className="text-sm text-foreground leading-relaxed">{msg.message}</p>
-                                <p className="text-xs text-violet-600/70 dark:text-violet-400/70 mt-3 flex items-center gap-1.5">
+                                <p className="text-xs text-violet-600/70 msg-private-note-time mt-3 flex items-center gap-1.5">
                                   <Clock className="h-3 w-3" />
                                   {new Date(msg.timestamp).toLocaleString()}
                                 </p>
@@ -1366,7 +1366,7 @@ export const ConversationDetail: React.FC<ConversationDetailProps> = ({ sessionI
                         /* Enhanced Regular Message */
                         <div className={`flex items-end gap-2 ${msg.sender === 'user' ? 'justify-start' : 'justify-end'}`}>
                           {msg.sender === 'user' && (
-                            <div className="h-7 w-7 flex-shrink-0 rounded-full bg-muted border border-border flex items-center justify-center">
+                            <div className="h-7 w-7 flex-shrink-0 rounded-full bg-muted border border-border msg-avatar-user flex items-center justify-center">
                               <UserIcon className="h-3.5 w-3.5 text-muted-foreground" />
                             </div>
                           )}
@@ -1374,8 +1374,8 @@ export const ConversationDetail: React.FC<ConversationDetailProps> = ({ sessionI
                             <div
                               className={`px-3.5 py-2.5 rounded-2xl ${
                                 msg.sender === 'user'
-                                  ? `bg-card border border-border ${isRTL ? 'rounded-br-md' : 'rounded-bl-md'} text-foreground shadow-sm`
-                                  : `bg-primary text-primary-foreground ${isRTL ? 'rounded-bl-md' : 'rounded-br-md'} shadow-sm`
+                                  ? `bg-card border border-border msg-bubble-user ${isRTL ? 'rounded-br-md' : 'rounded-bl-md'} text-foreground shadow-sm`
+                                  : `bg-primary text-primary-foreground msg-bubble-agent ${isRTL ? 'rounded-bl-md' : 'rounded-br-md'} shadow-sm`
                               }`}
                             >
                               <div className="prose prose-sm dark:prose-invert max-w-full prose-p:my-1 prose-headings:my-2">
@@ -1452,7 +1452,7 @@ export const ConversationDetail: React.FC<ConversationDetailProps> = ({ sessionI
                             </p>
                           </div>
                           {msg.sender !== 'user' && (
-                            <div className="h-7 w-7 flex-shrink-0 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center">
+                            <div className="h-7 w-7 flex-shrink-0 rounded-full bg-primary/10 border border-primary/20 msg-avatar-bot flex items-center justify-center">
                               <Bot className="h-3.5 w-3.5 text-primary" />
                             </div>
                           )}
@@ -1531,7 +1531,7 @@ export const ConversationDetail: React.FC<ConversationDetailProps> = ({ sessionI
                         transition={{ delay: index * 0.04 }}
                         whileTap={{ scale: 0.95 }}
                         onClick={() => setMessage(reply)}
-                        className="flex-shrink-0 px-2.5 py-1 bg-purple-50 dark:bg-purple-900/20 border border-purple-200/60 dark:border-purple-700/40 rounded-full text-[11px] text-purple-700 dark:text-purple-300 hover:bg-purple-100 dark:hover:bg-purple-900/40 transition-colors"
+                        className="flex-shrink-0 px-2.5 py-1 bg-purple-50 dark:bg-white/[0.06] border border-purple-200/60 dark:border-white/[0.10] rounded-full text-[11px] text-purple-700 dark:text-white/70 hover:bg-purple-100 dark:hover:bg-white/[0.10] transition-colors"
                       >
                         {reply}
                       </motion.button>
@@ -1686,7 +1686,7 @@ export const ConversationDetail: React.FC<ConversationDetailProps> = ({ sessionI
                         size="sm"
                         className={`h-7 px-3 rounded-md text-xs font-medium gap-1.5 transition-all ${
                           message.trim() || selectedFiles.length > 0
-                            ? 'bg-primary hover:bg-primary/90 text-primary-foreground shadow-sm'
+                            ? 'bg-primary hover:bg-primary/90 text-primary-foreground dark:bg-violet-600 dark:hover:bg-violet-500 dark:text-white shadow-sm'
                             : 'bg-muted text-muted-foreground/50 cursor-not-allowed'
                         }`}
                       >

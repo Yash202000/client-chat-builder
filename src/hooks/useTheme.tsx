@@ -16,7 +16,7 @@ const getSystemTheme = (): Theme =>
 export const ThemeProvider = ({ children }: { children: React.ReactNode }) => {
   const [theme, setThemeState] = useState<Theme>(() => {
     const stored = localStorage.getItem('theme') as Theme;
-    return stored || getSystemTheme();
+    return stored || 'dark';
   });
 
   // Follow system theme changes when the user hasn't set a manual preference

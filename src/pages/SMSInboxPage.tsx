@@ -55,7 +55,7 @@ const containerVariants = {
 
 // ── Skeleton ──────────────────────────────────────────────────────────────────
 const ThreadSkeleton = () => (
-  <div className="p-4 border-b border-slate-100 dark:border-slate-700">
+  <div className="p-4 border-b border-slate-100 dark:border-white/[0.10]">
     <div className="flex items-start gap-3">
       <div className="w-10 h-10 rounded-xl skeleton" />
       <div className="flex-1 space-y-2">
@@ -120,8 +120,8 @@ const ContactSelector: React.FC<ContactSelectorProps> = ({ contacts, value, onCh
   };
 
   return (
-    <div ref={containerRef} className="relative flex items-center gap-3 px-5 py-2.5 border-b border-slate-100 dark:border-slate-800">
-      <span className="text-xs font-semibold text-slate-400 dark:text-slate-500 w-8 shrink-0">To</span>
+    <div ref={containerRef} className="relative flex items-center gap-3 px-5 py-2.5 border-b border-slate-100 dark:border-white/[0.08]">
+      <span className="text-xs font-semibold text-slate-400 dark:text-white/35 w-8 shrink-0">To</span>
       {value ? (
         <div className="flex items-center gap-1.5 flex-1">
           <span className="inline-flex items-center gap-1 bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-300 text-xs px-2 py-0.5 rounded-full border border-green-200 dark:border-green-800">
@@ -151,7 +151,7 @@ const ContactSelector: React.FC<ContactSelectorProps> = ({ contacts, value, onCh
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -4 }}
             transition={{ duration: 0.15 }}
-            className="absolute left-14 right-0 top-full z-50 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl shadow-lg overflow-hidden"
+            className="absolute left-14 right-0 top-full z-50 bg-white dark:bg-card border border-slate-200 dark:border-white/[0.10] rounded-xl shadow-lg overflow-hidden"
           >
             {filtered.map((c: any) => (
               <button
@@ -197,9 +197,9 @@ const ComposeSMSPanel: React.FC<ComposeSMSPanelProps> = ({ contacts, onSend, onD
   const canSend = !!recipient && message.trim().length > 0 && !isSending;
 
   return (
-    <Card className="h-full flex flex-col shadow-sm bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 overflow-hidden">
+    <Card className="h-full flex flex-col shadow-sm bg-white dark:bg-card border-slate-200 dark:border-white/[0.08] overflow-hidden">
       {/* Header */}
-      <div className="flex items-center justify-between px-5 py-3.5 border-b border-slate-200 dark:border-slate-800 flex-shrink-0">
+      <div className="flex items-center justify-between px-5 py-3.5 border-b border-slate-200 dark:border-white/[0.08] flex-shrink-0">
         <div className="flex items-center gap-2.5">
           <div className="h-8 w-8 rounded-lg bg-green-50 dark:bg-green-900/20 flex items-center justify-center">
             <Pen className="h-4 w-4 text-green-600" />
@@ -227,7 +227,7 @@ const ComposeSMSPanel: React.FC<ComposeSMSPanelProps> = ({ contacts, onSend, onD
           />
 
           {/* Char counter */}
-          <div className="border-t border-slate-100 dark:border-slate-800 mt-3 pt-2 pb-1 flex-shrink-0">
+          <div className="border-t border-slate-100 dark:border-white/[0.08] mt-3 pt-2 pb-1 flex-shrink-0">
             <span className={`text-xs ${message.length > SMS_CHAR_LIMIT ? 'text-violet-500' : 'text-slate-400'}`}>
               {message.length} chars · {msgCount} SMS segment{msgCount > 1 ? 's' : ''}
             </span>
@@ -235,7 +235,7 @@ const ComposeSMSPanel: React.FC<ComposeSMSPanelProps> = ({ contacts, onSend, onD
         </div>
 
         {/* Toolbar */}
-        <div className="flex items-center justify-between px-5 py-3.5 border-t border-slate-200 dark:border-slate-800 flex-shrink-0">
+        <div className="flex items-center justify-between px-5 py-3.5 border-t border-slate-200 dark:border-white/[0.08] flex-shrink-0">
           <Button variant="ghost" size="sm" className="text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 text-xs" onClick={onDiscard}>
             {t('sms.cancel')}
           </Button>
@@ -355,7 +355,7 @@ const SMSInboxPage: React.FC = () => {
         className={`w-full p-4 text-left rounded-xl border transition-all duration-300 ${
           isSelected
             ? 'bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-950/50 dark:to-emerald-950/50 border-green-200 dark:border-green-800 shadow-lg ring-2 ring-green-500/20'
-            : 'bg-white dark:bg-slate-800/50 border-slate-100 dark:border-slate-700/50 hover:bg-slate-50 dark:hover:bg-slate-800 hover:shadow-md hover:border-slate-200 dark:hover:border-slate-600'
+            : 'bg-white dark:bg-white/[0.07]/50 border-slate-100 dark:border-white/[0.10]/50 hover:bg-slate-50 dark:hover:bg-slate-800 hover:shadow-md hover:border-slate-200 dark:hover:border-slate-600'
         }`}
         style={{ animationDelay: `${index * 0.05}s` }}
       >
@@ -365,12 +365,12 @@ const SMSInboxPage: React.FC = () => {
               <Phone className="h-4 w-4 text-green-600 dark:text-green-400" />
             </div>
             {!isResolved && (
-              <span className="absolute -top-1 -right-1 h-3 w-3 bg-green-500 rounded-full border-2 border-white dark:border-slate-800" />
+              <span className="absolute -top-1 -right-1 h-3 w-3 bg-green-500 rounded-full border-2 border-white dark:border-white/[0.08]" />
             )}
           </div>
           <div className="flex-grow min-w-0">
             <div className="flex items-center justify-between mb-1.5">
-              <h4 className={`font-semibold text-sm truncate ${isResolved ? 'text-slate-500 dark:text-slate-400' : 'text-slate-800 dark:text-slate-100'}`}>
+              <h4 className={`font-semibold text-sm truncate ${isResolved ? 'text-slate-500 dark:text-white/50' : 'text-slate-800 dark:text-white'}`}>
                 {session.contact_name || session.contact_phone || t('sms.unknown')}
               </h4>
               <span className="text-[10px] text-muted-foreground shrink-0 ml-2 flex items-center gap-1">
@@ -404,7 +404,7 @@ const SMSInboxPage: React.FC = () => {
 
   // ── Render ────────────────────────────────────────────────────────────────
   return (
-    <div className="h-full w-full overflow-hidden bg-slate-50 dark:bg-slate-950">
+    <div className="h-full w-full overflow-hidden bg-slate-50 dark:bg-background">
       <div className="grid grid-cols-1 md:grid-cols-12 gap-4 h-full p-4">
 
         {/* ── Left: Conversation List ───────────────────────────────────── */}
@@ -414,19 +414,19 @@ const SMSInboxPage: React.FC = () => {
           transition={{ duration: 0.4, ease: 'easeOut' }}
           className={`h-full overflow-hidden transition-all duration-500 ease-out ${isSidebarCollapsed ? 'md:col-span-1' : 'md:col-span-3'} ${(selectedSessionId || centerView === 'compose') ? 'hidden md:block' : 'block'}`}
         >
-          <Card className="h-full flex flex-col shadow-sm bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 relative overflow-hidden">
+          <Card className="h-full flex flex-col shadow-sm bg-white dark:bg-card border-slate-200 dark:border-white/[0.08] relative overflow-hidden">
             <motion.button
               whileHover={{ scale: 1.1 }}
               whileTap={{ scale: 0.95 }}
               onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
-              className={`absolute ${isRTL ? '-left-3' : '-right-3'} top-1/2 -translate-y-1/2 z-10 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 rounded-full p-2 shadow-sm border border-slate-200 dark:border-slate-700 transition-all duration-300`}
+              className={`absolute ${isRTL ? '-left-3' : '-right-3'} top-1/2 -translate-y-1/2 z-10 bg-white dark:bg-white/[0.07] hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-600 dark:text-white/80 rounded-full p-2 shadow-sm border border-slate-200 dark:border-white/[0.10] transition-all duration-300`}
             >
               <motion.div animate={{ rotate: isSidebarCollapsed ? 180 : 0 }} transition={{ duration: 0.3 }}>
                 <PanelLeftClose className="h-4 w-4" />
               </motion.div>
             </motion.button>
 
-            <CardHeader className={`border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 flex-shrink-0 py-4 ${isSidebarCollapsed ? 'px-2' : 'space-y-4'}`}>
+            <CardHeader className={`border-b border-slate-200 dark:border-white/[0.08] bg-white dark:bg-card flex-shrink-0 py-4 ${isSidebarCollapsed ? 'px-2' : 'space-y-4'}`}>
               <AnimatePresence mode="wait">
                 {!isSidebarCollapsed && (
                   <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }} className="space-y-4">
@@ -443,7 +443,7 @@ const SMSInboxPage: React.FC = () => {
                       </div>
                       <div className="flex items-center gap-1.5">
                         <motion.div key={counts.all} initial={{ scale: 0.8 }} animate={{ scale: 1 }}>
-                          <Badge variant="secondary" className="bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-200 font-semibold px-3 py-1 rounded-full">
+                          <Badge variant="secondary" className="bg-slate-100 dark:bg-white/[0.10] text-slate-700 dark:text-white/90 font-semibold px-3 py-1 rounded-full">
                             {counts.all}
                           </Badge>
                         </motion.div>
@@ -462,19 +462,19 @@ const SMSInboxPage: React.FC = () => {
                         placeholder={t('sms.searchPlaceholder')}
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
-                        className={`bg-white dark:bg-slate-900/50 border-slate-200 dark:border-slate-700 rounded-xl h-11 ${isRTL ? 'pr-11' : 'pl-11'} transition-all duration-200 focus:border-green-500 focus:ring-2 focus:ring-green-500/20`}
+                        className={`bg-white dark:bg-card/50 border-slate-200 dark:border-white/[0.10] rounded-xl h-11 ${isRTL ? 'pr-11' : 'pl-11'} transition-all duration-200 focus:border-green-500 focus:ring-2 focus:ring-green-500/20`}
                       />
                     </div>
 
                     {/* Tabs */}
                     <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as TabType)} className="w-full">
-                      <TabsList className="w-full grid grid-cols-3 bg-slate-100/80 dark:bg-slate-800/80 p-1 rounded-xl gap-1">
+                      <TabsList className="w-full grid grid-cols-3 bg-slate-100/80 dark:bg-white/[0.06] p-1 rounded-xl gap-1">
                         {([
                           { value: 'all', label: t('sms.tabAll'), count: counts.all, color: 'text-indigo-600 dark:text-blue-400' },
                           { value: 'open', label: t('sms.tabOpen'), count: counts.open, color: 'text-green-600 dark:text-green-400' },
                           { value: 'resolved', label: t('sms.tabDone'), count: counts.resolved, color: 'text-blue-600 dark:text-blue-400' },
                         ] as const).map(({ value, label, count, color }) => (
-                          <TabsTrigger key={value} value={value} className="text-xs font-medium rounded-lg data-[state=active]:bg-white dark:data-[state=active]:bg-slate-700 data-[state=active]:shadow-md transition-all duration-300 py-1.5">
+                          <TabsTrigger key={value} value={value} className="text-xs font-medium rounded-lg data-[state=active]:bg-white dark:data-[state=active]:bg-white/[0.12] data-[state=active]:shadow-md transition-all duration-300 py-1.5">
                             <span className="flex items-center gap-1.5">
                               <span>{label}</span>
                               <motion.span key={count} initial={{ scale: 0.8 }} animate={{ scale: 1 }} className={`text-xs font-bold ${color}`}>{count}</motion.span>
@@ -499,7 +499,7 @@ const SMSInboxPage: React.FC = () => {
               </AnimatePresence>
             </CardHeader>
 
-            <CardContent className={`flex-1 overflow-y-auto bg-gradient-to-b from-slate-50/50 to-white dark:from-slate-900/50 dark:to-slate-800 ${isSidebarCollapsed ? 'p-0' : 'p-3'}`}>
+            <CardContent className={`flex-1 overflow-y-auto bg-gradient-to-b from-slate-50/50 to-white dark:from-background/50 dark:to-white/[0.04] ${isSidebarCollapsed ? 'p-0' : 'p-3'}`}>
               {isLoading ? (
                 <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-3">
                   {[...Array(5)].map((_, i) => <ThreadSkeleton key={i} />)}
@@ -535,10 +535,10 @@ const SMSInboxPage: React.FC = () => {
               ) : (
                 <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="flex items-center justify-center h-full p-8">
                   <div className="text-center">
-                    <div className="w-20 h-20 rounded-xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center mx-auto mb-6">
-                      <MessageSquare className="w-10 h-10 text-slate-400 dark:text-slate-500" />
+                    <div className="w-20 h-20 rounded-xl bg-slate-100 dark:bg-white/[0.07] flex items-center justify-center mx-auto mb-6">
+                      <MessageSquare className="w-10 h-10 text-slate-400 dark:text-white/35" />
                     </div>
-                    <h3 className="text-lg font-semibold text-slate-700 dark:text-slate-300 mb-2">
+                    <h3 className="text-lg font-semibold text-slate-700 dark:text-white/80 mb-2">
                       {searchQuery ? t('sms.noMatches') : t('sms.noConversations')}
                     </h3>
                     <p className="text-sm text-muted-foreground max-w-[200px] mx-auto mb-4">
@@ -590,7 +590,7 @@ const SMSInboxPage: React.FC = () => {
               </motion.div>
             ) : (
               <motion.div key="empty" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="h-full">
-                <Card className="h-full flex items-center justify-center shadow-sm bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 overflow-hidden">
+                <Card className="h-full flex items-center justify-center shadow-sm bg-white dark:bg-card border-slate-200 dark:border-white/[0.08] overflow-hidden">
                   <div className="text-center p-8">
                     <motion.div initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ type: 'spring', stiffness: 200, damping: 15 }} className="inline-block mb-6">
                       <div className="w-24 h-24 rounded-2xl bg-green-50 dark:bg-green-900/20 flex items-center justify-center">
@@ -600,7 +600,7 @@ const SMSInboxPage: React.FC = () => {
                     <motion.h3 initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="text-2xl font-bold mb-3 text-slate-800 dark:text-white">
                       {t('sms.selectConversation')}
                     </motion.h3>
-                    <motion.p initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="text-slate-500 dark:text-slate-400 max-w-sm mx-auto leading-relaxed mb-6">
+                    <motion.p initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="text-slate-500 dark:text-white/50 max-w-sm mx-auto leading-relaxed mb-6">
                       {t('sms.selectConversationDesc')}
                     </motion.p>
                     <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}>
@@ -622,12 +622,12 @@ const SMSInboxPage: React.FC = () => {
           transition={{ duration: 0.4, delay: 0.2 }}
           className={`h-full overflow-hidden transition-all duration-500 ease-out ${isRightCollapsed ? 'md:col-span-1' : 'md:col-span-3'} hidden md:block`}
         >
-          <Card className="h-full flex flex-col shadow-sm bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 relative overflow-hidden">
+          <Card className="h-full flex flex-col shadow-sm bg-white dark:bg-card border-slate-200 dark:border-white/[0.08] relative overflow-hidden">
             <motion.button
               whileHover={{ scale: 1.1 }}
               whileTap={{ scale: 0.95 }}
               onClick={() => setIsRightCollapsed(!isRightCollapsed)}
-              className={`absolute ${isRTL ? '-right-3' : '-left-3'} top-1/2 -translate-y-1/2 z-10 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 rounded-full p-2 shadow-sm border border-slate-200 dark:border-slate-700 transition-all duration-300`}
+              className={`absolute ${isRTL ? '-right-3' : '-left-3'} top-1/2 -translate-y-1/2 z-10 bg-white dark:bg-white/[0.07] hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-600 dark:text-white/80 rounded-full p-2 shadow-sm border border-slate-200 dark:border-white/[0.10] transition-all duration-300`}
             >
               <motion.div animate={{ rotate: isRightCollapsed ? 0 : 180 }} transition={{ duration: 0.3 }}>
                 <PanelRightOpen className="h-4 w-4" />
@@ -638,8 +638,8 @@ const SMSInboxPage: React.FC = () => {
               {centerView === 'thread' && selectedSessionId ? (
                 isRightCollapsed ? (
                   <motion.div key="collapsed" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex flex-col items-center justify-center h-full p-2 gap-4">
-                    <div className="h-12 w-12 rounded-xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
-                      {sidebarView === 'summary' ? <Sparkles className="h-6 w-6 text-slate-600 dark:text-slate-300" /> : <UserIcon className="h-6 w-6 text-slate-600 dark:text-slate-300" />}
+                    <div className="h-12 w-12 rounded-xl bg-slate-100 dark:bg-white/[0.07] flex items-center justify-center">
+                      {sidebarView === 'summary' ? <Sparkles className="h-6 w-6 text-slate-600 dark:text-white/80" /> : <UserIcon className="h-6 w-6 text-slate-600 dark:text-white/80" />}
                     </div>
                     <span className="text-xs text-muted-foreground font-medium" style={{ writingMode: 'vertical-rl' }}>
                       {sidebarView === 'summary' ? t('sms.summary') : t('sms.contact')}
@@ -667,7 +667,7 @@ const SMSInboxPage: React.FC = () => {
                         <UserIcon className="w-10 h-10 text-green-500" />
                       </div>
                       <h3 className="text-lg font-bold mb-2 text-slate-800 dark:text-white">{t('sms.contactDetails')}</h3>
-                      <p className="text-slate-500 dark:text-slate-400 text-sm max-w-[180px] mx-auto">
+                      <p className="text-slate-500 dark:text-white/50 text-sm max-w-[180px] mx-auto">
                         {t('sms.selectConversationContact')}
                       </p>
                     </div>

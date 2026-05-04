@@ -18,6 +18,7 @@ import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from '@/componen
 import { ImperativePanelHandle } from 'react-resizable-panels';
 
 import Sidebar from './Sidebar';
+import { useTheme } from '@/hooks/useTheme';
 import WorkflowAISidebar, { WorkflowAISidebarHandle } from './WorkflowAISidebar';
 import { WorkflowDetailsDialog } from './WorkflowDetailsDialog';
 import { WorkflowSettings } from './WorkflowSettings';
@@ -42,6 +43,8 @@ const initialNodes = [
 
 const VisualWorkflowBuilder = () => {
   const { t, isRTL } = useI18n();
+  const { theme } = useTheme();
+  const isDark = theme === 'dark';
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
   const [reactFlowInstance, setReactFlowInstance] = useState(null);
@@ -111,9 +114,17 @@ const VisualWorkflowBuilder = () => {
         // Already traversed — steady green glow, not animated
         return { ...e, animated: false, style: { stroke: '#22c55e', strokeWidth: 2.5, opacity: 0.85, filter: 'drop-shadow(0 0 4px rgba(34,197,94,0.6))' } };
       }
-      return e;
+      // Override baked-in colors with theme-appropriate stroke
+      return {
+        ...e,
+        style: {
+          ...e.style,
+          stroke: isDark ? 'rgba(255,255,255,0.35)' : '#8b5cf6',
+          strokeWidth: isDark ? 1.5 : 2.5,
+        },
+      };
     }),
-    [edges, simEdgeIds, animatingEdgeId]
+    [edges, simEdgeIds, animatingEdgeId, isDark]
   );
 
   // Clear all simulation visuals (called on test reset)
@@ -892,7 +903,15 @@ const VisualWorkflowBuilder = () => {
                     defaultEdgeOptions={{
                       type: 'smoothstep',
                       animated: true,
-                      style: { stroke: '#8b5cf6', strokeWidth: 2.5 },
+                      style: {
+                        stroke: isDark ? 'rgba(255,255,255,0.35)' : '#8b5cf6',
+                        strokeWidth: isDark ? 1.5 : 2.5,
+                      },
+                    }}
+                    connectionLineStyle={{
+                      stroke: isDark ? 'rgba(255,255,255,0.50)' : '#8b5cf6',
+                      strokeWidth: isDark ? 1.5 : 2,
+                      strokeDasharray: '5 4',
                     }}
                     className="bg-background"
                   >
@@ -905,10 +924,16 @@ const VisualWorkflowBuilder = () => {
                         if (node.type === 'llm') return '#6366f1';
                         if (node.type === 'tool') return '#10b981';
                         if (node.type === 'condition') return '#f59e0b';
-                        return '#8b5cf6';
+                        return isDark ? 'rgba(255,255,255,0.4)' : '#8b5cf6';
                       }}
                     />
-                    <Background variant="dots" gap={24} size={1} color="#94a3b8" className="opacity-25" />
+                    <Background
+                      variant="dots"
+                      gap={24}
+                      size={1}
+                      color={isDark ? 'rgba(255,255,255,0.18)' : '#94a3b8'}
+                      className="opacity-100"
+                    />
                   </ReactFlow>
                 </div>
               </ResizablePanel>

@@ -110,14 +110,14 @@ const CHANNEL_CONFIG: Record<
 };
 
 const STAGE_CONFIG: Record<string, { label: string; cls: string }> = {
-  subscriber:  { label: "Subscriber",  cls: "bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-300" },
+  subscriber:  { label: "Subscriber",  cls: "bg-muted text-foreground" },
   lead:        { label: "Lead",        cls: "bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300" },
   mql:         { label: "MQL",         cls: "bg-indigo-100 text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300" },
   sql:         { label: "SQL",         cls: "bg-violet-100 text-violet-700 dark:bg-violet-900/40 dark:text-violet-300" },
   opportunity: { label: "Opportunity", cls: "bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300" },
   customer:    { label: "Customer",    cls: "bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300" },
   evangelist:  { label: "Evangelist",  cls: "bg-violet-100 text-violet-700 dark:bg-violet-900/40 dark:text-violet-300" },
-  other:       { label: "Other",       cls: "bg-slate-100 text-slate-500 dark:bg-slate-700 dark:text-slate-400" },
+  other:       { label: "Other",       cls: "bg-muted text-muted-foreground" },
 };
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -169,10 +169,10 @@ function ContactCardSkeleton() {
   return (
     <div className="px-3 py-3 rounded-lg animate-pulse">
       <div className="flex items-center gap-2.5">
-        <div className="w-9 h-9 rounded-full bg-slate-200 dark:bg-slate-700 flex-shrink-0" />
+        <div className="w-9 h-9 rounded-full bg-muted flex-shrink-0" />
         <div className="flex-1 space-y-1.5">
-          <div className="h-3 bg-slate-200 dark:bg-slate-700 rounded w-3/4" />
-          <div className="h-2.5 bg-slate-200 dark:bg-slate-700 rounded w-1/2" />
+          <div className="h-3 bg-muted rounded w-3/4" />
+          <div className="h-2.5 bg-muted rounded w-1/2" />
         </div>
       </div>
     </div>
@@ -182,10 +182,10 @@ function ContactCardSkeleton() {
 function TimelineItemSkeleton() {
   return (
     <div className="px-3 py-2.5 animate-pulse flex items-start gap-2.5">
-      <div className="w-4 h-4 rounded-full bg-slate-200 dark:bg-slate-700 flex-shrink-0 mt-0.5" />
+      <div className="w-4 h-4 rounded-full bg-muted flex-shrink-0 mt-0.5" />
       <div className="flex-1 space-y-1.5">
-        <div className="h-3 bg-slate-200 dark:bg-slate-700 rounded w-2/3" />
-        <div className="h-2.5 bg-slate-200 dark:bg-slate-700 rounded w-1/2" />
+        <div className="h-3 bg-muted rounded w-2/3" />
+        <div className="h-2.5 bg-muted rounded w-1/2" />
       </div>
     </div>
   );
@@ -212,8 +212,8 @@ function ContactCard({
       className={cn(
         "w-full text-left px-3 py-3 rounded-lg transition-all border",
         selected
-          ? "bg-blue-50 border-blue-200 dark:bg-blue-950/40 dark:border-blue-700 shadow-sm"
-          : "bg-white border-transparent hover:bg-slate-50 dark:bg-slate-800/50 dark:hover:bg-slate-700/50"
+          ? "bg-violet-50 border-violet-200 dark:bg-violet-500/10 dark:border-violet-500/30 shadow-sm"
+          : "bg-card border-transparent hover:bg-muted/60 dark:hover:bg-white/[0.06]"
       )}
     >
       <div className="flex items-center gap-2.5">
@@ -221,25 +221,25 @@ function ContactCard({
           className={cn(
             "flex-shrink-0 w-9 h-9 rounded-full flex items-center justify-center text-sm font-semibold",
             selected
-              ? "bg-blue-500 text-white"
-              : "bg-slate-200 text-slate-600 dark:bg-slate-600 dark:text-slate-200"
+              ? "bg-violet-500 text-white"
+              : "bg-muted text-foreground"
           )}
         >
           {initials}
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-center justify-between gap-1 mb-0.5">
-            <span className="text-sm font-medium text-slate-900 dark:text-slate-100 truncate">
+            <span className="text-sm font-medium text-foreground truncate">
               {contact.name || contact.email || "Unknown"}
             </span>
             {lastActivity && (
-              <span className="text-[10px] text-slate-400 flex-shrink-0">
+              <span className="text-[10px] text-muted-foreground flex-shrink-0">
                 {formatRelative(lastActivity)}
               </span>
             )}
           </div>
           <div className="flex items-center gap-1.5">
-            <span className="text-xs text-slate-500 dark:text-slate-400 truncate">
+            <span className="text-xs text-muted-foreground truncate">
               {contact.email || contact.phone_number || "No contact info"}
             </span>
             {stageCfg && (
@@ -274,15 +274,15 @@ function ChannelTab({
         className={cn(
           "flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md transition-colors",
           active
-            ? "bg-blue-500 text-white shadow-sm"
-            : "text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800"
+            ? "bg-violet-500 text-white shadow-sm"
+            : "text-muted-foreground hover:text-foreground hover:bg-muted/60"
         )}
       >
         <Activity className="w-3.5 h-3.5" />
         <span>Timeline</span>
         <span className={cn(
           "ml-0.5 px-1 rounded text-[10px]",
-          active ? "bg-blue-400 text-white" : "bg-slate-200 text-slate-500 dark:bg-slate-600 dark:text-slate-400"
+          active ? "bg-violet-500 text-white" : "bg-muted text-muted-foreground"
         )}>
           {count}
         </span>
@@ -290,7 +290,7 @@ function ChannelTab({
     );
   }
 
-  const cfg = CHANNEL_CONFIG[channel] ?? { label: channel, color: "text-slate-500", Icon: MessageSquare };
+  const cfg = CHANNEL_CONFIG[channel] ?? { label: channel, color: "text-muted-foreground", Icon: MessageSquare };
   const { Icon, label, color } = cfg;
 
   return (
@@ -299,8 +299,8 @@ function ChannelTab({
       className={cn(
         "flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md transition-colors",
         active
-          ? "bg-slate-100 dark:bg-slate-700 text-slate-900 dark:text-white"
-          : "text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800"
+          ? "bg-muted text-foreground"
+          : "text-muted-foreground hover:text-foreground hover:bg-muted/60"
       )}
     >
       <Icon className={cn("w-3.5 h-3.5", color)} />
@@ -308,8 +308,8 @@ function ChannelTab({
       <span className={cn(
         "ml-0.5 px-1 rounded text-[10px]",
         active
-          ? "bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300"
-          : "bg-slate-200 text-slate-500 dark:bg-slate-600 dark:text-slate-400"
+          ? "bg-violet-100 text-violet-700 dark:bg-violet-500/15 dark:text-violet-300"
+          : "bg-muted text-muted-foreground"
       )}>
         {count}
       </span>
@@ -337,8 +337,8 @@ function TimelineRow({
         className={cn(
           "w-full text-left px-3 py-2.5 rounded-lg flex items-center gap-2.5 transition-colors group",
           selected
-            ? "bg-blue-50 dark:bg-blue-950/40 ring-1 ring-blue-200 dark:ring-blue-800"
-            : "hover:bg-slate-50 dark:hover:bg-slate-700/40"
+            ? "bg-violet-50 dark:bg-violet-500/10 ring-1 ring-violet-200 dark:ring-violet-500/30"
+            : "hover:bg-muted/60"
         )}
       >
         <div className={cn(
@@ -354,21 +354,21 @@ function TimelineRow({
           <div className="flex items-center justify-between gap-1">
             <span className={cn(
               "text-xs font-medium",
-              selected ? "text-blue-700 dark:text-blue-300" : "text-slate-700 dark:text-slate-300"
+              selected ? "text-violet-600 dark:text-violet-400" : "text-foreground"
             )}>
               {isInbound ? call.from_number : call.to_number}
             </span>
-            <span className="text-[10px] text-slate-400 flex-shrink-0">{formatRelative(call.started_at)}</span>
+            <span className="text-[10px] text-muted-foreground flex-shrink-0">{formatRelative(call.started_at)}</span>
           </div>
           <div className="flex items-center gap-2 mt-0.5">
-            <span className="text-[11px] text-slate-500 dark:text-slate-400">
+            <span className="text-[11px] text-muted-foreground">
               📞 {formatDuration(call.duration_seconds)}
             </span>
             <span className={cn(
               "text-[9px] px-1 py-0.5 rounded font-medium",
               call.status === "completed" ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
               : call.status === "no-answer" ? "bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400"
-              : "bg-slate-100 text-slate-500 dark:bg-slate-700 dark:text-slate-400"
+              : "bg-muted text-muted-foreground"
             )}>
               {call.status}
             </span>
@@ -379,7 +379,7 @@ function TimelineRow({
   }
 
   const session = item.data;
-  const cfg = CHANNEL_CONFIG[session.channel] ?? { label: session.channel, color: "text-slate-500", Icon: MessageSquare };
+  const cfg = CHANNEL_CONFIG[session.channel] ?? { label: session.channel, color: "text-muted-foreground", Icon: MessageSquare };
   const { Icon, color, label } = cfg;
 
   return (
@@ -388,8 +388,8 @@ function TimelineRow({
       className={cn(
         "w-full text-left px-3 py-2.5 rounded-lg flex items-start gap-2.5 transition-colors",
         selected
-          ? "bg-blue-50 dark:bg-blue-950/40 ring-1 ring-blue-200 dark:ring-blue-800"
-          : "hover:bg-slate-50 dark:hover:bg-slate-700/40"
+          ? "bg-violet-50 dark:bg-violet-500/10 ring-1 ring-violet-200 dark:ring-violet-500/30"
+          : "hover:bg-muted/60"
       )}
     >
       <Icon className={cn("w-4 h-4 mt-0.5 flex-shrink-0", color)} />
@@ -397,15 +397,15 @@ function TimelineRow({
         <div className="flex items-center justify-between gap-1">
           <span className={cn(
             "text-xs font-medium",
-            selected ? "text-blue-700 dark:text-blue-300" : "text-slate-700 dark:text-slate-300"
+            selected ? "text-violet-600 dark:text-violet-400" : "text-foreground"
           )}>
             {label}
           </span>
-          <span className="text-[10px] text-slate-400 flex-shrink-0">
+          <span className="text-[10px] text-muted-foreground flex-shrink-0">
             {formatRelative(session.last_message_timestamp)}
           </span>
         </div>
-        <p className="text-[11px] text-slate-500 dark:text-slate-400 truncate mt-0.5">
+        <p className="text-[11px] text-muted-foreground truncate mt-0.5">
           {session.first_message_content || "No messages yet"}
         </p>
         <div className="mt-1">
@@ -413,7 +413,7 @@ function TimelineRow({
             "text-[9px] px-1 py-0.5 rounded font-medium",
             session.status === "active"   ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
             : session.status === "resolved" ? "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400"
-            : session.status === "inactive" ? "bg-slate-100 text-slate-500 dark:bg-slate-700 dark:text-slate-400"
+            : session.status === "inactive" ? "bg-muted text-muted-foreground"
             : "bg-violet-100 text-violet-700 dark:bg-violet-900/30 dark:text-violet-400"
           )}>
             {session.status}
@@ -435,7 +435,7 @@ function SessionRow({
   selected: boolean;
   onClick: () => void;
 }) {
-  const cfg = CHANNEL_CONFIG[session.channel] ?? { label: session.channel, color: "text-slate-500", Icon: MessageSquare };
+  const cfg = CHANNEL_CONFIG[session.channel] ?? { label: session.channel, color: "text-muted-foreground", Icon: MessageSquare };
   const { Icon, color } = cfg;
 
   return (
@@ -444,8 +444,8 @@ function SessionRow({
       className={cn(
         "w-full text-left px-3 py-2.5 rounded-lg flex items-start gap-2.5 transition-colors",
         selected
-          ? "bg-blue-50 dark:bg-blue-950/40 ring-1 ring-blue-200 dark:ring-blue-800"
-          : "hover:bg-slate-50 dark:hover:bg-slate-700/40"
+          ? "bg-violet-50 dark:bg-violet-500/10 ring-1 ring-violet-200 dark:ring-violet-500/30"
+          : "hover:bg-muted/60"
       )}
     >
       <Icon className={cn("w-4 h-4 mt-0.5 flex-shrink-0", color)} />
@@ -453,15 +453,15 @@ function SessionRow({
         <div className="flex items-center justify-between gap-1">
           <span className={cn(
             "text-xs font-medium",
-            selected ? "text-blue-700 dark:text-blue-300" : "text-slate-700 dark:text-slate-300"
+            selected ? "text-violet-600 dark:text-violet-400" : "text-foreground"
           )}>
             {cfg.label}
           </span>
-          <span className="text-[10px] text-slate-400 flex-shrink-0">
+          <span className="text-[10px] text-muted-foreground flex-shrink-0">
             {formatRelative(session.last_message_timestamp)}
           </span>
         </div>
-        <p className="text-[11px] text-slate-500 dark:text-slate-400 truncate mt-0.5">
+        <p className="text-[11px] text-muted-foreground truncate mt-0.5">
           {session.first_message_content || "No messages yet"}
         </p>
       </div>
@@ -469,7 +469,7 @@ function SessionRow({
         "text-[9px] px-1 py-0.5 rounded font-medium self-center flex-shrink-0",
         session.status === "active"   ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
         : session.status === "resolved" ? "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400"
-        : "bg-slate-100 text-slate-500 dark:bg-slate-700 dark:text-slate-400"
+        : "bg-muted text-muted-foreground"
       )}>
         {session.status}
       </span>
@@ -496,8 +496,8 @@ function CallRow({
       className={cn(
         "w-full text-left px-3 py-2.5 rounded-lg flex items-center gap-2.5 transition-colors",
         selected
-          ? "bg-blue-50 dark:bg-blue-950/40 ring-1 ring-blue-200 dark:ring-blue-800"
-          : "hover:bg-slate-50 dark:hover:bg-slate-700/40"
+          ? "bg-violet-50 dark:bg-violet-500/10 ring-1 ring-violet-200 dark:ring-violet-500/30"
+          : "hover:bg-muted/60"
       )}
     >
       {isInbound
@@ -506,21 +506,21 @@ function CallRow({
       }
       <div className="flex-1 min-w-0">
         <div className="flex items-center justify-between gap-1">
-          <span className="text-xs font-medium text-slate-700 dark:text-slate-300 truncate">
+          <span className="text-xs font-medium text-foreground truncate">
             {isInbound ? call.from_number : call.to_number}
           </span>
-          <span className="text-[10px] text-slate-400 flex-shrink-0">
+          <span className="text-[10px] text-muted-foreground flex-shrink-0">
             {formatRelative(call.started_at)}
           </span>
         </div>
         <div className="flex items-center gap-2 mt-0.5">
-          <span className="text-[11px] text-slate-500 dark:text-slate-400">
+          <span className="text-[11px] text-muted-foreground">
             {formatDuration(call.duration_seconds)}
           </span>
           <span className={cn(
             "text-[9px] px-1 py-0.5 rounded font-medium",
             call.status === "completed" ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
-            : "bg-slate-100 text-slate-500 dark:bg-slate-700 dark:text-slate-400"
+            : "bg-muted text-muted-foreground"
           )}>
             {call.status}
           </span>
@@ -763,22 +763,22 @@ export default function ContactHubPage() {
   // ── Render ─────────────────────────────────────────────────────────────────
 
   return (
-    <div className="flex h-full overflow-hidden bg-slate-50 dark:bg-slate-900">
+    <div className="flex h-full overflow-hidden bg-background">
 
       {/* ── Left Panel: Contact List ───────────────────────────────────────── */}
-      <div className="w-64 flex-shrink-0 flex flex-col border-r border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800">
+      <div className="w-64 flex-shrink-0 flex flex-col border-r border-border bg-card">
         {/* Header */}
-        <div className="px-3 py-3 border-b border-slate-100 dark:border-slate-700 space-y-2">
+        <div className="px-3 py-3 border-b border-border space-y-2">
           <div className="flex items-center justify-between">
-            <h2 className="text-sm font-semibold text-slate-700 dark:text-slate-200">Contacts</h2>
-            <span className="text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400">
+            <h2 className="text-sm font-semibold text-foreground">Contacts</h2>
+            <span className="text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-muted text-muted-foreground">
               {filteredContacts.length}
             </span>
           </div>
 
           {/* Search */}
           <div className="relative">
-            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400" />
+            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
             <Input
               placeholder="Search…"
               value={search}
@@ -792,14 +792,14 @@ export default function ContactHubPage() {
             <select
               value={stageFilter}
               onChange={(e) => setStageFilter(e.target.value)}
-              className="w-full appearance-none text-xs h-8 pl-2.5 pr-7 rounded-md border border-input bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 focus:outline-none focus:ring-1 focus:ring-ring"
+              className="w-full appearance-none text-xs h-8 pl-2.5 pr-7 rounded-md border border-input bg-card text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
             >
               <option value="">All stages</option>
               {Object.entries(STAGE_CONFIG).map(([key, cfg]) => (
                 <option key={key} value={key}>{cfg.label}</option>
               ))}
             </select>
-            <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400 pointer-events-none" />
+            <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground pointer-events-none" />
           </div>
         </div>
 
@@ -808,7 +808,7 @@ export default function ContactHubPage() {
           {isLoadingContacts ? (
             [...Array(6)].map((_, i) => <ContactCardSkeleton key={i} />)
           ) : filteredContacts.length === 0 ? (
-            <p className="text-xs text-slate-400 text-center py-8">No contacts found</p>
+            <p className="text-xs text-muted-foreground text-center py-8">No contacts found</p>
           ) : (
             filteredContacts.map((contact) => (
               <ContactCard
@@ -823,19 +823,19 @@ export default function ContactHubPage() {
       </div>
 
       {/* ── Middle Panel: Contact Profile + Channel Tabs ───────────────────── */}
-      <div className="w-80 flex-shrink-0 flex flex-col border-r border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800">
+      <div className="w-80 flex-shrink-0 flex flex-col border-r border-border bg-card">
         {!selectedContact ? (
           <div className="flex-1 flex items-center justify-center">
-            <div className="text-center text-slate-400">
+            <div className="text-center text-muted-foreground">
               <User className="w-10 h-10 mx-auto mb-2 opacity-30" />
               <p className="text-sm">Select a contact</p>
-              <p className="text-xs mt-1 text-slate-400">to view their activity</p>
+              <p className="text-xs mt-1 text-muted-foreground">to view their activity</p>
             </div>
           </div>
         ) : (
           <>
             {/* Profile header */}
-            <div className="px-4 py-4 border-b border-slate-100 dark:border-slate-700">
+            <div className="px-4 py-4 border-b border-border">
               {/* Avatar + name row */}
               <div className="flex items-start gap-3 mb-3">
                 <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-white text-lg font-semibold flex-shrink-0 shadow-sm">
@@ -843,13 +843,13 @@ export default function ContactHubPage() {
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
-                    <h3 className="font-semibold text-slate-900 dark:text-white truncate">
+                    <h3 className="font-semibold text-foreground truncate">
                       {selectedContact.name || "Unnamed Contact"}
                     </h3>
                     {!isEditing && (
                       <button
                         onClick={handleStartEdit}
-                        className="flex-shrink-0 p-1 rounded hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-colors"
+                        className="flex-shrink-0 p-1 rounded hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
                         title="Edit contact"
                       >
                         <Pencil className="w-3 h-3" />
@@ -860,7 +860,7 @@ export default function ContactHubPage() {
                     <span className={cn(
                       "text-[10px] px-1.5 py-0.5 rounded-full font-medium",
                       STAGE_CONFIG[selectedContact.lifecycle_stage]?.cls ??
-                        "bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-300"
+                        "bg-muted text-foreground"
                     )}>
                       {STAGE_CONFIG[selectedContact.lifecycle_stage]?.label ?? selectedContact.lifecycle_stage}
                     </span>
@@ -894,14 +894,14 @@ export default function ContactHubPage() {
                     <select
                       value={editForm.lifecycle_stage}
                       onChange={(e) => setEditForm((f) => ({ ...f, lifecycle_stage: e.target.value }))}
-                      className="w-full appearance-none text-xs h-7 pl-2 pr-7 rounded-md border border-input bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 focus:outline-none focus:ring-1 focus:ring-ring"
+                      className="w-full appearance-none text-xs h-7 pl-2 pr-7 rounded-md border border-input bg-card text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
                     >
                       <option value="">Stage…</option>
                       {Object.entries(STAGE_CONFIG).map(([key, cfg]) => (
                         <option key={key} value={key}>{cfg.label}</option>
                       ))}
                     </select>
-                    <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-3 h-3 text-slate-400 pointer-events-none" />
+                    <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-3 h-3 text-muted-foreground pointer-events-none" />
                   </div>
                   <div className="flex gap-2 pt-1">
                     <Button
@@ -930,7 +930,7 @@ export default function ContactHubPage() {
               ) : (
                 <>
                   {/* Contact info */}
-                  <div className="space-y-1 text-xs text-slate-500 dark:text-slate-400 mb-3">
+                  <div className="space-y-1 text-xs text-muted-foreground mb-3">
                     {selectedContact.email && (
                       <div className="flex items-center gap-1.5">
                         <Mail className="w-3 h-3 flex-shrink-0" />
@@ -951,7 +951,7 @@ export default function ContactHubPage() {
                       {selectedContact.tags.map((tag) => (
                         <span
                           key={tag.id}
-                          className="flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded-full font-medium bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300"
+                          className="flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded-full font-medium bg-muted text-foreground"
                           style={tag.color ? { backgroundColor: tag.color + "22", color: tag.color } : undefined}
                         >
                           <Tag className="w-2.5 h-2.5" />
@@ -979,28 +979,28 @@ export default function ContactHubPage() {
 
               {/* Stats row */}
               {!isEditing && (
-                <div className="grid grid-cols-2 gap-2 pt-2 border-t border-slate-100 dark:border-slate-700">
+                <div className="grid grid-cols-2 gap-2 pt-2 border-t border-border">
                   <div className="text-center">
-                    <div className="text-base font-bold text-slate-800 dark:text-slate-100">{stats.sessions}</div>
-                    <div className="text-[10px] text-slate-400 flex items-center justify-center gap-0.5">
+                    <div className="text-base font-bold text-foreground">{stats.sessions}</div>
+                    <div className="text-[10px] text-muted-foreground flex items-center justify-center gap-0.5">
                       <MessageSquare className="w-2.5 h-2.5" /> Chats
                     </div>
                   </div>
                   <div className="text-center">
-                    <div className="text-base font-bold text-slate-800 dark:text-slate-100">{stats.calls}</div>
-                    <div className="text-[10px] text-slate-400 flex items-center justify-center gap-0.5">
+                    <div className="text-base font-bold text-foreground">{stats.calls}</div>
+                    <div className="text-[10px] text-muted-foreground flex items-center justify-center gap-0.5">
                       <Phone className="w-2.5 h-2.5" /> Calls
                     </div>
                   </div>
                   <div className="text-center col-span-1">
-                    <div className="text-xs font-semibold text-slate-700 dark:text-slate-300">{stats.firstContact}</div>
-                    <div className="text-[10px] text-slate-400 flex items-center justify-center gap-0.5">
+                    <div className="text-xs font-semibold text-foreground">{stats.firstContact}</div>
+                    <div className="text-[10px] text-muted-foreground flex items-center justify-center gap-0.5">
                       <Calendar className="w-2.5 h-2.5" /> First contact
                     </div>
                   </div>
                   <div className="text-center col-span-1">
-                    <div className="text-xs font-semibold text-slate-700 dark:text-slate-300">{stats.lastContact}</div>
-                    <div className="text-[10px] text-slate-400 flex items-center justify-center gap-0.5">
+                    <div className="text-xs font-semibold text-foreground">{stats.lastContact}</div>
+                    <div className="text-[10px] text-muted-foreground flex items-center justify-center gap-0.5">
                       <Clock className="w-2.5 h-2.5" /> Last active
                     </div>
                   </div>
@@ -1010,7 +1010,7 @@ export default function ContactHubPage() {
 
             {/* Channel tabs */}
             {channelTabs.length > 0 && (
-              <div className="px-3 py-2 border-b border-slate-100 dark:border-slate-700 flex flex-wrap gap-1">
+              <div className="px-3 py-2 border-b border-border flex flex-wrap gap-1">
                 {channelTabs.map((tab) => (
                   <ChannelTab
                     key={tab}
@@ -1033,21 +1033,21 @@ export default function ContactHubPage() {
                   {[...Array(5)].map((_, i) => <TimelineItemSkeleton key={i} />)}
                 </div>
               ) : channelTabs.length <= 1 && timelineItems.length === 0 ? (
-                <p className="text-xs text-slate-400 text-center py-8">No conversations or calls yet</p>
+                <p className="text-xs text-muted-foreground text-center py-8">No conversations or calls yet</p>
               ) : activeChannel === "timeline" ? (
                 timelineByDay.length === 0 ? (
-                  <p className="text-xs text-slate-400 text-center py-8">No activity found</p>
+                  <p className="text-xs text-muted-foreground text-center py-8">No activity found</p>
                 ) : (
                   <div className="space-y-1">
                     {timelineByDay.map((group) => (
                       <div key={group.label}>
                         {/* Day divider */}
                         <div className="flex items-center gap-2 px-2 py-1.5">
-                          <div className="flex-1 h-px bg-slate-100 dark:bg-slate-700" />
-                          <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wide flex-shrink-0">
+                          <div className="flex-1 h-px bg-muted" />
+                          <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide flex-shrink-0">
                             {group.label}
                           </span>
-                          <div className="flex-1 h-px bg-slate-100 dark:bg-slate-700" />
+                          <div className="flex-1 h-px bg-muted" />
                         </div>
                         {group.items.map((item, idx) => (
                           <TimelineRow
@@ -1073,7 +1073,7 @@ export default function ContactHubPage() {
                 )
               ) : activeChannel === "calls" ? (
                 calls.length === 0 ? (
-                  <p className="text-xs text-slate-400 text-center py-8">No calls found</p>
+                  <p className="text-xs text-muted-foreground text-center py-8">No calls found</p>
                 ) : (
                   <div className="space-y-0.5">
                     {calls.map((call) => (
@@ -1112,13 +1112,13 @@ export default function ContactHubPage() {
                 <div className="w-16 h-16 rounded-2xl bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center mx-auto mb-4">
                   <BarChart2 className="w-8 h-8 text-blue-400 dark:text-blue-500" />
                 </div>
-                <h3 className="text-base font-semibold text-slate-700 dark:text-slate-200 mb-1">
+                <h3 className="text-base font-semibold text-foreground mb-1">
                   {selectedContact.name || "Contact"}'s Activity
                 </h3>
-                <p className="text-sm text-slate-400 max-w-[220px] mx-auto leading-relaxed">
+                <p className="text-sm text-muted-foreground max-w-[220px] mx-auto leading-relaxed">
                   Select a conversation or call from the timeline to view details
                 </p>
-                <div className="mt-4 flex items-center justify-center gap-4 text-xs text-slate-400">
+                <div className="mt-4 flex items-center justify-center gap-4 text-xs text-muted-foreground">
                   <span className="flex items-center gap-1">
                     <MessageSquare className="w-3.5 h-3.5" /> {stats.sessions} chats
                   </span>
@@ -1128,7 +1128,7 @@ export default function ContactHubPage() {
                 </div>
               </div>
             ) : (
-              <div className="text-center text-slate-400">
+              <div className="text-center text-muted-foreground">
                 <Activity className="w-12 h-12 mx-auto mb-2 opacity-20" />
                 <p className="text-sm">Select a contact to get started</p>
               </div>
@@ -1143,7 +1143,7 @@ export default function ContactHubPage() {
         {rightPanel.type === "call" && (
           <div className="flex-1 overflow-y-auto p-4 space-y-4">
             {/* Call summary */}
-            <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-5">
+            <div className="bg-card rounded-xl border border-border p-5">
               <div className="flex items-center gap-3 mb-4">
                 <div className={cn(
                   "w-10 h-10 rounded-full flex items-center justify-center",
@@ -1157,10 +1157,10 @@ export default function ContactHubPage() {
                   }
                 </div>
                 <div>
-                  <p className="font-semibold text-slate-900 dark:text-white capitalize">
+                  <p className="font-semibold text-foreground capitalize">
                     {rightPanel.call.direction} Call
                   </p>
-                  <p className="text-sm text-slate-500 dark:text-slate-400">
+                  <p className="text-sm text-muted-foreground">
                     {rightPanel.call.direction === "inbound"
                       ? rightPanel.call.from_number
                       : rightPanel.call.to_number}
@@ -1170,7 +1170,7 @@ export default function ContactHubPage() {
                   "ml-auto text-xs px-2 py-1 rounded-full font-medium",
                   rightPanel.call.status === "completed"
                     ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
-                    : "bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-400"
+                    : "bg-muted text-muted-foreground"
                 )}>
                   {rightPanel.call.status}
                 </span>
@@ -1178,28 +1178,28 @@ export default function ContactHubPage() {
 
               <dl className="grid grid-cols-2 gap-3 text-sm">
                 <div>
-                  <dt className="text-xs text-slate-400 uppercase tracking-wide mb-0.5">Duration</dt>
-                  <dd className="font-medium text-slate-700 dark:text-slate-300">
+                  <dt className="text-xs text-muted-foreground uppercase tracking-wide mb-0.5">Duration</dt>
+                  <dd className="font-medium text-foreground">
                     {formatDuration(rightPanel.call.duration_seconds)}
                   </dd>
                 </div>
                 {rightPanel.call.started_at && (
                   <div>
-                    <dt className="text-xs text-slate-400 uppercase tracking-wide mb-0.5">Started</dt>
-                    <dd className="font-medium text-slate-700 dark:text-slate-300">
+                    <dt className="text-xs text-muted-foreground uppercase tracking-wide mb-0.5">Started</dt>
+                    <dd className="font-medium text-foreground">
                       {new Date(rightPanel.call.started_at).toLocaleString()}
                     </dd>
                   </div>
                 )}
                 <div>
-                  <dt className="text-xs text-slate-400 uppercase tracking-wide mb-0.5">Direction</dt>
-                  <dd className="font-medium text-slate-700 dark:text-slate-300 capitalize">
+                  <dt className="text-xs text-muted-foreground uppercase tracking-wide mb-0.5">Direction</dt>
+                  <dd className="font-medium text-foreground capitalize">
                     {rightPanel.call.direction}
                   </dd>
                 </div>
                 <div>
-                  <dt className="text-xs text-slate-400 uppercase tracking-wide mb-0.5">Sentiment</dt>
-                  <dd className="font-medium text-slate-400 dark:text-slate-500 italic text-xs">
+                  <dt className="text-xs text-muted-foreground uppercase tracking-wide mb-0.5">Sentiment</dt>
+                  <dd className="font-medium text-muted-foreground dark:text-muted-foreground italic text-xs">
                     Not available
                   </dd>
                 </div>
@@ -1207,17 +1207,17 @@ export default function ContactHubPage() {
             </div>
 
             {/* Transcript */}
-            <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-5">
-              <h4 className="text-sm font-semibold text-slate-700 dark:text-slate-200 mb-3 flex items-center gap-2">
-                <MessageSquare className="w-4 h-4 text-slate-400" />
+            <div className="bg-card rounded-xl border border-border p-5">
+              <h4 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
+                <MessageSquare className="w-4 h-4 text-muted-foreground" />
                 Transcript
               </h4>
               {rightPanel.call.full_transcript ? (
-                <pre className="text-xs text-slate-600 dark:text-slate-400 whitespace-pre-wrap font-mono leading-relaxed max-h-[60vh] overflow-y-auto">
+                <pre className="text-xs text-muted-foreground whitespace-pre-wrap font-mono leading-relaxed max-h-[60vh] overflow-y-auto">
                   {rightPanel.call.full_transcript}
                 </pre>
               ) : (
-                <p className="text-sm text-slate-400 italic">No transcript available</p>
+                <p className="text-sm text-muted-foreground italic">No transcript available</p>
               )}
             </div>
           </div>

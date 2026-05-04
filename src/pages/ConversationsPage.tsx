@@ -103,14 +103,14 @@ const channelAvatarBg = (ch?: string) => {
 // ─── Avatar color derived from contact name ───────────────────────────────────
 const getAvatarColor = (name: string) => {
   const palette = [
-    'bg-violet-100 text-violet-700 dark:bg-violet-900/40 dark:text-violet-300',
-    'bg-cyan-100 text-cyan-700 dark:bg-cyan-900/40 dark:text-cyan-300',
-    'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300',
-    'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300',
-    'bg-rose-100 text-rose-700 dark:bg-rose-900/40 dark:text-rose-300',
-    'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300',
-    'bg-sky-100 text-sky-700 dark:bg-sky-900/40 dark:text-sky-300',
-    'bg-orange-100 text-orange-700 dark:bg-orange-900/40 dark:text-orange-300',
+    'bg-violet-100 text-violet-700 dark:bg-violet-500/20 dark:text-white',
+    'bg-cyan-100 text-cyan-700 dark:bg-cyan-500/20 dark:text-white',
+    'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-white',
+    'bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-white',
+    'bg-rose-100 text-rose-700 dark:bg-rose-500/20 dark:text-white',
+    'bg-indigo-100 text-indigo-700 dark:bg-indigo-500/20 dark:text-white',
+    'bg-sky-100 text-sky-700 dark:bg-sky-500/20 dark:text-white',
+    'bg-orange-100 text-orange-700 dark:bg-orange-500/20 dark:text-white',
   ];
   let hash = 0;
   for (let i = 0; i < name.length; i++) hash = name.charCodeAt(i) + ((hash << 5) - hash);
@@ -582,12 +582,12 @@ const ConversationsPage: React.FC<ConversationsPageProps> = ({ channel }) => {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'active': return 'bg-green-50 dark:bg-green-950 border-l-green-500';
-      case 'inactive': return 'bg-gray-50 dark:bg-gray-900 border-l-gray-400';
-      case 'resolved': return 'bg-blue-50 dark:bg-blue-950 border-l-blue-500 opacity-70';
-      case 'assigned': return 'bg-blue-50 dark:bg-indigo-950 border-l-blue-500';
-      case 'pending': return 'bg-red-50 dark:bg-red-950 border-l-red-500';
-      default: return 'bg-white dark:bg-slate-800 border-l-gray-300';
+      case 'active':   return 'bg-green-50 dark:bg-white/[0.03] border-l-green-500';
+      case 'inactive': return 'bg-gray-50 dark:bg-white/[0.02] border-l-gray-400';
+      case 'resolved': return 'bg-blue-50 dark:bg-white/[0.02] border-l-blue-500 opacity-70';
+      case 'assigned': return 'bg-blue-50 dark:bg-white/[0.03] border-l-indigo-400';
+      case 'pending':  return 'bg-red-50 dark:bg-red-500/[0.06] border-l-red-500';
+      default:         return 'bg-white dark:bg-white/[0.02] border-l-gray-300';
     }
   };
 

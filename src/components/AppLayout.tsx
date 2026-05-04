@@ -3,7 +3,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useTheme } from "@/hooks/useTheme";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { CircleUser, Moon, Sun, PanelLeftClose, PanelLeftOpen, ChevronDown, ChevronRight, MoreHorizontal } from "lucide-react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Outlet, NavLink, useLocation } from "react-router-dom";
 import { useToast } from "@/components/ui/use-toast";
 import { useNotifications } from "@/hooks/useNotifications";
@@ -463,7 +463,7 @@ const AppLayout = () => {
                   localStorage.setItem('notificationSoundPromptDismissed', 'true');
                   dismiss();
                 }}
-                className="px-3 py-1.5 bg-blue-600 text-white text-sm rounded-md hover:bg-blue-700"
+                className="px-3 py-1.5 bg-violet-600 text-white text-sm rounded-md hover:bg-violet-700"
               >
                 Enable
               </button>
@@ -646,6 +646,26 @@ const AppLayout = () => {
     setOpenGroups(prev => ({ ...prev, [groupId]: !prev[groupId] }));
   };
 
+  // Breadcrumb — find the best-matching sidebar item for the current path
+  const breadcrumb = useMemo(() => {
+    const path = location.pathname;
+    let bestMatch: { groupLabel: string; itemLabel: string; url: string } | null = null;
+    for (const group of sidebarGroups) {
+      for (const item of group.items) {
+        if (path === item.url || path.startsWith(item.url + '/')) {
+          if (!bestMatch || item.url.length > bestMatch.url.length) {
+            bestMatch = {
+              groupLabel: group.labelKey ? t(group.labelKey, { defaultValue: group.label }) : group.label,
+              itemLabel: item.title ?? (item.titleKey ? t(item.titleKey) : ''),
+              url: item.url,
+            };
+          }
+        }
+      }
+    }
+    return bestMatch;
+  }, [location.pathname, sidebarGroups]);
+
   // Auto-open the group that contains the current route
   useEffect(() => {
     sidebarGroups.forEach(group => {
@@ -698,18 +718,16 @@ const AppLayout = () => {
               : `fixed inset-y-0 ${isRTL ? 'right-0 translate-x-full' : 'left-0 -translate-x-full'} md:relative md:flex-shrink-0 md:translate-x-0`
           } ${sidebarCollapsed ? 'w-[60px]' : 'w-[240px]'}`}
         >
-          {/* Aurora bloom — very subtle backlit atmosphere */}
+          {/* Ambient glow */}
           <div className="pointer-events-none absolute inset-0 z-0">
-            <div className="absolute -bottom-32 -left-32 w-80 h-80 rounded-full bg-violet-600/[0.04] dark:bg-violet-500/[0.05] blur-[80px]" />
-            <div className="absolute -top-16 -left-16 w-64 h-64 rounded-full bg-indigo-500/[0.03] dark:bg-indigo-400/[0.04] blur-[80px]" />
+            <div className="absolute -bottom-32 -left-32 w-80 h-80 rounded-full bg-purple-400/20 blur-[80px]" />
+            <div className="absolute top-0 right-0 w-48 h-48 rounded-full bg-violet-300/10 blur-[60px]" />
           </div>
-          {/* Gradient right border (replaces flat border-r) */}
-          <div className={`pointer-events-none absolute ${isRTL ? 'left-0' : 'right-0'} top-0 bottom-0 w-px z-10 bg-gradient-to-b from-violet-500/25 via-border/80 to-cyan-500/15 dark:from-violet-400/20 dark:via-border dark:to-cyan-400/10`} />
+          {/* Right border */}
+          <div className={`pointer-events-none absolute ${isRTL ? 'left-0' : 'right-0'} top-0 bottom-0 w-px z-10 bg-gradient-to-b from-white/10 via-white/5 to-transparent`} />
 
           {/* ── Logo / Brand ── */}
-          <div className={`h-11 flex items-center flex-shrink-0 px-3 border-b border-transparent relative z-10 ${sidebarCollapsed ? 'justify-center' : 'justify-between'}`}>
-            {/* Aurora border-b shimmer */}
-            <div className="pointer-events-none absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-violet-500/30 via-border/60 to-cyan-500/20" />
+          <div className={`h-11 flex items-center flex-shrink-0 px-3 border-b border-white/10 relative z-10 ${sidebarCollapsed ? 'justify-center' : 'justify-between'}`}>
             {!sidebarCollapsed ? (
               <>
                 <div className="flex items-center gap-2.5 min-w-0">
@@ -718,11 +736,11 @@ const AppLayout = () => {
                   ) : (
                     <img src="/icon.png" alt="HeyGenAlly" className="h-6 w-6 rounded-xl object-contain flex-shrink-0" />
                   )}
-                  <span className="text-sm font-semibold bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent truncate">{branding.companyName}</span>
+                  <span className="text-sm font-semibold text-white truncate">{branding.companyName}</span>
                 </div>
                 <button
                   onClick={() => setSidebarCollapsed(true)}
-                  className="hidden md:flex h-6 w-6 rounded-md items-center justify-center text-muted-foreground hover:text-violet-400 hover:bg-violet-500/[0.08] transition-colors flex-shrink-0"
+                  className="hidden md:flex h-6 w-6 rounded-md items-center justify-center text-white/40 hover:text-white hover:bg-white/10 transition-colors flex-shrink-0"
                   title={t('navigation.collapseSidebar')}
                 >
                   {isRTL ? <PanelLeftOpen className="h-3.5 w-3.5 scale-x-[-1]" /> : <PanelLeftClose className="h-3.5 w-3.5" />}
@@ -737,7 +755,7 @@ const AppLayout = () => {
                 )}
                 <button
                   onClick={() => setSidebarCollapsed(false)}
-                  className="hidden lg:flex absolute -right-3 top-3 h-6 w-6 rounded-full bg-card border border-violet-500/20 items-center justify-center text-muted-foreground hover:text-violet-400 shadow-sm z-10 transition-colors"
+                  className="hidden lg:flex absolute -right-3 top-3 h-6 w-6 rounded-full bg-violet-900 border border-white/10 items-center justify-center text-white/50 hover:text-white shadow-lg z-10 transition-colors"
                   title={t('navigation.expandSidebar')}
                 >
                   {isRTL ? <PanelLeftClose className="h-3 w-3 scale-x-[-1]" /> : <PanelLeftOpen className="h-3 w-3" />}
@@ -767,10 +785,10 @@ const AppLayout = () => {
                     group.collapsible ? (
                       <button
                         onClick={() => toggleGroup(group.id)}
-                        className="w-full flex items-center justify-between px-2 py-1.5 mt-2 rounded-md text-muted-foreground/50 hover:text-violet-400/80 transition-colors group/label"
+                        className="w-full flex items-center justify-between px-2 py-1.5 mt-2 rounded-md text-white/35 hover:text-white/70 transition-colors group/label"
                       >
                         <div className="flex items-center gap-1.5">
-                          <span className="w-1 h-1 rounded-full bg-gradient-to-r from-violet-500/60 to-cyan-500/40 group-hover/label:from-violet-400 group-hover/label:to-cyan-400 transition-colors" />
+                          <span className="w-1 h-1 rounded-full bg-white/25 group-hover/label:bg-white/50 transition-colors" />
                           <span className="text-[10px] font-bold uppercase tracking-widest">
                             {group.labelKey ? t(group.labelKey, { defaultValue: group.label }) : group.label}
                           </span>
@@ -782,8 +800,8 @@ const AppLayout = () => {
                       </button>
                     ) : (
                       <div className="px-2 py-1.5 mt-2 flex items-center gap-1.5">
-                        <span className="w-1 h-1 rounded-full bg-gradient-to-r from-violet-500/60 to-cyan-500/40" />
-                        <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/50">
+                        <span className="w-1 h-1 rounded-full bg-white/25" />
+                        <span className="text-[10px] font-bold uppercase tracking-widest text-white/35">
                           {group.labelKey ? t(group.labelKey, { defaultValue: group.label }) : group.label}
                         </span>
                       </div>
@@ -792,7 +810,7 @@ const AppLayout = () => {
 
                   {/* Collapsed divider between groups */}
                   {sidebarCollapsed && groupIndex > 0 && (
-                    <div className="mx-2 my-1.5 h-px bg-border/60" />
+                    <div className="mx-2 my-1.5 h-px bg-white/10" />
                   )}
 
                   {(isGroupOpen || sidebarCollapsed) && (
@@ -809,17 +827,17 @@ const AppLayout = () => {
                                 : 'gap-2.5 px-2.5 py-1.5'
                             } ${
                               isActive
-                                ? 'bg-gradient-to-r from-violet-500/[0.12] to-transparent text-violet-300 dark:text-violet-300'
-                                : 'text-muted-foreground hover:text-foreground hover:bg-violet-500/[0.05]'
+                                ? 'bg-gradient-to-r from-white/[0.18] to-white/[0.04] text-white shadow-[inset_0_1px_0_rgb(255_255_255/0.08)]'
+                                : 'text-white/55 hover:text-white hover:bg-white/[0.07]'
                             }`
                           }
                         >
                           {({ isActive }) => (
                             <>
                               {isActive && !sidebarCollapsed && (
-                                <span className={`sidebar-active-bar absolute ${isRTL ? 'right-0' : 'left-0'} top-1/2 -translate-y-1/2 w-0.5 h-4 rounded-full bg-gradient-to-b from-violet-400 to-cyan-400 shadow-[0_0_6px_hsl(263_78%_68%/0.6)]`} />
+                                <span className={`sidebar-active-bar absolute ${isRTL ? 'right-0' : 'left-0'} top-1/2 -translate-y-1/2 w-0.5 h-4 rounded-full bg-white shadow-[0_0_8px_rgb(255_255_255/0.7)]`} />
                               )}
-                              <item.icon className={`flex-shrink-0 h-3.5 w-3.5 ${isActive ? 'text-violet-400 drop-shadow-[0_0_4px_hsl(263_78%_68%/0.7)]' : ''}`} />
+                              <item.icon className={`flex-shrink-0 h-3.5 w-3.5 ${isActive ? 'text-white drop-shadow-[0_0_6px_rgb(255_255_255/0.4)]' : ''}`} />
                               {!sidebarCollapsed && (
                                 <span className="truncate">{item.title ?? t(item.titleKey!)}</span>
                               )}
@@ -852,6 +870,21 @@ const AppLayout = () => {
             </button>
           )}
 
+          {/* ── Powered by ── */}
+          {!sidebarCollapsed && (
+            <a
+              href="https://heygenally.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="relative z-10 flex items-center justify-center gap-1.5 mx-3 mb-3 py-1.5 rounded-md border border-white/[0.07] bg-white/[0.04] hover:bg-white/[0.08] transition-colors group"
+            >
+              <img src="/icon.png" alt="" className="h-3.5 w-3.5 rounded-sm opacity-50 group-hover:opacity-80 transition-opacity" />
+              <span className="text-[10px] font-medium text-white/30 group-hover:text-white/55 transition-colors tracking-wide">
+                Powered by <span className="font-semibold">HeyGenAlly</span>
+              </span>
+            </a>
+          )}
+
         </aside>
 
         {/* ── Right column: header + main content ── */}
@@ -860,7 +893,7 @@ const AppLayout = () => {
           {/* Slim top bar — right side only, sidebar logo is top-left */}
           <header className="flex-shrink-0 h-11 bg-background border-b border-border/50 flex items-center px-3 justify-between gap-2 relative">
             <div className="pointer-events-none absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-violet-500/20 to-transparent" />
-            {/* Mobile: hamburger + brand */}
+            {/* Left: hamburger (mobile/tablet) + breadcrumb (desktop) */}
             <div className="flex items-center gap-2">
               <button
                 onClick={() => {
@@ -872,15 +905,15 @@ const AppLayout = () => {
                 }}
                 className="lg:hidden h-7 w-7 rounded-md flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
               >
-                {/* Mobile: X closes overlay, Menu opens it */}
                 <span className="md:hidden">
                   {sidebarOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
                 </span>
-                {/* Tablet: collapse/expand icon-rail ↔ full sidebar */}
                 <span className="hidden md:block">
                   {sidebarCollapsed ? <Menu className="h-4 w-4" /> : <PanelLeftClose className="h-4 w-4" />}
                 </span>
               </button>
+
+              {/* Mobile brand */}
               <div className="flex items-center gap-2 lg:hidden">
                 {branding.logoUrl ? (
                   <img src={branding.logoUrl} alt={branding.companyName} className="h-5 w-5 rounded-md object-contain" />
@@ -889,6 +922,15 @@ const AppLayout = () => {
                 )}
                 <span className="text-base font-semibold text-foreground">{branding.companyName}</span>
               </div>
+
+              {/* Desktop breadcrumb */}
+              {breadcrumb && (
+                <nav className="hidden lg:flex items-center gap-1.5 text-sm">
+                  <span className="text-muted-foreground/60 font-medium">{breadcrumb.groupLabel}</span>
+                  <ChevronRight className="h-3.5 w-3.5 text-muted-foreground/40 flex-shrink-0" />
+                  <span className="text-foreground font-semibold">{breadcrumb.itemLabel}</span>
+                </nav>
+              )}
             </div>
 
             {/* Centre: search */}

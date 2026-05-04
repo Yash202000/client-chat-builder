@@ -1,3 +1,4 @@
+import { SEOHead } from "@/components/SEOHead";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -167,6 +168,11 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 overflow-x-hidden">
+      <SEOHead
+        title="HeyGenAlly – AI Agent Builder & Chatbot Platform | Build, Deploy & Automate"
+        description="Build and deploy intelligent AI agents in minutes. No-code visual builder, multi-LLM support, knowledge bases, CRM, voice AI, and embeddable web widgets — for businesses of every size."
+        canonical="/"
+      />
       {/* ── Scroll progress bar ── */}
       <motion.div
         className="fixed top-0 left-0 right-0 h-[3px] bg-gradient-to-r from-violet-600 via-purple-500 to-cyan-400 z-[100] origin-left"

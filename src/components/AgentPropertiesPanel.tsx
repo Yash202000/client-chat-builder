@@ -45,15 +45,15 @@ const CollapsibleSection = ({ title, children, defaultOpen = false }: { title: s
   const [isOpen, setIsOpen] = useState(defaultOpen);
 
   return (
-    <div className="border border-slate-200 dark:border-slate-700 rounded-lg overflow-hidden">
+    <div className="border border-slate-200 dark:border-white/[0.10] rounded-lg overflow-hidden">
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="w-full flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
+        className="w-full flex items-center justify-between p-3 bg-slate-50 dark:bg-white/[0.07] hover:bg-slate-100 dark:hover:bg-white/[0.10] transition-colors"
       >
-        <span className="text-sm font-semibold text-slate-700 dark:text-slate-300">{title}</span>
+        <span className="text-sm font-semibold text-slate-700 dark:text-white/80">{title}</span>
         {isOpen ? <ChevronDown className="h-4 w-4 text-slate-500" /> : <ChevronRight className="h-4 w-4 text-slate-500" />}
       </button>
-      {isOpen && <div className="p-3 space-y-3 bg-white dark:bg-slate-900">{children}</div>}
+      {isOpen && <div className="p-3 space-y-3 bg-white dark:bg-background">{children}</div>}
     </div>
   );
 };
@@ -113,12 +113,12 @@ const ToolTester = ({ tool, onExecution, authFetch }: ToolTesterProps) => {
   return (
     <div className="space-y-3">
       <div>
-        <Label className="text-xs font-medium dark:text-gray-300">Parameters (JSON)</Label>
+        <Label className="text-xs font-medium dark:text-white/80">Parameters (JSON)</Label>
         <Textarea
           value={paramsJson}
           onChange={e => handleChange(e.target.value)}
           rows={6}
-          className="mt-1 text-xs font-mono dark:bg-slate-800 dark:border-slate-600 dark:text-white resize-none"
+          className="mt-1 text-xs font-mono dark:bg-white/[0.07] dark:border-white/[0.12] dark:text-white resize-none"
           placeholder="{}"
           spellCheck={false}
         />
@@ -135,9 +135,9 @@ const ToolTester = ({ tool, onExecution, authFetch }: ToolTesterProps) => {
           : <><Play className="h-3.5 w-3.5 mr-1.5" />Run Test</>}
       </Button>
       {result !== null && (
-        <div className="pt-2 border-t border-slate-200 dark:border-slate-700">
-          <p className="text-xs font-semibold text-slate-600 dark:text-slate-400 mb-2 uppercase tracking-wide">Result</p>
-          <pre className="text-xs bg-slate-50 dark:bg-slate-800 p-3 rounded-lg border border-slate-200 dark:border-slate-600 overflow-x-auto overflow-y-auto max-h-48 dark:text-gray-300 whitespace-pre-wrap break-words">
+        <div className="pt-2 border-t border-slate-200 dark:border-white/[0.10]">
+          <p className="text-xs font-semibold text-slate-600 dark:text-white/50 mb-2 uppercase tracking-wide">Result</p>
+          <pre className="text-xs bg-slate-50 dark:bg-white/[0.07] p-3 rounded-lg border border-slate-200 dark:border-white/[0.12] overflow-x-auto overflow-y-auto max-h-48 dark:text-white/80 whitespace-pre-wrap break-words">
             {JSON.stringify(result, null, 2)}
           </pre>
         </div>
@@ -216,9 +216,9 @@ const KbTester = ({ kb, onExecution, authFetch }: KbTesterProps) => {
                 </div>
                 <div className="flex-1 space-y-1.5">
                   {!msg.results || msg.results.length === 0 ? (
-                    <span className="text-xs text-slate-400 bg-slate-100 dark:bg-slate-800 rounded-xl rounded-tl-sm px-3 py-1.5 block">No matching chunks.</span>
+                    <span className="text-xs text-slate-400 bg-slate-100 dark:bg-white/[0.07] rounded-xl rounded-tl-sm px-3 py-1.5 block">No matching chunks.</span>
                   ) : msg.results.map((r, i) => (
-                    <div key={i} className="bg-slate-100 dark:bg-slate-800 rounded-xl rounded-tl-sm p-2.5 space-y-1">
+                    <div key={i} className="bg-slate-100 dark:bg-white/[0.07] rounded-xl rounded-tl-sm p-2.5 space-y-1">
                       <div className="flex items-center justify-between">
                         <span className="text-[10px] text-slate-400">Chunk {i + 1}</span>
                         {r.score !== undefined && (
@@ -227,7 +227,7 @@ const KbTester = ({ kb, onExecution, authFetch }: KbTesterProps) => {
                           </span>
                         )}
                       </div>
-                      <p className="text-xs dark:text-gray-300 line-clamp-3 leading-relaxed">
+                      <p className="text-xs dark:text-white/80 line-clamp-3 leading-relaxed">
                         {typeof r === 'string' ? r : r.text}
                       </p>
                     </div>
@@ -242,7 +242,7 @@ const KbTester = ({ kb, onExecution, authFetch }: KbTesterProps) => {
             <div className="h-5 w-5 rounded-full bg-gradient-to-br from-emerald-500 to-green-600 flex-shrink-0 flex items-center justify-center">
               <Loader2 className="h-2.5 w-2.5 text-white animate-spin" />
             </div>
-            <div className="bg-slate-100 dark:bg-slate-800 rounded-xl rounded-tl-sm px-3 py-2">
+            <div className="bg-slate-100 dark:bg-white/[0.07] rounded-xl rounded-tl-sm px-3 py-2">
               <div className="flex gap-1">
                 {[0, 150, 300].map(d => (
                   <span key={d} className="h-1 w-1 bg-slate-400 rounded-full animate-bounce" style={{ animationDelay: `${d}ms` }} />
@@ -255,11 +255,11 @@ const KbTester = ({ kb, onExecution, authFetch }: KbTesterProps) => {
       </div>
 
       {/* Input row */}
-      <div className="flex gap-1.5 items-center pt-1 border-t border-slate-100 dark:border-slate-700">
+      <div className="flex gap-1.5 items-center pt-1 border-t border-slate-100 dark:border-white/[0.10]">
         <select
           value={topK}
           onChange={e => setTopK(Number(e.target.value))}
-          className="text-[10px] border rounded-md px-1 py-1 bg-white dark:bg-slate-800 dark:border-slate-600 dark:text-white flex-shrink-0"
+          className="text-[10px] border rounded-md px-1 py-1 bg-white dark:bg-white/[0.07] dark:border-white/[0.12] dark:text-white flex-shrink-0"
         >
           {[3, 5, 10].map(n => <option key={n} value={n}>Top {n}</option>)}
         </select>
@@ -269,7 +269,7 @@ const KbTester = ({ kb, onExecution, authFetch }: KbTesterProps) => {
           onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(); } }}
           placeholder="Ask something..."
           disabled={isLoading}
-          className="flex-1 h-8 text-xs dark:bg-slate-800 dark:border-slate-600 dark:text-white"
+          className="flex-1 h-8 text-xs dark:bg-white/[0.07] dark:border-white/[0.12] dark:text-white"
         />
         <Button
           onClick={handleSend}
@@ -412,7 +412,7 @@ export const AgentPropertiesPanel = ({ agent, selectedNode, onNodeDelete, isColl
   // Collapsed view
   if (isCollapsed) {
     return (
-      <aside className={`w-0 overflow-hidden md:w-14 bg-white dark:bg-slate-900 ${isRTL ? 'border-r' : 'border-l'} border-slate-200 dark:border-slate-700 flex flex-col h-full transition-all duration-200 ease-in-out`}>
+      <aside className={`w-0 overflow-hidden md:w-14 bg-white dark:bg-background ${isRTL ? 'border-r' : 'border-l'} border-slate-200 dark:border-white/[0.10] flex flex-col h-full transition-all duration-200 ease-in-out`}>
         <div className="flex items-center justify-center p-4">
           {onToggle && (
             <Button
@@ -439,7 +439,7 @@ export const AgentPropertiesPanel = ({ agent, selectedNode, onNodeDelete, isColl
 
   if (!selectedNode) {
     return (
-      <aside className={`fixed md:relative inset-y-0 right-0 md:inset-auto z-50 md:z-auto w-[280px] md:w-80 p-4 bg-white dark:bg-slate-900 ${isRTL ? 'border-r' : 'border-l'} border-slate-200 dark:border-slate-700 flex flex-col h-full transition-all duration-200 ease-in-out shadow-2xl md:shadow-none`}>
+      <aside className={`fixed md:relative inset-y-0 right-0 md:inset-auto z-50 md:z-auto w-[280px] md:w-80 p-4 bg-white dark:bg-background ${isRTL ? 'border-r' : 'border-l'} border-slate-200 dark:border-white/[0.10] flex flex-col h-full transition-all duration-200 ease-in-out shadow-2xl md:shadow-none`}>
         {/* Header with toggle */}
         <div className="flex items-center justify-end mb-4">
           {onToggle && (
@@ -459,7 +459,7 @@ export const AgentPropertiesPanel = ({ agent, selectedNode, onNodeDelete, isColl
             <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-gradient-to-br from-green-100 to-emerald-100 dark:from-green-900/30 dark:to-emerald-900/30 mb-3">
               <ChevronRight className="h-6 w-6 text-green-600 dark:text-green-400" />
             </div>
-            <p className="text-sm text-gray-500 dark:text-gray-400">{t('builder.selectNodePrompt')}</p>
+            <p className="text-sm text-gray-500 dark:text-white/50">{t('builder.selectNodePrompt')}</p>
           </div>
         </div>
       </aside>
@@ -480,12 +480,12 @@ export const AgentPropertiesPanel = ({ agent, selectedNode, onNodeDelete, isColl
     ? agent.knowledge_bases.find(kb => kb.id === selectedNode.data.id)
     : null;
 
-  const selectClassName = "w-full p-2 text-sm border rounded-md bg-white dark:bg-slate-800 dark:border-slate-600 dark:text-white focus:ring-2 focus:ring-green-500 transition-all";
+  const selectClassName = "w-full p-2 text-sm border rounded-md bg-white dark:bg-white/[0.07] dark:border-white/[0.12] dark:text-white focus:ring-2 focus:ring-green-500 transition-all";
 
   return (
-    <aside className={`fixed md:relative inset-y-0 right-0 md:inset-auto z-50 md:z-auto w-[280px] md:w-80 bg-white dark:bg-slate-900 ${isRTL ? 'border-r' : 'border-l'} border-slate-200 dark:border-slate-700 flex flex-col h-full transition-all duration-200 ease-in-out shadow-2xl md:shadow-none`}>
+    <aside className={`fixed md:relative inset-y-0 right-0 md:inset-auto z-50 md:z-auto w-[280px] md:w-80 bg-white dark:bg-background ${isRTL ? 'border-r' : 'border-l'} border-slate-200 dark:border-white/[0.10] flex flex-col h-full transition-all duration-200 ease-in-out shadow-2xl md:shadow-none`}>
       {/* Header */}
-      <div className={`flex justify-between items-center p-4 border-b border-slate-200 dark:border-slate-700 ${isRTL ? 'flex-row-reverse' : ''}`}>
+      <div className={`flex justify-between items-center p-4 border-b border-slate-200 dark:border-white/[0.10] ${isRTL ? 'flex-row-reverse' : ''}`}>
         <div className="flex items-center gap-2 flex-1 min-w-0">
           {onToggle && (
             <Button
@@ -514,16 +514,16 @@ export const AgentPropertiesPanel = ({ agent, selectedNode, onNodeDelete, isColl
             {/* Basic Settings - Always Open */}
             <CollapsibleSection title={t('agents.settingsPage.basicInformation', { defaultValue: 'Basic Settings' })} defaultOpen={true}>
               <div>
-                <Label className="text-xs font-medium dark:text-gray-300">{t('agents.agentName', { defaultValue: 'Name' })}</Label>
+                <Label className="text-xs font-medium dark:text-white/80">{t('agents.agentName', { defaultValue: 'Name' })}</Label>
                 <Input
                   value={agentConfig.name}
                   onChange={(e) => handleConfigChange('name', e.target.value)}
-                  className="mt-1 text-sm dark:bg-slate-800 dark:border-slate-600 dark:text-white"
+                  className="mt-1 text-sm dark:bg-white/[0.07] dark:border-white/[0.12] dark:text-white"
                   placeholder={t('agents.settingsPage.enterAgentName', { defaultValue: 'Enter agent name' })}
                 />
               </div>
               <div>
-                <Label className="text-xs font-medium dark:text-gray-300">{t('agents.settingsPage.personality', { defaultValue: 'Personality' })}</Label>
+                <Label className="text-xs font-medium dark:text-white/80">{t('agents.settingsPage.personality', { defaultValue: 'Personality' })}</Label>
                 <select
                   value={agentConfig.personality}
                   onChange={(e) => handleConfigChange('personality', e.target.value)}
@@ -536,7 +536,7 @@ export const AgentPropertiesPanel = ({ agent, selectedNode, onNodeDelete, isColl
                 </select>
               </div>
               <div>
-                <Label className="text-xs font-medium dark:text-gray-300">{t('common.language', { defaultValue: 'Language' })}</Label>
+                <Label className="text-xs font-medium dark:text-white/80">{t('common.language', { defaultValue: 'Language' })}</Label>
                 <select
                   value={agentConfig.language}
                   onChange={(e) => handleConfigChange('language', e.target.value)}
@@ -550,7 +550,7 @@ export const AgentPropertiesPanel = ({ agent, selectedNode, onNodeDelete, isColl
                 </select>
               </div>
               <div>
-                <Label className="text-xs font-medium dark:text-gray-300">{t('agents.settingsPage.timezone', { defaultValue: 'Timezone' })}</Label>
+                <Label className="text-xs font-medium dark:text-white/80">{t('agents.settingsPage.timezone', { defaultValue: 'Timezone' })}</Label>
                 <select
                   value={agentConfig.timezone}
                   onChange={(e) => handleConfigChange('timezone', e.target.value)}
@@ -568,28 +568,28 @@ export const AgentPropertiesPanel = ({ agent, selectedNode, onNodeDelete, isColl
             {/* Prompts Section */}
             <CollapsibleSection title={t('agents.settingsPage.prompts', { defaultValue: 'Prompts' })} defaultOpen={true}>
               <div>
-                <Label className="text-xs font-medium dark:text-gray-300">{t('agents.settingsPage.systemPrompt', { defaultValue: 'System Prompt' })}</Label>
+                <Label className="text-xs font-medium dark:text-white/80">{t('agents.settingsPage.systemPrompt', { defaultValue: 'System Prompt' })}</Label>
                 <Textarea
                   value={agentConfig.prompt}
                   onChange={(e) => handleConfigChange('prompt', e.target.value)}
                   placeholder={t('agents.settingsPage.systemPromptPlaceholder', { defaultValue: 'You are a helpful assistant that...' })}
-                  className="mt-1 text-sm dark:bg-slate-800 dark:border-slate-600 dark:text-white resize-none"
+                  className="mt-1 text-sm dark:bg-white/[0.07] dark:border-white/[0.12] dark:text-white resize-none"
                   rows={6}
                 />
-                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                <p className="text-xs text-gray-500 dark:text-white/50 mt-1">
                   {t('agents.settingsPage.systemPromptHelp', { defaultValue: 'Instructions that define how the agent behaves and responds' })}
                 </p>
               </div>
               <div>
-                <Label className="text-xs font-medium dark:text-gray-300">{t('agents.settingsPage.welcomeMessage', { defaultValue: 'Welcome Message' })}</Label>
+                <Label className="text-xs font-medium dark:text-white/80">{t('agents.settingsPage.welcomeMessage', { defaultValue: 'Welcome Message' })}</Label>
                 <Textarea
                   value={agentConfig.welcome_message}
                   onChange={(e) => handleConfigChange('welcome_message', e.target.value)}
                   placeholder={t('agents.settingsPage.welcomeMessagePlaceholder', { defaultValue: 'Hello! How can I help you today?' })}
-                  className="mt-1 text-sm dark:bg-slate-800 dark:border-slate-600 dark:text-white resize-none"
+                  className="mt-1 text-sm dark:bg-white/[0.07] dark:border-white/[0.12] dark:text-white resize-none"
                   rows={3}
                 />
-                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                <p className="text-xs text-gray-500 dark:text-white/50 mt-1">
                   {t('agents.settingsPage.welcomeMessageHelp', { defaultValue: 'First message shown when a conversation starts' })}
                 </p>
               </div>
@@ -598,7 +598,7 @@ export const AgentPropertiesPanel = ({ agent, selectedNode, onNodeDelete, isColl
             {/* AI Configuration */}
             <CollapsibleSection title={t('agents.settingsPage.llmConfiguration', { defaultValue: 'AI Configuration' })}>
               <div>
-                <Label className="text-xs font-medium dark:text-gray-300">{t('agents.llmProvider', { defaultValue: 'LLM Provider' })}</Label>
+                <Label className="text-xs font-medium dark:text-white/80">{t('agents.llmProvider', { defaultValue: 'LLM Provider' })}</Label>
                 <select
                   value={agentConfig.llm_provider}
                   onChange={(e) => handleConfigChange('llm_provider', e.target.value)}
@@ -610,7 +610,7 @@ export const AgentPropertiesPanel = ({ agent, selectedNode, onNodeDelete, isColl
                 </select>
               </div>
               <div>
-                <Label className="text-xs font-medium dark:text-gray-300">{t('agents.settingsPage.modelName', { defaultValue: 'Model' })}</Label>
+                <Label className="text-xs font-medium dark:text-white/80">{t('agents.settingsPage.modelName', { defaultValue: 'Model' })}</Label>
                 <select
                   value={agentConfig.model_name}
                   onChange={(e) => handleConfigChange('model_name', e.target.value)}
@@ -622,7 +622,7 @@ export const AgentPropertiesPanel = ({ agent, selectedNode, onNodeDelete, isColl
                 </select>
               </div>
               <div>
-                <Label className="text-xs font-medium dark:text-gray-300">{t('agents.settingsPage.embeddingModel', { defaultValue: 'Embedding Model' })}</Label>
+                <Label className="text-xs font-medium dark:text-white/80">{t('agents.settingsPage.embeddingModel', { defaultValue: 'Embedding Model' })}</Label>
                 <select
                   value={agentConfig.embedding_model}
                   onChange={(e) => handleConfigChange('embedding_model', e.target.value)}
@@ -635,10 +635,10 @@ export const AgentPropertiesPanel = ({ agent, selectedNode, onNodeDelete, isColl
               </div>
               <div className="flex items-center justify-between py-2">
                 <div>
-                  <Label className="text-xs font-medium dark:text-gray-300">
+                  <Label className="text-xs font-medium dark:text-white/80">
                     {t('agents.settingsPage.visionEnabled', { defaultValue: 'Vision (Image Processing)' })}
                   </Label>
-                  <p className="text-xs text-slate-500 dark:text-slate-400">
+                  <p className="text-xs text-slate-500 dark:text-white/50">
                     {t('agents.settingsPage.visionEnabledHelp', { defaultValue: 'Enable to process images with LLM' })}
                   </p>
                 </div>
@@ -654,7 +654,7 @@ export const AgentPropertiesPanel = ({ agent, selectedNode, onNodeDelete, isColl
             {/* Voice Configuration */}
             <CollapsibleSection title={t('agents.settingsPage.voiceSettings', { defaultValue: 'Voice Configuration' })}>
               <div>
-                <Label className="text-xs font-medium dark:text-gray-300">{t('agents.settingsPage.ttsProvider', { defaultValue: 'TTS Provider' })}</Label>
+                <Label className="text-xs font-medium dark:text-white/80">{t('agents.settingsPage.ttsProvider', { defaultValue: 'TTS Provider' })}</Label>
                 <select
                   value={agentConfig.tts_provider}
                   onChange={(e) => handleConfigChange('tts_provider', e.target.value)}
@@ -666,7 +666,7 @@ export const AgentPropertiesPanel = ({ agent, selectedNode, onNodeDelete, isColl
                 </select>
               </div>
               <div>
-                <Label className="text-xs font-medium dark:text-gray-300">{t('agents.settingsPage.sttProvider', { defaultValue: 'STT Provider' })}</Label>
+                <Label className="text-xs font-medium dark:text-white/80">{t('agents.settingsPage.sttProvider', { defaultValue: 'STT Provider' })}</Label>
                 <select
                   value={agentConfig.stt_provider}
                   onChange={(e) => handleConfigChange('stt_provider', e.target.value)}
@@ -678,7 +678,7 @@ export const AgentPropertiesPanel = ({ agent, selectedNode, onNodeDelete, isColl
                 </select>
               </div>
               <div>
-                <Label className="text-xs font-medium dark:text-gray-300">{t('agents.settingsPage.voiceId', { defaultValue: 'Voice ID' })}</Label>
+                <Label className="text-xs font-medium dark:text-white/80">{t('agents.settingsPage.voiceId', { defaultValue: 'Voice ID' })}</Label>
                 <select
                   value={agentConfig.voice_id || 'default'}
                   onChange={(e) => handleConfigChange('voice_id', e.target.value)}
@@ -693,7 +693,7 @@ export const AgentPropertiesPanel = ({ agent, selectedNode, onNodeDelete, isColl
             {/* Team Settings */}
             <CollapsibleSection title={t('agents.settingsPage.teamSettings', { defaultValue: 'Team Settings' })}>
               <div>
-                <Label className="text-xs font-medium dark:text-gray-300">{t('agents.settingsPage.handoffTeam', { defaultValue: 'Handoff Team' })}</Label>
+                <Label className="text-xs font-medium dark:text-white/80">{t('agents.settingsPage.handoffTeam', { defaultValue: 'Handoff Team' })}</Label>
                 <select
                   value={agentConfig.handoff_team_id || ""}
                   onChange={(e) => handleConfigChange('handoff_team_id', e.target.value ? parseInt(e.target.value) : null)}
@@ -704,7 +704,7 @@ export const AgentPropertiesPanel = ({ agent, selectedNode, onNodeDelete, isColl
                     <option key={team.id} value={team.id}>{team.name}</option>
                   ))}
                 </select>
-                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                <p className="text-xs text-gray-500 dark:text-white/50 mt-1">
                   {t('agents.settingsPage.handoffTeamHelp', { defaultValue: 'Team to handle human support requests' })}
                 </p>
               </div>
@@ -713,13 +713,13 @@ export const AgentPropertiesPanel = ({ agent, selectedNode, onNodeDelete, isColl
             {/* Agent Specialization */}
             <CollapsibleSection title={t('agents.settingsPage.agentSpecialization', { defaultValue: 'Agent Specialization' })}>
               <div className="space-y-3">
-                <p className="text-xs text-gray-500 dark:text-gray-400">
+                <p className="text-xs text-gray-500 dark:text-white/50">
                   {t('agents.settingsPage.specializationHelp', { defaultValue: 'Define topics this agent specializes in for agent-to-agent transfers.' })}
                 </p>
 
                 {/* Specialization Topics List */}
                 {agentConfig.specialization_topics.map((topic, index) => (
-                  <div key={index} className="bg-slate-50 dark:bg-slate-800 rounded-lg p-3 border border-slate-200 dark:border-slate-700">
+                  <div key={index} className="bg-slate-50 dark:bg-white/[0.07] rounded-lg p-3 border border-slate-200 dark:border-white/[0.10]">
                     <div className="flex items-start justify-between gap-2">
                       <div className="flex-1 space-y-2">
                         <Input
@@ -730,7 +730,7 @@ export const AgentPropertiesPanel = ({ agent, selectedNode, onNodeDelete, isColl
                             handleConfigChange('specialization_topics', newTopics);
                           }}
                           placeholder={t('agents.settingsPage.topicName', { defaultValue: 'Topic (e.g., billing, support)' })}
-                          className="text-sm dark:bg-slate-900 dark:border-slate-600 dark:text-white"
+                          className="text-sm dark:bg-background dark:border-white/[0.12] dark:text-white"
                         />
                         <Input
                           value={topic.description}
@@ -740,7 +740,7 @@ export const AgentPropertiesPanel = ({ agent, selectedNode, onNodeDelete, isColl
                             handleConfigChange('specialization_topics', newTopics);
                           }}
                           placeholder={t('agents.settingsPage.topicDescription', { defaultValue: 'Description of what this agent handles' })}
-                          className="text-sm dark:bg-slate-900 dark:border-slate-600 dark:text-white"
+                          className="text-sm dark:bg-background dark:border-white/[0.12] dark:text-white"
                         />
                       </div>
                       <Button
@@ -782,10 +782,10 @@ export const AgentPropertiesPanel = ({ agent, selectedNode, onNodeDelete, isColl
                 {/* Accept Handoffs Toggle */}
                 <div className="flex items-center justify-between py-2">
                   <div>
-                    <Label className="text-xs font-medium dark:text-gray-300">
+                    <Label className="text-xs font-medium dark:text-white/80">
                       {t('agents.settingsPage.acceptHandoffs', { defaultValue: 'Accept Handoffs' })}
                     </Label>
-                    <p className="text-xs text-slate-500 dark:text-slate-400">
+                    <p className="text-xs text-slate-500 dark:text-white/50">
                       {t('agents.settingsPage.acceptHandoffsHelp', { defaultValue: 'Allow other agents to transfer conversations to this agent' })}
                     </p>
                   </div>
@@ -802,7 +802,7 @@ export const AgentPropertiesPanel = ({ agent, selectedNode, onNodeDelete, isColl
 
                 {/* History Mode */}
                 <div>
-                  <Label className="text-xs font-medium dark:text-gray-300">
+                  <Label className="text-xs font-medium dark:text-white/80">
                     {t('agents.settingsPage.historyMode', { defaultValue: 'History Mode' })}
                   </Label>
                   <select
@@ -817,14 +817,14 @@ export const AgentPropertiesPanel = ({ agent, selectedNode, onNodeDelete, isColl
                     <option value="summary">{t('agents.settingsPage.historyModes.summary', { defaultValue: 'Summary - Receive only a summary' })}</option>
                     <option value="none">{t('agents.settingsPage.historyModes.none', { defaultValue: 'None - Start fresh without context' })}</option>
                   </select>
-                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                  <p className="text-xs text-gray-500 dark:text-white/50 mt-1">
                     {t('agents.settingsPage.historyModeHelp', { defaultValue: 'How much conversation history to receive when taking over a conversation' })}
                   </p>
                 </div>
 
                 {/* Welcome Message on Handoff */}
                 <div>
-                  <Label className="text-xs font-medium dark:text-gray-300">
+                  <Label className="text-xs font-medium dark:text-white/80">
                     {t('agents.settingsPage.welcomeMessageOnHandoff', { defaultValue: 'Welcome Message on Handoff' })}
                   </Label>
                   <Textarea
@@ -834,10 +834,10 @@ export const AgentPropertiesPanel = ({ agent, selectedNode, onNodeDelete, isColl
                       welcome_message_on_handoff: e.target.value
                     })}
                     placeholder={t('agents.settingsPage.welcomeMessageOnHandoffPlaceholder', { defaultValue: "Hi! I'm the billing specialist. How can I help you today?" })}
-                    className="text-sm dark:bg-slate-800 dark:border-slate-600 dark:text-white resize-none"
+                    className="text-sm dark:bg-white/[0.07] dark:border-white/[0.12] dark:text-white resize-none"
                     rows={3}
                   />
-                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                  <p className="text-xs text-gray-500 dark:text-white/50 mt-1">
                     {t('agents.settingsPage.welcomeMessageOnHandoffHelp', { defaultValue: 'Message to send when this agent takes over a conversation' })}
                   </p>
                 </div>
@@ -848,23 +848,23 @@ export const AgentPropertiesPanel = ({ agent, selectedNode, onNodeDelete, isColl
 
         {selectedTool && (
           <div className="space-y-4">
-            <p className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-4">{t('builder.toolDetails')}</p>
-            <div className="bg-slate-50 dark:bg-slate-800 rounded-lg p-3 border border-slate-200 dark:border-slate-700">
-              <p className="text-xs font-semibold text-gray-600 dark:text-gray-400 mb-1">{t('builder.id')}</p>
+            <p className="text-xs text-gray-500 dark:text-white/50 uppercase tracking-wider mb-4">{t('builder.toolDetails')}</p>
+            <div className="bg-slate-50 dark:bg-white/[0.07] rounded-lg p-3 border border-slate-200 dark:border-white/[0.10]">
+              <p className="text-xs font-semibold text-gray-600 dark:text-white/50 mb-1">{t('builder.id')}</p>
               <p className="text-sm dark:text-white font-mono">#{selectedTool.id}</p>
             </div>
-            <div className="bg-slate-50 dark:bg-slate-800 rounded-lg p-3 border border-slate-200 dark:border-slate-700">
-              <p className="text-xs font-semibold text-gray-600 dark:text-gray-400 mb-1">{t('builder.description')}</p>
+            <div className="bg-slate-50 dark:bg-white/[0.07] rounded-lg p-3 border border-slate-200 dark:border-white/[0.10]">
+              <p className="text-xs font-semibold text-gray-600 dark:text-white/50 mb-1">{t('builder.description')}</p>
               <p className="text-sm dark:text-white">{selectedTool.description}</p>
             </div>
-            <div className="bg-slate-50 dark:bg-slate-800 rounded-lg p-3 border border-slate-200 dark:border-slate-700">
-              <p className="text-xs font-semibold text-gray-600 dark:text-gray-400 mb-1">{t('builder.type')}</p>
+            <div className="bg-slate-50 dark:bg-white/[0.07] rounded-lg p-3 border border-slate-200 dark:border-white/[0.10]">
+              <p className="text-xs font-semibold text-gray-600 dark:text-white/50 mb-1">{t('builder.type')}</p>
               <p className="text-sm dark:text-white capitalize">{selectedTool.tool_type}</p>
             </div>
             {selectedTool.tool_type === 'custom' && selectedTool.parameters && (
-              <div className="bg-slate-50 dark:bg-slate-800 rounded-lg p-3 border border-slate-200 dark:border-slate-700">
-                <p className="text-xs font-semibold text-gray-600 dark:text-gray-400 mb-2">{t('builder.parameters')}</p>
-                <pre className="text-xs bg-white dark:bg-slate-900 p-2 rounded border border-slate-200 dark:border-slate-600 overflow-x-auto dark:text-white">
+              <div className="bg-slate-50 dark:bg-white/[0.07] rounded-lg p-3 border border-slate-200 dark:border-white/[0.10]">
+                <p className="text-xs font-semibold text-gray-600 dark:text-white/50 mb-2">{t('builder.parameters')}</p>
+                <pre className="text-xs bg-white dark:bg-background p-2 rounded border border-slate-200 dark:border-white/[0.12] overflow-x-auto dark:text-white">
                   {JSON.stringify(selectedTool.parameters, null, 2)}
                 </pre>
               </div>
@@ -883,13 +883,13 @@ export const AgentPropertiesPanel = ({ agent, selectedNode, onNodeDelete, isColl
 
         {selectedKb && (
           <div className="space-y-4">
-            <p className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-4">{t('builder.knowledgeBaseDetails')}</p>
-            <div className="bg-slate-50 dark:bg-slate-800 rounded-lg p-3 border border-slate-200 dark:border-slate-700">
-              <p className="text-xs font-semibold text-gray-600 dark:text-gray-400 mb-1">{t('builder.id')}</p>
+            <p className="text-xs text-gray-500 dark:text-white/50 uppercase tracking-wider mb-4">{t('builder.knowledgeBaseDetails')}</p>
+            <div className="bg-slate-50 dark:bg-white/[0.07] rounded-lg p-3 border border-slate-200 dark:border-white/[0.10]">
+              <p className="text-xs font-semibold text-gray-600 dark:text-white/50 mb-1">{t('builder.id')}</p>
               <p className="text-sm dark:text-white font-mono">#{selectedKb.id}</p>
             </div>
-            <div className="bg-slate-50 dark:bg-slate-800 rounded-lg p-3 border border-slate-200 dark:border-slate-700">
-              <p className="text-xs font-semibold text-gray-600 dark:text-gray-400 mb-1">{t('builder.description')}</p>
+            <div className="bg-slate-50 dark:bg-white/[0.07] rounded-lg p-3 border border-slate-200 dark:border-white/[0.10]">
+              <p className="text-xs font-semibold text-gray-600 dark:text-white/50 mb-1">{t('builder.description')}</p>
               <p className="text-sm dark:text-white">{selectedKb.description}</p>
             </div>
             <CollapsibleSection title="Test Knowledge Base" defaultOpen={true}>
@@ -906,7 +906,7 @@ export const AgentPropertiesPanel = ({ agent, selectedNode, onNodeDelete, isColl
 
       {/* Save Button - Fixed at bottom for agent config */}
       {selectedNode.type === 'agent' && hasChanges && (
-        <div className="p-4 border-t border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800">
+        <div className="p-4 border-t border-slate-200 dark:border-white/[0.10] bg-slate-50 dark:bg-white/[0.07]">
           <Button
             onClick={handleSave}
             disabled={mutation.isPending}

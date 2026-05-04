@@ -52,7 +52,6 @@ export default defineConfig(({ mode }) => {
       "@": path.resolve(__dirname, "./src"),
     },
   },
-  // The build configuration now only pertains to the main application.
   build: {
     rollupOptions: {
       input: {
@@ -62,6 +61,120 @@ export default defineConfig(({ mode }) => {
         entryFileNames: 'assets/[name]-[hash].js',
         assetFileNames: 'assets/[name]-[hash][extname]',
         chunkFileNames: 'assets/[name]-[hash].js',
+        manualChunks(id) {
+          // Core React runtime — always tiny, always cached
+          if (id.includes('node_modules/react/') ||
+              id.includes('node_modules/react-dom/') ||
+              id.includes('node_modules/react-router-dom/') ||
+              id.includes('node_modules/scheduler/')) {
+            return 'vendor-react';
+          }
+          // UI primitives — shared across marketing + dashboard
+          if (id.includes('node_modules/@radix-ui/') ||
+              id.includes('node_modules/lucide-react/') ||
+              id.includes('node_modules/class-variance-authority/') ||
+              id.includes('node_modules/clsx/') ||
+              id.includes('node_modules/tailwind-merge/')) {
+            return 'vendor-ui';
+          }
+          // Animation — used on marketing pages
+          if (id.includes('node_modules/framer-motion/')) {
+            return 'vendor-motion';
+          }
+          // Data fetching
+          if (id.includes('node_modules/@tanstack/')) {
+            return 'vendor-query';
+          }
+          // Marketing pages — public SEO pages share one chunk
+          if (id.includes('/pages/FeaturesPage') ||
+              id.includes('/pages/PricingPage') ||
+              id.includes('/pages/UseCasesPage') ||
+              id.includes('/pages/UseCaseDetailPage') ||
+              id.includes('/components/MarketingLayout')) {
+            return 'chunk-marketing';
+          }
+          // Blog pages — share one chunk (includes react-markdown)
+          if (id.includes('/pages/BlogListPage') ||
+              id.includes('/pages/BlogPostPage') ||
+              id.includes('/data/blogPosts') ||
+              id.includes('node_modules/react-markdown') ||
+              id.includes('node_modules/remark') ||
+              id.includes('node_modules/rehype') ||
+              id.includes('node_modules/unified') ||
+              id.includes('node_modules/mdast') ||
+              id.includes('node_modules/hast') ||
+              id.includes('node_modules/vfile') ||
+              id.includes('node_modules/micromark')) {
+            return 'chunk-blog';
+          }
+          // CRM pages — load only when /dashboard/crm is visited
+          if (id.includes('/pages/CRM/')) {
+            return 'chunk-crm';
+          }
+          // CMS pages — load only when /dashboard/cms is visited
+          if (id.includes('/pages/CMS') || id.includes('/pages/KnowledgeBaseCMS')) {
+            return 'chunk-cms';
+          }
+          // Social / Marketing Hub
+          if (id.includes('/pages/Social/')) {
+            return 'chunk-social';
+          }
+          // AI tools
+          if (id.includes('AIImage') || id.includes('AIChat') || id.includes('AITool')) {
+            return 'chunk-ai-tools';
+          }
+          // LiveKit — only loaded on video call pages
+          if (id.includes('node_modules/livekit-client/') ||
+              id.includes('node_modules/@livekit/')) {
+            return 'vendor-livekit';
+          }
+          // Charts — only loaded on Reports page
+          if (id.includes('node_modules/recharts/') ||
+              id.includes('node_modules/d3') ||
+              id.includes('node_modules/d3-') ||
+              id.includes('node_modules/victory')) {
+            return 'vendor-charts';
+          }
+          // RxJS
+          if (id.includes('node_modules/rxjs/')) {
+            return 'vendor-rxjs';
+          }
+          // Date utilities
+          if (id.includes('node_modules/date-fns/')) {
+            return 'vendor-dates';
+          }
+          // Twilio — only loaded on call-center pages
+          if (id.includes('node_modules/@twilio/') ||
+              id.includes('node_modules/twilio-')) {
+            return 'vendor-twilio';
+          }
+          // Code editor (ace-builds) — only loaded when user opens code editor
+          if (id.includes('node_modules/ace-builds/')) {
+            return 'vendor-ace';
+          }
+          // Syntax highlighting — used in chat/KB pages
+          if (id.includes('node_modules/react-syntax-highlighter/') ||
+              id.includes('node_modules/refractor/') ||
+              id.includes('node_modules/prismjs/')) {
+            return 'vendor-syntax';
+          }
+          // Lexical rich text editor
+          if (id.includes('node_modules/@lexical/') ||
+              id.includes('node_modules/lexical/') ||
+              id.includes('node_modules/lib0/') ||
+              id.includes('node_modules/y-')) {
+            return 'vendor-editor';
+          }
+          // Maps
+          if (id.includes('node_modules/leaflet/') ||
+              id.includes('node_modules/react-leaflet/')) {
+            return 'vendor-maps';
+          }
+          // Everything else in node_modules goes into a general vendor chunk
+          if (id.includes('node_modules/')) {
+            return 'vendor-misc';
+          }
+        },
       },
     },
   }

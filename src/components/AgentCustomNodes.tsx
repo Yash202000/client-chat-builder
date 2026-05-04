@@ -4,7 +4,7 @@ import { Bot, Zap, BrainCircuit, Cloud, Code, X, MessageSquare, Layers } from 'l
 import { Button } from '@/components/ui/button';
 import { AgentBuilderContext } from './AgentBuilder';
 
-const nodeWrapperStyle = "p-4 border-2 rounded-xl shadow-lg bg-gradient-to-br from-white to-slate-50 dark:from-slate-800 dark:to-slate-900 transition-all hover:shadow-xl";
+const nodeWrapperStyle = "wf-node p-4 border-2 rounded-xl shadow-lg bg-gradient-to-br from-white to-slate-50 dark:from-slate-800 dark:to-slate-900 transition-all hover:shadow-xl";
 const nodeHeaderStyle = "flex items-center gap-2 font-bold text-lg dark:text-white";
 
 export const AgentNode = ({ data }) => {
@@ -16,8 +16,8 @@ export const AgentNode = ({ data }) => {
         </div>
         <span className="bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent dark:from-green-400 dark:to-emerald-400">{data.label}</span>
       </div>
-      <Handle type="target" position={Position.Top} className="!bg-green-500 !w-3 !h-3 !border-2 !border-white dark:!border-slate-900" />
-      <Handle type="source" position={Position.Bottom} className="!bg-green-500 !w-3 !h-3 !border-2 !border-white dark:!border-slate-900" />
+      <Handle type="target" position={Position.Top} className="!bg-green-500 !w-3 !h-3 !border-2 !border-white dark:!border-white/[0.15]" />
+      <Handle type="source" position={Position.Bottom} className="!bg-green-500 !w-3 !h-3 !border-2 !border-white dark:!border-white/[0.15]" />
     </div>
   );
 };
@@ -64,13 +64,13 @@ export const ToolsNode = ({ data }) => {
   return (
     <div className={`${nodeWrapperStyle} ${getBorderColor(data.tool_type)} dark:border-opacity-80`} style={style}>
       <div className={nodeHeaderStyle}>
-        <div className="p-1.5 bg-white dark:bg-slate-700 rounded-lg shadow-sm">
+        <div className="p-1.5 bg-white dark:bg-white/[0.10] rounded-lg shadow-sm">
           {getToolIcon(data.tool_type)}
         </div>
         <span className="text-sm">{data.label}</span>
       </div>
-      <Handle type="target" position={Position.Top} className={`${getHandleColor(data.tool_type)} !w-3 !h-3 !border-2 !border-white dark:!border-slate-900`} />
-      <Handle type="source" position={Position.Bottom} className={`${getHandleColor(data.tool_type)} !w-3 !h-3 !border-2 !border-white dark:!border-slate-900`} />
+      <Handle type="target" position={Position.Top} className={`${getHandleColor(data.tool_type)} !w-3 !h-3 !border-2 !border-white dark:!border-white/[0.15]`} />
+      <Handle type="source" position={Position.Bottom} className={`${getHandleColor(data.tool_type)} !w-3 !h-3 !border-2 !border-white dark:!border-white/[0.15]`} />
     </div>
   );
 };
@@ -84,7 +84,7 @@ export const KnowledgeNode = ({ data }) => {
         </div>
         <span className="text-sm">{data.label}</span>
       </div>
-      <Handle type="target" position={Position.Top} className="!bg-indigo-500 !w-3 !h-3 !border-2 !border-white dark:!border-slate-900" />
+      <Handle type="target" position={Position.Top} className="!bg-indigo-500 !w-3 !h-3 !border-2 !border-white dark:!border-white/[0.15]" />
     </div>
   );
 };
@@ -98,7 +98,7 @@ export const WorkflowNode = ({ data }) => {
         </div>
         <span className="text-sm">{data.label}</span>
       </div>
-      <Handle type="target" position={Position.Top} className="!bg-purple-500 !w-3 !h-3 !border-2 !border-white dark:!border-slate-900" />
+      <Handle type="target" position={Position.Top} className="!bg-purple-500 !w-3 !h-3 !border-2 !border-white dark:!border-white/[0.15]" />
     </div>
   );
 };
@@ -112,8 +112,8 @@ export const McpSubToolNode = ({ data }) => {
                 </div>
                 <span className="text-sm font-medium truncate">{data.label}</span>
             </div>
-            <Handle type="target" position={Position.Left} className="!bg-cyan-500 !w-3 !h-3 !border-2 !border-white dark:!border-slate-900" />
-            <Handle type="source" position={Position.Right} className="!bg-cyan-500 !w-3 !h-3 !border-2 !border-white dark:!border-slate-900" />
+            <Handle type="target" position={Position.Left} className="!bg-cyan-500 !w-3 !h-3 !border-2 !border-white dark:!border-white/[0.15]" />
+            <Handle type="source" position={Position.Right} className="!bg-cyan-500 !w-3 !h-3 !border-2 !border-white dark:!border-white/[0.15]" />
         </div>
     );
 };
@@ -127,8 +127,8 @@ export const ChatMessageNode = ({ data }) => {
         </div>
         <span className="text-sm">{data.label}</span>
       </div>
-      <Handle type="target" position={Position.Top} className="!bg-emerald-500 !w-3 !h-3 !border-2 !border-white dark:!border-slate-900" />
-      <Handle type="source" position={Position.Bottom} className="!bg-emerald-500 !w-3 !h-3 !border-2 !border-white dark:!border-slate-900" />
+      <Handle type="target" position={Position.Top} className="!bg-emerald-500 !w-3 !h-3 !border-2 !border-white dark:!border-white/[0.15]" />
+      <Handle type="source" position={Position.Bottom} className="!bg-emerald-500 !w-3 !h-3 !border-2 !border-white dark:!border-white/[0.15]" />
     </div>
   );
 };

@@ -1,12 +1,18 @@
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
+import { SEOHead } from "@/components/SEOHead";
 
 export const PrivacyPolicy = () => {
   const navigate = useNavigate();
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+      <SEOHead
+        title="Privacy Policy"
+        description="Read HeyGenAlly's privacy policy to understand how we collect, use, and protect your personal data."
+        canonical="/privacy-policy"
+      />
       <div className="max-w-4xl mx-auto px-4 py-12">
         <Button
           variant="ghost"
