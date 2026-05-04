@@ -716,9 +716,7 @@ const AppLayout = () => {
                   {branding.logoUrl ? (
                     <img src={branding.logoUrl} alt={branding.companyName} className="h-6 w-6 rounded-lg object-contain flex-shrink-0" />
                   ) : (
-                    <div className="h-6 w-6 rounded-xl bg-gradient-to-br from-violet-600 to-purple-700 flex items-center justify-center flex-shrink-0 shadow-lg shadow-violet-500/25">
-                      <Bot className="h-3.5 w-3.5 text-white" />
-                    </div>
+                    <img src="/icon.png" alt="HeyGenAlly" className="h-6 w-6 rounded-xl object-contain flex-shrink-0" />
                   )}
                   <span className="text-sm font-semibold bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent truncate">{branding.companyName}</span>
                 </div>
@@ -735,9 +733,7 @@ const AppLayout = () => {
                 {branding.logoUrl ? (
                   <img src={branding.logoUrl} alt={branding.companyName} className="h-6 w-6 rounded-lg object-contain" />
                 ) : (
-                  <div className="h-6 w-6 rounded-xl bg-gradient-to-br from-violet-600 to-purple-700 flex items-center justify-center shadow-lg shadow-violet-500/25">
-                    <Bot className="h-3.5 w-3.5 text-white" />
-                  </div>
+                  <img src="/icon.png" alt="HeyGenAlly" className="h-6 w-6 rounded-xl object-contain" />
                 )}
                 <button
                   onClick={() => setSidebarCollapsed(false)}
@@ -889,9 +885,7 @@ const AppLayout = () => {
                 {branding.logoUrl ? (
                   <img src={branding.logoUrl} alt={branding.companyName} className="h-5 w-5 rounded-md object-contain" />
                 ) : (
-                  <div className="h-5 w-5 rounded-lg bg-gradient-to-br from-violet-600 to-purple-700 flex items-center justify-center shadow-md shadow-violet-500/25">
-                    <Bot className="h-3 w-3 text-white" />
-                  </div>
+                  <img src="/icon.png" alt="HeyGenAlly" className="h-5 w-5 rounded-lg object-contain" />
                 )}
                 <span className="text-base font-semibold text-foreground">{branding.companyName}</span>
               </div>
