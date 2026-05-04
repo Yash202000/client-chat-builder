@@ -125,6 +125,10 @@ import DialerPage from "./pages/DialerPage";
 import CalendarPage from "./pages/CalendarPage";
 import DrivePage from "./pages/DrivePage";
 import AuditLogsPage from "./pages/AuditLogsPage";
+import TermsOfService from "./pages/TermsOfService";
+import CookiePolicyPage from "./pages/CookiePolicyPage";
+import SecurityPage from "./pages/SecurityPage";
+import { CookieConsentBanner } from "./components/CookieConsentBanner";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -155,6 +159,9 @@ const AppRoutes = () => {
       <Route path="/signup" element={<SignupPage />} />
       <Route path="/license-error" element={<LicenseErrorPage />} />
       <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+      <Route path="/terms" element={<TermsOfService />} />
+      <Route path="/cookie-policy" element={<CookiePolicyPage />} />
+      <Route path="/security" element={<SecurityPage />} />
       <Route path="/accept-invite" element={<AcceptInvitationPage />} />
       <Route path="/preview/:publishId" element={<PublishedPreviewPage mode="widget" />} />
       <Route path="/chat/:publishId" element={<PublishedPreviewPage mode="fullpage" />} />
@@ -295,6 +302,7 @@ const App = () => (
                 <PersonalizationProvider>
                   <VideoCallProvider>
                     <AppRoutes />
+                    <CookieConsentBanner />
                   </VideoCallProvider>
                 </PersonalizationProvider>
               </BrandingProvider>

@@ -1036,15 +1036,17 @@ const Index = () => {
                 <li><a href="#" className="hover:text-white transition-colors hover:translate-x-1 inline-block">Documentation</a></li>
                 <li><a href="#" className="hover:text-white transition-colors hover:translate-x-1 inline-block">API Reference</a></li>
                 <li><a href="#" className="hover:text-white transition-colors hover:translate-x-1 inline-block">Support</a></li>
+                <li><Link to="/security" className="hover:text-white transition-colors hover:translate-x-1 inline-block">Security & Trust</Link></li>
               </ul>
             </div>
           </div>
           <div className="border-t border-slate-800 pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
-            <p className="text-slate-400 text-sm">© 2025 HeyGenAlly. Your generative ally — built for your team's success.</p>
+            <p className="text-slate-400 text-sm">© 2026 HeyGenAlly. Your generative ally — built for your team's success.</p>
             <div className="flex items-center gap-6 text-sm text-slate-400">
-              <a href="/privacy-policy" className="hover:text-white transition-colors">Privacy Policy</a>
-              <a href="#" className="hover:text-white transition-colors">Terms of Service</a>
-              <a href="#" className="hover:text-white transition-colors">Contact</a>
+              <Link to="/privacy-policy" className="hover:text-white transition-colors">Privacy Policy</Link>
+              <Link to="/terms" className="hover:text-white transition-colors">Terms of Service</Link>
+              <Link to="/cookie-policy" className="hover:text-white transition-colors">Cookie Policy</Link>
+              <Link to="/security" className="hover:text-white transition-colors">Security</Link>
             </div>
           </div>
         </div>

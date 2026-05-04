@@ -764,6 +764,147 @@ export const Settings = () => {
               </div>
             </div>
           </div>
+
+          {/* GDPR / Data Rights */}
+          {(() => {
+            const [gdprOpen, setGdprOpen] = useState(false);
+            const [gdprPassword, setGdprPassword] = useState("");
+            const [gdprConfirm, setGdprConfirm] = useState("");
+            const [gdprLoading, setGdprLoading] = useState(false);
+
+            const handleErase = async () => {
+              if (gdprConfirm !== "DELETE MY ACCOUNT") {
+                toast({ title: "Confirmation required", description: 'Type "DELETE MY ACCOUNT" exactly to confirm.', variant: "destructive" });
+                return;
+              }
+              try {
+                setGdprLoading(true);
+                const res = await authFetch("/api/v1/gdpr/erase-my-data", {
+                  method: "DELETE",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({ password: gdprPassword, confirmation: gdprConfirm }),
+                });
+                if (res.ok) {
+                  toast({ title: "Account erased", description: "Your data has been permanently deleted. You will now be signed out." });
+                  setTimeout(() => { localStorage.clear(); window.location.href = "/login"; }, 2000);
+                } else {
+                  const err = await res.json();
+                  toast({ title: "Error", description: err.detail || "Could not erase account.", variant: "destructive" });
+                }
+              } catch {
+                toast({ title: "Error", description: "Unexpected error. Please try again.", variant: "destructive" });
+              } finally {
+                setGdprLoading(false);
+              }
+            };
+
+            return (
+              <>
+                <div className="rounded-xl border border-red-200 dark:border-red-800/50 bg-white dark:bg-slate-900 shadow-sm">
+                  <div className="p-6 border-b border-red-100 dark:border-red-800/30">
+                    <h3 className="flex items-center gap-3 dark:text-white text-base font-semibold">
+                      <div className="p-1.5 rounded-lg bg-gradient-to-br from-red-500 to-rose-600">
+                        <Lock className="h-4 w-4 text-white" />
+                      </div>
+                      Data Rights &amp; GDPR
+                    </h3>
+                    <p className="text-slate-500 dark:text-gray-400 text-sm mt-1">
+                      Download your data or permanently erase your account in accordance with GDPR Art. 17 &amp; 20.
+                    </p>
+                  </div>
+                  <div className="p-6 space-y-3">
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-4 p-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50">
+                      <div className="flex-1">
+                        <p className="font-medium dark:text-white text-sm">Download my data</p>
+                        <p className="text-sm text-gray-500 dark:text-gray-400">Export all your data as a ZIP of CSV files (contacts, leads, deals, campaigns, etc.)</p>
+                      </div>
+                      <Button
+                        variant="outline"
+                        className="rounded-xl dark:border-slate-600 dark:text-slate-300 self-start sm:self-auto flex-shrink-0"
+                        onClick={async () => {
+                          const res = await authFetch("/api/v1/export/data", { method: "POST" });
+                          if (res.ok) {
+                            const blob = await res.blob();
+                            const url = URL.createObjectURL(blob);
+                            const a = document.createElement("a");
+                            a.href = url; a.download = `my_data_${new Date().toISOString().slice(0,10)}.zip`;
+                            document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+                          } else {
+                            toast({ title: "Export failed", variant: "destructive" });
+                          }
+                        }}
+                      >
+                        <Download className="h-4 w-4 mr-1.5" /> Download
+                      </Button>
+                    </div>
+
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-4 p-4 rounded-xl border border-red-200 dark:border-red-800/40 bg-red-50/50 dark:bg-red-900/10">
+                      <div className="flex-1">
+                        <p className="font-medium text-red-700 dark:text-red-400 text-sm">Delete my account</p>
+                        <p className="text-sm text-red-500/80 dark:text-red-400/70">Permanently erases your account and personal data. This cannot be undone.</p>
+                      </div>
+                      <Button
+                        variant="outline"
+                        className="rounded-xl border-red-300 text-red-600 hover:bg-red-50 dark:border-red-700 dark:text-red-400 dark:hover:bg-red-900/20 self-start sm:self-auto flex-shrink-0"
+                        onClick={() => setGdprOpen(true)}
+                      >
+                        <Lock className="h-4 w-4 mr-1.5" /> Delete account
+                      </Button>
+                    </div>
+
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-4 p-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50">
+                      <div className="flex-1">
+                        <p className="font-medium dark:text-white text-sm">Sub-processors &amp; security information</p>
+                        <p className="text-sm text-gray-500 dark:text-gray-400">View the third-party processors that handle your data and our security controls.</p>
+                      </div>
+                      <Button
+                        variant="outline"
+                        className="rounded-xl dark:border-slate-600 dark:text-slate-300 self-start sm:self-auto flex-shrink-0"
+                        onClick={() => window.open("/security", "_blank")}
+                      >
+                        View security page
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+
+                <Dialog open={gdprOpen} onOpenChange={setGdprOpen}>
+                  <DialogContent className="dark:bg-slate-900 dark:border-slate-700 rounded-2xl sm:max-w-md">
+                    <DialogHeader>
+                      <DialogTitle className="dark:text-white flex items-center gap-2 text-red-600 dark:text-red-400">
+                        <Lock className="h-4 w-4" /> Delete My Account
+                      </DialogTitle>
+                    </DialogHeader>
+                    <div className="space-y-4 py-2">
+                      <div className="p-3 rounded-xl bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800/40 text-sm text-red-700 dark:text-red-400">
+                        This will <strong>permanently delete</strong> your account and all personal data. Your messages will be anonymised. This action cannot be undone.
+                      </div>
+                      <div>
+                        <Label htmlFor="gdpr-password" className="dark:text-gray-300">Current password</Label>
+                        <Input id="gdpr-password" type="password" value={gdprPassword} onChange={(e) => setGdprPassword(e.target.value)} className="dark:bg-slate-800 dark:border-slate-600 dark:text-white mt-1.5 rounded-xl" />
+                      </div>
+                      <div>
+                        <Label htmlFor="gdpr-confirm" className="dark:text-gray-300">
+                          Type <span className="font-mono font-bold">DELETE MY ACCOUNT</span> to confirm
+                        </Label>
+                        <Input id="gdpr-confirm" value={gdprConfirm} onChange={(e) => setGdprConfirm(e.target.value)} className="dark:bg-slate-800 dark:border-slate-600 dark:text-white mt-1.5 rounded-xl" placeholder="DELETE MY ACCOUNT" />
+                      </div>
+                    </div>
+                    <DialogFooter>
+                      <Button variant="ghost" className="rounded-xl dark:text-slate-300" onClick={() => setGdprOpen(false)}>Cancel</Button>
+                      <Button
+                        disabled={gdprLoading || gdprConfirm !== "DELETE MY ACCOUNT" || !gdprPassword}
+                        className="bg-red-600 hover:bg-red-700 text-white rounded-xl"
+                        onClick={handleErase}
+                      >
+                        {gdprLoading ? "Deleting…" : "Permanently delete"}
+                      </Button>
+                    </DialogFooter>
+                  </DialogContent>
+                </Dialog>
+              </>
+            );
+          })()}
         </TabsContent>
 
         <TabsContent value="integrations" className="space-y-6" dir={isRTL ? 'rtl' : 'ltr'}>
