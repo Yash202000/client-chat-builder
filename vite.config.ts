@@ -62,120 +62,50 @@ export default defineConfig(({ mode }) => {
         assetFileNames: 'assets/[name]-[hash][extname]',
         chunkFileNames: 'assets/[name]-[hash].js',
         manualChunks(id) {
-          // Core React runtime — always tiny, always cached
-          // react-leaflet must be co-located here: it calls React.forwardRef at
-          // module evaluation time, so it must not land in a separate chunk that
-          // could be evaluated before vendor-react is ready.
-          if (id.includes('node_modules/react/') ||
-              id.includes('node_modules/react-dom/') ||
-              id.includes('node_modules/react-router-dom/') ||
-              id.includes('node_modules/react-leaflet/') ||
-              id.includes('node_modules/scheduler/')) {
-            return 'vendor-react';
-          }
-          // UI primitives — shared across marketing + dashboard
-          if (id.includes('node_modules/@radix-ui/') ||
-              id.includes('node_modules/lucide-react/') ||
-              id.includes('node_modules/class-variance-authority/') ||
-              id.includes('node_modules/clsx/') ||
-              id.includes('node_modules/tailwind-merge/')) {
-            return 'vendor-ui';
-          }
-          // Animation — used on marketing pages
-          if (id.includes('node_modules/framer-motion/')) {
-            return 'vendor-motion';
-          }
-          // Data fetching
-          if (id.includes('node_modules/@tanstack/')) {
-            return 'vendor-query';
-          }
-          // Marketing pages — public SEO pages share one chunk
-          if (id.includes('/pages/FeaturesPage') ||
-              id.includes('/pages/PricingPage') ||
-              id.includes('/pages/UseCasesPage') ||
-              id.includes('/pages/UseCaseDetailPage') ||
-              id.includes('/components/MarketingLayout')) {
-            return 'chunk-marketing';
-          }
-          // Blog pages — share one chunk (includes react-markdown)
-          if (id.includes('/pages/BlogListPage') ||
-              id.includes('/pages/BlogPostPage') ||
-              id.includes('/data/blogPosts') ||
-              id.includes('node_modules/react-markdown') ||
-              id.includes('node_modules/remark') ||
-              id.includes('node_modules/rehype') ||
-              id.includes('node_modules/unified') ||
-              id.includes('node_modules/mdast') ||
-              id.includes('node_modules/hast') ||
-              id.includes('node_modules/vfile') ||
-              id.includes('node_modules/micromark')) {
-            return 'chunk-blog';
-          }
-          // CRM pages — load only when /dashboard/crm is visited
-          if (id.includes('/pages/CRM/')) {
-            return 'chunk-crm';
-          }
-          // CMS pages — load only when /dashboard/cms is visited
-          if (id.includes('/pages/CMS') || id.includes('/pages/KnowledgeBaseCMS')) {
-            return 'chunk-cms';
-          }
-          // Social / Marketing Hub
-          if (id.includes('/pages/Social/')) {
-            return 'chunk-social';
-          }
-          // AI tools
-          if (id.includes('AIImage') || id.includes('AIChat') || id.includes('AITool')) {
-            return 'chunk-ai-tools';
-          }
-          // LiveKit — only loaded on video call pages
+          // ── Strategy ────────────────────────────────────────────────────────
+          // Only split packages that are (a) large AND (b) have NO React imports
+          // at module evaluation time. Packages like @radix-ui, react-leaflet,
+          // framer-motion, lucide-react all call React.forwardRef / createContext
+          // at the top level — splitting them into separate chunks causes a race
+          // where the chunk evaluates before vendor-react, crashing with
+          // "Cannot read properties of undefined (reading 'forwardRef')".
+          // Rollup resolves dependency order correctly when these stay together.
+          // ────────────────────────────────────────────────────────────────────
+
+          // LiveKit — large, independent, only on video-call pages
           if (id.includes('node_modules/livekit-client/') ||
               id.includes('node_modules/@livekit/')) {
             return 'vendor-livekit';
           }
-          // Charts — only loaded on Reports page
+          // Charts — large, independent (d3 is pure JS, no React at module level)
           if (id.includes('node_modules/recharts/') ||
               id.includes('node_modules/d3') ||
               id.includes('node_modules/d3-') ||
               id.includes('node_modules/victory')) {
             return 'vendor-charts';
           }
-          // RxJS
-          if (id.includes('node_modules/rxjs/')) {
-            return 'vendor-rxjs';
+          // Maps — leaflet core is independent (react-leaflet stays with React ecosystem)
+          if (id.includes('node_modules/leaflet/')) {
+            return 'vendor-maps';
           }
-          // Date utilities
-          if (id.includes('node_modules/date-fns/')) {
-            return 'vendor-dates';
+          // Code editor — large, independent
+          if (id.includes('node_modules/ace-builds/')) {
+            return 'vendor-ace';
           }
-          // Twilio — only loaded on call-center pages
+          // Twilio — large, independent
           if (id.includes('node_modules/@twilio/') ||
               id.includes('node_modules/twilio-')) {
             return 'vendor-twilio';
           }
-          // Code editor (ace-builds) — only loaded when user opens code editor
-          if (id.includes('node_modules/ace-builds/')) {
-            return 'vendor-ace';
+          // RxJS — independent
+          if (id.includes('node_modules/rxjs/')) {
+            return 'vendor-rxjs';
           }
-          // Syntax highlighting — used in chat/KB pages
-          if (id.includes('node_modules/react-syntax-highlighter/') ||
-              id.includes('node_modules/refractor/') ||
-              id.includes('node_modules/prismjs/')) {
-            return 'vendor-syntax';
-          }
-          // Lexical rich text editor
-          if (id.includes('node_modules/@lexical/') ||
-              id.includes('node_modules/lexical/') ||
-              id.includes('node_modules/lib0/') ||
-              id.includes('node_modules/y-')) {
-            return 'vendor-editor';
-          }
-          // Maps (leaflet core only — react-leaflet is in vendor-react)
-          if (id.includes('node_modules/leaflet/')) {
-            return 'vendor-maps';
-          }
-          // Everything else in node_modules goes into a general vendor chunk
+          // Everything else (React, Radix, lucide, framer-motion, tanstack,
+          // date-fns, react-leaflet, markdown, etc.) goes into vendor — Rollup
+          // handles initialization order correctly within a single chunk.
           if (id.includes('node_modules/')) {
-            return 'vendor-misc';
+            return 'vendor';
           }
         },
       },
