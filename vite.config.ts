@@ -77,11 +77,9 @@ export default defineConfig(({ mode }) => {
               id.includes('node_modules/@livekit/')) {
             return 'vendor-livekit';
           }
-          // Charts — large, independent (d3 is pure JS, no React at module level)
-          if (id.includes('node_modules/recharts/') ||
-              id.includes('node_modules/d3') ||
-              id.includes('node_modules/d3-') ||
-              id.includes('node_modules/victory')) {
+          // d3 — pure JS, no React at module level (recharts/victory are React-based → vendor)
+          if (id.includes('node_modules/d3/') ||
+              id.includes('node_modules/d3-')) {
             return 'vendor-charts';
           }
           // Maps — leaflet core is independent (react-leaflet stays with React ecosystem)
