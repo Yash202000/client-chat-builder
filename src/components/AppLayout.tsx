@@ -65,6 +65,9 @@ import {
   GitBranch,
   FormInput,
   ClipboardList,
+  Ticket,
+  LifeBuoy,
+  Workflow,
 } from "lucide-react";
 import { CreateAgentDialog } from "@/components/CreateAgentDialog";
 import { Permission } from "./Permission";
@@ -554,7 +557,20 @@ const AppLayout = () => {
         { title: "Drive",    url: "/dashboard/drive",    icon: HardDrive },
       ],
     },
-    // 3. CRM — update contacts/leads after every interaction
+    // 3. Support & Tickets — Jira-like ticketing
+    {
+      id: 'tickets',
+      label: 'Support',
+      labelKey: 'navigation.supportGroup',
+      icon: LifeBuoy,
+      collapsible: true,
+      items: [
+        { title: 'My Tickets',       url: '/dashboard/tickets?assignee=me', icon: Ticket },
+        { title: 'All Projects',     url: '/dashboard/tickets',             icon: KanbanSquare },
+        { title: 'Workflow Editor',  url: '/dashboard/tickets/settings/workflows', icon: Workflow },
+      ],
+    },
+    // 4. CRM — update contacts/leads after every interaction
     {
       id: 'crm',
       label: 'CRM',

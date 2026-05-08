@@ -102,6 +102,15 @@ const AIToolCreatePage     = lazy(() => import("./pages/AIToolCreatePage"));
 const AIToolDetailPage     = lazy(() => import("./pages/AIToolDetailPage"));
 const AIToolEditPage       = lazy(() => import("./pages/AIToolEditPage"));
 
+// ─── Lazy: Tickets ───────────────────────────────────────────────────────────
+const TicketProjectsPage    = lazy(() => import("./pages/Tickets/ProjectsPage"));
+const TicketBoardPage       = lazy(() => import("./pages/Tickets/TicketBoardPage"));
+const TicketListPage        = lazy(() => import("./pages/Tickets/TicketListPage"));
+const TicketDetailPage      = lazy(() => import("./pages/Tickets/TicketDetailPage"));
+const WorkflowEditorPage    = lazy(() => import("./pages/Tickets/WorkflowEditorPage"));
+const TicketAnalyticsPage   = lazy(() => import("./pages/Tickets/TicketAnalyticsPage"));
+const TicketBacklogPage     = lazy(() => import("./pages/Tickets/TicketBacklogPage"));
+
 // ─── Lazy: CRM ───────────────────────────────────────────────────────────────
 const CRMDashboard       = lazy(() => import("./pages/CRM/CRMDashboard"));
 const LeadsPage          = lazy(() => import("./pages/CRM/LeadsPage"));
@@ -265,6 +274,14 @@ const AppRoutes = () => {
             <Route path="ai-tools/:id" element={<AIToolDetailPage />} />
             <Route path="ai-tools/:id/edit" element={<AIToolEditPage />} />
             <Route path="contacts" element={<ContactHubPage />} />
+            {/* Tickets */}
+            <Route path="tickets" element={<TicketProjectsPage />} />
+            <Route path="tickets/:projectKey/board" element={<TicketBoardPage />} />
+            <Route path="tickets/:projectKey/list" element={<TicketListPage />} />
+            <Route path="tickets/:projectKey/backlog" element={<TicketBacklogPage />} />
+            <Route path="tickets/:projectKey/analytics" element={<TicketAnalyticsPage />} />
+            <Route path="tickets/:projectKey/:ticketNumber" element={<TicketDetailPage />} />
+            <Route path="tickets/settings/workflows" element={<WorkflowEditorPage />} />
             {/* CRM */}
             <Route path="crm" element={<CRMDashboard />} />
             <Route path="crm/leads" element={<LeadsPage />} />

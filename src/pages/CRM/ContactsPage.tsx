@@ -835,12 +835,12 @@ export default function ContactsPage() {
             </div>
             <div className="space-y-2">
               <Label className="text-foreground font-medium">Link to Account</Label>
-              <Select value={newContact.account_id} onValueChange={(v) => setNewContact({ ...newContact, account_id: v })}>
+              <Select value={newContact.account_id || '__none__'} onValueChange={(v) => setNewContact({ ...newContact, account_id: v === '__none__' ? '' : v })}>
                 <SelectTrigger className="rounded-xl bg-background border-border">
                   <SelectValue placeholder="Select account (optional)" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">None</SelectItem>
+                  <SelectItem value="__none__">None</SelectItem>
                   {accounts.map(a => <SelectItem key={a.id} value={a.id.toString()}>{a.name}</SelectItem>)}
                 </SelectContent>
               </Select>

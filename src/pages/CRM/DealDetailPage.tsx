@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, Link } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
 import {
   ArrowLeft, Edit3, Check, X, DollarSign, Building2,
-  User, CalendarDays, FileText, TrendingUp, Loader2,
+  User, CalendarDays, FileText, TrendingUp, Loader2, Ticket,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -64,6 +65,12 @@ export default function DealDetailPage() {
   const [accounts, setAccounts] = useState<{ id: number; name: string }[]>([]);
 
   const headers = { Authorization: `Bearer ${localStorage.getItem('accessToken')}` };
+
+  const { data: linkedTickets = [] } = useQuery({
+    queryKey: ['deal-tickets', id],
+    queryFn: () => axios.get(`/api/v1/tickets/?deal_id=${id}&limit=50`, { headers }).then(r => r.data),
+    enabled: !!id,
+  });
 
   useEffect(() => { fetchDeal(); fetchContactsAndAccounts(); }, [id]);
 
@@ -283,6 +290,43 @@ export default function DealDetailPage() {
               </div>
             )}
           </div>
+
+          {/* Linked Tickets */}
+          <div className="rounded-xl border border-border bg-card p-5">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2">
+                <Ticket className="h-4 w-4 text-muted-foreground" />
+                <h2 className="font-semibold text-foreground">Linked Tickets</h2>
+                {linkedTickets.length > 0 && (
+                  <span className="text-xs bg-muted rounded-full px-2 py-0.5">{linkedTickets.length}</span>
+                )}
+              </div>
+              <Link to="/dashboard/tickets">
+                <Button variant="outline" size="sm" className="h-7 text-xs">View All</Button>
+              </Link>
+            </div>
+            {linkedTickets.length === 0 ? (
+              <p className="text-sm text-muted-foreground text-center py-4">
+                No tickets linked to this deal.
+              </p>
+            ) : (
+              <div className="space-y-2">
+                {linkedTickets.map((t: any) => (
+                  <Link key={t.id} to={`/dashboard/tickets/${t.project?.key}/${t.ticket_number}`}>
+                    <div className="flex items-center gap-3 p-2 rounded-lg hover:bg-muted/50 cursor-pointer">
+                      <span className="text-xs text-muted-foreground w-20 shrink-0">{t.ticket_number}</span>
+                      <span className="flex-1 text-sm truncate">{t.title}</span>
+                      {t.status && (
+                        <span className="text-xs px-1.5 py-0.5 rounded" style={{ backgroundColor: t.status.color + '20', color: t.status.color }}>
+                          {t.status.name}
+                        </span>
+                      )}
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Sidebar */}
@@ -295,14 +339,14 @@ export default function DealDetailPage() {
             </div>
             {editing ? (
               <Select
-                value={form.contact_id?.toString() ?? ''}
-                onValueChange={(v) => setForm({ ...form, contact_id: v ? parseInt(v) : null })}
+                value={form.contact_id?.toString() ?? '__none__'}
+                onValueChange={(v) => setForm({ ...form, contact_id: v === '__none__' ? null : parseInt(v) })}
               >
                 <SelectTrigger className="h-8 text-sm">
                   <SelectValue placeholder="No contact" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">None</SelectItem>
+                  <SelectItem value="__none__">None</SelectItem>
                   {contacts.map(c => (
                     <SelectItem key={c.id} value={c.id.toString()}>
                       {c.name} — {c.email}
@@ -331,14 +375,14 @@ export default function DealDetailPage() {
             </div>
             {editing ? (
               <Select
-                value={form.account_id?.toString() ?? ''}
-                onValueChange={(v) => setForm({ ...form, account_id: v ? parseInt(v) : null })}
+                value={form.account_id?.toString() ?? '__none__'}
+                onValueChange={(v) => setForm({ ...form, account_id: v === '__none__' ? null : parseInt(v) })}
               >
                 <SelectTrigger className="h-8 text-sm">
                   <SelectValue placeholder="No account" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">None</SelectItem>
+                  <SelectItem value="__none__">None</SelectItem>
                   {accounts.map(a => <SelectItem key={a.id} value={a.id.toString()}>{a.name}</SelectItem>)}
                 </SelectContent>
               </Select>
