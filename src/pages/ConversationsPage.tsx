@@ -1258,7 +1258,13 @@ const ConversationsPage: React.FC<ConversationsPageProps> = ({ channel }) => {
                   sessionId={selectedSessionId}
                   agentId={1}
                   onSummaryClick={() => setSidebarView(sidebarView === 'summary' ? 'contact' : 'summary')}
-                  onContactClick={() => setMobileContactOpen(true)}
+                  onContactClick={() => {
+                    if (window.innerWidth < 768) {
+                      setMobileContactOpen(true);
+                    } else {
+                      setIsRightSidebarCollapsed(prev => !prev);
+                    }
+                  }}
                 />
               </div>
             </motion.div>
@@ -1553,7 +1559,7 @@ const ConversationsPage: React.FC<ConversationsPageProps> = ({ channel }) => {
 
       {/* ── MOBILE CONTACT SHEET ─────────────────────────────────────────────── */}
       <Sheet open={mobileContactOpen} onOpenChange={setMobileContactOpen}>
-        <SheetContent side="right" className="w-full sm:w-[360px] p-0 flex flex-col md:hidden">
+        <SheetContent side="right" className="w-full sm:w-[360px] p-0 flex flex-col">
           <SheetHeader className="px-4 py-3 border-b border-border flex-shrink-0">
             <SheetTitle className="text-sm font-semibold">Contact Details</SheetTitle>
           </SheetHeader>
