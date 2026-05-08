@@ -21,6 +21,19 @@ self.addEventListener('fetch', (e) => {
   // Only cache GET requests; skip API calls
   if (e.request.method !== 'GET' || e.request.url.includes('/api/')) return;
 
+  // Never cache Vite dev server assets — pre-bundled dep chunks carry a
+  // session-scoped ?v=HASH that changes every `vite dev` restart.  Caching
+  // them causes a second React instance on the next session (old cached chunk
+  // uses React A, new session code uses React B → hooks crash).
+  const url = e.request.url;
+  if (
+    url.includes('/.vite/') ||
+    url.includes('/node_modules/.vite/') ||
+    url.includes('@vite/') ||
+    url.includes('@fs/') ||
+    /\?v=[0-9a-f]{8,}/.test(url)
+  ) return;
+
   e.respondWith(
     caches.match(e.request).then((cached) => {
       const network = fetch(e.request).then((res) => {

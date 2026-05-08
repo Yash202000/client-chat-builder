@@ -97,11 +97,20 @@
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
     <script>
-      // Skip service worker on localhost — it would cache-bust dev hot-reloads
-      if ('serviceWorker' in navigator && location.hostname !== 'localhost') {
-        window.addEventListener('load', () => {
-          navigator.serviceWorker.register('/sw.js').catch(() => {});
-        });
+      if ('serviceWorker' in navigator) {
+        if (location.hostname === 'localhost') {
+          // Unregister any previously installed SW on localhost.
+          // A stale SW caches Vite pre-bundle chunks (chunk-XXXX.js?v=OLD)
+          // and serves them to new sessions that request ?v=NEW — producing
+          // two React instances and crashing hooks.
+          navigator.serviceWorker.getRegistrations().then((regs) => {
+            regs.forEach((r) => r.unregister());
+          });
+        } else {
+          window.addEventListener('load', () => {
+            navigator.serviceWorker.register('/sw.js').catch(() => {});
+          });
+        }
       }
     </script>
   </body>
