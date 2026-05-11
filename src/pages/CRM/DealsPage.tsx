@@ -19,6 +19,7 @@ import { cn } from '@/lib/utils';
 import axios from 'axios';
 import { useToast } from '@/hooks/use-toast';
 import { downloadCsv } from '@/utils/csvExport';
+import { CustomFieldInput, CustomFieldDefinition, HierarchyNodeOption } from '@/components/CustomFieldInput';
 
 interface DealStage {
   id: number;
@@ -117,6 +118,10 @@ export default function DealsPage() {
     contact_id: '', account_id: '', expected_close_date: '', description: '',
   });
 
+  const [dealCF, setDealCF] = useState<Record<string, any>>({});
+  const [dealCFDefs, setDealCFDefs] = useState<CustomFieldDefinition[]>([]);
+  const [dealHierarchyNodes, setDealHierarchyNodes] = useState<HierarchyNodeOption[]>([]);
+
   const headers = { Authorization: `Bearer ${localStorage.getItem('accessToken')}` };
 
   useEffect(() => { fetchPipelines(); fetchWorkflow(); }, []);
@@ -176,6 +181,17 @@ export default function DealsPage() {
       ]);
       setContacts(cr.data);
       setAccounts(ar.data);
+    } catch {}
+  };
+
+  const fetchDealCustomFields = async () => {
+    try {
+      const [cfRes, nodeRes] = await Promise.all([
+        axios.get('/api/v1/custom-fields/', { headers, params: { entity_type: 'deal' } }),
+        axios.get('/api/v1/hierarchy/nodes', { headers, params: { limit: 1000 } }),
+      ]);
+      setDealCFDefs(cfRes.data);
+      setDealHierarchyNodes(nodeRes.data?.items ?? nodeRes.data ?? []);
     } catch {}
   };
 
@@ -239,6 +255,10 @@ export default function DealsPage() {
   const handleCreateDeal = async () => {
     if (!newDeal.title) return;
     try {
+      const cfPayload: Record<string, any> = {};
+      for (const [k, v] of Object.entries(dealCF)) {
+        if (v !== null && v !== undefined && v !== '') cfPayload[k] = v;
+      }
       await axios.post('/api/v1/deals/', {
         title: newDeal.title,
         amount: newDeal.amount ? parseFloat(newDeal.amount) : null,
@@ -249,10 +269,12 @@ export default function DealsPage() {
         account_id: newDeal.account_id ? parseInt(newDeal.account_id) : null,
         expected_close_date: newDeal.expected_close_date || null,
         description: newDeal.description || null,
+        custom_fields: Object.keys(cfPayload).length > 0 ? cfPayload : undefined,
       }, { headers });
       toast({ title: 'Deal created' });
       setCreateOpen(false);
       setNewDeal({ title: '', amount: '', currency: 'USD', contact_id: '', account_id: '', expected_close_date: '', description: '' });
+      setDealCF({});
       fetchDeals();
     } catch {
       toast({ title: 'Error', description: 'Failed to create deal', variant: 'destructive' });
@@ -301,7 +323,7 @@ export default function DealsPage() {
             <Button variant="outline" size="sm" className="h-9 px-3 text-sm" onClick={() => handleExportDeals()}>
               <Download className="h-4 w-4 sm:mr-1.5" /><span className="hidden sm:inline"> Export</span>
             </Button>
-            <Button onClick={() => { setCreateOpen(true); fetchContactsAndAccounts(); }} className="gap-2">
+            <Button onClick={() => { setCreateOpen(true); fetchContactsAndAccounts(); fetchDealCustomFields(); setDealCF({}); }} className="gap-2">
               <Plus className="h-4 w-4" /><span className="hidden sm:inline"> New Deal</span>
             </Button>
           </div>
@@ -532,13 +554,13 @@ export default function DealsPage() {
 
       {/* Create Deal Dialog */}
       <Dialog open={createOpen} onOpenChange={setCreateOpen}>
-        <DialogContent className="w-full max-w-lg max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
+        <DialogContent className="w-full max-w-lg flex flex-col max-h-[90vh]">
+          <DialogHeader className="shrink-0">
             <DialogTitle className="text-xl font-bold text-foreground">New Deal</DialogTitle>
             <DialogDescription className="text-muted-foreground">Add a new deal to your pipeline</DialogDescription>
           </DialogHeader>
 
-          <div className="space-y-4 pt-2">
+          <div className="space-y-4 pt-2 overflow-y-auto flex-1 pr-1">
             <div className="space-y-1.5">
               <Label>Title <span className="text-red-500">*</span></Label>
               <Input placeholder="Deal title" value={newDeal.title}
@@ -599,12 +621,29 @@ export default function DealsPage() {
                 className="bg-background border-border" />
             </div>
 
-            <div className="flex justify-end gap-2 pt-2">
-              <Button variant="outline" onClick={() => setCreateOpen(false)}>Cancel</Button>
-              <Button onClick={handleCreateDeal} disabled={!newDeal.title}>
-                <Plus className="h-4 w-4 mr-2" /> Create Deal
-              </Button>
-            </div>
+            {dealCFDefs.length > 0 && (
+              <div className="space-y-3 pt-2 border-t">
+                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Custom Fields</p>
+                {dealCFDefs.map(def => (
+                  <div key={def.id} className="space-y-1">
+                    <Label className="text-xs">{def.label}{def.required && <span className="text-red-500 ml-0.5">*</span>}</Label>
+                    <CustomFieldInput
+                      definition={def}
+                      value={dealCF[def.name] ?? null}
+                      onChange={v => setDealCF(cf => ({ ...cf, [def.name]: v }))}
+                      hierarchyNodes={dealHierarchyNodes}
+                    />
+                  </div>
+                ))}
+              </div>
+            )}
+
+          </div>
+          <div className="shrink-0 flex justify-end gap-2 pt-3 border-t">
+            <Button variant="outline" onClick={() => setCreateOpen(false)}>Cancel</Button>
+            <Button onClick={handleCreateDeal} disabled={!newDeal.title}>
+              <Plus className="h-4 w-4 mr-2" /> Create Deal
+            </Button>
           </div>
         </DialogContent>
       </Dialog>

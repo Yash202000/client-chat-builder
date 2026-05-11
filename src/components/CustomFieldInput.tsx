@@ -1,10 +1,14 @@
+import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { X } from "lucide-react";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
+import { Button } from "@/components/ui/button";
+import { X, MapPin, Check, ChevronsUpDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export interface CustomFieldDefinition {
@@ -18,16 +22,26 @@ export interface CustomFieldDefinition {
   group_name?: string;
 }
 
+export interface HierarchyNodeOption {
+  id: number;
+  name: string;
+  code: string;
+  type_id: number;
+  path: string;
+}
+
 interface CustomFieldInputProps {
   definition: CustomFieldDefinition;
   value: any;
   onChange: (value: any) => void;
   users?: { id: number; full_name?: string; email: string }[];
+  hierarchyNodes?: HierarchyNodeOption[];
   className?: string;
 }
 
-export function CustomFieldInput({ definition, value, onChange, users = [], className }: CustomFieldInputProps) {
+export function CustomFieldInput({ definition, value, onChange, users = [], hierarchyNodes = [], className }: CustomFieldInputProps) {
   const { field_type, options = [] } = definition;
+  const [nodePickerOpen, setNodePickerOpen] = useState(false);
 
   if (field_type === "textarea") {
     return (
@@ -173,6 +187,80 @@ export function CustomFieldInput({ definition, value, onChange, users = [], clas
     );
   }
 
+  if (field_type === "hierarchy_node") {
+    // options[0].value holds the hierarchy_type_id as string
+    const typeId = options[0]?.value ? parseInt(options[0].value) : null;
+    const nodes = typeId ? hierarchyNodes.filter(n => n.type_id === typeId) : hierarchyNodes;
+    const selected = nodes.find(n => n.code === value);
+    return (
+      <Popover open={nodePickerOpen} onOpenChange={setNodePickerOpen}>
+        <PopoverTrigger asChild>
+          <Button variant="outline" role="combobox" className={cn("w-full justify-between font-normal text-sm h-9", className)}>
+            <span className="truncate">{selected ? selected.name : <span className="text-muted-foreground">Select node…</span>}</span>
+            <ChevronsUpDown className="ml-2 h-3.5 w-3.5 shrink-0 opacity-50" />
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent className="w-72 p-0" align="start">
+          <Command>
+            <CommandInput placeholder="Search…" className="h-8 text-xs" />
+            <CommandList>
+              <CommandEmpty>No nodes found.</CommandEmpty>
+              <CommandGroup>
+                <CommandItem value="__none__" onSelect={() => { onChange(null); setNodePickerOpen(false); }} className="text-xs">
+                  <Check className={cn("mr-2 h-3.5 w-3.5", !value ? "opacity-100" : "opacity-0")} />
+                  — None —
+                </CommandItem>
+              </CommandGroup>
+              <CommandGroup heading={options[0]?.label ?? 'Nodes'}>
+                {nodes.map(n => (
+                  <CommandItem key={n.id} value={`${n.name} ${n.code}`} onSelect={() => { onChange(n.code); setNodePickerOpen(false); }} className="text-xs">
+                    <Check className={cn("mr-2 h-3.5 w-3.5", value === n.code ? "opacity-100" : "opacity-0")} />
+                    <span className="flex-1">{n.name}</span>
+                    <code className="text-muted-foreground font-mono text-[10px] ml-2">{n.code}</code>
+                  </CommandItem>
+                ))}
+              </CommandGroup>
+            </CommandList>
+          </Command>
+        </PopoverContent>
+      </Popover>
+    );
+  }
+
+  if (field_type === "coordinates") {
+    const coords = value && typeof value === "object" ? value : { lat: "", lng: "" };
+    return (
+      <div className={cn("flex gap-2 items-center", className)}>
+        <div className="flex-1 relative">
+          <span className="absolute left-2 top-1/2 -translate-y-1/2 text-xs text-muted-foreground font-mono">Lat</span>
+          <Input
+            type="number"
+            step="0.000001"
+            min={-90}
+            max={90}
+            className="pl-8 text-sm"
+            placeholder="e.g. 18.9217"
+            value={coords.lat ?? ""}
+            onChange={e => onChange({ ...coords, lat: e.target.value === "" ? null : parseFloat(e.target.value) })}
+          />
+        </div>
+        <div className="flex-1 relative">
+          <span className="absolute left-2 top-1/2 -translate-y-1/2 text-xs text-muted-foreground font-mono">Lng</span>
+          <Input
+            type="number"
+            step="0.000001"
+            min={-180}
+            max={180}
+            className="pl-9 text-sm"
+            placeholder="e.g. 72.8347"
+            value={coords.lng ?? ""}
+            onChange={e => onChange({ ...coords, lng: e.target.value === "" ? null : parseFloat(e.target.value) })}
+          />
+        </div>
+      </div>
+    );
+  }
+
   // text, email, phone, url, and fallback
   const inputType = field_type === "email" ? "email" : field_type === "url" ? "url" : field_type === "phone" ? "tel" : "text";
   return (
@@ -205,5 +293,36 @@ export function formatCustomFieldValue(
   if (field_type === "date" || field_type === "datetime") {
     try { return new Date(value).toLocaleDateString(); } catch { return String(value); }
   }
+  if (field_type === "hierarchy_node") {
+    // value is a node code; just return it (caller can resolve to name if they have nodes)
+    return String(value);
+  }
+  if (field_type === "coordinates") {
+    if (value && typeof value === "object" && value.lat != null && value.lng != null) {
+      return `${Number(value.lat).toFixed(6)}, ${Number(value.lng).toFixed(6)}`;
+    }
+    return "—";
+  }
   return String(value);
+}
+
+// Render coordinates as a clickable map link
+export function CoordinatesDisplay({ value }: { value: any }) {
+  if (!value || typeof value !== "object" || value.lat == null || value.lng == null) {
+    return <span className="text-muted-foreground">—</span>;
+  }
+  const lat = Number(value.lat).toFixed(6);
+  const lng = Number(value.lng).toFixed(6);
+  const mapsUrl = `https://www.google.com/maps?q=${lat},${lng}`;
+  return (
+    <a
+      href={mapsUrl}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="inline-flex items-center gap-1 text-sm text-blue-600 hover:underline"
+    >
+      <MapPin className="h-3.5 w-3.5" />
+      {lat}, {lng}
+    </a>
+  );
 }

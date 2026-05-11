@@ -66,6 +66,7 @@ import { useToast } from '@/hooks/use-toast';
 import { TagSelector } from '@/components/TagSelector';
 import CsvImportDialog from '@/components/CsvImportDialog';
 import { downloadCsv } from '@/utils/csvExport';
+import { CustomFieldInput } from '@/components/CustomFieldInput';
 
 interface WorkflowStatus { id: number; name: string; color: string; category: string; }
 interface WorkflowTransition {
@@ -214,11 +215,15 @@ export default function LeadsPage() {
     source: '',
     notes: '',
   });
+  const [leadCF, setLeadCF] = useState<Record<string, any>>({});
+  const [leadCFDefs, setLeadCFDefs] = useState<any[]>([]);
+  const [leadHierarchyNodes, setLeadHierarchyNodes] = useState<any[]>([]);
 
   useEffect(() => {
     fetchWorkflow();
     fetchLeads();
     fetchStats();
+    fetchLeadCustomFields();
   }, [selectedStatusId, filterTagIds]);
 
   useEffect(() => {
@@ -262,6 +267,23 @@ export default function LeadsPage() {
     } catch (error) {
       console.error('Error fetching stats:', error);
     }
+  };
+
+  const fetchLeadCustomFields = async () => {
+    try {
+      const token = localStorage.getItem('accessToken');
+      const headers = { Authorization: `Bearer ${token}` };
+      const [cfRes, htRes] = await Promise.all([
+        axios.get('/api/v1/custom-fields/', { headers, params: { entity_type: 'lead' } }).catch(() => ({ data: [] })),
+        axios.get('/api/v1/hierarchy/types', { headers }).catch(() => ({ data: [] })),
+      ]);
+      setLeadCFDefs(cfRes.data || []);
+      const types: { id: number }[] = htRes.data || [];
+      const nodeResponses = await Promise.all(
+        types.map((t) => axios.get(`/api/v1/hierarchy/types/${t.id}/nodes`, { headers }).catch(() => ({ data: [] })))
+      );
+      setLeadHierarchyNodes(nodeResponses.flatMap((r: any) => r.data));
+    } catch { /* non-fatal */ }
   };
 
   const fetchAvailableContacts = async () => {
@@ -316,11 +338,13 @@ export default function LeadsPage() {
           });
           return;
         }
+        const cfPayload = Object.fromEntries(Object.entries(leadCF).filter(([, v]) => v != null && v !== ''));
         const leadData = {
           contact_id: parseInt(selectedContactId),
           deal_value: newLead.deal_value ? parseFloat(newLead.deal_value) : null,
           source: newLead.source || null,
           notes: newLead.notes || null,
+          custom_fields: Object.keys(cfPayload).length > 0 ? cfPayload : undefined,
         };
         await axios.post('/api/v1/leads/', leadData, { headers });
       } else {
@@ -332,6 +356,7 @@ export default function LeadsPage() {
           });
           return;
         }
+        const cfPayload2 = Object.fromEntries(Object.entries(leadCF).filter(([, v]) => v != null && v !== ''));
         const leadData = {
           contact: {
             name: newLead.name,
@@ -342,6 +367,7 @@ export default function LeadsPage() {
           deal_value: newLead.deal_value ? parseFloat(newLead.deal_value) : null,
           source: newLead.source || null,
           notes: newLead.notes || null,
+          custom_fields: Object.keys(cfPayload2).length > 0 ? cfPayload2 : undefined,
         };
         await axios.post('/api/v1/leads/with-contact', leadData, { headers });
       }
@@ -752,8 +778,8 @@ export default function LeadsPage() {
 
       {/* Create Lead Dialog */}
       <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
-        <DialogContent className="w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
+        <DialogContent className="w-full max-w-2xl flex flex-col max-h-[90vh]">
+          <DialogHeader className="shrink-0">
             <DialogTitle className="text-xl font-bold text-foreground">
               {t('crm.leads.addLead')}
             </DialogTitle>
@@ -762,6 +788,7 @@ export default function LeadsPage() {
             </DialogDescription>
           </DialogHeader>
 
+          <div className="overflow-y-auto flex-1 pr-1">
           <Tabs value={createMode} onValueChange={(v) => setCreateMode(v as 'existing' | 'new')}>
             <TabsList className="grid w-full grid-cols-2 bg-muted">
               <TabsTrigger value="existing" className="data-[state=active]:bg-card data-[state=active]:text-foreground">
@@ -844,6 +871,23 @@ export default function LeadsPage() {
                   className="bg-background border-border" />
               </div>
 
+              {leadCFDefs.length > 0 && (
+                <div className="space-y-3 pt-2 border-t">
+                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Custom Fields</p>
+                  {leadCFDefs.map(def => (
+                    <div key={def.id} className="space-y-1">
+                      <Label className="text-xs">{def.label}{def.required && <span className="text-red-500 ml-0.5">*</span>}</Label>
+                      <CustomFieldInput
+                        definition={def}
+                        value={leadCF[def.name] ?? null}
+                        onChange={v => setLeadCF(cf => ({ ...cf, [def.name]: v }))}
+                        hierarchyNodes={leadHierarchyNodes}
+                      />
+                    </div>
+                  ))}
+                </div>
+              )}
+
               <div className="flex justify-end gap-2 pt-4">
                 <Button variant="outline" onClick={() => { setCreateDialogOpen(false); setSelectedContactId(''); setNewLead({ name: '', email: '', phone_number: '', company: '', deal_value: '', source: '', notes: '' }); }}>
                   {t('crm.common.cancel')}
@@ -911,6 +955,23 @@ export default function LeadsPage() {
                   className="bg-background border-border" />
               </div>
 
+              {leadCFDefs.length > 0 && (
+                <div className="space-y-3 pt-2 border-t">
+                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Custom Fields</p>
+                  {leadCFDefs.map(def => (
+                    <div key={def.id} className="space-y-1">
+                      <Label className="text-xs">{def.label}{def.required && <span className="text-red-500 ml-0.5">*</span>}</Label>
+                      <CustomFieldInput
+                        definition={def}
+                        value={leadCF[def.name] ?? null}
+                        onChange={v => setLeadCF(cf => ({ ...cf, [def.name]: v }))}
+                        hierarchyNodes={leadHierarchyNodes}
+                      />
+                    </div>
+                  ))}
+                </div>
+              )}
+
               <div className="flex justify-end gap-2 pt-4">
                 <Button variant="outline" onClick={() => { setCreateDialogOpen(false); setNewLead({ name: '', email: '', phone_number: '', company: '', deal_value: '', source: '', notes: '' }); }}>
                   {t('crm.common.cancel')}
@@ -921,6 +982,7 @@ export default function LeadsPage() {
               </div>
             </TabsContent>
           </Tabs>
+          </div>
         </DialogContent>
       </Dialog>
 

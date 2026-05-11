@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { Plus, Trash2, Edit2, GripVertical, ChevronRight, ToggleLeft, ToggleRight, Zap } from 'lucide-react';
+import { useState, useEffect, useMemo } from 'react';
+import { Plus, Trash2, Edit2, GripVertical, ChevronRight, Zap, ChevronDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -9,9 +9,13 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList, CommandSeparator } from '@/components/ui/command';
+import { Check, ChevronsUpDown } from 'lucide-react';
 import axios from 'axios';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
+import HierarchyNodePicker from '@/components/HierarchyNodePicker';
 
 const ENTITY_TABS = [
   { key: 'ticket', label: 'Tickets' },
@@ -33,11 +37,15 @@ const OPERATORS = [
 
 const ACTION_TYPES = [
   { value: 'assign_to_user', label: 'Assign to specific user' },
+  { value: 'assign_by_role', label: 'Assign by role — round-robin users with that role (scoped by classification/location if set)' },
   { value: 'assign_round_robin', label: 'Round-robin from team' },
   { value: 'assign_by_skill', label: 'Assign by agent skill' },
   { value: 'assign_by_node_match', label: 'Assign by jurisdiction (hierarchy match)' },
+  { value: 'assign_by_department', label: 'Assign via Department (classification → dept → user)' },
   { value: 'no_action', label: 'No assignment' },
 ];
+
+const DEPT_ROLES = ['agent', 'supervisor', 'approver', 'manager'];
 
 const TRIGGER_OPTIONS = [
   { value: 'on_create', label: 'On creation' },
@@ -81,7 +89,9 @@ interface RoutingRule {
 interface User { id: number; full_name: string; email: string }
 interface Team { id: number; name: string }
 interface HierarchyType { id: number; name: string }
+interface HierarchyNode { id: number; name: string; code: string; type_id: number; path: string }
 interface CustomFieldDef { id: number; name: string; label: string; entity_type: string }
+interface WorkflowTransition { id: number; name: string; workflow_id: number; workflowName: string }
 
 const emptyForm = {
   entity_type: 'ticket',
@@ -94,6 +104,235 @@ const emptyForm = {
   action_config: {} as Record<string, any>,
   is_active: true,
 };
+
+// ── TransitionPicker ─────────────────────────────────────────────────────────
+
+interface TransitionPickerProps {
+  allTransitions: WorkflowTransition[];
+  workflowFilter: number | null;
+  onWorkflowFilterChange: (id: number | null) => void;
+  value: number | null;
+  onChange: (id: number | null) => void;
+}
+
+function TransitionPicker({ allTransitions, workflowFilter, onWorkflowFilterChange, value, onChange }: TransitionPickerProps) {
+  const [wfOpen, setWfOpen] = useState(false);
+  const [txOpen, setTxOpen] = useState(false);
+
+  // Unique workflows derived from allTransitions
+  const workflows = useMemo(() => {
+    const seen = new Map<number, string>();
+    for (const t of allTransitions) {
+      if (!seen.has(t.workflow_id)) seen.set(t.workflow_id, t.workflowName);
+    }
+    return Array.from(seen.entries()).map(([id, name]) => ({ id, name })).sort((a, b) => a.name.localeCompare(b.name));
+  }, [allTransitions]);
+
+  const visibleTransitions = workflowFilter
+    ? allTransitions.filter(t => t.workflow_id === workflowFilter)
+    : allTransitions;
+
+  const selectedTransition = value ? allTransitions.find(t => t.id === value) : null;
+  const selectedWorkflow = workflowFilter ? workflows.find(w => w.id === workflowFilter) : null;
+
+  return (
+    <div className="space-y-2">
+      <Label>Trigger Transition <span className="text-muted-foreground font-normal text-xs">(optional — blank matches any)</span></Label>
+      <div className="flex gap-2">
+        {/* Workflow filter combobox */}
+        <Popover open={wfOpen} onOpenChange={setWfOpen}>
+          <PopoverTrigger asChild>
+            <Button variant="outline" role="combobox" className="w-44 justify-between text-xs h-9 font-normal">
+              <span className="truncate">{selectedWorkflow?.name ?? 'All workflows'}</span>
+              <ChevronsUpDown className="ml-1 h-3.5 w-3.5 shrink-0 opacity-50" />
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-52 p-0" align="start">
+            <Command>
+              <CommandInput placeholder="Search workflow…" className="h-8 text-xs" />
+              <CommandList>
+                <CommandEmpty>No workflows found.</CommandEmpty>
+                <CommandGroup>
+                  <CommandItem
+                    value="__all__"
+                    onSelect={() => { onWorkflowFilterChange(null); setWfOpen(false); }}
+                    className="text-xs"
+                  >
+                    <Check className={cn('mr-2 h-3.5 w-3.5', workflowFilter === null ? 'opacity-100' : 'opacity-0')} />
+                    All workflows
+                  </CommandItem>
+                </CommandGroup>
+                <CommandSeparator />
+                <CommandGroup heading="Workflows">
+                  {workflows.map(wf => (
+                    <CommandItem
+                      key={wf.id}
+                      value={wf.name}
+                      onSelect={() => {
+                        onWorkflowFilterChange(wf.id);
+                        // Clear transition selection if it doesn't belong to new workflow
+                        if (value) {
+                          const t = allTransitions.find(t => t.id === value);
+                          if (t && t.workflow_id !== wf.id) onChange(null);
+                        }
+                        setWfOpen(false);
+                      }}
+                      className="text-xs"
+                    >
+                      <Check className={cn('mr-2 h-3.5 w-3.5', workflowFilter === wf.id ? 'opacity-100' : 'opacity-0')} />
+                      {wf.name}
+                    </CommandItem>
+                  ))}
+                </CommandGroup>
+              </CommandList>
+            </Command>
+          </PopoverContent>
+        </Popover>
+
+        {/* Transition combobox */}
+        <Popover open={txOpen} onOpenChange={setTxOpen}>
+          <PopoverTrigger asChild>
+            <Button variant="outline" role="combobox" className="flex-1 justify-between text-xs h-9 font-normal">
+              <span className="truncate">{selectedTransition?.name ?? 'Any transition'}</span>
+              <ChevronsUpDown className="ml-1 h-3.5 w-3.5 shrink-0 opacity-50" />
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-72 p-0" align="start">
+            <Command>
+              <CommandInput placeholder="Search transition…" className="h-8 text-xs" />
+              <CommandList>
+                <CommandEmpty>No transitions found.</CommandEmpty>
+                <CommandGroup>
+                  <CommandItem
+                    value="__any__"
+                    onSelect={() => { onChange(null); setTxOpen(false); }}
+                    className="text-xs"
+                  >
+                    <Check className={cn('mr-2 h-3.5 w-3.5', value === null ? 'opacity-100' : 'opacity-0')} />
+                    Any transition
+                  </CommandItem>
+                </CommandGroup>
+                <CommandSeparator />
+                {workflowFilter ? (
+                  <CommandGroup heading={selectedWorkflow?.name}>
+                    {visibleTransitions.map(t => (
+                      <CommandItem
+                        key={t.id}
+                        value={t.name}
+                        onSelect={() => { onChange(t.id); setTxOpen(false); }}
+                        className="text-xs"
+                      >
+                        <Check className={cn('mr-2 h-3.5 w-3.5', value === t.id ? 'opacity-100' : 'opacity-0')} />
+                        {t.name}
+                      </CommandItem>
+                    ))}
+                  </CommandGroup>
+                ) : (
+                  workflows.map(wf => {
+                    const wfTransitions = allTransitions.filter(t => t.workflow_id === wf.id);
+                    if (wfTransitions.length === 0) return null;
+                    return (
+                      <CommandGroup key={wf.id} heading={wf.name}>
+                        {wfTransitions.map(t => (
+                          <CommandItem
+                            key={t.id}
+                            value={`${wf.name} ${t.name}`}
+                            onSelect={() => { onChange(t.id); setTxOpen(false); }}
+                            className="text-xs"
+                          >
+                            <Check className={cn('mr-2 h-3.5 w-3.5', value === t.id ? 'opacity-100' : 'opacity-0')} />
+                            {t.name}
+                          </CommandItem>
+                        ))}
+                      </CommandGroup>
+                    );
+                  })
+                )}
+              </CommandList>
+            </Command>
+          </PopoverContent>
+        </Popover>
+      </div>
+      {selectedTransition && (
+        <p className="text-xs text-muted-foreground">
+          <span className="font-medium">{selectedTransition.workflowName}</span> → {selectedTransition.name}
+        </p>
+      )}
+    </div>
+  );
+}
+
+// ── RuleRow ───────────────────────────────────────────────────────────────────
+
+interface RuleRowProps {
+  rule: RoutingRule;
+  idx: number;
+  allTransitions: WorkflowTransition[];
+  hierarchyNodes: HierarchyNode[];
+  noValueOps: string[];
+  actionLabel: (r: RoutingRule) => string;
+  onEdit: (r: RoutingRule) => void;
+  onDelete: (id: number) => void;
+  onToggle: (r: RoutingRule) => void;
+}
+
+function RuleRow({ rule: r, idx, allTransitions, hierarchyNodes, noValueOps, actionLabel, onEdit, onDelete, onToggle }: RuleRowProps) {
+  const transition = r.trigger_transition_id ? allTransitions.find(t => t.id === r.trigger_transition_id) : null;
+  return (
+    <div className={cn('flex items-center gap-4 p-4 bg-card hover:bg-muted/30 transition-colors', !r.is_active && 'opacity-50')}>
+      <div className="flex items-center gap-2 shrink-0">
+        <GripVertical className="h-4 w-4 text-muted-foreground cursor-grab" />
+        <span className="text-xs font-mono text-muted-foreground w-5 text-center">{idx + 1}</span>
+      </div>
+
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-2 flex-wrap">
+          <span className="font-medium text-sm">{r.name}</span>
+          <Badge variant="outline" className="text-xs capitalize">{r.trigger.replace(/_/g, ' ')}</Badge>
+          {transition && <Badge variant="secondary" className="text-xs">→ {transition.name}</Badge>}
+        </div>
+        <div className="flex items-center gap-1 mt-1 text-xs text-muted-foreground flex-wrap">
+          {(r.conditions || []).length === 0 ? (
+            <span className="italic">Match all</span>
+          ) : (
+            r.conditions!.map((c, i) => {
+              const opLabel = OPERATORS.find(o => o.value === c.operator)?.label ?? c.operator;
+              let valSummary = '';
+              if (!noValueOps.includes(c.operator)) {
+                if (Array.isArray(c.value)) {
+                  const names = c.value.slice(0, 3).map((code: string) => {
+                    const n = hierarchyNodes.find(n => n.code === code);
+                    return n?.name ?? code;
+                  });
+                  valSummary = ` ${names.join(', ')}${c.value.length > 3 ? ` +${c.value.length - 3}` : ''}`;
+                } else {
+                  valSummary = ` "${c.value}"`;
+                }
+              }
+              return (
+                <span key={i} className="bg-muted rounded px-1.5 py-0.5">
+                  {c.field} {opLabel}{valSummary}
+                </span>
+              );
+            })
+          )}
+          <ChevronRight className="h-3 w-3 mx-1" />
+          <span className="text-foreground font-medium">{actionLabel(r)}</span>
+        </div>
+      </div>
+
+      <div className="flex items-center gap-2 shrink-0">
+        <Switch checked={r.is_active} onCheckedChange={() => onToggle(r)} />
+        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => onEdit(r)}>
+          <Edit2 className="h-4 w-4" />
+        </Button>
+        <Button variant="ghost" size="icon" className="h-8 w-8 text-red-500 hover:text-red-600" onClick={() => onDelete(r.id)}>
+          <Trash2 className="h-4 w-4" />
+        </Button>
+      </div>
+    </div>
+  );
+}
 
 export default function RoutingRulesPage() {
   const { toast } = useToast();
@@ -108,11 +347,15 @@ export default function RoutingRulesPage() {
   const [users, setUsers] = useState<User[]>([]);
   const [teams, setTeams] = useState<Team[]>([]);
   const [hierarchyTypes, setHierarchyTypes] = useState<HierarchyType[]>([]);
+  const [hierarchyNodes, setHierarchyNodes] = useState<HierarchyNode[]>([]);
   const [customFieldDefs, setCustomFieldDefs] = useState<CustomFieldDef[]>([]);
+  const [allTransitions, setAllTransitions] = useState<WorkflowTransition[]>([]);
+  const [formWorkflowFilter, setFormWorkflowFilter] = useState<number | null>(null);
+  const [collapsedSections, setCollapsedSections] = useState<Set<string>>(new Set());
 
   const headers = { Authorization: `Bearer ${localStorage.getItem('accessToken')}` };
 
-  useEffect(() => { fetchRules(); fetchUsersAndTeams(); fetchHierarchyAndFields(); }, []);
+  useEffect(() => { fetchRules(); fetchUsersAndTeams(); fetchHierarchyAndFields(); fetchTransitions(); }, []);
 
   const fetchRules = async () => {
     try {
@@ -142,31 +385,67 @@ export default function RoutingRulesPage() {
         axios.get('/api/v1/hierarchy/types', { headers }),
         axios.get('/api/v1/custom-fields/', { headers }),
       ]);
-      setHierarchyTypes(ht.data);
+      const types: HierarchyType[] = ht.data;
+      setHierarchyTypes(types);
       setCustomFieldDefs(cf.data);
+      // Load nodes for all types in parallel
+      const nodeResponses = await Promise.all(
+        types.map(t => axios.get(`/api/v1/hierarchy/types/${t.id}/nodes`, { headers }).catch(() => ({ data: [] })))
+      );
+      setHierarchyNodes(nodeResponses.flatMap(r => r.data));
+    } catch { /* non-fatal */ }
+  };
+
+  const fetchTransitions = async () => {
+    try {
+      const res = await axios.get('/api/v1/tickets/workflows', { headers });
+      const flat: WorkflowTransition[] = (res.data as any[]).flatMap((wf: any) =>
+        (wf.transitions ?? []).map((t: any) => ({
+          id: t.id,
+          name: t.name,
+          workflow_id: wf.id,
+          workflowName: wf.name,
+        }))
+      );
+      setAllTransitions(flat);
     } catch { /* non-fatal */ }
   };
 
   const tabRules = rules.filter(r => r.entity_type === activeTab).sort((a, b) => a.priority - b.priority);
 
-  const openCreate = () => {
-    setForm({ ...emptyForm, entity_type: activeTab, priority: tabRules.length });
+  const openCreate = (workflowId?: number) => {
+    const count = rules.filter(r => r.entity_type === activeTab).length;
+    setForm({
+      ...emptyForm,
+      entity_type: activeTab,
+      priority: count,
+      trigger: workflowId ? 'on_transition' : 'on_create',
+    });
+    setFormWorkflowFilter(workflowId ?? null);
     setEditingId(null);
     setDialogOpen(true);
   };
 
   const openEdit = (r: RoutingRule) => {
+    // Ensure in/not_in values are always string arrays
+    const normalizedConditions = (r.conditions || []).map(c => ({
+      ...c,
+      value: (c.operator === 'in' || c.operator === 'not_in')
+        ? (Array.isArray(c.value) ? c.value : typeof c.value === 'string' ? c.value.split(',').map((s: string) => s.trim()).filter(Boolean) : [])
+        : c.value,
+    }));
     setForm({
       entity_type: r.entity_type,
       name: r.name,
       priority: r.priority,
       trigger: r.trigger,
       trigger_transition_id: r.trigger_transition_id,
-      conditions: r.conditions || [],
+      conditions: normalizedConditions,
       action_type: r.action_type,
       action_config: r.action_config || {},
       is_active: r.is_active,
     });
+    setFormWorkflowFilter(null);
     setEditingId(r.id);
     setDialogOpen(true);
   };
@@ -174,12 +453,13 @@ export default function RoutingRulesPage() {
   const handleSave = async () => {
     if (!form.name.trim()) { toast({ title: 'Name is required', variant: 'destructive' }); return; }
     setSaving(true);
+    const payload = { ...form };
     try {
       if (editingId) {
-        await axios.put(`/api/v1/routing-rules/${editingId}`, form, { headers });
+        await axios.put(`/api/v1/routing-rules/${editingId}`, payload, { headers });
         toast({ title: 'Rule updated' });
       } else {
-        await axios.post('/api/v1/routing-rules/', form, { headers });
+        await axios.post('/api/v1/routing-rules/', payload, { headers });
         toast({ title: 'Rule created' });
       }
       setDialogOpen(false);
@@ -246,10 +526,46 @@ export default function RoutingRulesPage() {
       const role = cfg.match_role ?? 'agent';
       return `→ Node match [${fields}] as ${role}`;
     }
+    if (r.action_type === 'assign_by_department') {
+      const fields = (cfg.node_fields ?? []).join(', ');
+      const role = cfg.role ?? 'agent';
+      return `→ Dept routing [${fields}] → ${role}`;
+    }
     return type?.label ?? r.action_type;
   };
 
   const noValueOps = ['exists', 'not_exists'];
+
+  // Group rules by workflow (for on_transition rules) or into "General"
+  const groupedRules = useMemo(() => {
+    const wfMap = new Map<number, { id: number; name: string; rules: RoutingRule[] }>();
+    const general: RoutingRule[] = [];
+
+    for (const r of tabRules) {
+      if (r.trigger_transition_id) {
+        const t = allTransitions.find(tr => tr.id === r.trigger_transition_id);
+        if (t) {
+          if (!wfMap.has(t.workflow_id)) {
+            wfMap.set(t.workflow_id, { id: t.workflow_id, name: t.workflowName, rules: [] });
+          }
+          wfMap.get(t.workflow_id)!.rules.push(r);
+          continue;
+        }
+      }
+      general.push(r);
+    }
+
+    const workflows = Array.from(wfMap.values()).sort((a, b) => a.name.localeCompare(b.name));
+    return { workflows, general };
+  }, [tabRules, allTransitions]);
+
+  const toggleSection = (key: string) => {
+    setCollapsedSections(prev => {
+      const next = new Set(prev);
+      next.has(key) ? next.delete(key) : next.add(key);
+      return next;
+    });
+  };
 
   return (
     <div className="p-6 max-w-4xl mx-auto space-y-6">
@@ -260,7 +576,7 @@ export default function RoutingRulesPage() {
             Auto-assign tickets, leads and deals based on conditions. Rules run in priority order — first match wins.
           </p>
         </div>
-        <Button onClick={openCreate} className="gap-2">
+        <Button onClick={() => openCreate()} className="gap-2">
           <Plus className="h-4 w-4" />Add Rule
         </Button>
       </div>
@@ -287,51 +603,110 @@ export default function RoutingRulesPage() {
               <div className="border border-dashed rounded-xl p-12 text-center">
                 <Zap className="h-8 w-8 text-muted-foreground mx-auto mb-3" />
                 <p className="text-muted-foreground text-sm">No routing rules for {t.label} yet.</p>
-                <Button variant="outline" size="sm" className="mt-3" onClick={openCreate}>
+                <Button variant="outline" size="sm" className="mt-3" onClick={() => openCreate()}>
                   <Plus className="h-4 w-4 mr-2" />Add First Rule
                 </Button>
               </div>
             ) : (
-              <div className="border rounded-xl divide-y overflow-hidden">
-                {tabRules.map((r, idx) => (
-                  <div key={r.id} className={cn('flex items-center gap-4 p-4 bg-card hover:bg-muted/30 transition-colors', !r.is_active && 'opacity-50')}>
-                    <div className="flex items-center gap-2 shrink-0">
-                      <GripVertical className="h-4 w-4 text-muted-foreground cursor-grab" />
-                      <span className="text-xs font-mono text-muted-foreground w-5 text-center">{idx + 1}</span>
-                    </div>
-
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <span className="font-medium text-sm">{r.name}</span>
-                        <Badge variant="outline" className="text-xs capitalize">{r.trigger.replace('_', ' ')}</Badge>
+              <div className="space-y-3">
+                {/* Workflow sections */}
+                {groupedRules.workflows.map(wf => {
+                  const sectionKey = `wf-${wf.id}`;
+                  const collapsed = collapsedSections.has(sectionKey);
+                  return (
+                    <div key={wf.id} className="border rounded-xl overflow-hidden">
+                      <div
+                        className="flex items-center justify-between px-4 py-3 bg-muted/40 cursor-pointer hover:bg-muted/60 transition-colors"
+                        onClick={() => toggleSection(sectionKey)}
+                      >
+                        <div className="flex items-center gap-2">
+                          {collapsed ? <ChevronRight className="h-4 w-4 text-muted-foreground" /> : <ChevronDown className="h-4 w-4 text-muted-foreground" />}
+                          <span className="font-semibold text-sm">{wf.name}</span>
+                          <Badge variant="secondary" className="text-xs">{wf.rules.length} rule{wf.rules.length !== 1 ? 's' : ''}</Badge>
+                        </div>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-7 text-xs gap-1"
+                          onClick={e => { e.stopPropagation(); openCreate(wf.id); }}
+                        >
+                          <Plus className="h-3 w-3" />Add Rule
+                        </Button>
                       </div>
-                      <div className="flex items-center gap-1 mt-1 text-xs text-muted-foreground flex-wrap">
-                        {(r.conditions || []).length === 0 ? (
-                          <span className="italic">Match all</span>
-                        ) : (
-                          r.conditions!.map((c, i) => (
-                            <span key={i} className="bg-muted rounded px-1.5 py-0.5">
-                              {c.field} {OPERATORS.find(o => o.value === c.operator)?.label ?? c.operator}
-                              {!noValueOps.includes(c.operator) && ` "${c.value}"`}
-                            </span>
-                          ))
-                        )}
-                        <ChevronRight className="h-3 w-3 mx-1" />
-                        <span className="text-foreground font-medium">{actionLabel(r)}</span>
-                      </div>
+                      {!collapsed && (
+                        <div className="divide-y">
+                          {wf.rules.map((r, idx) => (
+                            <RuleRow
+                              key={r.id}
+                              rule={r}
+                              idx={idx}
+                              allTransitions={allTransitions}
+                              hierarchyNodes={hierarchyNodes}
+                              noValueOps={noValueOps}
+                              actionLabel={actionLabel}
+                              onEdit={openEdit}
+                              onDelete={setDeleteId}
+                              onToggle={toggleActive}
+                            />
+                          ))}
+                          {wf.rules.length === 0 && (
+                            <p className="text-xs text-muted-foreground italic p-4 text-center">No rules yet — add one above.</p>
+                          )}
+                        </div>
+                      )}
                     </div>
+                  );
+                })}
 
-                    <div className="flex items-center gap-2 shrink-0">
-                      <Switch checked={r.is_active} onCheckedChange={() => toggleActive(r)} />
-                      <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => openEdit(r)}>
-                        <Edit2 className="h-4 w-4" />
-                      </Button>
-                      <Button variant="ghost" size="icon" className="h-8 w-8 text-red-500 hover:text-red-600" onClick={() => setDeleteId(r.id)}>
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
+                {/* General / on-create section */}
+                {(() => {
+                  const sectionKey = 'general';
+                  const collapsed = collapsedSections.has(sectionKey);
+                  return (
+                    <div className="border rounded-xl overflow-hidden">
+                      <div
+                        className="flex items-center justify-between px-4 py-3 bg-muted/40 cursor-pointer hover:bg-muted/60 transition-colors"
+                        onClick={() => toggleSection(sectionKey)}
+                      >
+                        <div className="flex items-center gap-2">
+                          {collapsed ? <ChevronRight className="h-4 w-4 text-muted-foreground" /> : <ChevronDown className="h-4 w-4 text-muted-foreground" />}
+                          <span className="font-semibold text-sm">General</span>
+                          <span className="text-xs text-muted-foreground">on create &amp; unscoped rules</span>
+                          <Badge variant="secondary" className="text-xs">{groupedRules.general.length} rule{groupedRules.general.length !== 1 ? 's' : ''}</Badge>
+                        </div>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-7 text-xs gap-1"
+                          onClick={e => { e.stopPropagation(); openCreate(); }}
+                        >
+                          <Plus className="h-3 w-3" />Add Rule
+                        </Button>
+                      </div>
+                      {!collapsed && (
+                        <div className="divide-y">
+                          {groupedRules.general.map((r, idx) => (
+                            <RuleRow
+                              key={r.id}
+                              rule={r}
+                              idx={idx}
+                              allTransitions={allTransitions}
+                              hierarchyNodes={hierarchyNodes}
+                              noValueOps={noValueOps}
+                              actionLabel={actionLabel}
+                              onEdit={openEdit}
+                              onDelete={setDeleteId}
+                              onToggle={toggleActive}
+                            />
+                          ))}
+                          {groupedRules.general.length === 0 && (
+                            <p className="text-xs text-muted-foreground italic p-4 text-center">No general rules — add one above.</p>
+                          )}
+                        </div>
+                      )}
                     </div>
-                  </div>
-                ))}
+                  );
+                })()}
               </div>
             )}
           </TabsContent>
@@ -367,7 +742,14 @@ export default function RoutingRulesPage() {
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>Trigger</Label>
-                <Select value={form.trigger} onValueChange={v => setForm(f => ({ ...f, trigger: v }))}>
+                <Select
+                  value={form.trigger}
+                  onValueChange={v => setForm(f => ({
+                    ...f,
+                    trigger: v,
+                    trigger_transition_id: v === 'on_create' ? undefined : f.trigger_transition_id,
+                  }))}
+                >
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
                     {TRIGGER_OPTIONS.map(o => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}
@@ -379,6 +761,17 @@ export default function RoutingRulesPage() {
                 <Input type="number" min={0} value={form.priority} onChange={e => setForm(f => ({ ...f, priority: parseInt(e.target.value) || 0 }))} />
               </div>
             </div>
+
+            {/* Transition picker — shown when trigger fires on transitions */}
+            {(form.trigger === 'on_transition' || form.trigger === 'both') && (
+              <TransitionPicker
+                allTransitions={allTransitions}
+                workflowFilter={formWorkflowFilter}
+                onWorkflowFilterChange={setFormWorkflowFilter}
+                value={form.trigger_transition_id ?? null}
+                onChange={id => setForm(f => ({ ...f, trigger_transition_id: id ?? undefined }))}
+              />
+            )}
 
             {/* Conditions */}
             <div className="space-y-2">
@@ -392,16 +785,22 @@ export default function RoutingRulesPage() {
                 <p className="text-xs text-muted-foreground italic border rounded-lg p-3 text-center">No conditions — rule matches everything.</p>
               ) : (
                 <div className="space-y-2">
-                  {form.conditions.map((c, idx) => (
-                    <div key={idx} className="flex items-center gap-2">
-                      <Select value={c.field} onValueChange={v => updateCondition(idx, { field: v })}>
-                        <SelectTrigger className="flex-1 h-8 text-xs"><SelectValue /></SelectTrigger>
-                        <SelectContent>
-                          {(COMMON_FIELDS[form.entity_type] || []).map(f => (
-                            <SelectItem key={f.value} value={f.value}>{f.label}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                  {form.conditions.map((c, idx) => {
+                    const commonOpts = COMMON_FIELDS[form.entity_type] || [];
+                    return (
+                    <div key={idx} className="flex items-start gap-2">
+                      <div className="flex-1 space-y-1">
+                        <Input
+                          className="h-8 text-xs"
+                          placeholder="Field (e.g. priority, custom_fields.classification)"
+                          value={c.field}
+                          onChange={e => updateCondition(idx, { field: e.target.value })}
+                          list={`fields-${idx}`}
+                        />
+                        <datalist id={`fields-${idx}`}>
+                          {commonOpts.map(f => <option key={f.value} value={f.value} label={f.label} />)}
+                        </datalist>
+                      </div>
                       <Select value={c.operator} onValueChange={v => updateCondition(idx, { operator: v })}>
                         <SelectTrigger className="w-32 h-8 text-xs"><SelectValue /></SelectTrigger>
                         <SelectContent>
@@ -409,18 +808,34 @@ export default function RoutingRulesPage() {
                         </SelectContent>
                       </Select>
                       {!noValueOps.includes(c.operator) && (
-                        <Input
-                          className="flex-1 h-8 text-xs"
-                          placeholder="value"
-                          value={c.value ?? ''}
-                          onChange={e => updateCondition(idx, { value: e.target.value })}
-                        />
+                        <div className="flex-1">
+                          {(c.operator === 'in' || c.operator === 'not_in') ? (
+                            <HierarchyNodePicker
+                              value={Array.isArray(c.value) ? c.value : []}
+                              onChange={codes => updateCondition(idx, { value: codes })}
+                              hierarchyTypes={hierarchyTypes}
+                              hierarchyNodes={hierarchyNodes}
+                              typeFilter={(() => {
+                                const segment = c.field.split('.').pop()?.toLowerCase() ?? '';
+                                const match = hierarchyTypes.find(ht => ht.name.toLowerCase() === segment);
+                                return match ? [match.id] : undefined;
+                              })()}
+                            />
+                          ) : (
+                            <Input
+                              className="h-8 text-xs"
+                              placeholder="value"
+                              value={c.value ?? ''}
+                              onChange={e => updateCondition(idx, { value: e.target.value })}
+                            />
+                          )}
+                        </div>
                       )}
-                      <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={() => removeCondition(idx)}>
+                      <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0 mt-0.5" onClick={() => removeCondition(idx)}>
                         <Trash2 className="h-3.5 w-3.5 text-muted-foreground" />
                       </Button>
                     </div>
-                  ))}
+                  );})}
                 </div>
               )}
             </div>
@@ -447,16 +862,52 @@ export default function RoutingRulesPage() {
                 </Select>
               )}
 
+              {form.action_type === 'assign_by_role' && (
+                <div className="space-y-2">
+                  <Select
+                    value={form.action_config.role ?? '__none__'}
+                    onValueChange={v => setForm(f => ({ ...f, action_config: { ...f.action_config, role: v === '__none__' ? undefined : v } }))}
+                  >
+                    <SelectTrigger><SelectValue placeholder="Select role" /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="__none__">Any role</SelectItem>
+                      {DEPT_ROLES.map(r => (
+                        <SelectItem key={r} value={r} className="capitalize">{r}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <p className="text-xs text-muted-foreground">
+                    Round-robins among users with this role. If conditions include classification or location fields,
+                    only users in matching departments are considered.
+                  </p>
+                </div>
+              )}
+
               {form.action_type === 'assign_round_robin' && (
-                <Select
-                  value={form.action_config.team_id?.toString() ?? ''}
-                  onValueChange={v => setForm(f => ({ ...f, action_config: { team_id: parseInt(v) } }))}
-                >
-                  <SelectTrigger><SelectValue placeholder="Select team" /></SelectTrigger>
-                  <SelectContent>
-                    {teams.map(t => <SelectItem key={t.id} value={t.id.toString()}>{t.name}</SelectItem>)}
-                  </SelectContent>
-                </Select>
+                <div className="space-y-2">
+                  <Select
+                    value={form.action_config.team_id?.toString() ?? '__none__'}
+                    onValueChange={v => setForm(f => ({ ...f, action_config: { ...f.action_config, team_id: v === '__none__' ? undefined : parseInt(v) } }))}
+                  >
+                    <SelectTrigger><SelectValue placeholder="Any team" /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="__none__">Any team</SelectItem>
+                      {teams.map(t => <SelectItem key={t.id} value={t.id.toString()}>{t.name}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                  <Select
+                    value={form.action_config.role ?? '__none__'}
+                    onValueChange={v => setForm(f => ({ ...f, action_config: { ...f.action_config, role: v === '__none__' ? undefined : v } }))}
+                  >
+                    <SelectTrigger><SelectValue placeholder="Any role" /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="__none__">Any role</SelectItem>
+                      {['agent', 'supervisor', 'approver', 'manager'].map(r => (
+                        <SelectItem key={r} value={r} className="capitalize">{r}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
               )}
 
               {form.action_type === 'assign_by_skill' && (
@@ -467,12 +918,12 @@ export default function RoutingRulesPage() {
                     onChange={e => setForm(f => ({ ...f, action_config: { ...f.action_config, skill: e.target.value } }))}
                   />
                   <Select
-                    value={form.action_config.team_id?.toString() ?? ''}
-                    onValueChange={v => setForm(f => ({ ...f, action_config: { ...f.action_config, team_id: parseInt(v) } }))}
+                    value={form.action_config.team_id?.toString() ?? '__none__'}
+                    onValueChange={v => setForm(f => ({ ...f, action_config: { ...f.action_config, team_id: v === '__none__' ? undefined : parseInt(v) } }))}
                   >
-                    <SelectTrigger><SelectValue placeholder="Limit to team (optional)" /></SelectTrigger>
+                    <SelectTrigger><SelectValue placeholder="Any team" /></SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">Any team</SelectItem>
+                      <SelectItem value="__none__">Any team</SelectItem>
                       {teams.map(t => <SelectItem key={t.id} value={t.id.toString()}>{t.name}</SelectItem>)}
                     </SelectContent>
                   </Select>
@@ -546,7 +997,7 @@ export default function RoutingRulesPage() {
                       >
                         <SelectTrigger className="h-8"><SelectValue /></SelectTrigger>
                         <SelectContent>
-                          {['agent', 'supervisor', 'approver', 'manager'].map(r => (
+                          {DEPT_ROLES.map(r => (
                             <SelectItem key={r} value={r} className="capitalize">{r}</SelectItem>
                           ))}
                         </SelectContent>
@@ -557,12 +1008,12 @@ export default function RoutingRulesPage() {
                     <div className="space-y-1.5">
                       <Label className="text-xs font-medium">Limit to team (optional)</Label>
                       <Select
-                        value={form.action_config.team_id?.toString() ?? ''}
-                        onValueChange={v => setForm(f => ({ ...f, action_config: { ...f.action_config, team_id: v ? parseInt(v) : undefined } }))}
+                        value={form.action_config.team_id?.toString() ?? '__none__'}
+                        onValueChange={v => setForm(f => ({ ...f, action_config: { ...f.action_config, team_id: v === '__none__' ? undefined : parseInt(v) } }))}
                       >
                         <SelectTrigger className="h-8"><SelectValue placeholder="Any team" /></SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="">Any team</SelectItem>
+                          <SelectItem value="__none__">Any team</SelectItem>
                           {teams.map(t => <SelectItem key={t.id} value={t.id.toString()}>{t.name}</SelectItem>)}
                         </SelectContent>
                       </Select>
@@ -577,6 +1028,83 @@ export default function RoutingRulesPage() {
                       <div>
                         <Label className="text-xs font-medium">Ancestor matching</Label>
                         <p className="text-xs text-muted-foreground">A city-level agent also matches all wards under that city</p>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })()}
+
+              {form.action_type === 'assign_by_department' && (() => {
+                const nodeFields: string[] = form.action_config.node_fields ?? [];
+                const typeMap: Record<string, number> = form.action_config.type_map ?? {};
+                const entityCfDefs = customFieldDefs.filter(d => d.entity_type === form.entity_type);
+                const toggleField = (name: string) => {
+                  const updated = nodeFields.includes(name)
+                    ? nodeFields.filter(f => f !== name)
+                    : [...nodeFields, name];
+                  setForm(f => ({ ...f, action_config: { ...f.action_config, node_fields: updated } }));
+                };
+                return (
+                  <div className="space-y-3 mt-2">
+                    <div className="rounded-md bg-muted/50 border px-3 py-2 text-xs text-muted-foreground">
+                      Two-hop routing: ticket field → classification node → matching department → user by role
+                    </div>
+                    {/* Node fields */}
+                    <div className="space-y-1.5">
+                      <Label className="text-xs font-medium">Custom fields that carry hierarchy node codes</Label>
+                      {entityCfDefs.length === 0 ? (
+                        <p className="text-xs text-muted-foreground italic">No custom fields defined. You can also type a field name manually below.</p>
+                      ) : (
+                        <div className="space-y-1 border rounded-lg p-2">
+                          {entityCfDefs.map(def => (
+                            <div key={def.id} className="flex items-center gap-2 text-sm">
+                              <input type="checkbox" id={`dept_nf_${def.name}`}
+                                checked={nodeFields.includes(def.name)}
+                                onChange={() => toggleField(def.name)} className="rounded" />
+                              <label htmlFor={`dept_nf_${def.name}`} className="flex-1 cursor-pointer">
+                                {def.label} <code className="text-xs text-muted-foreground ml-1">{def.name}</code>
+                              </label>
+                              {nodeFields.includes(def.name) && hierarchyTypes.length > 0 && (
+                                <Select value={typeMap[def.name]?.toString() ?? ''}
+                                  onValueChange={v => setForm(f => ({ ...f, action_config: { ...f.action_config, type_map: { ...(f.action_config.type_map ?? {}), [def.name]: parseInt(v) } } }))}>
+                                  <SelectTrigger className="h-7 text-xs w-40"><SelectValue placeholder="Hierarchy type" /></SelectTrigger>
+                                  <SelectContent>
+                                    {hierarchyTypes.map(ht => <SelectItem key={ht.id} value={ht.id.toString()} className="text-xs">{ht.name}</SelectItem>)}
+                                  </SelectContent>
+                                </Select>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                      <Input className="h-7 text-xs" placeholder="Or type field name e.g. classification"
+                        value={(nodeFields.filter(f => !entityCfDefs.some(d => d.name === f))).join(', ')}
+                        onChange={e => {
+                          const extra = e.target.value.split(',').map(s => s.trim()).filter(Boolean);
+                          const known = nodeFields.filter(f => entityCfDefs.some(d => d.name === f));
+                          setForm(f => ({ ...f, action_config: { ...f.action_config, node_fields: [...known, ...extra] } }));
+                        }} />
+                    </div>
+                    {/* Role */}
+                    <div className="space-y-1.5">
+                      <Label className="text-xs font-medium">Pick users with role</Label>
+                      <Select value={form.action_config.role ?? 'agent'}
+                        onValueChange={v => setForm(f => ({ ...f, action_config: { ...f.action_config, role: v } }))}>
+                        <SelectTrigger className="h-8"><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          {DEPT_ROLES.map(r => (
+                            <SelectItem key={r} value={r} className="capitalize">{r}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    {/* Ancestor match */}
+                    <div className="flex items-center gap-2">
+                      <Switch checked={form.action_config.ancestor_match !== false}
+                        onCheckedChange={v => setForm(f => ({ ...f, action_config: { ...f.action_config, ancestor_match: v } }))} />
+                      <div>
+                        <Label className="text-xs font-medium">Ancestor matching</Label>
+                        <p className="text-xs text-muted-foreground">A parent-node dept also matches its child node tickets</p>
                       </div>
                     </div>
                   </div>

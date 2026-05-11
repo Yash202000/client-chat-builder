@@ -22,6 +22,7 @@ import {
 } from '@/components/ui/select';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
+import { CustomFieldInput, CustomFieldDefinition, HierarchyNodeOption } from '@/components/CustomFieldInput';
 
 interface Status {
   id: number;
@@ -125,6 +126,9 @@ export default function TicketBoardPage() {
   const [newTicket, setNewTicket] = useState({
     title: '', description: '', priority: 'medium', issue_type_id: '', assignee_id: '',
   });
+  const [newTicketCF, setNewTicketCF] = useState<Record<string, any>>({});
+  const [customFieldDefs, setCustomFieldDefs] = useState<CustomFieldDefinition[]>([]);
+  const [hierarchyNodes, setHierarchyNodes] = useState<HierarchyNodeOption[]>([]);
 
   // Transition dialog state
   const [pendingDrop, setPendingDrop] = useState<{
@@ -150,6 +154,18 @@ export default function TicketBoardPage() {
       if (!proj) { toast.error('Project not found'); navigate('/dashboard/tickets'); return; }
 
       setProject(proj);
+
+      // Load custom fields scoped to this project + hierarchy nodes
+      const [cfRes, htRes] = await Promise.all([
+        axios.get('/api/v1/custom-fields/', { headers: headers(), params: { entity_type: 'ticket', project_id: proj.id } }).catch(() => ({ data: [] })),
+        axios.get('/api/v1/hierarchy/types', { headers: headers() }).catch(() => ({ data: [] })),
+      ]);
+      setCustomFieldDefs(cfRes.data || []);
+      const types: { id: number; name: string }[] = htRes.data || [];
+      const nodeResponses = await Promise.all(
+        types.map((t: { id: number }) => axios.get(`/api/v1/hierarchy/types/${t.id}/nodes`, { headers: headers() }).catch(() => ({ data: [] })))
+      );
+      setHierarchyNodes(nodeResponses.flatMap((r: any) => r.data));
       setIssueTypes(typesRes.data);
       setTeamMembers(usersRes.data || []);
 
@@ -291,6 +307,7 @@ export default function TicketBoardPage() {
   const openCreateInColumn = (statusId: number) => {
     setCreateStatusId(statusId);
     setNewTicket({ title: '', description: '', priority: 'medium', issue_type_id: '', assignee_id: '' });
+    setNewTicketCF({});
     setShowCreate(true);
   };
 
@@ -298,6 +315,7 @@ export default function TicketBoardPage() {
     if (!newTicket.title.trim() || !project) return;
     setCreating(true);
     try {
+      const cfPayload = Object.fromEntries(Object.entries(newTicketCF).filter(([, v]) => v != null && v !== ''));
       await axios.post('/api/v1/tickets/', {
         project_id: project.id,
         title: newTicket.title,
@@ -306,6 +324,7 @@ export default function TicketBoardPage() {
         status_id: createStatusId || undefined,
         issue_type_id: newTicket.issue_type_id ? parseInt(newTicket.issue_type_id) : undefined,
         assignee_id: newTicket.assignee_id ? parseInt(newTicket.assignee_id) : undefined,
+        custom_fields: Object.keys(cfPayload).length > 0 ? cfPayload : undefined,
       }, { headers: headers() });
       toast.success('Ticket created');
       setShowCreate(false);
@@ -604,11 +623,11 @@ export default function TicketBoardPage() {
 
       {/* Quick Create Dialog */}
       <Dialog open={showCreate} onOpenChange={setShowCreate}>
-        <DialogContent className="sm:max-w-lg">
-          <DialogHeader>
+        <DialogContent className="sm:max-w-lg flex flex-col max-h-[90vh]">
+          <DialogHeader className="shrink-0">
             <DialogTitle>Create Ticket</DialogTitle>
           </DialogHeader>
-          <div className="space-y-3 py-1">
+          <div className="space-y-3 py-1 overflow-y-auto flex-1 pr-1">
             <div>
               <Input placeholder="Ticket title *" value={newTicket.title}
                 onChange={e => setNewTicket(t => ({ ...t, title: e.target.value }))}
@@ -660,8 +679,24 @@ export default function TicketBoardPage() {
                 </SelectContent>
               </Select>
             </div>
+            {customFieldDefs.length > 0 && (
+              <div className="space-y-3 pt-2 border-t">
+                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Custom Fields</p>
+                {customFieldDefs.map(def => (
+                  <div key={def.id} className="space-y-1">
+                    <Label className="text-xs">{def.label}{def.required && <span className="text-red-500 ml-0.5">*</span>}</Label>
+                    <CustomFieldInput
+                      definition={def}
+                      value={newTicketCF[def.name] ?? null}
+                      onChange={v => setNewTicketCF(cf => ({ ...cf, [def.name]: v }))}
+                      hierarchyNodes={hierarchyNodes}
+                    />
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
-          <DialogFooter>
+          <DialogFooter className="shrink-0 pt-2 border-t">
             <Button variant="outline" onClick={() => setShowCreate(false)}>Cancel</Button>
             <Button onClick={submitCreate} disabled={creating || !newTicket.title.trim()}>
               {creating && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}

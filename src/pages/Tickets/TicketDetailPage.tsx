@@ -20,13 +20,13 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
-import { CustomFieldInput, CustomFieldDefinition, formatCustomFieldValue } from '@/components/CustomFieldInput';
+import { CustomFieldInput, CustomFieldDefinition, formatCustomFieldValue, CoordinatesDisplay } from '@/components/CustomFieldInput';
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
 interface Status { id: number; name: string; color: string; category: string; }
 interface IssueType { id: number; name: string; icon?: string; color: string; }
-interface TicketUser { id: number; full_name?: string; email?: string; profile_picture_url?: string; }
+interface TicketUser { id: number; full_name?: string; email?: string; profile_picture_url?: string; job_title?: string; }
 interface Comment { id: number; body: string; is_internal: boolean; created_at: string; author?: TicketUser; }
 interface Activity { id: number; action: string; field_name?: string; old_value?: string; new_value?: string; created_at: string; actor?: TicketUser; metadata_?: Record<string, any>; }
 interface ScreenField { field: string; label: string; required: boolean; }
@@ -39,6 +39,7 @@ interface TicketDetail {
   id: number; ticket_number: string; title: string; description?: string;
   priority: string; status?: Status; issue_type?: IssueType;
   assignee?: TicketUser; reporter?: TicketUser;
+  co_assignees: TicketUser[];
   due_date?: string; start_date?: string; resolved_at?: string;
   story_points?: number; time_estimate?: number; time_spent?: number;
   labels?: string[]; created_at: string; updated_at: string;
@@ -48,6 +49,7 @@ interface TicketDetail {
   sub_tickets: TicketSummary[]; parent?: TicketSummary;
   available_transitions: Transition[];
   custom_fields?: Record<string, any>;
+  user_context: Record<string, { depts: { name: string; role: string }[] }>;
 }
 
 // ── Constants ────────────────────────────────────────────────────────────────
@@ -142,7 +144,22 @@ function StatusBadge({ status }: { status?: Status }) {
   );
 }
 
-function ActivityItem({ act }: { act: Activity }) {
+function UserContextBadge({ userId, userContext }: { userId?: number; userContext: Record<string, { depts: { name: string; role: string }[] }> }) {
+  if (!userId) return null;
+  const ctx = userContext[String(userId)];
+  if (!ctx?.depts?.length) return null;
+  const { name, role } = ctx.depts[0];
+  return (
+    <span className="inline-flex items-center gap-1 text-[10px] text-muted-foreground">
+      <span className="w-0.5 h-0.5 rounded-full bg-muted-foreground/50 inline-block" />
+      <span className="capitalize">{role}</span>
+      <span className="text-muted-foreground/40">·</span>
+      <span>{name}</span>
+    </span>
+  );
+}
+
+function ActivityItem({ act, userContext }: { act: Activity; userContext: Record<string, { depts: { name: string; role: string }[] }> }) {
   const actor = act.actor?.full_name || act.actor?.email || 'System';
   const time = fmtRelative(act.created_at);
 
@@ -185,7 +202,17 @@ function ActivityItem({ act }: { act: Activity }) {
       </div>
       <div className="pb-4 flex-1 min-w-0">
         <div className="flex items-start gap-2 flex-wrap">
-          <span className="text-sm font-medium text-foreground">{actor}</span>
+          <div className="flex flex-col gap-0.5 min-w-0">
+            <div className="flex items-center gap-1.5 flex-wrap">
+              <span className="text-sm font-medium text-foreground">{actor}</span>
+              {act.actor?.job_title && (
+                <span className="text-[10px] px-1.5 py-0.5 rounded bg-muted text-muted-foreground font-medium border border-border/60">
+                  {act.actor.job_title}
+                </span>
+              )}
+              <UserContextBadge userId={act.actor?.id} userContext={userContext} />
+            </div>
+          </div>
           <span className="text-sm text-muted-foreground">{body}</span>
           <span className="ml-auto text-xs text-muted-foreground whitespace-nowrap">
             {new Date(act.created_at).toLocaleString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
@@ -408,14 +435,19 @@ export default function TicketDetailPage() {
 
   const load = useCallback(async () => {
     try {
-      const [ticketsRes, usersRes, cfDefsRes] = await Promise.all([
-        axios.get('/api/v1/tickets/', { headers: headers(), params: { limit: 500 } }),
+      const [summaryRes, usersRes] = await Promise.all([
+        axios.get('/api/v1/tickets/', { headers: headers(), params: { ticket_number: ticketNumber, limit: 1 } }),
         axios.get('/api/v1/users/', { headers: headers() }),
-        axios.get('/api/v1/custom-fields/', { headers: headers(), params: { entity_type: 'ticket' } }).catch(() => ({ data: [] })),
       ]);
-      const found = ticketsRes.data.find((t: any) => t.ticket_number === ticketNumber);
+      const found = summaryRes.data[0];
       if (!found) { toast.error('Ticket not found'); navigate(`/dashboard/tickets/${projectKey}/board`); return; }
-      const detailRes = await axios.get(`/api/v1/tickets/${found.id}`, { headers: headers() });
+      const [detailRes, cfDefsRes] = await Promise.all([
+        axios.get(`/api/v1/tickets/${found.id}`, { headers: headers() }),
+        axios.get('/api/v1/custom-fields/', {
+          headers: headers(),
+          params: { entity_type: 'ticket', project_id: found.project_id },
+        }).catch(() => ({ data: [] })),
+      ]);
       setTicket(detailRes.data);
       setTeamMembers(usersRes.data || []);
       setCustomFieldDefs(cfDefsRes.data || []);
@@ -883,8 +915,14 @@ export default function TicketDetailPage() {
                         <div className="flex-1 min-w-0">
                           <div className={cn('rounded-xl p-4 border',
                             c.is_internal ? 'bg-amber-50/60 border-amber-200/60' : 'bg-muted/40 border-border')}>
-                            <div className="flex items-center gap-2 mb-2">
+                            <div className="flex items-center gap-2 mb-2 flex-wrap">
                               <span className="text-sm font-semibold">{c.author?.full_name || c.author?.email}</span>
+                              {c.author?.job_title && (
+                                <span className="text-[10px] px-1.5 py-0.5 rounded bg-muted text-muted-foreground font-medium border border-border/60">
+                                  {c.author.job_title}
+                                </span>
+                              )}
+                              <UserContextBadge userId={c.author?.id} userContext={ticket.user_context} />
                               {c.is_internal && (
                                 <span className="inline-flex items-center gap-1 text-[10px] font-medium px-1.5 py-0.5 rounded bg-amber-100 text-amber-700 border border-amber-200">
                                   <Lock className="w-2.5 h-2.5" />Internal
@@ -969,10 +1007,21 @@ export default function TicketDetailPage() {
                                   {a.file_name}
                                   <ExternalLink className="w-3 h-3 opacity-0 group-hover:opacity-60 flex-shrink-0" />
                                 </a>
-                                <p className="text-xs text-muted-foreground mt-0.5">
-                                  {a.file_size ? `${(a.file_size / 1024).toFixed(1)} KB · ` : ''}
-                                  {a.uploaded_by?.full_name || a.uploaded_by?.email} · {fmtDate(a.created_at)}
-                                </p>
+                                <div className="flex items-center gap-1.5 flex-wrap mt-0.5">
+                                  {a.file_size ? <span className="text-xs text-muted-foreground">{(a.file_size / 1024).toFixed(1)} KB</span> : null}
+                                  {a.file_size && <span className="text-muted-foreground/40 text-xs">·</span>}
+                                  <span className="text-xs text-muted-foreground">
+                                    {a.uploaded_by?.full_name || a.uploaded_by?.email}
+                                  </span>
+                                  {a.uploaded_by?.job_title && (
+                                    <span className="text-[10px] px-1.5 py-0.5 rounded bg-muted text-muted-foreground font-medium border border-border/60">
+                                      {a.uploaded_by.job_title}
+                                    </span>
+                                  )}
+                                  <UserContextBadge userId={a.uploaded_by?.id} userContext={ticket.user_context} />
+                                  <span className="text-muted-foreground/40 text-xs">·</span>
+                                  <span className="text-xs text-muted-foreground">{fmtDate(a.created_at)}</span>
+                                </div>
                               </div>
                               <Button variant="ghost" size="icon" className="h-7 w-7 opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-destructive"
                                 onClick={() => deleteAttachment(a.id)}>
@@ -994,7 +1043,7 @@ export default function TicketDetailPage() {
                         <p className="text-sm text-muted-foreground">No activity yet</p>
                       </div>
                     ) : (
-                      ticket.activities.map(act => <ActivityItem key={act.id} act={act} />)
+                      ticket.activities.map(act => <ActivityItem key={act.id} act={act} userContext={ticket.user_context} />)
                     )}
                   </div>
                 )}
@@ -1038,6 +1087,60 @@ export default function TicketDetailPage() {
                       ))}
                     </SelectContent>
                   </Select>
+                </SidebarField>
+
+                {/* Co-Assignees */}
+                <SidebarField label="Co-Assignees">
+                  <div className="flex flex-col gap-1.5">
+                    {ticket.co_assignees.map(u => (
+                      <div key={u.id} className="flex items-center gap-1.5 group">
+                        <UserAvatar user={u} size="sm" />
+                        <span className="text-xs flex-1 truncate">{u.full_name || u.email}</span>
+                        <button
+                          className="opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-destructive transition-opacity p-0.5"
+                          onClick={async () => {
+                            await axios.delete(`/api/v1/tickets/${ticket.id}/co-assignees/${u.id}`, {
+                              headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+                            });
+                            setTicket(t => t ? { ...t, co_assignees: t.co_assignees.filter(c => c.id !== u.id) } : t);
+                          }}
+                        >
+                          <X className="w-3 h-3" />
+                        </button>
+                      </div>
+                    ))}
+                    <Select
+                      value=""
+                      onValueChange={async (userId) => {
+                        if (!userId) return;
+                        const uid = parseInt(userId);
+                        if (ticket.co_assignees.some(c => c.id === uid)) return;
+                        await axios.post(`/api/v1/tickets/${ticket.id}/co-assignees/${uid}`, {}, {
+                          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+                        });
+                        const user = teamMembers.find(m => m.id === uid);
+                        if (user) setTicket(t => t ? { ...t, co_assignees: [...t.co_assignees, user] } : t);
+                      }}
+                    >
+                      <SelectTrigger className="h-6 text-xs border-dashed border-muted-foreground/40 shadow-none hover:border-primary/50 focus:ring-0 mt-0.5">
+                        <span className="text-muted-foreground flex items-center gap-1">
+                          <Plus className="w-3 h-3" />Add co-assignee
+                        </span>
+                      </SelectTrigger>
+                      <SelectContent>
+                        {teamMembers
+                          .filter(m => !ticket.co_assignees.some(c => c.id === m.id))
+                          .map(u => (
+                            <SelectItem key={u.id} value={String(u.id)}>
+                              <div className="flex items-center gap-2">
+                                <UserAvatar user={u} size="sm" />
+                                {u.full_name || u.email}
+                              </div>
+                            </SelectItem>
+                          ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </SidebarField>
 
                 <SidebarField label="Reporter">
@@ -1192,7 +1295,10 @@ export default function TicketDetailPage() {
                       <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Custom Fields</p>
                       {customFieldDefs.map(def => (
                         <SidebarField key={def.id} label={def.label}>
-                          <span className="text-sm">{formatCustomFieldValue(ticket.custom_fields?.[def.name], def)}</span>
+                          {def.field_type === 'coordinates'
+                            ? <CoordinatesDisplay value={ticket.custom_fields?.[def.name]} />
+                            : <span className="text-sm">{formatCustomFieldValue(ticket.custom_fields?.[def.name], def)}</span>
+                          }
                         </SidebarField>
                       ))}
                     </div>

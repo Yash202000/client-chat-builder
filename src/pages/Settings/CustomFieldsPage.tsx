@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { Plus, Trash2, Edit2, GripVertical, ChevronDown, Check, X } from 'lucide-react';
+import { useState, useEffect, useCallback } from 'react';
+import { Plus, Trash2, Edit2, GripVertical, ChevronDown, Check, X, Globe, Lock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -34,6 +34,8 @@ const FIELD_TYPES = [
   { value: 'url', label: 'URL' },
   { value: 'email', label: 'Email' },
   { value: 'phone', label: 'Phone' },
+  { value: 'coordinates', label: 'Coordinates (Lat / Lng)' },
+  { value: 'hierarchy_node', label: 'Hierarchy Node (single pick)' },
 ];
 
 const OPTION_COLORS = ['#6366f1','#10b981','#f59e0b','#ef4444','#3b82f6','#8b5cf6','#ec4899','#14b8a6','#f97316','#64748b'];
@@ -51,6 +53,16 @@ interface CustomField {
   position: number;
   is_active: boolean;
   group_name?: string;
+  is_global: boolean;
+}
+interface Project { id: number; name: string; key: string; color?: string }
+interface ProjectConfig {
+  field_id: number;
+  project_id: number;
+  visible: boolean;
+  required: boolean | null;
+  position: number | null;
+  group_name: string | null;
 }
 
 const emptyForm = {
@@ -63,6 +75,7 @@ const emptyForm = {
   default_value: '',
   group_name: '',
   is_active: true,
+  is_global: true,
 };
 
 export default function CustomFieldsPage() {
@@ -77,10 +90,14 @@ export default function CustomFieldsPage() {
   const [saving, setSaving] = useState(false);
   const [newOption, setNewOption] = useState('');
   const [newOptionColor, setNewOptionColor] = useState(OPTION_COLORS[0]);
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [hierarchyTypes, setHierarchyTypes] = useState<{ id: number; name: string }[]>([]);
+  const [projectConfigs, setProjectConfigs] = useState<ProjectConfig[]>([]);
+  const [configSaving, setConfigSaving] = useState<number | null>(null); // project_id being saved
 
   const headers = { Authorization: `Bearer ${localStorage.getItem('accessToken')}` };
 
-  useEffect(() => { fetchFields(); }, []);
+  useEffect(() => { fetchFields(); fetchProjects(); fetchHierarchyTypes(); }, []);
 
   const fetchFields = async () => {
     try {
@@ -90,6 +107,53 @@ export default function CustomFieldsPage() {
       toast({ title: 'Error', description: 'Failed to load custom fields', variant: 'destructive' });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchHierarchyTypes = async () => {
+    try {
+      const res = await axios.get('/api/v1/hierarchy/types', { headers });
+      setHierarchyTypes(res.data);
+    } catch { /* non-fatal */ }
+  };
+
+  const fetchProjects = async () => {
+    try {
+      const res = await axios.get('/api/v1/tickets/projects', { headers });
+      setProjects(res.data);
+    } catch { /* non-fatal */ }
+  };
+
+  const fetchProjectConfigs = useCallback(async (fieldId: number) => {
+    try {
+      const res = await axios.get(`/api/v1/custom-fields/${fieldId}/project-configs`, { headers });
+      setProjectConfigs(res.data);
+    } catch { setProjectConfigs([]); }
+  }, []);
+
+  const upsertProjectConfig = async (fieldId: number, projectId: number, patch: Partial<ProjectConfig>) => {
+    setConfigSaving(projectId);
+    try {
+      const existing = projectConfigs.find(c => c.project_id === projectId) ?? {};
+      const payload = { visible: true, required: null, position: null, group_name: null, ...existing, ...patch };
+      const res = await axios.put(`/api/v1/custom-fields/${fieldId}/project-configs/${projectId}`, payload, { headers });
+      setProjectConfigs(prev => {
+        const next = prev.filter(c => c.project_id !== projectId);
+        return [...next, res.data];
+      });
+    } catch {
+      toast({ title: 'Failed to save project config', variant: 'destructive' });
+    } finally {
+      setConfigSaving(null);
+    }
+  };
+
+  const removeProjectConfig = async (fieldId: number, projectId: number) => {
+    try {
+      await axios.delete(`/api/v1/custom-fields/${fieldId}/project-configs/${projectId}`, { headers });
+      setProjectConfigs(prev => prev.filter(c => c.project_id !== projectId));
+    } catch {
+      toast({ title: 'Failed to remove project config', variant: 'destructive' });
     }
   };
 
@@ -112,7 +176,10 @@ export default function CustomFieldsPage() {
       default_value: f.default_value ?? '',
       group_name: f.group_name || '',
       is_active: f.is_active,
+      is_global: f.is_global,
     });
+    setProjectConfigs([]);
+    fetchProjectConfigs(f.id);
     setEditingId(f.id);
     setDialogOpen(true);
   };
@@ -131,6 +198,7 @@ export default function CustomFieldsPage() {
         default_value: form.default_value || undefined,
         group_name: form.group_name || undefined,
         is_active: form.is_active,
+        is_global: form.is_global,
       };
 
       if (editingId) {
@@ -186,6 +254,7 @@ export default function CustomFieldsPage() {
   };
 
   const needsOptions = ['dropdown', 'multi_select'].includes(form.field_type);
+  const isHierarchyNode = form.field_type === 'hierarchy_node';
 
   // Auto-generate name from label (create mode only)
   const handleLabelChange = (val: string) => {
@@ -247,6 +316,7 @@ export default function CustomFieldsPage() {
                         <code className="text-xs bg-muted px-1.5 py-0.5 rounded font-mono text-muted-foreground">{f.name}</code>
                         <Badge variant="outline" className="text-xs">{FIELD_TYPES.find(ft => ft.value === f.field_type)?.label ?? f.field_type}</Badge>
                         {f.required && <Badge className="text-xs bg-orange-100 text-orange-700 border-orange-200">Required</Badge>}
+                        {!f.is_global && <Badge variant="secondary" className="text-xs gap-1"><Lock className="h-2.5 w-2.5" />Project-scoped</Badge>}
                         {f.group_name && <span className="text-xs text-muted-foreground">· {f.group_name}</span>}
                       </div>
                       {f.field_type === 'dropdown' || f.field_type === 'multi_select' ? (
@@ -328,6 +398,29 @@ export default function CustomFieldsPage() {
               </Select>
             </div>
 
+            {isHierarchyNode && (
+              <div className="space-y-2">
+                <Label>Hierarchy Type <span className="text-red-500">*</span></Label>
+                <Select
+                  value={form.options[0]?.value ?? '__none__'}
+                  onValueChange={v => {
+                    if (v === '__none__') { setForm(f => ({ ...f, options: [] })); return; }
+                    const ht = hierarchyTypes.find(h => h.id === parseInt(v));
+                    setForm(f => ({ ...f, options: ht ? [{ value: String(ht.id), label: ht.name }] : [] }));
+                  }}
+                >
+                  <SelectTrigger><SelectValue placeholder="Select hierarchy type…" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="__none__">— Select type —</SelectItem>
+                    {hierarchyTypes.map(ht => (
+                      <SelectItem key={ht.id} value={String(ht.id)} className="capitalize">{ht.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-muted-foreground">Users will pick a single node from this hierarchy when filling out this field.</p>
+              </div>
+            )}
+
             {needsOptions && (
               <div className="space-y-2">
                 <Label>Options</Label>
@@ -386,6 +479,92 @@ export default function CustomFieldsPage() {
               </div>
               <Switch checked={form.is_active} onCheckedChange={v => setForm(f => ({ ...f, is_active: v }))} />
             </div>
+
+            {/* Global vs project-scoped (tickets only) */}
+            {(form.entity_type === 'ticket') && (
+              <div className="space-y-3 pt-2 border-t">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <Label className="text-sm flex items-center gap-1.5">
+                      <Globe className="h-3.5 w-3.5" />Show in all projects
+                    </Label>
+                    <p className="text-xs text-muted-foreground">Turn off to configure per-project visibility</p>
+                  </div>
+                  <Switch
+                    checked={form.is_global}
+                    onCheckedChange={v => setForm(f => ({ ...f, is_global: v }))}
+                  />
+                </div>
+
+                {/* Per-project config — only when editing a non-global field */}
+                {!form.is_global && editingId && (
+                  <div className="space-y-2">
+                    <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Project Configuration</Label>
+                    {projects.length === 0 ? (
+                      <p className="text-xs text-muted-foreground italic">No projects found.</p>
+                    ) : (
+                      <div className="border rounded-lg divide-y">
+                        {projects.map(proj => {
+                          const cfg = projectConfigs.find(c => c.project_id === proj.id);
+                          const isSaving = configSaving === proj.id;
+                          return (
+                            <div key={proj.id} className="flex items-center gap-3 px-3 py-2.5">
+                              <div
+                                className="w-2.5 h-2.5 rounded-full shrink-0"
+                                style={{ backgroundColor: proj.color || '#6366f1' }}
+                              />
+                              <span className="flex-1 text-sm font-medium">{proj.name}</span>
+                              <code className="text-xs text-muted-foreground font-mono">{proj.key}</code>
+
+                              {/* Required override */}
+                              {cfg?.visible && (
+                                <Select
+                                  value={cfg.required === null ? '__inherit__' : cfg.required ? 'true' : 'false'}
+                                  onValueChange={v => upsertProjectConfig(editingId, proj.id, {
+                                    required: v === '__inherit__' ? null : v === 'true',
+                                  })}
+                                >
+                                  <SelectTrigger className="h-7 w-28 text-xs">
+                                    <SelectValue />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    <SelectItem value="__inherit__" className="text-xs">Inherit</SelectItem>
+                                    <SelectItem value="true" className="text-xs">Required</SelectItem>
+                                    <SelectItem value="false" className="text-xs">Optional</SelectItem>
+                                  </SelectContent>
+                                </Select>
+                              )}
+
+                              {/* Visible toggle */}
+                              <Switch
+                                checked={cfg?.visible ?? false}
+                                disabled={isSaving}
+                                onCheckedChange={v => {
+                                  if (v) {
+                                    upsertProjectConfig(editingId, proj.id, { visible: true });
+                                  } else if (cfg) {
+                                    upsertProjectConfig(editingId, proj.id, { visible: false });
+                                  }
+                                }}
+                              />
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+                    <p className="text-xs text-muted-foreground">
+                      Toggle on to show this field in a project. When off, the field is hidden in that project regardless of ticket type.
+                    </p>
+                  </div>
+                )}
+
+                {!form.is_global && !editingId && (
+                  <p className="text-xs text-muted-foreground italic">
+                    Save the field first, then configure per-project visibility here.
+                  </p>
+                )}
+              </div>
+            )}
           </div>
 
           <DialogFooter>
