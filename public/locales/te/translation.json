@@ -108,7 +108,11 @@
     "telegramInbox": "Telegram",
     "twilioInbox": "Twilio కాల్స్",
     "apiInbox": "API చాట్",
-    "contactHub": "పరిచయాలు"
+    "contactHub": "పరిచయాలు",
+    "customFields": "అనుకూల ఫీల్డ్‌లు",
+    "routingRules": "రూటింగ్ నియమాలు",
+    "hierarchy": "శ్రేణి",
+    "departments": "విభాగాలు"
   },
   "agents": {
     "title": "మీ AI ఏజెంట్లు",

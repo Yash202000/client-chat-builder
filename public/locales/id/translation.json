@@ -108,7 +108,11 @@
     "telegramInbox": "Telegram",
     "twilioInbox": "Panggilan Twilio",
     "apiInbox": "API Chat",
-    "contactHub": "Kontak"
+    "contactHub": "Kontak",
+    "customFields": "Bidang Kustom",
+    "routingRules": "Aturan Perutean",
+    "hierarchy": "Hierarki",
+    "departments": "Departemen"
   },
   "agents": {
     "title": "Agen AI Anda",

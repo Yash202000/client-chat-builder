@@ -16,7 +16,6 @@ import {
   Shield,
   Mail,
   Plus,
-  Badge,
   Check,
   Send,
   Tag,
@@ -33,6 +32,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Badge } from "@/components/ui/badge";
 import {
   Dialog,
   DialogContent,
@@ -87,6 +87,14 @@ export const TeamManagement = () => {
   const [editUserPassword, setEditUserPassword] = useState("");
   const [editUserSkills, setEditUserSkills] = useState<string[]>([]);
   const [editUserSkillInput, setEditUserSkillInput] = useState("");
+
+  // Node assignments for the user being edited
+  const [userNodeAssignments, setUserNodeAssignments] = useState<any[]>([]);
+  const [hierarchyTypes, setHierarchyTypes] = useState<{ id: number; name: string }[]>([]);
+  const [hierarchyNodes, setHierarchyNodes] = useState<{ id: number; name: string; code: string; type_id: number; path: string }[]>([]);
+  const [nodeAssignForm, setNodeAssignForm] = useState({ type_id: '', node_ids: [] as string[] });
+  const [nodeSearch, setNodeSearch] = useState('');
+  const [addingNodeAssign, setAddingNodeAssign] = useState(false);
 
   // ── Extension config (localStorage, keyed by userId) ──────────────────────
   const EXT_LS_KEY = 'phone_ext_configs';
@@ -435,7 +443,7 @@ export const TeamManagement = () => {
     }
   };
 
-  const openEditUserModal = (user: User) => {
+  const openEditUserModal = async (user: User) => {
     setSelectedUserForEdit(user);
     setEditUserEmail(user.email);
     setEditUserFirstName(user.first_name || "");
@@ -443,7 +451,27 @@ export const TeamManagement = () => {
     setEditUserPassword("");
     setEditUserSkills(Array.isArray((user as any).skills) ? (user as any).skills : []);
     setEditUserSkillInput("");
+    setNodeAssignForm({ type_id: '', node_ids: [] });
+    setNodeSearch('');
     setEditUserModalOpen(true);
+    // Fetch hierarchy types, all nodes, and user's assignments
+    try {
+      const [typesRes, assignRes] = await Promise.all([
+        authFetch('/api/v1/hierarchy/types'),
+        authFetch(`/api/v1/hierarchy/user-assignments?user_id=${user.id}`),
+      ]);
+      const types = typesRes.ok ? await typesRes.json() : [];
+      if (typesRes.ok) setHierarchyTypes(types);
+      if (assignRes.ok) setUserNodeAssignments(await assignRes.json());
+      // Load all nodes for all types so we can show names in chips + depth in dropdown
+      if (types.length > 0) {
+        const nodeResults = await Promise.all(
+          types.map((t: { id: number }) => authFetch(`/api/v1/hierarchy/types/${t.id}/nodes`))
+        );
+        const allNodes = (await Promise.all(nodeResults.map(r => r.ok ? r.json() : []))).flat();
+        setHierarchyNodes(allNodes);
+      }
+    } catch { /* non-fatal */ }
   };
 
   const handleUpdateUser = async () => {
@@ -1222,8 +1250,8 @@ export const TeamManagement = () => {
 
       {/* Edit User Modal */}
       <Dialog open={isEditUserModalOpen} onOpenChange={setEditUserModalOpen}>
-        <DialogContent className="dark:bg-slate-800 dark:border-slate-700 rounded-2xl sm:rounded-2xl" dir={isRTL ? 'rtl' : 'ltr'}>
-          <DialogHeader className="pb-4 border-b border-slate-200/80 dark:border-slate-700/60">
+        <DialogContent className="dark:bg-slate-800 dark:border-slate-700 rounded-2xl sm:rounded-2xl flex flex-col max-h-[90vh]" dir={isRTL ? 'rtl' : 'ltr'}>
+          <DialogHeader className="pb-4 border-b border-slate-200/80 dark:border-slate-700/60 shrink-0">
             <DialogTitle className={`dark:text-white flex items-center gap-3 ${isRTL ? 'flex-row-reverse' : ''}`}>
               <div className="p-2 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 shadow-lg shadow-blue-500/25">
                 <Edit className="h-5 w-5 text-white" />
@@ -1231,7 +1259,7 @@ export const TeamManagement = () => {
               {t('teamManagement.dialogs.editUser.title')}
             </DialogTitle>
           </DialogHeader>
-          <div className="space-y-4 py-4">
+          <div className="space-y-4 py-4 overflow-y-auto flex-1 pr-1">
             <div>
               <Label htmlFor="edit-user-email" className="text-sm dark:text-gray-300 mb-1.5 block">{t('teamManagement.dialogs.editUser.emailLabel')}</Label>
               <Input
@@ -1326,8 +1354,177 @@ export const TeamManagement = () => {
                 </div>
               )}
             </div>
+
+            {/* Jurisdiction / Node Assignments */}
+            {hierarchyTypes.length > 0 && (
+              <div>
+                <Label className="text-sm dark:text-gray-300 mb-2 flex items-center gap-1.5 block">
+                  <Building2 className="h-3.5 w-3.5 text-blue-500" />
+                  Jurisdiction Assignments
+                </Label>
+                <div className="space-y-2">
+                  {hierarchyTypes.map(ht => {
+                    const typeAssignments = userNodeAssignments.filter(
+                      a => hierarchyNodes.find(n => n.id === a.node_id)?.type_id === ht.id
+                    );
+                    const isExpanded = nodeAssignForm.type_id === String(ht.id);
+                    const alreadyAssignedIds = new Set(typeAssignments.map(a => String(a.node_id)));
+
+                    return (
+                      <div key={ht.id} className="rounded-lg border border-input dark:border-slate-700 overflow-hidden">
+                        {/* Type header row */}
+                        <div className="flex items-center gap-2 px-2.5 py-1.5 bg-muted/40 dark:bg-slate-800/60">
+                          <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide flex-1">{ht.name}</span>
+                          <button
+                            type="button"
+                            className={`h-5 w-5 flex items-center justify-center rounded transition-colors text-muted-foreground ${isExpanded ? 'bg-primary/10 text-primary' : 'hover:bg-accent'}`}
+                            onClick={() => {
+                              setNodeSearch('');
+                              setNodeAssignForm(f => ({
+                                ...f,
+                                type_id: isExpanded ? '' : String(ht.id),
+                                node_ids: [],
+                              }));
+                            }}
+                          >
+                            {isExpanded ? <X className="h-3 w-3" /> : <Plus className="h-3 w-3" />}
+                          </button>
+                        </div>
+
+                        {/* Chips */}
+                        {typeAssignments.length > 0 && (
+                          <div className="flex flex-wrap gap-1.5 px-2.5 py-2">
+                            {typeAssignments.map(a => {
+                              const node = hierarchyNodes.find(n => n.id === a.node_id);
+                              return (
+                                <span key={a.id} className="inline-flex items-center gap-1 pl-2 pr-1 py-0.5 rounded-full text-[11px] bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-300 border border-blue-200 dark:border-blue-800">
+                                  {node?.name ?? `#${a.node_id}`}
+                                  <button
+                                    type="button"
+                                    className="hover:bg-blue-200 dark:hover:bg-blue-800 rounded-full p-0.5 transition-colors"
+                                    onClick={async () => {
+                                      await authFetch(`/api/v1/hierarchy/user-assignments/${a.id}`, { method: 'DELETE' });
+                                      setUserNodeAssignments(prev => prev.filter(x => x.id !== a.id));
+                                    }}
+                                  >
+                                    <X className="h-2.5 w-2.5" />
+                                  </button>
+                                </span>
+                              );
+                            })}
+                          </div>
+                        )}
+
+                        {/* Inline node picker — expands when + is clicked */}
+                        {isExpanded && (
+                          <div className="border-t border-input dark:border-slate-700">
+                            <div className="flex items-center gap-2 px-2 py-1.5 border-b border-input dark:border-slate-700">
+                              <Input
+                                placeholder="Search nodes…"
+                                className="h-6 text-xs border-0 shadow-none focus-visible:ring-0 px-0 bg-transparent flex-1"
+                                value={nodeSearch}
+                                onChange={e => setNodeSearch(e.target.value)}
+                                autoFocus
+                              />
+                              {nodeAssignForm.node_ids.length > 0 && (
+                                <button
+                                  type="button"
+                                  className="text-[10px] text-muted-foreground hover:text-destructive shrink-0 whitespace-nowrap"
+                                  onClick={() => setNodeAssignForm(f => ({ ...f, node_ids: [] }))}
+                                >
+                                  Clear ({nodeAssignForm.node_ids.length})
+                                </button>
+                              )}
+                            </div>
+                            <div className="max-h-40 overflow-y-auto">
+                              {(() => {
+                                const filtered = hierarchyNodes.filter(n =>
+                                  n.type_id === ht.id &&
+                                  !alreadyAssignedIds.has(String(n.id)) &&
+                                  (nodeSearch === '' || n.name.toLowerCase().includes(nodeSearch.toLowerCase()) || n.code.toLowerCase().includes(nodeSearch.toLowerCase()))
+                                );
+                                if (filtered.length === 0) return (
+                                  <p className="text-xs text-muted-foreground text-center py-3">
+                                    {alreadyAssignedIds.size > 0 && nodeSearch === '' ? 'All nodes assigned' : 'No nodes found'}
+                                  </p>
+                                );
+                                return filtered.map(n => {
+                                  const depth = n.path ? n.path.split('.').length - 1 : 0;
+                                  const isSelected = nodeAssignForm.node_ids.includes(String(n.id));
+                                  return (
+                                    <label
+                                      key={n.id}
+                                      className={`flex items-center gap-2 px-2 py-1.5 cursor-pointer text-xs hover:bg-accent transition-colors ${isSelected ? 'bg-accent/50' : ''}`}
+                                    >
+                                      <input
+                                        type="checkbox"
+                                        className="h-3.5 w-3.5 shrink-0 accent-primary"
+                                        checked={isSelected}
+                                        onChange={() => setNodeAssignForm(f => ({
+                                          ...f,
+                                          node_ids: isSelected
+                                            ? f.node_ids.filter(x => x !== String(n.id))
+                                            : [...f.node_ids, String(n.id)],
+                                        }))}
+                                      />
+                                      <span className="flex items-center gap-1 flex-1 min-w-0" style={{ paddingLeft: `${depth * 10}px` }}>
+                                        {depth > 0 && <span className="text-muted-foreground text-[10px] shrink-0">└</span>}
+                                        <span className="truncate">{n.name}</span>
+                                        <span className="text-muted-foreground shrink-0">({n.code})</span>
+                                      </span>
+                                    </label>
+                                  );
+                                });
+                              })()}
+                            </div>
+                            {nodeAssignForm.node_ids.length > 0 && (
+                              <div className="px-2 py-1.5 border-t border-input dark:border-slate-700">
+                                <Button
+                                  type="button"
+                                  size="sm"
+                                  className="h-7 w-full text-xs"
+                                  disabled={addingNodeAssign}
+                                  onClick={async () => {
+                                    if (!selectedUserForEdit) return;
+                                    setAddingNodeAssign(true);
+                                    try {
+                                      const results = await Promise.all(
+                                        nodeAssignForm.node_ids.map(nid =>
+                                          authFetch('/api/v1/hierarchy/user-assignments', {
+                                            method: 'POST',
+                                            headers: { 'Content-Type': 'application/json' },
+                                            body: JSON.stringify({ user_id: selectedUserForEdit.id, node_id: Number(nid) }),
+                                          }).then(r => r.ok ? r.json() : null)
+                                        )
+                                      );
+                                      const added = results.filter(Boolean);
+                                      if (added.length > 0) {
+                                        setUserNodeAssignments(prev => [...prev, ...added]);
+                                        setNodeAssignForm(f => ({ ...f, node_ids: [], type_id: '' }));
+                                        setNodeSearch('');
+                                      }
+                                    } finally {
+                                      setAddingNodeAssign(false);
+                                    }
+                                  }}
+                                >
+                                  {addingNodeAssign
+                                    ? <span className="flex items-center gap-1.5"><span className="h-3 w-3 rounded-full border-2 border-current border-t-transparent animate-spin" />Adding…</span>
+                                    : `Add ${nodeAssignForm.node_ids.length} node${nodeAssignForm.node_ids.length > 1 ? 's' : ''}`
+                                  }
+                                </Button>
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
           </div>
-          <DialogFooter className="pt-4 border-t border-slate-200/80 dark:border-slate-700/60">
+          <DialogFooter className="pt-4 border-t border-slate-200/80 dark:border-slate-700/60 shrink-0">
             <Button variant="outline" onClick={() => setEditUserModalOpen(false)} className="dark:border-slate-600 dark:text-white dark:hover:bg-slate-700 rounded-xl">
               {t('common.cancel')}
             </Button>

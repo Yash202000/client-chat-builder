@@ -24,7 +24,36 @@ import {
   BarChart2,
   Tag,
   Loader2,
+  LayoutList,
+  LayoutGrid,
+  Target,
+  UserPlus,
 } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import {
   WhatsAppIcon,
   MessengerIcon,
@@ -38,6 +67,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { toast } from "@/hooks/use-toast";
+import { CustomFieldInput, CustomFieldDefinition, formatCustomFieldValue } from "@/components/CustomFieldInput";
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -45,6 +75,21 @@ interface ContactTag {
   id: number;
   name: string;
   color?: string;
+}
+
+interface WorkflowStatus {
+  id: number;
+  name: string;
+  color: string;
+  category: string;
+}
+
+interface WorkflowTransition {
+  id: number;
+  name: string;
+  from_status_id?: number | null;
+  to_status_id: number;
+  screen_fields?: { field: string; label: string; required: boolean }[];
 }
 
 interface Contact {
@@ -58,6 +103,10 @@ interface Contact {
   created_at?: string;
   updated_at?: string;
   tags?: ContactTag[];
+  has_lead?: boolean;
+  wf_status?: WorkflowStatus;
+  available_transitions?: WorkflowTransition[];
+  custom_fields?: Record<string, any>;
 }
 
 interface Session {
@@ -537,6 +586,33 @@ export default function ContactHubPage() {
   const { makeCall, callState } = useTwilioCall();
   const queryClient = useQueryClient();
 
+  // View mode
+  const [viewMode, setViewMode] = useState<"hub" | "list">("hub");
+
+  // Bulk selection
+  const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
+  const [bulkConverting, setBulkConverting] = useState(false);
+
+  // Contact workflow transition
+  const [contactTransition, setContactTransition] = useState<{ contact: Contact; transition: WorkflowTransition } | null>(null);
+  const [contactTransitionFields, setContactTransitionFields] = useState<Record<string, any>>({});
+  const [contactTransitionSaving, setContactTransitionSaving] = useState(false);
+
+  // Custom field definitions for contacts
+  const { data: contactCustomFieldDefs = [] } = useQuery<CustomFieldDefinition[]>({
+    queryKey: ["custom-field-defs", "contact"],
+    queryFn: async () => {
+      const res = await authFetch("/api/v1/custom-fields/?entity_type=contact");
+      return res.ok ? res.json() : [];
+    },
+  });
+
+  // Convert to lead state
+  const [convertDialogOpen, setConvertDialogOpen] = useState(false);
+  const [convertingContact, setConvertingContact] = useState<Contact | null>(null);
+  const [leadData, setLeadData] = useState({ source: "", deal_value: "", notes: "" });
+  const [converting, setConverting] = useState(false);
+
   // Left panel state
   const [search, setSearch] = useState("");
   const [stageFilter, setStageFilter] = useState("");
@@ -560,9 +636,15 @@ export default function ContactHubPage() {
   const { data: contacts = [], isLoading: isLoadingContacts } = useQuery<Contact[]>({
     queryKey: ["contacts"],
     queryFn: async () => {
-      const res = await authFetch(`/api/v1/contacts/?limit=500`);
-      if (!res.ok) throw new Error("Failed to fetch contacts");
-      return res.json();
+      const [contactsRes, leadsRes] = await Promise.all([
+        authFetch(`/api/v1/contacts/?limit=500`),
+        authFetch(`/api/v1/leads/?limit=500`),
+      ]);
+      if (!contactsRes.ok) throw new Error("Failed to fetch contacts");
+      const contactsData: Contact[] = await contactsRes.json();
+      const leadsData: { contact_id: number }[] = leadsRes.ok ? await leadsRes.json() : [];
+      const leadContactIds = new Set(leadsData.map((l) => l.contact_id));
+      return contactsData.map((c) => ({ ...c, has_lead: leadContactIds.has(c.id) }));
     },
   });
 
@@ -756,6 +838,87 @@ export default function ContactHubPage() {
     return sessionsByChannel[tab]?.length ?? 0;
   };
 
+  const toggleSelect = (id: number) =>
+    setSelectedIds((prev) => { const s = new Set(prev); s.has(id) ? s.delete(id) : s.add(id); return s; });
+
+  const toggleSelectAll = () => {
+    const eligible = filteredContacts.filter((c) => !c.has_lead).map((c) => c.id);
+    const allSelected = eligible.every((id) => selectedIds.has(id));
+    setSelectedIds(allSelected ? new Set() : new Set(eligible));
+  };
+
+  const bulkConvertToLead = async () => {
+    const toConvert = filteredContacts.filter((c) => selectedIds.has(c.id) && !c.has_lead);
+    if (!toConvert.length) return;
+    setBulkConverting(true);
+    let success = 0;
+    await Promise.allSettled(
+      toConvert.map((c) =>
+        authFetch("/api/v1/leads/", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ contact_id: c.id }),
+        }).then((r) => { if (r.ok) success++; })
+      )
+    );
+    toast({ title: `${success} contact${success !== 1 ? "s" : ""} converted to lead` });
+    setSelectedIds(new Set());
+    setBulkConverting(false);
+    queryClient.invalidateQueries({ queryKey: ["contacts"] });
+  };
+
+  const submitContactTransition = async () => {
+    if (!contactTransition) return;
+    setContactTransitionSaving(true);
+    try {
+      const { contact, transition } = contactTransition;
+      const res = await authFetch(`/api/v1/contacts/${contact.id}/transition`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ transition_id: transition.id, field_values: contactTransitionFields }),
+      });
+      if (!res.ok) throw new Error();
+      setContactTransition(null);
+      queryClient.invalidateQueries({ queryKey: ["contacts"] });
+      toast({ title: "Status updated" });
+    } catch {
+      toast({ title: "Failed to update status", variant: "destructive" });
+    } finally {
+      setContactTransitionSaving(false);
+    }
+  };
+
+  const openConvertDialog = (contact: Contact) => {
+    setConvertingContact(contact);
+    setLeadData({ source: "", deal_value: "", notes: "" });
+    setConvertDialogOpen(true);
+  };
+
+  const submitConversion = async () => {
+    if (!convertingContact) return;
+    setConverting(true);
+    try {
+      await authFetch("/api/v1/leads/", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          contact_id: convertingContact.id,
+          source: leadData.source || null,
+          deal_value: leadData.deal_value ? parseFloat(leadData.deal_value) : null,
+          notes: leadData.notes || null,
+        }),
+      });
+      toast({ title: `${convertingContact.name || "Contact"} converted to lead` });
+      setConvertDialogOpen(false);
+      setConvertingContact(null);
+      queryClient.invalidateQueries({ queryKey: ["contacts"] });
+    } catch {
+      toast({ title: "Failed to convert to lead", variant: "destructive" });
+    } finally {
+      setConverting(false);
+    }
+  };
+
   const selectedSessionId = rightPanel.type === "session" ? rightPanel.sessionId : null;
   const selectedCall = rightPanel.type === "call" ? rightPanel.call : null;
   const isLoadingMiddle = isLoadingSessions || isLoadingCalls;
@@ -763,7 +926,216 @@ export default function ContactHubPage() {
   // ── Render ─────────────────────────────────────────────────────────────────
 
   return (
-    <div className="flex h-full overflow-hidden bg-background">
+    <div className="flex flex-col h-full overflow-hidden bg-background">
+
+      {/* ── Top toolbar ─────────────────────────────────────────────────────── */}
+      <div className="flex items-center justify-between px-4 py-2 border-b border-border bg-card flex-shrink-0">
+        <div className="flex items-center gap-2">
+          <User className="w-4 h-4 text-muted-foreground" />
+          <h1 className="text-sm font-semibold">Contact Hub</h1>
+          <span className="text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-muted text-muted-foreground">
+            {contacts.length}
+          </span>
+        </div>
+        <div className="flex items-center gap-1 bg-muted rounded-md p-0.5">
+          <button
+            onClick={() => setViewMode("hub")}
+            className={cn(
+              "flex items-center gap-1.5 px-2.5 py-1 rounded text-xs font-medium transition-colors",
+              viewMode === "hub" ? "bg-background shadow-sm text-foreground" : "text-muted-foreground hover:text-foreground"
+            )}
+          >
+            <LayoutGrid className="w-3.5 h-3.5" /> Hub
+          </button>
+          <button
+            onClick={() => setViewMode("list")}
+            className={cn(
+              "flex items-center gap-1.5 px-2.5 py-1 rounded text-xs font-medium transition-colors",
+              viewMode === "list" ? "bg-background shadow-sm text-foreground" : "text-muted-foreground hover:text-foreground"
+            )}
+          >
+            <LayoutList className="w-3.5 h-3.5" /> List
+          </button>
+        </div>
+      </div>
+
+      {/* ── List View ───────────────────────────────────────────────────────── */}
+      {viewMode === "list" && (
+        <div className="flex-1 overflow-auto relative">
+          {/* Search + filter bar */}
+          <div className="flex items-center gap-3 px-4 py-3 border-b border-border bg-card sticky top-0 z-10">
+            <div className="relative flex-1 max-w-xs">
+              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground pointer-events-none" />
+              <Input
+                placeholder="Search contacts…"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="pl-8 h-8 text-xs"
+              />
+            </div>
+            <select
+              value={stageFilter}
+              onChange={(e) => setStageFilter(e.target.value)}
+              className="appearance-none text-xs h-8 pl-2.5 pr-7 rounded-md border border-input bg-background text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+            >
+              <option value="">All stages</option>
+              {Object.entries(STAGE_CONFIG).map(([key, cfg]) => (
+                <option key={key} value={key}>{cfg.label}</option>
+              ))}
+            </select>
+            <span className="text-xs text-muted-foreground ml-auto">{filteredContacts.length} contacts</span>
+          </div>
+
+          {/* Bulk action bar */}
+          {selectedIds.size > 0 && (
+            <div className="sticky top-[57px] z-20 flex items-center gap-3 px-4 py-2 bg-primary text-primary-foreground text-sm font-medium shadow-md">
+              <span>{selectedIds.size} selected</span>
+              <Button
+                size="sm"
+                variant="secondary"
+                className="h-7 text-xs gap-1.5 ml-auto"
+                disabled={bulkConverting}
+                onClick={bulkConvertToLead}
+              >
+                {bulkConverting ? <Loader2 className="w-3 h-3 animate-spin" /> : <Target className="w-3 h-3" />}
+                Convert to Lead
+              </Button>
+              <button
+                className="text-primary-foreground/70 hover:text-primary-foreground"
+                onClick={() => setSelectedIds(new Set())}
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+          )}
+
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="w-10 pr-0">
+                  <Checkbox
+                    checked={
+                      filteredContacts.filter((c) => !c.has_lead).length > 0 &&
+                      filteredContacts.filter((c) => !c.has_lead).every((c) => selectedIds.has(c.id))
+                    }
+                    onCheckedChange={toggleSelectAll}
+                    aria-label="Select all"
+                  />
+                </TableHead>
+                <TableHead className="w-[200px]">Name</TableHead>
+                <TableHead>Email</TableHead>
+                <TableHead>Phone</TableHead>
+                <TableHead>Stage</TableHead>
+                <TableHead>Last Active</TableHead>
+                <TableHead>Tags</TableHead>
+                <TableHead className="text-right">Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {isLoadingContacts ? (
+                [...Array(8)].map((_, i) => (
+                  <TableRow key={i}>
+                    {[...Array(8)].map((__, j) => (
+                      <TableCell key={j}><div className="h-4 bg-muted rounded animate-pulse w-3/4" /></TableCell>
+                    ))}
+                  </TableRow>
+                ))
+              ) : filteredContacts.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={8} className="text-center text-muted-foreground py-12 text-sm">
+                    No contacts found
+                  </TableCell>
+                </TableRow>
+              ) : (
+                filteredContacts.map((contact) => {
+                  const initials = getInitials(contact.name, contact.email);
+                  const stageCfg = contact.lifecycle_stage ? STAGE_CONFIG[contact.lifecycle_stage] : null;
+                  const lastActivity = contact.last_contacted_at || contact.updated_at;
+                  const isSelected = selectedIds.has(contact.id);
+                  return (
+                    <TableRow
+                      key={contact.id}
+                      className={cn("group", isSelected && "bg-muted/50")}
+                    >
+                      <TableCell className="pr-0">
+                        <Checkbox
+                          checked={isSelected}
+                          disabled={!!contact.has_lead}
+                          onCheckedChange={() => !contact.has_lead && toggleSelect(contact.id)}
+                          aria-label={`Select ${contact.name || "contact"}`}
+                        />
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-2.5">
+                          <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center text-xs font-semibold flex-shrink-0">
+                            {initials}
+                          </div>
+                          <span className="font-medium text-sm truncate max-w-[130px]">
+                            {contact.name || contact.email || "Unknown"}
+                          </span>
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-sm text-muted-foreground">{contact.email || "—"}</TableCell>
+                      <TableCell className="text-sm text-muted-foreground">{contact.phone_number || "—"}</TableCell>
+                      <TableCell>
+                        {stageCfg ? (
+                          <span className={cn("text-[10px] px-1.5 py-0.5 rounded-full font-medium", stageCfg.cls)}>
+                            {stageCfg.label}
+                          </span>
+                        ) : <span className="text-muted-foreground text-xs">—</span>}
+                      </TableCell>
+                      <TableCell className="text-xs text-muted-foreground">
+                        {lastActivity ? formatRelative(lastActivity) : "—"}
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex flex-wrap gap-1">
+                          {(contact.tags ?? []).slice(0, 3).map((tag) => (
+                            <span key={tag.id} className="text-[10px] px-1.5 py-0.5 rounded-full bg-muted text-muted-foreground"
+                              style={tag.color ? { backgroundColor: tag.color + "22", color: tag.color } : undefined}>
+                              {tag.name}
+                            </span>
+                          ))}
+                          {(contact.tags?.length ?? 0) > 3 && (
+                            <span className="text-[10px] text-muted-foreground">+{(contact.tags?.length ?? 0) - 3}</span>
+                          )}
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <Button
+                            size="sm" variant="ghost"
+                            className="h-7 text-xs gap-1"
+                            onClick={() => { setViewMode("hub"); handleSelectContact(contact.id); }}
+                          >
+                            <LayoutGrid className="w-3 h-3" /> Hub
+                          </Button>
+                          {!contact.has_lead ? (
+                            <Button
+                              size="sm" variant="outline"
+                              className="h-7 text-xs gap-1 text-blue-600 border-blue-200 hover:bg-blue-50 dark:text-blue-400 dark:border-blue-800 dark:hover:bg-blue-900/20"
+                              onClick={() => openConvertDialog(contact)}
+                            >
+                              <Target className="w-3 h-3" /> Convert to Lead
+                            </Button>
+                          ) : (
+                            <span className="text-[10px] px-2 py-0.5 rounded-full bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 font-medium">
+                              Lead
+                            </span>
+                          )}
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })
+              )}
+            </TableBody>
+          </Table>
+        </div>
+      )}
+
+      {/* ── Hub View (3-panel) ───────────────────────────────────────────────── */}
+      {viewMode === "hub" && (
+      <div className="flex flex-1 overflow-hidden">
 
       {/* ── Left Panel: Contact List ───────────────────────────────────────── */}
       <div className="w-64 flex-shrink-0 flex flex-col border-r border-border bg-card">
@@ -856,15 +1228,24 @@ export default function ContactHubPage() {
                       </button>
                     )}
                   </div>
-                  {selectedContact.lifecycle_stage && !isEditing && (
-                    <span className={cn(
-                      "text-[10px] px-1.5 py-0.5 rounded-full font-medium",
-                      STAGE_CONFIG[selectedContact.lifecycle_stage]?.cls ??
-                        "bg-muted text-foreground"
-                    )}>
-                      {STAGE_CONFIG[selectedContact.lifecycle_stage]?.label ?? selectedContact.lifecycle_stage}
-                    </span>
-                  )}
+                  <div className="flex items-center gap-1 flex-wrap mt-0.5">
+                    {selectedContact.wf_status && !isEditing && (
+                      <span
+                        className="text-[10px] px-1.5 py-0.5 rounded-full font-medium text-white"
+                        style={{ backgroundColor: selectedContact.wf_status.color }}
+                      >
+                        {selectedContact.wf_status.name}
+                      </span>
+                    )}
+                    {selectedContact.lifecycle_stage && !isEditing && (
+                      <span className={cn(
+                        "text-[10px] px-1.5 py-0.5 rounded-full font-medium",
+                        STAGE_CONFIG[selectedContact.lifecycle_stage]?.cls ?? "bg-muted text-foreground"
+                      )}>
+                        {STAGE_CONFIG[selectedContact.lifecycle_stage]?.label ?? selectedContact.lifecycle_stage}
+                      </span>
+                    )}
+                  </div>
                 </div>
               </div>
 
@@ -962,17 +1343,48 @@ export default function ContactHubPage() {
                   )}
 
                   {/* Quick actions */}
-                  {selectedContact.phone_number && (
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="h-7 text-xs gap-1.5 mb-3"
-                      onClick={handleInitiateCall}
-                      disabled={callState !== "idle"}
-                    >
-                      <Phone className="w-3 h-3" />
-                      Call
-                    </Button>
+                  <div className="flex flex-wrap gap-1.5 mb-3">
+                    {selectedContact.phone_number && (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="h-7 text-xs gap-1.5"
+                        onClick={handleInitiateCall}
+                        disabled={callState !== "idle"}
+                      >
+                        <Phone className="w-3 h-3" />
+                        Call
+                      </Button>
+                    )}
+                    {!selectedContact.has_lead ? (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="h-7 text-xs gap-1.5 text-blue-600 border-blue-200 hover:bg-blue-50 dark:text-blue-400 dark:border-blue-800 dark:hover:bg-blue-900/20"
+                        onClick={() => openConvertDialog(selectedContact)}
+                      >
+                        <Target className="w-3 h-3" />
+                        Convert to Lead
+                      </Button>
+                    ) : (
+                      <span className="h-7 flex items-center text-[10px] px-2 rounded-full bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 font-medium gap-1">
+                        <Target className="w-2.5 h-2.5" /> Lead
+                      </span>
+                    )}
+                  </div>
+                  {/* Workflow transitions */}
+                  {(selectedContact.available_transitions ?? []).length > 0 && (
+                    <div className="flex flex-wrap gap-1 mb-3">
+                      {selectedContact.available_transitions!.map(t => (
+                        <button
+                          key={t.id}
+                          onClick={() => { setContactTransition({ contact: selectedContact, transition: t }); setContactTransitionFields({}); }}
+                          className="text-[10px] px-2 py-0.5 rounded-full border border-border bg-muted hover:bg-accent text-foreground font-medium transition-colors"
+                        >
+                          {t.name}
+                        </button>
+                      ))}
+                    </div>
                   )}
                 </>
               )}
@@ -1007,6 +1419,19 @@ export default function ContactHubPage() {
                 </div>
               )}
             </div>
+
+            {/* Custom Fields */}
+            {!isEditing && contactCustomFieldDefs.length > 0 && selectedContact?.custom_fields && Object.keys(selectedContact.custom_fields).length > 0 && (
+              <div className="px-3 py-2 border-t border-border space-y-1">
+                <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Custom Fields</p>
+                {contactCustomFieldDefs.map(def => (
+                  <div key={def.id} className="flex justify-between text-xs">
+                    <span className="text-muted-foreground">{def.label}</span>
+                    <span className="font-medium">{formatCustomFieldValue(selectedContact.custom_fields?.[def.name], def)}</span>
+                  </div>
+                ))}
+              </div>
+            )}
 
             {/* Channel tabs */}
             {channelTabs.length > 0 && (
@@ -1223,6 +1648,109 @@ export default function ContactHubPage() {
           </div>
         )}
       </div>
+      </div>
+      )}
+
+      {/* ── Contact Transition Dialog ────────────────────────────────────────── */}
+      <Dialog open={!!contactTransition} onOpenChange={() => setContactTransition(null)}>
+        <DialogContent className="sm:max-w-sm">
+          <DialogHeader>
+            <DialogTitle>{contactTransition?.transition.name ?? "Update Status"}</DialogTitle>
+          </DialogHeader>
+          {(contactTransition?.transition.screen_fields ?? []).map(f => {
+            const cfDef = contactCustomFieldDefs.find(d => d.name === f.field);
+            return (
+              <div key={f.field} className="space-y-1.5">
+                <Label className="text-sm">{f.label}{f.required && <span className="text-red-500 ml-1">*</span>}</Label>
+                {cfDef ? (
+                  <CustomFieldInput
+                    definition={cfDef}
+                    value={contactTransitionFields[f.field] ?? null}
+                    onChange={v => setContactTransitionFields(p => ({ ...p, [f.field]: v }))}
+                  />
+                ) : (
+                  <Input
+                    value={contactTransitionFields[f.field] ?? ""}
+                    onChange={e => setContactTransitionFields(p => ({ ...p, [f.field]: e.target.value }))}
+                  />
+                )}
+              </div>
+            );
+          })}
+          <DialogFooter>
+            <Button variant="outline" size="sm" onClick={() => setContactTransition(null)}>Cancel</Button>
+            <Button size="sm" onClick={submitContactTransition} disabled={contactTransitionSaving}>
+              {contactTransitionSaving && <Loader2 className="w-3 h-3 mr-1 animate-spin" />}
+              Confirm
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* ── Convert to Lead Dialog ───────────────────────────────────────────── */}
+      <Dialog open={convertDialogOpen} onOpenChange={setConvertDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Target className="w-4 h-4 text-blue-500" />
+              Convert to Lead
+            </DialogTitle>
+          </DialogHeader>
+          {convertingContact && (
+            <div className="space-y-4 py-1">
+              <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/50">
+                <div className="w-9 h-9 rounded-full bg-muted flex items-center justify-center text-sm font-semibold">
+                  {getInitials(convertingContact.name, convertingContact.email)}
+                </div>
+                <div>
+                  <p className="text-sm font-medium">{convertingContact.name || "Unnamed"}</p>
+                  <p className="text-xs text-muted-foreground">{convertingContact.email || convertingContact.phone_number || ""}</p>
+                </div>
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs">Lead Source</Label>
+                <Select value={leadData.source} onValueChange={(v) => setLeadData((d) => ({ ...d, source: v }))}>
+                  <SelectTrigger className="h-8 text-xs">
+                    <SelectValue placeholder="Select source…" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {["website", "referral", "social_media", "email_campaign", "cold_call", "event", "partner", "other"].map((s) => (
+                      <SelectItem key={s} value={s} className="text-xs capitalize">{s.replace("_", " ")}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs">Deal Value (optional)</Label>
+                <Input
+                  type="number"
+                  placeholder="0.00"
+                  value={leadData.deal_value}
+                  onChange={(e) => setLeadData((d) => ({ ...d, deal_value: e.target.value }))}
+                  className="h-8 text-xs"
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs">Notes (optional)</Label>
+                <Textarea
+                  placeholder="Add any notes about this lead…"
+                  value={leadData.notes}
+                  onChange={(e) => setLeadData((d) => ({ ...d, notes: e.target.value }))}
+                  className="text-xs resize-none min-h-[70px]"
+                />
+              </div>
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" size="sm" onClick={() => setConvertDialogOpen(false)}>Cancel</Button>
+            <Button size="sm" onClick={submitConversion} disabled={converting} className="gap-1.5">
+              {converting ? <Loader2 className="w-3 h-3 animate-spin" /> : <UserPlus className="w-3 h-3" />}
+              Convert to Lead
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
     </div>
   );
 }

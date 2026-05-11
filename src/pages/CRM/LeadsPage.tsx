@@ -67,6 +67,15 @@ import { TagSelector } from '@/components/TagSelector';
 import CsvImportDialog from '@/components/CsvImportDialog';
 import { downloadCsv } from '@/utils/csvExport';
 
+interface WorkflowStatus { id: number; name: string; color: string; category: string; }
+interface WorkflowTransition {
+  id: number; name: string;
+  from_status_id?: number | null; to_status_id: number;
+  to_status?: WorkflowStatus;
+  screen_fields?: Array<{ field: string; label: string; required: boolean }>;
+  post_actions?: Record<string, any>;
+}
+
 interface Lead {
   id: number;
   contact_id: number;
@@ -76,6 +85,8 @@ interface Lead {
     phone_number?: string;
   };
   stage: string;
+  status?: WorkflowStatus;
+  available_transitions?: WorkflowTransition[];
   score: number;
   deal_value?: number;
   qualification_status: string;
@@ -87,12 +98,7 @@ interface Lead {
 
 interface LeadStats {
   total_leads: number;
-  lead_count: number;
-  mql_count: number;
-  sql_count: number;
-  opportunity_count: number;
-  customer_count: number;
-  lost_count: number;
+  by_status: Record<string, number>;
   avg_score: number;
   total_pipeline_value: number;
   qualified_count: number;
@@ -107,32 +113,73 @@ interface Contact {
   company?: string;
 }
 
-const STAGE_LABELS: Record<string, string> = {
-  lead: 'Lead',
-  mql: 'MQL',
-  sql: 'SQL',
-  opportunity: 'Opportunity',
-  customer: 'Customer',
-  lost: 'Lost',
-};
 
-const STAGE_COLORS: Record<string, string> = {
-  lead: 'bg-muted text-muted-foreground border border-border',
-  mql: 'bg-blue-500/10 border border-blue-500/20 text-blue-600 dark:text-blue-400',
-  sql: 'bg-violet-500/10 border border-violet-500/20 text-violet-600 dark:text-violet-400',
-  opportunity: 'bg-violet-500/10 border border-violet-500/20 text-violet-600 dark:text-violet-400',
-  customer: 'bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400',
-  lost: 'bg-red-500/10 border border-red-500/20 text-red-600 dark:text-red-400',
-};
+// ── Inline Transition Dialog (reused from ticket system) ──────────────────────
+function TransitionDropDialog({ open, transition, onClose, onSubmit }: {
+  open: boolean;
+  transition: WorkflowTransition;
+  onClose: () => void;
+  onSubmit: (fieldValues: Record<string, any>, comment: string) => Promise<void>;
+}) {
+  const [comment, setComment] = useState('');
+  const [fieldValues, setFieldValues] = useState<Record<string, any>>({});
+  const [loading, setLoading] = useState(false);
+  const setFv = (k: string, v: any) => setFieldValues(p => ({ ...p, [k]: v }));
+  const fields = transition.screen_fields || [];
+  const otherFields = fields.filter(f => f.field !== 'comment');
+  const hasComment = fields.some(f => f.field === 'comment') || fields.length === 0;
 
-const STAGE_GRADIENTS: Record<string, string> = {
-  lead: 'from-slate-500 to-slate-600',
-  mql: 'from-blue-500 to-blue-600',
-  sql: 'from-purple-500 to-purple-600',
-  opportunity: 'from-violet-500 to-violet-600',
-  customer: 'from-green-500 to-green-600',
-  lost: 'from-red-500 to-red-600',
-};
+  const submit = async () => {
+    for (const sf of fields) {
+      if (sf.required && sf.field !== 'comment' && !fieldValues[sf.field]) { alert(`${sf.label} is required`); return; }
+      if (sf.required && sf.field === 'comment' && !comment.trim()) { alert('Comment is required'); return; }
+    }
+    setLoading(true);
+    try { await onSubmit(fieldValues, comment); }
+    finally { setLoading(false); }
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={v => { if (!v) onClose(); }}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            {transition.name}
+            {transition.to_status && (
+              <span className="inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full text-white ml-2"
+                style={{ backgroundColor: transition.to_status.color }}>
+                <span className="w-1.5 h-1.5 rounded-full bg-white/60" />
+                {transition.to_status.name}
+              </span>
+            )}
+          </DialogTitle>
+        </DialogHeader>
+        <div className="space-y-4 py-2">
+          {otherFields.map(sf => (
+            <div key={sf.field} className="space-y-1.5">
+              <Label className="text-sm font-medium">{sf.label}{sf.required && <span className="text-destructive ml-1">*</span>}</Label>
+              <Input value={fieldValues[sf.field] || ''} onChange={e => setFv(sf.field, e.target.value)} />
+            </div>
+          ))}
+          {hasComment && (
+            <div className="space-y-1.5">
+              <Label className="text-sm font-medium">Comment <span className="text-muted-foreground font-normal text-xs">(optional)</span></Label>
+              <Textarea placeholder="Add a comment…" rows={3} value={comment} onChange={e => setComment(e.target.value)} className="resize-none" />
+            </div>
+          )}
+        </div>
+        <div className="flex justify-end gap-2 pt-2">
+          <Button variant="outline" onClick={onClose}>Cancel</Button>
+          <Button onClick={submit} disabled={loading} className="text-white"
+            style={transition.to_status ? { backgroundColor: transition.to_status.color } : {}}>
+            {loading && <Loader2 className="w-4 h-4 animate-spin mr-2" />}
+            {transition.name}
+          </Button>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
 
 export default function LeadsPage() {
   const navigate = useNavigate();
@@ -142,8 +189,13 @@ export default function LeadsPage() {
   const [stats, setStats] = useState<LeadStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedStage, setSelectedStage] = useState<string>('all');
+  const [selectedStatusId, setSelectedStatusId] = useState<string>('all');
   const [filterTagIds, setFilterTagIds] = useState<number[]>([]);
+  // Workflow
+  const [workflowStatuses, setWorkflowStatuses] = useState<WorkflowStatus[]>([]);
+  const [workflowTransitions, setWorkflowTransitions] = useState<WorkflowTransition[]>([]);
+  // Transition dialog
+  const [pendingDrop, setPendingDrop] = useState<{ leadId: number; transition: WorkflowTransition } | null>(null);
   const [view, setView] = useState<'kanban' | 'table'>('kanban');
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [createMode, setCreateMode] = useState<'existing' | 'new'>('existing');
@@ -164,9 +216,10 @@ export default function LeadsPage() {
   });
 
   useEffect(() => {
+    fetchWorkflow();
     fetchLeads();
     fetchStats();
-  }, [selectedStage, filterTagIds]);
+  }, [selectedStatusId, filterTagIds]);
 
   useEffect(() => {
     if (createDialogOpen) {
@@ -174,26 +227,27 @@ export default function LeadsPage() {
     }
   }, [createDialogOpen]);
 
+  const fetchWorkflow = async () => {
+    try {
+      const token = localStorage.getItem('accessToken');
+      const res = await axios.get('/api/v1/leads/workflow', { headers: { Authorization: `Bearer ${token}` } });
+      setWorkflowStatuses(res.data.statuses || []);
+      setWorkflowTransitions(res.data.transitions || []);
+    } catch { /* silently ignore — falls back to empty */ }
+  };
+
   const fetchLeads = async () => {
     try {
       const token = localStorage.getItem('accessToken');
       const headers = { Authorization: `Bearer ${token}` };
       const params: any = {};
-      if (selectedStage !== 'all') {
-        params.stage = selectedStage;
-      }
-      if (filterTagIds.length > 0) {
-        params.tag_ids = filterTagIds;
-      }
+      if (selectedStatusId !== 'all') params.status_id = selectedStatusId;
+      if (filterTagIds.length > 0) params.tag_ids = filterTagIds;
       const response = await axios.get('/api/v1/leads/', { params, headers, paramsSerializer: { indexes: null } });
       setLeads(response.data);
     } catch (error) {
       console.error('Error fetching leads:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to fetch leads',
-        variant: 'destructive',
-      });
+      toast({ title: 'Error', description: 'Failed to fetch leads', variant: 'destructive' });
     } finally {
       setLoading(false);
     }
@@ -325,35 +379,63 @@ export default function LeadsPage() {
     ]);
   };
 
-  const leadsByStage = Object.keys(STAGE_LABELS).reduce((acc, stage) => {
-    acc[stage] = filteredLeads.filter((lead) => lead.stage === stage);
+  const leadsByStatus = workflowStatuses.reduce((acc, s) => {
+    acc[s.id] = filteredLeads.filter(lead => lead.status?.id === s.id);
     return acc;
-  }, {} as Record<string, Lead[]>);
+  }, {} as Record<number, Lead[]>);
 
-  const handleDragEnd = useCallback(async (result: DropResult) => {
-    const { destination, source, draggableId } = result;
-    if (!destination) return;
-    if (destination.droppableId === source.droppableId && destination.index === source.index) return;
-
-    const leadId = parseInt(draggableId.replace('lead-', ''));
-    const newStage = destination.droppableId;
-
-    setLeads((prevLeads) =>
-      prevLeads.map((lead) => (lead.id === leadId ? { ...lead, stage: newStage } : lead))
-    );
-
+  const applyStatusChange = async (leadId: number, statusId: number, statusName: string) => {
     try {
       const token = localStorage.getItem('accessToken');
-      const headers = { Authorization: `Bearer ${token}` };
-      await axios.put(`/api/v1/leads/${leadId}/stage`, { stage: newStage }, { headers });
-      toast({ title: 'Success', description: `Lead moved to ${STAGE_LABELS[newStage]}` });
+      await axios.put(`/api/v1/leads/${leadId}/stage`, { status_id: statusId }, { headers: { Authorization: `Bearer ${token}` } });
+      setLeads(prev => prev.map(l => l.id === leadId ? { ...l, status: workflowStatuses.find(s => s.id === statusId) } : l));
+      toast({ title: 'Success', description: `Lead moved to ${statusName}` });
       fetchStats();
-    } catch (error) {
-      console.error('Error updating lead stage:', error);
+    } catch {
       fetchLeads();
-      toast({ title: 'Error', description: 'Failed to update lead stage', variant: 'destructive' });
+      toast({ title: 'Error', description: 'Failed to update lead status', variant: 'destructive' });
     }
-  }, [toast]);
+  };
+
+  const submitTransitionDrop = async (fieldValues: Record<string, any>, comment: string) => {
+    if (!pendingDrop) return;
+    try {
+      const token = localStorage.getItem('accessToken');
+      await axios.post(`/api/v1/leads/${pendingDrop.leadId}/transition`, {
+        transition_id: pendingDrop.transition.id,
+        comment: comment || undefined,
+        field_values: Object.keys(fieldValues).length > 0 ? fieldValues : undefined,
+      }, { headers: { Authorization: `Bearer ${token}` } });
+      toast({ title: 'Success', description: `Lead moved to ${pendingDrop.transition.to_status?.name}` });
+      setPendingDrop(null);
+      fetchLeads(); fetchStats();
+    } catch (e: any) {
+      toast({ title: 'Error', description: e.response?.data?.detail || 'Transition failed', variant: 'destructive' });
+    }
+  };
+
+  const handleDragEnd = useCallback((result: DropResult) => {
+    const { destination, source, draggableId } = result;
+    if (!destination || destination.droppableId === source.droppableId) return;
+
+    const leadId = parseInt(draggableId.replace('lead-', ''));
+    const newStatusId = parseInt(destination.droppableId);
+    const newStatus = workflowStatuses.find(s => s.id === newStatusId);
+    const lead = leads.find(l => l.id === leadId);
+    if (!lead || !newStatus) return;
+
+    const transition = workflowTransitions.find(t =>
+      (t.from_status_id === lead.status?.id || t.from_status_id == null) && t.to_status_id === newStatusId
+    );
+    const hasFields = transition?.screen_fields && transition.screen_fields.length > 0;
+    const hasPostActions = transition?.post_actions && Object.keys(transition.post_actions).length > 0;
+
+    if (transition && (hasFields || hasPostActions)) {
+      setPendingDrop({ leadId, transition });
+    } else {
+      applyStatusChange(leadId, newStatusId, newStatus.name);
+    }
+  }, [leads, workflowStatuses, workflowTransitions]);
 
   if (loading) {
     return (
@@ -383,7 +465,7 @@ export default function LeadsPage() {
           </span>
           <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-violet-500/10 border border-violet-500/20 text-xs font-semibold text-violet-600 dark:text-violet-400">
             <Percent className="h-3.5 w-3.5" />
-            {stats?.total_leads ? (((stats?.customer_count || 0) / stats.total_leads) * 100).toFixed(1) : 0}% Conv.
+            {stats?.qualified_count || 0} Qualified
           </span>
         </div>
         {/* Actions */}
@@ -431,14 +513,19 @@ export default function LeadsPage() {
             className="pl-8 h-8 text-sm bg-muted/40 border-border w-full"
           />
         </div>
-        <Select value={selectedStage} onValueChange={setSelectedStage}>
+        <Select value={selectedStatusId} onValueChange={setSelectedStatusId}>
           <SelectTrigger className="w-full sm:w-40 h-8 text-sm bg-muted/40 border-border">
-            <SelectValue placeholder={t('crm.leads.filters.byStage')} />
+            <SelectValue placeholder="Filter by status" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">{t('crm.leads.filters.all')}</SelectItem>
-            {Object.entries(STAGE_LABELS).map(([value, label]) => (
-              <SelectItem key={value} value={value}>{t(`crm.leads.stages.${value}`, label)}</SelectItem>
+            <SelectItem value="all">All Statuses</SelectItem>
+            {workflowStatuses.map(s => (
+              <SelectItem key={s.id} value={String(s.id)}>
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: s.color }} />
+                  {s.name}
+                </div>
+              </SelectItem>
             ))}
           </SelectContent>
         </Select>
@@ -476,22 +563,32 @@ export default function LeadsPage() {
         </div>
       </div>
 
-      {/* Kanban View - PRESERVE ALL drag-drop logic exactly */}
+      {/* Transition Dialog */}
+      {pendingDrop && (
+        <TransitionDropDialog
+          open={!!pendingDrop}
+          transition={pendingDrop.transition}
+          onClose={() => setPendingDrop(null)}
+          onSubmit={submitTransitionDrop}
+        />
+      )}
+
+      {/* Kanban View */}
       {view === 'kanban' && (
         <DragDropContext onDragEnd={handleDragEnd}>
-          <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-3 flex-1">
-            {Object.entries(STAGE_LABELS).map(([stage, label]) => (
-              <div key={stage} className="flex flex-col min-h-0">
+          <div className="flex gap-3 flex-1 overflow-x-auto pb-2">
+            {workflowStatuses.map(status => (
+              <div key={status.id} className="flex flex-col min-h-0 w-52 flex-shrink-0">
                 <div className="flex items-center justify-between px-1 mb-2">
                   <div className="flex items-center gap-1.5">
-                    <div className={`w-2 h-2 rounded-full bg-gradient-to-r ${STAGE_GRADIENTS[stage]}`} />
-                    <span className="font-semibold text-xs text-foreground">{t(`crm.leads.stages.${stage}`, label)}</span>
+                    <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: status.color }} />
+                    <span className="font-semibold text-xs text-foreground">{status.name}</span>
                   </div>
                   <span className="text-xs font-medium px-1.5 py-0.5 rounded-full bg-muted text-muted-foreground">
-                    {leadsByStage[stage]?.length || 0}
+                    {leadsByStatus[status.id]?.length || 0}
                   </span>
                 </div>
-                <Droppable droppableId={stage}>
+                <Droppable droppableId={String(status.id)}>
                   {(provided, snapshot) => (
                     <div
                       ref={provided.innerRef}
@@ -503,7 +600,7 @@ export default function LeadsPage() {
                           : "bg-muted/30 border border-border"
                       )}
                     >
-                      {leadsByStage[stage]?.map((lead, index) => (
+                      {leadsByStatus[status.id]?.map((lead, index) => (
                         <Draggable key={lead.id} draggableId={`lead-${lead.id}`} index={index}>
                           {(provided, snapshot) => (
                             <div
@@ -552,10 +649,10 @@ export default function LeadsPage() {
                         </Draggable>
                       ))}
                       {provided.placeholder}
-                      {leadsByStage[stage]?.length === 0 && (
+                      {(leadsByStatus[status.id]?.length || 0) === 0 && (
                         <div className="flex flex-col items-center justify-center py-6 text-center">
                           <Target className="h-6 w-6 text-muted-foreground/30 mb-1" />
-                          <p className="text-xs text-muted-foreground/60">{t('crm.leads.noLeadsInStage', { stage: t(`crm.leads.stages.${stage}`, label) })}</p>
+                          <p className="text-xs text-muted-foreground/60">No leads</p>
                         </div>
                       )}
                     </div>
@@ -615,9 +712,13 @@ export default function LeadsPage() {
                       </TableCell>
                       <TableCell className="text-muted-foreground text-sm hidden sm:table-cell">{lead.contact?.email}</TableCell>
                       <TableCell>
-                        <span className={cn("inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium", STAGE_COLORS[lead.stage])}>
-                          {STAGE_LABELS[lead.stage]}
-                        </span>
+                        {lead.status ? (
+                          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold text-white"
+                            style={{ backgroundColor: lead.status.color }}>
+                            <span className="w-1.5 h-1.5 rounded-full bg-white/60" />
+                            {lead.status.name}
+                          </span>
+                        ) : <span className="text-xs text-muted-foreground">—</span>}
                       </TableCell>
                       <TableCell className="hidden sm:table-cell">
                         <div className="flex items-center gap-1.5">

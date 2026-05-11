@@ -108,7 +108,10 @@
     "telegramInbox": "Telegram",
     "twilioInbox": "Twilio کالز",
     "apiInbox": "API چیٹ",
-    "contactHub": "رابطے"
+    "contactHub": "رابطے",
+    "customFields": "حسب ضرورت فیلڈز",
+    "routingRules": "روٹنگ قواعد",
+    "hierarchy": "درجہ بندی"
   },
   "agents": {
     "title": "آپ کے AI ایجنٹس",

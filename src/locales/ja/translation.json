@@ -108,7 +108,10 @@
     "telegramInbox": "Telegram",
     "twilioInbox": "Twilio通話",
     "apiInbox": "APIチャット",
-    "contactHub": "連絡先"
+    "contactHub": "連絡先",
+    "customFields": "カスタムフィールド",
+    "routingRules": "ルーティングルール",
+    "hierarchy": "階層"
   },
   "agents": {
     "title": "AIエージェント",

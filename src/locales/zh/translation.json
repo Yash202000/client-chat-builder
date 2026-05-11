@@ -108,7 +108,10 @@
     "telegramInbox": "Telegram",
     "twilioInbox": "Twilio通话",
     "apiInbox": "API聊天",
-    "contactHub": "联系人"
+    "contactHub": "联系人",
+    "customFields": "自定义字段",
+    "routingRules": "路由规则",
+    "hierarchy": "层级结构"
   },
   "agents": {
     "title": "您的 AI 智能体",

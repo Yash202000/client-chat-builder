@@ -108,7 +108,11 @@
     "telegramInbox": "Telegram",
     "twilioInbox": "Twilio Aramaları",
     "apiInbox": "API Sohbet",
-    "contactHub": "Contacts"
+    "contactHub": "Contacts",
+    "customFields": "தனிப்பயன் புலங்கள்",
+    "routingRules": "திசைவிடல் விதிகள்",
+    "hierarchy": "படிநிலை",
+    "departments": "துறைகள்"
   },
   "agents": {
     "title": "Yapay Zeka Asistanlarınız",

@@ -20,6 +20,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
+import { CustomFieldInput, CustomFieldDefinition, formatCustomFieldValue } from '@/components/CustomFieldInput';
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -46,6 +47,7 @@ interface TicketDetail {
   watchers: TicketUser[]; source_links: TicketLink[]; target_links: TicketLink[];
   sub_tickets: TicketSummary[]; parent?: TicketSummary;
   available_transitions: Transition[];
+  custom_fields?: Record<string, any>;
 }
 
 // ── Constants ────────────────────────────────────────────────────────────────
@@ -200,10 +202,11 @@ interface TransitionDialogProps {
   open: boolean; onOpenChange: (v: boolean) => void;
   transition: Transition | null; ticket: TicketDetail;
   teamMembers: TicketUser[];
+  customFieldDefs: CustomFieldDefinition[];
   onExecute: (id: number, fv: Record<string, any>, comment: string) => Promise<void>;
 }
 
-function TransitionDialog({ open, onOpenChange, transition, ticket, teamMembers, onExecute }: TransitionDialogProps) {
+function TransitionDialog({ open, onOpenChange, transition, ticket, teamMembers, customFieldDefs, onExecute }: TransitionDialogProps) {
   const [comment, setComment] = useState('');
   const [fieldValues, setFieldValues] = useState<Record<string, any>>({});
   const [loading, setLoading] = useState(false);
@@ -286,6 +289,19 @@ function TransitionDialog({ open, onOpenChange, transition, ticket, teamMembers,
                 </label>
               </div>
             );
+            // custom field — look up definition for proper input type
+            const cfDef = customFieldDefs.find(d => d.name === sf.field);
+            if (cfDef) return (
+              <div key={sf.field} className="space-y-1.5">
+                <Label className="text-sm font-medium">{sf.label}{sf.required && <span className="text-destructive ml-0.5">*</span>}</Label>
+                <CustomFieldInput
+                  definition={cfDef}
+                  value={fieldValues[sf.field] ?? null}
+                  onChange={v => setFv(sf.field, v)}
+                  users={teamMembers.map(u => ({ id: u.id, full_name: u.full_name, email: u.email ?? '' }))}
+                />
+              </div>
+            );
             return (
               <div key={sf.field} className="space-y-1.5">
                 <Label className="text-sm font-medium">{sf.label}{sf.required && <span className="text-destructive ml-0.5">*</span>}</Label>
@@ -350,6 +366,7 @@ export default function TicketDetailPage() {
   const [ticket, setTicket] = useState<TicketDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [teamMembers, setTeamMembers] = useState<TicketUser[]>([]);
+  const [customFieldDefs, setCustomFieldDefs] = useState<CustomFieldDefinition[]>([]);
 
   // Edit states
   const [editingTitle, setEditingTitle] = useState(false);
@@ -391,15 +408,17 @@ export default function TicketDetailPage() {
 
   const load = useCallback(async () => {
     try {
-      const [ticketsRes, usersRes] = await Promise.all([
+      const [ticketsRes, usersRes, cfDefsRes] = await Promise.all([
         axios.get('/api/v1/tickets/', { headers: headers(), params: { limit: 500 } }),
         axios.get('/api/v1/users/', { headers: headers() }),
+        axios.get('/api/v1/custom-fields/', { headers: headers(), params: { entity_type: 'ticket' } }).catch(() => ({ data: [] })),
       ]);
       const found = ticketsRes.data.find((t: any) => t.ticket_number === ticketNumber);
       if (!found) { toast.error('Ticket not found'); navigate(`/dashboard/tickets/${projectKey}/board`); return; }
       const detailRes = await axios.get(`/api/v1/tickets/${found.id}`, { headers: headers() });
       setTicket(detailRes.data);
       setTeamMembers(usersRes.data || []);
+      setCustomFieldDefs(cfDefsRes.data || []);
     } catch { toast.error('Failed to load ticket'); }
     finally { setLoading(false); }
   }, [ticketNumber]);
@@ -515,7 +534,8 @@ export default function TicketDetailPage() {
     <TooltipProvider>
       {/* ── Transition Dialog ── */}
       <TransitionDialog open={!!transitionDialog} onOpenChange={v => { if (!v) setTransitionDialog(null); }}
-        transition={transitionDialog} ticket={ticket} teamMembers={teamMembers} onExecute={executeTransition} />
+        transition={transitionDialog} ticket={ticket} teamMembers={teamMembers}
+        customFieldDefs={customFieldDefs} onExecute={executeTransition} />
 
       {/* ── Add Link Dialog ── */}
       <Dialog open={showAddLink} onOpenChange={v => { setShowAddLink(v); if (!v) { setLinkSearch(''); setLinkSearchResults([]); } }}>
@@ -1160,6 +1180,21 @@ export default function TicketDetailPage() {
                           </Tooltip>
                         ))}
                       </div>
+                    </div>
+                  </>
+                )}
+
+                {/* Custom Fields */}
+                {customFieldDefs.length > 0 && (
+                  <>
+                    <Separator className="my-3" />
+                    <div className="space-y-0.5">
+                      <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Custom Fields</p>
+                      {customFieldDefs.map(def => (
+                        <SidebarField key={def.id} label={def.label}>
+                          <span className="text-sm">{formatCustomFieldValue(ticket.custom_fields?.[def.name], def)}</span>
+                        </SidebarField>
+                      ))}
                     </div>
                   </>
                 )}

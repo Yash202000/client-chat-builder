@@ -8,7 +8,7 @@ import ReactFlow, {
 import 'reactflow/dist/style.css';
 import {
   Plus, Settings2, Loader2, Trash2, Check,
-  ArrowRight, Info, X, GripVertical,
+  ArrowRight, Info, X, GripVertical, Search, Filter,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -52,9 +52,16 @@ interface Workflow {
   name: string;
   description?: string;
   is_default: boolean;
+  entity_type?: string | null;
   statuses: Status[];
   transitions: Transition[];
 }
+
+const ENTITY_BADGE: Record<string, { label: string; className: string }> = {
+  lead: { label: 'Lead', className: 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300' },
+  deal: { label: 'Deal', className: 'bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300' },
+  contact: { label: 'Contact', className: 'bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300' },
+};
 
 const STATUS_COLORS = [
   '#94a3b8', '#6366f1', '#8b5cf6', '#ec4899',
@@ -105,6 +112,8 @@ export default function WorkflowEditorPage() {
   const [workflows, setWorkflows] = useState<Workflow[]>([]);
   const [selectedWf, setSelectedWf] = useState<Workflow | null>(null);
   const [loading, setLoading] = useState(true);
+  const [wfSearch, setWfSearch] = useState('');
+  const [wfFilter, setWfFilter] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
@@ -326,17 +335,75 @@ export default function WorkflowEditorPage() {
               <Plus className="w-3 h-3 mr-1" />New
             </Button>
           </div>
+          {/* Search */}
+          <div className="relative">
+            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground pointer-events-none" />
+            <Input
+              placeholder="Search workflows…"
+              value={wfSearch}
+              onChange={e => setWfSearch(e.target.value)}
+              className="h-8 pl-8 text-xs"
+            />
+            {wfSearch && (
+              <button onClick={() => setWfSearch('')} className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
+                <X className="w-3 h-3" />
+              </button>
+            )}
+          </div>
+          {/* Filter chips */}
+          <div className="flex items-center gap-1 flex-wrap">
+            <Filter className="w-3 h-3 text-muted-foreground shrink-0" />
+            {[
+              { key: null, label: 'All' },
+              { key: 'tickets', label: 'Tickets' },
+              { key: 'lead', label: 'Lead' },
+              { key: 'deal', label: 'Deal' },
+              { key: 'contact', label: 'Contact' },
+            ].map(({ key, label }) => (
+              <button
+                key={String(key)}
+                onClick={() => setWfFilter(key)}
+                className={cn(
+                  'text-[10px] px-2 py-0.5 rounded-full font-medium transition-colors border',
+                  wfFilter === key
+                    ? 'bg-primary text-primary-foreground border-primary'
+                    : 'bg-muted text-muted-foreground border-transparent hover:border-border'
+                )}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
           <div className="space-y-1">
-            {workflows.map(wf => (
+            {workflows
+              .filter(wf => {
+                if (wfSearch && !wf.name.toLowerCase().includes(wfSearch.toLowerCase())) return false;
+                if (wfFilter === null) return true;
+                if (wfFilter === 'tickets') return !wf.entity_type;
+                return wf.entity_type === wfFilter;
+              })
+              .map(wf => (
               <div key={wf.id}
                 className={cn(
                   'flex items-center gap-1 rounded-md text-sm transition-colors group',
                   selectedWf?.id === wf.id ? 'bg-accent' : 'hover:bg-muted'
                 )}>
                 <button onClick={() => setSelectedWf(wf)}
-                  className="flex-1 text-left px-3 py-2 flex items-center gap-2 min-w-0">
+                  className="flex-1 text-left px-3 py-2 flex flex-col gap-0.5 min-w-0">
                   <span className="truncate font-medium">{wf.name}</span>
-                  {wf.is_default && <Badge variant="secondary" className="text-xs shrink-0">Default</Badge>}
+                  <div className="flex items-center gap-1 flex-wrap">
+                    {wf.entity_type && ENTITY_BADGE[wf.entity_type] && (
+                      <span className={cn('text-[10px] px-1.5 py-0 rounded-full font-medium leading-4', ENTITY_BADGE[wf.entity_type].className)}>
+                        {ENTITY_BADGE[wf.entity_type].label}
+                      </span>
+                    )}
+                    {!wf.entity_type && (
+                      <span className="text-[10px] px-1.5 py-0 rounded-full font-medium leading-4 bg-muted text-muted-foreground">
+                        Tickets
+                      </span>
+                    )}
+                    {wf.is_default && <Badge variant="secondary" className="text-[10px] h-4 px-1.5 shrink-0">Default</Badge>}
+                  </div>
                 </button>
                 <Button
                   variant="ghost" size="icon"

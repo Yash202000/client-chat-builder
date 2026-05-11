@@ -3,7 +3,7 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import {
   ArrowLeft, Edit3, Check, X, DollarSign, Building2,
-  User, CalendarDays, FileText, TrendingUp, Loader2, Ticket,
+  User, CalendarDays, FileText, TrendingUp, Loader2, Ticket, ArrowRight,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -11,21 +11,38 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { cn } from '@/lib/utils';
 import axios from 'axios';
 import { useToast } from '@/hooks/use-toast';
+import { CustomFieldInput, CustomFieldDefinition, formatCustomFieldValue } from '@/components/CustomFieldInput';
 
-interface DealStage { id: number; name: string; probability: number; color: string }
-interface Pipeline { id: number; name: string; stages: DealStage[] }
+interface WorkflowStatus {
+  id: number;
+  name: string;
+  color: string;
+  category?: string;
+}
+
+interface WorkflowTransition {
+  id: number;
+  name: string;
+  from_status_id?: number;
+  to_status_id?: number;
+  screen_fields?: any[];
+}
+
+interface Pipeline { id: number; name: string }
 
 interface Deal {
   id: number;
   title: string;
+  custom_fields?: Record<string, any>;
   amount?: number;
   currency: string;
   status: 'open' | 'won' | 'lost';
-  stage_id: number;
-  pipeline_id: number;
+  stage_id?: number;
+  pipeline_id?: number;
   contact?: { id: number; name: string; email: string };
   account?: { id: number; name: string };
   owner?: { id: number; full_name: string; email: string };
@@ -37,6 +54,8 @@ interface Deal {
   created_at: string;
   updated_at: string;
   stage?: { id: number; name: string; probability: number; color: string };
+  wf_status?: WorkflowStatus;
+  available_transitions?: WorkflowTransition[];
 }
 
 const STATUS_COLORS: Record<string, string> = {
@@ -63,6 +82,13 @@ export default function DealDetailPage() {
   const [form, setForm] = useState<Partial<Deal> & { contact_id?: number | null; account_id?: number | null }>({});
   const [contacts, setContacts] = useState<{ id: number; name: string; email: string }[]>([]);
   const [accounts, setAccounts] = useState<{ id: number; name: string }[]>([]);
+  const [transitionDialogOpen, setTransitionDialogOpen] = useState(false);
+  const [pendingTransition, setPendingTransition] = useState<WorkflowTransition | null>(null);
+  const [transitionComment, setTransitionComment] = useState('');
+  const [transitionFieldValues, setTransitionFieldValues] = useState<Record<string, any>>({});
+  const [transitionSaving, setTransitionSaving] = useState(false);
+  const [customFieldDefs, setCustomFieldDefs] = useState<CustomFieldDefinition[]>([]);
+  const [users, setUsers] = useState<{ id: number; full_name?: string; email: string }[]>([]);
 
   const headers = { Authorization: `Bearer ${localStorage.getItem('accessToken')}` };
 
@@ -87,11 +113,21 @@ export default function DealDetailPage() {
 
   const fetchDeal = async () => {
     try {
-      const res = await axios.get(`/api/v1/deals/${id}`, { headers });
+      const [res, cfRes, usersRes] = await Promise.all([
+        axios.get(`/api/v1/deals/${id}`, { headers }),
+        axios.get('/api/v1/custom-fields/', { headers, params: { entity_type: 'deal' } }).catch(() => ({ data: [] })),
+        axios.get('/api/v1/users/', { headers }).catch(() => ({ data: [] })),
+      ]);
       setDeal(res.data);
       setForm({ ...res.data, contact_id: res.data.contact?.id ?? null, account_id: res.data.account?.id ?? null });
-      const plRes = await axios.get(`/api/v1/pipelines/${res.data.pipeline_id}`, { headers });
-      setPipeline(plRes.data);
+      setCustomFieldDefs(cfRes.data || []);
+      setUsers(usersRes.data || []);
+      if (res.data.pipeline_id) {
+        try {
+          const plRes = await axios.get(`/api/v1/pipelines/${res.data.pipeline_id}`, { headers });
+          setPipeline(plRes.data);
+        } catch { /* pipeline may not exist */ }
+      }
     } catch {
       toast({ title: 'Error', description: 'Failed to load deal', variant: 'destructive' });
     } finally {
@@ -102,15 +138,40 @@ export default function DealDetailPage() {
   const handleSave = async () => {
     setSaving(true);
     try {
-      const res = await axios.put(`/api/v1/deals/${id}`, form, { headers });
+      const { wf_status, available_transitions, stage, ...payload } = form as any;
+      const res = await axios.put(`/api/v1/deals/${id}`, payload, { headers });
       setDeal(res.data);
-      setForm(res.data);
+      setForm({ ...res.data, contact_id: res.data.contact?.id ?? null, account_id: res.data.account?.id ?? null });
       setEditing(false);
       toast({ title: 'Deal updated' });
     } catch {
       toast({ title: 'Error', description: 'Failed to update deal', variant: 'destructive' });
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleTransition = async () => {
+    if (!pendingTransition) return;
+    setTransitionSaving(true);
+    try {
+      const fv = Object.keys(transitionFieldValues).length > 0 ? transitionFieldValues : undefined;
+      const res = await axios.post(
+        `/api/v1/deals/${id}/transition`,
+        { transition_id: pendingTransition.id, comment: transitionComment || undefined, field_values: fv },
+        { headers }
+      );
+      setDeal(res.data);
+      setForm({ ...res.data, contact_id: res.data.contact?.id ?? null, account_id: res.data.account?.id ?? null });
+      toast({ title: 'Status updated', description: `Moved to "${pendingTransition.name}"` });
+      setTransitionDialogOpen(false);
+      setTransitionComment('');
+      setTransitionFieldValues({});
+      setPendingTransition(null);
+    } catch {
+      toast({ title: 'Error', description: 'Failed to update status', variant: 'destructive' });
+    } finally {
+      setTransitionSaving(false);
     }
   };
 
@@ -140,6 +201,8 @@ export default function DealDetailPage() {
     </div>
   );
 
+  const wfColor = deal.wf_status?.color;
+
   return (
     <div className="flex flex-col h-full bg-background overflow-auto">
       {/* Header */}
@@ -149,7 +212,17 @@ export default function DealDetailPage() {
             <ArrowLeft className="h-4 w-4" />
           </Button>
           <div>
-            <h1 className="text-xl font-bold text-foreground">{deal.title}</h1>
+            <div className="flex items-center gap-2">
+              <h1 className="text-xl font-bold text-foreground">{deal.title}</h1>
+              {deal.wf_status && (
+                <Badge
+                  className="text-xs font-medium border"
+                  style={{ backgroundColor: wfColor + '20', color: wfColor, borderColor: wfColor + '50' }}
+                >
+                  {deal.wf_status.name}
+                </Badge>
+              )}
+            </div>
             <p className="text-sm text-muted-foreground">Deal #{deal.id}</p>
           </div>
         </div>
@@ -168,7 +241,7 @@ export default function DealDetailPage() {
             </Button>
           ) : (
             <div className="flex gap-2">
-              <Button variant="outline" size="sm" onClick={() => { setEditing(false); setForm(deal); }}>Cancel</Button>
+              <Button variant="outline" size="sm" onClick={() => { setEditing(false); setForm({ ...deal, contact_id: deal.contact?.id ?? null, account_id: deal.account?.id ?? null }); }}>Cancel</Button>
               <Button size="sm" onClick={handleSave} disabled={saving}>
                 {saving ? <Loader2 className="h-3.5 w-3.5 animate-spin mr-1" /> : <Check className="h-3.5 w-3.5 mr-1" />}
                 Save
@@ -177,6 +250,25 @@ export default function DealDetailPage() {
           )}
         </div>
       </div>
+
+      {/* Workflow Transitions Bar */}
+      {!editing && deal.available_transitions && deal.available_transitions.length > 0 && (
+        <div className="border-b border-border bg-muted/30 px-6 py-2.5 flex items-center gap-3 flex-wrap">
+          <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Move to:</span>
+          {deal.available_transitions.map(t => (
+            <Button
+              key={t.id}
+              size="sm"
+              variant="outline"
+              className="h-7 text-xs gap-1.5"
+              onClick={() => { setPendingTransition(t); setTransitionDialogOpen(true); }}
+            >
+              <ArrowRight className="h-3 w-3" />
+              {t.name}
+            </Button>
+          ))}
+        </div>
+      )}
 
       <div className="flex-1 p-6 grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Main details */}
@@ -207,20 +299,16 @@ export default function DealDetailPage() {
               </div>
 
               <div className="space-y-1.5">
-                <Label className="text-xs text-muted-foreground">Stage</Label>
-                {editing ? (
-                  <Select value={form.stage_id?.toString()} onValueChange={v => setForm({ ...form, stage_id: parseInt(v) })}>
-                    <SelectTrigger className="bg-background border-border"><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      {(pipeline?.stages ?? []).map(s => <SelectItem key={s.id} value={s.id.toString()}>{s.name}</SelectItem>)}
-                    </SelectContent>
-                  </Select>
+                <Label className="text-xs text-muted-foreground">Workflow Status</Label>
+                {deal.wf_status ? (
+                  <Badge
+                    className="text-xs font-medium border w-fit"
+                    style={{ backgroundColor: wfColor + '20', color: wfColor, borderColor: wfColor + '50' }}
+                  >
+                    {deal.wf_status.name}
+                  </Badge>
                 ) : (
-                  <div className="flex items-center gap-2">
-                    <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: deal.stage?.color }} />
-                    <span className="text-sm text-foreground">{deal.stage?.name ?? '—'}</span>
-                    <span className="text-xs text-muted-foreground">({deal.stage?.probability}%)</span>
-                  </div>
+                  <p className="text-sm text-muted-foreground">—</p>
                 )}
               </div>
 
@@ -306,9 +394,7 @@ export default function DealDetailPage() {
               </Link>
             </div>
             {linkedTickets.length === 0 ? (
-              <p className="text-sm text-muted-foreground text-center py-4">
-                No tickets linked to this deal.
-              </p>
+              <p className="text-sm text-muted-foreground text-center py-4">No tickets linked to this deal.</p>
             ) : (
               <div className="space-y-2">
                 {linkedTickets.map((t: any) => (
@@ -342,15 +428,11 @@ export default function DealDetailPage() {
                 value={form.contact_id?.toString() ?? '__none__'}
                 onValueChange={(v) => setForm({ ...form, contact_id: v === '__none__' ? null : parseInt(v) })}
               >
-                <SelectTrigger className="h-8 text-sm">
-                  <SelectValue placeholder="No contact" />
-                </SelectTrigger>
+                <SelectTrigger className="h-8 text-sm"><SelectValue placeholder="No contact" /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="__none__">None</SelectItem>
                   {contacts.map(c => (
-                    <SelectItem key={c.id} value={c.id.toString()}>
-                      {c.name} — {c.email}
-                    </SelectItem>
+                    <SelectItem key={c.id} value={c.id.toString()}>{c.name} — {c.email}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
@@ -378,9 +460,7 @@ export default function DealDetailPage() {
                 value={form.account_id?.toString() ?? '__none__'}
                 onValueChange={(v) => setForm({ ...form, account_id: v === '__none__' ? null : parseInt(v) })}
               >
-                <SelectTrigger className="h-8 text-sm">
-                  <SelectValue placeholder="No account" />
-                </SelectTrigger>
+                <SelectTrigger className="h-8 text-sm"><SelectValue placeholder="No account" /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="__none__">None</SelectItem>
                   {accounts.map(a => <SelectItem key={a.id} value={a.id.toString()}>{a.name}</SelectItem>)}
@@ -404,10 +484,12 @@ export default function DealDetailPage() {
               <p className="text-xs text-muted-foreground">Owner</p>
               <p className="text-sm text-foreground">{deal.owner?.full_name ?? '—'}</p>
             </div>
-            <div>
-              <p className="text-xs text-muted-foreground">Pipeline</p>
-              <p className="text-sm text-foreground">{pipeline?.name ?? '—'}</p>
-            </div>
+            {pipeline && (
+              <div>
+                <p className="text-xs text-muted-foreground">Pipeline</p>
+                <p className="text-sm text-foreground">{pipeline.name}</p>
+              </div>
+            )}
             <div>
               <p className="text-xs text-muted-foreground">Created</p>
               <p className="text-sm text-foreground">{new Date(deal.created_at).toLocaleDateString()}</p>
@@ -417,8 +499,86 @@ export default function DealDetailPage() {
               <p className="text-sm text-foreground">{new Date(deal.updated_at).toLocaleDateString()}</p>
             </div>
           </div>
+
+          {/* Custom Fields */}
+          {customFieldDefs.length > 0 && (
+            <div className="rounded-xl border border-border bg-card p-4 space-y-3">
+              <h3 className="font-medium text-sm text-foreground">Custom Fields</h3>
+              <div className="space-y-2">
+                {customFieldDefs.map(def => (
+                  <div key={def.id} className="flex justify-between text-sm">
+                    <span className="text-muted-foreground">{def.label}</span>
+                    <span className="font-medium">{formatCustomFieldValue(deal.custom_fields?.[def.name], def)}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       </div>
+
+      {/* Transition Dialog */}
+      <Dialog open={transitionDialogOpen} onOpenChange={open => {
+        setTransitionDialogOpen(open);
+        if (!open) { setTransitionComment(''); setTransitionFieldValues({}); setPendingTransition(null); }
+      }}>
+        <DialogContent className="sm:max-w-[460px]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <ArrowRight className="h-5 w-5" />
+              Move to: {pendingTransition?.name}
+            </DialogTitle>
+            <DialogDescription>Confirm moving this deal to the next status.</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            {/* Custom screen_fields */}
+            {(pendingTransition?.screen_fields || [])
+              .filter((sf: any) => sf.field !== 'comment')
+              .map((sf: any) => {
+                const cfDef = customFieldDefs.find(d => d.name === sf.field);
+                return (
+                  <div key={sf.field} className="space-y-1.5">
+                    <Label className="text-sm font-medium">
+                      {sf.label}
+                      {sf.required && <span className="text-destructive ml-0.5">*</span>}
+                    </Label>
+                    {cfDef ? (
+                      <CustomFieldInput
+                        definition={cfDef}
+                        value={transitionFieldValues[sf.field] ?? null}
+                        onChange={v => setTransitionFieldValues(p => ({ ...p, [sf.field]: v }))}
+                        users={users}
+                      />
+                    ) : (
+                      <Input
+                        value={transitionFieldValues[sf.field] ?? ''}
+                        onChange={e => setTransitionFieldValues(p => ({ ...p, [sf.field]: e.target.value }))}
+                      />
+                    )}
+                  </div>
+                );
+              })}
+            <div className="space-y-2">
+              <Label htmlFor="deal_transition_comment">Comment (optional)</Label>
+              <Textarea
+                id="deal_transition_comment"
+                placeholder="Add a note about this status change..."
+                value={transitionComment}
+                onChange={(e) => setTransitionComment(e.target.value)}
+                rows={3}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => { setTransitionDialogOpen(false); setTransitionComment(''); setTransitionFieldValues({}); setPendingTransition(null); }}>
+              Cancel
+            </Button>
+            <Button onClick={handleTransition} disabled={transitionSaving}>
+              {transitionSaving ? 'Saving...' : `Move to ${pendingTransition?.name}`}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

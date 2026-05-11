@@ -56,6 +56,10 @@ const DesignerPage              = lazy(() => import("./pages/DesignerPage"));
 const TeamPage                  = lazy(() => import("./pages/TeamPage"));
 const ReportsPage               = lazy(() => import("./pages/ReportsPage"));
 const SettingsPage              = lazy(() => import("./pages/SettingsPage"));
+const CustomFieldsPage          = lazy(() => import("./pages/Settings/CustomFieldsPage"));
+const RoutingRulesPage          = lazy(() => import("./pages/Settings/RoutingRulesPage"));
+const HierarchyPage             = lazy(() => import("./pages/Settings/HierarchyPage"));
+const DepartmentPage            = lazy(() => import("./pages/Settings/DepartmentPage"));
 const VaultPage                 = lazy(() => import("./pages/VaultPage"));
 const ProfilePage               = lazy(() => import("./pages/ProfilePage").then(m => ({ default: m.ProfilePage })));
 const ClientBillingPage         = lazy(() => import("./pages/ClientBillingPage"));
@@ -249,6 +253,10 @@ const AppRoutes = () => {
             <Route path="team-chat" element={<InternalChatPage />} />
             <Route path="reports" element={<ReportsPage />} />
             <Route path="settings" element={<SettingsPage />} />
+            <Route path="settings/custom-fields" element={<CustomFieldsPage />} />
+            <Route path="settings/routing-rules" element={<RoutingRulesPage />} />
+            <Route path="settings/hierarchy" element={<HierarchyPage />} />
+            <Route path="settings/departments" element={<DepartmentPage />} />
             <Route path="vault" element={<VaultPage />} />
             <Route path="knowledge-base" element={<Navigate to="/dashboard/knowledge-base/manage" replace />} />
             <Route path="tools" element={<ToolManagementPage />} />

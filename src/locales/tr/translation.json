@@ -108,7 +108,10 @@
     "telegramInbox": "Telegram",
     "twilioInbox": "Twilio Aramaları",
     "apiInbox": "API Sohbet",
-    "contactHub": "Kişiler"
+    "contactHub": "Kişiler",
+    "customFields": "Özel Alanlar",
+    "routingRules": "Yönlendirme Kuralları",
+    "hierarchy": "Hiyerarşi"
   },
   "agents": {
     "title": "Your AI Agents",

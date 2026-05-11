@@ -108,7 +108,10 @@
     "telegramInbox": "تيليغرام",
     "twilioInbox": "مكالمات تويليو",
     "apiInbox": "محادثة API",
-    "contactHub": "جهات الاتصال"
+    "contactHub": "جهات الاتصال",
+    "customFields": "الحقول المخصصة",
+    "routingRules": "قواعد التوجيه",
+    "hierarchy": "التسلسل الهرمي"
   },
   "agents": {
     "title": "وكلاء الذكاء الاصطناعي الخاصة بك",

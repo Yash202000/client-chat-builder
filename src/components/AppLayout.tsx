@@ -117,7 +117,9 @@ const AppLayout = () => {
   const location = useLocation();
   const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({
     workspace: true,
+    tickets: true,
     crm: true,
+    campaigns: true,
     marketing: true,
     agents: true,
     ai: true,
@@ -557,7 +559,7 @@ const AppLayout = () => {
         { title: "Drive",    url: "/dashboard/drive",    icon: HardDrive },
       ],
     },
-    // 3. Support & Tickets — Jira-like ticketing
+    // 3. Support & Tickets
     {
       id: 'tickets',
       label: 'Support',
@@ -565,12 +567,12 @@ const AppLayout = () => {
       icon: LifeBuoy,
       collapsible: true,
       items: [
-        { title: 'My Tickets',       url: '/dashboard/tickets?assignee=me', icon: Ticket },
-        { title: 'All Projects',     url: '/dashboard/tickets',             icon: KanbanSquare },
-        { title: 'Workflow Editor',  url: '/dashboard/tickets/settings/workflows', icon: Workflow },
+        { title: 'My Tickets',  url: '/dashboard/tickets?assignee=me',         icon: Ticket },
+        { title: 'All Projects', url: '/dashboard/tickets',                    icon: KanbanSquare },
+        { title: 'Workflows',   url: '/dashboard/tickets/settings/workflows',  icon: Workflow },
       ],
     },
-    // 4. CRM — update contacts/leads after every interaction
+    // 4. CRM — pipeline only
     {
       id: 'crm',
       label: 'CRM',
@@ -578,36 +580,44 @@ const AppLayout = () => {
       icon: TrendingUp,
       collapsible: true,
       items: [
-        { titleKey: "navigation.crm", url: "/dashboard/crm", icon: TrendingUp, permission: "page:crm_dashboard" },
-        { titleKey: "navigation.contacts", url: "/dashboard/crm/contacts", icon: Users, permission: "page:contacts" },
-        { titleKey: "navigation.leads", url: "/dashboard/crm/leads", icon: Target, permission: "page:leads" },
-        { title: "Deals", url: "/dashboard/crm/deals", icon: KanbanSquare },
-        { title: "Companies", url: "/dashboard/crm/accounts", icon: Building2 },
-        { title: "Booking Links", url: "/dashboard/crm/booking-links", icon: Calendar },
-        { title: "Sequences", url: "/dashboard/crm/sequences", icon: GitBranch },
-        { title: "Forms", url: "/dashboard/crm/forms", icon: FormInput },
-        { titleKey: "navigation.campaigns", url: "/dashboard/crm/campaigns", icon: Send, permission: "page:campaigns" },
-        { titleKey: "navigation.tags", url: "/dashboard/crm/tags", icon: Tag, permission: "page:tags" },
-        { titleKey: "navigation.segments", url: "/dashboard/crm/segments", icon: Layers, permission: "page:segments" },
-        { titleKey: "navigation.templates", url: "/dashboard/crm/templates", icon: LayoutTemplate, permission: "page:crm_templates" },
+        { titleKey: "navigation.crm",      url: "/dashboard/crm",              icon: TrendingUp,  permission: "page:crm_dashboard" },
+        { titleKey: "navigation.leads",    url: "/dashboard/crm/leads",        icon: Target,      permission: "page:leads" },
+        { title: "Deals",                  url: "/dashboard/crm/deals",        icon: KanbanSquare },
+        { title: "Companies",              url: "/dashboard/crm/accounts",     icon: Building2 },
+        { title: "Booking Links",          url: "/dashboard/crm/booking-links", icon: Calendar },
       ],
     },
-    // 6. Marketing Hub — campaigns and social
+    // 5. Campaigns — outreach & engagement
+    {
+      id: 'campaigns',
+      label: 'Campaigns',
+      icon: Send,
+      collapsible: true,
+      items: [
+        { titleKey: "navigation.campaigns", url: "/dashboard/crm/campaigns",  icon: Send,          permission: "page:campaigns" },
+        { title: "Sequences",               url: "/dashboard/crm/sequences",  icon: GitBranch },
+        { title: "Forms",                   url: "/dashboard/crm/forms",      icon: FormInput },
+        { titleKey: "navigation.tags",      url: "/dashboard/crm/tags",       icon: Tag,           permission: "page:tags" },
+        { titleKey: "navigation.segments",  url: "/dashboard/crm/segments",   icon: Layers,        permission: "page:segments" },
+        { titleKey: "navigation.templates", url: "/dashboard/crm/templates",  icon: LayoutTemplate, permission: "page:crm_templates" },
+      ],
+    },
+    // 6. Marketing Hub — social media
     {
       id: 'marketing',
       label: 'Marketing Hub',
       icon: Megaphone,
       collapsible: true,
       items: [
-        { title: "Social Hub",       url: "/dashboard/social",          icon: Share2 },
-        { title: "Post Composer",    url: "/dashboard/social/compose",  icon: PenLine },
-        { title: "Trending Posts",   url: "/dashboard/social/trending", icon: TrendingUp },
-        { title: "LinkedIn Leads",   url: "/dashboard/crm/linkedin-leads", icon: Linkedin },
-        { title: "Social Analytics", url: "/dashboard/social/analytics", icon: BarChart3 },
-        { title: "Social Accounts",  url: "/dashboard/social/accounts", icon: Settings2 },
+        { title: "Social Hub",       url: "/dashboard/social",              icon: Share2 },
+        { title: "Post Composer",    url: "/dashboard/social/compose",      icon: PenLine },
+        { title: "Trending Posts",   url: "/dashboard/social/trending",     icon: TrendingUp },
+        { title: "LinkedIn Leads",   url: "/dashboard/crm/linkedin-leads",  icon: Linkedin },
+        { title: "Social Analytics", url: "/dashboard/social/analytics",   icon: BarChart3 },
+        { title: "Social Accounts",  url: "/dashboard/social/accounts",    icon: Settings2 },
       ],
     },
-    // 7. Builder — configure agents, workflows, knowledge
+    // 7. Builder — agents, knowledge, automation
     {
       id: 'agents',
       label: 'Builder',
@@ -615,13 +625,13 @@ const AppLayout = () => {
       icon: Bot,
       collapsible: true,
       items: [
-        { titleKey: "navigation.agents", url: "/dashboard/agents", icon: Bot, permission: "page:agents" },
-        { titleKey: "navigation.widget", url: "/dashboard/designer", icon: Palette, permission: "page:widget_designer" },
-        { titleKey: "navigation.content", url: "/dashboard/knowledge-base/manage", icon: BookOpen, permission: "page:knowledge_base" },
-        { titleKey: "navigation.cms", url: "/dashboard/cms", icon: LayoutTemplate, permission: "page:knowledge_base" },
-        { titleKey: "navigation.tools", url: "/dashboard/tools", icon: Zap, permission: "page:tools" },
-        { titleKey: "navigation.workflows", url: "/dashboard/workflows", icon: WorkflowIcon, permission: "page:workflows" },
-        { titleKey: "navigation.messageTemplates", url: "/dashboard/message-templates", icon: Sparkles, permission: "page:message_templates" },
+        { titleKey: "navigation.agents",          url: "/dashboard/agents",               icon: Bot,          permission: "page:agents" },
+        { titleKey: "navigation.widget",          url: "/dashboard/designer",             icon: Palette,      permission: "page:widget_designer" },
+        { titleKey: "navigation.content",         url: "/dashboard/knowledge-base/manage", icon: BookOpen,    permission: "page:knowledge_base" },
+        { titleKey: "navigation.cms",             url: "/dashboard/cms",                  icon: LayoutTemplate, permission: "page:knowledge_base" },
+        { titleKey: "navigation.tools",           url: "/dashboard/tools",                icon: Zap,          permission: "page:tools" },
+        { title: "Automations",                   url: "/dashboard/workflows",            icon: WorkflowIcon, permission: "page:workflows" },
+        { titleKey: "navigation.messageTemplates", url: "/dashboard/message-templates",   icon: Sparkles,     permission: "page:message_templates" },
       ],
     },
     // 8. AI — on-demand tools
@@ -650,6 +660,10 @@ const AppLayout = () => {
         { titleKey: "navigation.auditLogs", url: "/dashboard/audit-logs", icon: ClipboardList, permission: "page:settings" },
         { titleKey: "navigation.teamManagement", url: "/dashboard/team", icon: Users, permission: "page:team_management" },
         { titleKey: "navigation.settings", url: "/dashboard/settings", icon: Settings, permission: "page:settings" },
+        { titleKey: "navigation.customFields", url: "/dashboard/settings/custom-fields", icon: FormInput, permission: "page:settings" },
+        { titleKey: "navigation.routingRules", url: "/dashboard/settings/routing-rules", icon: GitBranch, permission: "page:settings" },
+        { titleKey: "navigation.hierarchy", url: "/dashboard/settings/hierarchy", icon: WorkflowIcon, permission: "page:settings" },
+        { titleKey: "navigation.departments", url: "/dashboard/settings/departments", icon: Building2, permission: "page:settings" },
         ...(!isManagedCredentials ? [{ titleKey: "navigation.apiVault", url: "/dashboard/vault", icon: Key, permission: "page:api_vault" }] : []),
         { titleKey: "navigation.billing", url: "/dashboard/billing", icon: CreditCard, permission: "page:billing" },
         { titleKey: "navigation.managePlans", url: "/dashboard/admin/subscriptions", icon: Sparkles, admin: true },

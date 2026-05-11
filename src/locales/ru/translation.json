@@ -108,7 +108,10 @@
     "telegramInbox": "Telegram",
     "twilioInbox": "Звонки Twilio",
     "apiInbox": "API Chat",
-    "contactHub": "Контакты"
+    "contactHub": "Контакты",
+    "customFields": "Пользовательские поля",
+    "routingRules": "Правила маршрутизации",
+    "hierarchy": "Иерархия"
   },
   "agents": {
     "title": "Ваши ИИ-агенты",

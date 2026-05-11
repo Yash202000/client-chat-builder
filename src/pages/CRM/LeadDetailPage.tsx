@@ -5,7 +5,6 @@ import {
   User,
   Mail,
   Phone,
-  Building2,
   DollarSign,
   Star,
   Calendar,
@@ -24,14 +23,12 @@ import {
   Timer,
   CalendarDays,
   Globe,
-  UserCheck,
   ShieldCheck,
-  ChevronRight,
-  Sparkles,
+  ArrowRight,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import {
   DropdownMenu,
@@ -70,6 +67,22 @@ import { useToast } from '@/hooks/use-toast';
 import { TagSelector } from '@/components/TagSelector';
 import { EntityNotes } from '@/components/EntityNotes';
 import { cn } from '@/lib/utils';
+import { CustomFieldInput, CustomFieldDefinition, formatCustomFieldValue } from '@/components/CustomFieldInput';
+
+interface WorkflowStatus {
+  id: number;
+  name: string;
+  color: string;
+  category?: string;
+}
+
+interface WorkflowTransition {
+  id: number;
+  name: string;
+  from_status_id?: number;
+  to_status_id?: number;
+  screen_fields?: any[];
+}
 
 interface Lead {
   id: number;
@@ -87,7 +100,7 @@ interface Lead {
     created_at?: string;
     updated_at?: string;
   };
-  stage: string;
+  stage?: string;
   previous_stage?: string;
   score: number;
   deal_value?: number;
@@ -108,6 +121,10 @@ interface Lead {
   last_scored_at?: string;
   created_at: string;
   updated_at: string;
+  workflow_id?: number;
+  status_id?: number;
+  status?: WorkflowStatus;
+  available_transitions?: WorkflowTransition[];
 }
 
 interface LeadScore {
@@ -118,47 +135,6 @@ interface LeadScore {
   reason?: string;
   created_at: string;
 }
-
-const STAGE_CONFIG: Record<string, { label: string; color: string; bgColor: string; icon: React.ReactNode }> = {
-  lead: {
-    label: 'Lead',
-    color: 'text-slate-700 dark:text-slate-300',
-    bgColor: 'bg-slate-100 dark:bg-slate-800',
-    icon: <User className="h-4 w-4" />
-  },
-  mql: {
-    label: 'MQL',
-    color: 'text-blue-700 dark:text-blue-300',
-    bgColor: 'bg-blue-100 dark:bg-blue-900/50',
-    icon: <Zap className="h-4 w-4" />
-  },
-  sql: {
-    label: 'SQL',
-    color: 'text-purple-700 dark:text-purple-300',
-    bgColor: 'bg-purple-100 dark:bg-purple-900/50',
-    icon: <Target className="h-4 w-4" />
-  },
-  opportunity: {
-    label: 'Opportunity',
-    color: 'text-violet-700 dark:text-violet-300',
-    bgColor: 'bg-violet-100 dark:bg-violet-900/50',
-    icon: <Sparkles className="h-4 w-4" />
-  },
-  customer: {
-    label: 'Customer',
-    color: 'text-emerald-700 dark:text-emerald-300',
-    bgColor: 'bg-emerald-100 dark:bg-emerald-900/50',
-    icon: <CheckCircle2 className="h-4 w-4" />
-  },
-  lost: {
-    label: 'Lost',
-    color: 'text-red-700 dark:text-red-300',
-    bgColor: 'bg-red-100 dark:bg-red-900/50',
-    icon: <XCircle className="h-4 w-4" />
-  },
-};
-
-const STAGE_ORDER = ['lead', 'mql', 'sql', 'opportunity', 'customer', 'lost'];
 
 const getScoreColor = (score: number) => {
   if (score >= 70) return 'text-emerald-600 dark:text-emerald-400';
@@ -180,10 +156,14 @@ export default function LeadDetailPage() {
   const [scores, setScores] = useState<LeadScore[]>([]);
   const [loading, setLoading] = useState(true);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
-  const [stageDialogOpen, setStageDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [selectedStage, setSelectedStage] = useState('');
-  const [stageReason, setStageReason] = useState('');
+  const [transitionDialogOpen, setTransitionDialogOpen] = useState(false);
+  const [pendingTransition, setPendingTransition] = useState<WorkflowTransition | null>(null);
+  const [transitionComment, setTransitionComment] = useState('');
+  const [transitionFieldValues, setTransitionFieldValues] = useState<Record<string, any>>({});
+  const [transitionSaving, setTransitionSaving] = useState(false);
+  const [customFieldDefs, setCustomFieldDefs] = useState<CustomFieldDefinition[]>([]);
+  const [users, setUsers] = useState<{ id: number; full_name?: string; email: string }[]>([]);
   const [editData, setEditData] = useState({
     deal_value: '',
     source: '',
@@ -203,8 +183,14 @@ export default function LeadDetailPage() {
     try {
       const token = localStorage.getItem('accessToken');
       const headers = { Authorization: `Bearer ${token}` };
-      const response = await axios.get(`/api/v1/leads/${id}`, { headers });
+      const [response, cfRes, usersRes] = await Promise.all([
+        axios.get(`/api/v1/leads/${id}`, { headers }),
+        axios.get('/api/v1/custom-fields/', { headers, params: { entity_type: 'lead' } }).catch(() => ({ data: [] })),
+        axios.get('/api/v1/users/', { headers }).catch(() => ({ data: [] })),
+      ]);
       setLead(response.data);
+      setCustomFieldDefs(cfRes.data || []);
+      setUsers(usersRes.data || []);
       setEditData({
         deal_value: response.data.deal_value?.toString() || '',
         source: response.data.source || '',
@@ -214,12 +200,7 @@ export default function LeadDetailPage() {
       const tagIds = response.data.tag_ids || response.data.tags?.map((t: any) => t.id) || [];
       setSelectedTagIds(tagIds);
     } catch (error) {
-      console.error('Error fetching lead:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to fetch lead details',
-        variant: 'destructive',
-      });
+      toast({ title: 'Error', description: 'Failed to fetch lead details', variant: 'destructive' });
       navigate('/dashboard/crm/leads');
     } finally {
       setLoading(false);
@@ -232,36 +213,31 @@ export default function LeadDetailPage() {
       const headers = { Authorization: `Bearer ${token}` };
       const response = await axios.get(`/api/v1/leads/${id}/scores`, { headers });
       setScores(response.data.scores || []);
-    } catch (error) {
-      console.error('Error fetching scores:', error);
-    }
+    } catch {}
   };
 
-  const handleUpdateStage = async () => {
-    if (!selectedStage) return;
-
+  const handleTransition = async () => {
+    if (!pendingTransition) return;
+    setTransitionSaving(true);
     try {
       const token = localStorage.getItem('accessToken');
       const headers = { Authorization: `Bearer ${token}` };
-      await axios.put(
-        `/api/v1/leads/${id}/stage`,
-        { stage: selectedStage, reason: stageReason || undefined },
+      const fv = Object.keys(transitionFieldValues).length > 0 ? transitionFieldValues : undefined;
+      await axios.post(
+        `/api/v1/leads/${id}/transition`,
+        { transition_id: pendingTransition.id, comment: transitionComment || undefined, field_values: fv },
         { headers }
       );
-      toast({
-        title: 'Success',
-        description: 'Lead stage updated successfully',
-      });
-      setStageDialogOpen(false);
-      setStageReason('');
+      toast({ title: 'Status updated', description: `Moved to "${pendingTransition.name}"` });
+      setTransitionDialogOpen(false);
+      setTransitionComment('');
+      setTransitionFieldValues({});
+      setPendingTransition(null);
       fetchLead();
-    } catch (error) {
-      console.error('Error updating stage:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to update lead stage',
-        variant: 'destructive',
-      });
+    } catch {
+      toast({ title: 'Error', description: 'Failed to update status', variant: 'destructive' });
+    } finally {
+      setTransitionSaving(false);
     }
   };
 
@@ -279,19 +255,11 @@ export default function LeadDetailPage() {
         },
         { headers }
       );
-      toast({
-        title: 'Success',
-        description: 'Lead updated successfully',
-      });
+      toast({ title: 'Lead updated' });
       setEditDialogOpen(false);
       fetchLead();
-    } catch (error) {
-      console.error('Error updating lead:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to update lead',
-        variant: 'destructive',
-      });
+    } catch {
+      toast({ title: 'Error', description: 'Failed to update lead', variant: 'destructive' });
     }
   };
 
@@ -300,19 +268,11 @@ export default function LeadDetailPage() {
       const token = localStorage.getItem('accessToken');
       const headers = { Authorization: `Bearer ${token}` };
       await axios.post(`/api/v1/leads/${id}/qualify`, {}, { headers });
-      toast({
-        title: 'Success',
-        description: 'Lead qualified successfully',
-      });
+      toast({ title: 'Lead qualified' });
       fetchLead();
       fetchScores();
-    } catch (error) {
-      console.error('Error qualifying lead:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to qualify lead',
-        variant: 'destructive',
-      });
+    } catch {
+      toast({ title: 'Error', description: 'Failed to qualify lead', variant: 'destructive' });
     }
   };
 
@@ -321,18 +281,10 @@ export default function LeadDetailPage() {
       const token = localStorage.getItem('accessToken');
       const headers = { Authorization: `Bearer ${token}` };
       await axios.delete(`/api/v1/leads/${id}`, { headers });
-      toast({
-        title: 'Success',
-        description: 'Lead deleted successfully',
-      });
+      toast({ title: 'Lead deleted' });
       navigate('/dashboard/crm/leads');
-    } catch (error) {
-      console.error('Error deleting lead:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to delete lead',
-        variant: 'destructive',
-      });
+    } catch {
+      toast({ title: 'Error', description: 'Failed to delete lead', variant: 'destructive' });
     }
   };
 
@@ -341,90 +293,50 @@ export default function LeadDetailPage() {
     try {
       const token = localStorage.getItem('accessToken');
       const headers = { Authorization: `Bearer ${token}` };
-
       const currentTagIds = selectedTagIds;
-      const tagsToAdd = tagIds.filter(id => !currentTagIds.includes(id));
-      const tagsToRemove = currentTagIds.filter(id => !tagIds.includes(id));
-
+      const tagsToAdd = tagIds.filter(i => !currentTagIds.includes(i));
+      const tagsToRemove = currentTagIds.filter(i => !tagIds.includes(i));
       for (const tagId of tagsToAdd) {
-        await axios.post(`/api/v1/tags/${tagId}/assign`, {
-          entity_type: 'lead',
-          entity_ids: [parseInt(id!)]
-        }, { headers });
+        await axios.post(`/api/v1/tags/${tagId}/assign`, { entity_type: 'lead', entity_ids: [parseInt(id!)] }, { headers });
       }
-
       for (const tagId of tagsToRemove) {
-        await axios.post(`/api/v1/tags/${tagId}/unassign`, {
-          entity_type: 'lead',
-          entity_ids: [parseInt(id!)]
-        }, { headers });
+        await axios.post(`/api/v1/tags/${tagId}/unassign`, { entity_type: 'lead', entity_ids: [parseInt(id!)] }, { headers });
       }
-
-      toast({
-        title: 'Success',
-        description: 'Tags updated successfully',
-      });
-    } catch (error) {
-      console.error('Error updating tags:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to update tags',
-        variant: 'destructive',
-      });
+      toast({ title: 'Tags updated' });
+    } catch {
+      toast({ title: 'Error', description: 'Failed to update tags', variant: 'destructive' });
       fetchLead();
     }
   };
 
   const formatDate = (dateString?: string) => {
     if (!dateString) return '-';
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-    });
+    return new Date(dateString).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
   };
 
   const formatDateTime = (dateString?: string) => {
     if (!dateString) return '-';
-    return new Date(dateString).toLocaleString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-    });
+    return new Date(dateString).toLocaleString('en-US', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
   };
 
-  const getInitials = (name: string) => {
-    return name
-      .split(' ')
-      .map(n => n[0])
-      .join('')
-      .toUpperCase()
-      .slice(0, 2);
-  };
+  const getInitials = (name: string) =>
+    name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
 
-  const getDaysInStage = () => {
+  const getDaysInStatus = () => {
     if (!lead?.stage_changed_at) return 0;
-    return Math.floor(
-      (new Date().getTime() - new Date(lead.stage_changed_at).getTime()) /
-      (1000 * 60 * 60 * 24)
-    );
+    return Math.floor((new Date().getTime() - new Date(lead.stage_changed_at).getTime()) / (1000 * 60 * 60 * 24));
   };
 
   const getTotalAge = () => {
     if (!lead?.created_at) return 0;
-    return Math.floor(
-      (new Date().getTime() - new Date(lead.created_at).getTime()) /
-      (1000 * 60 * 60 * 24)
-    );
+    return Math.floor((new Date().getTime() - new Date(lead.created_at).getTime()) / (1000 * 60 * 60 * 24));
   };
 
   if (loading) {
     return (
       <div className="flex items-center justify-center h-[calc(100vh-200px)]">
         <div className="flex flex-col items-center gap-4">
-          <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary"></div>
+          <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary" />
           <p className="text-sm text-muted-foreground">Loading lead details...</p>
         </div>
       </div>
@@ -438,45 +350,32 @@ export default function LeadDetailPage() {
           <User className="h-8 w-8 text-muted-foreground" />
         </div>
         <h2 className="text-xl font-semibold">Lead not found</h2>
-        <p className="text-muted-foreground">The lead you're looking for doesn't exist.</p>
         <Button onClick={() => navigate('/dashboard/crm/leads')}>
-          <ArrowLeft className="h-4 w-4 mr-2" />
-          Back to Leads
+          <ArrowLeft className="h-4 w-4 mr-2" />Back to Leads
         </Button>
       </div>
     );
   }
 
-  const stageConfig = STAGE_CONFIG[lead.stage] || STAGE_CONFIG.lead;
-  const currentStageIndex = STAGE_ORDER.indexOf(lead.stage);
+  const statusColor = lead.status?.color || '#6366f1';
 
   return (
     <div className="space-y-6 pb-8">
-      {/* Header Section */}
+      {/* Header */}
       <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-slate-50 via-white to-slate-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 border shadow-sm">
-        <div className="absolute inset-0 bg-grid-slate-100 dark:bg-grid-slate-700/25 [mask-image:linear-gradient(0deg,transparent,black)]" />
-
         <div className="relative p-6">
-          {/* Back Button & Actions */}
+          {/* Back & Actions */}
           <div className="flex items-center justify-between mb-6">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => navigate('/dashboard/crm/leads')}
-              className="gap-2"
-            >
+            <Button variant="ghost" size="sm" onClick={() => navigate('/dashboard/crm/leads')} className="gap-2">
               <ArrowLeft className="h-4 w-4" />
               Back to Leads
             </Button>
-
             <div className="flex items-center gap-2">
               <Button variant="outline" size="sm" onClick={() => setEditDialogOpen(true)}>
-                <Edit className="h-4 w-4 mr-2" />
-                Edit
+                <Edit className="h-4 w-4 mr-2" />Edit
               </Button>
               <Button variant="outline" size="sm" onClick={handleQualifyLead}>
-                <Target className="h-4 w-4 mr-2" />
-                Auto-Qualify
+                <Target className="h-4 w-4 mr-2" />Auto-Qualify
               </Button>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
@@ -486,17 +385,9 @@ export default function LeadDetailPage() {
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
                   <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                  <DropdownMenuItem onClick={() => setStageDialogOpen(true)}>
-                    <TrendingUp className="h-4 w-4 mr-2" />
-                    Change Stage
-                  </DropdownMenuItem>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem
-                    className="text-red-600 focus:text-red-600"
-                    onClick={() => setDeleteDialogOpen(true)}
-                  >
-                    <Trash2 className="h-4 w-4 mr-2" />
-                    Delete Lead
+                  <DropdownMenuItem className="text-red-600 focus:text-red-600" onClick={() => setDeleteDialogOpen(true)}>
+                    <Trash2 className="h-4 w-4 mr-2" />Delete Lead
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
@@ -506,11 +397,7 @@ export default function LeadDetailPage() {
           {/* Lead Info */}
           <div className="flex items-start gap-5">
             <Avatar className="h-16 w-16 border-2 border-white dark:border-slate-700 shadow-md">
-              <AvatarFallback className={cn(
-                "text-lg font-semibold",
-                stageConfig.bgColor,
-                stageConfig.color
-              )}>
+              <AvatarFallback className="text-lg font-semibold bg-primary/10 text-primary">
                 {getInitials(lead.contact?.name || 'Unknown')}
               </AvatarFallback>
             </Avatar>
@@ -520,46 +407,39 @@ export default function LeadDetailPage() {
                 <h1 className="text-2xl font-bold truncate">
                   {lead.contact?.name || 'Unknown Contact'}
                 </h1>
-                <Badge className={cn("font-medium", stageConfig.bgColor, stageConfig.color)}>
-                  {stageConfig.icon}
-                  <span className="ml-1">{stageConfig.label}</span>
-                </Badge>
+                {lead.status ? (
+                  <Badge
+                    className="font-medium border"
+                    style={{ backgroundColor: statusColor + '20', color: statusColor, borderColor: statusColor + '50' }}
+                  >
+                    {lead.status.name}
+                  </Badge>
+                ) : lead.stage ? (
+                  <Badge variant="secondary" className="font-medium capitalize">{lead.stage}</Badge>
+                ) : null}
                 {lead.qualification_status === 'qualified' && (
                   <Badge variant="outline" className="bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-400 dark:border-emerald-800">
-                    <ShieldCheck className="h-3 w-3 mr-1" />
-                    Qualified
+                    <ShieldCheck className="h-3 w-3 mr-1" />Qualified
                   </Badge>
                 )}
               </div>
 
               <div className="flex items-center gap-4 mt-2 text-sm text-muted-foreground flex-wrap">
                 {lead.contact?.email && (
-                  <span className="flex items-center gap-1.5">
-                    <Mail className="h-4 w-4" />
-                    {lead.contact.email}
-                  </span>
+                  <span className="flex items-center gap-1.5"><Mail className="h-4 w-4" />{lead.contact.email}</span>
                 )}
                 {lead.contact?.phone_number && (
-                  <span className="flex items-center gap-1.5">
-                    <Phone className="h-4 w-4" />
-                    {lead.contact.phone_number}
-                  </span>
+                  <span className="flex items-center gap-1.5"><Phone className="h-4 w-4" />{lead.contact.phone_number}</span>
                 )}
                 {lead.source && (
-                  <span className="flex items-center gap-1.5">
-                    <Globe className="h-4 w-4" />
-                    {lead.source}
-                  </span>
+                  <span className="flex items-center gap-1.5"><Globe className="h-4 w-4" />{lead.source}</span>
                 )}
               </div>
 
-              {/* Quick Stats Row */}
-              <div className="flex items-center gap-6 mt-4">
+              {/* Quick Stats */}
+              <div className="flex items-center gap-6 mt-4 flex-wrap">
                 <div className="flex items-center gap-2">
-                  <div className={cn(
-                    "flex items-center justify-center w-8 h-8 rounded-lg",
-                    `bg-gradient-to-br ${getScoreGradient(lead.score)}`
-                  )}>
+                  <div className={cn("flex items-center justify-center w-8 h-8 rounded-lg bg-gradient-to-br", getScoreGradient(lead.score))}>
                     <Star className="h-4 w-4 text-white" />
                   </div>
                   <div>
@@ -575,9 +455,7 @@ export default function LeadDetailPage() {
                     </div>
                     <div>
                       <p className="text-xs text-muted-foreground">Deal Value</p>
-                      <p className="font-bold text-emerald-600 dark:text-emerald-400">
-                        ${lead.deal_value.toLocaleString()}
-                      </p>
+                      <p className="font-bold text-emerald-600 dark:text-emerald-400">${lead.deal_value.toLocaleString()}</p>
                     </div>
                   </div>
                 )}
@@ -587,8 +465,8 @@ export default function LeadDetailPage() {
                     <Timer className="h-4 w-4 text-white" />
                   </div>
                   <div>
-                    <p className="text-xs text-muted-foreground">Days in Stage</p>
-                    <p className="font-bold">{getDaysInStage()}</p>
+                    <p className="text-xs text-muted-foreground">Days in Status</p>
+                    <p className="font-bold">{getDaysInStatus()}</p>
                   </div>
                 </div>
 
@@ -606,88 +484,45 @@ export default function LeadDetailPage() {
           </div>
         </div>
 
-        {/* Pipeline Stepper */}
-        <div className="border-t bg-slate-50/50 dark:bg-slate-800/50 px-6 py-4">
-          <div className="flex items-center justify-between">
-            {STAGE_ORDER.map((stage, index) => {
-              const config = STAGE_CONFIG[stage];
-              const isActive = lead.stage === stage;
-              const isPast = currentStageIndex > index || (stage === 'lost' && lead.stage === 'lost');
-              const isLost = stage === 'lost';
-
-              return (
-                <div key={stage} className="flex items-center flex-1">
-                  <button
-                    onClick={() => {
-                      setSelectedStage(stage);
-                      setStageDialogOpen(true);
-                    }}
-                    className={cn(
-                      "flex flex-col items-center gap-1.5 transition-all group flex-1",
-                      isActive ? "" : ""
-                    )}
-                  >
-                    <div
-                      className={cn(
-                        "w-10 h-10 rounded-full flex items-center justify-center transition-all border-2",
-                        isActive
-                          ? cn(config.bgColor, config.color, "border-current shadow-md")
-                          : isPast
-                            ? "bg-primary text-primary-foreground border-primary"
-                            : "bg-muted text-muted-foreground border-muted-foreground/20 group-hover:border-muted-foreground/40"
-                      )}
-                    >
-                      {isPast && !isActive ? (
-                        <CheckCircle2 className="h-5 w-5" />
-                      ) : (
-                        config.icon
-                      )}
-                    </div>
-                    <span className={cn(
-                      "text-xs font-medium transition-colors",
-                      isActive ? config.color : "text-muted-foreground"
-                    )}>
-                      {config.label}
-                    </span>
-                  </button>
-
-                  {index < STAGE_ORDER.length - 1 && (
-                    <div className="flex-1 max-w-[60px] px-1">
-                      <div className={cn(
-                        "h-0.5 rounded-full transition-colors",
-                        currentStageIndex > index ? "bg-primary" : "bg-muted"
-                      )} />
-                    </div>
-                  )}
-                </div>
-              );
-            })}
+        {/* Workflow Transitions */}
+        {lead.available_transitions && lead.available_transitions.length > 0 && (
+          <div className="border-t bg-slate-50/50 dark:bg-slate-800/50 px-6 py-3">
+            <div className="flex items-center gap-3 flex-wrap">
+              <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Move to:</span>
+              {lead.available_transitions.map(t => (
+                <Button
+                  key={t.id}
+                  size="sm"
+                  variant="outline"
+                  className="h-7 text-xs gap-1.5"
+                  onClick={() => { setPendingTransition(t); setTransitionDialogOpen(true); }}
+                >
+                  <ArrowRight className="h-3 w-3" />
+                  {t.name}
+                </Button>
+              ))}
+            </div>
           </div>
-        </div>
+        )}
       </div>
 
-      {/* Main Content Grid */}
+      {/* Main Content */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Left Column - Main Content */}
         <div className="lg:col-span-2 space-y-6">
           <Tabs defaultValue="overview" className="w-full">
             <TabsList className="grid w-full grid-cols-3 lg:w-auto lg:inline-grid">
               <TabsTrigger value="overview" className="gap-2">
-                <User className="h-4 w-4" />
-                Overview
+                <User className="h-4 w-4" />Overview
               </TabsTrigger>
               <TabsTrigger value="scoring" className="gap-2">
-                <Award className="h-4 w-4" />
-                Scoring
+                <Award className="h-4 w-4" />Scoring
               </TabsTrigger>
               <TabsTrigger value="activity" className="gap-2">
-                <History className="h-4 w-4" />
-                Activity
+                <History className="h-4 w-4" />Activity
               </TabsTrigger>
             </TabsList>
 
             <TabsContent value="overview" className="space-y-4 mt-4">
-              {/* Lead Information */}
               <Card>
                 <CardHeader className="pb-3">
                   <CardTitle className="text-base flex items-center gap-2">
@@ -722,9 +557,7 @@ export default function LeadDetailPage() {
                         <Star className="h-4 w-4" />
                         <span className="text-xs font-medium">Score</span>
                       </div>
-                      <p className={cn("font-semibold", getScoreColor(lead.score))}>
-                        {lead.score}/100
-                      </p>
+                      <p className={cn("font-semibold", getScoreColor(lead.score))}>{lead.score}/100</p>
                     </div>
 
                     <div className="space-y-1 p-3 rounded-lg bg-muted/50">
@@ -732,10 +565,7 @@ export default function LeadDetailPage() {
                         <ShieldCheck className="h-4 w-4" />
                         <span className="text-xs font-medium">Qualification</span>
                       </div>
-                      <Badge
-                        variant={lead.qualification_status === 'qualified' ? 'default' : 'secondary'}
-                        className="capitalize"
-                      >
+                      <Badge variant={lead.qualification_status === 'qualified' ? 'default' : 'secondary'} className="capitalize">
                         {lead.qualification_status}
                       </Badge>
                     </div>
@@ -751,7 +581,7 @@ export default function LeadDetailPage() {
                     <div className="space-y-1 p-3 rounded-lg bg-muted/50">
                       <div className="flex items-center gap-2 text-muted-foreground">
                         <Clock className="h-4 w-4" />
-                        <span className="text-xs font-medium">Stage Changed</span>
+                        <span className="text-xs font-medium">Status Changed</span>
                       </div>
                       <p className="font-semibold text-sm">{formatDate(lead.stage_changed_at)}</p>
                     </div>
@@ -767,35 +597,28 @@ export default function LeadDetailPage() {
                     </div>
                   )}
 
-                  {(lead.won_reason || lead.lost_reason) && (
-                    <div className={cn(
-                      "mt-4 p-3 rounded-lg",
-                      lead.stage === 'customer'
-                        ? "bg-emerald-50 dark:bg-emerald-900/20"
-                        : "bg-red-50 dark:bg-red-900/20"
-                    )}>
-                      <div className={cn(
-                        "flex items-center gap-2 mb-2",
-                        lead.stage === 'customer'
-                          ? "text-emerald-600 dark:text-emerald-400"
-                          : "text-red-600 dark:text-red-400"
-                      )}>
-                        {lead.stage === 'customer' ? (
-                          <CheckCircle2 className="h-4 w-4" />
-                        ) : (
-                          <XCircle className="h-4 w-4" />
-                        )}
-                        <span className="text-xs font-medium">
-                          {lead.stage === 'customer' ? 'Won Reason' : 'Lost Reason'}
-                        </span>
+                  {lead.won_reason && (
+                    <div className="mt-4 p-3 rounded-lg bg-emerald-50 dark:bg-emerald-900/20">
+                      <div className="flex items-center gap-2 mb-2 text-emerald-600 dark:text-emerald-400">
+                        <CheckCircle2 className="h-4 w-4" />
+                        <span className="text-xs font-medium">Won Reason</span>
                       </div>
-                      <p className="text-sm">{lead.won_reason || lead.lost_reason}</p>
+                      <p className="text-sm">{lead.won_reason}</p>
+                    </div>
+                  )}
+
+                  {lead.lost_reason && (
+                    <div className="mt-4 p-3 rounded-lg bg-red-50 dark:bg-red-900/20">
+                      <div className="flex items-center gap-2 mb-2 text-red-600 dark:text-red-400">
+                        <XCircle className="h-4 w-4" />
+                        <span className="text-xs font-medium">Lost Reason</span>
+                      </div>
+                      <p className="text-sm">{lead.lost_reason}</p>
                     </div>
                   )}
                 </CardContent>
               </Card>
 
-              {/* Contact Information */}
               <Card>
                 <CardHeader className="pb-3">
                   <CardTitle className="text-base flex items-center gap-2">
@@ -814,7 +637,6 @@ export default function LeadDetailPage() {
                         <p className="font-medium">{lead.contact?.email || '-'}</p>
                       </div>
                     </div>
-
                     <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/50">
                       <Phone className="h-5 w-5 text-muted-foreground" />
                       <div>
@@ -822,9 +644,7 @@ export default function LeadDetailPage() {
                         <p className="font-medium">{lead.contact?.phone_number || '-'}</p>
                       </div>
                     </div>
-
                     <Separator />
-
                     <div className="grid grid-cols-2 gap-3">
                       <div className="p-3 rounded-lg bg-muted/50">
                         <p className="text-xs text-muted-foreground">Lead Source</p>
@@ -840,12 +660,7 @@ export default function LeadDetailPage() {
                       </div>
                       <div className="p-3 rounded-lg bg-muted/50">
                         <p className="text-xs text-muted-foreground">Do Not Contact</p>
-                        <p className={cn(
-                          "font-medium",
-                          lead.contact?.do_not_contact
-                            ? "text-red-600 dark:text-red-400"
-                            : "text-emerald-600 dark:text-emerald-400"
-                        )}>
+                        <p className={cn("font-medium", lead.contact?.do_not_contact ? "text-red-600 dark:text-red-400" : "text-emerald-600 dark:text-emerald-400")}>
                           {lead.contact?.do_not_contact ? 'Yes' : 'No'}
                         </p>
                       </div>
@@ -866,13 +681,9 @@ export default function LeadDetailPage() {
                       Score Breakdown
                     </CardTitle>
                     <div className="text-right">
-                      <p className={cn("text-2xl font-bold", getScoreColor(lead.score))}>
-                        {lead.score}/100
-                      </p>
+                      <p className={cn("text-2xl font-bold", getScoreColor(lead.score))}>{lead.score}/100</p>
                       {lead.last_scored_at && (
-                        <p className="text-xs text-muted-foreground">
-                          Last scored: {formatDate(lead.last_scored_at)}
-                        </p>
+                        <p className="text-xs text-muted-foreground">Last scored: {formatDate(lead.last_scored_at)}</p>
                       )}
                     </div>
                   </div>
@@ -882,28 +693,19 @@ export default function LeadDetailPage() {
                   {scores.length > 0 ? (
                     <div className="space-y-3">
                       {scores.map((score) => (
-                        <div
-                          key={score.id}
-                          className="flex items-center justify-between p-4 rounded-lg bg-muted/50 border"
-                        >
+                        <div key={score.id} className="flex items-center justify-between p-4 rounded-lg bg-muted/50 border">
                           <div className="flex items-center gap-3">
                             <div className="p-2 rounded-lg bg-primary/10">
                               <Zap className="h-4 w-4 text-primary" />
                             </div>
                             <div>
-                              <p className="font-medium capitalize">
-                                {score.score_type.replace(/_/g, ' ')}
-                              </p>
-                              {score.reason && (
-                                <p className="text-sm text-muted-foreground">{score.reason}</p>
-                              )}
+                              <p className="font-medium capitalize">{score.score_type.replace(/_/g, ' ')}</p>
+                              {score.reason && <p className="text-sm text-muted-foreground">{score.reason}</p>}
                             </div>
                           </div>
                           <div className="text-right">
                             <p className="text-xl font-bold">{score.score_value}</p>
-                            <p className="text-xs text-muted-foreground">
-                              {formatDate(score.created_at)}
-                            </p>
+                            <p className="text-xs text-muted-foreground">{formatDate(score.created_at)}</p>
                           </div>
                         </div>
                       ))}
@@ -913,12 +715,9 @@ export default function LeadDetailPage() {
                       <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center mx-auto mb-3">
                         <Award className="h-6 w-6 text-muted-foreground" />
                       </div>
-                      <p className="text-muted-foreground">
-                        No scoring history available.
-                      </p>
+                      <p className="text-muted-foreground">No scoring history available.</p>
                       <Button variant="outline" size="sm" className="mt-3" onClick={handleQualifyLead}>
-                        <Target className="h-4 w-4 mr-2" />
-                        Run Auto-Qualify
+                        <Target className="h-4 w-4 mr-2" />Run Auto-Qualify
                       </Button>
                     </div>
                   )}
@@ -927,10 +726,8 @@ export default function LeadDetailPage() {
             </TabsContent>
 
             <TabsContent value="activity" className="space-y-4 mt-4">
-              {/* Notes & Activities */}
               <EntityNotes leadId={lead.id} />
 
-              {/* Timeline Card */}
               <Card>
                 <CardHeader className="pb-3">
                   <CardTitle className="text-base flex items-center gap-2">
@@ -951,29 +748,26 @@ export default function LeadDetailPage() {
                       </div>
                       <div className="flex-1 pb-4">
                         <p className="font-medium">Lead Created</p>
-                        <p className="text-sm text-muted-foreground">
-                          {formatDateTime(lead.created_at)}
-                        </p>
+                        <p className="text-sm text-muted-foreground">{formatDateTime(lead.created_at)}</p>
                       </div>
                     </div>
 
-                    {lead.previous_stage && (
+                    {lead.stage_changed_at && lead.status && (
                       <div className="flex gap-4">
                         <div className="flex flex-col items-center">
-                          <div className="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900/50 flex items-center justify-center border-2 border-blue-200 dark:border-blue-800">
-                            <TrendingUp className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                          <div
+                            className="w-10 h-10 rounded-full flex items-center justify-center border-2"
+                            style={{ backgroundColor: statusColor + '20', borderColor: statusColor + '50' }}
+                          >
+                            <TrendingUp className="h-5 w-5" style={{ color: statusColor }} />
                           </div>
                           <div className="w-0.5 flex-1 bg-border mt-2" />
                         </div>
                         <div className="flex-1 pb-4">
                           <p className="font-medium">
-                            Stage: {STAGE_CONFIG[lead.previous_stage]?.label}
-                            <ChevronRight className="h-4 w-4 inline mx-1" />
-                            {stageConfig.label}
+                            Status: <span style={{ color: statusColor }}>{lead.status.name}</span>
                           </p>
-                          <p className="text-sm text-muted-foreground">
-                            {formatDateTime(lead.stage_changed_at)}
-                          </p>
+                          <p className="text-sm text-muted-foreground">{formatDateTime(lead.stage_changed_at)}</p>
                         </div>
                       </div>
                     )}
@@ -986,9 +780,7 @@ export default function LeadDetailPage() {
                       </div>
                       <div className="flex-1">
                         <p className="font-medium">Last Updated</p>
-                        <p className="text-sm text-muted-foreground">
-                          {formatDateTime(lead.updated_at)}
-                        </p>
+                        <p className="text-sm text-muted-foreground">{formatDateTime(lead.updated_at)}</p>
                       </div>
                     </div>
                   </div>
@@ -998,64 +790,50 @@ export default function LeadDetailPage() {
           </Tabs>
         </div>
 
-        {/* Right Column - Sidebar */}
+        {/* Sidebar */}
         <div className="space-y-6">
-          {/* Score Card */}
           <Card className="overflow-hidden">
-            <div className={cn(
-              "h-2 bg-gradient-to-r",
-              getScoreGradient(lead.score)
-            )} />
+            <div className={cn("h-2 bg-gradient-to-r", getScoreGradient(lead.score))} />
             <CardHeader className="pb-2">
               <CardTitle className="text-sm flex items-center gap-2">
-                <Star className="h-4 w-4" />
-                Lead Score
+                <Star className="h-4 w-4" />Lead Score
               </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="text-center py-2">
-                <p className={cn("text-4xl font-bold", getScoreColor(lead.score))}>
-                  {lead.score}
-                </p>
+                <p className={cn("text-4xl font-bold", getScoreColor(lead.score))}>{lead.score}</p>
                 <p className="text-sm text-muted-foreground">out of 100</p>
               </div>
               <Progress value={lead.score} className="mt-2" />
               <div className="flex justify-between text-xs text-muted-foreground mt-2">
-                <span>Cold</span>
-                <span>Warm</span>
-                <span>Hot</span>
+                <span>Cold</span><span>Warm</span><span>Hot</span>
               </div>
             </CardContent>
           </Card>
 
-          {/* Quick Stats */}
           <Card>
             <CardHeader className="pb-2">
               <CardTitle className="text-sm flex items-center gap-2">
-                <Zap className="h-4 w-4" />
-                Quick Stats
+                <Zap className="h-4 w-4" />Quick Stats
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
               <div className="flex items-center justify-between p-2 rounded-lg hover:bg-muted/50 transition-colors">
                 <span className="text-sm text-muted-foreground flex items-center gap-2">
-                  <Timer className="h-4 w-4" />
-                  Days in Stage
+                  <Timer className="h-4 w-4" />Days in Status
                 </span>
-                <span className="font-bold">{getDaysInStage()}</span>
+                <span className="font-bold">{getDaysInStatus()}</span>
               </div>
               <div className="flex items-center justify-between p-2 rounded-lg hover:bg-muted/50 transition-colors">
                 <span className="text-sm text-muted-foreground flex items-center gap-2">
-                  <CalendarDays className="h-4 w-4" />
-                  Total Age
+                  <CalendarDays className="h-4 w-4" />Total Age
                 </span>
                 <span className="font-bold">{getTotalAge()} days</span>
               </div>
               {lead.deal_value && (
                 <div className="flex items-center justify-between p-2 rounded-lg hover:bg-muted/50 transition-colors">
                   <span className="text-sm text-muted-foreground flex items-center gap-2">
-                    <DollarSign className="h-4 w-4" />
-                    Deal Value
+                    <DollarSign className="h-4 w-4" />Deal Value
                   </span>
                   <span className="font-bold text-emerald-600 dark:text-emerald-400">
                     ${lead.deal_value.toLocaleString()}
@@ -1065,33 +843,25 @@ export default function LeadDetailPage() {
             </CardContent>
           </Card>
 
-          {/* Tags */}
           <Card>
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm flex items-center gap-2">
-                Tags
-              </CardTitle>
+              <CardTitle className="text-sm">Tags</CardTitle>
             </CardHeader>
             <CardContent>
-              <TagSelector
-                entityType="lead"
-                selectedTagIds={selectedTagIds}
-                onTagsChange={handleTagsChange}
-              />
+              <TagSelector entityType="lead" selectedTagIds={selectedTagIds} onTagsChange={handleTagsChange} />
             </CardContent>
           </Card>
 
-          {/* Custom Fields */}
-          {lead.custom_fields && Object.keys(lead.custom_fields).length > 0 && (
+          {customFieldDefs.length > 0 && (
             <Card>
               <CardHeader className="pb-2">
                 <CardTitle className="text-sm">Custom Fields</CardTitle>
               </CardHeader>
               <CardContent className="space-y-2">
-                {Object.entries(lead.custom_fields).map(([key, value]) => (
-                  <div key={key} className="flex justify-between text-sm p-2 rounded-lg bg-muted/50">
-                    <span className="text-muted-foreground capitalize">{key.replace(/_/g, ' ')}</span>
-                    <span className="font-medium">{String(value)}</span>
+                {customFieldDefs.map(def => (
+                  <div key={def.id} className="flex justify-between text-sm p-2 rounded-lg bg-muted/50">
+                    <span className="text-muted-foreground">{def.label}</span>
+                    <span className="font-medium">{formatCustomFieldValue(lead.custom_fields?.[def.name], def)}</span>
                   </div>
                 ))}
               </CardContent>
@@ -1105,16 +875,14 @@ export default function LeadDetailPage() {
         <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              <Edit className="h-5 w-5" />
-              Edit Lead
+              <Edit className="h-5 w-5" />Edit Lead
             </DialogTitle>
             <DialogDescription>Update lead information and details</DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
               <Label htmlFor="deal_value" className="flex items-center gap-2">
-                <DollarSign className="h-4 w-4 text-muted-foreground" />
-                Deal Value
+                <DollarSign className="h-4 w-4 text-muted-foreground" />Deal Value
               </Label>
               <div className="relative">
                 <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">$</span>
@@ -1131,33 +899,21 @@ export default function LeadDetailPage() {
 
             <div className="space-y-2">
               <Label htmlFor="source" className="flex items-center gap-2">
-                <Globe className="h-4 w-4 text-muted-foreground" />
-                Source
+                <Globe className="h-4 w-4 text-muted-foreground" />Source
               </Label>
-              <Select
-                value={editData.source}
-                onValueChange={(value) => setEditData({ ...editData, source: value })}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select source" />
-                </SelectTrigger>
+              <Select value={editData.source} onValueChange={(value) => setEditData({ ...editData, source: value })}>
+                <SelectTrigger><SelectValue placeholder="Select source" /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="website">Website</SelectItem>
-                  <SelectItem value="referral">Referral</SelectItem>
-                  <SelectItem value="social_media">Social Media</SelectItem>
-                  <SelectItem value="email_campaign">Email Campaign</SelectItem>
-                  <SelectItem value="cold_call">Cold Call</SelectItem>
-                  <SelectItem value="event">Event</SelectItem>
-                  <SelectItem value="partner">Partner</SelectItem>
-                  <SelectItem value="other">Other</SelectItem>
+                  {['website', 'referral', 'social_media', 'email_campaign', 'cold_call', 'event', 'partner', 'other'].map(s => (
+                    <SelectItem key={s} value={s}>{s.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())}</SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
 
             <div className="space-y-2">
               <Label htmlFor="expected_close_date" className="flex items-center gap-2">
-                <Calendar className="h-4 w-4 text-muted-foreground" />
-                Expected Close Date
+                <Calendar className="h-4 w-4 text-muted-foreground" />Expected Close Date
               </Label>
               <Input
                 id="expected_close_date"
@@ -1169,8 +925,7 @@ export default function LeadDetailPage() {
 
             <div className="space-y-2">
               <Label htmlFor="notes" className="flex items-center gap-2">
-                <MessageSquare className="h-4 w-4 text-muted-foreground" />
-                Notes
+                <MessageSquare className="h-4 w-4 text-muted-foreground" />Notes
               </Label>
               <Textarea
                 id="notes"
@@ -1182,84 +937,81 @@ export default function LeadDetailPage() {
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setEditDialogOpen(false)}>
-              Cancel
-            </Button>
-            <Button onClick={handleUpdateLead}>
-              Save Changes
-            </Button>
+            <Button variant="outline" onClick={() => setEditDialogOpen(false)}>Cancel</Button>
+            <Button onClick={handleUpdateLead}>Save Changes</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
-      {/* Stage Change Dialog */}
-      <Dialog open={stageDialogOpen} onOpenChange={setStageDialogOpen}>
-        <DialogContent className="sm:max-w-[450px]">
+      {/* Transition Dialog */}
+      <Dialog open={transitionDialogOpen} onOpenChange={open => {
+        setTransitionDialogOpen(open);
+        if (!open) { setTransitionComment(''); setTransitionFieldValues({}); setPendingTransition(null); }
+      }}>
+        <DialogContent className="sm:max-w-[460px]">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              <TrendingUp className="h-5 w-5" />
-              Change Lead Stage
+              <ArrowRight className="h-5 w-5" />
+              Move to: {pendingTransition?.name}
             </DialogTitle>
-            <DialogDescription>
-              Update the stage for this lead in the sales pipeline
-            </DialogDescription>
+            <DialogDescription>Confirm moving this lead to the next status.</DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
+            {/* Custom screen_fields */}
+            {(pendingTransition?.screen_fields || [])
+              .filter((sf: any) => sf.field !== 'comment')
+              .map((sf: any) => {
+                const cfDef = customFieldDefs.find(d => d.name === sf.field);
+                return (
+                  <div key={sf.field} className="space-y-1.5">
+                    <Label className="text-sm font-medium">
+                      {sf.label}
+                      {sf.required && <span className="text-destructive ml-0.5">*</span>}
+                    </Label>
+                    {cfDef ? (
+                      <CustomFieldInput
+                        definition={cfDef}
+                        value={transitionFieldValues[sf.field] ?? null}
+                        onChange={v => setTransitionFieldValues(p => ({ ...p, [sf.field]: v }))}
+                        users={users}
+                      />
+                    ) : (
+                      <Input
+                        value={transitionFieldValues[sf.field] ?? ''}
+                        onChange={e => setTransitionFieldValues(p => ({ ...p, [sf.field]: e.target.value }))}
+                      />
+                    )}
+                  </div>
+                );
+              })}
             <div className="space-y-2">
-              <Label>New Stage</Label>
-              <Select value={selectedStage} onValueChange={setSelectedStage}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select stage" />
-                </SelectTrigger>
-                <SelectContent>
-                  {STAGE_ORDER.map((stage) => {
-                    const config = STAGE_CONFIG[stage];
-                    return (
-                      <SelectItem key={stage} value={stage}>
-                        <div className="flex items-center gap-2">
-                          {config.icon}
-                          <span>{config.label}</span>
-                        </div>
-                      </SelectItem>
-                    );
-                  })}
-                </SelectContent>
-              </Select>
+              <Label htmlFor="transition_comment">Comment (optional)</Label>
+              <Textarea
+                id="transition_comment"
+                placeholder="Add a note about this status change..."
+                value={transitionComment}
+                onChange={(e) => setTransitionComment(e.target.value)}
+                rows={3}
+              />
             </div>
-
-            {(selectedStage === 'customer' || selectedStage === 'lost') && (
-              <div className="space-y-2">
-                <Label htmlFor="reason">
-                  {selectedStage === 'customer' ? 'Won Reason' : 'Lost Reason'}
-                </Label>
-                <Textarea
-                  id="reason"
-                  placeholder={`Why was this lead ${selectedStage === 'customer' ? 'won' : 'lost'}?`}
-                  value={stageReason}
-                  onChange={(e) => setStageReason(e.target.value)}
-                  rows={3}
-                />
-              </div>
-            )}
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setStageDialogOpen(false)}>
+            <Button variant="outline" onClick={() => { setTransitionDialogOpen(false); setTransitionComment(''); setTransitionFieldValues({}); setPendingTransition(null); }}>
               Cancel
             </Button>
-            <Button onClick={handleUpdateStage} disabled={!selectedStage}>
-              Update Stage
+            <Button onClick={handleTransition} disabled={transitionSaving}>
+              {transitionSaving ? 'Saving...' : `Move to ${pendingTransition?.name}`}
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
-      {/* Delete Confirmation Dialog */}
+      {/* Delete Dialog */}
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle className="flex items-center gap-2">
-              <Trash2 className="h-5 w-5 text-red-500" />
-              Delete Lead
+              <Trash2 className="h-5 w-5 text-red-500" />Delete Lead
             </AlertDialogTitle>
             <AlertDialogDescription>
               Are you sure you want to delete this lead? This action cannot be undone.
@@ -1267,10 +1019,7 @@ export default function LeadDetailPage() {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleDeleteLead}
-              className="bg-red-600 hover:bg-red-700"
-            >
+            <AlertDialogAction onClick={handleDeleteLead} className="bg-red-600 hover:bg-red-700">
               Delete
             </AlertDialogAction>
           </AlertDialogFooter>

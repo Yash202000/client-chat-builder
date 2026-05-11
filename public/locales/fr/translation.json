@@ -108,7 +108,11 @@
     "telegramInbox": "Telegram",
     "twilioInbox": "Appels Twilio",
     "apiInbox": "API Chat",
-    "contactHub": "Contacts"
+    "contactHub": "Contacts",
+    "customFields": "Champs Personnalisés",
+    "routingRules": "Règles de Routage",
+    "hierarchy": "Hiérarchie",
+    "departments": "Départements"
   },
   "agents": {
     "title": "Vos agents IA",
