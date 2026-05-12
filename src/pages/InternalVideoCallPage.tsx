@@ -209,6 +209,7 @@ const InternalVideoCallPage: React.FC = () => {
   const { user }  = useAuth();
   const { playCallEndSound } = useNotifications();
   const isLastInRoomRef = useRef(false);
+  const hasLeftRef = useRef(false);
 
   const queryParams  = new URLSearchParams(location.search);
   const livekitToken = queryParams.get('livekitToken');
@@ -220,11 +221,13 @@ const InternalVideoCallPage: React.FC = () => {
   const returnTo     = (location.state as { returnTo?: string } | null)?.returnTo || '/dashboard/conversations';
 
   const handleLeave = async () => {
+    if (hasLeftRef.current) return;
+    hasLeftRef.current = true;
+    playCallEndSound();
     if (channelId) {
       const name = user?.first_name || user?.email || 'Someone';
       try { await createChannelMessage(Number(channelId), `${name} left the meeting`, true); } catch { /* ignore */ }
     }
-    playCallEndSound();
     // Last participant out — clear the meeting room so others see "Start Call"
     if (isLastInRoomRef.current && eventId) {
       try {

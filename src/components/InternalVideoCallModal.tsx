@@ -126,6 +126,7 @@ const InternalVideoCallModal: React.FC = () => {
 
   // Default false — tracker corrects this after the 1500ms room sync
   const isLastInRoomRef = useRef(false);
+  const hasLeftRef = useRef(false);
 
   const [isMinimized, setIsMinimized] = useState(false);
   const [isMaximized, setIsMaximized] = useState(false);
@@ -141,6 +142,9 @@ const InternalVideoCallModal: React.FC = () => {
   const isAtBottomRef = useRef(true);
 
   const { roomName, livekitToken, livekitUrl, channelId, callId, eventId } = activeInternalCall ?? {};
+
+  // Reset the leave guard whenever a new call starts
+  useEffect(() => { hasLeftRef.current = false; }, [callId]);
 
   const { position, isDragging, handleMouseDown, setPosition } = useDraggable({
     x: window.innerWidth - 340,
@@ -237,6 +241,8 @@ const InternalVideoCallModal: React.FC = () => {
   };
 
   const handleLeave = async () => {
+    if (hasLeftRef.current) return;
+    hasLeftRef.current = true;
     playCallEndSound();
     if (channelId) {
       const name = user?.first_name || user?.email || 'Someone';

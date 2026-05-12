@@ -110,6 +110,7 @@ const NewChatModal: React.FC<NewChatModalProps> = ({
       const existing = existingChannels.find(
         (ch) =>
           ch.channel_type?.toUpperCase() === 'DM' &&
+          ch.participants.length === 2 &&
           ch.participants.some((p) => p.user_id === targetId) &&
           ch.participants.some((p) => p.user_id === currentUserId)
       );

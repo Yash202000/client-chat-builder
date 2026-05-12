@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useSearchParams } from 'react-router-dom';
 import {
   getChannels,
   getChannelsSummary,
@@ -57,7 +57,6 @@ import MentionInput from '@/components/MentionInput';
 import MentionText from '@/components/MentionText';
 import { SlashCommandInput } from '@/components/SlashCommandInput';
 import SearchModal from '@/components/SearchModal';
-import IncomingCallModal from '@/components/IncomingCallModal';
 import CallingModal from '@/components/CallingModal';
 import CallHistory from '@/components/CallHistory';
 import PinnedMessagesPanel from '@/components/PinnedMessagesPanel';
@@ -266,7 +265,6 @@ const InternalChatPage: React.FC = () => {
   const { user } = useAuth();
   const { startInternalCall } = useVideoCall();
   const queryClient = useQueryClient();
-  const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
 
   const [selectedChannel, setSelectedChannel] = useState<ChatChannel | null>(null);
@@ -287,17 +285,6 @@ const InternalChatPage: React.FC = () => {
   const [replyingTo, setReplyingTo] = useState<ChatMessage | null>(null);
   const chatInputAreaRef = useRef<HTMLDivElement>(null);
   const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
-  const [incomingCall, setIncomingCall] = useState<{
-    callId: number;
-    callerId: number;
-    callerName: string;
-    callerAvatar?: string;
-    channelId: number;
-    channelName: string;
-    roomName: string;
-    livekitToken: string;
-    livekitUrl: string;
-  } | null>(null);
   const [outgoingCall, setOutgoingCall] = useState<{
     callId: number;
     channelId: number;
@@ -346,9 +333,7 @@ const InternalChatPage: React.FC = () => {
       if (wsMessage.type === 'new_message') {
         const newMessage = wsMessage.payload;
         queryClient.setQueryData<ChatMessage[]>(['channelMessages', selectedChannel!.id], (oldMessages = []) => {
-          if (oldMessages.some(msg => msg.id === newMessage.id)) {
-            return oldMessages;
-          }
+          if (oldMessages.some(msg => msg.id === newMessage.id)) return oldMessages;
           return [...oldMessages, newMessage];
         });
 
@@ -447,39 +432,43 @@ const InternalChatPage: React.FC = () => {
           });
         });
       } else if (wsMessage.type === 'video_call_initiated') {
-        // When a video call is initiated, show incoming call modal
-        const { call_id, room_name, livekit_token, livekit_url, channel_id, channel_member_ids, caller_id, caller_name, caller_avatar } = wsMessage;
-        console.log('Video call initiated via WebSocket:', { call_id, room_name, livekit_url, caller_id, channel_id, channel_member_ids });
+        const { call_id, room_name, livekit_token, livekit_url, channel_id, channel_type, channel_member_ids, caller_id, caller_name, caller_avatar } = wsMessage;
 
-        // Check if current user is a member of this channel
         const isChannelMember = channel_member_ids && user && channel_member_ids.includes(user.id);
+        const isDM = channel_type?.toUpperCase() === 'DM' && channel_member_ids?.length === 2;
 
-        // Only show notification if user is a channel member AND not the caller
         if (user && caller_id !== user.id && isChannelMember) {
-          // Look up the actual channel using channel_id from the WebSocket message
           const actualChannel = channels?.find(ch => ch.id === channel_id);
           const channelName = actualChannel ? getChannelDisplayName(actualChannel, user.id) : `Channel ${channel_id}`;
 
-          setIncomingCall({
-            callId: call_id,
-            callerId: caller_id,
-            callerName: caller_name || 'Unknown',
-            callerAvatar: caller_avatar,
-            channelId: channel_id,
-            channelName,
-            roomName: room_name,
-            livekitToken: livekit_token,
-            livekitUrl: livekit_url,
-          });
-
-          // Show desktop notification too
-          showNotification({
-            title: `${caller_name || 'Someone'} is calling`,
-            body: `Incoming video call in ${channelName}`,
-            tag: `video-call-${channel_id}`,
-          });
-        } else if (user && !isChannelMember) {
-          console.log('[InternalChatPage] Ignoring call - user is not a member of channel', channel_id);
+          if (isDM) {
+            // Ring modal is handled by AppLayout globally — just show a browser notification here
+            showNotification({
+              title: `${caller_name || 'Someone'} is calling`,
+              body: `Incoming video call in ${channelName}`,
+              tag: `video-call-${channel_id}`,
+            });
+          } else {
+            // Gentle toast for team calls — no blocking ring
+            toast({
+              title: `📞 ${caller_name || 'Someone'} started a call`,
+              description: `In ${channelName} — tap to join`,
+              duration: 10000,
+              action: (
+                <button
+                  className="text-xs font-medium text-primary underline"
+                  onClick={() => joinVideoCallMutation.mutate(channel_id)}
+                >
+                  Join
+                </button>
+              ),
+            } as any);
+            showNotification({
+              title: `${caller_name || 'Someone'} started a call`,
+              body: `Join the call in ${channelName}`,
+              tag: `video-call-${channel_id}`,
+            });
+          }
         }
 
         // Invalidate the active video call query to fetch fresh data with user's own token
@@ -514,15 +503,16 @@ const InternalChatPage: React.FC = () => {
 
           // If we have outgoingCall state, use it (has the token already)
           if (outgoingCall && outgoingCall.callId === call_id) {
-            console.log('[Call Flow] Using existing outgoingCall state');
-            navigate(
-              `/internal-video-call?roomName=${encodeURIComponent(outgoingCall.roomName)}&livekitToken=${encodeURIComponent(outgoingCall.livekitToken)}&livekitUrl=${encodeURIComponent(outgoingCall.livekitUrl)}&channelId=${outgoingCall.channelId}&callId=${call_id}`
-            );
+            startInternalCall({
+              roomName: outgoingCall.roomName,
+              livekitToken: outgoingCall.livekitToken,
+              livekitUrl: outgoingCall.livekitUrl,
+              channelId: outgoingCall.channelId,
+              callId: String(call_id),
+            });
             setOutgoingCall(null);
           } else {
-            // State was lost, but we can recover by joining the call with a new token
-            console.log('[Call Flow] outgoingCall state lost - requesting new token via join endpoint');
-
+            // State was lost, recover by joining the call with a new token
             const token = localStorage.getItem('accessToken');
             axios.post(
               `${API_BASE_URL}/api/v1/video-calls/channels/${channel_id}/join`,
@@ -531,10 +521,13 @@ const InternalChatPage: React.FC = () => {
             )
             .then(response => {
               const { room_name: roomName, livekit_token, livekit_url: livekitUrl } = response.data;
-              console.log('[Call Flow] Got new token - navigating to video room');
-              navigate(
-                `/internal-video-call?roomName=${encodeURIComponent(roomName)}&livekitToken=${encodeURIComponent(livekit_token)}&livekitUrl=${encodeURIComponent(livekitUrl)}&channelId=${channel_id}&callId=${call_id}`
-              );
+              startInternalCall({
+                roomName,
+                livekitToken: livekit_token,
+                livekitUrl: livekitUrl,
+                channelId: channel_id,
+                callId: String(call_id),
+              });
               setOutgoingCall(null);
             })
             .catch(error => {
@@ -571,11 +564,6 @@ const InternalChatPage: React.FC = () => {
           setOutgoingCall(null);
         }
 
-        // If current user had incoming call, clear it
-        if (incomingCall && incomingCall.callId === call_id) {
-          setIncomingCall(null);
-        }
-
         // Invalidate call history to show latest status
         queryClient.invalidateQueries({ queryKey: ['callHistory', selectedChannel?.id] });
       } else if (wsMessage.type === 'call_missed') {
@@ -594,11 +582,6 @@ const InternalChatPage: React.FC = () => {
           setOutgoingCall(null);
         }
 
-        // If current user had incoming call, clear it
-        if (incomingCall && incomingCall.callId === call_id) {
-          setIncomingCall(null);
-        }
-
         // Invalidate call history to show latest status
         queryClient.invalidateQueries({ queryKey: ['callHistory', selectedChannel?.id] });
       } else if (wsMessage.type === 'call_ended') {
@@ -613,10 +596,6 @@ const InternalChatPage: React.FC = () => {
         if (outgoingCall && outgoingCall.callId === call_id) {
           setOutgoingCall(null);
         }
-        if (incomingCall && incomingCall.callId === call_id) {
-          setIncomingCall(null);
-        }
-
         // Invalidate active call query
         queryClient.invalidateQueries({ queryKey: ['activeVideoCall', selectedChannel?.id] });
         // Invalidate call history to show latest status
@@ -632,13 +611,6 @@ const InternalChatPage: React.FC = () => {
             title: 'User joined',
             description: `${accepted_by_name} joined the call`,
           });
-        }
-
-        // If current user has an incoming call for this call_id, dismiss it since call is now active
-        // (other users already started the call)
-        if (incomingCall && incomingCall.callId === call_id) {
-          console.log('[User Joined] Dismissing incoming call modal - call is now active');
-          setIncomingCall(null);
         }
 
         // Invalidate call history to show updated participant info
@@ -850,27 +822,34 @@ const InternalChatPage: React.FC = () => {
         console.error('[Call] Failed to set in_call status:', statusError);
       }
 
-      // Don't navigate immediately - show calling modal first
       const { room_name, livekit_token, livekit_url, call_id } = data;
       const channelName = selectedChannel ? getChannelDisplayName(selectedChannel, user?.id) : 'Unknown';
 
-      console.log('[Call Flow] Initiating call - setting outgoingCall state:', {
-        call_id,
-        room_name,
-        channelId: selectedChannel?.id,
-        hasToken: !!livekit_token,
-        hasUrl: !!livekit_url
-      });
+      const isTrue1on1DM =
+        selectedChannel?.channel_type?.toUpperCase() === 'DM' &&
+        (selectedChannel?.participants?.length ?? 0) === 2;
 
-      setOutgoingCall({
-        callId: call_id,
-        channelId: selectedChannel?.id || 0,
-        channelName,
-        roomName: room_name,
-        livekitToken: livekit_token,
-        livekitUrl: livekit_url,
-        status: 'ringing',
-      });
+      if (isTrue1on1DM) {
+        // Show "Ringing..." outgoing modal for 1-on-1 DMs
+        setOutgoingCall({
+          callId: call_id,
+          channelId: selectedChannel?.id || 0,
+          channelName,
+          roomName: room_name,
+          livekitToken: livekit_token,
+          livekitUrl: livekit_url,
+          status: 'ringing',
+        });
+      } else {
+        // Group channel — join immediately, no ringing modal
+        startInternalCall({
+          roomName: room_name,
+          livekitToken: livekit_token,
+          livekitUrl: livekit_url,
+          channelId: selectedChannel?.id || 0,
+          callId: String(call_id),
+        });
+      }
     },
     onError: (err) => {
       console.error('Failed to initiate video call:', err);
@@ -921,9 +900,13 @@ const InternalChatPage: React.FC = () => {
       }
 
       const { call_id, room_name, livekit_token, livekit_url } = data;
-      navigate(
-        `/internal-video-call?roomName=${encodeURIComponent(room_name)}&livekitToken=${encodeURIComponent(livekit_token)}&livekitUrl=${encodeURIComponent(livekit_url)}&channelId=${selectedChannel?.id}&callId=${call_id}`
-      );
+      startInternalCall({
+        roomName: room_name,
+        livekitToken: livekit_token,
+        livekitUrl: livekit_url,
+        channelId: selectedChannel?.id,
+        callId: String(call_id),
+      });
     },
     onError: (err) => {
       console.error('Failed to join video call:', err);
@@ -1099,93 +1082,6 @@ const InternalChatPage: React.FC = () => {
     } else {
       // No active call — start a new channel call
       initiateVideoCallMutation.mutate(selectedChannel.id);
-    }
-  };
-
-  const handleAcceptCall = async () => {
-    if (!incomingCall) return;
-
-    try {
-      const token = localStorage.getItem('accessToken');
-
-      // Save current presence status before joining call
-      if (user?.presence_status && user.presence_status !== 'in_call') {
-        localStorage.setItem('previousPresenceStatus', user.presence_status);
-        console.log('[Call] Saved previous status:', user.presence_status);
-      }
-
-      // Set status to in_call
-      try {
-        await axios.post(
-          `${API_BASE_URL}/api/v1/auth/presence?presence_status=in_call`,
-          {},
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
-        console.log('[Call] Status set to in_call');
-      } catch (statusError) {
-        console.error('[Call] Failed to set in_call status:', statusError);
-      }
-
-      const endpoint = `${API_BASE_URL}/api/v1/video-calls/${incomingCall.callId}/accept`;
-
-      const response = await axios.post(
-        endpoint,
-        {},
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            'Content-Type': 'application/json',
-          },
-        }
-      );
-
-      const { room_name, livekit_token, livekit_url } = response.data;
-
-      // Navigate to video call page
-      navigate(
-        `/internal-video-call?roomName=${encodeURIComponent(room_name)}&livekitToken=${encodeURIComponent(livekit_token)}&livekitUrl=${encodeURIComponent(livekit_url)}&channelId=${incomingCall.channelId}&callId=${incomingCall.callId}`
-      );
-
-      // Clear incoming call state
-      setIncomingCall(null);
-    } catch (error) {
-      console.error('Failed to accept call:', error);
-      toast({
-        title: t('common.error'),
-        description: 'Failed to accept call',
-        variant: 'destructive',
-      });
-      setIncomingCall(null);
-    }
-  };
-
-  const handleRejectCall = async () => {
-    if (!incomingCall) return;
-
-    // Play call end sound
-    playCallEndSound();
-
-    try {
-      const token = localStorage.getItem('accessToken');
-      const endpoint = `${API_BASE_URL}/api/v1/video-calls/${incomingCall.callId}/reject`;
-
-      await axios.post(
-        endpoint,
-        {},
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            'Content-Type': 'application/json',
-          },
-        }
-      );
-
-      // Clear incoming call state
-      setIncomingCall(null);
-    } catch (error) {
-      console.error('Failed to reject call:', error);
-      // Still clear the modal even if API call fails
-      setIncomingCall(null);
     }
   };
 
@@ -2282,9 +2178,10 @@ const InternalChatPage: React.FC = () => {
                               <TooltipTrigger asChild>
                                 <button
                                   onClick={async () => {
-                                    // Find existing DM channel with this user, or create one
+                                    // Find existing 1-on-1 DM channel with this user, or create one
                                     let dmChannel = channels?.find(c =>
                                       c.channel_type?.toUpperCase() === 'DM' &&
+                                      c.participants?.length === 2 &&
                                       c.participants?.some(p => p.user_id === userId)
                                     );
                                     if (!dmChannel) {
@@ -2391,16 +2288,7 @@ const InternalChatPage: React.FC = () => {
         }}
         isLoading={newChatMutation.isLoading}
       />
-      {incomingCall && (
-        <IncomingCallModal
-          isOpen={true}
-          callerName={incomingCall.callerName}
-          callerAvatar={incomingCall.callerAvatar}
-          channelName={incomingCall.channelName}
-          onAccept={handleAcceptCall}
-          onReject={handleRejectCall}
-        />
-      )}
+
       {outgoingCall && (
         <CallingModal
           isOpen={true}

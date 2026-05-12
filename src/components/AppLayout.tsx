@@ -4,7 +4,8 @@ import { useTheme } from "@/hooks/useTheme";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { CircleUser, Moon, Sun, PanelLeftClose, PanelLeftOpen, ChevronDown, ChevronRight, MoreHorizontal } from "lucide-react";
 import { useState, useEffect, useMemo } from "react";
-import { Outlet, NavLink, useLocation } from "react-router-dom";
+import { Outlet, NavLink, useLocation, useNavigate } from "react-router-dom";
+import MessageNotificationPopup, { type MessageNotification } from "@/components/MessageNotificationPopup";
 import { useToast } from "@/components/ui/use-toast";
 import { useNotifications } from "@/hooks/useNotifications";
 import { useWebSocket } from "@/hooks/use-websocket";
@@ -133,6 +134,7 @@ const AppLayout = () => {
   const { data: systemConfig } = useSystemConfig();
   const isManagedCredentials = systemConfig?.managed_credentials ?? false;
   const { toast } = useToast();
+  const navigate = useNavigate();
   const { soundEnabled, enableSound, showNotification } = useNotifications();
   const queryClient = useQueryClient();
 
@@ -161,6 +163,8 @@ const AppLayout = () => {
   });
 
   const hasApiIntegration = apiIntegrations.length > 0;
+
+  const [messageNotifications, setMessageNotifications] = useState<MessageNotification[]>([]);
 
   // Global incoming call state
   const [incomingCall, setIncomingCall] = useState<{
@@ -239,33 +243,53 @@ const AppLayout = () => {
           });
         }
       } else if (wsMessage.type === 'video_call_initiated') {
-        const { call_id, room_name, livekit_token, livekit_url, channel_id, channel_member_ids, caller_id, caller_name, caller_avatar } = wsMessage;
-        // Check if current user is a member of this channel
+        const { call_id, room_name, livekit_token, livekit_url, channel_id, channel_type, channel_member_ids, caller_id, caller_name, caller_avatar } = wsMessage;
         const isChannelMember = channel_member_ids && user && channel_member_ids.includes(user.id);
+        const isDM = channel_type?.toUpperCase() === 'DM' && channel_member_ids?.length === 2;
 
-        // Only show notification if user is a channel member AND not the caller
         if (user && caller_id !== user.id && isChannelMember) {
-          setIncomingCall({
-            callId: call_id,
-            callerId: caller_id,
-            callerName: caller_name || 'Unknown',
-            callerAvatar: caller_avatar,
-            channelId: channel_id,
-            channelName: `Channel ${channel_id}`, // We'll improve this later
-            roomName: room_name,
-            livekitToken: livekit_token,
-            livekitUrl: livekit_url,
-          });
-
-          // Show browser notification
-          showNotification({
-            title: 'Incoming Video Call',
-            body: `${caller_name} is calling...`,
-            tag: `call-${call_id}`,
-          });
-        } else if (user && !isChannelMember) {
-          console.log('[AppLayout] Ignoring call - user is not a member of channel', channel_id);
+          if (isDM) {
+            // Full ring modal for 1-on-1 calls
+            setIncomingCall({
+              callId: call_id,
+              callerId: caller_id,
+              callerName: caller_name || 'Unknown',
+              callerAvatar: caller_avatar,
+              channelId: channel_id,
+              channelName: `Channel ${channel_id}`,
+              roomName: room_name,
+              livekitToken: livekit_token,
+              livekitUrl: livekit_url,
+            });
+            showNotification({
+              title: 'Incoming Video Call',
+              body: `${caller_name} is calling...`,
+              tag: `call-${call_id}`,
+            });
+          } else {
+            // Gentle toast for team calls
+            toast({
+              title: `📞 ${caller_name || 'Someone'} started a call`,
+              description: `Go to conversations to join`,
+              duration: 10000,
+            });
+            showNotification({
+              title: `${caller_name || 'Someone'} started a call`,
+              body: `Join the team call in your conversations`,
+              tag: `video-call-${channel_id}`,
+            });
+          }
         }
+      } else if (wsMessage.type === 'call_accepted' || wsMessage.type === 'user_joined_call') {
+        const { call_id } = wsMessage;
+        setIncomingCall((prev) => (prev?.callId === call_id ? null : prev));
+      } else if (wsMessage.type === 'call_ended') {
+        const { call_id } = wsMessage;
+        setIncomingCall((prev) => (prev?.callId === call_id ? null : prev));
+      } else if (wsMessage.type === 'call_rejected') {
+        // Caller cancelled or callee declined — dismiss ring modal on both sides
+        const { call_id } = wsMessage;
+        setIncomingCall((prev) => (prev?.callId === call_id ? null : prev));
       } else if (wsMessage.type === 'unread_count_update') {
         const { user_id, unread_count } = wsMessage;
         console.log('[AppLayout] Unread count update received:', { user_id, unread_count });
@@ -300,6 +324,35 @@ const AppLayout = () => {
 
         // Also invalidate channel members if needed
         queryClient.invalidateQueries({ queryKey: ['channelMembers'] });
+      } else if (wsMessage.type === 'new_message') {
+        const payload = wsMessage.payload;
+        if (!payload || payload.is_activity || payload.extra_data?.is_activity) return;
+        if (!user || payload.sender_id === user.id) return;
+        if (!payload.channel_member_ids?.includes(user.id)) return;
+        // Don't show if already viewing this channel
+        const params = new URLSearchParams(window.location.search);
+        if (location.pathname.includes('/team-chat') && params.get('channelId') === String(payload.channel_id)) return;
+
+        const sender = payload.sender;
+        const senderName = sender?.first_name
+          ? `${sender.first_name}${sender.last_name ? ' ' + sender.last_name : ''}`
+          : sender?.email || 'Someone';
+        const channelName = payload.channel_name || `Channel ${payload.channel_id}`;
+        const preview = (payload.content || '').replace(/@user:\d+/g, '@').trim().substring(0, 120) || 'Sent an attachment';
+
+        setMessageNotifications((prev) => {
+          // Cap at 3 simultaneous notifications
+          const next = [...prev.slice(-2), {
+            id: `msg-${Date.now()}-${payload.id}`,
+            senderId: payload.sender_id,
+            senderName,
+            senderAvatar: sender?.profile_picture_url,
+            channelId: payload.channel_id,
+            channelName,
+            preview,
+          }];
+          return next;
+        });
       }
     },
     enabled: !!user?.company_id,
@@ -337,7 +390,7 @@ const AppLayout = () => {
 
       const { room_name, livekit_token, livekit_url } = response.data;
 
-      // Clear incoming call state and open floating modal (agent stays on current page)
+      // Clear incoming call state and open floating modal (user stays on current page)
       setIncomingCall(null);
       startInternalCall({
         roomName: room_name,
@@ -1050,6 +1103,13 @@ const AppLayout = () => {
 
       {/* Calendar event reminders — shown globally like Teams notifications */}
       <EventReminderBanner />
+
+      {/* Teams-style message notification popups */}
+      <MessageNotificationPopup
+        notifications={messageNotifications}
+        onDismiss={(id) => setMessageNotifications((prev) => prev.filter((n) => n.id !== id))}
+        onNavigate={(channelId) => navigate(`/dashboard/team-chat?channelId=${channelId}`)}
+      />
 
       {/* Global ringtone — pre-loaded at app level so it's always ready to play */}
       <audio id="global-ringtone" src="/microsoft_teams_default.mp3" preload="auto" loop style={{ display: 'none' }} />
