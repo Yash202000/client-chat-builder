@@ -1119,6 +1119,7 @@ const InternalChatPage: React.FC = () => {
 
   // Helper function to change channel and update URL
   const handleChannelSelect = (channel: ChatChannel) => {
+    selectedChannelIdRef.current = channel.id;
     setSelectedChannel(channel);
     setIsRenamingChannel(false);
     setIsPinnedPanelOpen(false);
@@ -1133,18 +1134,20 @@ const InternalChatPage: React.FC = () => {
       .catch(() => {});
   };
 
-  // Auto-select channel from URL params (e.g., when returning from video call)
+  // Sync selected channel from URL params (on initial load or URL-driven navigation)
+  const selectedChannelIdRef = useRef<number | null>(null);
   useEffect(() => {
     const channelIdParam = searchParams.get('channelId');
-
     if (channelIdParam && channels) {
-      const channelToSelect = channels.find(ch => ch.id === Number(channelIdParam));
-      if (channelToSelect && (!selectedChannel || selectedChannel.id !== channelToSelect.id)) {
+      const id = Number(channelIdParam);
+      if (selectedChannelIdRef.current === id) return; // already on this channel
+      const channelToSelect = channels.find(ch => ch.id === id);
+      if (channelToSelect) {
+        selectedChannelIdRef.current = id;
         setSelectedChannel(channelToSelect);
-      } else {
       }
     }
-  }, [searchParams, channels, selectedChannel]);
+  }, [searchParams, channels]);
 
   if (isLoadingChannels)
     return (
