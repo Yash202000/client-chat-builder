@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useCallback, useRef, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { useVideoCall } from '@/contexts/VideoCallContext';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -632,6 +633,7 @@ function CreateEventModal({ open, onClose, onSave, editing, defaultStart }: {
   open: boolean; onClose: () => void; onSave: (ev: CalEvent) => void;
   editing: CalEvent | null; defaultStart: Date;
 }) {
+  const { t } = useTranslation();
   const [form, setForm] = useState<EventForm>({ title: '', type: 'meeting', isAllDay: false, startStr: toDatetimeLocal(defaultStart), endStr: toDatetimeLocal(addHours(defaultStart, 1)), location: '', description: '', enableVideo: true, recurrenceRule: 'none', recurrenceInterval: 1, recurrenceEndDate: '' });
   const [selectedAttendees, setSelectedAttendees] = useState<CompanyUser[]>([]);
   const [attendeeSearch, setAttendeeSearch] = useState('');
@@ -687,7 +689,7 @@ function CreateEventModal({ open, onClose, onSave, editing, defaultStart }: {
 
   const toggleAllDay = (on: boolean) => {
     if (on) { setForm((f) => ({ ...f, isAllDay: true, startStr: f.startStr.split('T')[0] || format(defaultStart, 'yyyy-MM-dd') })); }
-    else { const d = form.startStr.includes('T') ? form.startStr.split('T')[0] : form.startStr; const t = format(defaultStart, 'HH:mm'); setForm((f) => ({ ...f, isAllDay: false, startStr: `${d}T${t}`, endStr: toDatetimeLocal(addHours(fromDatetimeLocal(`${d}T${t}`), 1)) })); }
+    else { const d = form.startStr.includes('T') ? form.startStr.split('T')[0] : form.startStr; const timeStr = format(defaultStart, 'HH:mm'); setForm((f) => ({ ...f, isAllDay: false, startStr: `${d}T${timeStr}`, endStr: toDatetimeLocal(addHours(fromDatetimeLocal(`${d}T${timeStr}`), 1)) })); }
   };
 
   const addAttendee = (u: CompanyUser) => { setSelectedAttendees((p) => [...p, u]); setAttendeeSearch(''); setShowSuggestions(false); setTimeout(() => searchRef.current?.focus(), 50); };
@@ -728,16 +730,16 @@ function CreateEventModal({ open, onClose, onSave, editing, defaultStart }: {
   return (
     <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
       <DialogContent className="max-w-xl bg-card border-border/50 shadow-aurora-md max-h-[90vh] overflow-y-auto">
-        <DialogHeader><DialogTitle className="font-display text-lg font-semibold">{editing ? 'Edit Event' : 'New Event'}</DialogTitle></DialogHeader>
+        <DialogHeader><DialogTitle className="font-display text-lg font-semibold">{editing ? t('calendar.editEvent') : t('calendar.newEvent')}</DialogTitle></DialogHeader>
         <div className="space-y-4 py-1">
-          <Input value={form.title} onChange={(e) => field('title', e.target.value)} onKeyDown={(e) => e.key === 'Enter' && handleSave()} placeholder="Add title" className="bg-background/60 border-border/50 text-base font-medium h-11" autoFocus />
+          <Input value={form.title} onChange={(e) => field('title', e.target.value)} onKeyDown={(e) => e.key === 'Enter' && handleSave()} placeholder={t('calendar.addTitlePlaceholder')} className="bg-background/60 border-border/50 text-base font-medium h-11" autoFocus />
 
           <div className="flex items-center gap-3">
             <Select value={form.type} onValueChange={(v) => field('type', v as EventType)}>
               <SelectTrigger className="w-40 bg-background/60 border-border/50 text-sm"><SelectValue /></SelectTrigger>
               <SelectContent>
                 {(Object.entries(EVENT_TYPE_META) as [EventType, (typeof EVENT_TYPE_META)[EventType]][]).map(([key, meta]) => (
-                  <SelectItem key={key} value={key}><div className="flex items-center gap-2"><span className={cn('w-2 h-2 rounded-full', meta.dot)} />{meta.label}</div></SelectItem>
+                  <SelectItem key={key} value={key}><div className="flex items-center gap-2"><span className={cn('w-2 h-2 rounded-full', meta.dot)} />{t(`calendar.eventTypes.${key === 'out-of-office' ? 'outOfOffice' : key}`)}</div></SelectItem>
                 ))}
               </SelectContent>
             </Select>
@@ -782,7 +784,7 @@ function CreateEventModal({ open, onClose, onSave, editing, defaultStart }: {
             <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Location</label>
             <div className="relative">
               <div className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none">{isVideoLink ? <Video className="w-3.5 h-3.5" /> : <MapPin className="w-3.5 h-3.5" />}</div>
-              <Input value={form.location} onChange={(e) => field('location', e.target.value)} placeholder="Add location or video link…" className="bg-background/60 border-border/50 pl-8 text-sm" />
+              <Input value={form.location} onChange={(e) => field('location', e.target.value)} placeholder={t('calendar.addLocationPlaceholder')} className="bg-background/60 border-border/50 pl-8 text-sm" />
             </div>
           </div>
 
@@ -801,7 +803,7 @@ function CreateEventModal({ open, onClose, onSave, editing, defaultStart }: {
             )}
             <div className="relative">
               <div className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none"><UserPlus className="w-3.5 h-3.5" /></div>
-              <Input ref={searchRef} value={attendeeSearch} onChange={(e) => { setAttendeeSearch(e.target.value); setShowSuggestions(true); }} onFocus={() => setShowSuggestions(true)} onBlur={() => setTimeout(() => setShowSuggestions(false), 150)} placeholder="Search people to invite…" className="bg-background/60 border-border/50 pl-8 text-sm" />
+              <Input ref={searchRef} value={attendeeSearch} onChange={(e) => { setAttendeeSearch(e.target.value); setShowSuggestions(true); }} onFocus={() => setShowSuggestions(true)} onBlur={() => setTimeout(() => setShowSuggestions(false), 150)} placeholder={t('calendar.searchPeoplePlaceholder')} className="bg-background/60 border-border/50 pl-8 text-sm" />
               {showSuggestions && suggestions.length > 0 && (
                 <div className="absolute top-full left-0 right-0 mt-1 z-50 bg-card border border-border/50 rounded-lg shadow-aurora-md overflow-hidden">
                   {suggestions.map((u) => (
@@ -826,7 +828,7 @@ function CreateEventModal({ open, onClose, onSave, editing, defaultStart }: {
               <Video className="w-4 h-4 text-muted-foreground flex-shrink-0" />
               <div>
                 <p className="text-xs font-medium text-foreground">Video Meeting</p>
-                <p className="text-[10px] text-muted-foreground">{form.enableVideo ? 'LiveKit room will be created' : 'Add a video call to this event'}</p>
+                <p className="text-[10px] text-muted-foreground">{form.enableVideo ? t('calendar.liveKitRoom') : t('calendar.addVideoCall')}</p>
               </div>
             </div>
             <button type="button" role="switch" aria-checked={form.enableVideo} onClick={() => field('enableVideo', !form.enableVideo)}
@@ -842,7 +844,7 @@ function CreateEventModal({ open, onClose, onSave, editing, defaultStart }: {
               {(['none', 'daily', 'weekly', 'monthly'] as const).map((rule) => (
                 <button key={rule} type="button" onClick={() => field('recurrenceRule', rule)}
                   className={cn('px-2.5 py-1 rounded text-xs font-medium border transition-all', form.recurrenceRule === rule ? 'bg-primary/20 border-primary/50 text-primary' : 'border-border/40 text-muted-foreground hover:border-primary/30 hover:text-foreground')}>
-                  {rule === 'none' ? 'No repeat' : rule.charAt(0).toUpperCase() + rule.slice(1)}
+                  {rule === 'none' ? t('calendar.noRepeat') : rule.charAt(0).toUpperCase() + rule.slice(1)}
                 </button>
               ))}
             </div>
@@ -872,12 +874,12 @@ function CreateEventModal({ open, onClose, onSave, editing, defaultStart }: {
 
           <div className="space-y-1.5">
             <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Description</label>
-            <Textarea value={form.description} onChange={(e) => field('description', e.target.value)} placeholder="Add notes or agenda…" rows={2} className="bg-background/60 border-border/50 resize-none text-sm" />
+            <Textarea value={form.description} onChange={(e) => field('description', e.target.value)} placeholder={t('calendar.addNotesPlaceholder')} rows={2} className="bg-background/60 border-border/50 resize-none text-sm" />
           </div>
         </div>
         <DialogFooter className="gap-2 pt-2">
           <Button variant="ghost" onClick={onClose} className="text-muted-foreground">Cancel</Button>
-          <Button onClick={handleSave} disabled={!form.title.trim()} className="bg-primary hover:bg-primary/90 text-primary-foreground">{editing ? 'Save Changes' : 'Create Event'}</Button>
+          <Button onClick={handleSave} disabled={!form.title.trim()} className="bg-primary hover:bg-primary/90 text-primary-foreground">{editing ? t('calendar.saveChanges') : t('calendar.createEvent')}</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
@@ -891,6 +893,7 @@ function EventDetailPopover({ event, anchor, onClose, onEdit, onDelete, onJoin }
   onClose: () => void; onEdit: (ev: CalEvent) => void; onDelete: (id: string) => void;
   onJoin?: (ev: CalEvent) => void;
 }) {
+  const { t } = useTranslation();
   if (!event || !anchor) return null;
   const meta = EVENT_TYPE_META[event.type];
   const left = Math.min(anchor.x + 8, window.innerWidth - 308);
@@ -907,7 +910,7 @@ function EventDetailPopover({ event, anchor, onClose, onEdit, onDelete, onJoin }
           <button onClick={onClose} className="text-muted-foreground hover:text-foreground flex-shrink-0"><X className="w-4 h-4" /></button>
         </div>
         <div className="flex items-center gap-2">
-          <Badge className={cn('text-[10px] border', meta.bg, meta.color, meta.border)} variant="outline">{meta.label}</Badge>
+          <Badge className={cn('text-[10px] border', meta.bg, meta.color, meta.border)} variant="outline">{t(`calendar.eventTypes.${event.type === 'out-of-office' ? 'outOfOffice' : event.type}`)}</Badge>
           {event.isAllDay && <Badge className="text-[10px] border border-border/40 text-muted-foreground" variant="outline">All day</Badge>}
         </div>
         <div className="flex items-center gap-2 text-xs text-muted-foreground font-mono">
@@ -948,6 +951,7 @@ function EventDetailPopover({ event, anchor, onClose, onEdit, onDelete, onJoin }
 // ─── Main Page ────────────────────────────────────────────────────────────────
 
 export default function CalendarPage() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { startInternalCall } = useVideoCall();
   const { user } = useAuth();
@@ -1066,10 +1070,10 @@ export default function CalendarPage() {
         <div className="flex items-center justify-between gap-4 flex-wrap">
           <div>
             <h1 className="font-display text-xl font-semibold text-foreground leading-tight">
-              {calendarTab === 'events' ? 'Workspace Calendar' : 'Content Schedule'}
+              {calendarTab === 'events' ? t('calendar.title') : t('calendar.contentSchedule')}
             </h1>
             <p className="text-xs text-muted-foreground font-mono mt-0.5">
-              {calendarTab === 'events' ? `${userName.split(' ')[0]}'s schedule` : 'Scheduled social posts across platforms'}
+              {calendarTab === 'events' ? t('calendar.mySchedule', { name: userName.split(' ')[0] }) : t('calendar.socialPostsSchedule')}
             </p>
           </div>
 
@@ -1079,7 +1083,7 @@ export default function CalendarPage() {
               <div className="hidden lg:flex items-center gap-3">
                 {(Object.entries(EVENT_TYPE_META) as [EventType, (typeof EVENT_TYPE_META)[EventType]][]).map(([key, meta]) => (
                   <div key={key} className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                    <span className={cn('w-2 h-2 rounded-full', meta.dot)} />{meta.label}
+                    <span className={cn('w-2 h-2 rounded-full', meta.dot)} />{t(`calendar.eventTypes.${key === 'out-of-office' ? 'outOfOffice' : key}`)}
                   </div>
                 ))}
               </div>
@@ -1090,9 +1094,9 @@ export default function CalendarPage() {
               <div className="hidden md:flex items-center gap-3">
                 <div className="flex items-center gap-2">
                   {[
-                    { count: postStats.scheduled, label: 'Scheduled', color: '#D97706' },
-                    { count: postStats.published,  label: 'Published',  color: '#059669' },
-                    { count: postStats.drafts,     label: 'Drafts',     color: '#94A3B8' },
+                    { count: postStats.scheduled, label: t('social.status.scheduled'), color: '#D97706' },
+                    { count: postStats.published,  label: t('social.status.published'),  color: '#059669' },
+                    { count: postStats.drafts,     label: t('calendar.postStatus.drafts'),     color: '#94A3B8' },
                   ].map((s) => (
                     <div key={s.label} className="flex items-center gap-1 text-[10px] font-medium" style={{ color: s.color }}>
                       <span className="text-sm font-bold font-mono">{s.count}</span> {s.label}
@@ -1100,7 +1104,7 @@ export default function CalendarPage() {
                   ))}
                 </div>
                 <div className="flex items-center gap-1 bg-muted/40 border border-border/40 p-0.5 rounded-lg">
-                  {[{ key: 'all', label: 'All' }, ...Object.entries(SOCIAL_PLATFORMS).map(([k, v]) => ({ key: k, label: v.label }))].map((p) => (
+                  {[{ key: 'all', label: t('calendar.allFilter') }, ...Object.entries(SOCIAL_PLATFORMS).map(([k, v]) => ({ key: k, label: v.label }))].map((p) => (
                     <button key={p.key} onClick={() => setPlatformFilter(p.key)}
                       className={cn('px-2.5 py-1 rounded-md text-xs font-medium transition-all', platformFilter === p.key ? 'bg-card text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground')}>
                       {p.label}
@@ -1163,7 +1167,7 @@ export default function CalendarPage() {
               {calendarTab === 'events'
                 ? <CalendarDays className="w-3.5 h-3.5" />
                 : <Rss className="w-3.5 h-3.5" />}
-              <span>{calendarTab === 'events' ? 'Events' : 'Content'}</span>
+              <span>{calendarTab === 'events' ? t('calendar.tabs.events') : t('calendar.tabs.content')}</span>
               <ChevronDown className={cn('w-3 h-3 transition-transform duration-150', modeDropdownOpen && 'rotate-180')} />
             </button>
 
@@ -1177,8 +1181,8 @@ export default function CalendarPage() {
                     <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">Switch calendar</p>
                   </div>
                   {([
-                    { key: 'events'  as CalendarTab, label: 'Events',         desc: 'Meetings, tasks & calls',    Icon: CalendarDays, accent: 'text-primary',      activeBg: 'bg-primary/10' },
-                    { key: 'content' as CalendarTab, label: 'Social Content',  desc: 'Scheduled posts & drafts',   Icon: Rss,          accent: 'text-violet-400',   activeBg: 'bg-violet-500/10' },
+                    { key: 'events'  as CalendarTab, label: t('calendar.events'),        desc: t('calendar.meetingsDesc'),       Icon: CalendarDays, accent: 'text-primary',      activeBg: 'bg-primary/10' },
+                    { key: 'content' as CalendarTab, label: t('calendar.socialContent'), desc: t('calendar.socialContentDesc'),  Icon: Rss,          accent: 'text-violet-400',   activeBg: 'bg-violet-500/10' },
                   ]).map((opt) => (
                     <button
                       key={opt.key}
@@ -1248,7 +1252,7 @@ export default function CalendarPage() {
           <DialogFooter>
             <Button variant="outline" onClick={() => setDeleteConfirmId(null)}>Cancel</Button>
             <Button variant="destructive" onClick={confirmDelete} disabled={deleteMutation.isPending}>
-              {deleteMutation.isPending ? 'Deleting…' : 'Delete'}
+              {deleteMutation.isPending ? t('calendar.deleting') : t('calendar.delete')}
             </Button>
           </DialogFooter>
         </DialogContent>

@@ -1,4 +1,5 @@
 import React, { useState, useRef, useCallback, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   HardDrive, Folder, FolderOpen, File, FileText, FileImage, FileVideo, FileAudio,
@@ -49,6 +50,7 @@ function formatDate(iso: string): string {
 // ── Main Page ────────────────────────────────────────────────────────────────
 
 export default function DrivePage() {
+  const { t } = useTranslation();
   const queryClient = useQueryClient();
 
   const [currentFolderId, setCurrentFolderId] = useState<number | null>(null);
@@ -170,7 +172,7 @@ export default function DrivePage() {
               )}
             >
               <Home className="w-3.5 h-3.5" />
-              <span>Drive</span>
+              <span>{t('drive.title')}</span>
             </button>
             {breadcrumb.map((crumb, i) => (
               <React.Fragment key={crumb.id}>
@@ -194,7 +196,7 @@ export default function DrivePage() {
           <div className="relative hidden sm:block">
             <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
             <Input
-              placeholder="Search files…"
+              placeholder={t('drive.searchPlaceholder')}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="pl-8 h-8 w-44 text-sm"
@@ -211,7 +213,7 @@ export default function DrivePage() {
             <DropdownMenuTrigger asChild>
               <Button variant="outline" size="sm" className="h-8 gap-1 sm:gap-1.5 text-xs px-2 sm:px-3 flex-shrink-0">
                 <ArrowUpDown className="w-3.5 h-3.5" />
-                <span className="hidden sm:inline">{sortBy === 'name' ? 'Name' : sortBy === 'date' ? 'Date' : 'Size'}</span>
+                <span className="hidden sm:inline">{sortBy === 'name' ? t('drive.sort.name') : sortBy === 'date' ? t('drive.sort.date') : t('drive.sort.size')}</span>
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-36">
@@ -238,12 +240,12 @@ export default function DrivePage() {
 
           <Button variant="outline" size="sm" className="h-8 gap-1 sm:gap-1.5 text-xs px-2 sm:px-3 flex-shrink-0" onClick={() => setNewFolderOpen(true)}>
             <FolderPlus className="w-3.5 h-3.5" />
-            <span className="hidden sm:inline">New Folder</span>
+            <span className="hidden sm:inline">{t('drive.newFolder')}</span>
           </Button>
 
           <Button size="sm" className="h-8 gap-1 sm:gap-1.5 text-xs px-2 sm:px-3 flex-shrink-0" onClick={() => uploadInputRef.current?.click()}>
             <Upload className="w-3.5 h-3.5" />
-            <span className="hidden sm:inline">Upload</span>
+            <span className="hidden sm:inline">{t('drive.upload')}</span>
           </Button>
           <input ref={uploadInputRef} type="file" multiple className="hidden"
             onChange={(e) => e.target.files && handleFiles(e.target.files)} />
@@ -253,7 +255,7 @@ export default function DrivePage() {
         <div className="relative sm:hidden">
           <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
           <Input
-            placeholder="Search files…"
+            placeholder={t('drive.searchPlaceholder')}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="pl-8 h-8 w-full text-sm"
@@ -303,7 +305,7 @@ export default function DrivePage() {
             <div className="absolute inset-4 rounded-xl border-2 border-dashed border-primary/50 bg-primary/5 flex items-center justify-center z-10 pointer-events-none">
               <div className="text-center">
                 <Upload className="w-8 h-8 text-primary mx-auto mb-2" />
-                <p className="text-sm font-medium text-primary">Drop files to upload</p>
+                <p className="text-sm font-medium text-primary">{t('drive.dropToUpload')}</p>
               </div>
             </div>
           )}
@@ -317,8 +319,8 @@ export default function DrivePage() {
           ) : items.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-64 text-center">
               {isSearching
-                ? <><Search className="w-10 h-10 text-muted-foreground/40 mb-3" /><p className="text-sm text-muted-foreground">No files match "{debouncedSearch}"</p></>
-                : <><FolderOpen className="w-10 h-10 text-muted-foreground/40 mb-3" /><p className="text-sm font-medium text-foreground">This folder is empty</p><p className="text-xs text-muted-foreground mt-1">Upload files or create a folder to get started</p></>
+                ? <><Search className="w-10 h-10 text-muted-foreground/40 mb-3" /><p className="text-sm text-muted-foreground">{t('drive.noSearchResults', { query: debouncedSearch })}</p></>
+                : <><FolderOpen className="w-10 h-10 text-muted-foreground/40 mb-3" /><p className="text-sm font-medium text-foreground">{t('drive.folderEmpty')}</p><p className="text-xs text-muted-foreground mt-1">{t('drive.folderEmptyDesc')}</p></>
               }
             </div>
           ) : viewMode === 'grid' ? (
@@ -344,18 +346,18 @@ export default function DrivePage() {
       {/* Dialogs */}
       <Dialog open={newFolderOpen} onOpenChange={setNewFolderOpen}>
         <DialogContent className="sm:max-w-sm">
-          <DialogHeader><DialogTitle>New Folder</DialogTitle></DialogHeader>
+          <DialogHeader><DialogTitle>{t('drive.dialogs.newFolderTitle')}</DialogTitle></DialogHeader>
           <Input
             autoFocus
-            placeholder="Folder name"
+            placeholder={t('drive.folderNamePlaceholder')}
             value={newFolderName}
             onChange={(e) => setNewFolderName(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && newFolderName.trim() && createFolderMutation.mutate()}
           />
           <DialogFooter>
-            <Button variant="outline" onClick={() => setNewFolderOpen(false)}>Cancel</Button>
+            <Button variant="outline" onClick={() => setNewFolderOpen(false)}>{t('common.cancel')}</Button>
             <Button onClick={() => createFolderMutation.mutate()} disabled={!newFolderName.trim() || createFolderMutation.isPending}>
-              Create
+              {t('common.create')}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -363,7 +365,7 @@ export default function DrivePage() {
 
       <Dialog open={!!renameTarget} onOpenChange={(o) => !o && setRenameTarget(null)}>
         <DialogContent className="sm:max-w-sm">
-          <DialogHeader><DialogTitle>Rename</DialogTitle></DialogHeader>
+          <DialogHeader><DialogTitle>{t('drive.rename')}</DialogTitle></DialogHeader>
           <Input
             autoFocus
             value={renameValue}
@@ -371,9 +373,9 @@ export default function DrivePage() {
             onKeyDown={(e) => e.key === 'Enter' && renameValue.trim() && renameMutation.mutate(renameValue.trim())}
           />
           <DialogFooter>
-            <Button variant="outline" onClick={() => setRenameTarget(null)}>Cancel</Button>
+            <Button variant="outline" onClick={() => setRenameTarget(null)}>{t('common.cancel')}</Button>
             <Button onClick={() => renameMutation.mutate(renameValue.trim())} disabled={!renameValue.trim() || renameMutation.isPending}>
-              Save
+              {t('common.save')}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -381,16 +383,16 @@ export default function DrivePage() {
 
       <Dialog open={!!deleteTarget} onOpenChange={(o) => !o && setDeleteTarget(null)}>
         <DialogContent className="sm:max-w-sm">
-          <DialogHeader><DialogTitle>Delete "{deleteTarget?.name}"?</DialogTitle></DialogHeader>
+          <DialogHeader><DialogTitle>{t('drive.dialogs.deleteTitle', { name: deleteTarget?.name })}</DialogTitle></DialogHeader>
           <p className="text-sm text-muted-foreground">
             {deleteTarget?.is_folder
-              ? 'This folder and all its contents will be permanently deleted.'
-              : 'This file will be permanently deleted.'}
+              ? t('drive.dialogs.deleteFolderDesc')
+              : t('drive.dialogs.deleteFileDesc')}
           </p>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setDeleteTarget(null)}>Cancel</Button>
+            <Button variant="outline" onClick={() => setDeleteTarget(null)}>{t('common.cancel')}</Button>
             <Button variant="destructive" onClick={() => deleteMutation.mutate()} disabled={deleteMutation.isPending}>
-              Delete
+              {t('common.delete')}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -458,14 +460,15 @@ function FileListView({ items, onNavigate, onPreview, onRename, onDelete }: {
   onRename: (item: DriveItem) => void;
   onDelete: (item: DriveItem) => void;
 }) {
+  const { t } = useTranslation();
   return (
     <div className="rounded-xl border border-border overflow-hidden">
       <table className="w-full text-sm">
         <thead>
           <tr className="border-b border-border bg-muted/50">
-            <th className="text-left px-4 py-2.5 text-xs font-semibold text-muted-foreground">Name</th>
-            <th className="text-left px-4 py-2.5 text-xs font-semibold text-muted-foreground hidden md:table-cell">Size</th>
-            <th className="text-left px-4 py-2.5 text-xs font-semibold text-muted-foreground hidden md:table-cell">Modified</th>
+            <th className="text-left px-4 py-2.5 text-xs font-semibold text-muted-foreground">{t('drive.table.name')}</th>
+            <th className="text-left px-4 py-2.5 text-xs font-semibold text-muted-foreground hidden md:table-cell">{t('drive.table.size')}</th>
+            <th className="text-left px-4 py-2.5 text-xs font-semibold text-muted-foreground hidden md:table-cell">{t('drive.table.modified')}</th>
             <th className="w-10" />
           </tr>
         </thead>
@@ -508,6 +511,7 @@ function ItemMenu({ item, onRename, onDelete }: {
   onRename: (item: DriveItem) => void;
   onDelete: (item: DriveItem) => void;
 }) {
+  const { t } = useTranslation();
   const handleDownload = async () => {
     const data = await getDownloadUrl(item.id);
     const a = document.createElement('a');
@@ -527,16 +531,16 @@ function ItemMenu({ item, onRename, onDelete }: {
         {!item.is_folder && (
           <>
             <DropdownMenuItem onClick={handleDownload} className="gap-2">
-              <Download className="w-3.5 h-3.5" /> Download
+              <Download className="w-3.5 h-3.5" /> {t('drive.actions.download')}
             </DropdownMenuItem>
             <DropdownMenuSeparator />
           </>
         )}
         <DropdownMenuItem onClick={() => onRename(item)} className="gap-2">
-          <Pencil className="w-3.5 h-3.5" /> Rename
+          <Pencil className="w-3.5 h-3.5" /> {t('drive.actions.rename')}
         </DropdownMenuItem>
         <DropdownMenuItem onClick={() => onDelete(item)} className="gap-2 text-destructive focus:text-destructive">
-          <Trash2 className="w-3.5 h-3.5" /> Delete
+          <Trash2 className="w-3.5 h-3.5" /> {t('drive.actions.delete')}
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
@@ -546,6 +550,7 @@ function ItemMenu({ item, onRename, onDelete }: {
 // ── Preview Panel ────────────────────────────────────────────────────────────
 
 function FilePreviewPanel({ item, onClose }: { item: DriveItem; onClose: () => void }) {
+  const { t } = useTranslation();
   const { data: urlData } = useQuery({
     queryKey: ['drive-url', item.id],
     queryFn: () => getDownloadUrl(item.id, 3600),
@@ -581,28 +586,28 @@ function FilePreviewPanel({ item, onClose }: { item: DriveItem; onClose: () => v
         {!isImage && !isPdf && (
           <div className="flex flex-col items-center justify-center py-10">
             <FileIcon mime={item.mime_type} isFolder={false} size="lg" />
-            <p className="text-xs text-muted-foreground mt-3">{item.mime_type || 'Unknown type'}</p>
+            <p className="text-xs text-muted-foreground mt-3">{item.mime_type || t('drive.preview.unknownType')}</p>
           </div>
         )}
 
         <div className="px-4 py-3 space-y-2.5">
           <div>
-            <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide mb-0.5">File name</p>
+            <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide mb-0.5">{t('drive.preview.fileName')}</p>
             <p className="text-sm text-foreground break-all">{item.name}</p>
           </div>
           {item.file_size !== null && (
             <div>
-              <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide mb-0.5">Size</p>
+              <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide mb-0.5">{t('drive.preview.size')}</p>
               <p className="text-sm text-foreground">{formatBytes(item.file_size)}</p>
             </div>
           )}
           <div>
-            <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide mb-0.5">Modified</p>
+            <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide mb-0.5">{t('drive.preview.modified')}</p>
             <p className="text-sm text-foreground">{formatDate(item.updated_at)}</p>
           </div>
           {item.owner_name && (
             <div>
-              <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide mb-0.5">Owner</p>
+              <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide mb-0.5">{t('drive.preview.owner')}</p>
               <p className="text-sm text-foreground">{item.owner_name}</p>
             </div>
           )}
@@ -613,7 +618,7 @@ function FilePreviewPanel({ item, onClose }: { item: DriveItem; onClose: () => v
         <div className="px-4 py-3 border-t border-border">
           <a href={urlData.url} download={item.name} className="w-full">
             <Button size="sm" variant="outline" className="w-full gap-1.5">
-              <Download className="w-3.5 h-3.5" /> Download
+              <Download className="w-3.5 h-3.5" /> {t('drive.actions.download')}
             </Button>
           </a>
         </div>

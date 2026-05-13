@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -36,6 +37,7 @@ const INDUSTRIES = [
 ];
 
 export default function AccountsPage() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -61,7 +63,7 @@ export default function AccountsPage() {
       const res = await axios.get('/api/v1/accounts/', { headers, params });
       setAccounts(res.data);
     } catch {
-      toast({ title: 'Error', description: 'Failed to load accounts', variant: 'destructive' });
+      toast({ title: t('common.error'), description: t('accounts.toastLoadError'), variant: 'destructive' });
     } finally {
       setLoading(false);
     }
@@ -80,12 +82,12 @@ export default function AccountsPage() {
         address_city: newAccount.address_city || null,
         address_country: newAccount.address_country || null,
       }, { headers });
-      toast({ title: 'Account created' });
+      toast({ title: t('accounts.toastCreated') });
       setCreateOpen(false);
       setNewAccount({ name: '', domain: '', industry: '', employee_count: '', phone: '', website: '', address_city: '', address_country: '', description: '' });
       fetchAccounts();
     } catch {
-      toast({ title: 'Error', description: 'Failed to create account', variant: 'destructive' });
+      toast({ title: t('common.error'), description: t('accounts.toastCreateError'), variant: 'destructive' });
     }
   };
 
@@ -95,27 +97,27 @@ export default function AccountsPage() {
       <div className="border-b border-border px-4 sm:px-6 py-3 sm:py-4">
         <div className="flex items-center justify-between mb-3">
           <div>
-            <h1 className="text-xl sm:text-2xl font-bold text-foreground">Companies</h1>
-            <p className="text-sm text-muted-foreground mt-0.5">{accounts.length} accounts</p>
+            <h1 className="text-xl sm:text-2xl font-bold text-foreground">{t('accounts.title')}</h1>
+            <p className="text-sm text-muted-foreground mt-0.5">{t('accounts.accountCount', { count: accounts.length })}</p>
           </div>
           <Button onClick={() => setCreateOpen(true)} className="gap-1.5 px-2.5 sm:px-4">
-            <Plus className="h-4 w-4" /><span className="hidden sm:inline">New Company</span>
+            <Plus className="h-4 w-4" /><span className="hidden sm:inline">{t('accounts.newCompany')}</span>
           </Button>
         </div>
 
         <div className="flex flex-col sm:flex-row gap-2">
           <div className="relative w-full sm:flex-1 sm:max-w-sm">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input placeholder="Search companies..." value={search}
+            <Input placeholder={t('accounts.searchPlaceholder')} value={search}
               onChange={e => setSearch(e.target.value)}
               className="pl-9 bg-background border-border w-full" />
           </div>
           <Select value={industryFilter} onValueChange={setIndustryFilter}>
             <SelectTrigger className="w-full sm:w-44 bg-background border-border">
-              <SelectValue placeholder="All industries" />
+              <SelectValue placeholder={t('accounts.allIndustriesPlaceholder')} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All Industries</SelectItem>
+              <SelectItem value="all">{t('accounts.allIndustries')}</SelectItem>
               {INDUSTRIES.map(i => <SelectItem key={i} value={i}>{i}</SelectItem>)}
             </SelectContent>
           </Select>
@@ -134,12 +136,12 @@ export default function AccountsPage() {
             <Table>
               <TableHeader>
                 <TableRow className="border-border hover:bg-transparent">
-                  <TableHead className="text-muted-foreground font-medium">Company</TableHead>
-                  <TableHead className="text-muted-foreground font-medium hidden sm:table-cell">Industry</TableHead>
-                  <TableHead className="text-muted-foreground font-medium hidden sm:table-cell">Location</TableHead>
-                  <TableHead className="text-muted-foreground font-medium hidden md:table-cell">Employees</TableHead>
-                  <TableHead className="text-muted-foreground font-medium">Contacts</TableHead>
-                  <TableHead className="text-muted-foreground font-medium hidden md:table-cell">Owner</TableHead>
+                  <TableHead className="text-muted-foreground font-medium">{t('accounts.colCompany')}</TableHead>
+                  <TableHead className="text-muted-foreground font-medium hidden sm:table-cell">{t('accounts.colIndustry')}</TableHead>
+                  <TableHead className="text-muted-foreground font-medium hidden sm:table-cell">{t('accounts.colLocation')}</TableHead>
+                  <TableHead className="text-muted-foreground font-medium hidden md:table-cell">{t('accounts.colEmployees')}</TableHead>
+                  <TableHead className="text-muted-foreground font-medium">{t('accounts.colContacts')}</TableHead>
+                  <TableHead className="text-muted-foreground font-medium hidden md:table-cell">{t('accounts.colOwner')}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -149,10 +151,10 @@ export default function AccountsPage() {
                       <TableCell colSpan={6} className="py-16">
                         <div className="flex flex-col items-center justify-center gap-3">
                           <Building2 className="h-10 w-10 text-muted-foreground/30" />
-                          <p className="text-base font-medium text-foreground">No accounts yet</p>
-                          <p className="text-sm text-muted-foreground">Add your first account to get started.</p>
+                          <p className="text-base font-medium text-foreground">{t('accounts.emptyTitle')}</p>
+                          <p className="text-sm text-muted-foreground">{t('accounts.emptyDescription')}</p>
                           <Button variant="outline" size="sm" className="mt-1" onClick={() => setCreateOpen(true)}>
-                            <Plus className="h-3.5 w-3.5 mr-1.5" /> Add Account
+                            <Plus className="h-3.5 w-3.5 mr-1.5" /> {t('accounts.addAccount')}
                           </Button>
                         </div>
                       </TableCell>
@@ -203,13 +205,13 @@ export default function AccountsPage() {
       <Dialog open={createOpen} onOpenChange={setCreateOpen}>
         <DialogContent className="w-full max-w-lg max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle className="text-xl font-bold text-foreground">New Company</DialogTitle>
-            <DialogDescription className="text-muted-foreground">Add a B2B account to your CRM</DialogDescription>
+            <DialogTitle className="text-xl font-bold text-foreground">{t('accounts.dialogTitle')}</DialogTitle>
+            <DialogDescription className="text-muted-foreground">{t('accounts.dialogDescription')}</DialogDescription>
           </DialogHeader>
 
           <div className="space-y-4 pt-2">
             <div className="space-y-1.5">
-              <Label>Company Name <span className="text-red-500">*</span></Label>
+              <Label>{t('accounts.labelCompanyName')} <span className="text-red-500">*</span></Label>
               <Input placeholder="Acme Inc." value={newAccount.name}
                 onChange={e => setNewAccount({ ...newAccount, name: e.target.value })}
                 className="bg-background border-border" />
@@ -217,15 +219,15 @@ export default function AccountsPage() {
 
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
-                <Label>Domain</Label>
+                <Label>{t('accounts.labelDomain')}</Label>
                 <Input placeholder="acme.com" value={newAccount.domain}
                   onChange={e => setNewAccount({ ...newAccount, domain: e.target.value })}
                   className="bg-background border-border" />
               </div>
               <div className="space-y-1.5">
-                <Label>Industry</Label>
+                <Label>{t('accounts.labelIndustry')}</Label>
                 <Select value={newAccount.industry} onValueChange={v => setNewAccount({ ...newAccount, industry: v })}>
-                  <SelectTrigger className="bg-background border-border"><SelectValue placeholder="Select" /></SelectTrigger>
+                  <SelectTrigger className="bg-background border-border"><SelectValue placeholder={t('common.select')} /></SelectTrigger>
                   <SelectContent>
                     {INDUSTRIES.map(i => <SelectItem key={i} value={i}>{i}</SelectItem>)}
                   </SelectContent>
@@ -235,13 +237,13 @@ export default function AccountsPage() {
 
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
-                <Label>Employees</Label>
+                <Label>{t('accounts.labelEmployees')}</Label>
                 <Input type="number" placeholder="50" value={newAccount.employee_count}
                   onChange={e => setNewAccount({ ...newAccount, employee_count: e.target.value })}
                   className="bg-background border-border" />
               </div>
               <div className="space-y-1.5">
-                <Label>Phone</Label>
+                <Label>{t('accounts.labelPhone')}</Label>
                 <Input placeholder="+1 234 567 8900" value={newAccount.phone}
                   onChange={e => setNewAccount({ ...newAccount, phone: e.target.value })}
                   className="bg-background border-border" />
@@ -249,7 +251,7 @@ export default function AccountsPage() {
             </div>
 
             <div className="space-y-1.5">
-              <Label>Website</Label>
+              <Label>{t('accounts.labelWebsite')}</Label>
               <Input placeholder="https://acme.com" value={newAccount.website}
                 onChange={e => setNewAccount({ ...newAccount, website: e.target.value })}
                 className="bg-background border-border" />
@@ -257,13 +259,13 @@ export default function AccountsPage() {
 
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
-                <Label>City</Label>
+                <Label>{t('accounts.labelCity')}</Label>
                 <Input placeholder="New York" value={newAccount.address_city}
                   onChange={e => setNewAccount({ ...newAccount, address_city: e.target.value })}
                   className="bg-background border-border" />
               </div>
               <div className="space-y-1.5">
-                <Label>Country</Label>
+                <Label>{t('accounts.labelCountry')}</Label>
                 <Input placeholder="United States" value={newAccount.address_country}
                   onChange={e => setNewAccount({ ...newAccount, address_country: e.target.value })}
                   className="bg-background border-border" />
@@ -271,9 +273,9 @@ export default function AccountsPage() {
             </div>
 
             <div className="flex justify-end gap-2 pt-2">
-              <Button variant="outline" onClick={() => setCreateOpen(false)}>Cancel</Button>
+              <Button variant="outline" onClick={() => setCreateOpen(false)}>{t('common.cancel')}</Button>
               <Button onClick={handleCreate} disabled={!newAccount.name}>
-                <Plus className="h-4 w-4 mr-2" /> Create Company
+                <Plus className="h-4 w-4 mr-2" /> {t('accounts.createCompany')}
               </Button>
             </div>
           </div>

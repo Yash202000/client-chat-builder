@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import {
   TrendingUp, Search, Linkedin, Instagram, Facebook,
@@ -45,7 +46,14 @@ const authFetch = async (url: string, options: RequestInit = {}) => {
   return res.json();
 };
 
-const TONES = ['Professional', 'Conversational', 'Inspirational', 'Educational', 'Humorous', 'Provocative'];
+const TONES: { key: string; i18nKey: string }[] = [
+  { key: 'Professional',  i18nKey: 'social.trending.tones.professional'  },
+  { key: 'Conversational', i18nKey: 'social.trending.tones.conversational' },
+  { key: 'Inspirational', i18nKey: 'social.trending.tones.inspirational'  },
+  { key: 'Educational',   i18nKey: 'social.trending.tones.educational'    },
+  { key: 'Humorous',      i18nKey: 'social.trending.tones.humorous'       },
+  { key: 'Provocative',   i18nKey: 'social.trending.tones.provocative'    },
+];
 const PLATFORMS = ['linkedin', 'instagram', 'facebook'] as const;
 type Platform = typeof PLATFORMS[number];
 
@@ -57,10 +65,10 @@ const PLATFORM_META: Record<Platform, { label: string; maxChars: number; color: 
 };
 
 const SOURCES = [
-  { key: 'all' as const,         label: 'All Sources', Icon: Globe },
-  { key: 'hackernews' as const,  label: 'Hacker News', Icon: TrendingUp },
-  { key: 'google_news' as const, label: 'Google News', Icon: Search },
-  { key: 'linkedin' as const,    label: 'LinkedIn',    Icon: Linkedin },
+  { key: 'all' as const,         i18nKey: 'social.trending.allSources', Icon: Globe },
+  { key: 'hackernews' as const,  i18nKey: 'social.trending.hackerNews', Icon: TrendingUp },
+  { key: 'google_news' as const, i18nKey: 'social.trending.googleNews', Icon: Search },
+  { key: 'linkedin' as const,    i18nKey: 'social.trending.linkedin',   Icon: Linkedin },
 ];
 
 interface PlatformContent { content: string; hashtags: string[]; char_count?: number; character_count?: number; }
@@ -156,6 +164,7 @@ function ResultCard({ platform, content, onUpdate, onCopy, onSend }: {
 /* ─── main page ──────────────────────────────────────────────── */
 export default function TrendingPostsPage() {
   const { toast } = useToast();
+  const { t } = useTranslation();
   const navigate = useNavigate();
 
   const [topic, setTopic] = useState('');
@@ -189,13 +198,13 @@ export default function TrendingPostsPage() {
   const generateMutation = useMutation({
     mutationFn: (payload: object) => authFetch(`/api/v1/social/ai/generate-from-topic`, { method: 'POST', body: JSON.stringify(payload) }),
     onSuccess: (data) => setGenerated(data.platforms ?? data.content ?? data),
-    onError: (err: any) => toast({ title: 'Generation failed', description: err.message, variant: 'destructive' }),
+    onError: (err: any) => toast({ title: t('social.trending.generationFailed'), description: err.message, variant: 'destructive' }),
   });
 
   const generateFromUrlMutation = useMutation({
     mutationFn: (payload: object) => authFetch(`/api/v1/social/ai/generate-from-url`, { method: 'POST', body: JSON.stringify(payload) }),
     onSuccess: (data) => setGenerated(data.platforms ?? data.content ?? data),
-    onError: (err: any) => toast({ title: 'Generation failed', description: err.message, variant: 'destructive' }),
+    onError: (err: any) => toast({ title: t('social.trending.generationFailed'), description: err.message, variant: 'destructive' }),
   });
 
   const isGenerating = generateMutation.isPending || generateFromUrlMutation.isPending;
@@ -203,7 +212,7 @@ export default function TrendingPostsPage() {
   const handleGenerate = (overrideTopic?: string) => {
     const activeTopic = overrideTopic ?? topic;
     if (!activeTopic && !sourceUrl) {
-      toast({ title: 'Enter a topic or URL', variant: 'destructive' }); return;
+      toast({ title: t('social.trending.enterTopicOrUrl'), variant: 'destructive' }); return;
     }
     if (sourceUrl && !overrideTopic) {
       generateFromUrlMutation.mutate({ source_url: sourceUrl, target_platforms: selectedPlatforms, adaptation_style: tone });
@@ -273,7 +282,7 @@ export default function TrendingPostsPage() {
     const c = generated[platform];
     if (!c) return;
     navigator.clipboard.writeText(`${c.content}\n\n${c.hashtags?.join(' ') ?? ''}`);
-    toast({ title: 'Copied to clipboard' });
+    toast({ title: t('social.trending.copiedToClipboard') });
   };
 
   const sendToComposer = (platform: Platform) => {
@@ -297,11 +306,11 @@ export default function TrendingPostsPage() {
               <div className="flex items-center gap-2">
                 <Radio className="h-4 w-4 text-primary" />
                 <h1 className="text-lg font-semibold text-foreground tracking-tight">
-                  Viral Post Studio
+                  {t('social.trending.title')}
                 </h1>
               </div>
               <p className="text-[11px] text-muted-foreground mt-0.5">
-                Trending signals → AI-crafted content
+                {t('social.trending.subtitle')}
               </p>
             </div>
           </div>
@@ -342,7 +351,7 @@ export default function TrendingPostsPage() {
                           trendSource === s.key ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:bg-muted hover:text-foreground'
                         }`}>
                         <SIcon className="h-3 w-3 shrink-0" />
-                        {s.label}
+                        {t(s.i18nKey)}
                       </button>
                     );
                   })}
@@ -352,7 +361,7 @@ export default function TrendingPostsPage() {
                     <Search className="h-3 w-3 text-muted-foreground shrink-0" />
                     <input
                       className="flex-1 text-[11px] bg-transparent focus:outline-none text-foreground placeholder:text-muted-foreground"
-                      placeholder="Search topic..."
+                      placeholder={t('social.trending.searchTopic')}
                       value={trendQuery}
                       onChange={e => setTrendQuery(e.target.value)}
                       onKeyDown={e => e.key === 'Enter' && refetchTrends()}
@@ -405,7 +414,7 @@ export default function TrendingPostsPage() {
                   <Search className="h-3 w-3 text-muted-foreground shrink-0" />
                   <input
                     className="flex-1 text-[11px] bg-transparent focus:outline-none text-foreground placeholder:text-muted-foreground"
-                    placeholder="Search LinkedIn posts..."
+                    placeholder={t('social.trending.searchLinkedin')}
                     value={liKeyword}
                     onChange={e => setLiKeyword(e.target.value)}
                     onKeyDown={e => { if (e.key === 'Enter') { setLiSearchEnabled(true); runLiSearch(); } }}
@@ -574,14 +583,14 @@ export default function TrendingPostsPage() {
               <div className="space-y-1.5">
                 <label className="text-[10px] font-medium tracking-tight uppercase tracking-widest text-muted-foreground">Tone</label>
                 <div className="grid grid-cols-2 gap-1">
-                  {TONES.map(t => (
-                    <button key={t} onClick={() => setTone(t)}
+                  {TONES.map(tone_ => (
+                    <button key={tone_.key} onClick={() => setTone(tone_.key)}
                       className={`py-1.5 rounded-lg text-[10px] font-medium tracking-tight transition-colors ${
-                        tone === t
+                        tone === tone_.key
                           ? 'bg-primary text-primary-foreground'
                           : 'bg-card border border-border text-muted-foreground hover:text-foreground hover:bg-muted'
                       }`}>
-                      {t}
+                      {t(tone_.i18nKey)}
                     </button>
                   ))}
                 </div>

@@ -1,5 +1,6 @@
 import { useState, useCallback } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
 import {
   ClipboardList,
   Search,
@@ -94,6 +95,7 @@ const ENTITY_TYPES = [
 
 export default function AuditLogsPage() {
   const { authFetch } = useAuth();
+  const { t } = useTranslation();
 
   // Filters
   const [entityType, setEntityType] = useState<string>("all");
@@ -168,9 +170,9 @@ export default function AuditLogsPage() {
             <ClipboardList className="h-5 w-5 text-white" />
           </div>
           <div>
-            <h1 className="text-lg sm:text-xl font-semibold text-slate-900 dark:text-white">Audit Logs</h1>
+            <h1 className="text-lg sm:text-xl font-semibold text-slate-900 dark:text-white">{t('auditLogs.title')}</h1>
             <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 hidden sm:block">
-              Track every action performed across your workspace
+              {t('auditLogs.subtitle')}
             </p>
           </div>
         </div>
@@ -182,13 +184,13 @@ export default function AuditLogsPage() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
             {/* Entity type */}
             <div>
-              <Label className="text-xs text-slate-500 dark:text-slate-400 mb-1 block">Entity Type</Label>
+              <Label className="text-xs text-slate-500 dark:text-slate-400 mb-1 block">{t('auditLogs.filters.entityType')}</Label>
               <Select value={entityType} onValueChange={setEntityType}>
                 <SelectTrigger className="h-9 rounded-lg dark:bg-slate-800 dark:border-slate-600 dark:text-white text-sm">
-                  <SelectValue placeholder="All types" />
+                  <SelectValue placeholder={t('auditLogs.filters.allTypes')} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All types</SelectItem>
+                  <SelectItem value="all">{t('auditLogs.filters.allTypes')}</SelectItem>
                   {ENTITY_TYPES.map((t) => (
                     <SelectItem key={t} value={t}>
                       {t.charAt(0).toUpperCase() + t.slice(1)}
@@ -200,13 +202,13 @@ export default function AuditLogsPage() {
 
             {/* Action search */}
             <div>
-              <Label className="text-xs text-slate-500 dark:text-slate-400 mb-1 block">Action</Label>
+              <Label className="text-xs text-slate-500 dark:text-slate-400 mb-1 block">{t('auditLogs.filters.action')}</Label>
               <div className="relative">
                 <Search className="absolute left-2.5 top-2 h-4 w-4 text-slate-400" />
                 <Input
                   value={actionFilter}
                   onChange={(e) => setActionFilter(e.target.value)}
-                  placeholder="e.g. contact.created"
+                  placeholder={t('auditLogs.filters.actionPlaceholder')}
                   className="pl-8 h-9 rounded-lg dark:bg-slate-800 dark:border-slate-600 dark:text-white text-sm"
                   onKeyDown={(e) => e.key === "Enter" && applyFilters()}
                 />
@@ -215,7 +217,7 @@ export default function AuditLogsPage() {
 
             {/* Date from */}
             <div>
-              <Label className="text-xs text-slate-500 dark:text-slate-400 mb-1 block">From</Label>
+              <Label className="text-xs text-slate-500 dark:text-slate-400 mb-1 block">{t('auditLogs.filters.from')}</Label>
               <Input
                 type="date"
                 value={dateFrom}
@@ -226,7 +228,7 @@ export default function AuditLogsPage() {
 
             {/* Date to */}
             <div>
-              <Label className="text-xs text-slate-500 dark:text-slate-400 mb-1 block">To</Label>
+              <Label className="text-xs text-slate-500 dark:text-slate-400 mb-1 block">{t('auditLogs.filters.to')}</Label>
               <Input
                 type="date"
                 value={dateTo}
@@ -241,7 +243,7 @@ export default function AuditLogsPage() {
               onClick={resetFilters}
               className="text-xs text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 underline-offset-2 hover:underline transition-colors"
             >
-              Reset filters
+              {t('auditLogs.filters.resetFilters')}
             </button>
             <Button
               size="sm"
@@ -249,7 +251,7 @@ export default function AuditLogsPage() {
               className="h-8 px-4 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-medium flex items-center gap-1.5"
             >
               <Filter className="h-3.5 w-3.5" />
-              Apply
+              {t('auditLogs.filters.apply')}
             </Button>
           </div>
         </div>
@@ -262,13 +264,13 @@ export default function AuditLogsPage() {
         {isLoading ? (
           <div className="flex flex-col items-center justify-center py-16 gap-2 text-slate-400 dark:text-slate-500">
             <div className="h-6 w-6 rounded-full border-2 border-indigo-400 border-t-transparent animate-spin" />
-            <span className="text-sm">Loading audit logs…</span>
+            <span className="text-sm">{t('auditLogs.loading')}</span>
           </div>
         ) : logs.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16 gap-2 text-slate-400 dark:text-slate-500">
             <ClipboardList className="h-8 w-8 opacity-40" />
-            <p className="text-sm font-medium">No audit log entries found</p>
-            <p className="text-xs">Actions will appear here once users interact with the platform.</p>
+            <p className="text-sm font-medium">{t('auditLogs.empty')}</p>
+            <p className="text-xs">{t('auditLogs.emptyHint')}</p>
           </div>
         ) : (
           <>
@@ -300,7 +302,7 @@ export default function AuditLogsPage() {
                           <span className="text-xs text-slate-700 dark:text-slate-300 truncate">{displayName}</span>
                         </>
                       ) : (
-                        <span className="text-xs text-slate-400 italic">System</span>
+                        <span className="text-xs text-slate-400 italic">{t('auditLogs.system')}</span>
                       )}
                     </div>
                     {/* Row 3: entity + IP */}
@@ -326,17 +328,17 @@ export default function AuditLogsPage() {
                   <thead>
                     <tr className="border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/60">
                       <th className="text-left px-4 py-3 font-medium text-slate-500 dark:text-slate-400 whitespace-nowrap">
-                        <div className="flex items-center gap-1.5"><Calendar className="h-3.5 w-3.5" />Date / Time</div>
+                        <div className="flex items-center gap-1.5"><Calendar className="h-3.5 w-3.5" />{t('auditLogs.table.dateTime')}</div>
                       </th>
                       <th className="text-left px-4 py-3 font-medium text-slate-500 dark:text-slate-400 whitespace-nowrap">
-                        <div className="flex items-center gap-1.5"><User className="h-3.5 w-3.5" />User</div>
+                        <div className="flex items-center gap-1.5"><User className="h-3.5 w-3.5" />{t('auditLogs.table.user')}</div>
                       </th>
                       <th className="text-left px-4 py-3 font-medium text-slate-500 dark:text-slate-400 whitespace-nowrap">
-                        <div className="flex items-center gap-1.5"><Activity className="h-3.5 w-3.5" />Action</div>
+                        <div className="flex items-center gap-1.5"><Activity className="h-3.5 w-3.5" />{t('auditLogs.table.action')}</div>
                       </th>
-                      <th className="text-left px-4 py-3 font-medium text-slate-500 dark:text-slate-400">Entity Type</th>
-                      <th className="text-left px-4 py-3 font-medium text-slate-500 dark:text-slate-400">Entity</th>
-                      <th className="text-left px-4 py-3 font-medium text-slate-500 dark:text-slate-400">IP Address</th>
+                      <th className="text-left px-4 py-3 font-medium text-slate-500 dark:text-slate-400">{t('auditLogs.table.entityType')}</th>
+                      <th className="text-left px-4 py-3 font-medium text-slate-500 dark:text-slate-400">{t('auditLogs.table.entity')}</th>
+                      <th className="text-left px-4 py-3 font-medium text-slate-500 dark:text-slate-400">{t('auditLogs.table.ipAddress')}</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
@@ -358,7 +360,7 @@ export default function AuditLogsPage() {
                                 <span className="text-slate-700 dark:text-slate-300 text-sm truncate max-w-[140px]">{displayName}</span>
                               </div>
                             ) : (
-                              <span className="text-slate-400 dark:text-slate-500 text-xs italic">System</span>
+                              <span className="text-slate-400 dark:text-slate-500 text-xs italic">{t('auditLogs.system')}</span>
                             )}
                           </td>
                           <td className="px-4 py-3 whitespace-nowrap">
@@ -409,7 +411,7 @@ export default function AuditLogsPage() {
                   {isFetching
                     ? <div className="h-3 w-3 rounded-full border border-current border-t-transparent animate-spin" />
                     : <ChevronDown className="h-3.5 w-3.5" />}
-                  Load more
+                  {t('auditLogs.loadMore')}
                 </Button>
               </div>
             )}

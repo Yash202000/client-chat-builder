@@ -319,7 +319,7 @@ export default function CRMDashboard() {
                       <span className="text-xs font-medium text-yellow-700 dark:text-yellow-400">{lead.score}</span>
                     </div>
                     <Badge className={cn("border-0 text-xs", STAGE_BG_COLORS[lead.stage])}>
-                      {lead.stage.toUpperCase()}
+                      {lead.stage?.toUpperCase() ?? '—'}
                     </Badge>
                   </div>
                 </div>

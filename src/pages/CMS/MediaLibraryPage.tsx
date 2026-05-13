@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useState, useRef } from 'react';
 import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -68,6 +69,7 @@ const formatFileSize = (bytes: number): string => {
 const MediaLibraryPage = () => {
   const queryClient = useQueryClient();
   const { toast } = useToast();
+  const { t } = useTranslation();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [search, setSearch] = useState('');
@@ -92,11 +94,11 @@ const MediaLibraryPage = () => {
     mutationFn: (file: File) => cmsService.uploadMedia(file),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['cms-media'] });
-      toast({ title: 'File uploaded' });
+      toast({ title: t('cms.media.uploaded') });
     },
     onError: (error: any) => {
       toast({
-        title: 'Upload failed',
+        title: t('cms.media.uploadFailed'),
         description: error.response?.data?.detail || 'An error occurred',
         variant: 'destructive',
       });
@@ -110,12 +112,12 @@ const MediaLibraryPage = () => {
     mutationFn: (mediaId: number) => cmsService.deleteMedia(mediaId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['cms-media'] });
-      toast({ title: 'File deleted' });
+      toast({ title: t('cms.media.deleted') });
       setDeleteDialog({ open: false, media: null });
       setSelectedMedia(null);
     },
     onError: () => {
-      toast({ title: 'Failed to delete file', variant: 'destructive' });
+      toast({ title: t('cms.media.deleteFailed'), variant: 'destructive' });
     },
   });
 
@@ -185,7 +187,7 @@ const MediaLibraryPage = () => {
         <div className="relative flex-1 min-w-[160px] sm:max-w-sm">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <Input
-            placeholder="Search files..."
+            placeholder={t('cms.media.searchPlaceholder')}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="pl-9"
@@ -194,7 +196,7 @@ const MediaLibraryPage = () => {
 
         <Select value={mediaType || 'all'} onValueChange={(v) => setMediaType(v === 'all' ? '' : v)}>
           <SelectTrigger className="w-[140px]">
-            <SelectValue placeholder="Type" />
+            <SelectValue placeholder={t('cms.media.typeFilter')} />
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All Types</SelectItem>
@@ -389,7 +391,7 @@ const MediaLibraryPage = () => {
               onClick={() => deleteDialog.media && deleteMutation.mutate(deleteDialog.media.id)}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
-              {deleteMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Delete'}
+              {deleteMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : t('cms.media.deleteBtn')}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

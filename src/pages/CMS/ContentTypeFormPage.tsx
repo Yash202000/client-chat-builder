@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { useForm, useFieldArray } from 'react-hook-form';
+import { useTranslation } from 'react-i18next';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -61,6 +62,7 @@ const ContentTypeFormPage = ({ mode }: ContentTypeFormPageProps) => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { toast } = useToast();
+  const { t } = useTranslation();
 
   const isEdit = mode === 'edit';
 
@@ -101,12 +103,12 @@ const ContentTypeFormPage = ({ mode }: ContentTypeFormPageProps) => {
     mutationFn: (data: FormValues) => cmsService.createContentType(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['cms-content-types'] });
-      toast({ title: 'Content type created' });
+      toast({ title: t('cms.form.created') });
       navigate('/dashboard/cms/types');
     },
     onError: (error: any) => {
       toast({
-        title: 'Failed to create content type',
+        title: t('cms.form.createFailed'),
         description: error.response?.data?.detail || 'An error occurred',
         variant: 'destructive',
       });
@@ -118,12 +120,12 @@ const ContentTypeFormPage = ({ mode }: ContentTypeFormPageProps) => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['cms-content-types'] });
       queryClient.invalidateQueries({ queryKey: ['cms-content-type', slug] });
-      toast({ title: 'Content type updated' });
+      toast({ title: t('cms.form.updated') });
       navigate('/dashboard/cms/types');
     },
     onError: (error: any) => {
       toast({
-        title: 'Failed to update content type',
+        title: t('cms.form.updateFailed'),
         description: error.response?.data?.detail || 'An error occurred',
         variant: 'destructive',
       });
@@ -174,10 +176,10 @@ const ContentTypeFormPage = ({ mode }: ContentTypeFormPageProps) => {
         </Link>
         <div>
           <h1 className="text-xl sm:text-2xl font-bold">
-            {isEdit ? 'Edit Content Type' : 'Create Content Type'}
+            {isEdit ? t('cms.editContentType') : t('cms.createContentType')}
           </h1>
           <p className="text-muted-foreground hidden sm:block">
-            {isEdit ? 'Modify the schema for this content type' : 'Define a new content schema'}
+            {isEdit ? t('cms.form.modifySchema') : t('cms.form.defineSchema')}
           </p>
         </div>
       </div>
@@ -237,7 +239,7 @@ const ContentTypeFormPage = ({ mode }: ContentTypeFormPageProps) => {
                   <FormItem>
                     <FormLabel>Description</FormLabel>
                     <FormControl>
-                      <Textarea {...field} placeholder="Describe this content type..." />
+                      <Textarea {...field} placeholder={t('cms.form.descriptionPlaceholder')} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -448,7 +450,7 @@ const ContentTypeFormPage = ({ mode }: ContentTypeFormPageProps) => {
               ) : (
                 <Save className="w-4 h-4 mr-2" />
               )}
-              {isEdit ? 'Save Changes' : 'Create Content Type'}
+              {isEdit ? t('cms.form.saveChanges') : t('cms.createContentType')}
             </Button>
           </div>
         </form>

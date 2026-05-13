@@ -36,7 +36,7 @@ import {
   VISIBILITY_INFO,
 } from '@/types/cms';
 import { useToast } from '@/hooks/use-toast';
-import { useI18n } from '@/hooks/useI18n';
+import { useTranslation } from 'react-i18next';
 
 interface ContentItemFormPageProps {
   mode: 'create' | 'edit';
@@ -101,7 +101,7 @@ const DynamicFieldRenderer = ({
             onCheckedChange={onChange}
           />
           <Label htmlFor={field.slug} className="text-sm">
-            {value ? 'Yes' : 'No'}
+            {value ? t('cms.content.yesLabel') : t('cms.content.noLabel')}
           </Label>
         </div>
       );
@@ -150,7 +150,7 @@ const DynamicFieldRenderer = ({
           onChange={(e) =>
             onChange(e.target.value.split(',').map((t) => t.trim()).filter(Boolean))
           }
-          placeholder="Enter tags separated by commas..."
+          placeholder={t('cms.content.tagsPlaceholder')}
         />
       );
 
@@ -199,7 +199,7 @@ const DynamicFieldRenderer = ({
             const vals = e.target.value.split(',').map((v) => v.trim()).filter(Boolean);
             onChange(field.settings?.multiple ? vals.map(Number) : Number(vals[0]) || null);
           }}
-          placeholder="Enter related item IDs..."
+          placeholder={t('cms.content.relatedItemsPlaceholder')}
         />
       );
 
@@ -219,7 +219,7 @@ const ContentItemFormPage = ({ mode }: ContentItemFormPageProps) => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { toast } = useToast();
-  const { t } = useI18n();
+  const { t } = useTranslation();
 
   const isEdit = mode === 'edit';
   const itemId = id ? parseInt(id) : undefined;
@@ -310,7 +310,7 @@ const ContentItemFormPage = ({ mode }: ContentItemFormPageProps) => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['cms-content-items', typeSlug] });
       queryClient.invalidateQueries({ queryKey: ['cms-content-item', typeSlug, itemId] });
-      toast({ title: 'Item published' });
+      toast({ title: t('cms.content.published') });
     },
   });
 
@@ -319,7 +319,7 @@ const ContentItemFormPage = ({ mode }: ContentItemFormPageProps) => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['cms-content-items', typeSlug] });
       queryClient.invalidateQueries({ queryKey: ['cms-content-item', typeSlug, itemId] });
-      toast({ title: 'Item archived' });
+      toast({ title: t('cms.content.archived') });
     },
   });
 
@@ -364,10 +364,10 @@ const ContentItemFormPage = ({ mode }: ContentItemFormPageProps) => {
           </Link>
           <div className="min-w-0">
             <h1 className="text-xl sm:text-2xl font-bold truncate">
-              {isEdit ? 'Edit' : 'New'} {contentType?.name || 'Item'}
+              {isEdit ? t('cms.content.editItem', { name: contentType?.name || 'Item' }) : t('cms.content.newItem', { name: contentType?.name || 'Item' })}
             </h1>
             <p className="text-muted-foreground hidden sm:block">
-              {isEdit ? 'Update this content item' : 'Create a new content item'}
+              {isEdit ? t('cms.content.updateItem') : t('cms.content.createItem')}
             </p>
           </div>
         </div>
@@ -567,7 +567,7 @@ const ContentItemFormPage = ({ mode }: ContentItemFormPageProps) => {
             ) : (
               <Save className="w-4 h-4 mr-2" />
             )}
-            {isEdit ? 'Save Changes' : 'Create Item'}
+            {isEdit ? t('cms.content.saveChanges') : t('cms.content.createItemBtn')}
           </Button>
         </div>
       </form>

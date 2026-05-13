@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useParams, Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
 
@@ -68,6 +69,7 @@ function SprintDialog({
   sprint?: Sprint;
   projectId: number;
 }) {
+  const { t } = useTranslation();
   const qc = useQueryClient();
   const [name, setName] = useState(sprint?.name ?? "");
   const [goal, setGoal] = useState(sprint?.goal ?? "");
@@ -89,11 +91,11 @@ function SprintDialog({
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>{sprint ? "Edit Sprint" : "Create Sprint"}</DialogTitle>
+          <DialogTitle>{sprint ? t("tickets.sprint.edit") : t("tickets.sprint.create")}</DialogTitle>
         </DialogHeader>
         <div className="space-y-3">
-          <Input placeholder="Sprint name" value={name} onChange={e => setName(e.target.value)} />
-          <Textarea placeholder="Sprint goal (optional)" value={goal}
+          <Input placeholder={t("tickets.sprint.namePlaceholder")} value={name} onChange={e => setName(e.target.value)} />
+          <Textarea placeholder={t("tickets.sprint.goalPlaceholder")} value={goal}
             onChange={e => setGoal(e.target.value)} rows={2} />
           <div className="grid grid-cols-2 gap-3">
             <div>
@@ -116,7 +118,7 @@ function SprintDialog({
               end_date: endDate || undefined,
             })}
           >
-            {mutation.isPending ? "Saving…" : "Save"}
+            {mutation.isPending ? t("tickets.sprint.saving") : t("tickets.sprint.save")}
           </Button>
         </DialogFooter>
       </DialogContent>

@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -112,6 +113,7 @@ const CategoryItem = ({ category, level, onEdit, onDelete, onAddChild }: Categor
 };
 
 const CategoriesPage = () => {
+  const { t } = useTranslation();
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
@@ -142,13 +144,13 @@ const CategoriesPage = () => {
     mutationFn: (data: CategoryCreate) => cmsService.createCategory(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['cms-categories-tree'] });
-      toast({ title: 'Category created' });
+      toast({ title: t('cms.categories.created') });
       setFormDialog({ open: false, mode: 'create' });
     },
     onError: (error: any) => {
       toast({
-        title: 'Failed to create category',
-        description: error.response?.data?.detail || 'An error occurred',
+        title: t('cms.categories.createFailed'),
+        description: error.response?.data?.detail || t('cms.form.errorOccurred'),
         variant: 'destructive',
       });
     },
@@ -158,13 +160,13 @@ const CategoriesPage = () => {
     mutationFn: ({ id, data }: { id: number; data: any }) => cmsService.updateCategory(id, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['cms-categories-tree'] });
-      toast({ title: 'Category updated' });
+      toast({ title: t('cms.categories.updated') });
       setFormDialog({ open: false, mode: 'create' });
     },
     onError: (error: any) => {
       toast({
-        title: 'Failed to update category',
-        description: error.response?.data?.detail || 'An error occurred',
+        title: t('cms.categories.updateFailed'),
+        description: error.response?.data?.detail || t('cms.form.errorOccurred'),
         variant: 'destructive',
       });
     },
@@ -174,13 +176,13 @@ const CategoriesPage = () => {
     mutationFn: (categoryId: number) => cmsService.deleteCategory(categoryId, false),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['cms-categories-tree'] });
-      toast({ title: 'Category deleted' });
+      toast({ title: t('cms.categories.deleted') });
       setDeleteDialog({ open: false, category: null });
     },
     onError: (error: any) => {
       toast({
-        title: 'Failed to delete category',
-        description: error.response?.data?.detail || 'An error occurred',
+        title: t('cms.categories.deleteFailed'),
+        description: error.response?.data?.detail || t('cms.form.errorOccurred'),
         variant: 'destructive',
       });
     },
@@ -237,13 +239,13 @@ const CategoriesPage = () => {
             </Button>
           </Link>
           <div>
-            <h1 className="text-xl sm:text-2xl font-bold">Categories</h1>
-            <p className="text-muted-foreground hidden sm:block">Organize your content with hierarchical categories</p>
+            <h1 className="text-xl sm:text-2xl font-bold">{t('cms.quickLinks.categories')}</h1>
+            <p className="text-muted-foreground hidden sm:block">{t('cms.quickLinks.categoriesDesc')}</p>
           </div>
         </div>
         <Button onClick={() => openCreateDialog()}>
           <Plus className="w-4 h-4 sm:mr-2" />
-          <span className="hidden sm:inline">Add Category</span>
+          <span className="hidden sm:inline">{t('cms.categories.create')}</span>
         </Button>
       </div>
 
@@ -271,13 +273,13 @@ const CategoriesPage = () => {
         <Card>
           <CardContent className="flex flex-col items-center justify-center py-12">
             <FolderTree className="w-12 h-12 text-muted-foreground mb-4" />
-            <h3 className="text-lg font-medium mb-2">No categories yet</h3>
+            <h3 className="text-lg font-medium mb-2">{t('cms.categories.create')}</h3>
             <p className="text-muted-foreground text-center mb-4">
-              Create categories to organize your content.
+              {t('cms.quickLinks.categoriesDesc')}
             </p>
             <Button onClick={() => openCreateDialog()}>
               <Plus className="w-4 h-4 mr-2" />
-              Add Category
+              {t('cms.categories.create')}
             </Button>
           </CardContent>
         </Card>
@@ -288,7 +290,7 @@ const CategoriesPage = () => {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>
-              {formDialog.mode === 'create' ? 'Create Category' : 'Edit Category'}
+              {formDialog.mode === 'create' ? t('cms.categories.create') : t('cms.categories.edit')}
             </DialogTitle>
           </DialogHeader>
 
@@ -325,7 +327,7 @@ const CategoriesPage = () => {
               <Textarea
                 value={formData.description || ''}
                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                placeholder="Optional description..."
+                placeholder={t('cms.categories.descriptionPlaceholder')}
               />
             </div>
           </div>
@@ -335,7 +337,7 @@ const CategoriesPage = () => {
               variant="outline"
               onClick={() => setFormDialog({ open: false, mode: 'create' })}
             >
-              Cancel
+              {t('common.cancel')}
             </Button>
             <Button
               onClick={handleSubmit}
@@ -344,9 +346,9 @@ const CategoriesPage = () => {
               {(createMutation.isPending || updateMutation.isPending) ? (
                 <Loader2 className="w-4 h-4 animate-spin" />
               ) : formDialog.mode === 'create' ? (
-                'Create'
+                t('cms.categories.createBtn')
               ) : (
-                'Save'
+                t('cms.categories.saveBtn')
               )}
             </Button>
           </DialogFooter>
@@ -367,14 +369,14 @@ const CategoriesPage = () => {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel>{t('common.cancel')}</AlertDialogCancel>
             <AlertDialogAction
               onClick={() =>
                 deleteDialog.category && deleteMutation.mutate(deleteDialog.category.id)
               }
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
-              {deleteMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Delete'}
+              {deleteMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : t('cms.categories.deleteBtn')}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

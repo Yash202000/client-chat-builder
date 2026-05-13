@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import axios from 'axios';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
@@ -55,6 +56,7 @@ function TreeNode({
   onDelete: (n: HierarchyNode) => void;
   onAddChild: (parent: HierarchyNode) => void;
 }) {
+  const { t } = useTranslation();
   const [expanded, setExpanded] = useState(true);
   const hasChildren = node.children && node.children.length > 0;
 
@@ -95,7 +97,7 @@ function TreeNode({
         <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0">
           <button
             className="p-1 rounded hover:bg-muted text-muted-foreground hover:text-foreground"
-            title="Add child node"
+            title={t('hierarchy.addChild')}
             onClick={() => onAddChild(node)}
           >
             <Plus className="w-3 h-3" />
@@ -136,6 +138,7 @@ function TreeNode({
 // ── Main Page ─────────────────────────────────────────────────────────────────
 
 export default function HierarchyPage() {
+  const { t } = useTranslation();
   const { toast } = useToast();
   const [types, setTypes] = useState<HierarchyType[]>([]);
   const [selectedType, setSelectedType] = useState<HierarchyType | null>(null);
@@ -176,7 +179,7 @@ export default function HierarchyPage() {
       setTypes(res.data);
       if (res.data.length > 0 && !selectedType) setSelectedType(res.data[0]);
     } catch {
-      toast({ title: 'Error', description: 'Failed to load hierarchy types', variant: 'destructive' });
+      toast({ title: 'Error', description: t('hierarchy.loadTypesFailed'), variant: 'destructive' });
     } finally {
       setLoading(false);
     }
@@ -188,7 +191,7 @@ export default function HierarchyPage() {
       const res = await axios.get(`/api/v1/hierarchy/types/${typeId}/tree`, { headers: headers() });
       setTree(res.data);
     } catch {
-      toast({ title: 'Error', description: 'Failed to load nodes', variant: 'destructive' });
+      toast({ title: 'Error', description: t('hierarchy.loadNodesFailed'), variant: 'destructive' });
     } finally {
       setTreeLoading(false);
     }
@@ -212,15 +215,15 @@ export default function HierarchyPage() {
     try {
       if (typeDialog.edit) {
         await axios.put(`/api/v1/hierarchy/types/${typeDialog.edit.id}`, typeForm, { headers: headers() });
-        toast({ title: 'Type updated' });
+        toast({ title: t('hierarchy.typeUpdated') });
       } else {
         await axios.post('/api/v1/hierarchy/types', typeForm, { headers: headers() });
-        toast({ title: 'Type created' });
+        toast({ title: t('hierarchy.typeCreated') });
       }
       setTypeDialog({ open: false });
       fetchTypes();
     } catch {
-      toast({ title: 'Error', description: 'Failed to save type', variant: 'destructive' });
+      toast({ title: 'Error', description: t('hierarchy.typeSaveFailed'), variant: 'destructive' });
     } finally {
       setTypeSaving(false);
     }
@@ -246,7 +249,7 @@ export default function HierarchyPage() {
   const saveNode = async () => {
     if (!nodeForm.name.trim() || !nodeForm.code.trim() || !selectedType) return;
     if (!/^[a-z][a-z0-9_]*$/.test(nodeForm.code)) {
-      toast({ title: 'Invalid code', description: 'Code must be lowercase letters, numbers, underscores; start with a letter.', variant: 'destructive' });
+      toast({ title: t('hierarchy.invalidCode'), description: t('hierarchy.invalidCodeDesc'), variant: 'destructive' });
       return;
     }
     setNodeSaving(true);
@@ -259,15 +262,15 @@ export default function HierarchyPage() {
       };
       if (nodeDialog.edit) {
         await axios.put(`/api/v1/hierarchy/nodes/${nodeDialog.edit.id}`, payload, { headers: headers() });
-        toast({ title: 'Node updated' });
+        toast({ title: t('hierarchy.nodeUpdated') });
       } else {
         await axios.post(`/api/v1/hierarchy/types/${selectedType.id}/nodes`, payload, { headers: headers() });
-        toast({ title: 'Node created' });
+        toast({ title: t('hierarchy.nodeCreated') });
       }
       setNodeDialog({ open: false });
       fetchTree(selectedType.id);
     } catch (e: any) {
-      toast({ title: 'Error', description: e.response?.data?.detail || 'Failed to save node', variant: 'destructive' });
+      toast({ title: 'Error', description: e.response?.data?.detail || t('hierarchy.nodeSaveFailed'), variant: 'destructive' });
     } finally {
       setNodeSaving(false);
     }
@@ -281,17 +284,17 @@ export default function HierarchyPage() {
     try {
       if (deleteTarget.kind === 'type') {
         await axios.delete(`/api/v1/hierarchy/types/${deleteTarget.item.id}`, { headers: headers() });
-        toast({ title: 'Type deleted' });
+        toast({ title: t('hierarchy.typeDeleted') });
         setSelectedType(null);
         fetchTypes();
       } else {
         await axios.delete(`/api/v1/hierarchy/nodes/${deleteTarget.item.id}`, { headers: headers() });
-        toast({ title: 'Node deleted' });
+        toast({ title: t('hierarchy.nodeDeleted') });
         if (selectedType) fetchTree(selectedType.id);
       }
       setDeleteTarget(null);
     } catch (e: any) {
-      toast({ title: 'Error', description: e.response?.data?.detail || 'Delete failed', variant: 'destructive' });
+      toast({ title: 'Error', description: e.response?.data?.detail || t('hierarchy.deleteFailed'), variant: 'destructive' });
     } finally {
       setDeleting(false);
     }
@@ -436,7 +439,7 @@ export default function HierarchyPage() {
       <Dialog open={typeDialog.open} onOpenChange={open => setTypeDialog({ open })}>
         <DialogContent className="sm:max-w-[420px]">
           <DialogHeader>
-            <DialogTitle>{typeDialog.edit ? 'Edit Hierarchy Type' : 'New Hierarchy Type'}</DialogTitle>
+            <DialogTitle>{typeDialog.edit ? t('hierarchy.editType') : t('hierarchy.newType')}</DialogTitle>
             <DialogDescription>
               A hierarchy type defines a dimension (e.g. Location, Classification).
             </DialogDescription>
@@ -455,7 +458,7 @@ export default function HierarchyPage() {
               <Textarea
                 value={typeForm.description}
                 onChange={e => setTypeForm(f => ({ ...f, description: e.target.value }))}
-                placeholder="Optional description"
+                placeholder={t('hierarchy.descriptionPlaceholder')}
                 rows={2}
                 className="resize-none"
               />

@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import {
   Linkedin,
   Instagram,
@@ -34,11 +35,12 @@ const PLATFORM_ICONS = {
 };
 
 const StatusBadge = ({ status }: { status: string }) => {
+  const { t } = useTranslation();
   const map: Record<string, { label: string; className: string; icon: typeof CheckCircle2 }> = {
-    published: { label: 'Published', className: 'border-green-400 text-green-600', icon: CheckCircle2 },
-    scheduled: { label: 'Scheduled', className: 'border-blue-400 text-blue-600', icon: Clock },
-    draft: { label: 'Draft', className: 'border-slate-400 text-slate-500', icon: FileText },
-    failed: { label: 'Failed', className: 'border-red-400 text-red-500', icon: AlertCircle },
+    published: { label: t('social.status.published'), className: 'border-green-400 text-green-600', icon: CheckCircle2 },
+    scheduled: { label: t('social.status.scheduled'), className: 'border-blue-400 text-blue-600', icon: Clock },
+    draft: { label: t('social.status.draft'), className: 'border-slate-400 text-slate-500', icon: FileText },
+    failed: { label: t('social.status.failed'), className: 'border-red-400 text-red-500', icon: AlertCircle },
   };
   const cfg = map[status] ?? map['draft'];
   const Icon = cfg.icon;
@@ -52,6 +54,7 @@ const StatusBadge = ({ status }: { status: string }) => {
 
 export default function SocialHubPage() {
   const navigate = useNavigate();
+  const { t } = useTranslation();
 
   const { data: accountsData } = useQuery({
     queryKey: ['social-accounts'],
@@ -73,10 +76,10 @@ export default function SocialHubPage() {
   const analytics = analyticsData ?? {};
 
   const kpis = [
-    { label: 'Posts This Week', value: analytics.posts_this_week ?? 0, icon: FileText, color: 'text-blue-600' },
-    { label: 'Scheduled', value: analytics.scheduled_count ?? 0, icon: Clock, color: 'text-violet-500' },
-    { label: 'Total Engagements', value: analytics.total_engagements ?? 0, icon: TrendingUp, color: 'text-green-500' },
-    { label: 'Total Reach', value: analytics.total_reach ?? 0, icon: BarChart3, color: 'text-purple-500' },
+    { label: t('social.postsThisWeek'), value: analytics.posts_this_week ?? 0, icon: FileText, color: 'text-blue-600' },
+    { label: t('social.scheduled'), value: analytics.scheduled_count ?? 0, icon: Clock, color: 'text-violet-500' },
+    { label: t('social.totalEngagements'), value: analytics.total_engagements ?? 0, icon: TrendingUp, color: 'text-green-500' },
+    { label: t('social.totalReach'), value: analytics.total_reach ?? 0, icon: BarChart3, color: 'text-purple-500' },
   ];
 
   return (
@@ -85,14 +88,14 @@ export default function SocialHubPage() {
         <div>
           <h1 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
             <Megaphone className="h-5 w-5 sm:h-6 sm:w-6 text-purple-600" />
-            Marketing Hub
+            {t('social.title')}
           </h1>
           <p className="text-sm text-slate-500 dark:text-slate-400 mt-1 hidden sm:block">
-            Manage your social presence, create content, and track performance.
+            {t('social.subtitle')}
           </p>
         </div>
         <Button onClick={() => navigate('/dashboard/social/compose')} className="gap-2 flex-shrink-0">
-          <Plus className="h-4 w-4" /><span className="hidden sm:inline">New Post</span>
+          <Plus className="h-4 w-4" /><span className="hidden sm:inline">{t('social.newPost')}</span>
         </Button>
       </div>
 
@@ -116,7 +119,7 @@ export default function SocialHubPage() {
               <div>
                 <p className="text-xs font-medium capitalize">{platform}</p>
                 <p className="text-xs text-slate-400">
-                  {platformAccounts.length ? `${platformAccounts.length} connected` : 'Not connected'}
+                  {platformAccounts.length ? t('social.connected', { count: platformAccounts.length }) : t('social.notConnected')}
                 </p>
               </div>
             </div>
@@ -128,7 +131,7 @@ export default function SocialHubPage() {
           className="text-xs gap-1"
           onClick={() => navigate('/dashboard/social/accounts')}
         >
-          Manage accounts <ArrowRight className="h-3 w-3" />
+          {t('social.manageAccounts')} <ArrowRight className="h-3 w-3" />
         </Button>
       </div>
 
@@ -157,7 +160,7 @@ export default function SocialHubPage() {
         <Card>
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
-              <CardTitle className="text-base">Recent Posts</CardTitle>
+              <CardTitle className="text-base">{t('social.recentPosts')}</CardTitle>
               <Button variant="ghost" size="sm" className="gap-1 text-xs" onClick={() => navigate('/dashboard/calendar')}>
                 View all <ArrowRight className="h-3 w-3" />
               </Button>
@@ -168,9 +171,9 @@ export default function SocialHubPage() {
             {posts.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-10 text-slate-400">
                 <FileText className="h-8 w-8 mb-2 opacity-30" />
-                <p className="text-sm">No posts yet</p>
+                <p className="text-sm">{t('social.noPosts')}</p>
                 <Button variant="outline" size="sm" className="mt-3 gap-1" onClick={() => navigate('/dashboard/social/compose')}>
-                  <Plus className="h-3.5 w-3.5" /> Create your first post
+                  <Plus className="h-3.5 w-3.5" /> {t('social.createFirstPost')}
                 </Button>
               </div>
             ) : (
@@ -204,12 +207,12 @@ export default function SocialHubPage() {
 
         {/* Quick Actions */}
         <div className="space-y-3">
-          <h3 className="text-sm font-medium text-slate-700 dark:text-slate-300">Quick Actions</h3>
+          <h3 className="text-sm font-medium text-slate-700 dark:text-slate-300">{t('social.quickActionsTitle')}</h3>
           {[
-            { label: 'Compose New Post', description: 'Write and schedule posts for all platforms', icon: Plus, url: '/dashboard/social/compose', color: 'bg-purple-500' },
-            { label: 'Find Trending Topics', description: 'Discover viral content and generate AI posts', icon: TrendingUp, url: '/dashboard/social/trending', color: 'bg-blue-500' },
-            { label: 'Content Calendar', description: 'View and manage your publishing schedule', icon: Calendar, url: '/dashboard/calendar',        color: 'bg-green-500' },
-            { label: 'Import LinkedIn Leads', description: 'Turn LinkedIn profiles into CRM leads', icon: Linkedin, url: '/dashboard/crm/linkedin-leads', color: 'bg-blue-600' },
+            { label: t('social.quickActions.compose'), description: t('social.quickActions.composeDesc'), icon: Plus, url: '/dashboard/social/compose', color: 'bg-purple-500' },
+            { label: t('social.quickActions.trending'), description: t('social.quickActions.trendingDesc'), icon: TrendingUp, url: '/dashboard/social/trending', color: 'bg-blue-500' },
+            { label: t('social.quickActions.calendar'), description: t('social.quickActions.calendarDesc'), icon: Calendar, url: '/dashboard/calendar',        color: 'bg-green-500' },
+            { label: t('social.quickActions.linkedinLeads'), description: t('social.quickActions.linkedinLeadsDesc'), icon: Linkedin, url: '/dashboard/crm/linkedin-leads', color: 'bg-blue-600' },
           ].map(action => {
             const Icon = action.icon;
             return (

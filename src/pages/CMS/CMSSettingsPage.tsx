@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -61,6 +62,7 @@ import { useToast } from '@/hooks/use-toast';
 const CMSSettingsPage = () => {
   const queryClient = useQueryClient();
   const { toast } = useToast();
+  const { t } = useTranslation();
 
   // API Token state
   const [tokenDialog, setTokenDialog] = useState(false);
@@ -102,7 +104,7 @@ const CMSSettingsPage = () => {
     },
     onError: (error: any) => {
       toast({
-        title: 'Failed to create token',
+        title: t('cms.settings.createTokenFailed'),
         description: error.response?.data?.detail || 'An error occurred',
         variant: 'destructive',
       });
@@ -113,7 +115,7 @@ const CMSSettingsPage = () => {
     mutationFn: (tokenId: number) => cmsService.deleteApiToken(tokenId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['cms-api-tokens'] });
-      toast({ title: 'Token revoked' });
+      toast({ title: t('cms.settings.tokenRevoked') });
       setDeleteTokenDialog({ open: false, token: null });
     },
   });
@@ -123,7 +125,7 @@ const CMSSettingsPage = () => {
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['cms-api-tokens'] });
       setNewToken(data);
-      toast({ title: 'Token regenerated' });
+      toast({ title: t('cms.settings.tokenRegenerated') });
     },
   });
 
@@ -132,12 +134,12 @@ const CMSSettingsPage = () => {
     mutationFn: (format: ExportFormat) => cmsService.createExport({ format }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['cms-exports'] });
-      toast({ title: 'Export started' });
+      toast({ title: t('cms.settings.exportStarted') });
       setExporting(false);
     },
     onError: (error: any) => {
       toast({
-        title: 'Failed to start export',
+        title: t('cms.settings.exportFailed'),
         description: error.response?.data?.detail || 'An error occurred',
         variant: 'destructive',
       });
@@ -151,7 +153,7 @@ const CMSSettingsPage = () => {
       window.open(data.download_url, '_blank');
     },
     onError: () => {
-      toast({ title: 'Failed to get download link', variant: 'destructive' });
+      toast({ title: t('cms.settings.downloadFailed'), variant: 'destructive' });
     },
   });
 
@@ -159,7 +161,7 @@ const CMSSettingsPage = () => {
     mutationFn: (exportId: number) => cmsService.deleteExport(exportId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['cms-exports'] });
-      toast({ title: 'Export deleted' });
+      toast({ title: t('cms.settings.exportDeleted') });
     },
   });
 
@@ -174,7 +176,7 @@ const CMSSettingsPage = () => {
 
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
-    toast({ title: 'Copied to clipboard' });
+    toast({ title: t('cms.settings.copiedToClipboard') });
   };
 
   return (
@@ -217,7 +219,7 @@ const CMSSettingsPage = () => {
                 </div>
                 <Button onClick={() => setTokenDialog(true)}>
                   <Plus className="w-4 h-4 sm:mr-2" />
-                  <span className="hidden sm:inline">Create Token</span>
+                  <span className="hidden sm:inline">{t('cms.settings.createToken')}</span>
                 </Button>
               </div>
             </CardHeader>
@@ -243,7 +245,7 @@ const CMSSettingsPage = () => {
                   <TableBody>
                     {tokens.map((token) => (
                       <TableRow key={token.id}>
-                        <TableCell className="font-medium">{token.name || 'Unnamed'}</TableCell>
+                        <TableCell className="font-medium">{token.name || t('cms.settings.unnamed')}</TableCell>
                         <TableCell>
                           <code className="text-xs bg-muted px-2 py-1 rounded">
                             {token.token}
@@ -258,7 +260,7 @@ const CMSSettingsPage = () => {
                         <TableCell className="hidden md:table-cell">{token.rate_limit}/min</TableCell>
                         <TableCell>
                           <Badge variant={token.is_active ? 'default' : 'secondary'}>
-                            {token.is_active ? 'Active' : 'Inactive'}
+                            {token.is_active ? t('cms.settings.active') : t('cms.settings.inactive')}
                           </Badge>
                         </TableCell>
                         <TableCell className="hidden sm:table-cell text-muted-foreground">
@@ -270,7 +272,7 @@ const CMSSettingsPage = () => {
                               variant="ghost"
                               size="icon"
                               onClick={() => regenerateTokenMutation.mutate(token.id)}
-                              title="Regenerate"
+                              title={t('cms.settings.regenerate')}
                             >
                               <RefreshCw className="w-4 h-4" />
                             </Button>
@@ -279,7 +281,7 @@ const CMSSettingsPage = () => {
                               size="icon"
                               className="text-destructive"
                               onClick={() => setDeleteTokenDialog({ open: true, token })}
-                              title="Delete"
+                              title={t('cms.settings.delete')}
                             >
                               <Trash className="w-4 h-4" />
                             </Button>
@@ -501,7 +503,7 @@ const CMSSettingsPage = () => {
               {createTokenMutation.isPending ? (
                 <Loader2 className="w-4 h-4 animate-spin" />
               ) : (
-                'Create Token'
+                t('cms.settings.createToken')
               )}
             </Button>
           </DialogFooter>
@@ -567,7 +569,7 @@ const CMSSettingsPage = () => {
               {deleteTokenMutation.isPending ? (
                 <Loader2 className="w-4 h-4 animate-spin" />
               ) : (
-                'Revoke'
+                t('cms.settings.revoke')
               )}
             </AlertDialogAction>
           </AlertDialogFooter>

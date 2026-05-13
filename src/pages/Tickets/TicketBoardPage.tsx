@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import axios from 'axios';
 import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea/dnd';
 import {
@@ -110,6 +111,7 @@ function PriorityDot({ priority }: { priority: string }) {
 export default function TicketBoardPage() {
   const { projectKey } = useParams<{ projectKey: string }>();
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [project, setProject] = useState<Project | null>(null);
   const [tickets, setTickets] = useState<Ticket[]>([]);
   const [statuses, setStatuses] = useState<Status[]>([]);
@@ -151,7 +153,7 @@ export default function TicketBoardPage() {
         axios.get('/api/v1/users/', { headers: headers() }),
       ]);
       const proj = projRes.data.find((p: Project) => p.key === projectKey);
-      if (!proj) { toast.error('Project not found'); navigate('/dashboard/tickets'); return; }
+      if (!proj) { toast.error(t('tickets.projectNotFound')); navigate('/dashboard/tickets'); return; }
 
       setProject(proj);
 
@@ -294,10 +296,10 @@ export default function TicketBoardPage() {
       const fd = new FormData();
       fd.append('file', file);
       await axios.post(`/api/v1/tickets/${pendingDrop.ticketId}/attachments`, fd, { headers: headers() });
-      toast.success('Attachment uploaded');
+      toast.success(t('tickets.attachmentUploaded'));
       setTransitionFieldValues(prev => ({ ...prev, attachment: file.name }));
     } catch (err: any) {
-      toast.error(err.response?.data?.detail || 'Upload failed');
+      toast.error(err.response?.data?.detail || t('tickets.uploadFailed'));
     } finally {
       setUploadingAttachment(false);
       e.target.value = '';
@@ -524,7 +526,7 @@ export default function TicketBoardPage() {
                   <Label>{sf.label}{sf.required && <span className="text-destructive ml-0.5">*</span>}</Label>
                   <Select value={transitionFieldValues.priority || ''}
                     onValueChange={v => setTransitionFieldValues(p => ({ ...p, priority: v }))}>
-                    <SelectTrigger className="h-8 text-sm"><SelectValue placeholder="Select priority" /></SelectTrigger>
+                    <SelectTrigger className="h-8 text-sm"><SelectValue placeholder={t('tickets.selectPriority')} /></SelectTrigger>
                     <SelectContent>
                       {['critical', 'high', 'medium', 'low', 'none'].map(p => (
                         <SelectItem key={p} value={p} className="capitalize">{p}</SelectItem>
@@ -538,9 +540,9 @@ export default function TicketBoardPage() {
                   <Label>{sf.label}{sf.required && <span className="text-destructive ml-0.5">*</span>}</Label>
                   <Select value={transitionFieldValues.assignee_id ? String(transitionFieldValues.assignee_id) : '__none__'}
                     onValueChange={v => setTransitionFieldValues(p => ({ ...p, assignee_id: v === '__none__' ? null : parseInt(v) }))}>
-                    <SelectTrigger className="h-8 text-sm"><SelectValue placeholder="Unassigned" /></SelectTrigger>
+                    <SelectTrigger className="h-8 text-sm"><SelectValue placeholder={t('tickets.unassigned')} /></SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="__none__">Unassigned</SelectItem>
+                      <SelectItem value="__none__">{t('tickets.unassigned')}</SelectItem>
                       {teamMembers.map(u => (
                         <SelectItem key={u.id} value={String(u.id)}>{u.full_name || u.email}</SelectItem>
                       ))}
@@ -567,7 +569,7 @@ export default function TicketBoardPage() {
                     {uploadingAttachment
                       ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
                       : <Paperclip className="w-3.5 h-3.5" />}
-                    <span>{transitionFieldValues.attachment || (uploadingAttachment ? 'Uploading…' : 'Click to attach file')}</span>
+                    <span>{transitionFieldValues.attachment || (uploadingAttachment ? 'Uploading…' : t('tickets.clickToAttach'))}</span>
                     <input type="file" className="hidden" onChange={handleTransitionAttach} disabled={uploadingAttachment} />
                   </label>
                 </div>
@@ -583,12 +585,12 @@ export default function TicketBoardPage() {
               return (
                 <div className="space-y-1.5">
                   <Label>
-                    {commentField?.label || 'Comment'}
+                    {commentField?.label || t('tickets.commentLabel')}
                     {commentField?.required
                       ? <span className="text-destructive ml-0.5">*</span>
                       : <span className="text-muted-foreground font-normal ml-1">(optional)</span>}
                   </Label>
-                  <Textarea placeholder="Add a comment about this transition…" rows={3}
+                  <Textarea placeholder={t('tickets.addComment')} rows={3}
                     value={transitionComment} onChange={e => setTransitionComment(e.target.value)} />
                 </div>
               );
@@ -667,10 +669,10 @@ export default function TicketBoardPage() {
               <Label className="text-xs">Assignee</Label>
               <Select value={newTicket.assignee_id || '__none__'} onValueChange={v => setNewTicket(t => ({ ...t, assignee_id: v === '__none__' ? '' : v }))}>
                 <SelectTrigger className="h-8 text-xs">
-                  <SelectValue placeholder="Unassigned" />
+                  <SelectValue placeholder={t('tickets.unassigned')} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="__none__">Unassigned</SelectItem>
+                  <SelectItem value="__none__">{t('tickets.unassigned')}</SelectItem>
                   {teamMembers.map(u => (
                     <SelectItem key={u.id} value={String(u.id)}>
                       {u.full_name || u.email}

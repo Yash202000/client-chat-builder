@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import axios from 'axios';
 import {
   ArrowLeft, Plus, Search, LayoutGrid,
@@ -75,6 +76,7 @@ interface TransitionDialogProps {
 }
 
 function TransitionDialog({ open, onOpenChange, transition, ticketId, teamMembers, onDone }: TransitionDialogProps) {
+  const { t } = useTranslation();
   const [comment, setComment] = useState('');
   const [fieldValues, setFieldValues] = useState<Record<string, any>>({});
   const [loading, setLoading] = useState(false);
@@ -95,8 +97,8 @@ function TransitionDialog({ open, onOpenChange, transition, ticketId, teamMember
     try {
       const fd = new FormData(); fd.append('file', file);
       await axios.post(`/api/v1/tickets/${ticketId}/attachments`, fd, { headers: headers() });
-      toast.success('Attachment uploaded'); setFv('attachment', file.name);
-    } catch (err: any) { toast.error(err.response?.data?.detail || 'Upload failed'); }
+      toast.success(t('tickets.attachmentUploaded')); setFv('attachment', file.name);
+    } catch (err: any) { toast.error(err.response?.data?.detail || t('tickets.uploadFailed')); }
     finally { setUploadingFile(false); e.target.value = ''; }
   };
 
@@ -106,7 +108,7 @@ function TransitionDialog({ open, onOpenChange, transition, ticketId, teamMember
         toast.error(`${sf.label} is required`); return;
       }
       if (sf.required && sf.field === 'comment' && !comment.trim()) {
-        toast.error('Comment is required'); return;
+        toast.error(t('tickets.commentRequired')); return;
       }
     }
     setLoading(true);
@@ -144,7 +146,7 @@ function TransitionDialog({ open, onOpenChange, transition, ticketId, teamMember
               <div key={sf.field} className="space-y-1.5">
                 <Label className="text-sm font-medium">{sf.label}{sf.required && <span className="text-destructive ml-0.5">*</span>}</Label>
                 <Select value={fieldValues.priority || ''} onValueChange={v => setFv('priority', v)}>
-                  <SelectTrigger><SelectValue placeholder="Select priority" /></SelectTrigger>
+                  <SelectTrigger><SelectValue placeholder={t('tickets.selectPriority')} /></SelectTrigger>
                   <SelectContent>{['critical','high','medium','low','none'].map(p => <SelectItem key={p} value={p} className="capitalize">{p}</SelectItem>)}</SelectContent>
                 </Select>
               </div>
@@ -154,9 +156,9 @@ function TransitionDialog({ open, onOpenChange, transition, ticketId, teamMember
                 <Label className="text-sm font-medium">{sf.label}{sf.required && <span className="text-destructive ml-0.5">*</span>}</Label>
                 <Select value={fieldValues.assignee_id ? String(fieldValues.assignee_id) : '__none__'}
                   onValueChange={v => setFv('assignee_id', v === '__none__' ? null : parseInt(v))}>
-                  <SelectTrigger><SelectValue placeholder="Unassigned" /></SelectTrigger>
+                  <SelectTrigger><SelectValue placeholder={t('tickets.unassigned')} /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="__none__">Unassigned</SelectItem>
+                    <SelectItem value="__none__">{t('tickets.unassigned')}</SelectItem>
                     {teamMembers.map(u => <SelectItem key={u.id} value={String(u.id)}>{u.full_name || u.email}</SelectItem>)}
                   </SelectContent>
                 </Select>
@@ -174,7 +176,7 @@ function TransitionDialog({ open, onOpenChange, transition, ticketId, teamMember
                 <label className={cn('flex items-center gap-2 px-3 py-2.5 rounded-lg border-2 border-dashed text-sm cursor-pointer hover:bg-muted/40 transition-colors',
                   uploadingFile && 'opacity-50 pointer-events-none', fieldValues.attachment && 'border-green-400 bg-green-50')}>
                   {uploadingFile ? <Loader2 className="w-4 h-4 animate-spin" /> : <Paperclip className="w-4 h-4" />}
-                  <span>{fieldValues.attachment || 'Click to attach a file'}</span>
+                  <span>{fieldValues.attachment || t('tickets.clickToAttach')}</span>
                   <input type="file" className="hidden" onChange={handleAttach} disabled={uploadingFile} />
                 </label>
               </div>
@@ -190,12 +192,12 @@ function TransitionDialog({ open, onOpenChange, transition, ticketId, teamMember
           {(hasCommentField || fields.length === 0) && (
             <div className="space-y-1.5">
               <Label className="text-sm font-medium">
-                {hasCommentField ? (fields.find(f => f.field === 'comment')?.label || 'Comment') : 'Comment'}
+                {hasCommentField ? (fields.find(f => f.field === 'comment')?.label || t('tickets.commentLabel')) : t('tickets.commentLabel')}
                 {fields.find(f => f.field === 'comment')?.required
                   ? <span className="text-destructive ml-0.5">*</span>
                   : <span className="text-muted-foreground font-normal text-xs ml-1">(optional)</span>}
               </Label>
-              <Textarea placeholder="Add a comment about this transition…" rows={3}
+              <Textarea placeholder={t('tickets.addComment')} rows={3}
                 value={comment} onChange={e => setComment(e.target.value)} className="resize-none" />
             </div>
           )}
@@ -315,6 +317,7 @@ function StatusCell({ ticket, statuses, transitions, onTransitionSelect, onDirec
 export default function TicketListPage() {
   const { projectKey } = useParams<{ projectKey: string }>();
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [projectId, setProjectId] = useState<number | null>(null);
   const [projectName, setProjectName] = useState('');
   const [tickets, setTickets] = useState<Ticket[]>([]);
@@ -343,7 +346,7 @@ export default function TicketListPage() {
         axios.get('/api/v1/users/', { headers: headers() }),
       ]);
       const proj = projRes.data.find((p: any) => p.key === projectKey);
-      if (!proj) { toast.error('Project not found'); navigate('/dashboard/tickets'); return; }
+      if (!proj) { toast.error(t('tickets.projectNotFound')); navigate('/dashboard/tickets'); return; }
       setProjectId(proj.id);
       setProjectName(proj.name);
       setStatuses(proj.default_workflow?.statuses || []);
@@ -357,7 +360,7 @@ export default function TicketListPage() {
       });
       setTickets(ticketsRes.data);
     } catch {
-      toast.error('Failed to load tickets');
+      toast.error(t('tickets.loadFailed'));
     } finally {
       setLoading(false);
     }
@@ -383,7 +386,7 @@ export default function TicketListPage() {
     } catch (e: any) {
       // Revert on failure
       setTickets(prev => prev.map(t => t.id === ticket.id ? { ...t, status: ticket.status } : t));
-      toast.error(e.response?.data?.detail || 'Failed to update status');
+      toast.error(e.response?.data?.detail || t('tickets.updateStatusFailed'));
     }
   };
 
@@ -407,12 +410,12 @@ export default function TicketListPage() {
   };
 
   const deleteTicket = async (id: number) => {
-    if (!confirm('Delete this ticket?')) return;
+    if (!confirm(t('tickets.deleteConfirm'))) return;
     try {
       await axios.delete(`/api/v1/tickets/${id}`, { headers: headers() });
-      toast.success('Ticket deleted');
+      toast.success(t('tickets.ticketDeleted'));
       setTickets(prev => prev.filter(t => t.id !== id));
-    } catch { toast.error('Failed to delete ticket'); }
+    } catch { toast.error(t('tickets.deleteFailed')); }
   };
 
   const SortIcon = ({ field }: { field: typeof sortField }) => {

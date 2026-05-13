@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import {
   Plus, Search, MoreHorizontal, Trash2, Copy, Eye, ExternalLink,
   FormInput, Loader2, BarChart2, Code2, Pencil,
@@ -35,6 +36,7 @@ const STATUS_COLOR: Record<string, string> = {
 export default function FormsPage() {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { t } = useTranslation();
 
   const [forms, setForms] = useState<CaptureForm[]>([]);
   const [loading, setLoading] = useState(true);
@@ -58,7 +60,7 @@ export default function FormsPage() {
       setLoading(true);
       setForms(await getForms());
     } catch {
-      toast({ title: 'Error', description: 'Failed to load forms', variant: 'destructive' });
+      toast({ title: t('captureforms.toast.errorTitle'), description: t('captureforms.toast.loadError'), variant: 'destructive' });
     } finally { setLoading(false); }
   };
 
@@ -82,12 +84,12 @@ export default function FormsPage() {
           font_family: 'Inter',
         },
       });
-      toast({ title: 'Created', description: 'Opening editor…' });
+      toast({ title: t('captureforms.toast.createdTitle'), description: t('captureforms.toast.createdDesc') });
       setCreateOpen(false);
       setNewName('');
       navigate(`/dashboard/crm/forms/${form.id}`);
     } catch {
-      toast({ title: 'Error', description: 'Failed to create form', variant: 'destructive' });
+      toast({ title: t('captureforms.toast.errorTitle'), description: t('captureforms.toast.createError'), variant: 'destructive' });
     } finally { setCreating(false); }
   };
 
@@ -95,9 +97,9 @@ export default function FormsPage() {
     try {
       await deleteForm(id);
       setForms(prev => prev.filter(f => f.id !== id));
-      toast({ title: 'Deleted' });
+      toast({ title: t('captureforms.toast.deletedTitle') });
     } catch {
-      toast({ title: 'Error', description: 'Failed to delete', variant: 'destructive' });
+      toast({ title: t('captureforms.toast.errorTitle'), description: t('captureforms.toast.deleteError'), variant: 'destructive' });
     }
   };
 
@@ -113,7 +115,7 @@ export default function FormsPage() {
   const copyEmbedCode = (form: CaptureForm) => {
     const code = `<iframe src="${FRONTEND_BASE}/f/${form.slug}" width="100%" height="600" frameborder="0" style="border:none;border-radius:8px;"></iframe>`;
     navigator.clipboard.writeText(code);
-    toast({ title: 'Copied', description: 'Embed code copied to clipboard' });
+    toast({ title: t('captureforms.toast.copiedTitle'), description: t('captureforms.toast.embedCopied') });
   };
 
   const filtered = forms.filter(f => f.name.toLowerCase().includes(search.toLowerCase()));
@@ -126,22 +128,22 @@ export default function FormsPage() {
           <div>
             <h1 className="text-xl font-semibold flex items-center gap-2">
               <FormInput className="h-5 w-5 text-violet-500" />
-              Forms
+              {t('captureforms.title')}
             </h1>
             <p className="text-sm text-muted-foreground mt-0.5">
-              Build embeddable lead capture forms for your website
+              {t('captureforms.subtitle')}
             </p>
           </div>
           <Button
             onClick={() => setCreateOpen(true)}
             className="gap-2 bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white"
           >
-            <Plus className="h-4 w-4" /> New Form
+            <Plus className="h-4 w-4" /> {t('captureforms.newForm')}
           </Button>
         </div>
         <div className="relative max-w-sm">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
-          <Input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search forms…" className="pl-9 h-9 text-sm" />
+          <Input value={search} onChange={e => setSearch(e.target.value)} placeholder={t('captureforms.searchPlaceholder')} className="pl-9 h-9 text-sm" />
         </div>
       </div>
 
@@ -155,11 +157,11 @@ export default function FormsPage() {
               <FormInput className="h-6 w-6 text-violet-500" />
             </div>
             <div>
-              <p className="font-medium">No forms yet</p>
-              <p className="text-sm text-muted-foreground mt-1">Create a form to capture leads from your website</p>
+              <p className="font-medium">{t('captureforms.empty.title')}</p>
+              <p className="text-sm text-muted-foreground mt-1">{t('captureforms.empty.subtitle')}</p>
             </div>
             <Button onClick={() => setCreateOpen(true)} variant="outline" size="sm" className="gap-1.5">
-              <Plus className="h-3.5 w-3.5" /> New Form
+              <Plus className="h-3.5 w-3.5" /> {t('captureforms.newForm')}
             </Button>
           </div>
         ) : (
@@ -184,38 +186,38 @@ export default function FormsPage() {
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end" className="w-48">
                       <DropdownMenuItem onClick={() => navigate(`/dashboard/crm/forms/${form.id}`)}>
-                        <Pencil className="h-3.5 w-3.5 mr-2" /> Edit
+                        <Pencil className="h-3.5 w-3.5 mr-2" /> {t('captureforms.actions.edit')}
                       </DropdownMenuItem>
                       <DropdownMenuItem onClick={() => openSubmissions(form)}>
-                        <BarChart2 className="h-3.5 w-3.5 mr-2" /> View submissions
+                        <BarChart2 className="h-3.5 w-3.5 mr-2" /> {t('captureforms.actions.viewSubmissions')}
                       </DropdownMenuItem>
                       <DropdownMenuItem onClick={() => { setEmbedForm(form); setEmbedOpen(true); }}>
-                        <Code2 className="h-3.5 w-3.5 mr-2" /> Get embed code
+                        <Code2 className="h-3.5 w-3.5 mr-2" /> {t('captureforms.actions.getEmbedCode')}
                       </DropdownMenuItem>
                       <DropdownMenuItem onClick={() => window.open(`/f/${form.slug}`, '_blank')}>
-                        <ExternalLink className="h-3.5 w-3.5 mr-2" /> Preview
+                        <ExternalLink className="h-3.5 w-3.5 mr-2" /> {t('captureforms.actions.preview')}
                       </DropdownMenuItem>
                       <DropdownMenuSeparator />
                       <DropdownMenuItem className="text-destructive focus:text-destructive" onClick={() => handleDelete(form.id)}>
-                        <Trash2 className="h-3.5 w-3.5 mr-2" /> Delete
+                        <Trash2 className="h-3.5 w-3.5 mr-2" /> {t('captureforms.actions.delete')}
                       </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
                 </div>
 
                 <div className="flex items-center gap-4 text-xs text-muted-foreground mb-3">
-                  <span>{form.fields.length} field{form.fields.length !== 1 ? 's' : ''}</span>
-                  <span>{form.submission_count} submission{form.submission_count !== 1 ? 's' : ''}</span>
+                  <span>{t('captureforms.card.fields', { count: form.fields.length })}</span>
+                  <span>{t('captureforms.card.submissions', { count: form.submission_count })}</span>
                 </div>
 
                 <div className="flex items-center gap-2">
                   <Button variant="outline" size="sm" className="h-7 text-xs flex-1 gap-1" onClick={() => navigate(`/dashboard/crm/forms/${form.id}`)}>
-                    <Pencil className="h-3 w-3" /> Edit
+                    <Pencil className="h-3 w-3" /> {t('captureforms.actions.edit')}
                   </Button>
-                  <Button variant="outline" size="sm" className="h-7 text-xs px-2" title="Get embed code" onClick={() => { setEmbedForm(form); setEmbedOpen(true); }}>
+                  <Button variant="outline" size="sm" className="h-7 text-xs px-2" title={t('captureforms.actions.getEmbedCode')} onClick={() => { setEmbedForm(form); setEmbedOpen(true); }}>
                     <Code2 className="h-3.5 w-3.5" />
                   </Button>
-                  <Button variant="outline" size="sm" className="h-7 text-xs px-2" title="Preview" onClick={() => window.open(`/f/${form.slug}`, '_blank')}>
+                  <Button variant="outline" size="sm" className="h-7 text-xs px-2" title={t('captureforms.actions.preview')} onClick={() => window.open(`/f/${form.slug}`, '_blank')}>
                     <Eye className="h-3.5 w-3.5" />
                   </Button>
                 </div>
@@ -228,24 +230,24 @@ export default function FormsPage() {
       {/* Create dialog */}
       <Dialog open={createOpen} onOpenChange={setCreateOpen}>
         <DialogContent className="sm:max-w-sm">
-          <DialogHeader><DialogTitle>New Form</DialogTitle></DialogHeader>
+          <DialogHeader><DialogTitle>{t('captureforms.dialog.title')}</DialogTitle></DialogHeader>
           <div className="py-2 space-y-1.5">
-            <Label className="text-sm">Form name <span className="text-destructive">*</span></Label>
+            <Label className="text-sm">{t('captureforms.dialog.nameLabel')} <span className="text-destructive">*</span></Label>
             <Input
               value={newName}
               onChange={e => setNewName(e.target.value)}
-              placeholder="e.g. Contact Us, Demo Request…"
+              placeholder={t('captureforms.dialog.namePlaceholder')}
               className="text-sm"
               autoFocus
               onKeyDown={e => e.key === 'Enter' && handleCreate()}
             />
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setCreateOpen(false)}>Cancel</Button>
+            <Button variant="outline" onClick={() => setCreateOpen(false)}>{t('captureforms.dialog.cancel')}</Button>
             <Button onClick={handleCreate} disabled={!newName.trim() || creating}
               className="gap-1.5 bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white">
               {creating ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Plus className="h-3.5 w-3.5" />}
-              Create & Edit
+              {t('captureforms.dialog.createBtn')}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -254,11 +256,11 @@ export default function FormsPage() {
       {/* Embed code dialog */}
       <Dialog open={embedOpen} onOpenChange={setEmbedOpen}>
         <DialogContent className="sm:max-w-lg">
-          <DialogHeader><DialogTitle className="flex items-center gap-2"><Code2 className="h-4 w-4" /> Embed Code</DialogTitle></DialogHeader>
+          <DialogHeader><DialogTitle className="flex items-center gap-2"><Code2 className="h-4 w-4" /> {t('captureforms.embedDialog.title')}</DialogTitle></DialogHeader>
           {embedForm && (
             <div className="space-y-4 py-2">
               <div>
-                <Label className="text-xs text-muted-foreground mb-1.5 block">IFRAME EMBED</Label>
+                <Label className="text-xs text-muted-foreground mb-1.5 block">{t('captureforms.embedDialog.iframeLabel')}</Label>
                 <pre className="bg-slate-900 text-slate-100 text-xs p-3 rounded-lg overflow-x-auto whitespace-pre-wrap">
 {`<iframe
   src="${FRONTEND_BASE}/f/${embedForm.slug}"
@@ -270,12 +272,12 @@ export default function FormsPage() {
                 </pre>
               </div>
               <div>
-                <Label className="text-xs text-muted-foreground mb-1.5 block">DIRECT LINK</Label>
+                <Label className="text-xs text-muted-foreground mb-1.5 block">{t('captureforms.embedDialog.directLinkLabel')}</Label>
                 <div className="flex items-center gap-2">
                   <Input value={`${FRONTEND_BASE}/f/${embedForm.slug}`} readOnly className="text-xs font-mono" />
                   <Button size="sm" variant="outline" className="flex-shrink-0 gap-1" onClick={() => {
                     navigator.clipboard.writeText(`${FRONTEND_BASE}/f/${embedForm.slug}`);
-                    toast({ title: 'Copied' });
+                    toast({ title: t('captureforms.toast.copiedTitle') });
                   }}>
                     <Copy className="h-3.5 w-3.5" />
                   </Button>
@@ -285,7 +287,7 @@ export default function FormsPage() {
           )}
           <DialogFooter>
             <Button onClick={() => embedForm && copyEmbedCode(embedForm)} className="gap-1.5">
-              <Copy className="h-3.5 w-3.5" /> Copy iframe code
+              <Copy className="h-3.5 w-3.5" /> {t('captureforms.embedDialog.copyIframe')}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -296,7 +298,7 @@ export default function FormsPage() {
         <SheetContent className="w-full sm:w-[560px] sm:max-w-[560px] flex flex-col p-0">
           <SheetHeader className="px-5 py-4 border-b border-border flex-shrink-0">
             <SheetTitle className="text-base">
-              Submissions — {activeForm?.name}
+              {t('captureforms.submissions.sheetTitle', { name: activeForm?.name })}
               <Badge variant="secondary" className="ml-2 text-xs">{submissions.length}</Badge>
             </SheetTitle>
           </SheetHeader>
@@ -304,7 +306,7 @@ export default function FormsPage() {
             {loadingSubmissions ? (
               <div className="flex justify-center py-10"><Loader2 className="h-5 w-5 animate-spin text-muted-foreground" /></div>
             ) : submissions.length === 0 ? (
-              <p className="text-sm text-muted-foreground text-center py-10">No submissions yet</p>
+              <p className="text-sm text-muted-foreground text-center py-10">{t('captureforms.submissions.empty')}</p>
             ) : (
               <div className="divide-y divide-border">
                 {submissions.map(s => (

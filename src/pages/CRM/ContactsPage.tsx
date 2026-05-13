@@ -167,7 +167,7 @@ export default function ContactsPage() {
       setContacts(contactsWithLeadStatus);
     } catch (error) {
       console.error('Error fetching contacts:', error);
-      toast({ title: 'Error', description: 'Failed to fetch contacts', variant: 'destructive' });
+      toast({ title: t('crm.common.error'), description: t('crm.contacts.fetchError'), variant: 'destructive' });
     } finally {
       setLoading(false);
     }
@@ -236,10 +236,10 @@ export default function ContactsPage() {
       );
       setNewActivity({ activity_type: 'note', title: '', description: '' });
       await fetchTimeline(viewingContact.id);
-      toast({ title: 'Activity logged', description: 'Activity has been added to the timeline.' });
+      toast({ title: t('crm.contacts.activityLogged'), description: t('crm.contacts.activityLoggedDesc') });
     } catch (err) {
       console.error('Error logging activity:', err);
-      toast({ title: 'Error', description: 'Failed to log activity', variant: 'destructive' });
+      toast({ title: t('crm.common.error'), description: t('crm.contacts.activityLogError'), variant: 'destructive' });
     } finally {
       setLoggingActivity(false);
     }
@@ -345,14 +345,14 @@ export default function ContactsPage() {
         phone_number: editData.phone_number || null,
         company: editData.company || null,
       }, { headers });
-      toast({ title: 'Success', description: `Contact ${editData.name} updated successfully` });
+      toast({ title: t('crm.common.success'), description: t('crm.contacts.updateSuccess', { name: editData.name }) });
       setEditDialogOpen(false);
       setEditData({ name: '', email: '', phone_number: '', company: '' });
       setEditingContact(null);
       fetchContacts();
     } catch (error: any) {
       console.error('Error updating contact:', error);
-      toast({ title: 'Error', description: error.response?.data?.detail || 'Failed to update contact', variant: 'destructive' });
+      toast({ title: t('crm.common.error'), description: error.response?.data?.detail || t('crm.contacts.updateError'), variant: 'destructive' });
     }
   };
 
@@ -376,12 +376,12 @@ export default function ContactsPage() {
         )
       );
       const acct = accounts.find(a => a.id.toString() === bulkAccountId);
-      toast({ title: `Linked ${selectedContacts.length} contact(s) to ${acct?.name ?? 'account'}` });
+      toast({ title: t('crm.contacts.bulkLinked', { count: selectedContacts.length, account: acct?.name ?? 'account' }) });
       setBulkAccountId('');
       setSelectedContacts([]);
       fetchContacts();
     } catch {
-      toast({ title: 'Error', description: 'Failed to link some contacts', variant: 'destructive' });
+      toast({ title: t('crm.common.error'), description: t('crm.contacts.bulkLinkError'), variant: 'destructive' });
     } finally {
       setBulkLinking(false);
     }
@@ -389,7 +389,7 @@ export default function ContactsPage() {
 
   const handleCreateContact = async () => {
     if (!newContact.name || !newContact.email) {
-      toast({ title: 'Validation Error', description: 'Name and email are required', variant: 'destructive' });
+      toast({ title: t('crm.contacts.validationError'), description: t('crm.contacts.nameEmailRequired'), variant: 'destructive' });
       return;
     }
     try {
@@ -402,14 +402,14 @@ export default function ContactsPage() {
         company: newContact.company || null,
         account_id: newContact.account_id ? parseInt(newContact.account_id) : null,
       }, { headers });
-      toast({ title: 'Success', description: 'Contact created successfully' });
+      toast({ title: t('crm.common.success'), description: t('crm.contacts.createSuccess') });
       setCreateDialogOpen(false);
       setNewContact({ name: '', email: '', phone_number: '', company: '', account_id: '' });
       fetchContacts();
       fetchStats();
     } catch (error: any) {
       console.error('Error creating contact:', error);
-      toast({ title: 'Error', description: error.response?.data?.detail || 'Failed to create contact', variant: 'destructive' });
+      toast({ title: t('crm.common.error'), description: error.response?.data?.detail || t('crm.contacts.createError'), variant: 'destructive' });
     }
   };
 
@@ -429,7 +429,7 @@ export default function ContactsPage() {
         source: leadData.source || null,
         notes: leadData.notes || null,
       }, { headers });
-      toast({ title: 'Success', description: `${convertingContact.name} converted to lead successfully` });
+      toast({ title: t('crm.common.success'), description: t('crm.contacts.convertSuccess', { name: convertingContact.name }) });
       setConvertDialogOpen(false);
       setLeadData({ deal_value: '', source: '', notes: '' });
       setConvertingContact(null);
@@ -437,7 +437,7 @@ export default function ContactsPage() {
       fetchStats();
     } catch (error: any) {
       console.error('Error converting to lead:', error);
-      toast({ title: 'Error', description: error.response?.data?.detail || 'Failed to convert to lead', variant: 'destructive' });
+      toast({ title: t('crm.common.error'), description: error.response?.data?.detail || t('crm.contacts.convertError'), variant: 'destructive' });
     }
   };
 
@@ -610,7 +610,7 @@ export default function ContactsPage() {
         {selectedContacts.length > 0 && (
           <div className="flex items-center gap-2 flex-wrap w-full sm:w-auto">
             <span className="text-xs text-muted-foreground font-medium">
-              {selectedContacts.length} selected
+              {t('crm.contacts.selectedCount', { count: selectedContacts.length })}
             </span>
             <div className="flex items-center gap-1.5 flex-1 sm:flex-initial">
               <Select
@@ -619,7 +619,7 @@ export default function ContactsPage() {
                 onOpenChange={(open) => { if (open && accounts.length === 0) fetchAccounts(); }}
               >
                 <SelectTrigger className="h-8 text-xs flex-1 sm:w-44 bg-background border-border">
-                  <SelectValue placeholder="Assign to company…" />
+                  <SelectValue placeholder={t('crm.contacts.assignToCompany')} />
                 </SelectTrigger>
                 <SelectContent>
                   {accounts.map(a => (
@@ -634,11 +634,11 @@ export default function ContactsPage() {
                 onClick={handleBulkLinkAccount}
               >
                 {bulkLinking ? <Loader2 className="h-3 w-3 animate-spin" /> : <Building2 className="h-3 w-3" />}
-                Link
+                {t('crm.contacts.link')}
               </Button>
             </div>
             <Button size="sm" variant="outline" className="h-8 px-3 text-xs"
-              onClick={() => toast({ title: 'Coming Soon', description: 'Bulk conversion will be available soon' })}>
+              onClick={() => toast({ title: t('crm.contacts.comingSoon'), description: t('crm.contacts.bulkConvertSoon') })}>
               {t('crm.contacts.convertToLeads', { count: selectedContacts.length })}
             </Button>
           </div>
@@ -834,13 +834,13 @@ export default function ContactsPage() {
                 className="rounded-xl bg-background border-border" />
             </div>
             <div className="space-y-2">
-              <Label className="text-foreground font-medium">Link to Account</Label>
+              <Label className="text-foreground font-medium">{t('crm.contacts.linkToAccount')}</Label>
               <Select value={newContact.account_id || '__none__'} onValueChange={(v) => setNewContact({ ...newContact, account_id: v === '__none__' ? '' : v })}>
                 <SelectTrigger className="rounded-xl bg-background border-border">
-                  <SelectValue placeholder="Select account (optional)" />
+                  <SelectValue placeholder={t('crm.contacts.selectAccount')} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="__none__">None</SelectItem>
+                  <SelectItem value="__none__">{t('crm.contacts.noAccount')}</SelectItem>
                   {accounts.map(a => <SelectItem key={a.id} value={a.id.toString()}>{a.name}</SelectItem>)}
                 </SelectContent>
               </Select>
@@ -934,13 +934,13 @@ export default function ContactsPage() {
 
           <Tabs defaultValue="details" className="w-full">
             <TabsList className="w-full">
-              <TabsTrigger value="details" className="flex-1">Details</TabsTrigger>
+              <TabsTrigger value="details" className="flex-1">{t('crm.contacts.tabs.details')}</TabsTrigger>
               <TabsTrigger
                 value="activity"
                 className="flex-1"
                 onClick={() => { if (viewingContact) fetchTimeline(viewingContact.id); }}
               >
-                Activity
+                {t('crm.contacts.tabs.activity')}
               </TabsTrigger>
             </TabsList>
 
@@ -984,7 +984,7 @@ export default function ContactsPage() {
               <div className="space-y-3 pt-2">
                 {/* Log new activity form */}
                 <div className="rounded-lg border border-border bg-muted/30 p-3 space-y-2">
-                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Log Activity</p>
+                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">{t('crm.contacts.logActivity')}</p>
                   <Select
                     value={newActivity.activity_type}
                     onValueChange={(v) => setNewActivity({ ...newActivity, activity_type: v })}
@@ -993,20 +993,20 @@ export default function ContactsPage() {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="note">Note</SelectItem>
-                      <SelectItem value="call">Call</SelectItem>
-                      <SelectItem value="meeting">Meeting</SelectItem>
-                      <SelectItem value="task">Task</SelectItem>
+                      <SelectItem value="note">{t('crm.contacts.activity.types.note')}</SelectItem>
+                      <SelectItem value="call">{t('crm.contacts.activity.types.call')}</SelectItem>
+                      <SelectItem value="meeting">{t('crm.contacts.activity.types.meeting')}</SelectItem>
+                      <SelectItem value="task">{t('crm.contacts.activity.types.task')}</SelectItem>
                     </SelectContent>
                   </Select>
                   <Input
-                    placeholder="Title *"
+                    placeholder={t('crm.contacts.activity.titlePlaceholder')}
                     value={newActivity.title}
                     onChange={(e) => setNewActivity({ ...newActivity, title: e.target.value })}
                     className="h-8 text-sm bg-background border-border"
                   />
                   <Textarea
-                    placeholder="Description (optional)"
+                    placeholder={t('crm.contacts.activity.descriptionPlaceholder')}
                     value={newActivity.description}
                     onChange={(e) => setNewActivity({ ...newActivity, description: e.target.value })}
                     rows={2}
@@ -1019,7 +1019,7 @@ export default function ContactsPage() {
                     className="h-7 px-3 text-xs bg-orange-600 hover:bg-orange-700 text-white"
                   >
                     {loggingActivity ? <Loader2 className="h-3 w-3 animate-spin mr-1" /> : null}
-                    Log Activity
+                    {t('crm.contacts.logActivityButton')}
                   </Button>
                 </div>
 
@@ -1029,7 +1029,7 @@ export default function ContactsPage() {
                     <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
                   </div>
                 ) : timelineItems.length === 0 ? (
-                  <p className="text-sm text-muted-foreground text-center py-6">No activity yet.</p>
+                  <p className="text-sm text-muted-foreground text-center py-6">{t('crm.contacts.noActivityYet')}</p>
                 ) : (
                   <div className="relative pl-5 space-y-4 max-h-64 overflow-y-auto pr-1">
                     {/* Vertical line */}
@@ -1048,7 +1048,7 @@ export default function ContactsPage() {
                           <p className="text-xs text-muted-foreground mt-1">
                             {formatRelativeDate(item.occurred_at)}
                             {item.source === 'note' && (
-                              <span className="ml-1 text-[10px] bg-muted px-1 rounded">note</span>
+                              <span className="ml-1 text-[10px] bg-muted px-1 rounded">{t('crm.contacts.activity.noteBadge')}</span>
                             )}
                           </p>
                         </div>

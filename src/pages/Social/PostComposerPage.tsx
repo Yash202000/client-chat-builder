@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import {
   Linkedin, Instagram, Facebook,
@@ -69,6 +70,7 @@ function CharArc({ pct }: { pct: number }) {
 
 export default function PostComposerPage() {
   const { toast } = useToast();
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const editId = searchParams.get('edit');
@@ -153,8 +155,8 @@ export default function PostComposerPage() {
     mutationFn: (payload: object) => editId
       ? authFetch(`/api/v1/social/posts/${editId}`, { method: 'PUT', body: JSON.stringify(payload) })
       : authFetch(`/api/v1/social/posts`, { method: 'POST', body: JSON.stringify(payload) }),
-    onSuccess: () => { toast({ title: 'Draft saved!' }); navigate('/dashboard/social/calendar'); },
-    onError: () => toast({ title: 'Failed to save', variant: 'destructive' }),
+    onSuccess: () => { toast({ title: t('social.composer.draftSaved') }); navigate('/dashboard/social/calendar'); },
+    onError: () => toast({ title: t('social.composer.saveFailed'), variant: 'destructive' }),
   });
 
   const publishMutation = useMutation({
@@ -166,8 +168,8 @@ export default function PostComposerPage() {
       const post = await authFetch(`/api/v1/social/posts`, { method: 'POST', body: JSON.stringify(payload) });
       return authFetch(`/api/v1/social/posts/${post.id}/publish`, { method: 'POST' });
     },
-    onSuccess: () => { toast({ title: 'Post published!' }); navigate('/dashboard/social'); },
-    onError: () => toast({ title: 'Publish failed', variant: 'destructive' }),
+    onSuccess: () => { toast({ title: t('social.composer.published') }); navigate('/dashboard/social'); },
+    onError: () => toast({ title: t('social.composer.publishFailed'), variant: 'destructive' }),
   });
 
   const scheduleMutation = useMutation({
@@ -179,8 +181,8 @@ export default function PostComposerPage() {
       const post = await authFetch(`/api/v1/social/posts`, { method: 'POST', body: JSON.stringify(payload) });
       return authFetch(`/api/v1/social/posts/${post.id}/schedule`, { method: 'POST', body: JSON.stringify({ scheduled_at: payload.scheduled_at }) });
     },
-    onSuccess: () => { toast({ title: 'Post scheduled!' }); navigate('/dashboard/social/calendar'); },
-    onError: () => toast({ title: 'Schedule failed', variant: 'destructive' }),
+    onSuccess: () => { toast({ title: t('social.composer.postScheduled') }); navigate('/dashboard/social/calendar'); },
+    onError: () => toast({ title: t('social.composer.publishFailed'), variant: 'destructive' }),
   });
 
   const buildPayload = (platform = activeTab) => ({

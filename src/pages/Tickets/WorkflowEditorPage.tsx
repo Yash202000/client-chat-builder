@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import axios from 'axios';
 import ReactFlow, {
   Node, Edge, Controls, Background, MiniMap,
@@ -57,10 +58,10 @@ interface Workflow {
   transitions: Transition[];
 }
 
-const ENTITY_BADGE: Record<string, { label: string; className: string }> = {
-  lead: { label: 'Lead', className: 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300' },
-  deal: { label: 'Deal', className: 'bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300' },
-  contact: { label: 'Contact', className: 'bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300' },
+const ENTITY_BADGE: Record<string, { labelKey: string; className: string }> = {
+  lead: { labelKey: 'tickets.workflow.lead', className: 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300' },
+  deal: { labelKey: 'tickets.workflow.deal', className: 'bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300' },
+  contact: { labelKey: 'tickets.workflow.contact', className: 'bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300' },
 };
 
 const STATUS_COLORS = [
@@ -77,6 +78,7 @@ const CATEGORY_LABELS: Record<string, string> = {
 
 // Custom node component for status
 function StatusNode({ data, selected }: NodeProps) {
+  const { t } = useTranslation();
   return (
     <div className={cn(
       'px-4 py-3 rounded-lg border-2 bg-background shadow-sm min-w-[140px] text-center transition-all',
@@ -88,7 +90,7 @@ function StatusNode({ data, selected }: NodeProps) {
         <div className="w-3 h-3 rounded-full flex-shrink-0" style={{ backgroundColor: data.color }} />
         <span className="font-medium text-sm">{data.name}</span>
       </div>
-      <div className="text-xs text-muted-foreground mt-0.5 capitalize">{CATEGORY_LABELS[data.category]}</div>
+      <div className="text-xs text-muted-foreground mt-0.5 capitalize">{data.category === 'todo' ? t('tickets.workflow.todo') : data.category === 'in_progress' ? t('tickets.workflow.inProgress') : t('tickets.workflow.done')}</div>
       {data.isDefault && (
         <div className="text-xs text-green-600 font-medium mt-0.5">Default</div>
       )}
@@ -109,6 +111,7 @@ const AVAILABLE_FIELDS: ScreenField[] = [
 ];
 
 export default function WorkflowEditorPage() {
+  const { t } = useTranslation();
   const [workflows, setWorkflows] = useState<Workflow[]>([]);
   const [selectedWf, setSelectedWf] = useState<Workflow | null>(null);
   const [loading, setLoading] = useState(true);
@@ -150,7 +153,7 @@ export default function WorkflowEditorPage() {
         const refreshed = res.data.find((w: Workflow) => w.id === selectedWf.id);
         if (refreshed) setSelectedWf(refreshed);
       }
-    } catch { toast.error('Failed to load workflows'); }
+    } catch { toast.error(t('tickets.workflow.loadFailed')); }
     finally { setLoading(false); }
   }, []);
 
@@ -202,11 +205,11 @@ export default function WorkflowEditorPage() {
     try {
       if (editingStatus) {
         await axios.put(`/api/v1/tickets/workflows/statuses/${editingStatus.id}`, statusForm, { headers: headers() });
-        toast.success('Status updated');
+        toast.success(t('tickets.workflow.statusUpdated'));
         setShowEditStatus(false);
       } else {
         await axios.post(`/api/v1/tickets/workflows/${selectedWf.id}/statuses`, statusForm, { headers: headers() });
-        toast.success('Status added');
+        toast.success(t('tickets.workflow.statusAdded'));
         setShowAddStatus(false);
       }
       load();
@@ -330,16 +333,16 @@ export default function WorkflowEditorPage() {
       <div className="w-72 border-r flex flex-col flex-shrink-0">
         <div className="p-4 border-b space-y-3">
           <div className="flex items-center justify-between">
-            <h2 className="font-semibold">Workflows</h2>
+            <h2 className="font-semibold">{t('tickets.workflow.workflowsTitle')}</h2>
             <Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => setShowCreateWf(true)}>
-              <Plus className="w-3 h-3 mr-1" />New
+              <Plus className="w-3 h-3 mr-1" />{t('tickets.workflow.new')}
             </Button>
           </div>
           {/* Search */}
           <div className="relative">
             <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground pointer-events-none" />
             <Input
-              placeholder="Search workflows…"
+              placeholder={t('tickets.workflow.searchPlaceholder')}
               value={wfSearch}
               onChange={e => setWfSearch(e.target.value)}
               className="h-8 pl-8 text-xs"
@@ -354,11 +357,11 @@ export default function WorkflowEditorPage() {
           <div className="flex items-center gap-1 flex-wrap">
             <Filter className="w-3 h-3 text-muted-foreground shrink-0" />
             {[
-              { key: null, label: 'All' },
-              { key: 'tickets', label: 'Tickets' },
-              { key: 'lead', label: 'Lead' },
-              { key: 'deal', label: 'Deal' },
-              { key: 'contact', label: 'Contact' },
+              { key: null, label: t('tickets.workflow.filterAll') },
+              { key: 'tickets', label: t('tickets.workflow.filterTickets') },
+              { key: 'lead', label: t('tickets.workflow.lead') },
+              { key: 'deal', label: t('tickets.workflow.deal') },
+              { key: 'contact', label: t('tickets.workflow.contact') },
             ].map(({ key, label }) => (
               <button
                 key={String(key)}
@@ -394,15 +397,15 @@ export default function WorkflowEditorPage() {
                   <div className="flex items-center gap-1 flex-wrap">
                     {wf.entity_type && ENTITY_BADGE[wf.entity_type] && (
                       <span className={cn('text-[10px] px-1.5 py-0 rounded-full font-medium leading-4', ENTITY_BADGE[wf.entity_type].className)}>
-                        {ENTITY_BADGE[wf.entity_type].label}
+                        {t(ENTITY_BADGE[wf.entity_type].labelKey)}
                       </span>
                     )}
                     {!wf.entity_type && (
                       <span className="text-[10px] px-1.5 py-0 rounded-full font-medium leading-4 bg-muted text-muted-foreground">
-                        Tickets
+                        {t('tickets.workflow.filterTickets')}
                       </span>
                     )}
-                    {wf.is_default && <Badge variant="secondary" className="text-[10px] h-4 px-1.5 shrink-0">Default</Badge>}
+                    {wf.is_default && <Badge variant="secondary" className="text-[10px] h-4 px-1.5 shrink-0">{t('tickets.workflow.default')}</Badge>}
                   </div>
                 </button>
                 <Button
@@ -553,7 +556,11 @@ export default function WorkflowEditorPage() {
               <Select value={statusForm.category} onValueChange={v => setStatusForm(f => ({ ...f, category: v }))}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  {Object.entries(CATEGORY_LABELS).map(([v, l]) => <SelectItem key={v} value={v}>{l}</SelectItem>)}
+                  {Object.entries(CATEGORY_LABELS).map(([v]) => (
+                    <SelectItem key={v} value={v}>
+                      {v === 'todo' ? t('tickets.workflow.todo') : v === 'in_progress' ? t('tickets.workflow.inProgress') : t('tickets.workflow.done')}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
@@ -678,7 +685,7 @@ export default function WorkflowEditorPage() {
                     )}>
                       <Switch checked={!!active} onCheckedChange={() => toggleScreenField(af.field)} />
                       <div className="flex-1">
-                        <p className="text-sm font-medium">{af.label}</p>
+                        <p className="text-sm font-medium">{af.field === 'comment' ? t('tickets.commentLabel') : af.field === 'attachment' ? t('tickets.workflow.fields.attachment') : af.field === 'assignee_id' ? t('tickets.fields.assignee_id') : af.field === 'priority' ? t('tickets.fields.priority') : af.field === 'due_date' ? t('tickets.fields.due_date') : af.field === 'time_estimate' ? t('tickets.fields.time_estimate') : af.label}</p>
                         <p className="text-xs text-muted-foreground capitalize">{af.field.replace('_', ' ')} field</p>
                       </div>
                       {active && (

@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { FileText, Image, FolderTree, Store, Settings, Plus, Loader2 } from 'lucide-react';
@@ -7,30 +8,32 @@ import * as cmsService from '@/services/cmsService';
 import { ContentType, FIELD_TYPE_INFO } from '@/types/cms';
 
 const CMSDashboardPage = () => {
+  const { t } = useTranslation();
+
   const { data: contentTypes, isLoading } = useQuery({
     queryKey: ['cms-content-types'],
     queryFn: () => cmsService.getContentTypes(),
   });
 
   const quickLinks = [
-    { title: 'Content Types', description: 'Define content schemas', icon: FileText, href: '/dashboard/cms/types' },
-    { title: 'Media Library', description: 'Manage files & images', icon: Image, href: '/dashboard/cms/media' },
-    { title: 'Categories', description: 'Organize content', icon: FolderTree, href: '/dashboard/cms/categories' },
-    { title: 'Marketplace', description: 'Browse shared content', icon: Store, href: '/dashboard/cms/marketplace' },
-    { title: 'Settings', description: 'API tokens & export', icon: Settings, href: '/dashboard/cms/settings' },
+    { title: t('cms.quickLinks.contentTypes'), description: t('cms.quickLinks.contentTypesDesc'), icon: FileText, href: '/dashboard/cms/types' },
+    { title: t('cms.quickLinks.mediaLibrary'), description: t('cms.quickLinks.mediaLibraryDesc'), icon: Image, href: '/dashboard/cms/media' },
+    { title: t('cms.quickLinks.categories'), description: t('cms.quickLinks.categoriesDesc'), icon: FolderTree, href: '/dashboard/cms/categories' },
+    { title: t('cms.quickLinks.marketplace'), description: t('cms.quickLinks.marketplaceDesc'), icon: Store, href: '/dashboard/cms/marketplace' },
+    { title: t('cms.quickLinks.settings'), description: t('cms.quickLinks.settingsDesc'), icon: Settings, href: '/dashboard/cms/settings' },
   ];
 
   return (
     <div className="px-4 sm:px-6 py-4 sm:py-6 space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-xl sm:text-2xl font-bold">Content Management</h1>
-          <p className="text-muted-foreground hidden sm:block">Manage your dynamic content with flexible schemas</p>
+          <h1 className="text-xl sm:text-2xl font-bold">{t('cms.title')}</h1>
+          <p className="text-muted-foreground hidden sm:block">{t('cms.subtitle')}</p>
         </div>
         <Link to="/dashboard/cms/types/new">
           <Button>
             <Plus className="w-4 h-4 sm:mr-2" />
-            <span className="hidden sm:inline">New Content Type</span>
+            <span className="hidden sm:inline">{t('cms.newContentType')}</span>
           </Button>
         </Link>
       </div>
@@ -54,7 +57,7 @@ const CMSDashboardPage = () => {
 
       {/* Content Types */}
       <div>
-        <h2 className="text-xl font-semibold mb-4">Your Content Types</h2>
+        <h2 className="text-xl font-semibold mb-4">{t('cms.yourContentTypes')}</h2>
         {isLoading ? (
           <div className="flex items-center justify-center py-8">
             <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
@@ -77,7 +80,7 @@ const CMSDashboardPage = () => {
                   </CardHeader>
                   <CardContent>
                     <p className="text-sm text-muted-foreground mb-3">
-                      {type.description || 'No description'}
+                      {type.description || t('cms.noDescription')}
                     </p>
                     <div className="flex flex-wrap gap-1">
                       {type.field_schema?.slice(0, 4).map((field) => (
@@ -90,7 +93,7 @@ const CMSDashboardPage = () => {
                       ))}
                       {type.field_schema?.length > 4 && (
                         <span className="text-xs px-2 py-0.5 bg-muted rounded">
-                          +{type.field_schema.length - 4} more
+                          {t('cms.moreFields', { count: type.field_schema.length - 4 })}
                         </span>
                       )}
                     </div>
@@ -103,14 +106,14 @@ const CMSDashboardPage = () => {
           <Card>
             <CardContent className="flex flex-col items-center justify-center py-12">
               <FileText className="w-12 h-12 text-muted-foreground mb-4" />
-              <h3 className="text-lg font-medium mb-2">No content types yet</h3>
+              <h3 className="text-lg font-medium mb-2">{t('cms.noContentTypes')}</h3>
               <p className="text-muted-foreground text-center mb-4">
-                Create your first content type to start managing structured content.
+                {t('cms.noContentTypesDesc')}
               </p>
               <Link to="/dashboard/cms/types/new">
                 <Button>
                   <Plus className="w-4 h-4 mr-2" />
-                  Create Content Type
+                  {t('cms.createContentType')}
                 </Button>
               </Link>
             </CardContent>

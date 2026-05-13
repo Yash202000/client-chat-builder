@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import {
   Linkedin, Instagram, Facebook,
   Clock, Trash2, Zap, Shield, Users, Wifi, WifiOff,
@@ -206,7 +207,14 @@ function AccountRow({ account, cfg, onDisconnect }: {
 /* ─── main page ──────────────────────────────────────────────── */
 export default function SocialAccountsPage() {
   const { toast } = useToast();
+  const { t } = useTranslation();
   const queryClient = useQueryClient();
+
+  const PLATFORM_TAGLINES: Record<string, string> = {
+    linkedin: t('social.accounts.linkedinTagline'),
+    instagram: t('social.accounts.instagramTagline'),
+    facebook: t('social.accounts.facebookTagline'),
+  };
   const [connecting, setConnecting] = useState<string | null>(null);
 
   const { data: accountsData, isLoading } = useQuery({
@@ -218,8 +226,8 @@ export default function SocialAccountsPage() {
 
   const disconnectMutation = useMutation({
     mutationFn: (id: number) => authFetch(`/api/v1/social/accounts/${id}`, { method: 'DELETE' }),
-    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['social-accounts'] }); toast({ title: 'Account disconnected' }); },
-    onError: () => toast({ title: 'Failed to disconnect', variant: 'destructive' }),
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['social-accounts'] }); toast({ title: t('social.accounts.connected') }); },
+    onError: () => toast({ title: t('social.accounts.disconnectFailed'), variant: 'destructive' }),
   });
 
   const handleConnect = (platform: string) => {
@@ -241,7 +249,7 @@ export default function SocialAccountsPage() {
         <div className="flex items-center justify-between px-4 sm:px-6 py-3 shrink-0 bg-card border-b border-border">
           <div className="flex items-center gap-3">
             <span className="text-[11px] font-mono tracking-widest uppercase text-muted-foreground">
-              Social Channels
+              {t('social.accounts.channelsTitle')}
             </span>
             <span className="text-border">·</span>
             <span className="text-[11px] font-mono text-muted-foreground">
@@ -298,7 +306,7 @@ export default function SocialAccountsPage() {
                         style={{ }}>
                         {cfg.label}
                       </h2>
-                      <p className="text-[11px] font-mono text-muted-foreground mt-0.5">{cfg.tagline}</p>
+                      <p className="text-[11px] font-mono text-muted-foreground mt-0.5">{PLATFORM_TAGLINES[key] ?? cfg.tagline}</p>
                     </div>
                   </div>
 
@@ -344,7 +352,7 @@ export default function SocialAccountsPage() {
                         border border-border bg-transparent text-muted-foreground hover:text-foreground hover:bg-muted disabled:opacity-50"
                     >
                       <Zap className="h-3 w-3" />
-                      {connecting === key ? 'CONNECTING...' : '+ ADD ACCOUNT'}
+                      {connecting === key ? t('social.accounts.connecting') : t('social.accounts.addAccount')}
                     </button>
                   ) : (
                     <button
@@ -361,7 +369,7 @@ export default function SocialAccountsPage() {
                         ? <div className="h-4 w-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                         : <Wifi className="h-4 w-4" />
                       }
-                      {connecting === key ? 'CONNECTING' : 'CONNECT'}
+                      {connecting === key ? t('social.accounts.connecting') : t('social.accounts.connect')}
                     </button>
                   )}
                 </div>

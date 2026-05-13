@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import {
   ArrowLeft, Plus, Save, Loader2, Trash2, GripVertical,
   Mail, MessageSquare, CheckSquare, Clock, Users, Play, Pause,
@@ -26,18 +27,18 @@ import axios from 'axios';
 const getAuthHeaders = () => ({ Authorization: `Bearer ${localStorage.getItem('accessToken')}` });
 
 const STEP_TYPES = [
-  { value: 'email',    label: 'Email',     icon: Mail,           color: 'text-blue-500'   },
-  { value: 'sms',      label: 'SMS',       icon: MessageSquare,  color: 'text-green-500'  },
-  { value: 'whatsapp', label: 'WhatsApp',  icon: MessageSquare,  color: 'text-emerald-500'},
-  { value: 'task',     label: 'Task',      icon: CheckSquare,    color: 'text-amber-500'  },
-  { value: 'wait',     label: 'Wait',      icon: Clock,          color: 'text-slate-400'  },
+  { value: 'email',    labelKey: 'sequences.editor.stepTypes.email',     icon: Mail,           color: 'text-blue-500'   },
+  { value: 'sms',      labelKey: 'sequences.editor.stepTypes.sms',       icon: MessageSquare,  color: 'text-green-500'  },
+  { value: 'whatsapp', labelKey: 'sequences.editor.stepTypes.whatsapp',  icon: MessageSquare,  color: 'text-emerald-500'},
+  { value: 'task',     labelKey: 'sequences.editor.stepTypes.task',      icon: CheckSquare,    color: 'text-amber-500'  },
+  { value: 'wait',     labelKey: 'sequences.editor.stepTypes.wait',      icon: Clock,          color: 'text-slate-400'  },
 ];
 
 const CONDITIONS = [
-  { value: 'always',          label: 'Always send' },
-  { value: 'if_not_opened',   label: 'Only if previous email not opened' },
-  { value: 'if_not_clicked',  label: 'Only if previous email not clicked' },
-  { value: 'if_not_replied',  label: 'Only if no reply received' },
+  { value: 'always',          labelKey: 'sequences.editor.conditions.always' },
+  { value: 'if_not_opened',   labelKey: 'sequences.editor.conditions.ifNotOpened' },
+  { value: 'if_not_clicked',  labelKey: 'sequences.editor.conditions.ifNotClicked' },
+  { value: 'if_not_replied',  labelKey: 'sequences.editor.conditions.ifNotReplied' },
 ];
 
 const STATUS_COLORS: Record<string, string> = {
@@ -55,13 +56,14 @@ function StepIcon({ type, className }: { type: string; className?: string }) {
 }
 
 function DelayBadge({ days, hours }: { days: number; hours: number }) {
-  if (days === 0 && hours === 0) return <span className="text-xs text-muted-foreground">Immediately</span>;
+  const { t } = useTranslation();
+  if (days === 0 && hours === 0) return <span className="text-xs text-muted-foreground">{t('sequences.editor.delay.immediately')}</span>;
   const parts = [];
   if (days > 0) parts.push(`${days}d`);
   if (hours > 0) parts.push(`${hours}h`);
   return (
     <span className="text-xs text-muted-foreground flex items-center gap-1">
-      <Clock className="h-3 w-3" /> after {parts.join(' ')}
+      <Clock className="h-3 w-3" /> {t('sequences.editor.delay.after', { delay: parts.join(' ') })}
     </span>
   );
 }
@@ -78,6 +80,7 @@ interface StepCardProps {
 }
 
 function StepCard({ step, index, total, templates, onChange, onDelete, onMoveUp, onMoveDown }: StepCardProps) {
+  const { t } = useTranslation();
   const [expanded, setExpanded] = useState(true);
   const typeMeta = STEP_TYPES.find(t => t.value === step.step_type) ?? STEP_TYPES[0];
   const emailTemplates = templates.filter(t => t.template_type === step.step_type || (step.step_type === 'email' && t.template_type === 'email'));
@@ -106,7 +109,7 @@ function StepCard({ step, index, total, templates, onChange, onDelete, onMoveUp,
           <StepIcon type={step.step_type} />
 
           <div className="flex-1 min-w-0">
-            <span className="text-sm font-medium text-foreground capitalize">{typeMeta.label}</span>
+            <span className="text-sm font-medium text-foreground capitalize">{t(typeMeta.labelKey)}</span>
             {step.subject && (
               <span className="text-xs text-muted-foreground ml-2 truncate">— {step.subject}</span>
             )}
@@ -135,21 +138,21 @@ function StepCard({ step, index, total, templates, onChange, onDelete, onMoveUp,
             <div className="grid grid-cols-3 gap-3">
               {/* Type */}
               <div className="space-y-1">
-                <Label className="text-xs">Type</Label>
+                <Label className="text-xs">{t('sequences.editor.step.type')}</Label>
                 <Select value={step.step_type} onValueChange={v => onChange(index, { ...step, step_type: v as any })}>
                   <SelectTrigger className="h-8 text-xs">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    {STEP_TYPES.map(t => (
-                      <SelectItem key={t.value} value={t.value} className="text-xs">{t.label}</SelectItem>
+                    {STEP_TYPES.map(st => (
+                      <SelectItem key={st.value} value={st.value} className="text-xs">{t(st.labelKey)}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
               </div>
               {/* Delay days */}
               <div className="space-y-1">
-                <Label className="text-xs">Delay (days)</Label>
+                <Label className="text-xs">{t('sequences.editor.step.delayDays')}</Label>
                 <Input
                   type="number"
                   min={0}
@@ -160,7 +163,7 @@ function StepCard({ step, index, total, templates, onChange, onDelete, onMoveUp,
               </div>
               {/* Delay hours */}
               <div className="space-y-1">
-                <Label className="text-xs">Delay (hours)</Label>
+                <Label className="text-xs">{t('sequences.editor.step.delayHours')}</Label>
                 <Input
                   type="number"
                   min={0}
@@ -176,18 +179,18 @@ function StepCard({ step, index, total, templates, onChange, onDelete, onMoveUp,
               <>
                 {/* Template picker */}
                 <div className="space-y-1">
-                  <Label className="text-xs">Template (optional)</Label>
+                  <Label className="text-xs">{t('sequences.editor.step.templateOptional')}</Label>
                   <Select
                     value={step.template_id?.toString() ?? 'none'}
                     onValueChange={v => onChange(index, { ...step, template_id: v === 'none' ? null : parseInt(v) })}
                   >
                     <SelectTrigger className="h-8 text-xs">
-                      <SelectValue placeholder="Select a template…" />
+                      <SelectValue placeholder={t('sequences.editor.step.selectTemplate')} />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="none" className="text-xs text-muted-foreground">No template (custom)</SelectItem>
-                      {emailTemplates.map(t => (
-                        <SelectItem key={t.id} value={t.id.toString()} className="text-xs">{t.name}</SelectItem>
+                      <SelectItem value="none" className="text-xs text-muted-foreground">{t('sequences.editor.step.noTemplate')}</SelectItem>
+                      {emailTemplates.map(tmpl => (
+                        <SelectItem key={tmpl.id} value={tmpl.id.toString()} className="text-xs">{tmpl.name}</SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
@@ -196,11 +199,15 @@ function StepCard({ step, index, total, templates, onChange, onDelete, onMoveUp,
                 {/* Subject */}
                 {(step.step_type === 'email' || !step.template_id) && (
                   <div className="space-y-1">
-                    <Label className="text-xs">Subject {step.step_type === 'email' ? '' : '(caption)'}</Label>
+                    <Label className="text-xs">
+                      {step.step_type === 'email'
+                        ? t('sequences.editor.step.subject')
+                        : t('sequences.editor.step.subjectCaption')}
+                    </Label>
                     <Input
                       value={step.subject ?? ''}
                       onChange={e => onChange(index, { ...step, subject: e.target.value })}
-                      placeholder="Subject line…"
+                      placeholder={t('sequences.editor.step.subjectPlaceholder')}
                       className="h-8 text-xs"
                     />
                   </div>
@@ -209,11 +216,11 @@ function StepCard({ step, index, total, templates, onChange, onDelete, onMoveUp,
                 {/* Body */}
                 {!step.template_id && (
                   <div className="space-y-1">
-                    <Label className="text-xs">Body</Label>
+                    <Label className="text-xs">{t('sequences.editor.step.body')}</Label>
                     <Textarea
                       value={step.body ?? ''}
                       onChange={e => onChange(index, { ...step, body: e.target.value })}
-                      placeholder="Message body…"
+                      placeholder={t('sequences.editor.step.bodyPlaceholder')}
                       className="text-xs min-h-[80px] resize-none"
                     />
                   </div>
@@ -223,11 +230,11 @@ function StepCard({ step, index, total, templates, onChange, onDelete, onMoveUp,
 
             {step.step_type === 'task' && (
               <div className="space-y-1">
-                <Label className="text-xs">Task note</Label>
+                <Label className="text-xs">{t('sequences.editor.step.taskNote')}</Label>
                 <Textarea
                   value={step.task_note ?? ''}
                   onChange={e => onChange(index, { ...step, task_note: e.target.value })}
-                  placeholder="What needs to be done?"
+                  placeholder={t('sequences.editor.step.taskNotePlaceholder')}
                   className="text-xs min-h-[72px] resize-none"
                 />
               </div>
@@ -236,14 +243,14 @@ function StepCard({ step, index, total, templates, onChange, onDelete, onMoveUp,
             {/* Condition */}
             {step.step_type !== 'wait' && step.step_type !== 'task' && index > 0 && (
               <div className="space-y-1">
-                <Label className="text-xs">Send condition</Label>
+                <Label className="text-xs">{t('sequences.editor.step.sendCondition')}</Label>
                 <Select value={step.condition} onValueChange={v => onChange(index, { ...step, condition: v as any })}>
                   <SelectTrigger className="h-8 text-xs">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
                     {CONDITIONS.map(c => (
-                      <SelectItem key={c.value} value={c.value} className="text-xs">{c.label}</SelectItem>
+                      <SelectItem key={c.value} value={c.value} className="text-xs">{t(c.labelKey)}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
@@ -269,6 +276,7 @@ export default function SequenceEditorPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { t } = useTranslation();
 
   const [sequence, setSequence] = useState<Sequence | null>(null);
   const [steps, setSteps] = useState<SequenceStep[]>([]);
@@ -307,7 +315,7 @@ export default function SequenceEditorPage() {
       const enrData = await getEnrollments(seq.id);
       setEnrollments(enrData);
     } catch {
-      toast({ title: 'Error', description: 'Failed to load sequence', variant: 'destructive' });
+      toast({ title: t('sequences.editor.toast.errorTitle'), description: t('sequences.editor.toast.loadFailed'), variant: 'destructive' });
       navigate('/dashboard/crm/sequences');
     } finally {
       setLoading(false);
@@ -333,8 +341,8 @@ export default function SequenceEditorPage() {
 
   const handleSave = async () => {
     if (!name.trim()) {
-      setNameError('Sequence name is required');
-      toast({ title: 'Name required', variant: 'destructive' });
+      setNameError(t('sequences.editor.validation.nameRequired'));
+      toast({ title: t('sequences.editor.toast.nameRequiredTitle'), variant: 'destructive' });
       return;
     }
     setSaving(true);
@@ -357,9 +365,9 @@ export default function SequenceEditorPage() {
         })),
       });
       setSequence(updated);
-      toast({ title: 'Saved', description: 'Sequence saved successfully' });
+      toast({ title: t('sequences.editor.toast.savedTitle'), description: t('sequences.editor.toast.savedDescription') });
     } catch {
-      toast({ title: 'Error', description: 'Failed to save', variant: 'destructive' });
+      toast({ title: t('sequences.editor.toast.errorTitle'), description: t('sequences.editor.toast.saveFailed'), variant: 'destructive' });
     } finally {
       setSaving(false);
     }
@@ -413,9 +421,9 @@ export default function SequenceEditorPage() {
       const newEnrollments = await enrollContacts(parseInt(id!), selectedContactIds);
       setEnrollments(prev => [...newEnrollments, ...prev]);
       setSelectedContactIds([]);
-      toast({ title: 'Enrolled', description: `${newEnrollments.length} contact(s) enrolled` });
+      toast({ title: t('sequences.editor.toast.enrolledTitle'), description: t('sequences.editor.toast.enrolledDescription', { count: newEnrollments.length }) });
     } catch {
-      toast({ title: 'Error', description: 'Failed to enroll contacts', variant: 'destructive' });
+      toast({ title: t('sequences.editor.toast.errorTitle'), description: t('sequences.editor.toast.enrollFailed'), variant: 'destructive' });
     } finally {
       setEnrolling(false);
     }
@@ -425,9 +433,9 @@ export default function SequenceEditorPage() {
     try {
       await unenrollContact(parseInt(id!), enrollmentId);
       setEnrollments(prev => prev.filter(e => e.id !== enrollmentId));
-      toast({ title: 'Unenrolled' });
+      toast({ title: t('sequences.editor.toast.unenrolledTitle') });
     } catch {
-      toast({ title: 'Error', description: 'Failed to unenroll', variant: 'destructive' });
+      toast({ title: t('sequences.editor.toast.errorTitle'), description: t('sequences.editor.toast.unenrollFailed'), variant: 'destructive' });
     }
   };
 
@@ -436,7 +444,7 @@ export default function SequenceEditorPage() {
       await updateEnrollmentStatus(parseInt(id!), enrollmentId, newStatus);
       setEnrollments(prev => prev.map(e => e.id === enrollmentId ? { ...e, status: newStatus } : e));
     } catch {
-      toast({ title: 'Error', description: 'Failed to update status', variant: 'destructive' });
+      toast({ title: t('sequences.editor.toast.errorTitle'), description: t('sequences.editor.toast.statusUpdateFailed'), variant: 'destructive' });
     }
   };
 
@@ -471,7 +479,7 @@ export default function SequenceEditorPage() {
             value={name}
             onChange={e => { setName(e.target.value); if (e.target.value.trim()) setNameError(''); }}
             className={`h-8 text-sm font-semibold bg-transparent border-transparent hover:border-border focus:border-border px-2 w-full${nameError ? ' border-destructive' : ''}`}
-            placeholder="Sequence name…"
+            placeholder={t('sequences.editor.namePlaceholder')}
           />
           {nameError && <p className="text-xs text-destructive mt-1">{nameError}</p>}
         </div>
@@ -480,10 +488,10 @@ export default function SequenceEditorPage() {
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="draft" className="text-xs">Draft</SelectItem>
-            <SelectItem value="active" className="text-xs">Active</SelectItem>
-            <SelectItem value="paused" className="text-xs">Paused</SelectItem>
-            <SelectItem value="archived" className="text-xs">Archived</SelectItem>
+            <SelectItem value="draft" className="text-xs">{t('sequences.editor.statuses.draft')}</SelectItem>
+            <SelectItem value="active" className="text-xs">{t('sequences.editor.statuses.active')}</SelectItem>
+            <SelectItem value="paused" className="text-xs">{t('sequences.editor.statuses.paused')}</SelectItem>
+            <SelectItem value="archived" className="text-xs">{t('sequences.editor.statuses.archived')}</SelectItem>
           </SelectContent>
         </Select>
         <Button
@@ -493,7 +501,7 @@ export default function SequenceEditorPage() {
           onClick={handleEnrollOpen}
         >
           <UserPlus className="h-3.5 w-3.5" />
-          Enroll Contacts
+          {t('sequences.editor.enrollContactsButton')}
           {enrollments.length > 0 && (
             <Badge variant="secondary" className="ml-0.5 text-[10px] px-1.5 py-0">{enrollments.length}</Badge>
           )}
@@ -505,7 +513,7 @@ export default function SequenceEditorPage() {
           className="bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white gap-1.5 h-8"
         >
           {saving ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Save className="h-3.5 w-3.5" />}
-          Save
+          {t('sequences.editor.saveButton')}
         </Button>
       </div>
 
@@ -517,15 +525,15 @@ export default function SequenceEditorPage() {
           {stats && stats.total_enrollments > 0 && (
             <div className="mb-6 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
               {[
-                { label: 'Total enrolled', value: stats.total_enrollments, color: 'text-foreground' },
-                { label: 'Active',         value: stats.active,            color: 'text-emerald-600' },
-                { label: 'Completed',      value: stats.completed,         color: 'text-blue-600'    },
-                { label: 'Paused',         value: stats.paused,            color: 'text-amber-600'   },
-                { label: 'Failed',         value: stats.failed,            color: 'text-red-600'     },
+                { labelKey: 'sequences.editor.stats.totalEnrolled', value: stats.total_enrollments, color: 'text-foreground' },
+                { labelKey: 'sequences.editor.stats.active',        value: stats.active,            color: 'text-emerald-600' },
+                { labelKey: 'sequences.editor.stats.completed',     value: stats.completed,         color: 'text-blue-600'    },
+                { labelKey: 'sequences.editor.stats.paused',        value: stats.paused,            color: 'text-amber-600'   },
+                { labelKey: 'sequences.editor.stats.failed',        value: stats.failed,            color: 'text-red-600'     },
               ].map(s => (
-                <div key={s.label} className="bg-card border border-border rounded-lg p-3 text-center">
+                <div key={s.labelKey} className="bg-card border border-border rounded-lg p-3 text-center">
                   <p className={`text-xl font-bold ${s.color}`}>{s.value}</p>
-                  <p className="text-xs text-muted-foreground">{s.label}</p>
+                  <p className="text-xs text-muted-foreground">{t(s.labelKey)}</p>
                 </div>
               ))}
             </div>
@@ -534,20 +542,20 @@ export default function SequenceEditorPage() {
           {/* Description + goal */}
           <div className="mb-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-1.5">
-              <Label className="text-xs">Description</Label>
+              <Label className="text-xs">{t('sequences.editor.descriptionLabel')}</Label>
               <Textarea
                 value={description}
                 onChange={e => setDescription(e.target.value)}
-                placeholder="What is this sequence for?"
+                placeholder={t('sequences.editor.descriptionPlaceholder')}
                 className="text-xs resize-none min-h-[56px]"
               />
             </div>
             <div className="space-y-1.5">
-              <Label className="text-xs">Goal</Label>
+              <Label className="text-xs">{t('sequences.editor.goalLabel')}</Label>
               <Input
                 value={goal}
                 onChange={e => setGoal(e.target.value)}
-                placeholder="e.g. Book a demo call"
+                placeholder={t('sequences.editor.goalPlaceholder')}
                 className="h-8 text-xs"
               />
             </div>
@@ -556,7 +564,7 @@ export default function SequenceEditorPage() {
           {/* Steps */}
           <div className="mb-4 flex items-center justify-between">
             <h2 className="text-sm font-semibold text-foreground">
-              Steps <span className="text-muted-foreground font-normal">({steps.length})</span>
+              {t('sequences.editor.stepsHeading')} <span className="text-muted-foreground font-normal">({steps.length})</span>
             </h2>
           </div>
 
@@ -566,11 +574,11 @@ export default function SequenceEditorPage() {
                 <Plus className="h-5 w-5 text-violet-500" />
               </div>
               <div>
-                <p className="font-medium text-sm text-foreground">No steps yet</p>
-                <p className="text-xs text-muted-foreground mt-0.5">Add your first step to build the sequence</p>
+                <p className="font-medium text-sm text-foreground">{t('sequences.editor.emptyState.title')}</p>
+                <p className="text-xs text-muted-foreground mt-0.5">{t('sequences.editor.emptyState.description')}</p>
               </div>
               <Button onClick={addStep} size="sm" variant="outline" className="gap-1.5 text-xs">
-                <Plus className="h-3.5 w-3.5" /> Add first step
+                <Plus className="h-3.5 w-3.5" /> {t('sequences.editor.addFirstStepButton')}
               </Button>
             </div>
           ) : (
@@ -595,7 +603,7 @@ export default function SequenceEditorPage() {
           {steps.length > 0 && (
             <div className="mt-4 flex justify-center">
               <Button onClick={addStep} variant="outline" size="sm" className="gap-1.5 text-xs border-dashed">
-                <Plus className="h-3.5 w-3.5" /> Add step
+                <Plus className="h-3.5 w-3.5" /> {t('sequences.editor.addStepButton')}
               </Button>
             </div>
           )}
@@ -608,20 +616,20 @@ export default function SequenceEditorPage() {
           <SheetHeader className="px-5 py-4 border-b border-border flex-shrink-0">
             <SheetTitle className="text-base flex items-center gap-2">
               <Users className="h-4 w-4 text-violet-500" />
-              Enroll Contacts
+              {t('sequences.editor.enrollSheet.title')}
             </SheetTitle>
           </SheetHeader>
 
           <div className="flex-1 flex flex-col overflow-hidden">
             {/* Pick contacts */}
             <div className="px-5 py-4 border-b border-border flex-shrink-0">
-              <p className="text-xs font-medium text-muted-foreground mb-3">ADD NEW CONTACTS</p>
+              <p className="text-xs font-medium text-muted-foreground mb-3">{t('sequences.editor.enrollSheet.addNewContacts')}</p>
               <div className="relative mb-3">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
                 <Input
                   value={contactSearch}
                   onChange={e => setContactSearch(e.target.value)}
-                  placeholder="Search contacts…"
+                  placeholder={t('sequences.editor.enrollSheet.searchPlaceholder')}
                   className="pl-9 h-8 text-xs"
                 />
               </div>
@@ -651,7 +659,7 @@ export default function SequenceEditorPage() {
                         </div>
                         <div className="flex-1 min-w-0">
                           <p className="font-medium truncate">
-                            {[c.first_name, c.last_name].filter(Boolean).join(' ') || c.email || `Contact #${c.id}`}
+                            {[c.first_name, c.last_name].filter(Boolean).join(' ') || c.email || t('sequences.editor.enrollSheet.contactFallback', { id: c.id })}
                           </p>
                           {c.email && <p className="text-muted-foreground truncate">{c.email}</p>}
                         </div>
@@ -663,7 +671,9 @@ export default function SequenceEditorPage() {
                   })}
                   {filteredContacts.filter(c => !enrolledContactIds.has(c.id)).length === 0 && (
                     <p className="text-xs text-muted-foreground text-center py-4">
-                      {enrolledContactIds.size > 0 ? 'All contacts already enrolled' : 'No contacts found'}
+                      {enrolledContactIds.size > 0
+                        ? t('sequences.editor.enrollSheet.allEnrolled')
+                        : t('sequences.editor.enrollSheet.noContactsFound')}
                     </p>
                   )}
                 </div>
@@ -676,7 +686,7 @@ export default function SequenceEditorPage() {
                   disabled={enrolling}
                 >
                   {enrolling ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <UserPlus className="h-3.5 w-3.5" />}
-                  Enroll {selectedContactIds.length} contact{selectedContactIds.length !== 1 ? 's' : ''}
+                  {t('sequences.editor.enrollSheet.enrollButton', { count: selectedContactIds.length })}
                 </Button>
               )}
             </div>
@@ -684,17 +694,17 @@ export default function SequenceEditorPage() {
             {/* Enrolled list */}
             <div className="flex-1 overflow-y-auto px-5 py-4">
               <p className="text-xs font-medium text-muted-foreground mb-3">
-                ENROLLED ({enrollments.length})
+                {t('sequences.editor.enrollSheet.enrolledHeading', { count: enrollments.length })}
               </p>
               {enrollments.length === 0 ? (
-                <p className="text-xs text-muted-foreground text-center py-6">No contacts enrolled yet</p>
+                <p className="text-xs text-muted-foreground text-center py-6">{t('sequences.editor.enrollSheet.noEnrollments')}</p>
               ) : (
                 <div className="space-y-2">
                   {enrollments.map(e => {
                     const c = e.contact;
                     const displayName = c
-                      ? [c.first_name, c.last_name].filter(Boolean).join(' ') || c.email || `Contact #${c.id}`
-                      : `Contact #${e.contact_id}`;
+                      ? [c.first_name, c.last_name].filter(Boolean).join(' ') || c.email || t('sequences.editor.enrollSheet.contactFallback', { id: c.id })
+                      : t('sequences.editor.enrollSheet.contactFallback', { id: e.contact_id });
                     return (
                       <div key={e.id} className="flex items-center gap-2.5 px-2.5 py-2 rounded-lg bg-muted/40">
                         <div className="h-6 w-6 rounded-full bg-gradient-to-br from-violet-500 to-indigo-500 flex items-center justify-center text-white font-bold text-[10px] flex-shrink-0">
@@ -703,7 +713,7 @@ export default function SequenceEditorPage() {
                         <div className="flex-1 min-w-0">
                           <p className="text-xs font-medium truncate">{displayName}</p>
                           <p className="text-[10px] text-muted-foreground">
-                            Step {e.current_step} · {e.enrolled_at ? new Date(e.enrolled_at).toLocaleDateString() : ''}
+                            {t('sequences.editor.enrollSheet.stepInfo', { step: e.current_step })} · {e.enrolled_at ? new Date(e.enrolled_at).toLocaleDateString() : ''}
                           </p>
                         </div>
                         <Badge className={`text-[10px] px-1.5 py-0 capitalize ${STATUS_COLORS[e.status] ?? ''}`} variant="secondary">
@@ -711,19 +721,19 @@ export default function SequenceEditorPage() {
                         </Badge>
                         {e.status === 'active' ? (
                           <Button variant="ghost" size="icon" className="h-6 w-6 flex-shrink-0"
-                            title="Pause"
+                            title={t('sequences.editor.enrollSheet.pauseTitle')}
                             onClick={() => handleEnrollmentStatus(e.id, 'paused')}>
                             <Pause className="h-3 w-3 text-amber-500" />
                           </Button>
                         ) : e.status === 'paused' ? (
                           <Button variant="ghost" size="icon" className="h-6 w-6 flex-shrink-0"
-                            title="Resume"
+                            title={t('sequences.editor.enrollSheet.resumeTitle')}
                             onClick={() => handleEnrollmentStatus(e.id, 'active')}>
                             <Play className="h-3 w-3 text-emerald-500" />
                           </Button>
                         ) : null}
                         <Button variant="ghost" size="icon" className="h-6 w-6 flex-shrink-0 text-muted-foreground hover:text-destructive"
-                          title="Unenroll"
+                          title={t('sequences.editor.enrollSheet.unenrollTitle')}
                           onClick={() => handleUnenroll(e.id)}>
                           <X className="h-3 w-3" />
                         </Button>

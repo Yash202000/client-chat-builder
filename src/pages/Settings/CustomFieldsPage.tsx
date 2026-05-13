@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Plus, Trash2, Edit2, GripVertical, ChevronDown, Check, X, Globe, Lock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -13,25 +14,25 @@ import axios from 'axios';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 
-const ENTITY_TABS = [
-  { key: 'ticket', label: 'Tickets' },
-  { key: 'lead', label: 'Leads' },
-  { key: 'deal', label: 'Deals' },
-  { key: 'contact', label: 'Contacts' },
+const ENTITY_TAB_KEYS = [
+  { key: 'ticket', tKey: 'customFields.entities.ticket' },
+  { key: 'lead', tKey: 'customFields.entities.lead' },
+  { key: 'deal', tKey: 'customFields.entities.deal' },
+  { key: 'contact', tKey: 'customFields.entities.contact' },
 ];
 
-const FIELD_TYPES = [
-  { value: 'text', label: 'Text' },
-  { value: 'textarea', label: 'Long Text' },
-  { value: 'number', label: 'Number' },
-  { value: 'decimal', label: 'Decimal' },
-  { value: 'boolean', label: 'Yes / No' },
-  { value: 'date', label: 'Date' },
-  { value: 'datetime', label: 'Date & Time' },
-  { value: 'dropdown', label: 'Dropdown' },
-  { value: 'multi_select', label: 'Multi-select' },
-  { value: 'user_picker', label: 'User Picker' },
-  { value: 'url', label: 'URL' },
+const FIELD_TYPE_KEYS = [
+  { value: 'text', tKey: 'customFields.types.text' },
+  { value: 'textarea', tKey: 'customFields.types.textarea' },
+  { value: 'number', tKey: 'customFields.types.number' },
+  { value: 'decimal', tKey: 'customFields.types.decimal' },
+  { value: 'boolean', tKey: 'customFields.types.boolean' },
+  { value: 'date', tKey: 'customFields.types.date' },
+  { value: 'datetime', tKey: 'customFields.types.datetime' },
+  { value: 'dropdown', tKey: 'customFields.types.dropdown' },
+  { value: 'multi_select', tKey: 'customFields.types.multi_select' },
+  { value: 'user_picker', tKey: 'customFields.types.user_picker' },
+  { value: 'url', tKey: 'customFields.types.url' },
   { value: 'email', label: 'Email' },
   { value: 'phone', label: 'Phone' },
   { value: 'coordinates', label: 'Coordinates (Lat / Lng)' },
@@ -79,7 +80,14 @@ const emptyForm = {
 };
 
 export default function CustomFieldsPage() {
+  const { t } = useTranslation();
   const { toast } = useToast();
+
+  const ENTITY_TABS = ENTITY_TAB_KEYS.map(e => ({ key: e.key, label: t(e.tKey) }));
+  const FIELD_TYPES = FIELD_TYPE_KEYS.map(f => ({
+    value: f.value,
+    label: 'tKey' in f ? t(f.tKey) : (f as any).label,
+  }));
   const [fields, setFields] = useState<CustomField[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('ticket');
@@ -269,7 +277,7 @@ export default function CustomFieldsPage() {
     <div className="p-6 max-w-4xl mx-auto space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold">Custom Fields</h1>
+          <h1 className="text-2xl font-bold">{t('customFields.title')}</h1>
           <p className="text-sm text-muted-foreground mt-1">
             Define typed fields for tickets, leads, deals, and contacts. Fields appear on entity forms and can be required during workflow transitions.
           </p>

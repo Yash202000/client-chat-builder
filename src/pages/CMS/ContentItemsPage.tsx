@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -58,6 +59,7 @@ const ContentItemsPage = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { toast } = useToast();
+  const { t } = useTranslation();
   const [searchParams, setSearchParams] = useSearchParams();
 
   const [deleteDialog, setDeleteDialog] = useState<{ open: boolean; item: ContentItem | null }>({
@@ -88,11 +90,11 @@ const ContentItemsPage = () => {
     mutationFn: (itemId: number) => cmsService.deleteContentItem(typeSlug!, itemId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['cms-content-items', typeSlug] });
-      toast({ title: 'Item deleted' });
+      toast({ title: t('cms.content.deleted') });
       setDeleteDialog({ open: false, item: null });
     },
     onError: () => {
-      toast({ title: 'Failed to delete item', variant: 'destructive' });
+      toast({ title: t('cms.content.deleteFailed'), variant: 'destructive' });
     },
   });
 
@@ -100,7 +102,7 @@ const ContentItemsPage = () => {
     mutationFn: (itemId: number) => cmsService.publishContentItem(typeSlug!, itemId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['cms-content-items', typeSlug] });
-      toast({ title: 'Item published' });
+      toast({ title: t('cms.content.published') });
     },
   });
 
@@ -108,7 +110,7 @@ const ContentItemsPage = () => {
     mutationFn: (itemId: number) => cmsService.archiveContentItem(typeSlug!, itemId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['cms-content-items', typeSlug] });
-      toast({ title: 'Item archived' });
+      toast({ title: t('cms.content.archived') });
     },
   });
 
@@ -179,7 +181,7 @@ const ContentItemsPage = () => {
         <div className="relative flex-1 min-w-[160px] sm:max-w-sm">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <Input
-            placeholder="Search..."
+            placeholder={t('cms.content.searchPlaceholder')}
             value={search}
             onChange={(e) => handleSearch(e.target.value)}
             className="pl-9"
@@ -188,7 +190,7 @@ const ContentItemsPage = () => {
 
         <Select value={status || 'all'} onValueChange={(v) => handleFilterChange('status', v)}>
           <SelectTrigger className="w-[120px] sm:w-[140px]">
-            <SelectValue placeholder="Status" />
+            <SelectValue placeholder={t('cms.content.statusFilter')} />
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All Statuses</SelectItem>
@@ -200,7 +202,7 @@ const ContentItemsPage = () => {
 
         <Select value={visibility || 'all'} onValueChange={(v) => handleFilterChange('visibility', v)}>
           <SelectTrigger className="w-[120px] sm:w-[140px]">
-            <SelectValue placeholder="Visibility" />
+            <SelectValue placeholder={t('cms.content.visibilityFilter')} />
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All Visibility</SelectItem>
@@ -373,7 +375,7 @@ const ContentItemsPage = () => {
               onClick={() => deleteDialog.item && deleteMutation.mutate(deleteDialog.item.id)}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
-              {deleteMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Delete'}
+              {deleteMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : t('cms.content.delete')}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

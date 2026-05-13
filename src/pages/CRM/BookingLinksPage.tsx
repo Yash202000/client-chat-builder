@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   Plus, Copy, Trash2, Eye, Settings2, Calendar, Clock, Users, ChevronRight, Link2,
@@ -87,6 +88,7 @@ function AvailabilityEditor({
   value: Record<string, { start: string; end: string }[]>;
   onChange: (v: Record<string, { start: string; end: string }[]>) => void;
 }) {
+  const { t } = useTranslation();
   const avail = { ...DEFAULT_AVAILABILITY, ...value } as Record<Day, { start: string; end: string }[]>;
 
   const toggle = (day: Day) => {
@@ -130,7 +132,7 @@ function AvailabilityEditor({
                 />
               </div>
             ) : (
-              <span className="text-xs text-gray-400">Unavailable</span>
+              <span className="text-xs text-gray-400">{t('bookingLinks.unavailable')}</span>
             )}
           </div>
         );
@@ -172,6 +174,7 @@ const blankForm = (): LinkFormState => ({
 export default function BookingLinksPage() {
   const qc = useQueryClient();
   const { toast } = useToast();
+  const { t } = useTranslation();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingLink, setEditingLink] = useState<BookingLink | null>(null);
   const [form, setForm] = useState<LinkFormState>(blankForm());
@@ -211,7 +214,7 @@ export default function BookingLinksPage() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["booking-links"] });
       setDialogOpen(false);
-      toast({ title: "Booking link created" });
+      toast({ title: t('bookingLinks.created') });
     },
     onError: (e: Error) => toast({ title: "Error", description: e.message, variant: "destructive" }),
   });
@@ -230,7 +233,7 @@ export default function BookingLinksPage() {
       qc.invalidateQueries({ queryKey: ["booking-links"] });
       setDialogOpen(false);
       setEditingLink(null);
-      toast({ title: "Booking link updated" });
+      toast({ title: t('bookingLinks.updated') });
     },
     onError: (e: Error) => toast({ title: "Error", description: e.message, variant: "destructive" }),
   });
@@ -245,7 +248,7 @@ export default function BookingLinksPage() {
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["booking-links"] });
-      toast({ title: "Booking link deleted" });
+      toast({ title: t('bookingLinks.deleted') });
     },
     onError: (e: Error) => toast({ title: "Error", description: e.message, variant: "destructive" }),
   });
@@ -291,7 +294,7 @@ export default function BookingLinksPage() {
   const copyLink = (slug: string) => {
     const url = `${window.location.origin}/book/${slug}`;
     navigator.clipboard.writeText(url);
-    toast({ title: "Link copied to clipboard" });
+    toast({ title: t('bookingLinks.linkCopied') });
   };
 
   const fmtDt = (iso: string) =>
@@ -306,13 +309,13 @@ export default function BookingLinksPage() {
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Booking Links</h1>
+          <h1 className="text-2xl font-bold text-gray-900">{t('bookingLinks.title')}</h1>
           <p className="text-gray-500 text-sm mt-1">
-            Create shareable scheduling pages for meetings
+            {t('bookingLinks.subtitle')}
           </p>
         </div>
         <Button onClick={openCreate} className="gap-2">
-          <Plus className="w-4 h-4" /> New Booking Link
+          <Plus className="w-4 h-4" /> {t('bookingLinks.newBookingLink')}
         </Button>
       </div>
 
@@ -324,10 +327,10 @@ export default function BookingLinksPage() {
       ) : links.length === 0 ? (
         <div className="text-center py-20 text-gray-500">
           <Calendar className="w-12 h-12 mx-auto mb-3 text-gray-300" />
-          <p className="font-medium">No booking links yet</p>
-          <p className="text-sm mt-1">Create one to start scheduling meetings</p>
+          <p className="font-medium">{t('bookingLinks.noBookingLinks')}</p>
+          <p className="text-sm mt-1">{t('bookingLinks.noBookingLinksDesc')}</p>
           <Button onClick={openCreate} className="mt-4" variant="outline">
-            <Plus className="w-4 h-4 mr-2" /> Create Booking Link
+            <Plus className="w-4 h-4 mr-2" /> {t('bookingLinks.createBookingLink')}
           </Button>
         </div>
       ) : (
@@ -336,11 +339,11 @@ export default function BookingLinksPage() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Name</TableHead>
-                <TableHead>Duration</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Created</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
+                <TableHead>{t('bookingLinks.table.name')}</TableHead>
+                <TableHead>{t('bookingLinks.table.duration')}</TableHead>
+                <TableHead>{t('bookingLinks.table.status')}</TableHead>
+                <TableHead>{t('bookingLinks.table.created')}</TableHead>
+                <TableHead className="text-right">{t('bookingLinks.table.actions')}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -366,7 +369,7 @@ export default function BookingLinksPage() {
                   </TableCell>
                   <TableCell>
                     <Badge variant={link.is_active ? "default" : "secondary"}>
-                      {link.is_active ? "Active" : "Inactive"}
+                      {link.is_active ? t('bookingLinks.status.active') : t('bookingLinks.status.inactive')}
                     </Badge>
                   </TableCell>
                   <TableCell className="text-sm text-gray-500">
@@ -378,7 +381,7 @@ export default function BookingLinksPage() {
                         size="sm"
                         variant="ghost"
                         onClick={() => copyLink(link.slug)}
-                        title="Copy link"
+                        title={t('bookingLinks.actions.copyLink')}
                       >
                         <Copy className="w-3.5 h-3.5" />
                       </Button>
@@ -386,7 +389,7 @@ export default function BookingLinksPage() {
                         size="sm"
                         variant="ghost"
                         onClick={() => window.open(`/book/${link.slug}`, "_blank")}
-                        title="Preview"
+                        title={t('bookingLinks.actions.preview')}
                       >
                         <Eye className="w-3.5 h-3.5" />
                       </Button>
@@ -394,7 +397,7 @@ export default function BookingLinksPage() {
                         size="sm"
                         variant="ghost"
                         onClick={() => setBookingsSheet(link)}
-                        title="View bookings"
+                        title={t('bookingLinks.actions.viewBookings')}
                       >
                         <Users className="w-3.5 h-3.5" />
                       </Button>
@@ -406,17 +409,17 @@ export default function BookingLinksPage() {
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
                           <DropdownMenuItem onClick={() => openEdit(link)}>
-                            Edit
+                            {t('bookingLinks.actions.edit')}
                           </DropdownMenuItem>
                           <DropdownMenuItem
                             className="text-red-600"
                             onClick={() => {
-                              if (confirm("Delete this booking link?")) {
+                              if (confirm(t('bookingLinks.deleteConfirm'))) {
                                 deleteMutation.mutate(link.id);
                               }
                             }}
                           >
-                            <Trash2 className="w-3.5 h-3.5 mr-2" /> Delete
+                            <Trash2 className="w-3.5 h-3.5 mr-2" /> {t('bookingLinks.actions.delete')}
                           </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
@@ -434,35 +437,35 @@ export default function BookingLinksPage() {
       <Dialog open={dialogOpen} onOpenChange={(o) => { if (!o) { setDialogOpen(false); setEditingLink(null); } }}>
         <DialogContent className="w-full max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>{editingLink ? "Edit Booking Link" : "New Booking Link"}</DialogTitle>
+            <DialogTitle>{editingLink ? t('bookingLinks.editBookingLink') : t('bookingLinks.newBookingLink')}</DialogTitle>
           </DialogHeader>
           <div className="space-y-5 py-2">
             <div className="grid grid-cols-2 gap-4">
               <div className="col-span-2">
-                <Label>Title *</Label>
+                <Label>{t('bookingLinks.form.titleLabel')}</Label>
                 <Input
                   value={form.title}
                   onChange={(e) => setForm({ ...form, title: e.target.value })}
-                  placeholder="30-min intro call"
+                  placeholder={t('bookingLinks.form.titlePlaceholder')}
                   className="mt-1"
                 />
               </div>
               <div className="col-span-2">
-                <Label>Description</Label>
+                <Label>{t('bookingLinks.form.descriptionLabel')}</Label>
                 <Textarea
                   value={form.description}
                   onChange={(e) => setForm({ ...form, description: e.target.value })}
-                  placeholder="What's this meeting about?"
+                  placeholder={t('bookingLinks.form.descriptionPlaceholder')}
                   rows={2}
                   className="mt-1"
                 />
               </div>
               <div className="col-span-2">
-                <Label>Location</Label>
+                <Label>{t('bookingLinks.form.locationLabel')}</Label>
                 <Input
                   value={form.location}
                   onChange={(e) => setForm({ ...form, location: e.target.value })}
-                  placeholder="Zoom link, office address, etc."
+                  placeholder={t('bookingLinks.form.locationPlaceholder')}
                   className="mt-1"
                 />
               </div>
@@ -472,7 +475,7 @@ export default function BookingLinksPage() {
 
             <div className="grid grid-cols-3 gap-4">
               <div>
-                <Label>Duration (min)</Label>
+                <Label>{t('bookingLinks.form.durationLabel')}</Label>
                 <Input
                   type="number"
                   min={5}
@@ -482,7 +485,7 @@ export default function BookingLinksPage() {
                 />
               </div>
               <div>
-                <Label>Buffer before (min)</Label>
+                <Label>{t('bookingLinks.form.bufferBeforeLabel')}</Label>
                 <Input
                   type="number"
                   min={0}
@@ -492,7 +495,7 @@ export default function BookingLinksPage() {
                 />
               </div>
               <div>
-                <Label>Buffer after (min)</Label>
+                <Label>{t('bookingLinks.form.bufferAfterLabel')}</Label>
                 <Input
                   type="number"
                   min={0}
@@ -502,7 +505,7 @@ export default function BookingLinksPage() {
                 />
               </div>
               <div>
-                <Label>Min notice (hrs)</Label>
+                <Label>{t('bookingLinks.form.minNoticeLabel')}</Label>
                 <Input
                   type="number"
                   min={0}
@@ -512,7 +515,7 @@ export default function BookingLinksPage() {
                 />
               </div>
               <div>
-                <Label>Max advance (days)</Label>
+                <Label>{t('bookingLinks.form.maxAdvanceLabel')}</Label>
                 <Input
                   type="number"
                   min={1}
@@ -522,7 +525,7 @@ export default function BookingLinksPage() {
                 />
               </div>
               <div>
-                <Label>Color</Label>
+                <Label>{t('bookingLinks.form.colorLabel')}</Label>
                 <div className="flex items-center gap-2 mt-1">
                   <input
                     type="color"
@@ -540,7 +543,7 @@ export default function BookingLinksPage() {
             </div>
 
             <div>
-              <Label>Timezone</Label>
+              <Label>{t('bookingLinks.form.timezoneLabel')}</Label>
               <select
                 value={form.timezone}
                 onChange={(e) => setForm({ ...form, timezone: e.target.value })}
@@ -555,7 +558,7 @@ export default function BookingLinksPage() {
             <Separator />
 
             <div>
-              <Label className="mb-3 block">Availability</Label>
+              <Label className="mb-3 block">{t('bookingLinks.form.availabilityLabel')}</Label>
               <AvailabilityEditor
                 value={form.availability}
                 onChange={(v) => setForm({ ...form, availability: v })}
@@ -567,13 +570,13 @@ export default function BookingLinksPage() {
                 checked={form.is_active}
                 onCheckedChange={(v) => setForm({ ...form, is_active: v })}
               />
-              <Label>Active (accepts new bookings)</Label>
+              <Label>{t('bookingLinks.form.activeLabel')}</Label>
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setDialogOpen(false)}>Cancel</Button>
+            <Button variant="outline" onClick={() => setDialogOpen(false)}>{t('common.cancel')}</Button>
             <Button onClick={submit} disabled={!form.title || isBusy}>
-              {isBusy ? "Saving…" : editingLink ? "Save Changes" : "Create"}
+              {isBusy ? t('bookingLinks.saving') : editingLink ? t('bookingLinks.saveChanges') : t('bookingLinks.create')}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -585,7 +588,7 @@ export default function BookingLinksPage() {
           <SheetHeader>
             <SheetTitle className="flex items-center gap-2">
               <Users className="w-4 h-4" />
-              Bookings — {bookingsSheet?.title}
+              {t('bookingLinks.bookingsTitle', { title: bookingsSheet?.title })}
             </SheetTitle>
           </SheetHeader>
           <div className="mt-4 space-y-3">
@@ -606,7 +609,7 @@ export default function BookingLinksPage() {
             )}
             <Separator />
             {bookings.length === 0 ? (
-              <p className="text-center text-gray-500 py-8 text-sm">No bookings yet</p>
+              <p className="text-center text-gray-500 py-8 text-sm">{t('bookingLinks.noBookings')}</p>
             ) : (
               bookings.map((b) => (
                 <div key={b.id} className="border rounded-lg p-3 space-y-1">

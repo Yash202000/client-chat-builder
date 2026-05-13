@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import {
   Plus, Search, MoreHorizontal, Play, Pause, Archive, Trash2,
   Mail, MessageSquare, Phone, CheckSquare, Clock, Users, Loader2,
@@ -53,6 +54,7 @@ function StatPill({ label, value, color }: { label: string; value: number; color
 export default function SequencesPage() {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { t } = useTranslation();
 
   const [sequences, setSequences] = useState<SequenceListItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -71,7 +73,7 @@ export default function SequencesPage() {
       const data = await getSequences();
       setSequences(data);
     } catch {
-      toast({ title: 'Error', description: 'Failed to load sequences', variant: 'destructive' });
+      toast({ title: t('sequences.toast.errorTitle'), description: t('sequences.toast.loadError'), variant: 'destructive' });
     } finally {
       setLoading(false);
     }
@@ -88,12 +90,12 @@ export default function SequencesPage() {
         status: 'draft',
         steps: [],
       });
-      toast({ title: 'Created', description: 'Sequence created — add steps in the editor' });
+      toast({ title: t('sequences.toast.createdTitle'), description: t('sequences.toast.createdDesc') });
       setCreateOpen(false);
       setForm({ name: '', description: '', goal: '' });
       navigate(`/dashboard/crm/sequences/${seq.id}`);
     } catch {
-      toast({ title: 'Error', description: 'Failed to create sequence', variant: 'destructive' });
+      toast({ title: t('sequences.toast.errorTitle'), description: t('sequences.toast.createError'), variant: 'destructive' });
     } finally {
       setCreating(false);
     }
@@ -103,9 +105,9 @@ export default function SequencesPage() {
     try {
       await updateSequence(id, { status });
       setSequences(prev => prev.map(s => s.id === id ? { ...s, status } : s));
-      toast({ title: 'Updated', description: `Sequence ${status}` });
+      toast({ title: t('sequences.toast.updatedTitle'), description: t('sequences.toast.updatedDesc', { status }) });
     } catch {
-      toast({ title: 'Error', description: 'Failed to update', variant: 'destructive' });
+      toast({ title: t('sequences.toast.errorTitle'), description: t('sequences.toast.updateError'), variant: 'destructive' });
     }
   };
 
@@ -113,9 +115,9 @@ export default function SequencesPage() {
     try {
       await deleteSequence(id);
       setSequences(prev => prev.filter(s => s.id !== id));
-      toast({ title: 'Deleted', description: 'Sequence deleted' });
+      toast({ title: t('sequences.toast.deletedTitle'), description: t('sequences.toast.deletedDesc') });
     } catch {
-      toast({ title: 'Error', description: 'Failed to delete', variant: 'destructive' });
+      toast({ title: t('sequences.toast.errorTitle'), description: t('sequences.toast.deleteError'), variant: 'destructive' });
     }
   };
 
@@ -133,17 +135,17 @@ export default function SequencesPage() {
           <div>
             <h1 className="text-xl font-semibold text-foreground flex items-center gap-2">
               <GitBranch className="h-5 w-5 text-violet-500" />
-              Sales Sequences
+              {t('sequences.title')}
             </h1>
             <p className="text-sm text-muted-foreground mt-0.5">
-              Automate multi-step outreach cadences for your contacts
+              {t('sequences.subtitle')}
             </p>
           </div>
           <Button
             onClick={() => setCreateOpen(true)}
             className="gap-2 bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white"
           >
-            <Plus className="h-4 w-4" /> New Sequence
+            <Plus className="h-4 w-4" /> {t('sequences.newSequence')}
           </Button>
         </div>
 
@@ -153,7 +155,7 @@ export default function SequencesPage() {
             <Input
               value={search}
               onChange={e => setSearch(e.target.value)}
-              placeholder="Search sequences…"
+              placeholder={t('sequences.searchPlaceholder')}
               className="pl-9 h-9 text-sm"
             />
           </div>
@@ -162,11 +164,11 @@ export default function SequencesPage() {
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All statuses</SelectItem>
-              <SelectItem value="draft">Draft</SelectItem>
-              <SelectItem value="active">Active</SelectItem>
-              <SelectItem value="paused">Paused</SelectItem>
-              <SelectItem value="archived">Archived</SelectItem>
+              <SelectItem value="all">{t('sequences.filter.allStatuses')}</SelectItem>
+              <SelectItem value="draft">{t('sequences.status.draft')}</SelectItem>
+              <SelectItem value="active">{t('sequences.status.active')}</SelectItem>
+              <SelectItem value="paused">{t('sequences.status.paused')}</SelectItem>
+              <SelectItem value="archived">{t('sequences.status.archived')}</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -184,13 +186,13 @@ export default function SequencesPage() {
               <GitBranch className="h-6 w-6 text-violet-500" />
             </div>
             <div>
-              <p className="font-medium text-foreground">No sequences yet</p>
+              <p className="font-medium text-foreground">{t('sequences.empty.title')}</p>
               <p className="text-sm text-muted-foreground mt-1">
-                Create a sequence to automate your outreach
+                {t('sequences.empty.subtitle')}
               </p>
             </div>
             <Button onClick={() => setCreateOpen(true)} variant="outline" size="sm" className="gap-1.5">
-              <Plus className="h-3.5 w-3.5" /> New Sequence
+              <Plus className="h-3.5 w-3.5" /> {t('sequences.newSequence')}
             </Button>
           </div>
         ) : (
@@ -220,7 +222,7 @@ export default function SequencesPage() {
                       <div className="flex items-center gap-4 text-xs text-muted-foreground">
                         <span className="flex items-center gap-1">
                           <GitBranch className="h-3 w-3" />
-                          {seq.step_count} step{seq.step_count !== 1 ? 's' : ''}
+                          {t('sequences.card.steps', { count: seq.step_count })}
                         </span>
                         {seq.goal && (
                           <span className="flex items-center gap-1">
@@ -231,7 +233,7 @@ export default function SequencesPage() {
                         {stats && stats.total_enrollments > 0 && (
                           <span className="flex items-center gap-1">
                             <Users className="h-3 w-3" />
-                            {stats.total_enrollments} enrolled
+                            {t('sequences.card.enrolled', { count: stats.total_enrollments })}
                           </span>
                         )}
                       </div>
@@ -250,9 +252,9 @@ export default function SequencesPage() {
                     <div className="flex items-center gap-6 flex-shrink-0">
                       {stats && stats.total_enrollments > 0 && (
                         <div className="flex items-center gap-4 pr-4 border-r border-border">
-                          <StatPill label="Active" value={stats.active} color="text-emerald-600" />
-                          <StatPill label="Done" value={stats.completed} color="text-blue-600" />
-                          <StatPill label="Paused" value={stats.paused} color="text-amber-600" />
+                          <StatPill label={t('sequences.stats.active')} value={stats.active} color="text-emerald-600" />
+                          <StatPill label={t('sequences.stats.done')} value={stats.completed} color="text-blue-600" />
+                          <StatPill label={t('sequences.stats.paused')} value={stats.paused} color="text-amber-600" />
                         </div>
                       )}
                       <DropdownMenu>
@@ -263,21 +265,21 @@ export default function SequencesPage() {
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end" className="w-48">
                           <DropdownMenuItem onClick={e => { e.stopPropagation(); navigate(`/dashboard/crm/sequences/${seq.id}`); }}>
-                            Edit sequence
+                            {t('sequences.actions.edit')}
                           </DropdownMenuItem>
                           <DropdownMenuSeparator />
                           {seq.status === 'draft' || seq.status === 'paused' ? (
                             <DropdownMenuItem onClick={e => { e.stopPropagation(); handleStatusChange(seq.id, 'active'); }}>
-                              <Play className="h-3.5 w-3.5 mr-2 text-emerald-500" /> Activate
+                              <Play className="h-3.5 w-3.5 mr-2 text-emerald-500" /> {t('sequences.actions.activate')}
                             </DropdownMenuItem>
                           ) : seq.status === 'active' ? (
                             <DropdownMenuItem onClick={e => { e.stopPropagation(); handleStatusChange(seq.id, 'paused'); }}>
-                              <Pause className="h-3.5 w-3.5 mr-2 text-amber-500" /> Pause
+                              <Pause className="h-3.5 w-3.5 mr-2 text-amber-500" /> {t('sequences.actions.pause')}
                             </DropdownMenuItem>
                           ) : null}
                           {seq.status !== 'archived' && (
                             <DropdownMenuItem onClick={e => { e.stopPropagation(); handleStatusChange(seq.id, 'archived'); }}>
-                              <Archive className="h-3.5 w-3.5 mr-2" /> Archive
+                              <Archive className="h-3.5 w-3.5 mr-2" /> {t('sequences.actions.archive')}
                             </DropdownMenuItem>
                           )}
                           <DropdownMenuSeparator />
@@ -285,7 +287,7 @@ export default function SequencesPage() {
                             className="text-destructive focus:text-destructive"
                             onClick={e => { e.stopPropagation(); handleDelete(seq.id); }}
                           >
-                            <Trash2 className="h-3.5 w-3.5 mr-2" /> Delete
+                            <Trash2 className="h-3.5 w-3.5 mr-2" /> {t('sequences.actions.delete')}
                           </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
@@ -302,48 +304,48 @@ export default function SequencesPage() {
       <Dialog open={createOpen} onOpenChange={setCreateOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>New Sequence</DialogTitle>
+            <DialogTitle>{t('sequences.dialog.title')}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-2">
             <div className="space-y-1.5">
-              <Label className="text-sm">Name <span className="text-destructive">*</span></Label>
+              <Label className="text-sm">{t('sequences.dialog.nameLabel')} <span className="text-destructive">*</span></Label>
               <Input
                 value={form.name}
                 onChange={e => setForm(p => ({ ...p, name: e.target.value }))}
-                placeholder="e.g. Cold outreach – SaaS founders"
+                placeholder={t('sequences.dialog.namePlaceholder')}
                 className="text-sm"
                 autoFocus
                 onKeyDown={e => e.key === 'Enter' && handleCreate()}
               />
             </div>
             <div className="space-y-1.5">
-              <Label className="text-sm">Description</Label>
+              <Label className="text-sm">{t('sequences.dialog.descriptionLabel')}</Label>
               <Textarea
                 value={form.description}
                 onChange={e => setForm(p => ({ ...p, description: e.target.value }))}
-                placeholder="What is this sequence for?"
+                placeholder={t('sequences.dialog.descriptionPlaceholder')}
                 className="text-sm resize-none min-h-[72px]"
               />
             </div>
             <div className="space-y-1.5">
-              <Label className="text-sm">Goal</Label>
+              <Label className="text-sm">{t('sequences.dialog.goalLabel')}</Label>
               <Input
                 value={form.goal}
                 onChange={e => setForm(p => ({ ...p, goal: e.target.value }))}
-                placeholder="e.g. Book a demo call"
+                placeholder={t('sequences.dialog.goalPlaceholder')}
                 className="text-sm"
               />
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setCreateOpen(false)}>Cancel</Button>
+            <Button variant="outline" onClick={() => setCreateOpen(false)}>{t('sequences.dialog.cancel')}</Button>
             <Button
               onClick={handleCreate}
               disabled={!form.name.trim() || creating}
               className="bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white gap-1.5"
             >
               {creating ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Plus className="h-3.5 w-3.5" />}
-              Create & Edit
+              {t('sequences.dialog.createBtn')}
             </Button>
           </DialogFooter>
         </DialogContent>

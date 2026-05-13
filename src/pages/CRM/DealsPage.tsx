@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea/dnd';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -94,6 +95,7 @@ function fmtMoney(amount?: number, currency = 'USD') {
 export default function DealsPage() {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { t } = useTranslation();
 
   const [pipelines, setPipelines] = useState<Pipeline[]>([]);
   const [selectedPipeline, setSelectedPipeline] = useState<Pipeline | null>(null);
@@ -149,7 +151,7 @@ export default function DealsPage() {
       setPipelines(pls);
       setSelectedPipeline(pls.find(p => p.is_default) ?? pls[0]);
     } catch {
-      toast({ title: 'Error', description: 'Failed to load pipelines', variant: 'destructive' });
+      toast({ title: t('common.error'), description: t('deals.loadFailed'), variant: 'destructive' });
     }
   };
 
@@ -159,7 +161,7 @@ export default function DealsPage() {
       const res = await axios.get('/api/v1/deals/', { headers, params: { limit: 200 } });
       setDeals(res.data);
     } catch {
-      toast({ title: 'Error', description: 'Failed to load deals', variant: 'destructive' });
+      toast({ title: t('common.error'), description: t('deals.loadDealsFailed'), variant: 'destructive' });
     } finally {
       setLoading(false);
     }
@@ -226,7 +228,7 @@ export default function DealsPage() {
       }
     } catch {
       fetchDeals();
-      toast({ title: 'Error', description: 'Failed to move deal', variant: 'destructive' });
+      toast({ title: t('common.error'), description: t('deals.moveFailed'), variant: 'destructive' });
     }
   };
 
@@ -246,7 +248,7 @@ export default function DealsPage() {
       setPendingTransition(null);
       fetchDeals();
     } catch {
-      toast({ title: 'Error', description: 'Failed to apply transition', variant: 'destructive' });
+      toast({ title: t('common.error'), description: t('deals.transitionFailed'), variant: 'destructive' });
     } finally {
       setTransitionSaving(false);
     }
@@ -271,13 +273,13 @@ export default function DealsPage() {
         description: newDeal.description || null,
         custom_fields: Object.keys(cfPayload).length > 0 ? cfPayload : undefined,
       }, { headers });
-      toast({ title: 'Deal created' });
+      toast({ title: t('deals.dealCreated') });
       setCreateOpen(false);
       setNewDeal({ title: '', amount: '', currency: 'USD', contact_id: '', account_id: '', expected_close_date: '', description: '' });
       setDealCF({});
       fetchDeals();
     } catch {
-      toast({ title: 'Error', description: 'Failed to create deal', variant: 'destructive' });
+      toast({ title: t('common.error'), description: t('deals.createFailed'), variant: 'destructive' });
     }
   };
 
@@ -291,15 +293,15 @@ export default function DealsPage() {
 
   const handleExportDeals = () => {
     downloadCsv('deals.csv', filteredDeals as Record<string, any>[], [
-      { key: 'title', label: 'Title' },
-      { key: 'amount', label: 'Amount' },
-      { key: 'currency', label: 'Currency' },
-      { key: 'status', label: 'Status' },
-      { key: 'wf_status.name', label: 'Stage' },
-      { key: 'contact.name', label: 'Contact' },
-      { key: 'account.name', label: 'Account' },
-      { key: 'expected_close_date', label: 'Expected Close Date' },
-      { key: 'created_at', label: 'Created At' },
+      { key: 'title', label: t('deals.columns.title') },
+      { key: 'amount', label: t('deals.columns.amount') },
+      { key: 'currency', label: t('deals.columns.currency') },
+      { key: 'status', label: t('deals.columns.status') },
+      { key: 'wf_status.name', label: t('deals.columns.stage') },
+      { key: 'contact.name', label: t('deals.columns.contact') },
+      { key: 'account.name', label: t('deals.columns.account') },
+      { key: 'expected_close_date', label: t('deals.columns.expectedCloseDate') },
+      { key: 'created_at', label: t('deals.columns.createdAt') },
     ]);
   };
 
@@ -316,7 +318,7 @@ export default function DealsPage() {
       <div className="border-b border-border px-4 sm:px-6 py-3 sm:py-4">
         <div className="flex items-center justify-between mb-3 sm:mb-4">
           <div>
-            <h1 className="text-xl sm:text-2xl font-bold text-foreground">Deals</h1>
+            <h1 className="text-xl sm:text-2xl font-bold text-foreground">{t('deals.title')}</h1>
             <p className="text-sm text-muted-foreground mt-0.5">Manage your sales pipeline</p>
           </div>
           <div className="flex items-center gap-2">
@@ -355,7 +357,7 @@ export default function DealsPage() {
         <div className="flex items-center gap-3 flex-wrap">
           <div className="relative w-full sm:flex-1 sm:min-w-48">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input placeholder="Search deals..." value={search} onChange={e => setSearch(e.target.value)}
+            <Input placeholder={t('deals.searchPlaceholder')} value={search} onChange={e => setSearch(e.target.value)}
               className="pl-9 bg-background border-border w-full" />
           </div>
 
@@ -563,7 +565,7 @@ export default function DealsPage() {
           <div className="space-y-4 pt-2 overflow-y-auto flex-1 pr-1">
             <div className="space-y-1.5">
               <Label>Title <span className="text-red-500">*</span></Label>
-              <Input placeholder="Deal title" value={newDeal.title}
+              <Input placeholder={t('deals.dealTitlePlaceholder')} value={newDeal.title}
                 onChange={e => setNewDeal({ ...newDeal, title: e.target.value })}
                 className="bg-background border-border" />
             </div>
@@ -590,7 +592,7 @@ export default function DealsPage() {
               <div className="space-y-1.5">
                 <Label>Contact</Label>
                 <Select value={newDeal.contact_id} onValueChange={v => setNewDeal({ ...newDeal, contact_id: v })}>
-                  <SelectTrigger className="bg-background border-border"><SelectValue placeholder="Select contact" /></SelectTrigger>
+                  <SelectTrigger className="bg-background border-border"><SelectValue placeholder={t('deals.selectContact')} /></SelectTrigger>
                   <SelectContent>
                     {contacts.map(c => <SelectItem key={c.id} value={c.id.toString()}>{c.name || c.email}</SelectItem>)}
                   </SelectContent>
@@ -599,7 +601,7 @@ export default function DealsPage() {
               <div className="space-y-1.5">
                 <Label>Account</Label>
                 <Select value={newDeal.account_id} onValueChange={v => setNewDeal({ ...newDeal, account_id: v })}>
-                  <SelectTrigger className="bg-background border-border"><SelectValue placeholder="Select account" /></SelectTrigger>
+                  <SelectTrigger className="bg-background border-border"><SelectValue placeholder={t('deals.selectAccount')} /></SelectTrigger>
                   <SelectContent>
                     {accounts.map(a => <SelectItem key={a.id} value={a.id.toString()}>{a.name}</SelectItem>)}
                   </SelectContent>
@@ -616,7 +618,7 @@ export default function DealsPage() {
 
             <div className="space-y-1.5">
               <Label>Description</Label>
-              <Textarea placeholder="Deal notes..." value={newDeal.description} rows={3}
+              <Textarea placeholder={t('deals.dealNotesPlaceholder')} value={newDeal.description} rows={3}
                 onChange={e => setNewDeal({ ...newDeal, description: e.target.value })}
                 className="bg-background border-border" />
             </div>
@@ -652,7 +654,7 @@ export default function DealsPage() {
       <Dialog open={!!pendingTransition} onOpenChange={() => setPendingTransition(null)}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>{pendingTransition?.transition?.name ?? 'Move Deal'}</DialogTitle>
+            <DialogTitle>{pendingTransition?.transition?.name ?? t('deals.moveDeal')}</DialogTitle>
           </DialogHeader>
           {pendingTransition?.transition?.screen_fields?.map(f => (
             <div key={f.field} className="space-y-1.5">

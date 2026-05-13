@@ -1,4 +1,5 @@
 import { useParams, Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
 import axios from "axios";
 
@@ -16,6 +17,7 @@ const COLORS = ["#6366f1", "#22c55e", "#f59e0b", "#ef4444", "#3b82f6", "#8b5cf6"
 
 export default function TicketAnalyticsPage() {
   const { projectKey } = useParams<{ projectKey: string }>();
+  const { t } = useTranslation();
 
   const { data: projects } = useQuery({
     queryKey: ["ticket-projects"],
@@ -77,7 +79,7 @@ export default function TicketAnalyticsPage() {
           <CardContent className="p-4 flex items-center gap-3">
             <TrendingUp className="h-8 w-8 text-indigo-500" />
             <div>
-              <p className="text-sm text-muted-foreground">Total</p>
+              <p className="text-sm text-muted-foreground">{t('tickets.analytics.total')}</p>
               <p className="text-2xl font-bold">{stats?.total ?? 0}</p>
             </div>
           </CardContent>
@@ -86,7 +88,7 @@ export default function TicketAnalyticsPage() {
           <CardContent className="p-4 flex items-center gap-3">
             <Clock className="h-8 w-8 text-blue-500" />
             <div>
-              <p className="text-sm text-muted-foreground">Open</p>
+              <p className="text-sm text-muted-foreground">{t('tickets.analytics.open')}</p>
               <p className="text-2xl font-bold">{stats?.open_count ?? 0}</p>
             </div>
           </CardContent>
@@ -95,7 +97,7 @@ export default function TicketAnalyticsPage() {
           <CardContent className="p-4 flex items-center gap-3">
             <CheckCircle className="h-8 w-8 text-green-500" />
             <div>
-              <p className="text-sm text-muted-foreground">Resolved</p>
+              <p className="text-sm text-muted-foreground">{t('tickets.analytics.resolved')}</p>
               <p className="text-2xl font-bold">{stats?.resolved_count ?? 0}</p>
             </div>
           </CardContent>
@@ -104,7 +106,7 @@ export default function TicketAnalyticsPage() {
           <CardContent className="p-4 flex items-center gap-3">
             <AlertCircle className="h-8 w-8 text-red-500" />
             <div>
-              <p className="text-sm text-muted-foreground">Overdue</p>
+              <p className="text-sm text-muted-foreground">{t('tickets.analytics.overdue')}</p>
               <p className="text-2xl font-bold">{stats?.overdue_count ?? 0}</p>
             </div>
           </CardContent>
@@ -115,7 +117,7 @@ export default function TicketAnalyticsPage() {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">By Status</CardTitle>
+            <CardTitle className="text-base">{t('tickets.analytics.byStatus')}</CardTitle>
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={220}>
@@ -132,7 +134,7 @@ export default function TicketAnalyticsPage() {
 
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">By Priority</CardTitle>
+            <CardTitle className="text-base">{t('tickets.analytics.byPriority')}</CardTitle>
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={220}>
@@ -154,7 +156,7 @@ export default function TicketAnalyticsPage() {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">By Issue Type</CardTitle>
+            <CardTitle className="text-base">{t('tickets.analytics.byIssueType')}</CardTitle>
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={220}>
@@ -171,7 +173,7 @@ export default function TicketAnalyticsPage() {
 
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">Created per Day (last 14 days)</CardTitle>
+            <CardTitle className="text-base">{t('tickets.analytics.createdPerDay')}</CardTitle>
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={220}>

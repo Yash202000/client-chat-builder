@@ -184,7 +184,7 @@ function TemplateForm({
             {template ? 'Edit template' : 'New template'}
           </p>
           <p className="text-[11px] text-muted-foreground mt-0.5">
-            {template ? `Editing /${template.shortcut}` : 'Type / in chat to use your shortcut'}
+            {template ? `Editing /${template.shortcut}` : t('messageTemplates.editingSubtitle')}
           </p>
         </div>
         <button type="button" onClick={onCancel}
@@ -399,7 +399,7 @@ export default function MessageTemplatesPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['messageTemplates'] });
       setPanel(null);
-      toast({ title: 'Template created' });
+      toast({ title: t('messageTemplates.created') });
     },
     onError: (e: Error) => toast({ title: t('error'), description: e.message, variant: 'destructive' }),
   });
@@ -410,7 +410,7 @@ export default function MessageTemplatesPage() {
       queryClient.invalidateQueries({ queryKey: ['messageTemplates'] });
       setPanel(null);
       setEditingTemplate(null);
-      toast({ title: 'Template updated' });
+      toast({ title: t('messageTemplates.updated') });
     },
     onError: (e: Error) => toast({ title: t('error'), description: e.message, variant: 'destructive' }),
   });
@@ -420,7 +420,7 @@ export default function MessageTemplatesPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['messageTemplates'] });
       setDeletingTemplate(null);
-      toast({ title: 'Template deleted' });
+      toast({ title: t('messageTemplates.deleted') });
     },
     onError: (e: Error) => toast({ title: t('error'), description: e.message, variant: 'destructive' }),
   });
@@ -450,8 +450,8 @@ export default function MessageTemplatesPage() {
                 <MessageSquare className="h-4 w-4 text-muted-foreground" />
               </div>
               <div className="min-w-0">
-                <h1 className="text-base font-semibold text-foreground tracking-tight">Message Templates</h1>
-                <p className="text-[11px] text-muted-foreground mt-0.5 hidden sm:block">Type / in chat to use a shortcut</p>
+                <h1 className="text-base font-semibold text-foreground tracking-tight">{t('messageTemplates.title')}</h1>
+                <p className="text-[11px] text-muted-foreground mt-0.5 hidden sm:block">{t('messageTemplates.subtitle')}</p>
               </div>
             </div>
 
@@ -465,7 +465,7 @@ export default function MessageTemplatesPage() {
                 }`}
               >
                 <Info className="h-3.5 w-3.5" />
-                <span className="hidden sm:inline">Variables</span>
+                <span className="hidden sm:inline">{t('messageTemplates.variables')}</span>
               </button>
               <button
                 onClick={() => { setEditingTemplate(null); setPanel('create'); }}
@@ -526,12 +526,12 @@ export default function MessageTemplatesPage() {
                 </div>
                 <div className="text-center space-y-1.5">
                   <p className="text-base font-semibold text-foreground">
-                    {search ? `No results for "${search}"` : 'No templates yet'}
+                    {search ? t('messageTemplates.noResults', { search }) : t('messageTemplates.noTemplates')}
                   </p>
                   <p className="text-sm text-muted-foreground max-w-xs">
                     {search
-                      ? 'Try a different search term or clear the filter.'
-                      : 'Create your first template to speed up replies with quick shortcuts.'}
+                      ? t('messageTemplates.noResultsHint')
+                      : t('messageTemplates.noTemplatesHint')}
                   </p>
                 </div>
                 {!search && (
@@ -539,7 +539,7 @@ export default function MessageTemplatesPage() {
                     onClick={() => { setEditingTemplate(null); setPanel('create'); }}
                     className="flex items-center gap-2 h-9 px-5 rounded-xl text-sm font-semibold bg-primary text-primary-foreground hover:opacity-90 transition-opacity"
                   >
-                    <Plus className="h-4 w-4" /> Create first template
+                    <Plus className="h-4 w-4" /> {t('messageTemplates.createFirst')}
                   </button>
                 )}
               </div>
@@ -610,20 +610,19 @@ export default function MessageTemplatesPage() {
                 <div className="h-9 w-9 rounded-xl bg-destructive/10 flex items-center justify-center shrink-0">
                   <Trash2 className="h-4 w-4 text-destructive" />
                 </div>
-                Delete template?
+                {t('messageTemplates.deleteTitle')}
               </AlertDialogTitle>
               <AlertDialogDescription className="mt-1">
-                <span className="font-medium text-foreground">/{deletingTemplate?.shortcut}</span> will be permanently removed.
-                This can't be undone.
+                <span className="font-medium text-foreground">/{deletingTemplate?.shortcut}</span> {t('messageTemplates.deleteDescription')}
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter className="pt-4 border-t border-border">
-              <AlertDialogCancel className="rounded-xl h-9 px-4 text-sm">Cancel</AlertDialogCancel>
+              <AlertDialogCancel className="rounded-xl h-9 px-4 text-sm">{t('messageTemplates.cancel')}</AlertDialogCancel>
               <AlertDialogAction
                 onClick={() => deletingTemplate && deleteMutation.mutate(deletingTemplate.id)}
                 className="rounded-xl h-9 px-4 text-sm bg-destructive text-destructive-foreground hover:opacity-90"
               >
-                {deleteMutation.isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : 'Delete'}
+                {deleteMutation.isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : t('messageTemplates.delete')}
               </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>

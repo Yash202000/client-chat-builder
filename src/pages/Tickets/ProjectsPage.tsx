@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import axios from 'axios';
 import {
   Plus, Ticket, FolderOpen, Users, BarChart3,
@@ -49,6 +50,7 @@ function colorDot(color?: string) {
 
 export default function ProjectsPage() {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
   const [showCreate, setShowCreate] = useState(false);
@@ -66,7 +68,7 @@ export default function ProjectsPage() {
       const res = await axios.get('/api/v1/tickets/projects', { headers: headers() });
       setProjects(res.data);
     } catch {
-      toast.error('Failed to load projects');
+      toast.error(t('tickets.projects.loadFailed'));
     } finally {
       setLoading(false);
     }
@@ -93,22 +95,22 @@ export default function ProjectsPage() {
 
   const submit = async () => {
     if (!form.name.trim() || !form.key.trim()) {
-      toast.error('Name and key are required');
+      toast.error(t('tickets.projects.nameKeyRequired'));
       return;
     }
     setCreating(true);
     try {
       if (editProject) {
         await axios.put(`/api/v1/tickets/projects/${editProject.id}`, form, { headers: headers() });
-        toast.success('Project updated');
+        toast.success(t('tickets.projects.updated'));
       } else {
         await axios.post('/api/v1/tickets/projects', form, { headers: headers() });
-        toast.success('Project created');
+        toast.success(t('tickets.projects.created'));
       }
       setShowCreate(false);
       load();
     } catch (e: any) {
-      toast.error(e.response?.data?.detail || 'Failed to save project');
+      toast.error(e.response?.data?.detail || t('tickets.projects.saveFailed'));
     } finally {
       setCreating(false);
     }
@@ -118,10 +120,10 @@ export default function ProjectsPage() {
     if (!confirm(`Delete project "${p.name}"? This cannot be undone.`)) return;
     try {
       await axios.delete(`/api/v1/tickets/projects/${p.id}`, { headers: headers() });
-      toast.success('Project deleted');
+      toast.success(t('tickets.projects.deleted'));
       load();
     } catch (e: any) {
-      toast.error(e.response?.data?.detail || 'Failed to delete project');
+      toast.error(e.response?.data?.detail || t('tickets.projects.deleteFailed'));
     }
   };
 
@@ -139,7 +141,7 @@ export default function ProjectsPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-semibold">Projects</h1>
-          <p className="text-muted-foreground text-sm mt-0.5">Manage your ticketing projects</p>
+          <p className="text-muted-foreground text-sm mt-0.5">{t('tickets.projects.subtitle')}</p>
         </div>
         <Button onClick={openCreate}>
           <Plus className="w-4 h-4 mr-2" />
@@ -150,10 +152,10 @@ export default function ProjectsPage() {
       {/* Stats row */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {[
-          { label: 'Total Projects', value: projects.length, icon: FolderOpen, color: 'text-indigo-500' },
-          { label: 'Open Tickets', value: projects.reduce((s, p) => s + (p.open_ticket_count || 0), 0), icon: AlertCircle, color: 'text-amber-500' },
-          { label: 'Total Tickets', value: projects.reduce((s, p) => s + p.ticket_counter, 0), icon: Ticket, color: 'text-blue-500' },
-          { label: 'Active Projects', value: projects.filter(p => p.ticket_counter > 0).length, icon: TrendingUp, color: 'text-green-500' },
+          { label: t('tickets.projects.totalProjects'), value: projects.length, icon: FolderOpen, color: 'text-indigo-500' },
+          { label: t('tickets.projects.openTickets'), value: projects.reduce((s, p) => s + (p.open_ticket_count || 0), 0), icon: AlertCircle, color: 'text-amber-500' },
+          { label: t('tickets.projects.totalTickets'), value: projects.reduce((s, p) => s + p.ticket_counter, 0), icon: Ticket, color: 'text-blue-500' },
+          { label: t('tickets.projects.activeProjects'), value: projects.filter(p => p.ticket_counter > 0).length, icon: TrendingUp, color: 'text-green-500' },
         ].map(stat => (
           <Card key={stat.label}>
             <CardContent className="pt-5 pb-4">
@@ -213,7 +215,7 @@ export default function ProjectsPage() {
                         className={project.ticket_counter > 0 ? 'text-muted-foreground cursor-not-allowed' : 'text-destructive'}
                         onClick={e => { e.stopPropagation(); if (project.ticket_counter === 0) deleteProject(project); }}>
                         <Trash2 className="w-4 h-4 mr-2" />
-                        {project.ticket_counter > 0 ? `Delete (${project.ticket_counter} tickets exist)` : 'Delete'}
+                        {project.ticket_counter > 0 ? t('tickets.projects.deleteWithTickets', { count: project.ticket_counter }) : t('tickets.projects.delete')}
                       </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
@@ -253,7 +255,7 @@ export default function ProjectsPage() {
       <Dialog open={showCreate} onOpenChange={setShowCreate}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>{editProject ? 'Edit Project' : 'Create Project'}</DialogTitle>
+            <DialogTitle>{editProject ? t('tickets.projects.editProject') : t('tickets.projects.createProject')}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-2">
             <div className="space-y-1.5">
@@ -265,11 +267,11 @@ export default function ProjectsPage() {
               <Label>Project Key *</Label>
               <Input placeholder="e.g. CUST" value={form.key}
                 onChange={e => setForm(f => ({ ...f, key: e.target.value.toUpperCase().slice(0, 10) }))} />
-              <p className="text-xs text-muted-foreground">Tickets will be numbered like {form.key || 'KEY'}-001</p>
+              <p className="text-xs text-muted-foreground">{t('tickets.projects.keyHint', { key: form.key || 'KEY' })}</p>
             </div>
             <div className="space-y-1.5">
               <Label>Description</Label>
-              <Textarea placeholder="What is this project about?" value={form.description}
+              <Textarea placeholder={t('tickets.projects.descriptionPlaceholder')} value={form.description}
                 onChange={e => setForm(f => ({ ...f, description: e.target.value }))} rows={2} />
             </div>
             <div className="space-y-1.5">

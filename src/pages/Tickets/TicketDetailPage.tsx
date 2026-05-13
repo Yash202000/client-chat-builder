@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import axios from 'axios';
 import {
   ArrowLeft, Loader2, Paperclip, User, Link2, ChevronRight, Plus,
@@ -124,11 +125,13 @@ function UserAvatar({ user, size = 'sm' }: { user?: TicketUser; size?: 'sm' | 'm
 }
 
 function PriorityBadge({ priority }: { priority: string }) {
+  const { t } = useTranslation();
   const cfg = PRIORITY_CONFIG[priority] || PRIORITY_CONFIG.none;
   const Icon = cfg.icon;
+  const labelKey = `tickets.priority.${priority}` as const;
   return (
     <span className={cn('inline-flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded border', cfg.bg, cfg.color)}>
-      <Icon className="w-3 h-3" />{cfg.label}
+      <Icon className="w-3 h-3" />{t(labelKey, { defaultValue: cfg.label })}
     </span>
   );
 }
@@ -160,6 +163,7 @@ function UserContextBadge({ userId, userContext }: { userId?: number; userContex
 }
 
 function ActivityItem({ act, userContext }: { act: Activity; userContext: Record<string, { depts: { name: string; role: string }[] }> }) {
+  const { t } = useTranslation();
   const actor = act.actor?.full_name || act.actor?.email || 'System';
   const time = fmtRelative(act.created_at);
 
@@ -182,7 +186,8 @@ function ActivityItem({ act, userContext }: { act: Activity; userContext: Record
     if (act.action === 'attachment_added') return <span>attached <strong>{act.new_value || 'a file'}</strong></span>;
     if (act.action === 'attachment_removed') return <span>removed attachment <strong>{act.old_value || 'a file'}</strong></span>;
     if (act.action === 'updated' && act.field_name) {
-      const label = FIELD_LABELS[act.field_name] || act.field_name;
+      const fieldKey = act.field_name in FIELD_LABELS ? `tickets.fields.${act.field_name}` : null;
+      const label = fieldKey ? t(fieldKey, { defaultValue: FIELD_LABELS[act.field_name] || act.field_name }) : (FIELD_LABELS[act.field_name] || act.field_name);
       return (
         <span className="flex items-center gap-1.5 flex-wrap">
           <span>changed <strong>{label}</strong></span>
@@ -234,6 +239,7 @@ interface TransitionDialogProps {
 }
 
 function TransitionDialog({ open, onOpenChange, transition, ticket, teamMembers, customFieldDefs, onExecute }: TransitionDialogProps) {
+  const { t } = useTranslation();
   const [comment, setComment] = useState('');
   const [fieldValues, setFieldValues] = useState<Record<string, any>>({});
   const [loading, setLoading] = useState(false);
@@ -254,8 +260,8 @@ function TransitionDialog({ open, onOpenChange, transition, ticket, teamMembers,
     try {
       const fd = new FormData(); fd.append('file', file);
       await axios.post(`/api/v1/tickets/${ticket.id}/attachments`, fd, { headers: headers() });
-      toast.success('Attachment uploaded'); setFv('attachment', file.name);
-    } catch (err: any) { toast.error(err.response?.data?.detail || 'Upload failed'); }
+      toast.success(t('tickets.attachmentUploaded')); setFv('attachment', file.name);
+    } catch (err: any) { toast.error(err.response?.data?.detail || t('tickets.uploadFailed')); }
     finally { setUploadingFile(false); e.target.value = ''; }
   };
 
@@ -281,7 +287,7 @@ function TransitionDialog({ open, onOpenChange, transition, ticket, teamMembers,
               <div key={sf.field} className="space-y-1.5">
                 <Label className="text-sm font-medium">{sf.label}{sf.required && <span className="text-destructive ml-0.5">*</span>}</Label>
                 <Select value={fieldValues.priority || ''} onValueChange={v => setFv('priority', v)}>
-                  <SelectTrigger><SelectValue placeholder="Select priority" /></SelectTrigger>
+                  <SelectTrigger><SelectValue placeholder={t('tickets.selectPriority')} /></SelectTrigger>
                   <SelectContent>{['critical','high','medium','low','none'].map(p => <SelectItem key={p} value={p} className="capitalize">{p}</SelectItem>)}</SelectContent>
                 </Select>
               </div>
@@ -291,9 +297,9 @@ function TransitionDialog({ open, onOpenChange, transition, ticket, teamMembers,
                 <Label className="text-sm font-medium">{sf.label}{sf.required && <span className="text-destructive ml-0.5">*</span>}</Label>
                 <Select value={fieldValues.assignee_id ? String(fieldValues.assignee_id) : '__none__'}
                   onValueChange={v => setFv('assignee_id', v === '__none__' ? null : parseInt(v))}>
-                  <SelectTrigger><SelectValue placeholder="Unassigned" /></SelectTrigger>
+                  <SelectTrigger><SelectValue placeholder={t('tickets.unassigned')} /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="__none__">Unassigned</SelectItem>
+                    <SelectItem value="__none__">{t('tickets.unassigned')}</SelectItem>
                     {teamMembers.map(u => <SelectItem key={u.id} value={String(u.id)}>{u.full_name || u.email}</SelectItem>)}
                   </SelectContent>
                 </Select>
@@ -311,7 +317,7 @@ function TransitionDialog({ open, onOpenChange, transition, ticket, teamMembers,
                 <label className={cn('flex items-center gap-2 px-3 py-2.5 rounded-lg border-2 border-dashed text-sm cursor-pointer hover:bg-muted/40 transition-colors',
                   uploadingFile && 'opacity-50 pointer-events-none', fieldValues.attachment && 'border-green-400 bg-green-50')}>
                   {uploadingFile ? <Loader2 className="w-4 h-4 animate-spin" /> : <Paperclip className="w-4 h-4" />}
-                  <span>{fieldValues.attachment || 'Click to attach a file'}</span>
+                  <span>{fieldValues.attachment || t('tickets.clickToAttach')}</span>
                   <input type="file" className="hidden" onChange={handleAttach} disabled={uploadingFile} />
                 </label>
               </div>
@@ -340,12 +346,12 @@ function TransitionDialog({ open, onOpenChange, transition, ticket, teamMembers,
           {(hasCommentField || fields.length === 0) && (
             <div className="space-y-1.5">
               <Label className="text-sm font-medium">
-                {hasCommentField ? (fields.find(f => f.field === 'comment')?.label || 'Comment') : 'Comment'}
+                {hasCommentField ? (fields.find(f => f.field === 'comment')?.label || t('tickets.commentLabel')) : t('tickets.commentLabel')}
                 {fields.find(f => f.field === 'comment')?.required
                   ? <span className="text-destructive ml-0.5">*</span>
                   : <span className="text-muted-foreground font-normal text-xs ml-1">(optional)</span>}
               </Label>
-              <Textarea placeholder="Add a comment about this transition…" rows={3}
+              <Textarea placeholder={t('tickets.addComment')} rows={3}
                 value={comment} onChange={e => setComment(e.target.value)} className="resize-none" />
             </div>
           )}
@@ -390,6 +396,7 @@ function SidebarField({ label, children }: { label: string; children: React.Reac
 export default function TicketDetailPage() {
   const { projectKey, ticketNumber } = useParams<{ projectKey: string; ticketNumber: string }>();
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [ticket, setTicket] = useState<TicketDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [teamMembers, setTeamMembers] = useState<TicketUser[]>([]);
@@ -505,8 +512,8 @@ export default function TicketDetailPage() {
     try {
       const fd = new FormData(); fd.append('file', file);
       await axios.post(`/api/v1/tickets/${ticket.id}/attachments`, fd, { headers: headers() });
-      toast.success('File uploaded'); load();
-    } catch (err: any) { toast.error(err.response?.data?.detail || 'Upload failed'); }
+      toast.success(t('tickets.attachmentUploaded')); load();
+    } catch (err: any) { toast.error(err.response?.data?.detail || t('tickets.uploadFailed')); }
     finally { setUploadingFile(false); e.target.value = ''; }
   };
 
@@ -1055,7 +1062,7 @@ export default function TicketDetailPage() {
               <div className="space-y-0">
                 <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">Details</p>
 
-                <SidebarField label="Assignee">
+                <SidebarField label={t('tickets.fields.assignee_id')}>
                   <Select value={String(ticket.assignee?.id || '__none__')}
                     onValueChange={v => update({ assignee_id: v === '__none__' ? null : parseInt(v) })}>
                     <SelectTrigger className="h-7 text-xs border-none shadow-none px-0 hover:bg-muted/50 rounded focus:ring-0 [&>svg]:opacity-40">
@@ -1070,13 +1077,13 @@ export default function TicketDetailPage() {
                             <div className="w-5 h-5 rounded-full border-2 border-dashed border-muted-foreground/30 flex items-center justify-center">
                               <User className="w-2.5 h-2.5" />
                             </div>
-                            <span>Unassigned</span>
+                            <span>{t('tickets.unassigned')}</span>
                           </div>
                         )}
                       </SelectValue>
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="__none__">Unassigned</SelectItem>
+                      <SelectItem value="__none__">{t('tickets.unassigned')}</SelectItem>
                       {teamMembers.map(u => (
                         <SelectItem key={u.id} value={String(u.id)}>
                           <div className="flex items-center gap-2">
@@ -1152,7 +1159,7 @@ export default function TicketDetailPage() {
                   ) : <span className="text-xs text-muted-foreground">—</span>}
                 </SidebarField>
 
-                <SidebarField label="Priority">
+                <SidebarField label={t('tickets.fields.priority')}>
                   <Select value={ticket.priority} onValueChange={v => update({ priority: v })}>
                     <SelectTrigger className="h-7 text-xs border-none shadow-none px-0 hover:bg-muted/50 rounded focus:ring-0 [&>svg]:opacity-40">
                       <SelectValue><PriorityBadge priority={ticket.priority} /></SelectValue>
@@ -1164,7 +1171,7 @@ export default function TicketDetailPage() {
                           <SelectItem key={v} value={v}>
                             <div className="flex items-center gap-2">
                               <PI className={cn('w-3.5 h-3.5', cfg.color)} />
-                              {cfg.label}
+                              {t(`tickets.priority.${v}`, { defaultValue: cfg.label })}
                             </div>
                           </SelectItem>
                         );
@@ -1202,7 +1209,7 @@ export default function TicketDetailPage() {
                   </SidebarField>
                 )}
 
-                <SidebarField label="Due Date">
+                <SidebarField label={t('tickets.fields.due_date')}>
                   <div className="space-y-0.5">
                     <Input type="date" className="h-7 text-xs border-none shadow-none px-0 bg-transparent focus-visible:ring-0 hover:bg-muted/50 rounded cursor-pointer"
                       value={ticket.due_date ? ticket.due_date.slice(0, 10) : ''}
@@ -1211,7 +1218,7 @@ export default function TicketDetailPage() {
                   </div>
                 </SidebarField>
 
-                <SidebarField label="Estimate">
+                <SidebarField label={t('tickets.fields.time_estimate')}>
                   {editingEstimate ? (
                     <div className="flex gap-1 items-center">
                       <Input type="number" min="0" step="0.5" autoFocus
@@ -1238,13 +1245,13 @@ export default function TicketDetailPage() {
                 </SidebarField>
 
                 {ticket.time_spent != null && ticket.time_spent > 0 && (
-                  <SidebarField label="Time Spent">
+                  <SidebarField label={t('tickets.fields.time_spent')}>
                     <span className="text-xs flex items-center gap-1"><Clock className="w-3 h-3 text-muted-foreground" />{fmtMinutes(ticket.time_spent)}</span>
                   </SidebarField>
                 )}
 
                 {ticket.story_points != null && (
-                  <SidebarField label="Story Points">
+                  <SidebarField label={t('tickets.fields.story_points')}>
                     <span className="text-xs font-medium">{ticket.story_points}</span>
                   </SidebarField>
                 )}
@@ -1260,7 +1267,7 @@ export default function TicketDetailPage() {
                 </SidebarField>
 
                 {ticket.resolved_at && (
-                  <SidebarField label="Resolved">
+                  <SidebarField label={t('tickets.fields.resolved_at')}>
                     <span className="text-xs text-green-600 font-medium">{fmtDate(ticket.resolved_at)}</span>
                   </SidebarField>
                 )}

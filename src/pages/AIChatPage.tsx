@@ -107,19 +107,20 @@ const TypingIndicator = () => (
 );
 
 /* ─── EmptyState ─────────────────────────────────────────────────── */
-const SUGGESTIONS = [
-  'Summarise last week\'s support tickets',
-  'Draft a reply to an angry customer',
-  'What are the most common issues this month?',
-  'Write a polite escalation message',
-];
+// SUGGESTIONS is now built inside the component using t() so it reacts to language changes
 
 const EmptyState = ({
   agentName,
   onSuggest,
+  title,
+  subtitle,
+  suggestions,
 }: {
   agentName?: string;
   onSuggest: (text: string) => void;
+  title: string;
+  subtitle: string;
+  suggestions: string[];
 }) => (
   <div className="flex flex-col items-center justify-center min-h-[70vh] px-6 fade-up">
     {/* Icon stack */}
@@ -132,15 +133,15 @@ const EmptyState = ({
     </div>
 
     <h2 className="text-xl font-semibold text-foreground mb-1.5 tracking-tight">
-      {agentName ? `Chat with ${agentName}` : 'Start a conversation'}
+      {title}
     </h2>
     <p className="text-sm text-muted-foreground text-center max-w-xs mb-8 leading-relaxed">
-      Ask anything — your AI assistant is ready to help with customer support, drafting, and analysis.
+      {subtitle}
     </p>
 
     {/* Suggestion chips */}
     <div className="grid grid-cols-2 gap-2 w-full max-w-md">
-      {SUGGESTIONS.map((s, i) => (
+      {suggestions.map((s, i) => (
         <button
           key={i}
           onClick={() => onSuggest(s)}
@@ -271,6 +272,14 @@ const AIChatPage: React.FC = () => {
     return s.agent_name?.toLowerCase().includes(q) || s.last_message?.toLowerCase().includes(q);
   });
 
+  /* ── translated suggestion chips ── */
+  const suggestions = [
+    t('aiChat.emptyState.suggestions.summarise'),
+    t('aiChat.emptyState.suggestions.draft'),
+    t('aiChat.emptyState.suggestions.common'),
+    t('aiChat.emptyState.suggestions.escalate'),
+  ];
+
   return (
     <>
       <style>{STYLES}</style>
@@ -299,9 +308,11 @@ const AIChatPage: React.FC = () => {
                   <Bot className="h-4 w-4 text-primary" />
                 </div>
                 <div>
-                  <h1 className="text-sm font-semibold text-foreground leading-none">AI Chat</h1>
+                  <h1 className="text-sm font-semibold text-foreground leading-none">{t('aiChat.title')}</h1>
                   <p className="text-[10px] text-muted-foreground mt-0.5 leading-none">
-                    {sessions?.length ?? 0} conversation{(sessions?.length ?? 0) !== 1 ? 's' : ''}
+                    {(sessions?.length ?? 0) !== 1
+                      ? t('aiChat.conversationCountPlural', { count: sessions?.length ?? 0 })
+                      : t('aiChat.conversationCount', { count: sessions?.length ?? 0 })}
                   </p>
                 </div>
               </div>
@@ -315,7 +326,7 @@ const AIChatPage: React.FC = () => {
                       'text-muted-foreground hover:text-foreground hover:bg-muted',
                       'transition-colors duration-150',
                     )}
-                    title="Close"
+                    title={t('aiChat.close')}
                   >
                     <ChevronLeft className="h-4 w-4" />
                   </button>
@@ -327,7 +338,7 @@ const AIChatPage: React.FC = () => {
                     'text-muted-foreground hover:text-foreground hover:bg-muted',
                     'transition-colors duration-150',
                   )}
-                  title="New chat"
+                  title={t('aiChat.newChat')}
                 >
                   <Plus className="h-4 w-4" />
                 </button>
@@ -339,7 +350,7 @@ const AIChatPage: React.FC = () => {
               <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
               <input
                 type="text"
-                placeholder="Search conversations…"
+                placeholder={t('aiChat.searchPlaceholder')}
                 value={searchQuery}
                 onChange={e => setSearchQuery(e.target.value)}
                 className={cn(
@@ -359,14 +370,14 @@ const AIChatPage: React.FC = () => {
               }
             >
               <SelectTrigger className="h-8 text-xs border-border bg-background rounded-lg">
-                <SelectValue placeholder="Select agent…" />
+                <SelectValue placeholder={t('aiChat.selectAgentPlaceholder')} />
               </SelectTrigger>
               <SelectContent className="text-xs rounded-lg">
                 {isLoadingAgents ? (
-                  <SelectItem value="loading" disabled>Loading…</SelectItem>
+                  <SelectItem value="loading" disabled>{t('aiChat.loadingAgents')}</SelectItem>
                 ) : (
                   <>
-                    <SelectItem value="none">No Agent (Default AI)</SelectItem>
+                    <SelectItem value="none">{t('aiChat.noAgent')}</SelectItem>
                     {agents?.map(a => (
                       <SelectItem key={a.id} value={String(a.id)}>{a.name}</SelectItem>
                     ))}
@@ -386,7 +397,7 @@ const AIChatPage: React.FC = () => {
               <div className="flex flex-col items-center justify-center py-12 px-4 text-center">
                 <MessageCircle className="h-8 w-8 text-muted-foreground/30 mb-2.5" />
                 <p className="text-xs text-muted-foreground">
-                  {searchQuery ? 'No matches found' : 'No conversations yet'}
+                  {searchQuery ? t('aiChat.noMatchesFound') : t('aiChat.noConversationsYet')}
                 </p>
               </div>
             ) : (
@@ -417,7 +428,7 @@ const AIChatPage: React.FC = () => {
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center justify-between gap-1">
                             <span className="text-xs font-medium truncate text-foreground leading-none">
-                              {session.agent_name || 'AI Assistant'}
+                              {session.agent_name || t('aiChat.aiAssistantFallback')}
                             </span>
                             {session.last_message_at && (
                               <span className="text-[10px] text-muted-foreground flex-shrink-0 leading-none">
@@ -426,7 +437,7 @@ const AIChatPage: React.FC = () => {
                             )}
                           </div>
                           <p className="text-[11px] text-muted-foreground truncate mt-1 leading-snug">
-                            {session.last_message || 'No messages yet'}
+                            {session.last_message || t('aiChat.noMessagesYet')}
                           </p>
                         </div>
                       </div>
@@ -449,7 +460,7 @@ const AIChatPage: React.FC = () => {
               )}
             >
               <Plus className="h-3.5 w-3.5" />
-              New conversation
+              {t('aiChat.newConversation')}
             </button>
           </div>
         </aside>
@@ -464,7 +475,7 @@ const AIChatPage: React.FC = () => {
               <button
                 className="md:hidden flex items-center justify-center h-8 w-8 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors flex-shrink-0"
                 onClick={() => setMobileSidebarOpen(true)}
-                title="Show conversations"
+                title={t('aiChat.showConversations')}
               >
                 <Menu className="h-4 w-4" />
               </button>
@@ -477,12 +488,12 @@ const AIChatPage: React.FC = () => {
             </div>
             <div className="min-w-0">
               <h2 className="text-sm font-semibold text-foreground leading-none truncate">
-                {selectedAgent ? selectedAgent.name : 'AI Assistant'}
+                {selectedAgent ? selectedAgent.name : t('aiChat.aiAssistantFallback')}
               </h2>
               <p className="text-[11px] text-muted-foreground mt-0.5 leading-none">
                 {conversationId
-                  ? `Session · ${conversationId.slice(0, 8)}…`
-                  : 'Ready to help'}
+                  ? t('aiChat.sessionLabel', { id: conversationId.slice(0, 8) })
+                  : t('aiChat.readyToHelp')}
               </p>
             </div>
 
@@ -490,7 +501,9 @@ const AIChatPage: React.FC = () => {
             {messages.length > 0 && (
               <div className="ml-auto flex items-center gap-1.5">
                 <span className="text-[11px] text-muted-foreground">
-                  {messages.length} message{messages.length !== 1 ? 's' : ''}
+                  {messages.length !== 1
+                    ? t('aiChat.messageCountPlural', { count: messages.length })
+                    : t('aiChat.messageCount', { count: messages.length })}
                 </span>
               </div>
             )}
@@ -506,6 +519,11 @@ const AIChatPage: React.FC = () => {
                     setInputValue(text);
                     textareaRef.current?.focus();
                   }}
+                  title={selectedAgent
+                    ? t('aiChat.emptyState.chatWith', { name: selectedAgent.name })
+                    : t('aiChat.emptyState.startConversation')}
+                  subtitle={t('aiChat.emptyState.subtitle')}
+                  suggestions={suggestions}
                 />
               ) : (
                 <div className="space-y-1">
@@ -598,7 +616,7 @@ const AIChatPage: React.FC = () => {
                               'h-7 w-7 rounded-full bg-primary/15 flex items-center justify-center flex-shrink-0 mb-0.5',
                               isGrouped && 'invisible',
                             )}>
-                              <span className="text-[10px] font-bold text-primary">You</span>
+                              <span className="text-[10px] font-bold text-primary">{t('aiChat.userAvatarLabel')}</span>
                             </div>
                           )}
                         </div>
@@ -661,7 +679,7 @@ const AIChatPage: React.FC = () => {
               </div>
 
               <p className="text-[10px] text-muted-foreground/60 text-center mt-1.5">
-                Enter to send · Shift+Enter for new line
+                {t('aiChat.enterHint')}
               </p>
             </div>
           </div>

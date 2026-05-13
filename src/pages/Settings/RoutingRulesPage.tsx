@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Plus, Trash2, Edit2, GripVertical, ChevronRight, Zap, ChevronDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -17,10 +18,10 @@ import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import HierarchyNodePicker from '@/components/HierarchyNodePicker';
 
-const ENTITY_TABS = [
-  { key: 'ticket', label: 'Tickets' },
-  { key: 'lead', label: 'Leads' },
-  { key: 'deal', label: 'Deals' },
+const ENTITY_TAB_KEYS = [
+  { key: 'ticket', tKey: 'routingRules.entities.ticket' },
+  { key: 'lead', tKey: 'routingRules.entities.lead' },
+  { key: 'deal', tKey: 'routingRules.entities.deal' },
 ];
 
 const OPERATORS = [
@@ -35,41 +36,41 @@ const OPERATORS = [
   { value: 'not_exists', label: 'is not set' },
 ];
 
-const ACTION_TYPES = [
-  { value: 'assign_to_user', label: 'Assign to specific user' },
-  { value: 'assign_by_role', label: 'Assign by role — round-robin users with that role (scoped by classification/location if set)' },
-  { value: 'assign_round_robin', label: 'Round-robin from team' },
-  { value: 'assign_by_skill', label: 'Assign by agent skill' },
-  { value: 'assign_by_node_match', label: 'Assign by jurisdiction (hierarchy match)' },
-  { value: 'assign_by_department', label: 'Assign via Department (classification → dept → user)' },
-  { value: 'no_action', label: 'No assignment' },
+const ACTION_TYPE_KEYS = [
+  { value: 'assign_to_user', tKey: 'routingRules.actions.assign_to_user' },
+  { value: 'assign_by_role', tKey: 'routingRules.actions.assign_by_role' },
+  { value: 'assign_round_robin', tKey: 'routingRules.actions.assign_round_robin' },
+  { value: 'assign_by_skill', tKey: 'routingRules.actions.assign_by_skill' },
+  { value: 'assign_by_node_match', tKey: 'routingRules.actions.assign_by_node_match' },
+  { value: 'assign_by_department', tKey: 'routingRules.actions.assign_by_department' },
+  { value: 'no_action', tKey: 'routingRules.actions.no_action' },
 ];
 
 const DEPT_ROLES = ['agent', 'supervisor', 'approver', 'manager'];
 
-const TRIGGER_OPTIONS = [
-  { value: 'on_create', label: 'On creation' },
-  { value: 'on_transition', label: 'On status transition' },
-  { value: 'both', label: 'Both' },
+const TRIGGER_OPTION_KEYS = [
+  { value: 'on_create', tKey: 'routingRules.triggers.on_create' },
+  { value: 'on_transition', tKey: 'routingRules.triggers.on_transition' },
+  { value: 'both', tKey: 'routingRules.triggers.both' },
 ];
 
-const COMMON_FIELDS: Record<string, { value: string; label: string }[]> = {
+const COMMON_FIELD_KEYS: Record<string, { value: string; tKey: string }[]> = {
   ticket: [
-    { value: 'priority', label: 'Priority' },
-    { value: 'issue_type_id', label: 'Issue Type' },
-    { value: 'labels', label: 'Labels' },
-    { value: 'custom_fields.department', label: 'Department (custom)' },
+    { value: 'priority', tKey: 'routingRules.conditions.priority' },
+    { value: 'issue_type_id', tKey: 'routingRules.conditions.issue_type_id' },
+    { value: 'labels', tKey: 'routingRules.conditions.labels' },
+    { value: 'custom_fields.department', tKey: 'routingRules.conditions.department' },
   ],
   lead: [
-    { value: 'source', label: 'Source' },
-    { value: 'score', label: 'Lead Score' },
-    { value: 'qualification_status', label: 'Qualification Status' },
-    { value: 'custom_fields.tier', label: 'Tier (custom)' },
+    { value: 'source', tKey: 'routingRules.conditions.source' },
+    { value: 'score', tKey: 'routingRules.conditions.score' },
+    { value: 'qualification_status', tKey: 'routingRules.conditions.qualification_status' },
+    { value: 'custom_fields.tier', tKey: 'routingRules.conditions.tier' },
   ],
   deal: [
-    { value: 'status', label: 'Status' },
-    { value: 'amount', label: 'Amount' },
-    { value: 'custom_fields.region', label: 'Region (custom)' },
+    { value: 'status', tKey: 'routingRules.conditions.status' },
+    { value: 'amount', tKey: 'routingRules.conditions.amount' },
+    { value: 'custom_fields.region', tKey: 'routingRules.conditions.region' },
   ],
 };
 
@@ -335,7 +336,18 @@ function RuleRow({ rule: r, idx, allTransitions, hierarchyNodes, noValueOps, act
 }
 
 export default function RoutingRulesPage() {
+  const { t } = useTranslation();
   const { toast } = useToast();
+
+  const ENTITY_TABS = ENTITY_TAB_KEYS.map(e => ({ key: e.key, label: t(e.tKey) }));
+  const ACTION_TYPES = ACTION_TYPE_KEYS.map(a => ({ value: a.value, label: t(a.tKey) }));
+  const TRIGGER_OPTIONS = TRIGGER_OPTION_KEYS.map(o => ({ value: o.value, label: t(o.tKey) }));
+  const COMMON_FIELDS: Record<string, { value: string; label: string }[]> = Object.fromEntries(
+    Object.entries(COMMON_FIELD_KEYS).map(([entity, fields]) => [
+      entity,
+      fields.map(f => ({ value: f.value, label: t(f.tKey) })),
+    ])
+  );
   const [rules, setRules] = useState<RoutingRule[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('ticket');
@@ -571,7 +583,7 @@ export default function RoutingRulesPage() {
     <div className="p-6 max-w-4xl mx-auto space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold">Routing Rules</h1>
+          <h1 className="text-2xl font-bold">{t('routingRules.title')}</h1>
           <p className="text-sm text-muted-foreground mt-1">
             Auto-assign tickets, leads and deals based on conditions. Rules run in priority order — first match wins.
           </p>

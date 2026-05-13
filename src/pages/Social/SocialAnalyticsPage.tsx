@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import {
   BarChart3, TrendingUp, Eye, Heart, MessageCircle,
   Share2, Linkedin, Instagram, Facebook, RefreshCw,
@@ -157,6 +158,7 @@ function PostRow({ post, rank }: { post: any; rank: number }) {
 
 /* ─── main page ───────────────────────────────────────────── */
 export default function SocialAnalyticsPage() {
+  const { t } = useTranslation();
   const [selectedAccountId, setSelectedAccountId] = useState<number | null>(null);
   const [days, setDays] = useState(30);
   const [showPlatformPosts, setShowPlatformPosts] = useState(false);
@@ -231,7 +233,7 @@ export default function SocialAnalyticsPage() {
               <h1 className="text-lg font-semibold text-foreground tracking-tight">Social Analytics</h1>
             </div>
             <p className="text-[11px] text-muted-foreground mt-0.5">
-              {activeAccount ? `Viewing — ${activeAccount.account_name}` : 'Select an account to view detailed stats'}
+              {activeAccount ? t('social.analytics.viewingAccount', { name: activeAccount.account_name }) : t('social.analytics.selectAccount')}
             </p>
           </div>
 
@@ -256,10 +258,10 @@ export default function SocialAnalyticsPage() {
                     ? <Loader2 className="h-3 w-3 animate-spin" />
                     : <Linkedin className="h-3 w-3" />}
                   {platformError
-                    ? 'Sync unavailable'
+                    ? t('social.analytics.syncUnavailable')
                     : showPlatformPosts
-                    ? 'LinkedIn synced'
-                    : 'Sync LinkedIn posts'}
+                    ? t('social.analytics.linkedinSynced')
+                    : t('social.analytics.syncLinkedin')}
                 </button>
                 {/* Tooltip for error */}
                 {platformError && (
@@ -345,10 +347,10 @@ export default function SocialAnalyticsPage() {
               [0,1,2,3].map(i => <Skeleton key={i} className="h-28 rounded-2xl" />)
             ) : (
               <>
-                <StatCard icon={FileText}   label="Total Posts"   value={overview?.total_posts ?? 0}       sub={`${overview?.published_posts ?? 0} published`} delay={0}    />
-                <StatCard icon={Eye}        label="Impressions"   value={overview?.total_impressions ?? 0} sub="total reach"      delay={0.05} />
-                <StatCard icon={Zap}        label="Engagements"   value={overview?.total_engagements ?? 0} sub="likes + comments + shares" delay={0.1}  />
-                <StatCard icon={TrendingUp} label="Eng. Rate"     value={`${overview?.engagement_rate ?? 0}%`} sub="of impressions" delay={0.15} />
+                <StatCard icon={FileText}   label={t('social.analytics.totalPosts')}   value={overview?.total_posts ?? 0}       sub={`${overview?.published_posts ?? 0} ${t('social.analytics.published')}`} delay={0}    />
+                <StatCard icon={Eye}        label={t('social.analytics.impressions')}   value={overview?.total_impressions ?? 0} sub={t('social.analytics.totalReach')}      delay={0.05} />
+                <StatCard icon={Zap}        label={t('social.analytics.engagements')}   value={overview?.total_engagements ?? 0} sub={t('social.analytics.engagementsSub')} delay={0.1}  />
+                <StatCard icon={TrendingUp} label={t('social.analytics.engRate')}     value={`${overview?.engagement_rate ?? 0}%`} sub={t('social.analytics.ofImpressions')} delay={0.15} />
               </>
             )}
           </div>
@@ -441,7 +443,7 @@ export default function SocialAnalyticsPage() {
             <div className="px-4 py-3 border-b border-border flex items-center justify-between">
               <div>
                 <p className="text-sm font-semibold text-foreground">
-                  {showPlatformPosts && selectedAccountId ? 'All Posts (LinkedIn + AgentConnect)' : 'Top Posts'}
+                  {showPlatformPosts && selectedAccountId ? t('social.analytics.allPosts') : t('social.analytics.topPosts')}
                 </p>
                 <p className="text-[11px] text-muted-foreground">
                   {showPlatformPosts && selectedAccountId

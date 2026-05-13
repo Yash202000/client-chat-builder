@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import {
   ArrowLeft, Save, Loader2, Plus, Trash2, GripVertical,
   Eye, Settings2, Type, Mail, Phone, AlignLeft, ChevronDown,
@@ -95,6 +96,7 @@ function FieldEditor({
   onDelete: () => void;
 }) {
   const [expanded, setExpanded] = useState(true);
+  const { t } = useTranslation();
   return (
     <div className="bg-card border border-border rounded-lg overflow-hidden">
       <div
@@ -103,8 +105,8 @@ function FieldEditor({
       >
         <GripVertical className="h-4 w-4 text-muted-foreground/40 flex-shrink-0" />
         <FieldTypeIcon type={field.type} />
-        <span className="flex-1 text-sm font-medium text-foreground">{field.label || 'Untitled field'}</span>
-        {field.required && <Badge variant="secondary" className="text-[10px] px-1.5 py-0">Required</Badge>}
+        <span className="flex-1 text-sm font-medium text-foreground">{field.label || t('captureforms.fieldEditor.untitled')}</span>
+        {field.required && <Badge variant="secondary" className="text-[10px] px-1.5 py-0">{t('captureforms.fieldEditor.required')}</Badge>}
         <Button variant="ghost" size="icon" className="h-6 w-6 text-destructive hover:text-destructive flex-shrink-0"
           onClick={e => { e.stopPropagation(); onDelete(); }}>
           <Trash2 className="h-3.5 w-3.5" />
@@ -115,38 +117,38 @@ function FieldEditor({
         <div className="px-3 pb-3 pt-1 border-t border-border space-y-3">
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1">
-              <Label className="text-xs">Type</Label>
+              <Label className="text-xs">{t('captureforms.fieldEditor.typeLabel')}</Label>
               <Select value={field.type} onValueChange={v => onChange({ ...field, type: v as any })}>
                 <SelectTrigger className="h-7 text-xs"><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  {FIELD_TYPES.map(t => (
-                    <SelectItem key={t.value} value={t.value} className="text-xs">{t.label}</SelectItem>
+                  {FIELD_TYPES.map(ft => (
+                    <SelectItem key={ft.value} value={ft.value} className="text-xs">{ft.label}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
             <div className="space-y-1">
-              <Label className="text-xs">Width</Label>
+              <Label className="text-xs">{t('captureforms.fieldEditor.widthLabel')}</Label>
               <Select value={field.width} onValueChange={v => onChange({ ...field, width: v as any })}>
                 <SelectTrigger className="h-7 text-xs"><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="full" className="text-xs">Full width</SelectItem>
-                  <SelectItem value="half" className="text-xs">Half width</SelectItem>
+                  <SelectItem value="full" className="text-xs">{t('captureforms.fieldEditor.fullWidth')}</SelectItem>
+                  <SelectItem value="half" className="text-xs">{t('captureforms.fieldEditor.halfWidth')}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
           </div>
           <div className="space-y-1">
-            <Label className="text-xs">Label</Label>
+            <Label className="text-xs">{t('captureforms.fieldEditor.labelLabel')}</Label>
             <Input value={field.label} onChange={e => onChange({ ...field, label: e.target.value })} className="h-7 text-xs" />
           </div>
           <div className="space-y-1">
-            <Label className="text-xs">Placeholder</Label>
+            <Label className="text-xs">{t('captureforms.fieldEditor.placeholderLabel')}</Label>
             <Input value={field.placeholder ?? ''} onChange={e => onChange({ ...field, placeholder: e.target.value })} className="h-7 text-xs" />
           </div>
           {field.type === 'select' && (
             <div className="space-y-1">
-              <Label className="text-xs">Options (one per line)</Label>
+              <Label className="text-xs">{t('captureforms.fieldEditor.optionsLabel')}</Label>
               <Textarea
                 value={(field.options ?? []).join('\n')}
                 onChange={e => onChange({ ...field, options: e.target.value.split('\n').filter(Boolean) })}
@@ -161,7 +163,7 @@ function FieldEditor({
               checked={field.required}
               onCheckedChange={v => onChange({ ...field, required: v })}
             />
-            <Label htmlFor={`req-${field.id}`} className="text-xs cursor-pointer">Required</Label>
+            <Label htmlFor={`req-${field.id}`} className="text-xs cursor-pointer">{t('captureforms.fieldEditor.required')}</Label>
           </div>
         </div>
       )}
@@ -173,6 +175,7 @@ export default function FormEditorPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { t } = useTranslation();
 
   const [form, setForm] = useState<CaptureForm | null>(null);
   const [loading, setLoading] = useState(true);
@@ -194,22 +197,22 @@ export default function FormEditorPage() {
       setFields(f.fields as FormField[]);
       setSettings(f.settings ?? {});
     } catch {
-      toast({ title: 'Error', description: 'Failed to load form', variant: 'destructive' });
+      toast({ title: t('captureforms.toast.errorTitle'), description: t('captureforms.toast.loadFormError'), variant: 'destructive' });
       navigate('/dashboard/crm/forms');
     } finally { setLoading(false); }
   };
 
   const handleSave = async () => {
     if (!name.trim()) {
-      setNameError('Form name is required');
+      setNameError(t('captureforms.editor.nameRequired'));
       return;
     }
     setSaving(true);
     try {
       await updateForm(parseInt(id!), { name, fields, settings });
-      toast({ title: 'Saved' });
+      toast({ title: t('captureforms.toast.savedTitle') });
     } catch {
-      toast({ title: 'Error', description: 'Failed to save', variant: 'destructive' });
+      toast({ title: t('captureforms.toast.errorTitle'), description: t('captureforms.toast.saveError'), variant: 'destructive' });
     } finally { setSaving(false); }
   };
 
@@ -218,7 +221,7 @@ export default function FormEditorPage() {
     setFields(prev => [...prev, {
       id: uid,
       type: 'text',
-      label: 'New Field',
+      label: t('captureforms.fieldEditor.newFieldLabel'),
       required: false,
       width: 'full',
     }]);
@@ -260,12 +263,12 @@ export default function FormEditorPage() {
         <Badge variant="outline" className="text-xs font-mono">/f/{form?.slug}</Badge>
         <Button variant="outline" size="sm" className="h-8 text-xs gap-1.5"
           onClick={() => window.open(`/f/${form?.slug}`, '_blank')}>
-          <Eye className="h-3.5 w-3.5" /> Preview
+          <Eye className="h-3.5 w-3.5" /> {t('captureforms.editor.preview')}
         </Button>
         <Button size="sm" onClick={handleSave} disabled={saving}
           className="h-8 gap-1.5 bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white">
           {saving ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Save className="h-3.5 w-3.5" />}
-          Save
+          {t('captureforms.editor.save')}
         </Button>
       </div>
 
@@ -275,9 +278,9 @@ export default function FormEditorPage() {
         <div className="hidden lg:flex lg:w-80 flex-shrink-0 border-r border-border flex-col overflow-hidden">
           <Tabs value={activeTab} onValueChange={v => setActiveTab(v as any)} className="flex-1 flex flex-col overflow-hidden">
             <TabsList className="flex-shrink-0 mx-3 mt-3 h-8">
-              <TabsTrigger value="fields" className="text-xs flex-1">Fields</TabsTrigger>
+              <TabsTrigger value="fields" className="text-xs flex-1">{t('captureforms.editor.tabFields')}</TabsTrigger>
               <TabsTrigger value="settings" className="text-xs flex-1">
-                <Settings2 className="h-3 w-3 mr-1" />Settings
+                <Settings2 className="h-3 w-3 mr-1" />{t('captureforms.editor.tabSettings')}
               </TabsTrigger>
             </TabsList>
 
@@ -291,17 +294,17 @@ export default function FormEditorPage() {
                 />
               ))}
               <Button onClick={addField} variant="outline" size="sm" className="w-full text-xs gap-1.5 border-dashed mt-1">
-                <Plus className="h-3.5 w-3.5" /> Add field
+                <Plus className="h-3.5 w-3.5" /> {t('captureforms.editor.addField')}
               </Button>
             </TabsContent>
 
             <TabsContent value="settings" className="flex-1 overflow-y-auto px-3 pb-3 mt-3 space-y-4">
               <div className="space-y-1.5">
-                <Label className="text-xs">Submit button label</Label>
+                <Label className="text-xs">{t('captureforms.settings.submitLabel')}</Label>
                 <Input value={settings.submit_label ?? 'Submit'} onChange={e => setSetting('submit_label', e.target.value)} className="h-8 text-xs" />
               </div>
               <div className="space-y-1.5">
-                <Label className="text-xs">Success message</Label>
+                <Label className="text-xs">{t('captureforms.settings.successMessage')}</Label>
                 <Textarea
                   value={settings.submit_message ?? "Thank you! We'll be in touch."}
                   onChange={e => setSetting('submit_message', e.target.value)}
@@ -309,7 +312,7 @@ export default function FormEditorPage() {
                 />
               </div>
               <div className="space-y-1.5">
-                <Label className="text-xs">Redirect URL after submit (optional)</Label>
+                <Label className="text-xs">{t('captureforms.settings.redirectUrl')}</Label>
                 <Input
                   value={settings.redirect_url ?? ''}
                   onChange={e => setSetting('redirect_url', e.target.value)}
@@ -318,7 +321,7 @@ export default function FormEditorPage() {
                 />
               </div>
               <div className="space-y-1.5">
-                <Label className="text-xs">Notification email (optional)</Label>
+                <Label className="text-xs">{t('captureforms.settings.notifyEmail')}</Label>
                 <Input
                   value={settings.notify_email ?? ''}
                   onChange={e => setSetting('notify_email', e.target.value)}
@@ -327,7 +330,7 @@ export default function FormEditorPage() {
                 />
               </div>
               <div className="space-y-1.5">
-                <Label className="text-xs">Primary color</Label>
+                <Label className="text-xs">{t('captureforms.settings.primaryColor')}</Label>
                 <div className="flex items-center gap-2">
                   <input
                     type="color"
@@ -349,7 +352,7 @@ export default function FormEditorPage() {
                     checked={settings.create_contact !== false}
                     onCheckedChange={v => setSetting('create_contact', v)}
                   />
-                  <Label htmlFor="create-contact" className="text-xs cursor-pointer">Create contact on submit</Label>
+                  <Label htmlFor="create-contact" className="text-xs cursor-pointer">{t('captureforms.settings.createContact')}</Label>
                 </div>
                 <div className="flex items-center gap-2">
                   <Switch
@@ -357,7 +360,7 @@ export default function FormEditorPage() {
                     checked={settings.create_lead === true}
                     onCheckedChange={v => setSetting('create_lead', v)}
                   />
-                  <Label htmlFor="create-lead" className="text-xs cursor-pointer">Also create a Lead</Label>
+                  <Label htmlFor="create-lead" className="text-xs cursor-pointer">{t('captureforms.settings.createLead')}</Label>
                 </div>
               </div>
             </TabsContent>
@@ -366,7 +369,7 @@ export default function FormEditorPage() {
 
         {/* Preview panel */}
         <div className="flex-1 overflow-y-auto bg-muted/30 p-8">
-          <p className="text-xs text-center text-muted-foreground mb-4">Live preview</p>
+          <p className="text-xs text-center text-muted-foreground mb-4">{t('captureforms.editor.livePreview')}</p>
           <FormPreview fields={fields} settings={settings} />
         </div>
       </div>

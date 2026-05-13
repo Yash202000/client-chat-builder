@@ -295,7 +295,7 @@ const WorkflowManagementPage = () => {
             <div className="relative flex-1 min-w-[140px] sm:flex-none">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
               <Input
-                placeholder="Search workflows…"
+                placeholder={t("workflows.searchPlaceholder")}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="pl-8 h-9 w-full sm:w-48 text-sm bg-background border-border"

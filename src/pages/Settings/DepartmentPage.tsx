@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/hooks/useAuth';
 import { useI18n } from '@/hooks/useI18n';
 import { useToast } from '@/hooks/use-toast';
@@ -111,7 +112,8 @@ function PanelSkeleton() {
 
 export default function DepartmentPage() {
   const { authFetch } = useAuth();
-  const { t, isRTL } = useI18n();
+  const { t: tI18n, isRTL } = useI18n();
+  const { t } = useTranslation();
   const { toast } = useToast();
 
   // ── Global data ──────────────────────────────────────────────────────────────
@@ -170,7 +172,7 @@ export default function DepartmentPage() {
         setDepartments(data);
       }
     } catch {
-      toast({ title: 'Error', description: 'Failed to load departments', variant: 'destructive' });
+      toast({ title: t('departments.error'), description: t('departments.loadFailed'), variant: 'destructive' });
     } finally {
       setDeptLoading(false);
     }
@@ -219,7 +221,7 @@ export default function DepartmentPage() {
       if (nodesRes.ok) setNodeAssignments(await nodesRes.json());
       if (membersRes.ok) setMembers(await membersRes.json());
     } catch {
-      toast({ title: 'Error', description: 'Failed to load department details', variant: 'destructive' });
+      toast({ title: t('departments.error'), description: t('departments.loadDetailFailed'), variant: 'destructive' });
     } finally {
       setPanelLoading(false);
     }
@@ -261,14 +263,14 @@ export default function DepartmentPage() {
         setCreatingDept(false);
         setNewDeptName('');
         setNewDeptDesc('');
-        toast({ title: 'Department created', description: created.name });
+        toast({ title: t('departments.created'), description: created.name });
         selectDept(created);
       } else {
         const err = await res.json().catch(() => ({}));
-        toast({ title: 'Error', description: err.detail || 'Failed to create department', variant: 'destructive' });
+        toast({ title: t('departments.error'), description: err.detail || t('departments.createFailed'), variant: 'destructive' });
       }
     } catch {
-      toast({ title: 'Error', description: 'Network error', variant: 'destructive' });
+      toast({ title: t('departments.error'), description: t('departments.networkError'), variant: 'destructive' });
     } finally {
       setSavingNew(false);
     }
@@ -288,12 +290,12 @@ export default function DepartmentPage() {
         setDepartments(prev => prev.map(d => d.id === updated.id ? updated : d));
         setSelectedDept(updated);
         setEditingHeader(false);
-        toast({ title: 'Saved', description: 'Department updated' });
+        toast({ title: t('departments.saved'), description: t('departments.updated') });
       } else {
-        toast({ title: 'Error', description: 'Failed to save', variant: 'destructive' });
+        toast({ title: t('departments.error'), description: t('departments.saveFailed'), variant: 'destructive' });
       }
     } catch {
-      toast({ title: 'Error', description: 'Network error', variant: 'destructive' });
+      toast({ title: t('departments.error'), description: t('departments.networkError'), variant: 'destructive' });
     } finally {
       setSavingHeader(false);
     }
@@ -313,10 +315,10 @@ export default function DepartmentPage() {
         setDepartments(prev => prev.map(d => d.id === updated.id ? updated : d));
         setSelectedDept(updated);
       } else {
-        toast({ title: 'Error', description: 'Failed to update status', variant: 'destructive' });
+        toast({ title: t('departments.error'), description: t('departments.statusUpdateFailed'), variant: 'destructive' });
       }
     } catch {
-      toast({ title: 'Error', description: 'Network error', variant: 'destructive' });
+      toast({ title: t('departments.error'), description: t('departments.networkError'), variant: 'destructive' });
     } finally {
       setTogglingStatus(false);
     }
@@ -334,12 +336,12 @@ export default function DepartmentPage() {
           setNodeAssignments([]);
           setMembers([]);
         }
-        toast({ title: 'Deleted', description: 'Department removed' });
+        toast({ title: t('departments.deleted'), description: t('departments.removed') });
       } else {
         toast({ title: 'Error', description: 'Failed to delete', variant: 'destructive' });
       }
     } catch {
-      toast({ title: 'Error', description: 'Network error', variant: 'destructive' });
+      toast({ title: t('departments.error'), description: t('departments.networkError'), variant: 'destructive' });
     } finally {
       setDeletingDeptId(null);
     }
@@ -399,7 +401,7 @@ export default function DepartmentPage() {
         toast({ title: 'Error', description: 'Failed to remove node', variant: 'destructive' });
       }
     } catch {
-      toast({ title: 'Error', description: 'Network error', variant: 'destructive' });
+      toast({ title: t('departments.error'), description: t('departments.networkError'), variant: 'destructive' });
     } finally {
       setRemovingNode(null);
     }
@@ -425,7 +427,7 @@ export default function DepartmentPage() {
         toast({ title: 'Error', description: err.detail || 'Failed to add member', variant: 'destructive' });
       }
     } catch {
-      toast({ title: 'Error', description: 'Network error', variant: 'destructive' });
+      toast({ title: t('departments.error'), description: t('departments.networkError'), variant: 'destructive' });
     } finally {
       setAddingMember(false);
     }
@@ -446,7 +448,7 @@ export default function DepartmentPage() {
         toast({ title: 'Error', description: 'Failed to remove member', variant: 'destructive' });
       }
     } catch {
-      toast({ title: 'Error', description: 'Network error', variant: 'destructive' });
+      toast({ title: t('departments.error'), description: t('departments.networkError'), variant: 'destructive' });
     } finally {
       setRemovingMember(null);
     }

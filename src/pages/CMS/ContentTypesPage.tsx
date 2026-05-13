@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Link, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import {
@@ -25,6 +26,7 @@ import { ContentType, FIELD_TYPE_INFO } from '@/types/cms';
 import { useToast } from '@/hooks/use-toast';
 
 const ContentTypesPage = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { toast } = useToast();
@@ -42,11 +44,11 @@ const ContentTypesPage = () => {
     mutationFn: (slug: string) => cmsService.deleteContentType(slug),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['cms-content-types'] });
-      toast({ title: 'Content type deleted' });
+      toast({ title: t('cms.form.created') });
       setDeleteDialog({ open: false, type: null });
     },
     onError: () => {
-      toast({ title: 'Failed to delete content type', variant: 'destructive' });
+      toast({ title: t('cms.form.createFailed'), variant: 'destructive' });
     },
   });
 
@@ -66,14 +68,14 @@ const ContentTypesPage = () => {
             </Button>
           </Link>
           <div>
-            <h1 className="text-xl sm:text-2xl font-bold">Content Types</h1>
-            <p className="text-muted-foreground hidden sm:block">Define schemas for your content</p>
+            <h1 className="text-xl sm:text-2xl font-bold">{t('cms.quickLinks.contentTypes')}</h1>
+            <p className="text-muted-foreground hidden sm:block">{t('cms.quickLinks.contentTypesDesc')}</p>
           </div>
         </div>
         <Link to="/dashboard/cms/types/new">
           <Button>
             <Plus className="w-4 h-4 sm:mr-2" />
-            <span className="hidden sm:inline">New Content Type</span>
+            <span className="hidden sm:inline">{t('cms.newContentType')}</span>
           </Button>
         </Link>
       </div>
@@ -106,18 +108,18 @@ const ContentTypesPage = () => {
                     <DropdownMenuContent align="end">
                       <DropdownMenuItem onClick={() => navigate(`/dashboard/cms/content/${type.slug}`)}>
                         <List className="w-4 h-4 mr-2" />
-                        View Items
+                        {t('common.view')}
                       </DropdownMenuItem>
                       <DropdownMenuItem onClick={() => navigate(`/dashboard/cms/types/${type.slug}`)}>
                         <Pencil className="w-4 h-4 mr-2" />
-                        Edit Schema
+                        {t('common.edit')}
                       </DropdownMenuItem>
                       <DropdownMenuItem
                         className="text-destructive"
                         onClick={() => setDeleteDialog({ open: true, type })}
                       >
                         <Trash className="w-4 h-4 mr-2" />
-                        Delete
+                        {t('common.delete')}
                       </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
@@ -125,7 +127,7 @@ const ContentTypesPage = () => {
               </CardHeader>
               <CardContent>
                 <p className="text-sm text-muted-foreground mb-4">
-                  {type.description || 'No description'}
+                  {type.description || t('cms.noDescription')}
                 </p>
                 <div className="space-y-2">
                   <p className="text-xs font-medium text-muted-foreground">
@@ -152,14 +154,14 @@ const ContentTypesPage = () => {
         <Card>
           <CardContent className="flex flex-col items-center justify-center py-12">
             <FileText className="w-12 h-12 text-muted-foreground mb-4" />
-            <h3 className="text-lg font-medium mb-2">No content types yet</h3>
+            <h3 className="text-lg font-medium mb-2">{t('cms.noContentTypes')}</h3>
             <p className="text-muted-foreground text-center mb-4">
-              Create your first content type to define a schema for your structured content.
+              {t('cms.noContentTypesDesc')}
             </p>
             <Link to="/dashboard/cms/types/new">
               <Button>
                 <Plus className="w-4 h-4 mr-2" />
-                Create Content Type
+                {t('cms.createContentType')}
               </Button>
             </Link>
           </CardContent>
@@ -169,14 +171,13 @@ const ContentTypesPage = () => {
       <AlertDialog open={deleteDialog.open} onOpenChange={(open) => setDeleteDialog({ ...deleteDialog, open })}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete Content Type</AlertDialogTitle>
+            <AlertDialogTitle>{t('cms.editContentType')}</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to delete "{deleteDialog.type?.name}"? This will also delete all content items
-              of this type. This action cannot be undone.
+              {deleteDialog.type?.name}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel>{t('common.cancel')}</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleDelete}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
@@ -184,7 +185,7 @@ const ContentTypesPage = () => {
               {deleteMutation.isPending ? (
                 <Loader2 className="w-4 h-4 animate-spin" />
               ) : (
-                'Delete'
+                t('common.delete')
               )}
             </AlertDialogAction>
           </AlertDialogFooter>

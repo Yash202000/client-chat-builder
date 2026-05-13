@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -39,6 +40,7 @@ import { useToast } from '@/hooks/use-toast';
 const MarketplacePage = () => {
   const queryClient = useQueryClient();
   const { toast } = useToast();
+  const { t } = useTranslation();
 
   const [search, setSearch] = useState('');
   const [contentTypeSlug, setContentTypeSlug] = useState<string>('');
@@ -67,13 +69,13 @@ const MarketplacePage = () => {
   const copyMutation = useMutation({
     mutationFn: (originalItemId: number) => cmsService.copyFromMarketplace(originalItemId),
     onSuccess: () => {
-      toast({ title: 'Content copied to your library' });
+      toast({ title: t('cms.marketplace.copied') });
       setCopyDialog({ open: false, item: null });
       queryClient.invalidateQueries({ queryKey: ['cms-content-items'] });
     },
     onError: (error: any) => {
       toast({
-        title: 'Failed to copy content',
+        title: t('cms.marketplace.copyFailed'),
         description: error.response?.data?.detail || 'An error occurred',
         variant: 'destructive',
       });
@@ -135,7 +137,7 @@ const MarketplacePage = () => {
                 </CardHeader>
                 <CardContent>
                   <p className="text-sm text-muted-foreground line-clamp-2 mb-4">
-                    {getItemDescription(item) || 'No description'}
+                    {getItemDescription(item) || t('cms.marketplace.noDescription')}
                   </p>
                   <Button
                     variant="outline"
@@ -158,7 +160,7 @@ const MarketplacePage = () => {
         <div className="relative flex-1 min-w-[160px] sm:max-w-md">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <Input
-            placeholder="Search marketplace..."
+            placeholder={t('cms.marketplace.searchPlaceholder')}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="pl-9"
@@ -170,7 +172,7 @@ const MarketplacePage = () => {
           onValueChange={(v) => setContentTypeSlug(v === 'all' ? '' : v)}
         >
           <SelectTrigger className="w-[140px] sm:w-[180px]">
-            <SelectValue placeholder="Content Type" />
+            <SelectValue placeholder={t('cms.marketplace.contentTypeFilter')} />
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All Types</SelectItem>
@@ -227,8 +229,8 @@ const MarketplacePage = () => {
             <h3 className="text-lg font-medium mb-2">No items in marketplace</h3>
             <p className="text-muted-foreground text-center">
               {search
-                ? 'No items match your search. Try different keywords.'
-                : 'The marketplace is empty. Check back later!'}
+                ? t('cms.marketplace.noResultsSearch')
+                : t('cms.marketplace.noResultsEmpty')}
             </p>
           </CardContent>
         </Card>

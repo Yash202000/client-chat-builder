@@ -1,4 +1,5 @@
 import { useState, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -60,6 +61,7 @@ interface ImportResult {
 }
 
 export default function LinkedInLeadsPage() {
+  const { t } = useTranslation();
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const navigate = useNavigate();
@@ -87,11 +89,11 @@ export default function LinkedInLeadsPage() {
       setImportResults(data.results ?? []);
       queryClient.invalidateQueries({ queryKey: ['linkedin-leads'] });
       toast({
-        title: `Import complete: ${data.successful}/${data.total} succeeded`,
-        description: data.failed > 0 ? `${data.failed} failed — check the results below.` : undefined,
+        title: t('linkedinLeads.toastImportComplete', { successful: data.successful, total: data.total }),
+        description: data.failed > 0 ? t('linkedinLeads.toastImportPartialDesc', { failed: data.failed }) : undefined,
       });
     },
-    onError: () => toast({ title: 'Import failed', variant: 'destructive' }),
+    onError: () => toast({ title: t('linkedinLeads.toastImportFailed'), variant: 'destructive' }),
   });
 
   const csvImportMutation = useMutation({
@@ -110,19 +112,19 @@ export default function LinkedInLeadsPage() {
     onSuccess: (data) => {
       setImportResults(data.results ?? []);
       queryClient.invalidateQueries({ queryKey: ['linkedin-leads'] });
-      toast({ title: `CSV import: ${data.successful}/${data.total} succeeded` });
+      toast({ title: t('linkedinLeads.toastCsvImportComplete', { successful: data.successful, total: data.total }) });
     },
-    onError: () => toast({ title: 'CSV import failed', variant: 'destructive' }),
+    onError: () => toast({ title: t('linkedinLeads.toastCsvImportFailed'), variant: 'destructive' }),
   });
 
   const handleImport = () => {
     const urls = urlInput.split('\n').map(u => u.trim()).filter(u => u.includes('linkedin.com'));
     if (urls.length === 0) {
-      toast({ title: 'No valid LinkedIn URLs found', variant: 'destructive' });
+      toast({ title: t('linkedinLeads.toastNoValidUrls'), variant: 'destructive' });
       return;
     }
     if (urls.length > 100) {
-      toast({ title: 'Maximum 100 URLs per import', variant: 'destructive' });
+      toast({ title: t('linkedinLeads.toastMaxUrls'), variant: 'destructive' });
       return;
     }
     bulkImportMutation.mutate(urls);
@@ -142,14 +144,14 @@ export default function LinkedInLeadsPage() {
         <div>
           <h1 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
             <Linkedin className="h-5 w-5 sm:h-6 sm:w-6 text-blue-600" />
-            LinkedIn Lead Machine
+            {t('linkedinLeads.title')}
           </h1>
           <p className="text-sm text-slate-500 dark:text-slate-400 mt-1 hidden sm:block">
-            Paste LinkedIn profile URLs to auto-enrich and import as leads.
+            {t('linkedinLeads.subtitle')}
           </p>
         </div>
         <Button onClick={() => navigate('/dashboard/crm/campaigns/new')} className="gap-2 flex-shrink-0">
-          <Plus className="h-4 w-4" /><span className="hidden sm:inline">Start Outreach Campaign</span>
+          <Plus className="h-4 w-4" /><span className="hidden sm:inline">{t('linkedinLeads.startOutreach')}</span>
         </Button>
       </div>
 
@@ -158,29 +160,29 @@ export default function LinkedInLeadsPage() {
         <div className="space-y-4">
           <Card>
             <CardHeader className="pb-3">
-              <CardTitle className="text-base">Import Profiles</CardTitle>
-              <CardDescription>Paste one LinkedIn profile URL per line (max 100)</CardDescription>
+              <CardTitle className="text-base">{t('linkedinLeads.importProfilesTitle')}</CardTitle>
+              <CardDescription>{t('linkedinLeads.importProfilesDesc')}</CardDescription>
             </CardHeader>
             <CardContent className="space-y-3">
               <div>
-                <Label htmlFor="urls">LinkedIn URLs</Label>
+                <Label htmlFor="urls">{t('linkedinLeads.labelLinkedInUrls')}</Label>
                 <Textarea
                   id="urls"
-                  placeholder={"https://linkedin.com/in/johndoe\nhttps://linkedin.com/in/janedoe"}
+                  placeholder={t('linkedinLeads.urlsPlaceholder')}
                   value={urlInput}
                   onChange={e => setUrlInput(e.target.value)}
                   rows={8}
                   className="mt-1.5 font-mono text-xs"
                 />
                 <p className="text-xs text-slate-400 mt-1">
-                  {urlInput.split('\n').filter(u => u.trim().includes('linkedin.com')).length} valid URL(s)
+                  {t('linkedinLeads.validUrlCount', { count: urlInput.split('\n').filter(u => u.trim().includes('linkedin.com')).length })}
                 </p>
               </div>
 
               <div className="flex gap-2">
                 <Button onClick={handleImport} disabled={isImporting} className="flex-1 gap-2">
                   {isImporting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Linkedin className="h-4 w-4" />}
-                  {isImporting ? 'Importing...' : 'Import & Enrich'}
+                  {isImporting ? t('linkedinLeads.importing') : t('linkedinLeads.importEnrich')}
                 </Button>
                 <Button
                   variant="outline"
@@ -189,7 +191,7 @@ export default function LinkedInLeadsPage() {
                   className="gap-2"
                 >
                   <Upload className="h-4 w-4" />
-                  CSV
+                  {t('linkedinLeads.csvButton')}
                 </Button>
                 <input
                   ref={fileRef}
@@ -206,7 +208,7 @@ export default function LinkedInLeadsPage() {
           {importResults.length > 0 && (
             <Card>
               <CardHeader className="pb-3">
-                <CardTitle className="text-base">Import Results</CardTitle>
+                <CardTitle className="text-base">{t('linkedinLeads.importResultsTitle')}</CardTitle>
               </CardHeader>
               <CardContent className="space-y-2 max-h-64 overflow-y-auto">
                 {importResults.map((r, i) => (
@@ -239,9 +241,9 @@ export default function LinkedInLeadsPage() {
               <div>
                 <CardTitle className="text-base flex items-center gap-2">
                   <Users className="h-4 w-4" />
-                  Imported Leads
+                  {t('linkedinLeads.importedLeadsTitle')}
                 </CardTitle>
-                <CardDescription>{leads.length} total</CardDescription>
+                <CardDescription>{t('linkedinLeads.totalLeads', { count: leads.length })}</CardDescription>
               </div>
               <Button
                 variant="ghost"
@@ -261,7 +263,7 @@ export default function LinkedInLeadsPage() {
             ) : leads.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-10 text-slate-400">
                 <Linkedin className="h-8 w-8 mb-2 opacity-30" />
-                <p className="text-sm">No leads imported yet</p>
+                <p className="text-sm">{t('linkedinLeads.noLeadsYet')}</p>
               </div>
             ) : (
               <div className="divide-y dark:divide-slate-700 max-h-[520px] overflow-y-auto">
@@ -270,7 +272,7 @@ export default function LinkedInLeadsPage() {
                     <div className="flex items-start justify-between gap-2">
                       <div className="min-w-0">
                         <p className="font-medium text-sm text-slate-900 dark:text-white truncate">
-                          {lead.name || 'Unknown'}
+                          {lead.name || t('linkedinLeads.unknown')}
                         </p>
                         {lead.job_title && (
                           <p className="text-xs text-slate-500 flex items-center gap-1 mt-0.5">

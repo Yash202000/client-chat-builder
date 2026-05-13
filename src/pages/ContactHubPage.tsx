@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
 import { ConversationDetail } from "@/components/ConversationDetail";
@@ -251,6 +252,7 @@ function ContactCard({
   selected: boolean;
   onClick: () => void;
 }) {
+  const { t } = useTranslation();
   const initials = getInitials(contact.name, contact.email);
   const lastActivity = contact.last_contacted_at || contact.updated_at;
   const stageCfg = contact.lifecycle_stage ? STAGE_CONFIG[contact.lifecycle_stage] : null;
@@ -279,7 +281,7 @@ function ContactCard({
         <div className="flex-1 min-w-0">
           <div className="flex items-center justify-between gap-1 mb-0.5">
             <span className="text-sm font-medium text-foreground truncate">
-              {contact.name || contact.email || "Unknown"}
+              {contact.name || contact.email || t('contactHub.unknown')}
             </span>
             {lastActivity && (
               <span className="text-[10px] text-muted-foreground flex-shrink-0">
@@ -289,7 +291,7 @@ function ContactCard({
           </div>
           <div className="flex items-center gap-1.5">
             <span className="text-xs text-muted-foreground truncate">
-              {contact.email || contact.phone_number || "No contact info"}
+              {contact.email || contact.phone_number || t('contactHub.noContactInfo')}
             </span>
             {stageCfg && (
               <span className={cn("text-[9px] px-1 py-0.5 rounded font-medium flex-shrink-0", stageCfg.cls)}>
@@ -316,6 +318,7 @@ function ChannelTab({
   count: number;
   onClick: () => void;
 }) {
+  const { t } = useTranslation();
   if (channel === "timeline") {
     return (
       <button
@@ -328,7 +331,7 @@ function ChannelTab({
         )}
       >
         <Activity className="w-3.5 h-3.5" />
-        <span>Timeline</span>
+        <span>{t('contactHub.timeline')}</span>
         <span className={cn(
           "ml-0.5 px-1 rounded text-[10px]",
           active ? "bg-violet-500 text-white" : "bg-muted text-muted-foreground"
@@ -340,7 +343,8 @@ function ChannelTab({
   }
 
   const cfg = CHANNEL_CONFIG[channel] ?? { label: channel, color: "text-muted-foreground", Icon: MessageSquare };
-  const { Icon, label, color } = cfg;
+  const { Icon, color } = cfg;
+  const label = channel === "calls" ? t('contactHub.calls') : cfg.label;
 
   return (
     <button
@@ -377,6 +381,7 @@ function TimelineRow({
   selected: boolean;
   onClick: () => void;
 }) {
+  const { t } = useTranslation();
   if (item.kind === "call") {
     const call = item.data;
     const isInbound = call.direction === "inbound";
@@ -455,7 +460,7 @@ function TimelineRow({
           </span>
         </div>
         <p className="text-[11px] text-muted-foreground truncate mt-0.5">
-          {session.first_message_content || "No messages yet"}
+          {session.first_message_content || t('contactHub.noMessagesYet')}
         </p>
         <div className="mt-1">
           <span className={cn(
@@ -484,6 +489,7 @@ function SessionRow({
   selected: boolean;
   onClick: () => void;
 }) {
+  const { t } = useTranslation();
   const cfg = CHANNEL_CONFIG[session.channel] ?? { label: session.channel, color: "text-muted-foreground", Icon: MessageSquare };
   const { Icon, color } = cfg;
 
@@ -511,7 +517,7 @@ function SessionRow({
           </span>
         </div>
         <p className="text-[11px] text-muted-foreground truncate mt-0.5">
-          {session.first_message_content || "No messages yet"}
+          {session.first_message_content || t('contactHub.noMessagesYet')}
         </p>
       </div>
       <span className={cn(
@@ -582,6 +588,7 @@ function CallRow({
 // ── Main Page ─────────────────────────────────────────────────────────────────
 
 export default function ContactHubPage() {
+  const { t } = useTranslation();
   const { authFetch } = useAuth();
   const { makeCall, callState } = useTwilioCall();
   const queryClient = useQueryClient();
@@ -685,10 +692,10 @@ export default function ContactHubPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["contacts"] });
       setIsEditing(false);
-      toast({ title: "Contact updated" });
+      toast({ title: t('contactHub.toastContactUpdated') });
     },
     onError: () => {
-      toast({ title: "Failed to update contact", variant: "destructive" });
+      toast({ title: t('contactHub.toastContactUpdateFailed'), variant: "destructive" });
     },
   });
 
@@ -861,7 +868,7 @@ export default function ContactHubPage() {
         }).then((r) => { if (r.ok) success++; })
       )
     );
-    toast({ title: `${success} contact${success !== 1 ? "s" : ""} converted to lead` });
+    toast({ title: t('contactHub.toastBulkConverted', { count: success }) });
     setSelectedIds(new Set());
     setBulkConverting(false);
     queryClient.invalidateQueries({ queryKey: ["contacts"] });
@@ -880,9 +887,9 @@ export default function ContactHubPage() {
       if (!res.ok) throw new Error();
       setContactTransition(null);
       queryClient.invalidateQueries({ queryKey: ["contacts"] });
-      toast({ title: "Status updated" });
+      toast({ title: t('contactHub.toastStatusUpdated') });
     } catch {
-      toast({ title: "Failed to update status", variant: "destructive" });
+      toast({ title: t('contactHub.toastStatusUpdateFailed'), variant: "destructive" });
     } finally {
       setContactTransitionSaving(false);
     }
@@ -908,12 +915,12 @@ export default function ContactHubPage() {
           notes: leadData.notes || null,
         }),
       });
-      toast({ title: `${convertingContact.name || "Contact"} converted to lead` });
+      toast({ title: t('contactHub.toastConvertedToLead', { name: convertingContact.name || t('contactHub.contact') }) });
       setConvertDialogOpen(false);
       setConvertingContact(null);
       queryClient.invalidateQueries({ queryKey: ["contacts"] });
     } catch {
-      toast({ title: "Failed to convert to lead", variant: "destructive" });
+      toast({ title: t('contactHub.toastConvertFailed'), variant: "destructive" });
     } finally {
       setConverting(false);
     }
@@ -932,7 +939,7 @@ export default function ContactHubPage() {
       <div className="flex items-center justify-between px-4 py-2 border-b border-border bg-card flex-shrink-0">
         <div className="flex items-center gap-2">
           <User className="w-4 h-4 text-muted-foreground" />
-          <h1 className="text-sm font-semibold">Contact Hub</h1>
+          <h1 className="text-sm font-semibold">{t('contactHub.title')}</h1>
           <span className="text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-muted text-muted-foreground">
             {contacts.length}
           </span>
@@ -945,7 +952,7 @@ export default function ContactHubPage() {
               viewMode === "hub" ? "bg-background shadow-sm text-foreground" : "text-muted-foreground hover:text-foreground"
             )}
           >
-            <LayoutGrid className="w-3.5 h-3.5" /> Hub
+            <LayoutGrid className="w-3.5 h-3.5" /> {t('contactHub.viewHub')}
           </button>
           <button
             onClick={() => setViewMode("list")}
@@ -954,7 +961,7 @@ export default function ContactHubPage() {
               viewMode === "list" ? "bg-background shadow-sm text-foreground" : "text-muted-foreground hover:text-foreground"
             )}
           >
-            <LayoutList className="w-3.5 h-3.5" /> List
+            <LayoutList className="w-3.5 h-3.5" /> {t('contactHub.viewList')}
           </button>
         </div>
       </div>
@@ -967,7 +974,7 @@ export default function ContactHubPage() {
             <div className="relative flex-1 max-w-xs">
               <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground pointer-events-none" />
               <Input
-                placeholder="Search contacts…"
+                placeholder={t('contactHub.searchContactsPlaceholder')}
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 className="pl-8 h-8 text-xs"
@@ -978,18 +985,18 @@ export default function ContactHubPage() {
               onChange={(e) => setStageFilter(e.target.value)}
               className="appearance-none text-xs h-8 pl-2.5 pr-7 rounded-md border border-input bg-background text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
             >
-              <option value="">All stages</option>
+              <option value="">{t('contactHub.allStages')}</option>
               {Object.entries(STAGE_CONFIG).map(([key, cfg]) => (
                 <option key={key} value={key}>{cfg.label}</option>
               ))}
             </select>
-            <span className="text-xs text-muted-foreground ml-auto">{filteredContacts.length} contacts</span>
+            <span className="text-xs text-muted-foreground ml-auto">{t('contactHub.contactsCount', { count: filteredContacts.length })}</span>
           </div>
 
           {/* Bulk action bar */}
           {selectedIds.size > 0 && (
             <div className="sticky top-[57px] z-20 flex items-center gap-3 px-4 py-2 bg-primary text-primary-foreground text-sm font-medium shadow-md">
-              <span>{selectedIds.size} selected</span>
+              <span>{t('contactHub.selectedCount', { count: selectedIds.size })}</span>
               <Button
                 size="sm"
                 variant="secondary"
@@ -998,7 +1005,7 @@ export default function ContactHubPage() {
                 onClick={bulkConvertToLead}
               >
                 {bulkConverting ? <Loader2 className="w-3 h-3 animate-spin" /> : <Target className="w-3 h-3" />}
-                Convert to Lead
+                {t('contactHub.convertToLead')}
               </Button>
               <button
                 className="text-primary-foreground/70 hover:text-primary-foreground"
@@ -1019,16 +1026,16 @@ export default function ContactHubPage() {
                       filteredContacts.filter((c) => !c.has_lead).every((c) => selectedIds.has(c.id))
                     }
                     onCheckedChange={toggleSelectAll}
-                    aria-label="Select all"
+                    aria-label={t('contactHub.selectAll')}
                   />
                 </TableHead>
-                <TableHead className="w-[200px]">Name</TableHead>
-                <TableHead>Email</TableHead>
-                <TableHead>Phone</TableHead>
-                <TableHead>Stage</TableHead>
-                <TableHead>Last Active</TableHead>
-                <TableHead>Tags</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
+                <TableHead className="w-[200px]">{t('contactHub.colName')}</TableHead>
+                <TableHead>{t('contactHub.colEmail')}</TableHead>
+                <TableHead>{t('contactHub.colPhone')}</TableHead>
+                <TableHead>{t('contactHub.colStage')}</TableHead>
+                <TableHead>{t('contactHub.colLastActive')}</TableHead>
+                <TableHead>{t('contactHub.colTags')}</TableHead>
+                <TableHead className="text-right">{t('contactHub.colActions')}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -1043,7 +1050,7 @@ export default function ContactHubPage() {
               ) : filteredContacts.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={8} className="text-center text-muted-foreground py-12 text-sm">
-                    No contacts found
+                    {t('contactHub.noContactsFound')}
                   </TableCell>
                 </TableRow>
               ) : (
@@ -1071,7 +1078,7 @@ export default function ContactHubPage() {
                             {initials}
                           </div>
                           <span className="font-medium text-sm truncate max-w-[130px]">
-                            {contact.name || contact.email || "Unknown"}
+                            {contact.name || contact.email || t('contactHub.unknown')}
                           </span>
                         </div>
                       </TableCell>
@@ -1107,7 +1114,7 @@ export default function ContactHubPage() {
                             className="h-7 text-xs gap-1"
                             onClick={() => { setViewMode("hub"); handleSelectContact(contact.id); }}
                           >
-                            <LayoutGrid className="w-3 h-3" /> Hub
+                            <LayoutGrid className="w-3 h-3" /> {t('contactHub.viewHub')}
                           </Button>
                           {!contact.has_lead ? (
                             <Button
@@ -1115,11 +1122,11 @@ export default function ContactHubPage() {
                               className="h-7 text-xs gap-1 text-blue-600 border-blue-200 hover:bg-blue-50 dark:text-blue-400 dark:border-blue-800 dark:hover:bg-blue-900/20"
                               onClick={() => openConvertDialog(contact)}
                             >
-                              <Target className="w-3 h-3" /> Convert to Lead
+                              <Target className="w-3 h-3" /> {t('contactHub.convertToLead')}
                             </Button>
                           ) : (
                             <span className="text-[10px] px-2 py-0.5 rounded-full bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 font-medium">
-                              Lead
+                              {t('contactHub.lead')}
                             </span>
                           )}
                         </div>
@@ -1142,7 +1149,7 @@ export default function ContactHubPage() {
         {/* Header */}
         <div className="px-3 py-3 border-b border-border space-y-2">
           <div className="flex items-center justify-between">
-            <h2 className="text-sm font-semibold text-foreground">Contacts</h2>
+            <h2 className="text-sm font-semibold text-foreground">{t('contactHub.contacts')}</h2>
             <span className="text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-muted text-muted-foreground">
               {filteredContacts.length}
             </span>
@@ -1152,7 +1159,7 @@ export default function ContactHubPage() {
           <div className="relative">
             <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
             <Input
-              placeholder="Search…"
+              placeholder={t('contactHub.searchPlaceholder')}
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="pl-7 h-8 text-xs"
@@ -1166,7 +1173,7 @@ export default function ContactHubPage() {
               onChange={(e) => setStageFilter(e.target.value)}
               className="w-full appearance-none text-xs h-8 pl-2.5 pr-7 rounded-md border border-input bg-card text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
             >
-              <option value="">All stages</option>
+              <option value="">{t('contactHub.allStages')}</option>
               {Object.entries(STAGE_CONFIG).map(([key, cfg]) => (
                 <option key={key} value={key}>{cfg.label}</option>
               ))}
@@ -1180,7 +1187,7 @@ export default function ContactHubPage() {
           {isLoadingContacts ? (
             [...Array(6)].map((_, i) => <ContactCardSkeleton key={i} />)
           ) : filteredContacts.length === 0 ? (
-            <p className="text-xs text-muted-foreground text-center py-8">No contacts found</p>
+            <p className="text-xs text-muted-foreground text-center py-8">{t('contactHub.noContactsFound')}</p>
           ) : (
             filteredContacts.map((contact) => (
               <ContactCard
@@ -1200,8 +1207,8 @@ export default function ContactHubPage() {
           <div className="flex-1 flex items-center justify-center">
             <div className="text-center text-muted-foreground">
               <User className="w-10 h-10 mx-auto mb-2 opacity-30" />
-              <p className="text-sm">Select a contact</p>
-              <p className="text-xs mt-1 text-muted-foreground">to view their activity</p>
+              <p className="text-sm">{t('contactHub.selectContact')}</p>
+              <p className="text-xs mt-1 text-muted-foreground">{t('contactHub.selectContactHint')}</p>
             </div>
           </div>
         ) : (
@@ -1216,7 +1223,7 @@ export default function ContactHubPage() {
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
                     <h3 className="font-semibold text-foreground truncate">
-                      {selectedContact.name || "Unnamed Contact"}
+                      {selectedContact.name || t('contactHub.unnamedContact')}
                     </h3>
                     {!isEditing && (
                       <button
@@ -1255,20 +1262,20 @@ export default function ContactHubPage() {
                   <Input
                     value={editForm.name}
                     onChange={(e) => setEditForm((f) => ({ ...f, name: e.target.value }))}
-                    placeholder="Name"
+                    placeholder={t('contactHub.namePlaceholder')}
                     className="h-7 text-xs"
                   />
                   <Input
                     value={editForm.email}
                     onChange={(e) => setEditForm((f) => ({ ...f, email: e.target.value }))}
-                    placeholder="Email"
+                    placeholder={t('contactHub.emailPlaceholder')}
                     type="email"
                     className="h-7 text-xs"
                   />
                   <Input
                     value={editForm.phone_number}
                     onChange={(e) => setEditForm((f) => ({ ...f, phone_number: e.target.value }))}
-                    placeholder="Phone"
+                    placeholder={t('contactHub.phonePlaceholder')}
                     className="h-7 text-xs"
                   />
                   <div className="relative">
@@ -1277,7 +1284,7 @@ export default function ContactHubPage() {
                       onChange={(e) => setEditForm((f) => ({ ...f, lifecycle_stage: e.target.value }))}
                       className="w-full appearance-none text-xs h-7 pl-2 pr-7 rounded-md border border-input bg-card text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
                     >
-                      <option value="">Stage…</option>
+                      <option value="">{t('contactHub.stagePlaceholder')}</option>
                       {Object.entries(STAGE_CONFIG).map(([key, cfg]) => (
                         <option key={key} value={key}>{cfg.label}</option>
                       ))}
@@ -1295,7 +1302,7 @@ export default function ContactHubPage() {
                         ? <Loader2 className="w-3 h-3 animate-spin" />
                         : <Check className="w-3 h-3" />
                       }
-                      Save
+                      {t('contactHub.save')}
                     </Button>
                     <Button
                       size="sm"
@@ -1304,7 +1311,7 @@ export default function ContactHubPage() {
                       onClick={() => setIsEditing(false)}
                     >
                       <X className="w-3 h-3" />
-                      Cancel
+                      {t('contactHub.cancel')}
                     </Button>
                   </div>
                 </div>
@@ -1353,7 +1360,7 @@ export default function ContactHubPage() {
                         disabled={callState !== "idle"}
                       >
                         <Phone className="w-3 h-3" />
-                        Call
+                        {t('contactHub.call')}
                       </Button>
                     )}
                     {!selectedContact.has_lead ? (
@@ -1364,11 +1371,11 @@ export default function ContactHubPage() {
                         onClick={() => openConvertDialog(selectedContact)}
                       >
                         <Target className="w-3 h-3" />
-                        Convert to Lead
+                        {t('contactHub.convertToLead')}
                       </Button>
                     ) : (
                       <span className="h-7 flex items-center text-[10px] px-2 rounded-full bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 font-medium gap-1">
-                        <Target className="w-2.5 h-2.5" /> Lead
+                        <Target className="w-2.5 h-2.5" /> {t('contactHub.lead')}
                       </span>
                     )}
                   </div>
@@ -1395,25 +1402,25 @@ export default function ContactHubPage() {
                   <div className="text-center">
                     <div className="text-base font-bold text-foreground">{stats.sessions}</div>
                     <div className="text-[10px] text-muted-foreground flex items-center justify-center gap-0.5">
-                      <MessageSquare className="w-2.5 h-2.5" /> Chats
+                      <MessageSquare className="w-2.5 h-2.5" /> {t('contactHub.chats')}
                     </div>
                   </div>
                   <div className="text-center">
                     <div className="text-base font-bold text-foreground">{stats.calls}</div>
                     <div className="text-[10px] text-muted-foreground flex items-center justify-center gap-0.5">
-                      <Phone className="w-2.5 h-2.5" /> Calls
+                      <Phone className="w-2.5 h-2.5" /> {t('contactHub.calls')}
                     </div>
                   </div>
                   <div className="text-center col-span-1">
                     <div className="text-xs font-semibold text-foreground">{stats.firstContact}</div>
                     <div className="text-[10px] text-muted-foreground flex items-center justify-center gap-0.5">
-                      <Calendar className="w-2.5 h-2.5" /> First contact
+                      <Calendar className="w-2.5 h-2.5" /> {t('contactHub.firstContact')}
                     </div>
                   </div>
                   <div className="text-center col-span-1">
                     <div className="text-xs font-semibold text-foreground">{stats.lastContact}</div>
                     <div className="text-[10px] text-muted-foreground flex items-center justify-center gap-0.5">
-                      <Clock className="w-2.5 h-2.5" /> Last active
+                      <Clock className="w-2.5 h-2.5" /> {t('contactHub.lastActive')}
                     </div>
                   </div>
                 </div>
@@ -1423,7 +1430,7 @@ export default function ContactHubPage() {
             {/* Custom Fields */}
             {!isEditing && contactCustomFieldDefs.length > 0 && selectedContact?.custom_fields && Object.keys(selectedContact.custom_fields).length > 0 && (
               <div className="px-3 py-2 border-t border-border space-y-1">
-                <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Custom Fields</p>
+                <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">{t('contactHub.customFields')}</p>
                 {contactCustomFieldDefs.map(def => (
                   <div key={def.id} className="flex justify-between text-xs">
                     <span className="text-muted-foreground">{def.label}</span>
@@ -1458,10 +1465,10 @@ export default function ContactHubPage() {
                   {[...Array(5)].map((_, i) => <TimelineItemSkeleton key={i} />)}
                 </div>
               ) : channelTabs.length <= 1 && timelineItems.length === 0 ? (
-                <p className="text-xs text-muted-foreground text-center py-8">No conversations or calls yet</p>
+                <p className="text-xs text-muted-foreground text-center py-8">{t('contactHub.noConversationsOrCalls')}</p>
               ) : activeChannel === "timeline" ? (
                 timelineByDay.length === 0 ? (
-                  <p className="text-xs text-muted-foreground text-center py-8">No activity found</p>
+                  <p className="text-xs text-muted-foreground text-center py-8">{t('contactHub.noActivityFound')}</p>
                 ) : (
                   <div className="space-y-1">
                     {timelineByDay.map((group) => (
@@ -1498,7 +1505,7 @@ export default function ContactHubPage() {
                 )
               ) : activeChannel === "calls" ? (
                 calls.length === 0 ? (
-                  <p className="text-xs text-muted-foreground text-center py-8">No calls found</p>
+                  <p className="text-xs text-muted-foreground text-center py-8">{t('contactHub.noCallsFound')}</p>
                 ) : (
                   <div className="space-y-0.5">
                     {calls.map((call) => (
@@ -1538,24 +1545,24 @@ export default function ContactHubPage() {
                   <BarChart2 className="w-8 h-8 text-blue-400 dark:text-blue-500" />
                 </div>
                 <h3 className="text-base font-semibold text-foreground mb-1">
-                  {selectedContact.name || "Contact"}'s Activity
+                  {t('contactHub.activityHeading', { name: selectedContact.name || t('contactHub.contact') })}
                 </h3>
                 <p className="text-sm text-muted-foreground max-w-[220px] mx-auto leading-relaxed">
-                  Select a conversation or call from the timeline to view details
+                  {t('contactHub.selectConversationHint')}
                 </p>
                 <div className="mt-4 flex items-center justify-center gap-4 text-xs text-muted-foreground">
                   <span className="flex items-center gap-1">
-                    <MessageSquare className="w-3.5 h-3.5" /> {stats.sessions} chats
+                    <MessageSquare className="w-3.5 h-3.5" /> {t('contactHub.chatsCount', { count: stats.sessions })}
                   </span>
                   <span className="flex items-center gap-1">
-                    <Phone className="w-3.5 h-3.5" /> {stats.calls} calls
+                    <Phone className="w-3.5 h-3.5" /> {t('contactHub.callsCount', { count: stats.calls })}
                   </span>
                 </div>
               </div>
             ) : (
               <div className="text-center text-muted-foreground">
                 <Activity className="w-12 h-12 mx-auto mb-2 opacity-20" />
-                <p className="text-sm">Select a contact to get started</p>
+                <p className="text-sm">{t('contactHub.selectContactToGetStarted')}</p>
               </div>
             )}
           </div>
@@ -1583,7 +1590,7 @@ export default function ContactHubPage() {
                 </div>
                 <div>
                   <p className="font-semibold text-foreground capitalize">
-                    {rightPanel.call.direction} Call
+                    {t('contactHub.callDirectionLabel', { direction: rightPanel.call.direction })}
                   </p>
                   <p className="text-sm text-muted-foreground">
                     {rightPanel.call.direction === "inbound"
@@ -1603,29 +1610,29 @@ export default function ContactHubPage() {
 
               <dl className="grid grid-cols-2 gap-3 text-sm">
                 <div>
-                  <dt className="text-xs text-muted-foreground uppercase tracking-wide mb-0.5">Duration</dt>
+                  <dt className="text-xs text-muted-foreground uppercase tracking-wide mb-0.5">{t('contactHub.duration')}</dt>
                   <dd className="font-medium text-foreground">
                     {formatDuration(rightPanel.call.duration_seconds)}
                   </dd>
                 </div>
                 {rightPanel.call.started_at && (
                   <div>
-                    <dt className="text-xs text-muted-foreground uppercase tracking-wide mb-0.5">Started</dt>
+                    <dt className="text-xs text-muted-foreground uppercase tracking-wide mb-0.5">{t('contactHub.started')}</dt>
                     <dd className="font-medium text-foreground">
                       {new Date(rightPanel.call.started_at).toLocaleString()}
                     </dd>
                   </div>
                 )}
                 <div>
-                  <dt className="text-xs text-muted-foreground uppercase tracking-wide mb-0.5">Direction</dt>
+                  <dt className="text-xs text-muted-foreground uppercase tracking-wide mb-0.5">{t('contactHub.direction')}</dt>
                   <dd className="font-medium text-foreground capitalize">
                     {rightPanel.call.direction}
                   </dd>
                 </div>
                 <div>
-                  <dt className="text-xs text-muted-foreground uppercase tracking-wide mb-0.5">Sentiment</dt>
+                  <dt className="text-xs text-muted-foreground uppercase tracking-wide mb-0.5">{t('contactHub.sentiment')}</dt>
                   <dd className="font-medium text-muted-foreground dark:text-muted-foreground italic text-xs">
-                    Not available
+                    {t('contactHub.notAvailable')}
                   </dd>
                 </div>
               </dl>
@@ -1635,14 +1642,14 @@ export default function ContactHubPage() {
             <div className="bg-card rounded-xl border border-border p-5">
               <h4 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
                 <MessageSquare className="w-4 h-4 text-muted-foreground" />
-                Transcript
+                {t('contactHub.transcript')}
               </h4>
               {rightPanel.call.full_transcript ? (
                 <pre className="text-xs text-muted-foreground whitespace-pre-wrap font-mono leading-relaxed max-h-[60vh] overflow-y-auto">
                   {rightPanel.call.full_transcript}
                 </pre>
               ) : (
-                <p className="text-sm text-muted-foreground italic">No transcript available</p>
+                <p className="text-sm text-muted-foreground italic">{t('contactHub.noTranscriptAvailable')}</p>
               )}
             </div>
           </div>
@@ -1655,7 +1662,7 @@ export default function ContactHubPage() {
       <Dialog open={!!contactTransition} onOpenChange={() => setContactTransition(null)}>
         <DialogContent className="sm:max-w-sm">
           <DialogHeader>
-            <DialogTitle>{contactTransition?.transition.name ?? "Update Status"}</DialogTitle>
+            <DialogTitle>{contactTransition?.transition.name ?? t('contactHub.updateStatus')}</DialogTitle>
           </DialogHeader>
           {(contactTransition?.transition.screen_fields ?? []).map(f => {
             const cfDef = contactCustomFieldDefs.find(d => d.name === f.field);
@@ -1678,10 +1685,10 @@ export default function ContactHubPage() {
             );
           })}
           <DialogFooter>
-            <Button variant="outline" size="sm" onClick={() => setContactTransition(null)}>Cancel</Button>
+            <Button variant="outline" size="sm" onClick={() => setContactTransition(null)}>{t('contactHub.cancel')}</Button>
             <Button size="sm" onClick={submitContactTransition} disabled={contactTransitionSaving}>
               {contactTransitionSaving && <Loader2 className="w-3 h-3 mr-1 animate-spin" />}
-              Confirm
+              {t('contactHub.confirm')}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -1693,7 +1700,7 @@ export default function ContactHubPage() {
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Target className="w-4 h-4 text-blue-500" />
-              Convert to Lead
+              {t('contactHub.convertToLead')}
             </DialogTitle>
           </DialogHeader>
           {convertingContact && (
@@ -1703,15 +1710,15 @@ export default function ContactHubPage() {
                   {getInitials(convertingContact.name, convertingContact.email)}
                 </div>
                 <div>
-                  <p className="text-sm font-medium">{convertingContact.name || "Unnamed"}</p>
+                  <p className="text-sm font-medium">{convertingContact.name || t('contactHub.unnamed')}</p>
                   <p className="text-xs text-muted-foreground">{convertingContact.email || convertingContact.phone_number || ""}</p>
                 </div>
               </div>
               <div className="space-y-1.5">
-                <Label className="text-xs">Lead Source</Label>
+                <Label className="text-xs">{t('contactHub.leadSource')}</Label>
                 <Select value={leadData.source} onValueChange={(v) => setLeadData((d) => ({ ...d, source: v }))}>
                   <SelectTrigger className="h-8 text-xs">
-                    <SelectValue placeholder="Select source…" />
+                    <SelectValue placeholder={t('contactHub.selectSourcePlaceholder')} />
                   </SelectTrigger>
                   <SelectContent>
                     {["website", "referral", "social_media", "email_campaign", "cold_call", "event", "partner", "other"].map((s) => (
@@ -1721,7 +1728,7 @@ export default function ContactHubPage() {
                 </Select>
               </div>
               <div className="space-y-1.5">
-                <Label className="text-xs">Deal Value (optional)</Label>
+                <Label className="text-xs">{t('contactHub.dealValue')}</Label>
                 <Input
                   type="number"
                   placeholder="0.00"
@@ -1731,9 +1738,9 @@ export default function ContactHubPage() {
                 />
               </div>
               <div className="space-y-1.5">
-                <Label className="text-xs">Notes (optional)</Label>
+                <Label className="text-xs">{t('contactHub.notes')}</Label>
                 <Textarea
-                  placeholder="Add any notes about this lead…"
+                  placeholder={t('contactHub.notesPlaceholder')}
                   value={leadData.notes}
                   onChange={(e) => setLeadData((d) => ({ ...d, notes: e.target.value }))}
                   className="text-xs resize-none min-h-[70px]"
@@ -1742,10 +1749,10 @@ export default function ContactHubPage() {
             </div>
           )}
           <DialogFooter>
-            <Button variant="outline" size="sm" onClick={() => setConvertDialogOpen(false)}>Cancel</Button>
+            <Button variant="outline" size="sm" onClick={() => setConvertDialogOpen(false)}>{t('contactHub.cancel')}</Button>
             <Button size="sm" onClick={submitConversion} disabled={converting} className="gap-1.5">
               {converting ? <Loader2 className="w-3 h-3 animate-spin" /> : <UserPlus className="w-3 h-3" />}
-              Convert to Lead
+              {t('contactHub.convertToLead')}
             </Button>
           </DialogFooter>
         </DialogContent>
