@@ -325,7 +325,21 @@ const AppLayout = () => {
         if (!payload || payload.is_activity || payload.extra_data?.is_activity) return;
         if (!user || payload.sender_id === user.id) return;
         if (!payload.channel_member_ids?.includes(user.id)) return;
-        // Don't show if already viewing this channel
+
+        // Always update the channelMessages cache so missed per-channel WS events are recovered.
+        // Only update if the cache already exists (user has visited this channel).
+        const channelId = payload.channel_id;
+        if (channelId !== undefined) {
+          const existing = queryClient.getQueryData<any[]>(['channelMessages', channelId]);
+          if (existing !== undefined) {
+            queryClient.setQueryData<any[]>(['channelMessages', channelId], (old = []) => {
+              if (old.some((msg) => msg.id === payload.id)) return old;
+              return [...old, payload];
+            });
+          }
+        }
+
+        // Don't show notification if already viewing this channel
         const params = new URLSearchParams(window.location.search);
         if (location.pathname.includes('/team-chat') && params.get('channelId') === String(payload.channel_id)) return;
 

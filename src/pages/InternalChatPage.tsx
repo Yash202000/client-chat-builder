@@ -689,6 +689,7 @@ const InternalChatPage: React.FC = () => {
     queryKey: ['channelMessages', selectedChannel?.id],
     queryFn: () => getChannelMessages(selectedChannel!.id),
     enabled: !!selectedChannel?.id,
+    refetchInterval: 30000, // fallback poll in case WS events are missed
     onSuccess: (data) => {
       const presences: UserPresence = {};
       data.forEach(msg => {
