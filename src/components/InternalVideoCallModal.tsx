@@ -203,6 +203,11 @@ const InternalVideoCallModal: React.FC = () => {
 
   const sendMutation = useMutation({
     mutationFn: (text: string) => createChannelMessage(Number(channelId!), text),
+    onSuccess: (newMessage) => {
+      queryClient.setQueryData<ChatMessage[]>(['channelMessages', channelId], (prev = []) =>
+        prev.some((m) => m.id === newMessage.id) ? prev : [...prev, newMessage],
+      );
+    },
   });
 
   useEffect(() => {
