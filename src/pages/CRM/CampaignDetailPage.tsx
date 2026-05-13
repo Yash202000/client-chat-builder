@@ -310,9 +310,7 @@ export default function CampaignDetailPage() {
           const enrollResponse = await axios.post(`/api/v1/campaigns/${id}/enroll-from-criteria`, {}, { headers });
           enrolledCount = enrollResponse.data?.enrolled_count || 0;
           totalEnrolled = enrollResponse.data?.total_enrolled || enrolledCount;
-          console.log('Enrollment result:', enrollResponse.data);
         } catch (enrollError: any) {
-          console.log('Enrollment error:', enrollError.response?.data || enrollError.message);
         }
 
         // Use total_enrolled (includes existing enrollments) for the check
@@ -362,9 +360,7 @@ export default function CampaignDetailPage() {
           try {
             const enrollResponse = await axios.post(`/api/v1/campaigns/${id}/enroll-from-criteria`, {}, { headers });
             enrolledCount = enrollResponse.data?.enrolled_count || 0;
-            console.log('Enrollment result:', enrollResponse.data);
           } catch (enrollError: any) {
-            console.log('Enrollment error:', enrollError.response?.data || enrollError.message);
           }
 
           if (enrolledCount === 0) {

@@ -26,8 +26,6 @@ const KnowledgeBaseManagementPage = () => {
   const { authFetch } = useAuth();
   const { t, isRTL } = useI18n();
 
-  console.log('KnowledgeBaseManagementPage - Current language:', isRTL ? 'ar' : 'en');
-  console.log('KnowledgeBaseManagementPage - isRTL:', isRTL);
 
   const { data: knowledgeBases, isLoading } = useQuery<KnowledgeBase[]>({ queryKey: ['knowledgeBases', companyId], queryFn: async () => {
     const response = await authFetch(`/api/v1/knowledge-bases/`);

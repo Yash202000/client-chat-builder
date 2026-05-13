@@ -18,35 +18,28 @@ export const useNotifications = () => {
   const callEndAudioRef = useRef<HTMLAudioElement | null>(null);
 
   useEffect(() => {
-    console.log('[NotificationSound] Initializing notification sound system...');
 
     // Check if browser supports notifications
     if ('Notification' in window) {
       setPermission(Notification.permission);
-      console.log('[NotificationSound] Browser notification permission:', Notification.permission);
     }
 
     // Initialize notification audio
     if (typeof window !== 'undefined') {
       notificationAudioRef.current = new Audio('/teams_notification.mp3');
       notificationAudioRef.current.preload = 'auto';
-      console.log('[NotificationSound] Teams notification audio initialized');
 
       successAudioRef.current = new Audio('/done.mp3');
       successAudioRef.current.preload = 'auto';
-      console.log('[NotificationSound] Success notification audio initialized');
 
       callEndAudioRef.current = new Audio('/samsung_call_end.mp3');
       callEndAudioRef.current.preload = 'auto';
-      console.log('[NotificationSound] Call end audio initialized');
     }
 
     // Check if sound was previously enabled
     const savedSoundPreference = localStorage.getItem('notificationSoundEnabled');
-    console.log('[NotificationSound] Saved sound preference:', savedSoundPreference);
     if (savedSoundPreference === 'true') {
       setSoundEnabled(true);
-      console.log('[NotificationSound] Sound enabled from saved preference');
     }
 
     // Cleanup
@@ -63,13 +56,11 @@ export const useNotifications = () => {
         callEndAudioRef.current.pause();
         callEndAudioRef.current.currentTime = 0;
       }
-      console.log('[NotificationSound] Audio cleaned up');
     };
   }, []);
 
   const requestPermission = async () => {
     if (!('Notification' in window)) {
-      console.log('This browser does not support desktop notifications');
       return false;
     }
 
@@ -84,7 +75,6 @@ export const useNotifications = () => {
   };
 
   const playBeep = async () => {
-    console.log('[NotificationSound] playBeep called');
 
     if (!notificationAudioRef.current) {
       console.error('[NotificationSound] Notification audio not available');
@@ -95,18 +85,15 @@ export const useNotifications = () => {
       const audio = notificationAudioRef.current;
       audio.currentTime = 0; // Reset to start
       await audio.play();
-      console.log('[NotificationSound] ✓ Teams notification sound played successfully!');
     } catch (error) {
       console.error('[NotificationSound] Error playing notification sound:', error);
     }
   };
 
   const playSuccessSound = async () => {
-    console.log('[NotificationSound] playSuccessSound called | soundEnabled:', soundEnabled);
 
     // Only play if sound is enabled
     if (!soundEnabled) {
-      console.log('[NotificationSound] ⚠ Sound is disabled. Click the speaker icon in notification bell to enable it.');
       return;
     }
 
@@ -119,14 +106,12 @@ export const useNotifications = () => {
       const audio = successAudioRef.current;
       audio.currentTime = 0; // Reset to start
       await audio.play();
-      console.log('[NotificationSound] ✓ Success sound played successfully!');
     } catch (error) {
       console.error('[NotificationSound] Error playing success sound:', error);
     }
   };
 
   const playCallEndSound = async () => {
-    console.log('[NotificationSound] playCallEndSound called');
 
     if (!callEndAudioRef.current) {
       console.error('[NotificationSound] Call end audio not available');
@@ -137,7 +122,6 @@ export const useNotifications = () => {
       const audio = callEndAudioRef.current;
       audio.currentTime = 0; // Reset to start
       await audio.play();
-      console.log('[NotificationSound] ✓ Call end sound played successfully!');
     } catch (error) {
       console.error('[NotificationSound] Error playing call end sound:', error);
     }
@@ -146,14 +130,12 @@ export const useNotifications = () => {
   const enableSound = async () => {
     // This function must be called from a user interaction (click, etc.)
     // to bypass browser autoplay policies
-    console.log('[NotificationSound] enableSound called');
 
     try {
       // Play a test beep to unlock audio
       await playBeep();
       setSoundEnabled(true);
       localStorage.setItem('notificationSoundEnabled', 'true');
-      console.log('[NotificationSound] ✓ Sound enabled successfully!');
       return true;
     } catch (error) {
       console.error('[NotificationSound] Could not enable notification sound:', error);
@@ -162,7 +144,6 @@ export const useNotifications = () => {
   };
 
   const disableSound = () => {
-    console.log('[NotificationSound] Sound disabled');
     setSoundEnabled(false);
     localStorage.setItem('notificationSoundEnabled', 'false');
   };
@@ -200,15 +181,12 @@ export const useNotifications = () => {
   };
 
   const playNotificationSound = async () => {
-    console.log('[NotificationSound] playNotificationSound called | soundEnabled:', soundEnabled);
 
     // Only play if sound is enabled
     if (!soundEnabled) {
-      console.log('[NotificationSound] ⚠ Sound is disabled. Click the speaker icon in notification bell to enable it.');
       return;
     }
 
-    console.log('[NotificationSound] Sound is enabled, playing beep...');
     await playBeep();
   };
 
@@ -220,12 +198,6 @@ export const useNotifications = () => {
   };
 
   const showNotification = (options: NotificationOptions) => {
-    console.log('[NotificationSound] showNotification called:', {
-      title: options.title,
-      body: options.body,
-      soundEnabled,
-    });
-
     // Play notification sound (if enabled)
     playNotificationSound();
 

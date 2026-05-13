@@ -182,7 +182,6 @@ export default function CampaignEditPage() {
           }
         }
       } catch (msgError) {
-        console.log('No existing messages found:', msgError);
       }
     } catch (error) {
       console.error('Error fetching campaign:', error);

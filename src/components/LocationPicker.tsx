@@ -14,7 +14,6 @@ L.Icon.Default.mergeOptions({
   shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
 });
 
-console.log('[LocationPicker] Module loaded, default icon fixed');
 
 interface LocationPickerProps {
   initialLocation?: { latitude: number; longitude: number } | null;
@@ -34,7 +33,6 @@ const MapSetup: React.FC<{
   // Handle recentering when "My Location" is clicked
   React.useEffect(() => {
     if (recenterTo) {
-      console.log('[MapSetup] Recentering to:', recenterTo);
       map.setView([recenterTo.lat, recenterTo.lng], map.getZoom(), { animate: true });
       onRecenterDone();
     }
@@ -42,7 +40,6 @@ const MapSetup: React.FC<{
 
   // Initial invalidateSize (run once)
   React.useEffect(() => {
-    console.log('[MapSetup] Initial setup - invalidating size');
     setTimeout(() => {
       map.invalidateSize();
     }, 200);
@@ -63,7 +60,6 @@ const MapController: React.FC<{ lat: number; lng: number; shouldRecenter: boolea
     const posKey = `${lat},${lng}`;
     if (shouldRecenter && posKey !== lastRecenter.current) {
       lastRecenter.current = posKey;
-      console.log('[MapController] Recentering to:', lat, lng);
       map.setView([lat, lng], map.getZoom(), { animate: true });
     }
   }, [lat, lng, shouldRecenter, map]);
@@ -72,7 +68,6 @@ const MapController: React.FC<{ lat: number; lng: number; shouldRecenter: boolea
   useEffect(() => {
     if (!hasInitialized.current) {
       hasInitialized.current = true;
-      console.log('[MapController] Initial invalidateSize');
       setTimeout(() => {
         map.invalidateSize();
       }, 200);
@@ -106,14 +101,12 @@ const LocationPicker: React.FC<LocationPickerProps> = ({
   useEffect(() => {
     if (initialLocation &&
         (position.lat !== initialLocation.latitude || position.lng !== initialLocation.longitude)) {
-      console.log('[LocationPicker] Syncing position from initialLocation:', initialLocation);
       setPosition({ lat: initialLocation.latitude, lng: initialLocation.longitude });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); // Only run on mount
 
   const handleLocationSelect = (lat: number, lng: number) => {
-    console.log('[LocationPicker] handleLocationSelect called:', lat, lng);
     // Update local position state
     setPosition({ lat, lng });
     // Notify parent
@@ -125,7 +118,6 @@ const LocationPicker: React.FC<LocationPickerProps> = ({
     navigator.geolocation.getCurrentPosition(
       (pos) => {
         const { latitude, longitude } = pos.coords;
-        console.log('[LocationPicker] Got current location:', latitude, longitude);
         setPosition({ lat: latitude, lng: longitude });
         onLocationSelect(latitude, longitude);
         setRecenterTo({ lat: latitude, lng: longitude }); // Recenter map to new location
@@ -142,17 +134,14 @@ const LocationPicker: React.FC<LocationPickerProps> = ({
 
   const handleMarkerDrag = () => {
     const marker = markerRef.current;
-    console.log('[LocationPicker] Marker drag ended, marker ref:', marker);
     if (marker) {
       const latlng = marker.getLatLng();
-      console.log('[LocationPicker] Marker dragged to:', latlng);
       setPosition({ lat: latlng.lat, lng: latlng.lng });
       onLocationSelect(latlng.lat, latlng.lng);
     }
   };
 
   // Log render for debugging
-  console.log('[LocationPicker] Rendering with position:', position);
 
   return (
     <div
@@ -228,10 +217,7 @@ const LocationPicker: React.FC<LocationPickerProps> = ({
               draggable={true}
               ref={markerRef}
               eventHandlers={{
-                dragstart: () => console.log('[Marker] Drag started'),
-                drag: () => console.log('[Marker] Dragging'),
                 dragend: handleMarkerDrag,
-                add: () => console.log('[Marker] Added to map at', position),
               }}
             />
             <MapSetup
@@ -272,7 +258,6 @@ const LocationPicker: React.FC<LocationPickerProps> = ({
             <Button
               size="sm"
               onClick={() => {
-                console.log('[LocationPicker] Confirm clicked, position:', position);
                 onConfirm(position.lat, position.lng);
               }}
               className="flex items-center gap-1 bg-green-600 hover:bg-green-700"

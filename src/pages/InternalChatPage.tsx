@@ -384,6 +384,15 @@ const InternalChatPage: React.FC = () => {
             }
           }
         }
+      } else if (wsMessage.type === 'attachment_added') {
+        const { message_id, attachment } = wsMessage.payload;
+        queryClient.setQueryData<ChatMessage[]>(['channelMessages', selectedChannel!.id], (old = []) =>
+          old.map(msg =>
+            msg.id === message_id
+              ? { ...msg, attachments: [...(msg.attachments || []).filter(a => a.id !== attachment.id), attachment] }
+              : msg
+          )
+        );
       } else if (wsMessage.type === 'channel_read') {
         // Someone read the channel — refresh read summary so sender sees double tick immediately
         const { channel_id } = wsMessage.payload;
@@ -478,23 +487,11 @@ const InternalChatPage: React.FC = () => {
       } else if (wsMessage.type === 'call_accepted') {
         // Call was accepted by someone
         const { call_id, accepted_by_id, accepted_by_name, room_name, livekit_url, caller_id, channel_id } = wsMessage;
-        console.log('Call accepted:', {
-          call_id,
-          accepted_by_id,
-          accepted_by_name,
-          room_name,
-          livekit_url,
-          caller_id,
-          outgoingCall,
-          currentUserId: user?.id,
-          isUserCaller: user?.id === caller_id
-        });
 
         // Check if current user is the caller (either by outgoingCall state or caller_id from event)
         const isUserCaller = (outgoingCall && outgoingCall.callId === call_id) || (user?.id === caller_id);
 
         if (isUserCaller) {
-          console.log('[Call Flow] Caller detected - navigating to video room');
 
           toast({
             title: 'Call accepted',
@@ -540,7 +537,6 @@ const InternalChatPage: React.FC = () => {
             });
           }
         } else {
-          console.log('[Call Flow] NOT the caller - ignoring accept event');
         }
 
         // Invalidate active call query
@@ -550,7 +546,6 @@ const InternalChatPage: React.FC = () => {
       } else if (wsMessage.type === 'call_rejected') {
         // Call was rejected
         const { call_id, rejected_by_name } = wsMessage;
-        console.log('Call rejected:', { call_id, rejected_by_name });
 
         // If current user is the caller, show notification
         if (outgoingCall && outgoingCall.callId === call_id) {
@@ -569,7 +564,6 @@ const InternalChatPage: React.FC = () => {
       } else if (wsMessage.type === 'call_missed') {
         // Call timed out
         const { call_id } = wsMessage;
-        console.log('Call missed (timeout):', { call_id });
 
         // If current user is the caller, show notification
         if (outgoingCall && outgoingCall.callId === call_id) {
@@ -587,7 +581,6 @@ const InternalChatPage: React.FC = () => {
       } else if (wsMessage.type === 'call_ended') {
         // Call ended
         const { call_id, duration_seconds } = wsMessage;
-        console.log('Call ended:', { call_id, duration_seconds });
 
         // Play call end sound
         playCallEndSound();
@@ -603,7 +596,6 @@ const InternalChatPage: React.FC = () => {
       } else if (wsMessage.type === 'user_joined_call') {
         // Additional user joined an active call
         const { call_id, accepted_by_name, participant_count } = wsMessage;
-        console.log('User joined call:', { call_id, accepted_by_name, participant_count });
 
         // Show toast notification (but not if current user is the one who joined)
         if (wsMessage.accepted_by_id !== user?.id) {
@@ -618,7 +610,6 @@ const InternalChatPage: React.FC = () => {
       } else if (wsMessage.type === 'user_left_call') {
         // User left an active call (but call continues)
         const { call_id, left_by_name, participant_count } = wsMessage;
-        console.log('User left call:', { call_id, left_by_name, participant_count });
 
         // Show toast notification (but not if current user is the one who left)
         if (wsMessage.left_by_id !== user?.id) {
@@ -699,7 +690,6 @@ const InternalChatPage: React.FC = () => {
     queryFn: () => getChannelMessages(selectedChannel!.id),
     enabled: !!selectedChannel?.id,
     onSuccess: (data) => {
-      console.log("Messages after successful fetch:", data);
       const presences: UserPresence = {};
       data.forEach(msg => {
         presences[msg.sender.id] = msg.sender.presence_status as 'online' | 'offline';
@@ -806,7 +796,6 @@ const InternalChatPage: React.FC = () => {
       // Save current presence status before initiating call
       if (user?.presence_status && user.presence_status !== 'in_call') {
         localStorage.setItem('previousPresenceStatus', user.presence_status);
-        console.log('[Call] Saved previous status:', user.presence_status);
       }
 
       // Set status to in_call
@@ -817,7 +806,6 @@ const InternalChatPage: React.FC = () => {
           {},
           { headers: { Authorization: `Bearer ${token}` } }
         );
-        console.log('[Call] Status set to in_call');
       } catch (statusError) {
         console.error('[Call] Failed to set in_call status:', statusError);
       }
@@ -883,7 +871,6 @@ const InternalChatPage: React.FC = () => {
       // Save current presence status before joining call
       if (user?.presence_status && user.presence_status !== 'in_call') {
         localStorage.setItem('previousPresenceStatus', user.presence_status);
-        console.log('[Call] Saved previous status:', user.presence_status);
       }
 
       // Set status to in_call
@@ -894,7 +881,6 @@ const InternalChatPage: React.FC = () => {
           {},
           { headers: { Authorization: `Bearer ${token}` } }
         );
-        console.log('[Call] Status set to in_call');
       } catch (statusError) {
         console.error('[Call] Failed to set in_call status:', statusError);
       }
@@ -948,6 +934,7 @@ const InternalChatPage: React.FC = () => {
         }
         setIsUploadingFiles(false);
         setSelectedFiles([]);
+        queryClient.invalidateQueries({ queryKey: ['channelMessages', selectedChannel.id] });
       }
 
       // Share Drive file attachments (each creates its own message)
@@ -1132,7 +1119,6 @@ const InternalChatPage: React.FC = () => {
 
   // Helper function to change channel and update URL
   const handleChannelSelect = (channel: ChatChannel) => {
-    console.log('[Channel Select] Changing to channel:', channel.id);
     setSelectedChannel(channel);
     setIsRenamingChannel(false);
     setIsPinnedPanelOpen(false);
@@ -1150,15 +1136,12 @@ const InternalChatPage: React.FC = () => {
   // Auto-select channel from URL params (e.g., when returning from video call)
   useEffect(() => {
     const channelIdParam = searchParams.get('channelId');
-    console.log('[URL Sync] Checking URL param:', channelIdParam, 'Current channel:', selectedChannel?.id);
 
     if (channelIdParam && channels) {
       const channelToSelect = channels.find(ch => ch.id === Number(channelIdParam));
       if (channelToSelect && (!selectedChannel || selectedChannel.id !== channelToSelect.id)) {
-        console.log('[URL Sync] Switching to channel from URL:', channelToSelect.id);
         setSelectedChannel(channelToSelect);
       } else {
-        console.log('[URL Sync] No channel switch needed');
       }
     }
   }, [searchParams, channels, selectedChannel]);
@@ -1803,26 +1786,29 @@ const InternalChatPage: React.FC = () => {
                                       ? `bg-primary text-primary-foreground dark:text-white msg-bubble-agent rounded-2xl ${isRTL ? 'rounded-bl-md' : 'rounded-br-md'}`
                                       : `bg-card border border-border text-foreground msg-bubble-user rounded-2xl ${isRTL ? 'rounded-br-md' : 'rounded-bl-md'}`
                                   )}>
-                                    <div className={cn(
-                                      'prose prose-sm max-w-full prose-p:my-0.5 prose-p:leading-relaxed',
-                                      isOwn ? 'prose-invert' : 'dark:prose-invert'
-                                    )}>
-                                      <MentionText
-                                        content={msg.content}
-                                        users={channelMembers?.reduce((acc, member) => {
-                                          if (member && member.id) {
-                                            acc[member.id] = {
-                                              id: member.id,
-                                              first_name: member.first_name,
-                                              last_name: member.last_name,
-                                              email: member.email
-                                            };
-                                          }
-                                          return acc;
-                                        }, {} as any) || {}}
-                                        className={isOwn ? 'text-primary-foreground dark:text-white' : ''}
-                                      />
-                                    </div>
+                                    {/* Hide placeholder text when message only has attachments */}
+                                    {!(msg.content === '📎 File attachment' && msg.attachments && msg.attachments.length > 0) && (
+                                      <div className={cn(
+                                        'prose prose-sm max-w-full prose-p:my-0.5 prose-p:leading-relaxed',
+                                        isOwn ? 'prose-invert' : 'dark:prose-invert'
+                                      )}>
+                                        <MentionText
+                                          content={msg.content}
+                                          users={channelMembers?.reduce((acc, member) => {
+                                            if (member && member.id) {
+                                              acc[member.id] = {
+                                                id: member.id,
+                                                first_name: member.first_name,
+                                                last_name: member.last_name,
+                                                email: member.email
+                                              };
+                                            }
+                                            return acc;
+                                          }, {} as any) || {}}
+                                          className={isOwn ? 'text-primary-foreground dark:text-white' : ''}
+                                        />
+                                      </div>
+                                    )}
                                     {msg.attachments && msg.attachments.length > 0 && (
                                       <div className="mt-2 space-y-1.5">
                                         {msg.attachments.map((attachment) => (
@@ -2032,6 +2018,7 @@ const InternalChatPage: React.FC = () => {
                         onKeyPress={(e) => e.key === 'Enter' && !e.shiftKey && handleSendMessage()}
                         className="w-full bg-transparent border-0 outline-none text-sm text-foreground placeholder:text-muted-foreground/50 focus:ring-0 py-0.5"
                         disabled={isUploadingFiles}
+                        users={channelMembers || []}
                       />
                     </div>
                     {/* Schedule message */}

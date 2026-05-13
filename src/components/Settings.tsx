@@ -1241,7 +1241,6 @@ export const Settings = () => {
                       <Button
                         className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white rounded-xl px-8"
                         onClick={() => {
-                          console.log("Saving identity/SAML settings", { ssoEnabled, entityId, ssoUrl, sloUrl, scimEnabled });
                           toast({ title: "Identity settings saved", description: "Your SAML / SSO configuration has been updated." });
                           playSuccessSound();
                         }}
@@ -1328,7 +1327,6 @@ export const Settings = () => {
                             toast({ title: "Email required", description: "Please enter the guest's email address.", variant: "destructive" });
                             return;
                           }
-                          console.log("Sending guest invite", { inviteEmail, invitePermission, inviteExpiry });
                           toast({ title: "Invite sent", description: `Invite sent to ${inviteEmail}.` });
                           playSuccessSound();
                           setInviteEmail("");
@@ -1661,7 +1659,6 @@ export const Settings = () => {
                       <Button
                         className="bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700 text-white rounded-xl"
                         onClick={() => {
-                          console.log("Exporting audit log", { auditFrom, auditTo, exportFormat });
                           toast({ title: "Export started", description: "Export started — you'll receive an email when your download is ready." });
                         }}
                       >
@@ -1742,7 +1739,6 @@ export const Settings = () => {
                             toast({ title: "Case name required", variant: "destructive" });
                             return;
                           }
-                          console.log("Creating legal hold", { holdCase, holdPatterns, holdFrom, holdTo, holdNotes });
                           toast({ title: "Legal hold created", description: `Hold "${holdCase}" is now active.` });
                           playSuccessSound();
                           setLegalHoldOpen(false);

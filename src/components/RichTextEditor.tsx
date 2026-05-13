@@ -305,7 +305,6 @@ function RichTextEditor({
               ErrorBoundary={() => <div>Error loading editor</div>}
             />
             <SlashCommandPlugin onTemplateInsert={(id, content) => {
-              console.log('Template inserted:', id, content);
             }} />
           </div>
           <HistoryPlugin />

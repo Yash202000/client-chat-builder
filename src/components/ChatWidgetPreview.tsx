@@ -36,13 +36,11 @@ export const ChatWidgetPreview = () => {
       ws.current = new WebSocket(`${BACKEND_URL.replace('http', 'ws')}/ws/public/${companyId}/${agentId}/${sessionId}?user_type=user`);
 
       ws.current.onopen = () => {
-        console.log("WebSocket connected");
         // The backend will send the welcome message upon connection.
       };
 
       ws.current.onmessage = (event) => {
         const receivedData = JSON.parse(event.data);
-        console.log("Received data:", receivedData);
 
         if (receivedData.message_type === 'form') {
           setCurrentForm({
@@ -73,7 +71,6 @@ export const ChatWidgetPreview = () => {
       };
 
       ws.current.onclose = () => {
-        console.log("WebSocket disconnected");
       };
 
       ws.current.onerror = (error) => {

@@ -12,7 +12,6 @@ export const API_BASE_URL = getBackendUrl();
 // Get WebSocket URL based on API base URL
 export const getWebSocketUrl = (): string => {
   if (!API_BASE_URL) {
-    console.warn('API_BASE_URL is not configured, WebSocket connections will not work');
     return '';
   }
   try {

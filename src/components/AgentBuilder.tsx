@@ -160,10 +160,8 @@ export const AgentBuilder = ({ agent, showTester = false }: AgentBuilderProps) =
     }
 
     const finalNodes = [...initialNodes(agent.name), ...nodesToAdd];
-    console.log("Setting nodes:", finalNodes);
     setNodes(finalNodes);
 
-    console.log("Setting edges:", edgesToAdd);
     setEdges(edgesToAdd);
   }, [agent, setNodes, setEdges]);
 
@@ -305,11 +303,8 @@ export const AgentBuilder = ({ agent, showTester = false }: AgentBuilderProps) =
       mutation.mutate({ knowledge_base_ids: [...new Set([...existingKbIds, id])] });
     }
     if (nodeType === 'tools') {
-      console.log("Agent object before update:", agent);
       const existingToolIds = agent.tools?.map(t => t.id) || [];
-      console.log("Existing tool IDs:", existingToolIds);
       const newToolIds = [...new Set([...existingToolIds, id])];
-      console.log("New tool IDs to be sent:", newToolIds);
       mutation.mutate({ tool_ids: newToolIds });
     }
     if (nodeType === 'workflow') {

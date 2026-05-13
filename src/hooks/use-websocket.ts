@@ -62,22 +62,14 @@ export const useWebSocket = (url: string | null, options: WebSocketOptions = {})
     const currentOptions = optionsRef.current;
 
     if (!currentUrl || !enabled) {
-      console.log('[WebSocket] Not connecting - url:', currentUrl, 'enabled:', enabled);
       return;
     }
 
     // Close existing connection if any
     if (ws.current) {
       const readyState = ws.current.readyState;
-      console.log('[WebSocket] Existing connection state:', {
-        CONNECTING: readyState === WebSocket.CONNECTING,
-        OPEN: readyState === WebSocket.OPEN,
-        CLOSING: readyState === WebSocket.CLOSING,
-        CLOSED: readyState === WebSocket.CLOSED
-      });
 
       if (readyState === WebSocket.OPEN || readyState === WebSocket.CONNECTING) {
-        console.log('[WebSocket] Closing existing connection before creating new one');
         ws.current.close();
         // Wait a bit for the close to complete
         ws.current = null;
@@ -85,11 +77,9 @@ export const useWebSocket = (url: string | null, options: WebSocketOptions = {})
     }
 
     try {
-      console.log('[WebSocket] Creating new connection to:', currentUrl);
       ws.current = new WebSocket(currentUrl);
 
       ws.current.onopen = () => {
-        console.log('[WebSocket] Connected successfully');
         setIsConnected(true);
         reconnectAttempts.current = 0;
         setReconnectCount(0);
@@ -107,7 +97,6 @@ export const useWebSocket = (url: string | null, options: WebSocketOptions = {})
       };
 
       ws.current.onclose = (event) => {
-        console.log('[WebSocket] Connection closed:', event.code, event.reason);
         setIsConnected(false);
         clearTimers();
 
@@ -118,7 +107,6 @@ export const useWebSocket = (url: string | null, options: WebSocketOptions = {})
         // Attempt to reconnect if not manually closed
         if (shouldReconnect.current && !isManualClose.current && reconnectAttempts.current < maxReconnectAttempts) {
           const delay = reconnectInterval * Math.min(reconnectAttempts.current + 1, 5); // Exponential backoff (capped at 5x)
-          console.log(`[WebSocket] Reconnecting in ${delay}ms (attempt ${reconnectAttempts.current + 1}/${maxReconnectAttempts})`);
 
           reconnectAttempts.current += 1;
           setReconnectCount(reconnectAttempts.current);
@@ -143,7 +131,6 @@ export const useWebSocket = (url: string | null, options: WebSocketOptions = {})
   }, [enabled, maxReconnectAttempts, reconnectInterval, startHeartbeat, clearTimers]);
 
   useEffect(() => {
-    console.log('[WebSocket] useEffect triggered - url:', url, 'enabled:', enabled);
 
     if (url && enabled) {
       shouldReconnect.current = true;
@@ -156,13 +143,11 @@ export const useWebSocket = (url: string | null, options: WebSocketOptions = {})
       }, 100);
 
       return () => {
-        console.log('[WebSocket] Cleanup triggered for url:', url);
         clearTimeout(connectTimer);
         shouldReconnect.current = false;
         isManualClose.current = true;
         clearTimers();
         if (ws.current) {
-          console.log('[WebSocket] Closing connection in cleanup');
           ws.current.close();
           ws.current = null;
         }
@@ -170,7 +155,6 @@ export const useWebSocket = (url: string | null, options: WebSocketOptions = {})
     }
 
     return () => {
-      console.log('[WebSocket] Empty cleanup (url or enabled is falsy)');
     };
   }, [url, enabled]); // Keep minimal dependencies to prevent infinite loop
 

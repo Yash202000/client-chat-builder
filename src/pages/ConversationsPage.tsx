@@ -301,10 +301,8 @@ const ConversationsPage: React.FC<ConversationsPageProps> = ({ channel }) => {
   const wsOptions = useMemo(() => ({
     onMessage: (event) => {
         const eventData = JSON.parse(event.data);
-        console.log('[WebSocket] Received event:', eventData.type, eventData);
 
         if (eventData.type === 'new_session') {
-          console.log('[WebSocket] 🆕 New session created:', eventData.session);
           toast({
             title: t('conversations.notifications.newConversation'),
             description: t('conversations.notifications.newConversationDesc'),
@@ -327,14 +325,9 @@ const ConversationsPage: React.FC<ConversationsPageProps> = ({ channel }) => {
             queryClient.invalidateQueries({ queryKey: ['messages', selectedSessionId, companyId] });
           }
         } else if (eventData.type === 'conversation_assigned') {
-          console.log('[Assignment] Received assignment notification');
-          console.log('[Assignment] Assigned to ID:', eventData.assigned_to_id);
-          console.log('[Assignment] Current user ID:', user?.id);
-          console.log('[Assignment] Match:', eventData.assigned_to_id === user?.id);
 
           // Check if this assignment is for the current user
           if (eventData.assigned_to_id === user?.id) {
-            console.log('[Assignment] ✅ Showing notification for current user');
             // Increment unread counter
             setUnreadAssignments(prev => prev + 1);
 
@@ -387,7 +380,6 @@ const ConversationsPage: React.FC<ConversationsPageProps> = ({ channel }) => {
           }
         } else if (eventData.type === 'session_reopened') {
           // Handle conversation reopening from resolved status
-          console.log('[WebSocket] 🔄 Session reopened:', eventData.session_id);
 
           // Mark session as reopened for animation
           setReopenedSessions(prev => new Set(prev).add(eventData.session_id));
@@ -491,7 +483,6 @@ const ConversationsPage: React.FC<ConversationsPageProps> = ({ channel }) => {
           queryClient.invalidateQueries({ queryKey: ['sessionCounts', companyId] });
         } else if (eventData.type === 'session_status_update') {
           // Handle real-time status updates (active/inactive/resolved) and connection status
-          console.log(`Session ${eventData.session_id} status changed to: ${eventData.status}, connected: ${eventData.is_client_connected}, assignee: ${eventData.assignee_id}`);
 
           // Invalidate counts immediately
           queryClient.invalidateQueries({ queryKey: ['sessionCounts', companyId] });
@@ -544,7 +535,6 @@ const ConversationsPage: React.FC<ConversationsPageProps> = ({ channel }) => {
           queryClient.invalidateQueries({ queryKey: ['sessions', companyId] });
         } else if (eventData.type === 'contact_updated') {
           // Handle real-time contact updates when AI collects contact information
-          console.log('[WebSocket] 📇 Contact updated:', eventData);
 
           // Invalidate contact query to refresh ContactProfile component
           if (selectedSessionId === eventData.session_id) {

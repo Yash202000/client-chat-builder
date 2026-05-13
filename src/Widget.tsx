@@ -292,9 +292,6 @@ const Widget = ({ agentId, companyId, backendUrl, appUrl = '', rtlOverride, lang
         const response = await fetch(`${backendUrl}/api/v1/agents/${agentId}/widget-settings`);
         if (!response.ok) throw new Error('Failed to fetch settings');
         const data = await response.json();
-        console.log('HeyGenAlly Widget: Fetched settings:', data);
-        console.log('HeyGenAlly Widget: Avatar URL:', data.agent_avatar_url);
-        console.log('HeyGenAlly Widget: Header Title:', data.header_title);
         setSettings(data);
       } catch (error) {
         console.error('HeyGenAlly: Error fetching settings:', error);
@@ -349,11 +346,9 @@ const Widget = ({ agentId, companyId, backendUrl, appUrl = '', rtlOverride, lang
 
     const wsUrl = `${backendUrl.replace('http', 'ws')}/api/v1/ws/public/${companyId}/${agentId}/${currentSessionId.current}?user_type=user`;
 
-    console.log('[Widget] Connecting to WebSocket:', wsUrl);
     ws.current = new WebSocket(wsUrl);
 
     ws.current.onopen = () => {
-      console.log('[Widget] WebSocket connected');
       setIsConnected(true);
       reconnectAttempts.current = 0;
       startHeartbeat();
@@ -387,7 +382,6 @@ const Widget = ({ agentId, companyId, backendUrl, appUrl = '', rtlOverride, lang
 
       // Handle message history on reconnection
       if (data.type === 'history') {
-        console.log('[Widget] Received message history:', data.messages?.length, 'messages');
         if (data.messages && data.messages.length > 0) {
           const historyMessages: Message[] = data.messages.map((msg: any) => ({
             id: msg.id,
@@ -404,7 +398,6 @@ const Widget = ({ agentId, companyId, backendUrl, appUrl = '', rtlOverride, lang
 
           // Show "Start Over" option for any resumed session with history
           setShowStartOver(true);
-          console.log('[Widget] Resumed session - showing Start Over option');
 
           // Check if last message is a prompt/form (workflow paused) - disable inputs
           const lastMsg = data.messages[data.messages.length - 1];
@@ -414,7 +407,6 @@ const Widget = ({ agentId, companyId, backendUrl, appUrl = '', rtlOverride, lang
             if (lastMsg?.message_type === 'prompt') {
               setIsTextInputDisabled(true);
             }
-            console.log('[Widget] Resumed with paused workflow at prompt/form');
           }
         }
         return;
@@ -436,7 +428,6 @@ const Widget = ({ agentId, companyId, backendUrl, appUrl = '', rtlOverride, lang
       // Handle input constraint from workflow Listen node
       if (data.message_type === 'input_constraint') {
         setExpectedInputType(data.expected_input_type || 'any');
-        console.log('[Widget] Input constraint received:', data.expected_input_type);
         return;
       }
 
@@ -447,7 +438,6 @@ const Widget = ({ agentId, companyId, backendUrl, appUrl = '', rtlOverride, lang
 
       // Handle call events
       if (data.type === 'call_accepted') {
-        console.log('[Widget] Call accepted by agent:', data);
         setCallStatus('connecting');
         setCallData({
           agentName: data.agent_name,
@@ -461,7 +451,6 @@ const Widget = ({ agentId, companyId, backendUrl, appUrl = '', rtlOverride, lang
 
         // Open LiveKit call in new window
         const callUrl = `${settings?.frontend_url || window.location.origin}/video-call?token=${encodeURIComponent(data.user_token)}&livekitUrl=${encodeURIComponent(data.livekit_url)}&sessionId=${currentSessionId.current}`;
-        console.log('[Widget] Opening call window:', callUrl);
 
         const callWindow = window.open(
           callUrl,
@@ -503,7 +492,6 @@ const Widget = ({ agentId, companyId, backendUrl, appUrl = '', rtlOverride, lang
       }
 
       if (data.type === 'call_rejected') {
-        console.log('[Widget] Call rejected by agent:', data);
         setIsCallActive(false);
         setCallStatus(null);
         setCallData(null);
@@ -566,7 +554,6 @@ const Widget = ({ agentId, companyId, backendUrl, appUrl = '', rtlOverride, lang
             // Replace temp message with real one from backend
             const updated = [...prev];
             updated[tempMessageIndex] = newMessage;
-            console.log(`✅ Replaced temp message with real ID: ${data.id}`);
             return updated;
           }
         }
@@ -580,7 +567,6 @@ const Widget = ({ agentId, companyId, backendUrl, appUrl = '', rtlOverride, lang
 
       // Check if message contains call initiation info (from handoff tool)
       if (data.sender === 'agent' && data.call_initiated) {
-        console.log('[Widget] Call initiated:', data);
         setCallStatus('calling');
         setIsCallActive(true);
         setCallData({
@@ -600,19 +586,16 @@ const Widget = ({ agentId, companyId, backendUrl, appUrl = '', rtlOverride, lang
         const allowTextInput = data.allow_text_input === true;  // Default to false
         setIsTextInputDisabled(!allowTextInput);
         setIsWorkflowPaused(true);
-        console.log('[Widget] Prompt received, allow_text_input:', allowTextInput, 'disabling input:', !allowTextInput);
       }
     };
 
     ws.current.onclose = (event) => {
-      console.log('[Widget] WebSocket closed:', event.code, event.reason);
       setIsConnected(false);
       clearTimers();
 
       // Attempt to reconnect if widget is still open and should reconnect
       if (shouldReconnect.current && isOpen && reconnectAttempts.current < 10) {
         const delay = Math.min(3000 * (reconnectAttempts.current + 1), 15000); // Max 15 seconds
-        console.log(`[Widget] Reconnecting in ${delay}ms (attempt ${reconnectAttempts.current + 1}/10)`);
 
         reconnectAttempts.current += 1;
         reconnectTimer.current = setTimeout(() => {
@@ -637,16 +620,13 @@ const Widget = ({ agentId, companyId, backendUrl, appUrl = '', rtlOverride, lang
     voiceWs.current = new WebSocket(voiceUrl);
 
     voiceWs.current.onopen = async () => {
-      console.log('[Widget] Voice WebSocket connected');
 
       // Request microphone permission once when WebSocket connects
       // This keeps the stream alive for the entire session
       if (settings?.communication_mode === 'voice' || settings?.communication_mode === 'chat_and_voice') {
         try {
-          console.log('[Widget] Requesting microphone permission...');
           const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
           audioStream.current = stream;
-          console.log('[Widget] ✅ Microphone permission granted and stream acquired');
         } catch (error) {
           console.error('[Widget] ❌ Failed to get microphone permission:', error);
         }
@@ -704,7 +684,6 @@ const Widget = ({ agentId, companyId, backendUrl, appUrl = '', rtlOverride, lang
       const fullAudioBlob = new Blob(incomingAudioChunks.current, { type: 'audio/webm' });
       incomingAudioChunks.current = [];
       audioQueue.current.push(fullAudioBlob);
-      console.log('[Widget] Audio queued, queue length:', audioQueue.current.length);
 
       // Start playing if not already playing
       if (!isPlayingAudio.current) {
@@ -764,7 +743,6 @@ const Widget = ({ agentId, companyId, backendUrl, appUrl = '', rtlOverride, lang
     };
 
     voiceWs.current.onclose = () => {
-      console.log('[Widget] Voice WebSocket closed');
       stopVoiceActivityDetection();
     };
 
@@ -779,12 +757,9 @@ const Widget = ({ agentId, companyId, backendUrl, appUrl = '', rtlOverride, lang
       // Reuse existing audio stream if available, otherwise request permission
       let stream = audioStream.current;
       if (!stream) {
-        console.log('[VAD] No existing stream, requesting microphone permission...');
         stream = await navigator.mediaDevices.getUserMedia({ audio: true });
         audioStream.current = stream;
-        console.log('[VAD] ✅ Microphone permission granted');
       } else {
-        console.log('[VAD] ✅ Reusing existing microphone stream (no permission prompt)');
       }
 
       // Setup audio analysis (only if not already set up)
@@ -794,7 +769,6 @@ const Widget = ({ agentId, companyId, backendUrl, appUrl = '', rtlOverride, lang
         analyser.current = audioContext.current.createAnalyser();
         analyser.current.fftSize = 2048;
         source.connect(analyser.current);
-        console.log('[VAD] Audio analysis context created');
       }
 
       // Setup media recorder
@@ -811,7 +785,6 @@ const Widget = ({ agentId, companyId, backendUrl, appUrl = '', rtlOverride, lang
         if (audioChunks.current.length > 0 && voiceWs.current?.readyState === WebSocket.OPEN) {
           const audioBlob = new Blob(audioChunks.current, { type: 'audio/webm' });
           voiceWs.current.send(audioBlob);
-          console.log('[VAD] Sent audio chunk:', audioBlob.size, 'bytes');
         }
         audioChunks.current = [];
       };
@@ -821,7 +794,6 @@ const Widget = ({ agentId, companyId, backendUrl, appUrl = '', rtlOverride, lang
 
       // Start monitoring audio levels
       monitorAudioLevel();
-      console.log('[VAD] Voice Activity Detection started');
     } catch (error) {
       console.error('[VAD] Error starting voice detection:', error);
     }
@@ -856,7 +828,6 @@ const Widget = ({ agentId, companyId, backendUrl, appUrl = '', rtlOverride, lang
       if (average > SPEECH_THRESHOLD) {
         // User is speaking
         if (!isSpeaking.current) {
-          console.log('[VAD] Speech detected, starting recording');
           isSpeaking.current = true;
           setIsVoiceActive(true);
 
@@ -876,7 +847,6 @@ const Widget = ({ agentId, companyId, backendUrl, appUrl = '', rtlOverride, lang
             const silenceDuration = Date.now() - silenceStart.current;
 
             if (silenceDuration > SILENCE_DURATION) {
-              console.log('[VAD] Silence detected, stopping recording');
               isSpeaking.current = false;
               setIsVoiceActive(false);
               silenceStart.current = null;
@@ -907,7 +877,6 @@ const Widget = ({ agentId, companyId, backendUrl, appUrl = '', rtlOverride, lang
 
   // Pause VAD while AI is speaking
   const pauseVAD = () => {
-    console.log('[VAD] Pausing voice detection');
     if (vadTimer.current) {
       clearTimeout(vadTimer.current);
       vadTimer.current = null;
@@ -919,7 +888,6 @@ const Widget = ({ agentId, companyId, backendUrl, appUrl = '', rtlOverride, lang
 
   // Resume VAD after AI finishes speaking
   const resumeVAD = () => {
-    console.log('[VAD] Resuming voice detection');
     // Only resume if mic is still enabled
     if (!isMicEnabledRef.current) return;
 
@@ -964,7 +932,6 @@ const Widget = ({ agentId, companyId, backendUrl, appUrl = '', rtlOverride, lang
 
   // Stop Voice Activity Detection (but keep stream alive for reuse)
   const stopVoiceActivityDetection = () => {
-    console.log('[VAD] Stopping voice detection (keeping stream alive)');
 
     if (vadTimer.current) {
       clearTimeout(vadTimer.current);
@@ -985,7 +952,6 @@ const Widget = ({ agentId, companyId, backendUrl, appUrl = '', rtlOverride, lang
 
   // Completely cleanup voice resources (called on widget close)
   const cleanupVoiceResources = () => {
-    console.log('[VAD] Cleaning up all voice resources');
 
     stopVoiceActivityDetection();
 
@@ -1006,14 +972,12 @@ const Widget = ({ agentId, companyId, backendUrl, appUrl = '', rtlOverride, lang
   const handleMicToggle = async () => {
     if (isMicEnabled) {
       // Turn mic off
-      console.log('[Voice] Mic disabled by user');
       setIsMicEnabled(false);
       isMicEnabledRef.current = false;
       setIsVoiceActive(false);
       stopVoiceActivityDetection();
     } else {
       // Turn mic on
-      console.log('[Voice] Mic enabled by user');
       setIsMicEnabled(true);
       isMicEnabledRef.current = true;
       await startVoiceActivityDetection();
@@ -1031,13 +995,11 @@ const Widget = ({ agentId, companyId, backendUrl, appUrl = '', rtlOverride, lang
         // Reuse existing session if not expired
         newSessionId = storedSession.sessionId;
         isResumingSession.current = true;  // History will be sent via WebSocket
-        console.log('Resuming existing session:', newSessionId);
       } else {
         // Generate new session and store it
         newSessionId = generateSessionId();
         isResumingSession.current = false;  // New session, show welcome message
         storeSession(agentId, companyId, newSessionId);
-        console.log('Created new session:', newSessionId);
       }
 
       setSessionId(newSessionId);
@@ -1095,7 +1057,6 @@ const Widget = ({ agentId, companyId, backendUrl, appUrl = '', rtlOverride, lang
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    console.log('[Widget] File selected:', file?.name, file?.type, file?.size);
     if (!file) return;
 
     // Validate file type (images only)
@@ -1109,7 +1070,6 @@ const Widget = ({ agentId, companyId, backendUrl, appUrl = '', rtlOverride, lang
       return;
     }
 
-    console.log('[Widget] File accepted, setting preview');
     setSelectedFile(file);
     setFilePreview(URL.createObjectURL(file));
   };
@@ -1183,7 +1143,6 @@ const Widget = ({ agentId, companyId, backendUrl, appUrl = '', rtlOverride, lang
           timestamp: new Date().toISOString()
         }]);
 
-        console.log('[Widget] Workflow reset successfully');
       } else {
         console.error('[Widget] Failed to reset workflow:', response.statusText);
       }
@@ -1212,15 +1171,12 @@ const Widget = ({ agentId, companyId, backendUrl, appUrl = '', rtlOverride, lang
     // Validate input type constraint
     if (expectedInputType !== 'any') {
       if (expectedInputType === 'attachment' && !selectedFile) {
-        console.log('[Widget] Validation failed: Attachment expected');
         return;
       }
       if (expectedInputType === 'location' && !selectedLocation) {
-        console.log('[Widget] Validation failed: Location expected');
         return;
       }
       if (expectedInputType === 'text' && (selectedFile || selectedLocation)) {
-        console.log('[Widget] Validation failed: Text only expected');
         return;
       }
     }
@@ -1286,26 +1242,12 @@ const Widget = ({ agentId, companyId, backendUrl, appUrl = '', rtlOverride, lang
     }
     if (attachments.length > 0) {
       messageToSend.attachments = attachments;
-      console.log('[Widget] Sending message with attachments:', attachments.length, 'item(s)');
     }
 
-    console.log('[Widget] Sending message:', { hasAttachments: attachments.length > 0, messageLength: messageToSend.message?.length });
 
     if (ws.current?.readyState === WebSocket.OPEN) {
       const payload = JSON.stringify(messageToSend);
-      console.log('[Widget] WebSocket payload size:', payload.length, 'bytes');
-      console.log('[Widget] WebSocket payload keys:', Object.keys(messageToSend));
-      if (messageToSend.attachments) {
-        console.log('[Widget] Attachments in payload:', messageToSend.attachments.map((a: Attachment) => ({
-          name: a.file_name,
-          type: a.file_type,
-          size: a.file_size,
-          hasData: !!a.file_data,
-          hasLocation: !!a.location
-        })));
-      }
       ws.current.send(payload);
-      console.log('[Widget] ✅ Message sent via WebSocket');
       setInputValue('');
       clearSelectedFile();
       setSelectedLocation(null);
@@ -2226,16 +2168,13 @@ const Widget = ({ agentId, companyId, backendUrl, appUrl = '', rtlOverride, lang
       <LocationPicker
         initialLocation={selectedLocation}
         onLocationSelect={(lat, lng) => {
-          console.log('[Widget] Location selected:', lat, lng);
           setSelectedLocation({ latitude: lat, longitude: lng });
         }}
         onClose={() => {
-          console.log('[Widget] Location picker closed');
           setShowLocationPicker(false);
           setSelectedLocation(null);
         }}
         onConfirm={(lat, lng) => {
-          console.log('[Widget] Location confirmed:', lat, lng);
           // Set the location first, then send
           setSelectedLocation({ latitude: lat, longitude: lng });
           // Use setTimeout to ensure state is updated before sending

@@ -49,7 +49,6 @@ export const WorkflowDetailsDialog = ({ isOpen, onClose, workflow, onSave }) => 
   };
 
   const handleRegenerateDescription = async () => {
-    console.log('Regenerate clicked, workflow:', workflow);
     if (!workflow?.id) {
       console.error('No workflow ID');
       return;

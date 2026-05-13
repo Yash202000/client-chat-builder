@@ -140,7 +140,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         }
       } catch (error) {
         if ((error as Error).message === 'License error') {
-          console.warn("License error - user blocked but still authenticated");
           setIsLoading(false);
           return;
         }

@@ -40,12 +40,8 @@ const KnowledgeBasePage = () => {
   const { t, isRTL, currentLanguage } = useI18n();
   const companyId = 1; // Hardcoded company ID for now
 
-  console.log('KnowledgeBasePage render - Current language:', currentLanguage);
-  console.log('KnowledgeBasePage render - isRTL:', isRTL);
-  console.log('KnowledgeBasePage render - t("knowledgeBase.title"):', t("knowledgeBase.title"));
 
   useEffect(() => {
-    console.log('KnowledgeBasePage useEffect - Language changed to:', currentLanguage);
   }, [currentLanguage]);
 
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);

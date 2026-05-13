@@ -41,7 +41,6 @@ export const useVoiceConnection = (agentId: number, sessionId: string, voiceId: 
         voiceWsRef.current = new WebSocket(wsUrl);
 
         voiceWsRef.current.onopen = () => {
-            console.log('Voice WebSocket connected (internal).');
             if (!audioContextRef.current) {
                 audioContextRef.current = new (window.AudioContext || window.webkitAudioContext)();
             }
@@ -58,7 +57,6 @@ export const useVoiceConnection = (agentId: number, sessionId: string, voiceId: 
         };
 
         voiceWsRef.current.onerror = (error) => console.error('Voice WebSocket error:', error);
-        voiceWsRef.current.onclose = () => console.log('Voice WebSocket disconnected.');
 
     }, [agentId, sessionId, voiceId, token, isPlaying, playNextInQueue]);
 

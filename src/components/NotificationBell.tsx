@@ -131,7 +131,6 @@ const NotificationBell: React.FC<NotificationBellProps> = ({
               variant="ghost"
               size="sm"
               onClick={() => {
-                console.log('[NotificationBell] Speaker button clicked. Current soundEnabled:', soundEnabled);
                 soundEnabled ? disableSound() : enableSound();
               }}
               className="p-1 h-8 w-8"

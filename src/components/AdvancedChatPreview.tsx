@@ -161,7 +161,6 @@ export const AdvancedChatPreview = ({ selectedAgentId: initialAgentId }: { selec
     if (selectedAgentId && companyId) {
       const newSessionId = generateSessionId();
       setSessionId(newSessionId);
-      console.log(`Created preview session: ${newSessionId}`);
     }
   }, [selectedAgentId, companyId]);
 
@@ -170,14 +169,12 @@ export const AdvancedChatPreview = ({ selectedAgentId: initialAgentId }: { selec
     if (selectedAgentId && companyId && sessionId && isExpanded) {
       // Only create connections if they don't already exist
       if (!ws.current) {
-        console.log(`Opening chat WebSocket for session: ${sessionId}`);
         setMessages([]);
 
         const wsUrl = `${BACKEND_URL.replace('http', 'ws')}/api/v1/ws/public/${companyId}/${selectedAgentId}/${sessionId}?user_type=user`;
         ws.current = new WebSocket(wsUrl);
 
         ws.current.onopen = () => {
-          console.log(`Chat WebSocket opened for session: ${sessionId}`);
           if (customization.welcome_message) {
             setMessages([{ id: 'welcome', sender: 'agent', text: customization.welcome_message, timestamp: new Date().toISOString() }]);
           }
@@ -220,13 +217,11 @@ export const AdvancedChatPreview = ({ selectedAgentId: initialAgentId }: { selec
         };
 
         ws.current.onclose = () => {
-          console.log(`Chat WebSocket closed for session: ${sessionId}`);
         };
         ws.current.onerror = (error) => console.error("Chat preview WebSocket error:", error);
       }
 
       if (!voiceWs.current) {
-        console.log(`Opening voice WebSocket for session: ${sessionId}`);
         const voiceUrl = `${BACKEND_URL.replace('http', 'ws')}/api/v1/ws/public/voice/${companyId}/${selectedAgentId}/${sessionId}?user_type=user&voice_id=${(customization as any).voice_id || 'default'}&stt_provider=${(customization as any).stt_provider || 'groq'}`;
         voiceWs.current = new WebSocket(voiceUrl);
 
@@ -246,18 +241,15 @@ export const AdvancedChatPreview = ({ selectedAgentId: initialAgentId }: { selec
         };
 
         voiceWs.current.onclose = () => {
-          console.log(`Voice WebSocket closed for session: ${sessionId}`);
         };
       }
     } else if (!isExpanded) {
       // Close connections when preview is collapsed
       if (ws.current) {
-        console.log(`Closing chat WebSocket for session: ${sessionId}`);
         ws.current.close();
         ws.current = null;
       }
       if (voiceWs.current) {
-        console.log(`Closing voice WebSocket for session: ${sessionId}`);
         voiceWs.current.close();
         voiceWs.current = null;
       }
@@ -266,12 +258,10 @@ export const AdvancedChatPreview = ({ selectedAgentId: initialAgentId }: { selec
     return () => {
       // Cleanup on unmount
       if (ws.current) {
-        console.log(`Cleanup: Closing chat WebSocket for session: ${sessionId}`);
         ws.current.close();
         ws.current = null;
       }
       if (voiceWs.current) {
-        console.log(`Cleanup: Closing voice WebSocket for session: ${sessionId}`);
         voiceWs.current.close();
         voiceWs.current = null;
       }
@@ -281,7 +271,6 @@ export const AdvancedChatPreview = ({ selectedAgentId: initialAgentId }: { selec
   // Force close WebSocket connections when page/tab is closed abruptly
   useEffect(() => {
     const handleBeforeUnload = () => {
-      console.log('Page unloading - force closing preview WebSocket connections');
       // Synchronously close connections before page unloads
       if (ws.current) {
         ws.current.close();

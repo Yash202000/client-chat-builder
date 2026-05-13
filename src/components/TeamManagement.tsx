@@ -138,7 +138,6 @@ export const TeamManagement = () => {
       const response = await authFetch(`/api/v1/users/`);
       if (!response.ok) throw new Error('Failed to fetch users');
       const usersData = await response.json();
-      console.log("Users data fetched:", usersData);
       return usersData;
     },
   });
@@ -413,7 +412,6 @@ export const TeamManagement = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['users'] });
       toast({ title: t('teamManagement.toasts.userUpdated') });
-      console.log("User update successful, users query invalidated.");
     },
     onError: (error) => {
       toast({ title: t('common.error'), description: error.message, variant: "destructive" });
@@ -421,7 +419,6 @@ export const TeamManagement = () => {
   });
 
   const handleRoleChange = (userId: number, roleId: string) => {
-    console.log(`Attempting to change role for user ${userId} to role ${roleId}`);
     updateUserMutation.mutate({ userId, updateData: { role_id: parseInt(roleId, 10) } });
   };
 

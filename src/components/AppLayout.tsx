@@ -292,7 +292,6 @@ const AppLayout = () => {
         setIncomingCall((prev) => (prev?.callId === call_id ? null : prev));
       } else if (wsMessage.type === 'unread_count_update') {
         const { user_id, unread_count } = wsMessage;
-        console.log('[AppLayout] Unread count update received:', { user_id, unread_count });
 
         // Only update if this message is for the current user
         if (user && user_id === user.id) {
@@ -301,7 +300,6 @@ const AppLayout = () => {
 
           // Play notification sound if count increased (new notification)
           if (unread_count > previousCount) {
-            console.log('[AppLayout] New notification detected, playing sound');
             showNotification({
               title: 'New Notification',
               body: 'You have a new notification',
@@ -311,11 +309,9 @@ const AppLayout = () => {
         }
       } else if (wsMessage.type === 'presence_update') {
         const { user_id, status } = wsMessage.payload;
-        console.log('[AppLayout] Presence update received:', { user_id, status });
 
         // If the presence update is for the current user, refetch their data
         if (user && user_id === user.id) {
-          console.log('[AppLayout] Refetching current user data due to presence update');
           refetchUser();
         }
 
@@ -368,7 +364,6 @@ const AppLayout = () => {
       // Save current presence status before joining call
       if (user?.presence_status && user.presence_status !== 'in_call') {
         localStorage.setItem('previousPresenceStatus', user.presence_status);
-        console.log('[AppLayout Call] Saved previous status:', user.presence_status);
       }
 
       // Set status to in_call
@@ -378,7 +373,6 @@ const AppLayout = () => {
           {},
           { headers: { Authorization: `Bearer ${token}` } }
         );
-        console.log('[AppLayout Call] Status set to in_call');
       } catch (statusError) {
         console.error('[AppLayout Call] Failed to set in_call status:', statusError);
       }
@@ -516,7 +510,6 @@ const AppLayout = () => {
             <div className="flex gap-2">
               <button
                 onClick={() => {
-                  console.log('[AppLayout] Enable sound button clicked');
                   enableSound();
                   localStorage.setItem('notificationSoundPromptDismissed', 'true');
                   dismiss();
@@ -527,7 +520,6 @@ const AppLayout = () => {
               </button>
               <button
                 onClick={() => {
-                  console.log('[AppLayout] Dismiss sound prompt button clicked');
                   localStorage.setItem('notificationSoundPromptDismissed', 'true');
                   dismiss();
                 }}

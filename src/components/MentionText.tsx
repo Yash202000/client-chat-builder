@@ -24,13 +24,10 @@ const MentionText: React.FC<MentionTextProps> = ({ content, users = {}, classNam
     // Replace @user:123 with @FirstName
     return text.replace(/@user:(\d+)/g, (match, userId) => {
       const user = users[parseInt(userId)];
-      console.log('[MentionText] Processing mention:', { match, userId, user, allUsers: Object.keys(users) });
       if (user) {
         const displayName = user.first_name || user.email.split('@')[0];
-        console.log('[MentionText] Replacing with:', displayName);
         return `**@${displayName}**`;
       }
-      console.log('[MentionText] User not found in users object');
       return match;
     });
   };

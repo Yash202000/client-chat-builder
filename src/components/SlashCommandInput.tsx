@@ -1,26 +1,20 @@
-/**
- * Slash Command Input Component
- *
- * Wrapper around regular Input component that adds slash command functionality.
- * Detects slash commands, searches templates, and shows autocomplete dropdown.
- *
- * Used for plain text inputs (e.g., InternalChatPage) where Lexical editor isn't used.
- *
- * Features:
- * - Detects '/' followed by text (no spaces)
- * - Debounced template search
- * - Keyboard navigation (arrows, enter, escape)
- * - Inserts template content at slash position
- * - Tracks template usage
- */
-
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Sparkles } from 'lucide-react';
+import { Sparkles, AtSign } from 'lucide-react';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { searchTemplates, trackTemplateUsage, TemplateSearchResult } from '@/services/messageTemplateService';
+
+interface User {
+  id: number;
+  email: string;
+  first_name?: string;
+  last_name?: string;
+  profile_picture_url?: string;
+}
 
 interface SlashCommandInputProps {
   value: string;
@@ -29,6 +23,7 @@ interface SlashCommandInputProps {
   placeholder?: string;
   disabled?: boolean;
   className?: string;
+  users?: User[];
 }
 
 export const SlashCommandInput: React.FC<SlashCommandInputProps> = ({
@@ -38,121 +33,143 @@ export const SlashCommandInput: React.FC<SlashCommandInputProps> = ({
   placeholder,
   disabled,
   className,
+  users = [],
 }) => {
+  // Slash command state
   const [showTemplates, setShowTemplates] = useState(false);
-  const [query, setQuery] = useState('');
+  const [templateQuery, setTemplateQuery] = useState('');
   const [templates, setTemplates] = useState<TemplateSearchResult[]>([]);
-  const [selectedIndex, setSelectedIndex] = useState(0);
-  const [cursorPosition, setCursorPosition] = useState(0);
+  const [templateSelectedIndex, setTemplateSelectedIndex] = useState(0);
   const [slashPosition, setSlashPosition] = useState(-1);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoadingTemplates, setIsLoadingTemplates] = useState(false);
+
+  // Mention state
+  const [showMentions, setShowMentions] = useState(false);
+  const [mentionQuery, setMentionQuery] = useState('');
+  const [mentionPosition, setMentionPosition] = useState(-1);
+  const [mentionSelectedIndex, setMentionSelectedIndex] = useState(0);
+
+  const [cursorPosition, setCursorPosition] = useState(0);
+  const [dropdownRect, setDropdownRect] = useState<DOMRect | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // Search templates when query changes (debounced)
+  const updateDropdownRect = useCallback(() => {
+    if (inputRef.current) setDropdownRect(inputRef.current.getBoundingClientRect());
+  }, []);
+
+  // Filter users for mention suggestions
+  const filteredUsers = users
+    .filter((u) => {
+      const q = mentionQuery.toLowerCase();
+      return (
+        u.first_name?.toLowerCase().includes(q) ||
+        u.last_name?.toLowerCase().includes(q) ||
+        u.email.toLowerCase().includes(q)
+      );
+    })
+    .slice(0, 6);
+
+  // Debounced template search
   useEffect(() => {
-    if (!query) {
-      setTemplates([]);
-      return;
-    }
-
-    const searchDebounce = setTimeout(async () => {
-      setIsLoading(true);
+    if (!templateQuery) { setTemplates([]); return; }
+    const t = setTimeout(async () => {
+      setIsLoadingTemplates(true);
       try {
-        const results = await searchTemplates(query, 10);
-        setTemplates(results);
-        setSelectedIndex(0);
-      } catch (error) {
-        console.error('Failed to search templates:', error);
-        setTemplates([]);
-      } finally {
-        setIsLoading(false);
-      }
+        setTemplates(await searchTemplates(templateQuery, 10));
+        setTemplateSelectedIndex(0);
+      } catch { setTemplates([]); }
+      finally { setIsLoadingTemplates(false); }
     }, 150);
+    return () => clearTimeout(t);
+  }, [templateQuery]);
 
-    return () => clearTimeout(searchDebounce);
-  }, [query]);
+  useEffect(() => { setMentionSelectedIndex(0); }, [mentionQuery]);
 
-  // Handle input change and detect slash commands
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newValue = e.target.value;
     const cursorPos = e.target.selectionStart || 0;
-
     onChange(newValue);
     setCursorPosition(cursorPos);
 
-    // Check if user is typing a slash command
     const textBeforeCursor = newValue.slice(0, cursorPos);
-    const lastSlash = textBeforeCursor.lastIndexOf('/');
 
-    if (lastSlash !== -1) {
-      const textAfterSlash = textBeforeCursor.slice(lastSlash + 1);
-
-      // Check if there's no space after slash (still typing the command)
-      if (!textAfterSlash.includes(' ')) {
-        setQuery(textAfterSlash);
-        setSlashPosition(lastSlash);
-        setShowTemplates(true);
+    // --- @ mention detection (takes priority) ---
+    const lastAt = textBeforeCursor.lastIndexOf('@');
+    if (lastAt !== -1) {
+      const afterAt = textBeforeCursor.slice(lastAt + 1);
+      if (!afterAt.includes(' ')) {
+        setMentionQuery(afterAt);
+        setMentionPosition(lastAt);
+        setShowMentions(true);
+        setShowTemplates(false);
+        updateDropdownRect();
         return;
       }
     }
+    setShowMentions(false);
 
+    // --- / slash command detection ---
+    const lastSlash = textBeforeCursor.lastIndexOf('/');
+    if (lastSlash !== -1) {
+      const afterSlash = textBeforeCursor.slice(lastSlash + 1);
+      if (!afterSlash.includes(' ')) {
+        setTemplateQuery(afterSlash);
+        setSlashPosition(lastSlash);
+        setShowTemplates(true);
+        updateDropdownRect();
+        return;
+      }
+    }
     setShowTemplates(false);
-    setQuery('');
+    setTemplateQuery('');
   };
 
-  // Insert template at slash position
-  const insertTemplate = (template: TemplateSearchResult) => {
-    if (slashPosition === -1) return;
-
-    const textBeforeSlash = value.slice(0, slashPosition);
-    const textAfterCursor = value.slice(cursorPosition);
-    const newValue = textBeforeSlash + template.content + textAfterCursor;
-
+  const insertMention = (user: User) => {
+    const displayName = user.first_name || user.email.split('@')[0];
+    const mentionText = `@${displayName}`;
+    const newValue =
+      value.slice(0, mentionPosition) + mentionText + ' ' + value.slice(cursorPosition);
     onChange(newValue);
-
-    // Track usage
-    trackTemplateUsage(template.id).catch(console.error);
-
-    // Reset state
-    setShowTemplates(false);
-    setQuery('');
-    setSlashPosition(-1);
-
-    // Set cursor position after template
-    const newCursorPos = textBeforeSlash.length + template.content.length;
+    setShowMentions(false);
+    setMentionQuery('');
+    const newCursor = mentionPosition + mentionText.length + 1;
     setTimeout(() => {
       inputRef.current?.focus();
-      inputRef.current?.setSelectionRange(newCursorPos, newCursorPos);
+      inputRef.current?.setSelectionRange(newCursor, newCursor);
     }, 0);
   };
 
-  // Handle keyboard navigation
+  const insertTemplate = (template: TemplateSearchResult) => {
+    if (slashPosition === -1) return;
+    const newValue = value.slice(0, slashPosition) + template.content + value.slice(cursorPosition);
+    onChange(newValue);
+    trackTemplateUsage(template.id).catch(console.error);
+    setShowTemplates(false);
+    setTemplateQuery('');
+    setSlashPosition(-1);
+    const newCursor = slashPosition + template.content.length;
+    setTimeout(() => {
+      inputRef.current?.focus();
+      inputRef.current?.setSelectionRange(newCursor, newCursor);
+    }, 0);
+  };
+
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (showTemplates && templates.length > 0) {
-      if (e.key === 'ArrowDown') {
-        e.preventDefault();
-        setSelectedIndex((prev) => (prev + 1) % templates.length);
-        return;
-      } else if (e.key === 'ArrowUp') {
-        e.preventDefault();
-        setSelectedIndex((prev) => (prev - 1 + templates.length) % templates.length);
-        return;
-      } else if (e.key === 'Enter') {
-        e.preventDefault();
-        insertTemplate(templates[selectedIndex]);
-        return;
-      } else if (e.key === 'Escape') {
-        e.preventDefault();
-        setShowTemplates(false);
-        setQuery('');
-        return;
-      }
+    if (showMentions && filteredUsers.length > 0) {
+      if (e.key === 'ArrowDown') { e.preventDefault(); setMentionSelectedIndex((i) => (i + 1) % filteredUsers.length); return; }
+      if (e.key === 'ArrowUp') { e.preventDefault(); setMentionSelectedIndex((i) => (i - 1 + filteredUsers.length) % filteredUsers.length); return; }
+      if (e.key === 'Enter') { e.preventDefault(); insertMention(filteredUsers[mentionSelectedIndex]); return; }
+      if (e.key === 'Escape') { setShowMentions(false); return; }
     }
 
-    // Pass through other key events (like Enter for sending)
-    if (e.key === 'Enter' && onKeyPress) {
-      onKeyPress(e);
+    if (showTemplates && templates.length > 0) {
+      if (e.key === 'ArrowDown') { e.preventDefault(); setTemplateSelectedIndex((i) => (i + 1) % templates.length); return; }
+      if (e.key === 'ArrowUp') { e.preventDefault(); setTemplateSelectedIndex((i) => (i - 1 + templates.length) % templates.length); return; }
+      if (e.key === 'Enter') { e.preventDefault(); insertTemplate(templates[templateSelectedIndex]); return; }
+      if (e.key === 'Escape') { e.preventDefault(); setShowTemplates(false); setTemplateQuery(''); return; }
     }
+
+    if (e.key === 'Enter' && onKeyPress) onKeyPress(e);
   };
 
   return (
@@ -167,66 +184,104 @@ export const SlashCommandInput: React.FC<SlashCommandInputProps> = ({
         className={className}
       />
 
-      {/* Template autocomplete dropdown */}
-      {showTemplates && (
-        <div className="absolute bottom-full left-0 mb-2 w-full max-w-2xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg shadow-xl z-50">
-          {isLoading ? (
-            <div className="p-4 text-center text-sm text-slate-500">
-              Searching templates...
+      {/* @ Mention dropdown — portal so it escapes overflow:hidden parents */}
+      {showMentions && dropdownRect && createPortal(
+        <div
+          className="fixed z-[9990] w-72 bg-popover border border-border rounded-xl shadow-xl overflow-hidden"
+          style={{
+            left: dropdownRect.left,
+            top: dropdownRect.top - 8,
+            transform: 'translateY(-100%)',
+          }}
+        >
+          <div className="px-3 py-2 border-b border-border flex items-center gap-1.5">
+            <AtSign className="h-3 w-3 text-violet-500" />
+            <span className="text-xs font-semibold text-muted-foreground">Mention someone</span>
+          </div>
+          {filteredUsers.length === 0 ? (
+            <div className="px-3 py-3 text-xs text-muted-foreground text-center">No members found</div>
+          ) : (
+            <div className="py-1">
+              {filteredUsers.map((user, index) => (
+                <button
+                  key={user.id}
+                  onMouseDown={(e) => { e.preventDefault(); insertMention(user); }}
+                  className={cn(
+                    'w-full flex items-center gap-2.5 px-3 py-2 text-left transition-colors',
+                    index === mentionSelectedIndex ? 'bg-violet-50 dark:bg-violet-900/20' : 'hover:bg-accent'
+                  )}
+                >
+                  <Avatar className="h-7 w-7 flex-shrink-0">
+                    <AvatarImage src={user.profile_picture_url} />
+                    <AvatarFallback className="text-[10px] font-bold bg-gradient-to-br from-violet-500 to-indigo-600 text-white">
+                      {(user.first_name?.[0] || user.email[0]).toUpperCase()}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-foreground truncate leading-tight">
+                      {user.first_name ? `${user.first_name} ${user.last_name || ''}`.trim() : user.email}
+                    </p>
+                    {user.first_name && <p className="text-xs text-muted-foreground truncate">{user.email}</p>}
+                  </div>
+                </button>
+              ))}
             </div>
+          )}
+        </div>,
+        document.body
+      )}
+
+      {/* / Slash command dropdown — portal so it escapes overflow:hidden parents */}
+      {showTemplates && dropdownRect && createPortal(
+        <div
+          className="fixed z-[9990] w-[480px] max-w-[90vw] bg-popover border border-border rounded-xl shadow-xl"
+          style={{
+            left: dropdownRect.left,
+            top: dropdownRect.top - 8,
+            transform: 'translateY(-100%)',
+          }}
+        >
+          {isLoadingTemplates ? (
+            <div className="p-4 text-center text-sm text-muted-foreground">Searching templates...</div>
           ) : templates.length === 0 ? (
-            <div className="p-4 text-center text-sm text-slate-500">
-              {query ? 'No templates found' : 'Start typing to search templates'}
+            <div className="p-4 text-center text-sm text-muted-foreground">
+              {templateQuery ? 'No templates found' : 'Start typing to search templates'}
             </div>
           ) : (
             <ScrollArea className="max-h-80">
               <div className="p-2">
-                <div className="text-xs font-semibold text-slate-500 dark:text-slate-400 px-2 py-1 flex items-center gap-1">
+                <div className="text-xs font-semibold text-muted-foreground px-2 py-1 flex items-center gap-1">
                   <Sparkles className="h-3 w-3" />
                   Message Templates
                 </div>
                 {templates.map((template, index) => (
                   <button
                     key={template.id}
-                    onClick={() => insertTemplate(template)}
+                    onMouseDown={(e) => { e.preventDefault(); insertTemplate(template); }}
                     className={cn(
                       'w-full text-left px-3 py-2 rounded-md transition-colors',
-                      index === selectedIndex
-                        ? 'bg-purple-50 dark:bg-purple-900/20 border-l-2 border-purple-600'
-                        : 'hover:bg-slate-50 dark:hover:bg-slate-700/50'
+                      index === templateSelectedIndex
+                        ? 'bg-violet-50 dark:bg-violet-900/20 border-l-2 border-violet-500'
+                        : 'hover:bg-accent'
                     )}
                   >
                     <div className="flex items-start justify-between gap-2">
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 mb-1">
-                          <span className="text-sm font-medium text-slate-900 dark:text-slate-100">
-                            /{template.shortcut}
-                          </span>
-                          <span className="text-xs text-slate-500 dark:text-slate-400">
-                            {template.name}
-                          </span>
+                          <span className="text-sm font-medium text-foreground">/{template.shortcut}</span>
+                          <span className="text-xs text-muted-foreground">{template.name}</span>
                         </div>
-                        <p className="text-xs text-slate-600 dark:text-slate-300 line-clamp-2">
-                          {template.preview}
-                        </p>
+                        <p className="text-xs text-muted-foreground line-clamp-2">{template.preview}</p>
                         {template.tags.length > 0 && (
                           <div className="flex gap-1 mt-1 flex-wrap">
                             {template.tags.slice(0, 3).map((tag) => (
-                              <Badge
-                                key={tag}
-                                variant="secondary"
-                                className="text-xs px-1.5 py-0"
-                              >
-                                {tag}
-                              </Badge>
+                              <Badge key={tag} variant="secondary" className="text-xs px-1.5 py-0">{tag}</Badge>
                             ))}
                           </div>
                         )}
                       </div>
                       {template.scope === 'shared' && (
-                        <Badge variant="outline" className="text-xs shrink-0">
-                          Shared
-                        </Badge>
+                        <Badge variant="outline" className="text-xs shrink-0">Shared</Badge>
                       )}
                     </div>
                   </button>
@@ -234,7 +289,8 @@ export const SlashCommandInput: React.FC<SlashCommandInputProps> = ({
               </div>
             </ScrollArea>
           )}
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );

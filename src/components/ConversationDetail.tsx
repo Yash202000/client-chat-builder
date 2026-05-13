@@ -308,7 +308,6 @@ export const ConversationDetail: React.FC<ConversationDetailProps> = ({ sessionI
 
   // Keep refs in sync with state
   useEffect(() => {
-    console.log('[Draft] Syncing refs - message:', message, 'note:', note);
     messageRef.current = message;
     noteRef.current = note;
   }, [message, note]);
@@ -330,10 +329,6 @@ export const ConversationDetail: React.FC<ConversationDetailProps> = ({ sessionI
   useEffect(() => {
     if (readOnly) return;
 
-    console.log('[Draft] Session changed to:', sessionId);
-    console.log('[Draft] Previous session:', currentSessionIdRef.current);
-    console.log('[Draft] isInitialLoad:', isInitialLoadRef.current);
-    console.log('[Draft] messageRef.current:', messageRef.current);
 
     // Set loading flag
     isLoadingDraftRef.current = true;
@@ -345,12 +340,9 @@ export const ConversationDetail: React.FC<ConversationDetailProps> = ({ sessionI
       const currentMessage = messageRef.current;
       const currentNote = noteRef.current;
 
-      console.log('[Draft] Saving to previous session:', prevSessionId);
-      console.log('[Draft] Message to save:', currentMessage);
 
       if (currentMessage.trim()) {
         localStorage.setItem(getDraftKey(prevSessionId, 'message'), currentMessage);
-        console.log('[Draft] Saved message to localStorage:', getDraftKey(prevSessionId, 'message'));
       }
       if (currentNote.trim()) {
         localStorage.setItem(getDraftKey(prevSessionId, 'note'), currentNote);
@@ -365,9 +357,6 @@ export const ConversationDetail: React.FC<ConversationDetailProps> = ({ sessionI
     const savedMessage = localStorage.getItem(getDraftKey(sessionId, 'message')) || '';
     const savedNote = localStorage.getItem(getDraftKey(sessionId, 'note')) || '';
 
-    console.log('[Draft] Loading from session:', sessionId);
-    console.log('[Draft] Loaded message:', savedMessage);
-    console.log('[Draft] localStorage key:', getDraftKey(sessionId, 'message'));
 
     // Update refs immediately to prevent stale data issues
     messageRef.current = savedMessage;
@@ -380,7 +369,6 @@ export const ConversationDetail: React.FC<ConversationDetailProps> = ({ sessionI
     // Reset loading flag after state updates
     setTimeout(() => {
       isLoadingDraftRef.current = false;
-      console.log('[Draft] Loading flag reset');
     }, 100);
   }, [sessionId, readOnly]);
 
@@ -390,7 +378,6 @@ export const ConversationDetail: React.FC<ConversationDetailProps> = ({ sessionI
 
     // Skip auto-save while loading drafts
     if (isLoadingDraftRef.current) {
-      console.log('[Draft] Auto-save skipped - loading in progress');
       return;
     }
 
@@ -403,22 +390,17 @@ export const ConversationDetail: React.FC<ConversationDetailProps> = ({ sessionI
     draftSaveTimeoutRef.current = setTimeout(() => {
       // Double-check loading flag
       if (isLoadingDraftRef.current) {
-        console.log('[Draft] Auto-save skipped in timeout - loading in progress');
         return;
       }
 
       // Only save for current session
       const saveSessionId = currentSessionIdRef.current;
 
-      console.log('[Draft] Auto-saving to session:', saveSessionId);
-      console.log('[Draft] Message:', message);
 
       if (message.trim()) {
         localStorage.setItem(getDraftKey(saveSessionId, 'message'), message);
-        console.log('[Draft] Auto-saved message');
       } else {
         localStorage.removeItem(getDraftKey(saveSessionId, 'message'));
-        console.log('[Draft] Removed empty message from localStorage');
       }
 
       if (note.trim()) {
@@ -545,7 +527,6 @@ export const ConversationDetail: React.FC<ConversationDetailProps> = ({ sessionI
 
       ws.current.onopen = () => {
         reconnectAttemptRef.current = 0;
-        console.log('[WebSocket] Connected');
       };
 
       ws.current.onmessage = (event) => {
@@ -558,7 +539,6 @@ export const ConversationDetail: React.FC<ConversationDetailProps> = ({ sessionI
 
         // Handle contact update messages
         if (rawMessage.type === 'contact_updated') {
-          console.log('[WebSocket] Contact updated:', rawMessage);
           queryClient.invalidateQueries({ queryKey: ['sessionDetails', sessionId] });
           return;
         }
@@ -594,7 +574,6 @@ export const ConversationDetail: React.FC<ConversationDetailProps> = ({ sessionI
         if (destroyed) return;
         if (!event.wasClean) {
           const delay = Math.min(1000 * 2 ** reconnectAttemptRef.current, 30000);
-          console.log(`[WebSocket] Disconnected — reconnecting in ${delay}ms (attempt ${reconnectAttemptRef.current + 1})`);
           reconnectAttemptRef.current += 1;
           reconnectTimeoutRef.current = setTimeout(connect, delay);
         }
@@ -677,7 +656,6 @@ export const ConversationDetail: React.FC<ConversationDetailProps> = ({ sessionI
 
       // Check if user has scrolled to top (within 100px from top)
       if (container.scrollTop < 100 && hasNextPage && !isFetchingNextPage) {
-        console.log('[Scroll] Loading more messages...', { scrollTop: container.scrollTop, hasNextPage, isFetchingNextPage });
         const scrollHeightBefore = container.scrollHeight;
         const scrollTopBefore = container.scrollTop;
 
@@ -688,7 +666,6 @@ export const ConversationDetail: React.FC<ConversationDetailProps> = ({ sessionI
               const scrollHeightAfter = container.scrollHeight;
               const newScrollTop = scrollTopBefore + (scrollHeightAfter - scrollHeightBefore);
               container.scrollTop = newScrollTop;
-              console.log('[Scroll] Loaded older messages, adjusted scroll position');
             }
           });
         });
@@ -696,10 +673,8 @@ export const ConversationDetail: React.FC<ConversationDetailProps> = ({ sessionI
     };
 
     container.addEventListener('scroll', handleScroll);
-    console.log('[Scroll] Scroll listener attached', { hasInitiallyLoaded, hasNextPage });
     return () => {
       container.removeEventListener('scroll', handleScroll);
-      console.log('[Scroll] Scroll listener removed');
     };
   }, [hasNextPage, isFetchingNextPage, fetchNextPage, hasInitiallyLoaded]);
 

@@ -327,11 +327,6 @@ const VisualWorkflowBuilder = () => {
         const isMultiCondition = conditions.length > 0;
 
         // Debug logging
-        console.log('[Condition Validation] Node:', node.id);
-        console.log('[Condition Validation] conditions array:', conditions);
-        console.log('[Condition Validation] isMultiCondition:', isMultiCondition);
-        console.log('[Condition Validation] outgoingEdges:', outgoingEdges);
-        console.log('[Condition Validation] outgoingEdges sourceHandles:', outgoingEdges.map(e => e.sourceHandle));
 
         if (isMultiCondition) {
           // Multi-condition format: check for numeric handles (0, 1, 2, ...) and 'else'
@@ -340,7 +335,6 @@ const VisualWorkflowBuilder = () => {
           // Check each condition has an edge
           conditions.forEach((_, index) => {
             const hasEdge = outgoingEdges.some(edge => edge.sourceHandle === String(index));
-            console.log(`[Condition Validation] Checking handle "${index}" (string: "${String(index)}") - hasEdge:`, hasEdge);
             if (!hasEdge) {
               missingHandles.push(index);
             }
@@ -348,8 +342,6 @@ const VisualWorkflowBuilder = () => {
 
           // Check for else edge
           const hasElseEdge = outgoingEdges.some(edge => edge.sourceHandle === 'else');
-          console.log('[Condition Validation] hasElseEdge:', hasElseEdge);
-          console.log('[Condition Validation] missingHandles:', missingHandles);
 
           if (missingHandles.length > 0) {
             errors.push(`Condition node "${node.data.label || node.id}" is missing edges for conditions: ${missingHandles.join(', ')}`);

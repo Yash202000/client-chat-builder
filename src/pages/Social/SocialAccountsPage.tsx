@@ -274,9 +274,8 @@ export default function SocialAccountsPage() {
                 {/* Platform header */}
                 <div className="px-5 pt-5 pb-4 border-b border-border">
                   <div className="flex items-center justify-between mb-4">
-                    <span className="text-[10px] font-mono tracking-[0.18em] uppercase"
-                      style={{ color: hasActive ? cfg.accent : undefined }}
-                      className={hasActive ? '' : 'text-muted-foreground'}>
+                    <span className={`text-[10px] font-mono tracking-[0.18em] uppercase${hasActive ? '' : ' text-muted-foreground'}`}
+                      style={{ color: hasActive ? cfg.accent : undefined }}>
                       {cfg.channel}
                     </span>
                     <div className="flex items-center gap-2">
