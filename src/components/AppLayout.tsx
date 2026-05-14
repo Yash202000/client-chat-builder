@@ -135,7 +135,7 @@ const AppLayout = () => {
   const isManagedCredentials = systemConfig?.managed_credentials ?? false;
   const { toast } = useToast();
   const navigate = useNavigate();
-  const { soundEnabled, enableSound, showNotification } = useNotifications();
+  const { soundEnabled, enableSound, showNotification, playNotificationSound } = useNotifications();
   const queryClient = useQueryClient();
 
   const { data: integrations = [] } = useQuery<{ type: string }[]>({
@@ -177,6 +177,7 @@ const AppLayout = () => {
     roomName: string;
     livekitToken: string;
     livekitUrl: string;
+    joinMode?: 'accept' | 'join';
   } | null>(null);
 
   // Handoff call state (customer -> agent)
@@ -193,7 +194,7 @@ const AppLayout = () => {
   } | null>(null);
 
   // Active calls — stored in context so they persist across navigation
-  const { activeCall: activeHandoffCall, startCall: setActiveHandoffCallCtx, endCall: clearActiveHandoffCall, startInternalCall } = useVideoCall();
+  const { activeCall: activeHandoffCall, startCall: setActiveHandoffCallCtx, endCall: clearActiveHandoffCall, startInternalCall, updateInternalCall } = useVideoCall();
   const setActiveHandoffCall = (call: { sessionId: string; token: string; livekitUrl: string; botAgentId?: number; } | null) => {
     if (call) {
       setActiveHandoffCallCtx({
@@ -243,13 +244,14 @@ const AppLayout = () => {
           });
         }
       } else if (wsMessage.type === 'video_call_initiated') {
-        const { call_id, room_name, livekit_token, livekit_url, channel_id, channel_type, channel_member_ids, caller_id, caller_name, caller_avatar } = wsMessage;
+        const { call_id, room_name, livekit_token, livekit_url, channel_id, channel_type, channel_member_ids, caller_id, caller_name, caller_avatar, is_direct_invite } = wsMessage;
         const isChannelMember = channel_member_ids && user && channel_member_ids.includes(user.id);
         const isDM = channel_type?.toUpperCase() === 'DM' && channel_member_ids?.length === 2;
+        const shouldRing = isDM || is_direct_invite;
 
         if (user && caller_id !== user.id && isChannelMember) {
-          if (isDM) {
-            // Full ring modal for 1-on-1 calls
+          if (shouldRing) {
+            // Full ring modal for 1-on-1 DM calls and direct invites into active calls
             setIncomingCall({
               callId: call_id,
               callerId: caller_id,
@@ -258,8 +260,9 @@ const AppLayout = () => {
               channelId: channel_id,
               channelName: `Channel ${channel_id}`,
               roomName: room_name,
-              livekitToken: livekit_token,
+              livekitToken: livekit_token || '',
               livekitUrl: livekit_url,
+              joinMode: isDM ? 'accept' : 'join',
             });
             showNotification({
               title: 'Incoming Video Call',
@@ -290,6 +293,12 @@ const AppLayout = () => {
         // Caller cancelled or callee declined — dismiss ring modal on both sides
         const { call_id } = wsMessage;
         setIncomingCall((prev) => (prev?.callId === call_id ? null : prev));
+      } else if (wsMessage.type === 'call_channel_upgraded') {
+        // DM call was upgraded to a group channel — switch active call chat to new channel
+        const { new_channel_id } = wsMessage;
+        if (new_channel_id) {
+          updateInternalCall({ channelId: new_channel_id });
+        }
       } else if (wsMessage.type === 'unread_count_update') {
         const { user_id, unread_count } = wsMessage;
 
@@ -298,13 +307,9 @@ const AppLayout = () => {
           const previousCount = queryClient.getQueryData<number>(['notificationUnreadCount']) || 0;
           queryClient.setQueryData(['notificationUnreadCount'], unread_count);
 
-          // Play notification sound if count increased (new notification)
+          // Play notification sound if count increased
           if (unread_count > previousCount) {
-            showNotification({
-              title: 'New Notification',
-              body: 'You have a new notification',
-              tag: 'notification-update',
-            });
+            playNotificationSound();
           }
         }
       } else if (wsMessage.type === 'presence_update') {
@@ -348,7 +353,22 @@ const AppLayout = () => {
           ? `${sender.first_name}${sender.last_name ? ' ' + sender.last_name : ''}`
           : sender?.email || 'Someone';
         const channelName = payload.channel_name || `Channel ${payload.channel_id}`;
-        const preview = (payload.content || '').replace(/@user:\d+/g, '@').trim().substring(0, 120) || 'Sent an attachment';
+        // Resolve @user:ID and @{Name:ID} mentions to display names using cached channel members
+        const cachedMembers: any[] = queryClient.getQueryData<any[]>(['channelMembers', payload.channel_id]) || [];
+        const membersById: Record<number, any> = cachedMembers.reduce((acc, m) => {
+          if (m?.id) acc[m.id] = m;
+          return acc;
+        }, {});
+        const resolveMention = (id: number) => {
+          const u = membersById[id];
+          return u ? `@${u.first_name || u.email?.split('@')[0] || 'user'}` : '@user';
+        };
+        const preview = (payload.content || '')
+          .replace(/@user:(\d+)/g, (_: string, id: string) => resolveMention(Number(id)))
+          .replace(/@\{([^}:]+):(\d+)\}/g, (_: string, name: string, id: string) => membersById[Number(id)]
+            ? resolveMention(Number(id))
+            : `@${name}`)
+          .trim().substring(0, 120) || 'Sent an attachment';
 
         setMessageNotifications((prev) => {
           // Cap at 3 simultaneous notifications
@@ -363,6 +383,7 @@ const AppLayout = () => {
           }];
           return next;
         });
+        playNotificationSound();
       }
     },
     enabled: !!user?.company_id,
@@ -391,7 +412,10 @@ const AppLayout = () => {
         console.error('[AppLayout Call] Failed to set in_call status:', statusError);
       }
 
-      const endpoint = `${API_BASE_URL}/api/v1/video-calls/${incomingCall.callId}/accept`;
+      const isJoinMode = incomingCall.joinMode === 'join';
+      const endpoint = isJoinMode
+        ? `${API_BASE_URL}/api/v1/video-calls/channels/${incomingCall.channelId}/join`
+        : `${API_BASE_URL}/api/v1/video-calls/${incomingCall.callId}/accept`;
       const response = await axios.post(endpoint, {}, {
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -605,9 +629,9 @@ const AppLayout = () => {
         ...(integrationTypes.has('twilio_voice') ? [{ titleKey: "navigation.smsInbox", url: "/dashboard/inbox/sms", icon: MessageSquare }] : []),
         { titleKey: "navigation.contactHub", url: "/dashboard/contacts", icon: Users },
         // Voice Center
+        { titleKey: "navigation.callLog", url: "/dashboard/voice-calls", icon: PhoneCall },
         ...(integrationTypes.has('twilio_voice') ? [
           { titleKey: "navigation.callQueue",        url: "/dashboard/call-queue",     icon: Phone },
-          { titleKey: "navigation.callLog",          url: "/dashboard/voice-calls",    icon: PhoneCall },
           { titleKey: "navigation.supervisor",       url: "/dashboard/supervisor",     icon: Radio },
           { titleKey: "navigation.predictiveDialer", url: "/dashboard/dialer",         icon: Headphones },
           { titleKey: "navigation.callAnalytics",    url: "/dashboard/call-analytics", icon: BarChart3 },
@@ -982,10 +1006,10 @@ const AppLayout = () => {
         <div className="flex-1 flex flex-col overflow-hidden">
 
           {/* Slim top bar — right side only, sidebar logo is top-left */}
-          <header className="flex-shrink-0 h-11 bg-background border-b border-border/50 flex items-center px-3 justify-between gap-2 relative">
+          <header className="flex-shrink-0 h-11 bg-background border-b border-border/50 flex items-center px-3 gap-2 relative">
             <div className="pointer-events-none absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-violet-500/20 to-transparent" />
             {/* Left: hamburger (mobile/tablet) + breadcrumb (desktop) */}
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-shrink-0">
               <button
                 onClick={() => {
                   if (window.innerWidth < 768) {
@@ -1024,13 +1048,13 @@ const AppLayout = () => {
               )}
             </div>
 
-            {/* Centre: search */}
-            <div className="absolute left-1/2 -translate-x-1/2 hidden md:block">
+            {/* Centre: search — grows to fill space, shrinks on narrow screens */}
+            <div className="hidden md:flex flex-1 justify-center items-center px-4 min-w-0">
               <CommandPaletteTrigger />
             </div>
 
             {/* Right: utility actions */}
-            <div className="flex items-center gap-2 ml-auto">
+            <div className="flex items-center gap-2 ml-auto md:ml-0 flex-shrink-0">
               <NotificationBell />
               <LanguageSwitcher />
               <button

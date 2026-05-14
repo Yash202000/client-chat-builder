@@ -312,11 +312,6 @@ const ConversationsPage: React.FC<ConversationsPageProps> = ({ channel }) => {
           queryClient.invalidateQueries({ queryKey: ['sessions', companyId] });
           queryClient.invalidateQueries({ queryKey: ['sessionCounts', companyId] });
         } else if (eventData.type === 'new_message') {
-          toast({
-            title: t('conversations.notifications.newMessage'),
-            description: t('conversations.notifications.newMessageDesc'),
-            variant: "info",
-          });
           // Invalidate queries to refetch session list and counts
           queryClient.invalidateQueries({ queryKey: ['sessions', companyId] });
           queryClient.invalidateQueries({ queryKey: ['sessionCounts', companyId] });

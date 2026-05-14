@@ -6,41 +6,38 @@ interface User {
 }
 
 /**
- * Convert display mentions (@FirstName) to API format (@user:123)
- * Uses fuzzy matching to find the user by first name or email
+ * Convert display mentions to API format (@user:123).
+ * Pass 1: @{Name:ID} safety-net (old stored messages, kept for backward compat)
+ * Pass 2: @Name → @user:ID via exact first_name / email-prefix lookup
  */
 export const convertMentionsToApiFormat = (content: string, users: User[]): string => {
-  if (!content || users.length === 0) return content;
+  if (!content) return content;
 
-  // Find all @mentions in the content
-  const mentionRegex = /@(\w+)/g;
-  let processedContent = content;
-  const matches = Array.from(content.matchAll(mentionRegex));
+  // Pass 1: @{Name:ID} → @user:ID  (no lookup needed; {} is markdown-safe unlike [])
+  let processed = content.replace(/@\{([^}:]+):(\d+)\}/g, (_match, _name, id) => `@user:${id}`);
 
-  // Process each mention
-  for (const match of matches) {
-    const mentionText = match[1]; // The text after @
-    const fullMatch = match[0]; // The full @mention
-
-    // Try to find matching user
-    const matchedUser = users.find((user) => {
-      const firstName = user.first_name?.toLowerCase() || '';
-      const emailName = user.email.split('@')[0].toLowerCase();
-      const searchText = mentionText.toLowerCase();
-
-      return firstName === searchText || emailName === searchText;
-    });
-
-    if (matchedUser) {
-      // Replace with API format
-      processedContent = processedContent.replace(
-        fullMatch,
-        `@user:${matchedUser.id}`
-      );
+  // Pass 2: @Name → @user:ID  (exact match against inserted display name)
+  // Regex matches @<anything except whitespace and @> so it handles hyphens, dots, etc.
+  // Already-converted @user:123 tokens won't match any real user name, so they pass through safely.
+  if (users.length > 0) {
+    const legacyRegex = /@([^\s@{}\[\]]+)/g;
+    const legacyMatches = Array.from(processed.matchAll(legacyRegex));
+    for (const match of legacyMatches) {
+      const mentionText = match[1];
+      const fullMatch = match[0];
+      const matchedUser = users.find((user) => {
+        const firstName = user.first_name?.toLowerCase() || '';
+        const emailName = user.email.split('@')[0].toLowerCase();
+        const searchText = mentionText.toLowerCase();
+        return firstName === searchText || emailName === searchText;
+      });
+      if (matchedUser) {
+        processed = processed.replace(fullMatch, `@user:${matchedUser.id}`);
+      }
     }
   }
 
-  return processedContent;
+  return processed;
 };
 
 /**

@@ -6,7 +6,7 @@ import {
   ArrowLeft, Plus, Search, LayoutGrid,
   ChevronUp, ChevronDown, Loader2, MoreVertical, Trash2,
   Bug, CheckSquare, Bookmark, Zap, GitBranch, X,
-  ArrowRight, Paperclip, User, ChevronRight,
+  ArrowRight, Paperclip, User, ChevronRight, Calendar, UserCircle,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -312,6 +312,164 @@ function StatusCell({ ticket, statuses, transitions, onTransitionSelect, onDirec
   );
 }
 
+// ── Assignee Cell ─────────────────────────────────────────────────────────────
+
+interface AssigneeCellProps {
+  ticket: Ticket;
+  teamMembers: TicketUser[];
+  onUpdate: (ticketId: number, patch: Record<string, any>, rollback: () => void) => void;
+  onOptimistic: (ticketId: number, patch: Partial<Ticket>) => void;
+}
+
+function AssigneeCell({ ticket, teamMembers, onUpdate, onOptimistic }: AssigneeCellProps) {
+  const [open, setOpen] = useState(false);
+  const [search, setSearch] = useState('');
+  const { t } = useTranslation();
+
+  const filtered = teamMembers.filter(u => {
+    if (!search) return true;
+    const q = search.toLowerCase();
+    return (u.full_name || '').toLowerCase().includes(q) || (u.email || '').toLowerCase().includes(q);
+  });
+
+  const handleSelect = (user: TicketUser | null, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setOpen(false);
+    setSearch('');
+    const prevAssignee = ticket.assignee;
+    onOptimistic(ticket.id, { assignee: user ?? undefined });
+    onUpdate(
+      ticket.id,
+      { assignee_id: user?.id ?? null },
+      () => onOptimistic(ticket.id, { assignee: prevAssignee }),
+    );
+  };
+
+  return (
+    <Popover open={open} onOpenChange={v => { setOpen(v); if (!v) setSearch(''); }}>
+      <PopoverTrigger asChild onClick={e => e.stopPropagation()}>
+        <button className="flex items-center gap-1.5 px-2 py-1 rounded-md hover:bg-muted/60 transition-colors group -ml-2 max-w-[120px]">
+          {ticket.assignee ? (
+            <>
+              <Avatar className="w-5 h-5 flex-shrink-0">
+                <AvatarFallback className="text-[10px]">
+                  {ticket.assignee.full_name?.[0] || ticket.assignee.email?.[0] || '?'}
+                </AvatarFallback>
+              </Avatar>
+              <span className="text-xs truncate">{ticket.assignee.full_name || ticket.assignee.email}</span>
+            </>
+          ) : (
+            <>
+              <UserCircle className="w-4 h-4 text-muted-foreground/60 flex-shrink-0" />
+              <span className="text-xs text-muted-foreground">{t('tickets.unassigned')}</span>
+            </>
+          )}
+        </button>
+      </PopoverTrigger>
+      <PopoverContent className="w-56 p-1.5" align="start" onClick={e => e.stopPropagation()}>
+        <div className="px-2 pb-1.5">
+          <input
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            placeholder="Search…"
+            className="w-full text-xs px-2 py-1 rounded border border-border bg-background focus:outline-none focus:ring-1 focus:ring-primary"
+            onClick={e => e.stopPropagation()}
+            autoFocus
+          />
+        </div>
+        <div className="max-h-44 overflow-y-auto space-y-0.5">
+          <button
+            className="w-full flex items-center gap-2 px-2 py-1.5 rounded hover:bg-muted/60 text-left"
+            onClick={e => handleSelect(null, e)}
+          >
+            <UserCircle className="w-4 h-4 text-muted-foreground/60" />
+            <span className="text-sm text-muted-foreground">{t('tickets.unassigned')}</span>
+          </button>
+          {filtered.map(u => (
+            <button
+              key={u.id}
+              className={cn(
+                'w-full flex items-center gap-2 px-2 py-1.5 rounded hover:bg-muted/60 text-left',
+                ticket.assignee?.id === u.id && 'bg-primary/10',
+              )}
+              onClick={e => handleSelect(u, e)}
+            >
+              <Avatar className="w-5 h-5 flex-shrink-0">
+                <AvatarFallback className="text-[10px]">
+                  {u.full_name?.[0] || u.email?.[0] || '?'}
+                </AvatarFallback>
+              </Avatar>
+              <span className="text-sm truncate">{u.full_name || u.email}</span>
+            </button>
+          ))}
+        </div>
+      </PopoverContent>
+    </Popover>
+  );
+}
+
+// ── Due Date Cell ─────────────────────────────────────────────────────────────
+
+interface DueDateCellProps {
+  ticket: Ticket;
+  onUpdate: (ticketId: number, patch: Record<string, any>, rollback: () => void) => void;
+  onOptimistic: (ticketId: number, patch: Partial<Ticket>) => void;
+}
+
+function DueDateCell({ ticket, onUpdate, onOptimistic }: DueDateCellProps) {
+  const [open, setOpen] = useState(false);
+
+  const currentValue = ticket.due_date ? ticket.due_date.substring(0, 10) : '';
+  const isOverdue = ticket.due_date && new Date(ticket.due_date) < new Date();
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value || null;
+    const prevDate = ticket.due_date;
+    setOpen(false);
+    onOptimistic(ticket.id, { due_date: val ?? undefined });
+    onUpdate(
+      ticket.id,
+      { due_date: val },
+      () => onOptimistic(ticket.id, { due_date: prevDate }),
+    );
+  };
+
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild onClick={e => e.stopPropagation()}>
+        <button className="flex items-center gap-1.5 px-2 py-1 rounded-md hover:bg-muted/60 transition-colors group -ml-2">
+          <Calendar className={cn('w-3.5 h-3.5 flex-shrink-0', isOverdue ? 'text-red-500' : 'text-muted-foreground/60')} />
+          {ticket.due_date ? (
+            <span className={cn('text-xs', isOverdue ? 'text-red-500 font-medium' : 'text-muted-foreground')}>
+              {new Date(ticket.due_date).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
+            </span>
+          ) : (
+            <span className="text-xs text-muted-foreground">Set date</span>
+          )}
+        </button>
+      </PopoverTrigger>
+      <PopoverContent className="w-auto p-3" align="start" onClick={e => e.stopPropagation()}>
+        <p className="text-xs font-medium text-muted-foreground mb-2">Due date</p>
+        <input
+          type="date"
+          value={currentValue}
+          onChange={handleChange}
+          onClick={e => e.stopPropagation()}
+          className="text-sm px-2 py-1 rounded border border-border bg-background focus:outline-none focus:ring-1 focus:ring-primary"
+        />
+        {ticket.due_date && (
+          <button
+            className="mt-2 w-full text-xs text-muted-foreground hover:text-destructive transition-colors"
+            onClick={e => { e.stopPropagation(); handleChange({ target: { value: '' } } as any); }}
+          >
+            Clear date
+          </button>
+        )}
+      </PopoverContent>
+    </Popover>
+  );
+}
+
 // ── Main Page ─────────────────────────────────────────────────────────────────
 
 export default function TicketListPage() {
@@ -329,6 +487,10 @@ export default function TicketListPage() {
   const [search, setSearch] = useState('');
   const [filterStatus, setFilterStatus] = useState('');
   const [filterPriority, setFilterPriority] = useState('');
+  const [filterAssignee, setFilterAssignee] = useState('');
+  const [filterType, setFilterType] = useState('');
+  const [filterReporter, setFilterReporter] = useState('');
+  const [filterDue, setFilterDue] = useState(''); // 'overdue' | 'today' | 'week' | 'unset'
   const [sortField, setSortField] = useState<'created_at' | 'priority' | 'due_date'>('created_at');
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc');
 
@@ -376,6 +538,23 @@ export default function TicketListPage() {
     } catch { /* silent — list still shows stale data rather than breaking */ }
   };
 
+  const optimisticUpdate = (ticketId: number, patch: Partial<Ticket>) => {
+    setTickets(prev => prev.map(t => t.id === ticketId ? { ...t, ...patch } : t));
+  };
+
+  const updateTicketField = async (
+    ticketId: number,
+    patch: Record<string, any>,
+    rollback: () => void,
+  ) => {
+    try {
+      await axios.put(`/api/v1/tickets/${ticketId}`, patch, { headers: headers() });
+    } catch (e: any) {
+      rollback();
+      toast.error(e.response?.data?.detail || 'Update failed');
+    }
+  };
+
   const directStatusChange = async (ticket: Ticket, statusId: number) => {
     const targetStatus = statuses.find(s => s.id === statusId);
     // Optimistic update — swap status immediately, no flicker
@@ -392,10 +571,27 @@ export default function TicketListPage() {
 
   const PRIORITY_ORDER: Record<string, number> = { critical: 0, high: 1, medium: 2, low: 3, none: 4 };
 
+  const now = new Date();
+  const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const endOfWeek = new Date(startOfToday); endOfWeek.setDate(endOfWeek.getDate() + 7);
+
   const filtered = tickets
     .filter(t => !search || t.title.toLowerCase().includes(search.toLowerCase()) || t.ticket_number.toLowerCase().includes(search.toLowerCase()))
     .filter(t => !filterStatus || String(t.status?.id) === filterStatus)
     .filter(t => !filterPriority || t.priority === filterPriority)
+    .filter(t => !filterAssignee || (filterAssignee === '__none__' ? !t.assignee : String(t.assignee?.id) === filterAssignee))
+    .filter(t => !filterType || String(t.issue_type?.id) === filterType)
+    .filter(t => !filterReporter || String(t.reporter?.id) === filterReporter)
+    .filter(t => {
+      if (!filterDue) return true;
+      if (filterDue === 'unset') return !t.due_date;
+      if (!t.due_date) return false;
+      const d = new Date(t.due_date);
+      if (filterDue === 'overdue') return d < startOfToday;
+      if (filterDue === 'today') return d >= startOfToday && d < new Date(startOfToday.getTime() + 86400000);
+      if (filterDue === 'week') return d >= startOfToday && d <= endOfWeek;
+      return true;
+    })
     .sort((a, b) => {
       let cmp = 0;
       if (sortField === 'priority') cmp = (PRIORITY_ORDER[a.priority] || 4) - (PRIORITY_ORDER[b.priority] || 4);
@@ -440,48 +636,118 @@ export default function TicketListPage() {
       />
 
       {/* Header */}
-      <div className="flex items-center gap-3 px-6 py-3 border-b bg-background flex-shrink-0">
-        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => navigate('/dashboard/tickets')}>
-          <ArrowLeft className="w-4 h-4" />
-        </Button>
-        <span className="font-semibold">{projectName}</span>
-        <Badge variant="secondary" className="text-xs">{projectKey}</Badge>
-        <div className="ml-auto flex items-center gap-2">
+      <div className="px-6 py-3 border-b bg-background flex-shrink-0 space-y-2">
+        {/* Top row: back / title / actions */}
+        <div className="flex items-center gap-3">
+          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => navigate('/dashboard/tickets')}>
+            <ArrowLeft className="w-4 h-4" />
+          </Button>
+          <span className="font-semibold">{projectName}</span>
+          <Badge variant="secondary" className="text-xs">{projectKey}</Badge>
+          <div className="ml-auto flex items-center gap-2">
+            <Button variant="outline" size="sm" className="h-8"
+              onClick={() => navigate(`/dashboard/tickets/${projectKey}/board`)}>
+              <LayoutGrid className="w-3.5 h-3.5 mr-1.5" />Board
+            </Button>
+            <Button size="sm" className="h-8"
+              onClick={() => navigate(`/dashboard/tickets/${projectKey}/board`)}>
+              <Plus className="w-3.5 h-3.5 mr-1.5" />Create
+            </Button>
+          </div>
+        </div>
+
+        {/* Filter row */}
+        <div className="flex flex-wrap items-center gap-2">
+          {/* Search */}
           <div className="relative">
             <Search className="absolute left-2.5 top-2 w-3.5 h-3.5 text-muted-foreground" />
-            <Input className="pl-8 h-8 w-48 text-sm" placeholder="Search..." value={search}
+            <Input className="pl-8 h-8 w-44 text-xs" placeholder="Search tickets…" value={search}
               onChange={e => setSearch(e.target.value)} />
           </div>
+
+          {/* Status */}
           <Select value={filterStatus || '__all__'} onValueChange={v => setFilterStatus(v === '__all__' ? '' : v)}>
-            <SelectTrigger className="h-8 w-32 text-xs"><SelectValue placeholder="Status" /></SelectTrigger>
+            <SelectTrigger className={`h-8 w-32 text-xs ${filterStatus ? 'ring-1 ring-primary' : ''}`}>
+              <SelectValue placeholder="Status" />
+            </SelectTrigger>
             <SelectContent>
               <SelectItem value="__all__">All Statuses</SelectItem>
               {statuses.map(s => <SelectItem key={s.id} value={String(s.id)}>{s.name}</SelectItem>)}
             </SelectContent>
           </Select>
+
+          {/* Priority */}
           <Select value={filterPriority || '__all__'} onValueChange={v => setFilterPriority(v === '__all__' ? '' : v)}>
-            <SelectTrigger className="h-8 w-28 text-xs"><SelectValue placeholder="Priority" /></SelectTrigger>
+            <SelectTrigger className={`h-8 w-28 text-xs ${filterPriority ? 'ring-1 ring-primary' : ''}`}>
+              <SelectValue placeholder="Priority" />
+            </SelectTrigger>
             <SelectContent>
-              <SelectItem value="__all__">All</SelectItem>
+              <SelectItem value="__all__">All Priorities</SelectItem>
               {['critical', 'high', 'medium', 'low', 'none'].map(p => (
                 <SelectItem key={p} value={p} className="capitalize">{p}</SelectItem>
               ))}
             </SelectContent>
           </Select>
-          {(search || filterStatus || filterPriority) && (
-            <Button variant="ghost" size="icon" className="h-8 w-8"
-              onClick={() => { setSearch(''); setFilterStatus(''); setFilterPriority(''); }}>
-              <X className="w-3.5 h-3.5" />
+
+          {/* Issue Type */}
+          <Select value={filterType || '__all__'} onValueChange={v => setFilterType(v === '__all__' ? '' : v)}>
+            <SelectTrigger className={`h-8 w-32 text-xs ${filterType ? 'ring-1 ring-primary' : ''}`}>
+              <SelectValue placeholder="Type" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="__all__">All Types</SelectItem>
+              {issueTypes.map(it => <SelectItem key={it.id} value={String(it.id)}>{it.name}</SelectItem>)}
+            </SelectContent>
+          </Select>
+
+          {/* Assignee */}
+          <Select value={filterAssignee || '__all__'} onValueChange={v => setFilterAssignee(v === '__all__' ? '' : v)}>
+            <SelectTrigger className={`h-8 w-36 text-xs ${filterAssignee ? 'ring-1 ring-primary' : ''}`}>
+              <SelectValue placeholder="Assignee" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="__all__">All Assignees</SelectItem>
+              <SelectItem value="__none__">Unassigned</SelectItem>
+              {teamMembers.map(u => (
+                <SelectItem key={u.id} value={String(u.id)}>{u.full_name || u.email}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
+          {/* Reporter */}
+          <Select value={filterReporter || '__all__'} onValueChange={v => setFilterReporter(v === '__all__' ? '' : v)}>
+            <SelectTrigger className={`h-8 w-36 text-xs ${filterReporter ? 'ring-1 ring-primary' : ''}`}>
+              <SelectValue placeholder="Reporter" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="__all__">All Reporters</SelectItem>
+              {teamMembers.map(u => (
+                <SelectItem key={u.id} value={String(u.id)}>{u.full_name || u.email}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
+          {/* Due date range */}
+          <Select value={filterDue || '__all__'} onValueChange={v => setFilterDue(v === '__all__' ? '' : v)}>
+            <SelectTrigger className={`h-8 w-32 text-xs ${filterDue ? 'ring-1 ring-primary' : ''}`}>
+              <SelectValue placeholder="Due date" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="__all__">Any due date</SelectItem>
+              <SelectItem value="overdue">Overdue</SelectItem>
+              <SelectItem value="today">Due today</SelectItem>
+              <SelectItem value="week">Due this week</SelectItem>
+              <SelectItem value="unset">No due date</SelectItem>
+            </SelectContent>
+          </Select>
+
+          {/* Clear all */}
+          {(search || filterStatus || filterPriority || filterAssignee || filterType || filterReporter || filterDue) && (
+            <Button variant="ghost" size="sm" className="h-8 gap-1.5 text-muted-foreground hover:text-foreground"
+              onClick={() => { setSearch(''); setFilterStatus(''); setFilterPriority(''); setFilterAssignee(''); setFilterType(''); setFilterReporter(''); setFilterDue(''); }}>
+              <X className="w-3.5 h-3.5" />Clear all
             </Button>
           )}
-          <Button variant="outline" size="sm" className="h-8"
-            onClick={() => navigate(`/dashboard/tickets/${projectKey}/board`)}>
-            <LayoutGrid className="w-3.5 h-3.5 mr-1.5" />Board
-          </Button>
-          <Button size="sm" className="h-8"
-            onClick={() => navigate(`/dashboard/tickets/${projectKey}/board`)}>
-            <Plus className="w-3.5 h-3.5 mr-1.5" />Create
-          </Button>
         </div>
       </div>
 
@@ -555,27 +821,19 @@ export default function TicketListPage() {
                     />
                   </TableCell>
                   <TableCell>
-                    {ticket.assignee ? (
-                      <div className="flex items-center gap-1.5">
-                        <Avatar className="w-5 h-5">
-                          <AvatarFallback className="text-xs">
-                            {ticket.assignee.full_name?.[0] || ticket.assignee.email?.[0] || '?'}
-                          </AvatarFallback>
-                        </Avatar>
-                        <span className="text-xs truncate max-w-20">
-                          {ticket.assignee.full_name || ticket.assignee.email}
-                        </span>
-                      </div>
-                    ) : (
-                      <span className="text-xs text-muted-foreground">—</span>
-                    )}
+                    <AssigneeCell
+                      ticket={ticket}
+                      teamMembers={teamMembers}
+                      onOptimistic={optimisticUpdate}
+                      onUpdate={updateTicketField}
+                    />
                   </TableCell>
                   <TableCell>
-                    {ticket.due_date ? (
-                      <span className={cn('text-xs', new Date(ticket.due_date) < new Date() ? 'text-red-500 font-medium' : 'text-muted-foreground')}>
-                        {new Date(ticket.due_date).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
-                      </span>
-                    ) : <span className="text-xs text-muted-foreground">—</span>}
+                    <DueDateCell
+                      ticket={ticket}
+                      onOptimistic={optimisticUpdate}
+                      onUpdate={updateTicketField}
+                    />
                   </TableCell>
                   <TableCell>
                     <span className="text-xs text-muted-foreground">

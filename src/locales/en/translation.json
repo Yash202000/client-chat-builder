@@ -3930,13 +3930,22 @@
       "description": "Description",
       "priority": "Priority",
       "assignee": "Assignee",
+      "assignee_id": "Assignee",
+      "coAssignees": "Co-Assignees",
+      "addCoAssignee": "Add co-assignee",
       "status": "Status",
       "dueDate": "Due Date",
+      "due_date": "Due Date",
       "startDate": "Start Date",
+      "start_date": "Start Date",
       "resolvedAt": "Resolved At",
+      "resolved_at": "Resolved At",
       "storyPoints": "Story Points",
-      "timeEstimate": "Estimate",
+      "story_points": "Story Points",
+      "timeEstimate": "Time Estimate",
+      "time_estimate": "Time Estimate",
       "timeSpent": "Time Spent",
+      "time_spent": "Time Spent",
       "labels": "Labels",
       "parent": "Parent"
     },
@@ -3984,6 +3993,16 @@
       "deleteWithTickets": "Delete ({{count}} tickets exist)",
       "delete": "Delete",
       "subtitle": "Manage your ticketing projects"
+    },
+    "analytics": {
+      "total": "Total Tickets",
+      "open": "Open",
+      "resolved": "Resolved",
+      "overdue": "Overdue",
+      "byStatus": "By Status",
+      "byPriority": "By Priority",
+      "byIssueType": "By Issue Type",
+      "createdPerDay": "Created Per Day"
     }
   },
   "customFields": {

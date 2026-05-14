@@ -96,7 +96,13 @@ const NotificationCard: React.FC<{
 
       {/* Message preview */}
       <div className="px-4 pb-3">
-        <p className="text-sm text-foreground/90 line-clamp-2 leading-relaxed">{notification.preview}</p>
+        <p className="text-sm text-foreground/90 line-clamp-2 leading-relaxed">
+          {notification.preview.split(/(@\w+)/).map((part, i) =>
+            part.startsWith('@') && part.length > 1
+              ? <span key={i} className="text-violet-500 font-medium">{part}</span>
+              : part
+          )}
+        </p>
       </div>
 
       {/* Divider */}

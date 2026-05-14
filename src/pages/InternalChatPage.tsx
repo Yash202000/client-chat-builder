@@ -22,6 +22,7 @@ import {
   cancelScheduledMessage,
   getChannelReadSummary,
   shareDriveFile,
+  leaveChannel,
 } from '@/services/chatService';
 import { listFolder, searchItems } from '@/services/driveService';
 import type { DriveItem } from '@/services/driveService';
@@ -38,14 +39,16 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Bot, User, Send, Loader2, Video, Plus, Users, MessageSquare, Search, History, PanelLeftClose, Clock, X, Pencil, Check, Phone, PhoneCall, Hash, Voicemail, Pin, Forward, MoreHorizontal, BellOff, UserPlus, UserMinus, VideoOff, HardDrive, FileIcon, Folder, ChevronLeft } from 'lucide-react';
+import { Bot, User, Send, Loader2, Video, Plus, Users, MessageSquare, Search, History, PanelLeftClose, Clock, X, Pencil, Check, Phone, PhoneCall, Hash, Voicemail, Pin, Forward, MoreHorizontal, BellOff, UserPlus, UserMinus, VideoOff, HardDrive, FileIcon, Folder, ChevronLeft, LogOut } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { isToday, isYesterday, format } from 'date-fns';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { useAuth } from '@/hooks/useAuth';
 import axios from 'axios';
 import { useToast } from '@/components/ui/use-toast';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import CreateChannelModal from '@/components/CreateChannelModal';
 import NewChatModal from '@/components/NewChatModal';
 import ManageChannelMembersModal from '@/components/ManageChannelMembersModal';
@@ -197,6 +200,36 @@ interface ActiveVideoCall {
 }
 
 // ── Drive File Picker ──────────────────────────────────────────────────────────
+// ── Date separator helpers ────────────────────────────────────────────────────
+
+function dateDayKey(dateStr: string) {
+  const d = new Date(dateStr);
+  return `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
+}
+
+function dateSeparatorLabel(dateStr: string): string {
+  const d = new Date(dateStr);
+  if (isToday(d)) return 'Today';
+  if (isYesterday(d)) return 'Yesterday';
+  const now = new Date();
+  const diffDays = Math.floor((now.getTime() - d.getTime()) / 86400000);
+  if (diffDays < 7) return format(d, 'EEEE'); // Monday, Tuesday…
+  if (d.getFullYear() === now.getFullYear()) return format(d, 'MMMM d'); // May 12
+  return format(d, 'MMMM d, yyyy'); // May 12, 2024
+}
+
+function DateSeparator({ dateStr }: { dateStr: string }) {
+  return (
+    <div className="flex items-center gap-3 px-2 py-3 select-none">
+      <div className="flex-1 h-px bg-border/60" />
+      <span className="text-[11px] font-medium text-muted-foreground/70 px-1 whitespace-nowrap tracking-wide">
+        {dateSeparatorLabel(dateStr)}
+      </span>
+      <div className="flex-1 h-px bg-border/60" />
+    </div>
+  );
+}
+
 function DriveFilePicker({ search, onSearchChange, onSelect, onClose }: {
   search: string;
   onSearchChange: (v: string) => void;
@@ -268,6 +301,13 @@ const InternalChatPage: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
 
   const [selectedChannel, setSelectedChannel] = useState<ChatChannel | null>(null);
+  const [channelToLeave, setChannelToLeave] = useState<ChatChannel | null>(null);
+  // Keeps the last non-null value so the dialog content doesn't crash during close animation
+  const channelToLeaveRef = useRef<ChatChannel | null>(null);
+  const setChannelToLeaveAndRef = (ch: ChatChannel | null) => {
+    if (ch) channelToLeaveRef.current = ch;
+    setChannelToLeave(ch);
+  };
   const [inputValue, setInputValue] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [isCreateChannelModalOpen, setCreateChannelModalOpen] = useState(false);
@@ -758,6 +798,24 @@ const InternalChatPage: React.FC = () => {
     },
   });
 
+  // Leave channel mutation
+  const leaveChannelMutation = useMutation({
+    mutationFn: (channelId: number) => leaveChannel(channelId),
+    onSuccess: (_, channelId) => {
+      queryClient.invalidateQueries({ queryKey: ['chatChannels'] });
+      if (selectedChannel?.id === channelId) {
+        setSelectedChannel(null);
+        setSearchParams({});
+      }
+      setChannelToLeaveAndRef(null);
+      toast({ title: 'Left channel', description: 'You have left the channel.' });
+    },
+    onError: () => {
+      setChannelToLeaveAndRef(null);
+      toast({ title: t('common.error'), description: 'Failed to leave channel', variant: 'destructive' });
+    },
+  });
+
   const createMessageMutation = useMutation({
     mutationFn: ({ channelId, content }: { channelId: number; content: string }) =>
       createChannelMessage(channelId, content),
@@ -911,10 +969,10 @@ const InternalChatPage: React.FC = () => {
 
     let messageContent = inputValue.trim() || '📎 File attachment';
 
-    // Convert mentions from display format (@FirstName) to API format (@user:123)
-    if (channelMembers && channelMembers.length > 0) {
-      messageContent = convertMentionsToApiFormat(messageContent, channelMembers);
-    }
+    // Convert mentions to API format (@user:123).
+    // Always run: pass 1 handles @{Name:ID} tokens (no members lookup needed),
+    // pass 2 handles legacy @Name tokens using the members list as fallback.
+    messageContent = convertMentionsToApiFormat(messageContent, channelMembers ?? []);
 
     try {
       // Create message or reply
@@ -1247,11 +1305,12 @@ const InternalChatPage: React.FC = () => {
                 return (
                   <Tooltip key={channel.id}>
                     <TooltipTrigger asChild>
+                      <div className="relative group/channel">
                       <motion.button
                         whileTap={{ scale: 0.98 }}
                         onClick={() => handleChannelSelect(channel)}
                         className={cn(
-                          'w-full flex items-center gap-2.5 rounded-lg text-left transition-all duration-150 relative group',
+                          'w-full flex items-center gap-2.5 rounded-lg text-left transition-all duration-150 relative',
                           channelSidebarCollapsed ? 'p-1.5 justify-center' : 'px-2 py-2',
                           isSelected
                             ? 'bg-primary/10 text-foreground'
@@ -1310,6 +1369,31 @@ const InternalChatPage: React.FC = () => {
                           <span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-primary" />
                         )}
                       </motion.button>
+                      {/* Leave channel hover menu */}
+                      {!channelSidebarCollapsed && (
+                        <div className="absolute right-1 top-1/2 -translate-y-1/2 opacity-0 group-hover/channel:opacity-100 transition-opacity z-10">
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <button
+                                onClick={(e) => e.stopPropagation()}
+                                className="h-6 w-6 flex items-center justify-center rounded hover:bg-muted-foreground/20 transition-colors"
+                              >
+                                <MoreHorizontal className="h-3.5 w-3.5 text-muted-foreground" />
+                              </button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end" className="w-44 bg-card border-border" onClick={(e) => e.stopPropagation()}>
+                              <DropdownMenuItem
+                                className="text-destructive focus:text-destructive focus:bg-destructive/10 gap-2 cursor-pointer"
+                                onClick={(e) => { e.stopPropagation(); setChannelToLeaveAndRef(channel); }}
+                              >
+                                <LogOut className="h-4 w-4" />
+                                Leave channel
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </div>
+                      )}
+                      </div>
                     </TooltipTrigger>
                     {channelSidebarCollapsed && (
                       <TooltipContent side={isRTL ? 'left' : 'right'}>
@@ -1338,6 +1422,7 @@ const InternalChatPage: React.FC = () => {
                 return (
                   <Tooltip key={channel.id}>
                     <TooltipTrigger asChild>
+                      <div className="relative group/dm">
                       <motion.button
                         whileTap={{ scale: 0.98 }}
                         onClick={() => handleChannelSelect(channel)}
@@ -1395,6 +1480,31 @@ const InternalChatPage: React.FC = () => {
                           <span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-primary" />
                         )}
                       </motion.button>
+                      {/* Leave DM hover menu */}
+                      {!channelSidebarCollapsed && (
+                        <div className="absolute right-1 top-1/2 -translate-y-1/2 opacity-0 group-hover/dm:opacity-100 transition-opacity z-10">
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <button
+                                onClick={(e) => e.stopPropagation()}
+                                className="h-6 w-6 flex items-center justify-center rounded hover:bg-muted-foreground/20 transition-colors"
+                              >
+                                <MoreHorizontal className="h-3.5 w-3.5 text-muted-foreground" />
+                              </button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end" className="w-44 bg-card border-border" onClick={(e) => e.stopPropagation()}>
+                              <DropdownMenuItem
+                                className="text-destructive focus:text-destructive focus:bg-destructive/10 gap-2 cursor-pointer"
+                                onClick={(e) => { e.stopPropagation(); setChannelToLeaveAndRef(channel); }}
+                              >
+                                <LogOut className="h-4 w-4" />
+                                Close DM
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </div>
+                      )}
+                      </div>
                     </TooltipTrigger>
                     {channelSidebarCollapsed && (
                       <TooltipContent side={isRTL ? 'left' : 'right'}>
@@ -1662,6 +1772,7 @@ const InternalChatPage: React.FC = () => {
                       >
                         {messages?.map((msg, msgIdx) => {
                           const prevMsg = msgIdx > 0 ? messages[msgIdx - 1] : null;
+                          const showDateSep = !prevMsg || dateDayKey(msg.created_at) !== dateDayKey(prevMsg.created_at);
                           const isSameSender = !!(
                             prevMsg &&
                             !prevMsg.is_activity &&
@@ -1669,6 +1780,7 @@ const InternalChatPage: React.FC = () => {
                             !(prevMsg as any).extra_data?.is_system &&
                             prevMsg.sender_id === msg.sender_id &&
                             !msg.parent_message_id &&
+                            !showDateSep &&
                             (new Date(msg.created_at).getTime() - new Date(prevMsg.created_at).getTime()) < 5 * 60 * 1000
                           );
 
@@ -1679,30 +1791,37 @@ const InternalChatPage: React.FC = () => {
                               : c.includes('ended') || c.includes('end') ? VideoOff
                               : Video;
                             return (
-                              <div key={msg.id} className="flex items-center gap-2 py-0.5 px-1 my-0.5">
-                                <Icon className="w-3.5 h-3.5 text-muted-foreground/50 flex-shrink-0" />
-                                <span className="text-[12px] text-muted-foreground/70">{msg.content}</span>
-                              </div>
+                              <React.Fragment key={msg.id}>
+                                {showDateSep && <DateSeparator dateStr={msg.created_at} />}
+                                <div className="flex items-center gap-2 py-0.5 px-1 my-0.5">
+                                  <Icon className="w-3.5 h-3.5 text-muted-foreground/50 flex-shrink-0" />
+                                  <span className="text-[12px] text-muted-foreground/70">{msg.content}</span>
+                                </div>
+                              </React.Fragment>
                             );
                           }
 
                           if ((msg as any).extra_data?.is_system) {
                             return (
-                              <div key={msg.id} className="flex w-full justify-center my-3">
-                                <div className="px-3 py-1 rounded-full bg-muted border border-border text-muted-foreground text-xs flex items-center gap-2">
-                                  <span>{msg.content}</span>
-                                  <span className="opacity-60">
-                                    {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                                  </span>
+                              <React.Fragment key={msg.id}>
+                                {showDateSep && <DateSeparator dateStr={msg.created_at} />}
+                                <div className="flex w-full justify-center my-3">
+                                  <div className="px-3 py-1 rounded-full bg-muted border border-border text-muted-foreground text-xs flex items-center gap-2">
+                                    <span>{msg.content}</span>
+                                    <span className="opacity-60">
+                                      {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                    </span>
+                                  </div>
                                 </div>
-                              </div>
+                              </React.Fragment>
                             );
                           }
 
                           const isOwn = msg.sender_id === user?.id;
                           return (
+                            <React.Fragment key={msg.id}>
+                              {showDateSep && <DateSeparator dateStr={msg.created_at} />}
                             <motion.div
-                              key={msg.id}
                               variants={messageVariants}
                               className={cn(
                                 'group flex w-full items-end gap-2.5',
@@ -1909,6 +2028,7 @@ const InternalChatPage: React.FC = () => {
                                 );
                               })()}
                             </motion.div>
+                            </React.Fragment>
                           );
                         })}
                         <div ref={messagesEndRef} />
@@ -2022,7 +2142,7 @@ const InternalChatPage: React.FC = () => {
                         onKeyPress={(e) => e.key === 'Enter' && !e.shiftKey && handleSendMessage()}
                         className="w-full bg-transparent border-0 outline-none text-sm text-foreground placeholder:text-muted-foreground/50 focus:ring-0 py-0.5"
                         disabled={isUploadingFiles}
-                        users={channelMembers || []}
+                        users={(channelMembers || []).filter((m: any) => m.id !== user?.id)}
                       />
                     </div>
                     {/* Schedule message */}
@@ -2297,6 +2417,50 @@ const InternalChatPage: React.FC = () => {
         channels={channels || []}
         currentUserId={user?.id}
       />
+
+      {/* Leave channel / Close DM confirmation */}
+      <AlertDialog open={!!channelToLeave} onOpenChange={(open) => { if (!open) setChannelToLeaveAndRef(null); }}>
+        <AlertDialogContent className="bg-card border-border">
+          {/* Read from ref — always non-null even during close animation */}
+          {(() => {
+            const ch = channelToLeaveRef.current;
+            if (!ch) return null;
+            const isDM = ch.channel_type?.toUpperCase() === 'DM';
+            const name = getChannelDisplayName(ch, user?.id);
+            return (
+              <>
+                <AlertDialogHeader>
+                  <AlertDialogTitle className="text-foreground">
+                    {isDM ? 'Close this DM?' : 'Leave channel?'}
+                  </AlertDialogTitle>
+                  <AlertDialogDescription className="text-muted-foreground">
+                    {isDM
+                      ? `This will remove the conversation from your sidebar. The chat history is not deleted — if ${name} messages you again, it will reappear.`
+                      : `This removes you from #${name}. The channel and its messages are not deleted. You can rejoin if someone adds you back.`
+                    }
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel className="border-border text-foreground hover:bg-muted">
+                    Cancel
+                  </AlertDialogCancel>
+                  <AlertDialogAction
+                    onClick={() => leaveChannelMutation.mutate(ch.id)}
+                    disabled={leaveChannelMutation.isLoading}
+                    className="bg-destructive hover:bg-destructive/90 text-destructive-foreground"
+                  >
+                    {leaveChannelMutation.isLoading ? (
+                      <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Leaving…</>
+                    ) : (
+                      isDM ? 'Close DM' : 'Leave channel'
+                    )}
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </>
+            );
+          })()}
+        </AlertDialogContent>
+      </AlertDialog>
 
     </TooltipProvider>
   );

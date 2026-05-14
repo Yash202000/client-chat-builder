@@ -21,8 +21,8 @@ const MentionText: React.FC<MentionTextProps> = ({ content, users = {}, classNam
   const processContent = (text: string): string => {
     if (!text) return text;
 
-    // Replace @user:123 with @FirstName
-    return text.replace(/@user:(\d+)/g, (match, userId) => {
+    // Replace @user:123 with bold mention (stored/API format)
+    let out = text.replace(/@user:(\d+)/g, (match, userId) => {
       const user = users[parseInt(userId)];
       if (user) {
         const displayName = user.first_name || user.email.split('@')[0];
@@ -30,6 +30,15 @@ const MentionText: React.FC<MentionTextProps> = ({ content, users = {}, classNam
       }
       return match;
     });
+
+    // Replace @{Name:ID} with bold mention (input display format, conversion safety-net)
+    out = out.replace(/@\{([^}:]+):(\d+)\}/g, (_match, name, userId) => {
+      const user = users[parseInt(userId)];
+      const displayName = user ? (user.first_name || user.email.split('@')[0]) : name;
+      return `**@${displayName}**`;
+    });
+
+    return out;
   };
 
   const processedContent = processContent(content);
@@ -37,10 +46,12 @@ const MentionText: React.FC<MentionTextProps> = ({ content, users = {}, classNam
   // Custom renderer to style mentions
   const components = {
     strong: ({ node, ...props }: any) => {
-      const text = props.children?.[0];
-      if (typeof text === 'string' && text.startsWith('@')) {
+      // children can be a plain string (single text child) or an array — handle both
+      const raw = props.children;
+      const text = typeof raw === 'string' ? raw : Array.isArray(raw) ? raw.join('') : String(raw ?? '');
+      if (text.startsWith('@')) {
         return (
-          <span className="px-1.5 py-0.5 rounded bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 font-medium">
+          <span className="inline-flex items-center px-1.5 py-0.5 rounded bg-primary/10 text-primary font-medium text-[0.8em]">
             {text}
           </span>
         );

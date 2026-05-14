@@ -9,6 +9,8 @@ import {
   Linkedin, Share2, PenLine, CalendarDays, Megaphone, Settings2, Wand2,
   Images, CircleUser, Plus, ArrowRight, Clock, Hash,
   WorkflowIcon as WorkflowIcon, LayoutDashboard,
+  Ticket, KanbanSquare, GitBranch, FormInput, HardDrive, Palette,
+  Building2, ClipboardList,
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { usePersonalization, RecentEntityType } from '@/contexts/PersonalizationContext';
@@ -24,7 +26,7 @@ type PageItem = {
   route: string;
   icon: React.ElementType;
   keywords: string;
-  group: 'inbox' | 'voice' | 'builder' | 'crm' | 'marketing' | 'ai' | 'admin' | 'home';
+  group: 'inbox' | 'voice' | 'builder' | 'crm' | 'marketing' | 'ai' | 'admin' | 'home' | 'support';
 };
 
 const PAGES: PageItem[] = [
@@ -34,6 +36,7 @@ const PAGES: PageItem[] = [
   { title: 'SMS Inbox',          subtitle: 'Twilio messaging',        route: '/dashboard/inbox/sms',             icon: MessageSquare,   group: 'inbox',    keywords: 'sms text twilio messages' },
   { title: 'Team Chat',          subtitle: 'Internal channels',       route: '/dashboard/team-chat',             icon: MessageSquare,   group: 'inbox',    keywords: 'team chat internal channels slack' },
   { title: 'Contact Hub',        subtitle: 'All your contacts',       route: '/dashboard/contacts',              icon: Users,           group: 'inbox',    keywords: 'contacts directory people address book' },
+  { title: 'Drive',              subtitle: 'Files & documents',       route: '/dashboard/drive',                 icon: HardDrive,       group: 'inbox',    keywords: 'drive files documents storage upload' },
 
   { title: 'Call Queue',         subtitle: 'Live call routing',       route: '/dashboard/call-queue',            icon: Phone,           group: 'voice',    keywords: 'call queue voice phone routing' },
   { title: 'Voice Call Log',     subtitle: 'Past phone calls',        route: '/dashboard/voice-calls',           icon: Phone,           group: 'voice',    keywords: 'voice call log history phone' },
@@ -41,7 +44,12 @@ const PAGES: PageItem[] = [
   { title: 'Predictive Dialer',  subtitle: 'Outbound campaigns',      route: '/dashboard/dialer',                icon: PhoneCall,       group: 'voice',    keywords: 'dialer predictive outbound campaign' },
   { title: 'Call Analytics',     subtitle: 'Voice metrics',           route: '/dashboard/call-analytics',        icon: BarChart3,       group: 'voice',    keywords: 'call analytics voice metrics reports' },
 
+  { title: 'My Tickets',         subtitle: 'Assigned to me',          route: '/dashboard/tickets?assignee=me',           icon: Ticket,          group: 'support',  keywords: 'tickets my assigned support helpdesk issues' },
+  { title: 'All Projects',       subtitle: 'All tickets & projects',  route: '/dashboard/tickets',                       icon: KanbanSquare,    group: 'support',  keywords: 'projects tickets kanban board all support' },
+  { title: 'Ticket Workflows',   subtitle: 'Support automation',      route: '/dashboard/tickets/settings/workflows',    icon: WorkflowIcon,    group: 'support',  keywords: 'ticket workflows automation support routing' },
+
   { title: 'Agents',             subtitle: 'AI agent builder',        route: '/dashboard/agents',                icon: Bot,             group: 'builder',  keywords: 'agents ai bots builder llm' },
+  { title: 'Widget Designer',    subtitle: 'Chat widget & branding',  route: '/dashboard/designer',              icon: Palette,         group: 'builder',  keywords: 'widget designer chat embed branding customize' },
   { title: 'Knowledge Base',     subtitle: 'Train your agents',       route: '/dashboard/knowledge-base/manage', icon: BookOpen,        group: 'builder',  keywords: 'knowledge base kb rag documents files train' },
   { title: 'CMS',                subtitle: 'Content management',      route: '/dashboard/cms',                   icon: LayoutTemplate,  group: 'builder',  keywords: 'cms content publish articles' },
   { title: 'Tools',              subtitle: 'Custom integrations',     route: '/dashboard/tools',                 icon: Zap,             group: 'builder',  keywords: 'tools functions actions integrations api' },
@@ -51,13 +59,19 @@ const PAGES: PageItem[] = [
   { title: 'CRM Dashboard',      subtitle: 'Pipeline overview',       route: '/dashboard/crm',                   icon: TrendingUp,      group: 'crm',      keywords: 'crm dashboard pipeline overview sales' },
   { title: 'Contacts',           subtitle: 'CRM contacts',            route: '/dashboard/crm/contacts',          icon: Users,           group: 'crm',      keywords: 'crm contacts people directory' },
   { title: 'Leads',              subtitle: 'Sales pipeline',          route: '/dashboard/crm/leads',             icon: Target,          group: 'crm',      keywords: 'leads pipeline sales prospects deals' },
+  { title: 'Deals',              subtitle: 'Deal pipeline',           route: '/dashboard/crm/deals',             icon: KanbanSquare,    group: 'crm',      keywords: 'deals pipeline opportunities kanban sales' },
+  { title: 'Companies',          subtitle: 'Accounts & companies',    route: '/dashboard/crm/accounts',          icon: Building2,       group: 'crm',      keywords: 'companies accounts organizations crm b2b' },
+  { title: 'Booking Links',      subtitle: 'Schedule meetings',       route: '/dashboard/crm/booking-links',     icon: CalendarDays,    group: 'crm',      keywords: 'booking links calendar schedule meetings appointments' },
   { title: 'Campaigns',          subtitle: 'Multi-channel outreach',  route: '/dashboard/crm/campaigns',         icon: Send,            group: 'crm',      keywords: 'campaigns email sms outreach blast' },
+  { title: 'Sequences',          subtitle: 'Automated follow-ups',    route: '/dashboard/crm/sequences',         icon: GitBranch,       group: 'crm',      keywords: 'sequences drip automated follow up nurture' },
+  { title: 'Forms',              subtitle: 'Lead capture forms',      route: '/dashboard/crm/forms',             icon: FormInput,       group: 'crm',      keywords: 'forms lead capture survey embed crm' },
   { title: 'Tags',               subtitle: 'Audience labels',         route: '/dashboard/crm/tags',              icon: Tag,             group: 'crm',      keywords: 'tags labels filter' },
   { title: 'Segments',           subtitle: 'Audience groups',         route: '/dashboard/crm/segments',          icon: Layers,          group: 'crm',      keywords: 'segments audience groups filter' },
   { title: 'CRM Templates',      subtitle: 'Reusable content',        route: '/dashboard/crm/templates',         icon: LayoutTemplate,  group: 'crm',      keywords: 'crm templates email sms reusable' },
 
   { title: 'Social Hub',         subtitle: 'All social accounts',     route: '/dashboard/social',                icon: Share2,          group: 'marketing', keywords: 'social hub overview accounts marketing' },
   { title: 'Post Composer',      subtitle: 'Create social posts',     route: '/dashboard/social/compose',        icon: PenLine,         group: 'marketing', keywords: 'compose write post social marketing' },
+  { title: 'Trending Posts',     subtitle: 'Top performing content',  route: '/dashboard/social/trending',       icon: TrendingUp,      group: 'marketing', keywords: 'trending posts viral top content social' },
   { title: 'Content Calendar',   subtitle: 'Schedule posts',          route: '/dashboard/calendar',              icon: CalendarDays,    group: 'marketing', keywords: 'calendar schedule social posts marketing' },
   { title: 'LinkedIn Leads',     subtitle: 'B2B prospecting',         route: '/dashboard/crm/linkedin-leads',    icon: Linkedin,        group: 'marketing', keywords: 'linkedin leads b2b prospecting outreach' },
   { title: 'Social Analytics',   subtitle: 'Marketing metrics',       route: '/dashboard/social/analytics',      icon: BarChart3,       group: 'marketing', keywords: 'social analytics marketing metrics' },
@@ -68,12 +82,17 @@ const PAGES: PageItem[] = [
   { title: 'AI Image Generator', subtitle: 'Generate images',         route: '/dashboard/ai-image-generator',    icon: Wand2,           group: 'ai',       keywords: 'ai image generator dalle midjourney' },
   { title: 'AI Image Gallery',   subtitle: 'Image history',           route: '/dashboard/ai-image-gallery',      icon: Images,          group: 'ai',       keywords: 'ai images gallery history' },
 
-  { title: 'Team Management',    subtitle: 'Users & roles',           route: '/dashboard/team',                  icon: Users,           group: 'admin',    keywords: 'team users members roles admin' },
-  { title: 'Reports',            subtitle: 'All metrics',             route: '/dashboard/reports',               icon: BarChart3,       group: 'admin',    keywords: 'reports analytics metrics insights' },
-  { title: 'Settings',           subtitle: 'Account settings',        route: '/dashboard/settings',              icon: Settings,        group: 'admin',    keywords: 'settings preferences config' },
-  { title: 'API Vault',          subtitle: 'Stored credentials',      route: '/dashboard/vault',                 icon: Key,             group: 'admin',    keywords: 'vault api keys credentials secrets' },
-  { title: 'Billing',            subtitle: 'Subscription & invoices', route: '/dashboard/billing',               icon: CreditCard,      group: 'admin',    keywords: 'billing subscription invoices payment plan' },
-  { title: 'Profile',            subtitle: 'Your profile',            route: '/dashboard/profile',               icon: CircleUser,      group: 'admin',    keywords: 'profile account avatar me personal' },
+  { title: 'Team Management',    subtitle: 'Users & roles',           route: '/dashboard/team',                           icon: Users,         group: 'admin',    keywords: 'team users members roles admin' },
+  { title: 'Reports',            subtitle: 'All metrics',             route: '/dashboard/reports',                        icon: BarChart3,     group: 'admin',    keywords: 'reports analytics metrics insights' },
+  { title: 'Audit Logs',         subtitle: 'Activity history',        route: '/dashboard/audit-logs',                     icon: ClipboardList, group: 'admin',    keywords: 'audit logs activity history events trail' },
+  { title: 'Settings',           subtitle: 'Account settings',        route: '/dashboard/settings',                       icon: Settings,      group: 'admin',    keywords: 'settings preferences config' },
+  { title: 'Custom Fields',      subtitle: 'Data customization',      route: '/dashboard/settings/custom-fields',         icon: FormInput,     group: 'admin',    keywords: 'custom fields attributes data settings crm' },
+  { title: 'Routing Rules',      subtitle: 'Conversation routing',    route: '/dashboard/settings/routing-rules',         icon: GitBranch,     group: 'admin',    keywords: 'routing rules assign conversations inbox settings' },
+  { title: 'Hierarchy',          subtitle: 'Org structure',           route: '/dashboard/settings/hierarchy',             icon: Building2,     group: 'admin',    keywords: 'hierarchy org structure departments tree settings' },
+  { title: 'Departments',        subtitle: 'Team departments',        route: '/dashboard/settings/departments',           icon: Building2,     group: 'admin',    keywords: 'departments teams organization structure settings' },
+  { title: 'API Vault',          subtitle: 'Stored credentials',      route: '/dashboard/vault',                          icon: Key,           group: 'admin',    keywords: 'vault api keys credentials secrets' },
+  { title: 'Billing',            subtitle: 'Subscription & invoices', route: '/dashboard/billing',                        icon: CreditCard,    group: 'admin',    keywords: 'billing subscription invoices payment plan' },
+  { title: 'Profile',            subtitle: 'Your profile',            route: '/dashboard/profile',                        icon: CircleUser,    group: 'admin',    keywords: 'profile account avatar me personal' },
 ];
 
 const QUICK_ACTIONS = [

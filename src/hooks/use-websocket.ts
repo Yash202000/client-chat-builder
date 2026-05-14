@@ -6,9 +6,9 @@ interface WebSocketOptions {
   onClose?: () => void;
   onError?: (error: Event) => void;
   enabled?: boolean;
-  reconnectInterval?: number; // milliseconds between reconnection attempts
-  maxReconnectAttempts?: number; // maximum number of reconnection attempts
-  heartbeatInterval?: number; // milliseconds between heartbeat pings
+  reconnectInterval?: number;
+  maxReconnectAttempts?: number;
+  heartbeatInterval?: number;
 }
 
 export const useWebSocket = (url: string | null, options: WebSocketOptions = {}) => {
@@ -16,7 +16,7 @@ export const useWebSocket = (url: string | null, options: WebSocketOptions = {})
     enabled = true,
     reconnectInterval = 3000,
     maxReconnectAttempts = 10,
-    heartbeatInterval = 30000, // 30 seconds
+    heartbeatInterval = 30000,
   } = options;
 
   const [isConnected, setIsConnected] = useState(false);
@@ -24,13 +24,15 @@ export const useWebSocket = (url: string | null, options: WebSocketOptions = {})
   const ws = useRef<WebSocket | null>(null);
   const reconnectTimer = useRef<NodeJS.Timeout | null>(null);
   const heartbeatTimer = useRef<NodeJS.Timeout | null>(null);
-  const shouldReconnect = useRef(true);
-  const isManualClose = useRef(false);
   const reconnectAttempts = useRef(0);
   const urlRef = useRef(url);
   const optionsRef = useRef(options);
 
-  // Update refs when props change
+  // Generation counter: incremented each time we start a fresh connection lifecycle
+  // (URL change or manual reconnect). Captured per-connect so stale onclose/onerror
+  // handlers can detect they've been superseded and must not trigger reconnect.
+  const generation = useRef(0);
+
   useEffect(() => {
     urlRef.current = url;
     optionsRef.current = options;
@@ -48,82 +50,76 @@ export const useWebSocket = (url: string | null, options: WebSocketOptions = {})
   }, []);
 
   const startHeartbeat = useCallback(() => {
-    clearTimers();
+    if (heartbeatTimer.current) clearInterval(heartbeatTimer.current);
     heartbeatTimer.current = setInterval(() => {
-      if (ws.current && ws.current.readyState === WebSocket.OPEN) {
-        // Send ping message to keep connection alive
+      if (ws.current?.readyState === WebSocket.OPEN) {
         ws.current.send(JSON.stringify({ type: 'ping' }));
       }
     }, heartbeatInterval);
-  }, [heartbeatInterval, clearTimers]);
+  }, [heartbeatInterval]);
 
-  const connect = useCallback(() => {
+  const connect = useCallback((myGeneration: number) => {
     const currentUrl = urlRef.current;
     const currentOptions = optionsRef.current;
 
-    if (!currentUrl || !enabled) {
-      return;
-    }
+    if (!currentUrl || !enabled) return;
 
-    // Close existing connection if any
+    // Close any existing socket before opening a new one
     if (ws.current) {
-      const readyState = ws.current.readyState;
-
-      if (readyState === WebSocket.OPEN || readyState === WebSocket.CONNECTING) {
-        ws.current.close();
-        // Wait a bit for the close to complete
-        ws.current = null;
+      const s = ws.current;
+      ws.current = null;
+      // Nullify handlers so the stale socket doesn't fire callbacks after replacement
+      s.onopen = null;
+      s.onmessage = null;
+      s.onclose = null;
+      s.onerror = null;
+      if (s.readyState === WebSocket.OPEN || s.readyState === WebSocket.CONNECTING) {
+        s.close();
       }
     }
 
     try {
-      ws.current = new WebSocket(currentUrl);
+      const socket = new WebSocket(currentUrl);
+      ws.current = socket;
 
-      ws.current.onopen = () => {
+      socket.onopen = () => {
+        if (generation.current !== myGeneration) return; // superseded
         setIsConnected(true);
         reconnectAttempts.current = 0;
         setReconnectCount(0);
         startHeartbeat();
-        if (currentOptions.onOpen) {
-          currentOptions.onOpen();
-        }
+        currentOptions.onOpen?.();
       };
 
-      ws.current.onmessage = (event) => {
-        // Always read from the ref so we get the latest callback without reconnecting
-        if (optionsRef.current.onMessage) {
-          optionsRef.current.onMessage(event);
-        }
+      socket.onmessage = (event) => {
+        if (generation.current !== myGeneration) return; // superseded
+        optionsRef.current.onMessage?.(event);
       };
 
-      ws.current.onclose = (event) => {
+      socket.onclose = () => {
+        if (generation.current !== myGeneration) return; // superseded — do NOT reconnect
         setIsConnected(false);
         clearTimers();
+        currentOptions.onClose?.();
 
-        if (currentOptions.onClose) {
-          currentOptions.onClose();
-        }
-
-        // Attempt to reconnect if not manually closed
-        if (shouldReconnect.current && !isManualClose.current && reconnectAttempts.current < maxReconnectAttempts) {
-          const delay = reconnectInterval * Math.min(reconnectAttempts.current + 1, 5); // Exponential backoff (capped at 5x)
-
+        if (reconnectAttempts.current < maxReconnectAttempts) {
+          const delay = reconnectInterval * Math.min(reconnectAttempts.current + 1, 5);
           reconnectAttempts.current += 1;
           setReconnectCount(reconnectAttempts.current);
-
           reconnectTimer.current = setTimeout(() => {
-            connect();
+            if (generation.current === myGeneration) {
+              connect(myGeneration);
+            }
           }, delay);
-        } else if (reconnectAttempts.current >= maxReconnectAttempts) {
+        } else {
           console.error('[WebSocket] Max reconnection attempts reached');
         }
       };
 
-      ws.current.onerror = (error) => {
+      socket.onerror = (error) => {
+        if (generation.current !== myGeneration) return; // superseded
         console.error('[WebSocket] Error:', error);
-        if (currentOptions.onError) {
-          currentOptions.onError(error);
-        }
+        currentOptions.onError?.(error);
       };
     } catch (error) {
       console.error('[WebSocket] Connection error:', error);
@@ -131,35 +127,37 @@ export const useWebSocket = (url: string | null, options: WebSocketOptions = {})
   }, [enabled, maxReconnectAttempts, reconnectInterval, startHeartbeat, clearTimers]);
 
   useEffect(() => {
+    if (!url || !enabled) return;
 
-    if (url && enabled) {
-      shouldReconnect.current = true;
-      isManualClose.current = false;
-      reconnectAttempts.current = 0;
+    // Advance generation — any in-flight onclose/onerror for the old generation
+    // will see a mismatch and skip their reconnect logic.
+    const myGeneration = ++generation.current;
+    reconnectAttempts.current = 0;
 
-      // Small delay to ensure previous connection is fully closed
-      const connectTimer = setTimeout(() => {
-        connect();
-      }, 100);
-
-      return () => {
-        clearTimeout(connectTimer);
-        shouldReconnect.current = false;
-        isManualClose.current = true;
-        clearTimers();
-        if (ws.current) {
-          ws.current.close();
-          ws.current = null;
-        }
-      };
-    }
+    const connectTimer = setTimeout(() => {
+      connect(myGeneration);
+    }, 100);
 
     return () => {
+      clearTimeout(connectTimer);
+      // Advance generation again so the socket we just opened (or are about to open)
+      // knows it has been superseded by the cleanup.
+      generation.current++;
+      clearTimers();
+      if (ws.current) {
+        const s = ws.current;
+        ws.current = null;
+        s.onopen = null;
+        s.onmessage = null;
+        s.onclose = null;
+        s.onerror = null;
+        s.close();
+      }
     };
-  }, [url, enabled]); // Keep minimal dependencies to prevent infinite loop
+  }, [url, enabled]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const sendMessage = useCallback((message: string) => {
-    if (ws.current && ws.current.readyState === WebSocket.OPEN) {
+    if (ws.current?.readyState === WebSocket.OPEN) {
       ws.current.send(message);
     } else {
       console.error('[WebSocket] Cannot send message - not connected');
@@ -167,31 +165,28 @@ export const useWebSocket = (url: string | null, options: WebSocketOptions = {})
   }, []);
 
   const disconnect = useCallback(() => {
-    shouldReconnect.current = false;
-    isManualClose.current = true;
+    generation.current++;
     clearTimers();
     if (ws.current) {
-      ws.current.close();
+      const s = ws.current;
+      ws.current = null;
+      s.onopen = null;
+      s.onmessage = null;
+      s.onclose = null;
+      s.onerror = null;
+      s.close();
     }
+    setIsConnected(false);
   }, [clearTimers]);
 
   const reconnect = useCallback(() => {
+    generation.current++;
     reconnectAttempts.current = 0;
     setReconnectCount(0);
-    shouldReconnect.current = true;
-    isManualClose.current = false;
     clearTimers();
-    if (ws.current) {
-      ws.current.close();
-    }
-    setTimeout(() => connect(), 100);
+    const myGeneration = ++generation.current;
+    setTimeout(() => connect(myGeneration), 100);
   }, [connect, clearTimers]);
 
-  return {
-    isConnected,
-    sendMessage,
-    disconnect,
-    reconnect,
-    reconnectCount
-  };
+  return { isConnected, sendMessage, disconnect, reconnect, reconnectCount };
 };

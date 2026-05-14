@@ -25,6 +25,7 @@ interface VideoCallContextValue {
   activeInternalCall: ActiveInternalCall | null;
   startInternalCall: (call: ActiveInternalCall) => void;
   endInternalCall: () => void;
+  updateInternalCall: (patch: Partial<ActiveInternalCall>) => void;
 }
 
 const VideoCallContext = createContext<VideoCallContextValue>({
@@ -34,6 +35,7 @@ const VideoCallContext = createContext<VideoCallContextValue>({
   activeInternalCall: null,
   startInternalCall: () => {},
   endInternalCall: () => {},
+  updateInternalCall: () => {},
 });
 
 export function VideoCallProvider({ children }: { children: ReactNode }) {
@@ -48,6 +50,7 @@ export function VideoCallProvider({ children }: { children: ReactNode }) {
       activeInternalCall,
       startInternalCall: setActiveInternalCall,
       endInternalCall: () => setActiveInternalCall(null),
+      updateInternalCall: (patch) => setActiveInternalCall(prev => prev ? { ...prev, ...patch } : prev),
     }}>
       {children}
     </VideoCallContext.Provider>

@@ -118,7 +118,7 @@ function ParticipantActivityTracker({
 
 // ── Main modal ────────────────────────────────────────────────────────────────
 const InternalVideoCallModal: React.FC = () => {
-  const { activeInternalCall, endInternalCall } = useVideoCall();
+  const { activeInternalCall, endInternalCall, updateInternalCall } = useVideoCall();
   const { theme } = useTheme();
   const { user } = useAuth();
   const { playCallEndSound } = useNotifications();
@@ -190,10 +190,23 @@ const InternalVideoCallModal: React.FC = () => {
   });
 
   const handleSendInvites = async () => {
-    if (!eventId || selectedInvitees.length === 0) return;
+    if (selectedInvitees.length === 0) return;
     setIsSendingInvite(true);
     try {
-      await inviteToMeeting(eventId, selectedInvitees);
+      if (eventId) {
+        await inviteToMeeting(eventId, selectedInvitees);
+      } else if (channelId) {
+        const token = localStorage.getItem('accessToken');
+        const res = await axios.post(
+          `${API_BASE_URL}/api/v1/video-calls/channels/${channelId}/invite`,
+          { user_ids: selectedInvitees },
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        // If the backend upgraded a DM channel to a GROUP channel, switch to the new one
+        if (res.data?.chat_channel_id && res.data.chat_channel_id !== channelId) {
+          updateInternalCall({ channelId: res.data.chat_channel_id });
+        }
+      }
       setSelectedInvitees([]);
       setIsInviteOpen(false);
     } catch { /* ignore */ } finally {
@@ -398,7 +411,7 @@ const InternalVideoCallModal: React.FC = () => {
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
-                  {eventId && (
+                  {(eventId || channelId) && (
                     <button
                       onClick={() => setIsInviteOpen(p => !p)}
                       className={cn('px-4 py-2 rounded-xl border transition-all flex items-center gap-2 text-sm font-medium group',
@@ -477,7 +490,7 @@ const InternalVideoCallModal: React.FC = () => {
               </div>
 
               {/* Invite sidebar */}
-              {!isMinimized && eventId && isInviteOpen && (
+              {!isMinimized && (eventId || channelId) && isInviteOpen && (
                 <div className="w-[280px] flex flex-col border-l border-green-500/20 bg-white dark:bg-slate-900">
                   <div className="px-4 py-3 border-b border-green-500/20 flex items-center gap-2">
                     <UserRoundPlus className="w-4 h-4 text-green-500" />

@@ -1097,7 +1097,7 @@ export default function TicketDetailPage() {
                 </SidebarField>
 
                 {/* Co-Assignees */}
-                <SidebarField label="Co-Assignees">
+                <SidebarField label={t('tickets.fields.coAssignees')}>
                   <div className="flex flex-col gap-1.5">
                     {ticket.co_assignees.map(u => (
                       <div key={u.id} className="flex items-center gap-1.5 group">
@@ -1131,7 +1131,7 @@ export default function TicketDetailPage() {
                     >
                       <SelectTrigger className="h-6 text-xs border-dashed border-muted-foreground/40 shadow-none hover:border-primary/50 focus:ring-0 mt-0.5">
                         <span className="text-muted-foreground flex items-center gap-1">
-                          <Plus className="w-3 h-3" />Add co-assignee
+                          <Plus className="w-3 h-3" />{t('tickets.fields.addCoAssignee')}
                         </span>
                       </SelectTrigger>
                       <SelectContent>

@@ -5,7 +5,7 @@ import axios from 'axios';
 import {
   Plus, Ticket, FolderOpen, Users, BarChart3,
   Settings, MoreVertical, Trash2, Edit2, Loader2,
-  CheckCircle2, Clock, AlertCircle, TrendingUp,
+  CheckCircle2, Clock, AlertCircle, TrendingUp, Search, X,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -52,6 +52,7 @@ export default function ProjectsPage() {
   const navigate = useNavigate();
   const { t } = useTranslation();
   const [projects, setProjects] = useState<Project[]>([]);
+  const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(true);
   const [showCreate, setShowCreate] = useState(false);
   const [creating, setCreating] = useState(false);
@@ -138,15 +139,31 @@ export default function ProjectsPage() {
   return (
     <div className="p-6 max-w-7xl mx-auto space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-semibold">Projects</h1>
           <p className="text-muted-foreground text-sm mt-0.5">{t('tickets.projects.subtitle')}</p>
         </div>
-        <Button onClick={openCreate}>
-          <Plus className="w-4 h-4 mr-2" />
-          New Project
-        </Button>
+        <div className="flex items-center gap-2 ml-auto">
+          <div className="relative">
+            <Search className="absolute left-2.5 top-2 w-3.5 h-3.5 text-muted-foreground" />
+            <Input
+              className="pl-8 h-9 w-52 text-sm"
+              placeholder="Search projects…"
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+            />
+            {search && (
+              <button onClick={() => setSearch('')} className="absolute right-2 top-2.5 text-muted-foreground hover:text-foreground">
+                <X className="w-3.5 h-3.5" />
+              </button>
+            )}
+          </div>
+          <Button onClick={openCreate}>
+            <Plus className="w-4 h-4 mr-2" />
+            New Project
+          </Button>
+        </div>
       </div>
 
       {/* Stats row */}
@@ -172,16 +189,31 @@ export default function ProjectsPage() {
       </div>
 
       {/* Projects grid */}
-      {projects.length === 0 ? (
-        <div className="text-center py-20 border-2 border-dashed rounded-xl">
-          <FolderOpen className="w-12 h-12 text-muted-foreground mx-auto mb-3" />
-          <h3 className="font-medium text-lg">No projects yet</h3>
-          <p className="text-muted-foreground text-sm mb-4">Create your first project to start tracking tickets</p>
-          <Button onClick={openCreate}><Plus className="w-4 h-4 mr-2" />New Project</Button>
-        </div>
-      ) : (
+      {(() => {
+        const visible = projects.filter(p =>
+          !search ||
+          p.name.toLowerCase().includes(search.toLowerCase()) ||
+          p.key.toLowerCase().includes(search.toLowerCase()) ||
+          (p.description || '').toLowerCase().includes(search.toLowerCase())
+        );
+        if (projects.length === 0) return (
+          <div className="text-center py-20 border-2 border-dashed rounded-xl">
+            <FolderOpen className="w-12 h-12 text-muted-foreground mx-auto mb-3" />
+            <h3 className="font-medium text-lg">No projects yet</h3>
+            <p className="text-muted-foreground text-sm mb-4">Create your first project to start tracking tickets</p>
+            <Button onClick={openCreate}><Plus className="w-4 h-4 mr-2" />New Project</Button>
+          </div>
+        );
+        if (visible.length === 0) return (
+          <div className="text-center py-16 border-2 border-dashed rounded-xl">
+            <Search className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
+            <h3 className="font-medium">No projects match "{search}"</h3>
+            <button className="text-sm text-primary mt-1" onClick={() => setSearch('')}>Clear search</button>
+          </div>
+        );
+        return (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {projects.map(project => (
+          {visible.map(project => (
             <Card key={project.id}
               className="group hover:shadow-md transition-shadow cursor-pointer relative"
               onClick={() => navigate(`/dashboard/tickets/${project.key}/board`)}>
@@ -249,7 +281,8 @@ export default function ProjectsPage() {
             </Card>
           ))}
         </div>
-      )}
+        );
+      })()}
 
       {/* Create / Edit Dialog */}
       <Dialog open={showCreate} onOpenChange={setShowCreate}>

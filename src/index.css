@@ -1297,7 +1297,9 @@ html.light .lk-participant-tile .lk-participant-placeholder svg {
   align-items: center;
   gap: 8px;
   height: 28px;
-  width: 400px;
+  width: 100%;
+  max-width: 400px;
+  min-width: 120px;
   padding: 0 10px 0 12px;
   border-radius: 6px;
   background: hsl(var(--muted) / 0.4);
@@ -1318,6 +1320,10 @@ html.light .lk-participant-tile .lk-participant-placeholder svg {
 .cmd-palette-trigger-label {
   font-family: 'Inter', system-ui, sans-serif;
   flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
 }
 .cmd-palette-trigger-kbd {
   font-family: 'JetBrains Mono', monospace;
@@ -1330,6 +1336,8 @@ html.light .lk-participant-tile .lk-participant-placeholder svg {
   border: 1px solid hsl(var(--border) / 0.5);
   color: hsl(var(--muted-foreground) / 0.85);
   margin-left: 2px;
+  flex-shrink: 0;
+  white-space: nowrap;
 }
 
 /* ═══════════════════════════════════════════════════════════════════════

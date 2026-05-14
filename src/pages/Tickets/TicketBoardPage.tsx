@@ -54,6 +54,7 @@ interface Ticket {
   status?: Status;
   issue_type?: IssueType;
   assignee?: TicketUser;
+  reporter?: TicketUser;
   due_date?: string;
   comment_count?: number;
   attachment_count?: number;
@@ -122,6 +123,9 @@ export default function TicketBoardPage() {
   const [search, setSearch] = useState('');
   const [filterAssignee, setFilterAssignee] = useState('');
   const [filterPriority, setFilterPriority] = useState('');
+  const [filterType, setFilterType] = useState('');
+  const [filterReporter, setFilterReporter] = useState('');
+  const [filterDue, setFilterDue] = useState('');
   const [showCreate, setShowCreate] = useState(false);
   const [createStatusId, setCreateStatusId] = useState<number | null>(null);
   const [creating, setCreating] = useState(false);
@@ -189,12 +193,28 @@ export default function TicketBoardPage() {
 
   useEffect(() => { load(); }, [load]);
 
+  const now = new Date();
+  const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const endOfWeek = new Date(startOfToday); endOfWeek.setDate(endOfWeek.getDate() + 7);
+
   const ticketsByStatus = (statusId: number) => {
     return tickets
       .filter(t => t.status?.id === statusId)
       .filter(t => !search || t.title.toLowerCase().includes(search.toLowerCase()) || t.ticket_number.toLowerCase().includes(search.toLowerCase()))
-      .filter(t => !filterAssignee || String(t.assignee?.id) === filterAssignee)
+      .filter(t => !filterAssignee || (filterAssignee === '__none__' ? !t.assignee : String(t.assignee?.id) === filterAssignee))
       .filter(t => !filterPriority || t.priority === filterPriority)
+      .filter(t => !filterType || String(t.issue_type?.id) === filterType)
+      .filter(t => !filterReporter || String(t.reporter?.id) === filterReporter)
+      .filter(t => {
+        if (!filterDue) return true;
+        if (filterDue === 'unset') return !t.due_date;
+        if (!t.due_date) return false;
+        const d = new Date(t.due_date);
+        if (filterDue === 'overdue') return d < startOfToday;
+        if (filterDue === 'today') return d >= startOfToday && d < new Date(startOfToday.getTime() + 86400000);
+        if (filterDue === 'week') return d >= startOfToday && d <= endOfWeek;
+        return true;
+      })
       .sort((a, b) => a.position - b.position);
   };
 
@@ -342,32 +362,104 @@ export default function TicketBoardPage() {
     return <div className="flex items-center justify-center h-64"><Loader2 className="w-6 h-6 animate-spin" /></div>;
   }
 
-  const hasFilters = search || filterAssignee || filterPriority;
+  const hasFilters = !!(search || filterAssignee || filterPriority || filterType || filterReporter || filterDue);
+  const activeFilterCount = [filterAssignee, filterPriority, filterType, filterReporter, filterDue].filter(Boolean).length;
+  const clearFilters = () => { setSearch(''); setFilterAssignee(''); setFilterPriority(''); setFilterType(''); setFilterReporter(''); setFilterDue(''); };
+
+  const filterChip = (active: boolean) =>
+    cn(
+      'inline-flex items-center gap-1.5 h-7 px-3 rounded-full border text-xs font-medium transition-all cursor-pointer select-none',
+      active
+        ? 'bg-primary/10 border-primary/40 text-primary'
+        : 'bg-background border-border text-muted-foreground hover:border-foreground/30 hover:text-foreground',
+    );
 
   return (
     <div className="flex flex-col h-full">
-      {/* Top bar */}
-      <div className="flex items-center gap-3 px-6 py-3 border-b bg-background flex-shrink-0">
-        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => navigate('/dashboard/tickets')}>
-          <ArrowLeft className="w-4 h-4" />
-        </Button>
-        <div className="flex items-center gap-2">
-          <div className="w-6 h-6 rounded flex items-center justify-center text-white text-xs font-bold"
-            style={{ backgroundColor: project?.color || '#6366f1' }}>
-            {project?.key?.[0]}
+      {/* ── Header ── */}
+      <div className="flex-shrink-0 border-b bg-background">
+        {/* Row 1 — project + views + create */}
+        <div className="flex items-center gap-2 px-5 py-2.5 border-b border-border/50">
+          <Button variant="ghost" size="icon" className="h-7 w-7 rounded-lg -ml-1"
+            onClick={() => navigate('/dashboard/tickets')}>
+            <ArrowLeft className="w-3.5 h-3.5" />
+          </Button>
+
+          <div className="flex items-center gap-2">
+            <div className="w-7 h-7 rounded-lg flex items-center justify-center text-white text-xs font-bold shadow-sm"
+              style={{ backgroundColor: project?.color || '#6366f1' }}>
+              {project?.key?.[0]}
+            </div>
+            <span className="font-semibold text-sm">{project?.name}</span>
+            <span className="text-xs text-muted-foreground bg-muted px-1.5 py-0.5 rounded font-mono">{project?.key}</span>
           </div>
-          <span className="font-semibold">{project?.name}</span>
-          <Badge variant="secondary" className="text-xs">{project?.key}</Badge>
+
+          {/* View tabs */}
+          <div className="ml-4 flex items-center gap-0.5 bg-muted/60 rounded-lg p-0.5">
+            {[
+              { label: 'Board', active: true, onClick: () => {} },
+              { label: 'List', active: false, onClick: () => navigate(`/dashboard/tickets/${projectKey}/list`) },
+              { label: 'Backlog', active: false, onClick: () => navigate(`/dashboard/tickets/${projectKey}/backlog`) },
+              { label: 'Analytics', active: false, onClick: () => navigate(`/dashboard/tickets/${projectKey}/analytics`) },
+            ].map(v => (
+              <button key={v.label}
+                onClick={v.onClick}
+                className={cn(
+                  'px-3 py-1 rounded-md text-xs font-medium transition-all',
+                  v.active
+                    ? 'bg-background text-foreground shadow-sm'
+                    : 'text-muted-foreground hover:text-foreground',
+                )}>
+                {v.label}
+              </button>
+            ))}
+          </div>
+
+          <div className="ml-auto">
+            <Button size="sm" className="h-7 text-xs rounded-lg gap-1.5"
+              onClick={() => openCreateInColumn(statuses[0]?.id)}>
+              <Plus className="w-3.5 h-3.5" />Create
+            </Button>
+          </div>
         </div>
-        <div className="ml-auto flex items-center gap-2">
-          <div className="relative">
-            <Search className="absolute left-2.5 top-2 w-3.5 h-3.5 text-muted-foreground" />
-            <Input className="pl-8 h-8 w-48 text-sm" placeholder="Search tickets..."
-              value={search} onChange={e => setSearch(e.target.value)} />
+
+        {/* Row 2 — filters */}
+        <div className="flex items-center gap-2 px-5 py-2 overflow-x-auto scrollbar-none">
+          {/* Search */}
+          <div className="relative flex-shrink-0">
+            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3 h-3 text-muted-foreground" />
+            <input
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              placeholder="Search tickets…"
+              className={cn(
+                'h-7 pl-7 pr-3 rounded-full border text-xs bg-background transition-all outline-none',
+                'placeholder:text-muted-foreground/60',
+                search
+                  ? 'w-44 border-primary/40 ring-1 ring-primary/20'
+                  : 'w-36 border-border hover:border-foreground/30 focus:w-44 focus:border-primary/40 focus:ring-1 focus:ring-primary/20',
+              )}
+            />
+            {search && (
+              <button onClick={() => setSearch('')}
+                className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
+                <X className="w-3 h-3" />
+              </button>
+            )}
           </div>
+
+          <div className="w-px h-4 bg-border flex-shrink-0" />
+
+          {/* Priority chip */}
           <Select value={filterPriority || '__all__'} onValueChange={v => setFilterPriority(v === '__all__' ? '' : v)}>
-            <SelectTrigger className="h-8 w-32 text-xs">
+            <SelectTrigger className={filterChip(!!filterPriority)} style={{ width: 'auto', border: undefined }}>
               <SelectValue placeholder="Priority" />
+              {filterPriority && (
+                <span onClick={e => { e.stopPropagation(); setFilterPriority(''); }}
+                  className="ml-1 hover:bg-primary/20 rounded-full p-0.5 -mr-1">
+                  <X className="w-2.5 h-2.5" />
+                </span>
+              )}
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="__all__">All Priorities</SelectItem>
@@ -376,27 +468,94 @@ export default function TicketBoardPage() {
               ))}
             </SelectContent>
           </Select>
+
+          {/* Type chip */}
+          <Select value={filterType || '__all__'} onValueChange={v => setFilterType(v === '__all__' ? '' : v)}>
+            <SelectTrigger className={filterChip(!!filterType)} style={{ width: 'auto' }}>
+              <SelectValue placeholder="Type" />
+              {filterType && (
+                <span onClick={e => { e.stopPropagation(); setFilterType(''); }}
+                  className="ml-1 hover:bg-primary/20 rounded-full p-0.5 -mr-1">
+                  <X className="w-2.5 h-2.5" />
+                </span>
+              )}
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="__all__">All Types</SelectItem>
+              {issueTypes.map(it => <SelectItem key={it.id} value={String(it.id)}>{it.name}</SelectItem>)}
+            </SelectContent>
+          </Select>
+
+          {/* Assignee chip */}
+          <Select value={filterAssignee || '__all__'} onValueChange={v => setFilterAssignee(v === '__all__' ? '' : v)}>
+            <SelectTrigger className={filterChip(!!filterAssignee)} style={{ width: 'auto' }}>
+              <SelectValue placeholder="Assignee" />
+              {filterAssignee && (
+                <span onClick={e => { e.stopPropagation(); setFilterAssignee(''); }}
+                  className="ml-1 hover:bg-primary/20 rounded-full p-0.5 -mr-1">
+                  <X className="w-2.5 h-2.5" />
+                </span>
+              )}
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="__all__">All Assignees</SelectItem>
+              <SelectItem value="__none__">Unassigned</SelectItem>
+              {teamMembers.map(u => (
+                <SelectItem key={u.id} value={String(u.id)}>{u.full_name || u.email}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
+          {/* Reporter chip */}
+          <Select value={filterReporter || '__all__'} onValueChange={v => setFilterReporter(v === '__all__' ? '' : v)}>
+            <SelectTrigger className={filterChip(!!filterReporter)} style={{ width: 'auto' }}>
+              <SelectValue placeholder="Reporter" />
+              {filterReporter && (
+                <span onClick={e => { e.stopPropagation(); setFilterReporter(''); }}
+                  className="ml-1 hover:bg-primary/20 rounded-full p-0.5 -mr-1">
+                  <X className="w-2.5 h-2.5" />
+                </span>
+              )}
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="__all__">All Reporters</SelectItem>
+              {teamMembers.map(u => (
+                <SelectItem key={u.id} value={String(u.id)}>{u.full_name || u.email}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
+          {/* Due date chip */}
+          <Select value={filterDue || '__all__'} onValueChange={v => setFilterDue(v === '__all__' ? '' : v)}>
+            <SelectTrigger className={filterChip(!!filterDue)} style={{ width: 'auto' }}>
+              <SelectValue placeholder="Due date" />
+              {filterDue && (
+                <span onClick={e => { e.stopPropagation(); setFilterDue(''); }}
+                  className="ml-1 hover:bg-primary/20 rounded-full p-0.5 -mr-1">
+                  <X className="w-2.5 h-2.5" />
+                </span>
+              )}
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="__all__">Any due date</SelectItem>
+              <SelectItem value="overdue">Overdue</SelectItem>
+              <SelectItem value="today">Due today</SelectItem>
+              <SelectItem value="week">Due this week</SelectItem>
+              <SelectItem value="unset">No due date</SelectItem>
+            </SelectContent>
+          </Select>
+
+          {/* Clear all — only when filters active */}
           {hasFilters && (
-            <Button variant="ghost" size="icon" className="h-8 w-8"
-              onClick={() => { setSearch(''); setFilterAssignee(''); setFilterPriority(''); }}>
-              <X className="w-3.5 h-3.5" />
-            </Button>
+            <>
+              <div className="w-px h-4 bg-border flex-shrink-0" />
+              <button onClick={clearFilters}
+                className="inline-flex items-center gap-1 h-7 px-2.5 rounded-full text-xs text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors flex-shrink-0">
+                <X className="w-3 h-3" />
+                Clear{activeFilterCount > 0 ? ` (${activeFilterCount})` : ''}
+              </button>
+            </>
           )}
-          <Button variant="outline" size="sm" className="h-8"
-            onClick={() => navigate(`/dashboard/tickets/${projectKey}/list`)}>
-            <List className="w-3.5 h-3.5 mr-1.5" />List
-          </Button>
-          <Button variant="outline" size="sm" className="h-8"
-            onClick={() => navigate(`/dashboard/tickets/${projectKey}/backlog`)}>
-            Backlog
-          </Button>
-          <Button variant="outline" size="sm" className="h-8"
-            onClick={() => navigate(`/dashboard/tickets/${projectKey}/analytics`)}>
-            Analytics
-          </Button>
-          <Button size="sm" className="h-8" onClick={() => openCreateInColumn(statuses[0]?.id)}>
-            <Plus className="w-3.5 h-3.5 mr-1.5" />Create
-          </Button>
         </div>
       </div>
 
