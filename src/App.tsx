@@ -22,6 +22,7 @@ const SignupPage        = lazy(() => import("./pages/SignupPage").then(m => ({ d
 const PrivacyPolicy     = lazy(() => import("./pages/PrivacyPolicy"));
 const TermsOfService    = lazy(() => import("./pages/TermsOfService"));
 const CookiePolicyPage  = lazy(() => import("./pages/CookiePolicyPage"));
+const DataDeletionPage  = lazy(() => import("./pages/DataDeletionPage"));
 const SecurityPage      = lazy(() => import("./pages/SecurityPage"));
 const FeaturesPage      = lazy(() => import("./pages/FeaturesPage"));
 const PricingPage       = lazy(() => import("./pages/PricingPage"));
@@ -212,6 +213,7 @@ const AppRoutes = () => {
         <Route path="/blog/:slug" element={<BlogPostPage />} />
         <Route path="/privacy-policy" element={<PrivacyPolicy />} />
         <Route path="/terms" element={<TermsOfService />} />
+        <Route path="/data-deletion" element={<DataDeletionPage />} />
         <Route path="/cookie-policy" element={<CookiePolicyPage />} />
         <Route path="/security" element={<SecurityPage />} />
 
