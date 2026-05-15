@@ -4370,6 +4370,95 @@
       "deletedTitle": "Deleted",
       "deletedDesc": "Sequence deleted",
       "deleteError": "Failed to delete"
+    },
+    "editor": {
+      "namePlaceholder": "Sequence name",
+      "descriptionLabel": "Description",
+      "descriptionPlaceholder": "What is this sequence for?",
+      "goalLabel": "Goal",
+      "goalPlaceholder": "e.g. Book a demo call",
+      "saveButton": "Save",
+      "enrollContactsButton": "Enroll Contacts",
+      "stepsHeading": "Steps",
+      "addFirstStepButton": "Add First Step",
+      "addStepButton": "Add Step",
+      "statuses": {
+        "draft": "Draft",
+        "active": "Active",
+        "paused": "Paused",
+        "archived": "Archived"
+      },
+      "stepTypes": {
+        "email": "Email",
+        "sms": "SMS",
+        "whatsapp": "WhatsApp",
+        "task": "Task",
+        "wait": "Wait"
+      },
+      "conditions": {
+        "always": "Always",
+        "ifNotOpened": "If not opened",
+        "ifNotClicked": "If not clicked",
+        "ifNotReplied": "If not replied"
+      },
+      "delay": {
+        "immediately": "Send immediately",
+        "after": "After {{delay}}"
+      },
+      "step": {
+        "type": "Step type",
+        "delayDays": "Delay (days)",
+        "delayHours": "Hours",
+        "templateOptional": "Template (optional)",
+        "selectTemplate": "Select a template…",
+        "noTemplate": "No template",
+        "sendCondition": "Send condition",
+        "subject": "Subject",
+        "subjectPlaceholder": "Email subject line",
+        "subjectCaption": "You can use {{firstName}}, {{lastName}}, {{company}} tokens",
+        "body": "Message body",
+        "bodyPlaceholder": "Write your message here…",
+        "taskNote": "Task note",
+        "taskNotePlaceholder": "What should be done?"
+      },
+      "stats": {
+        "totalEnrolled": "Total enrolled",
+        "active": "Active",
+        "completed": "Completed",
+        "paused": "Paused",
+        "failed": "Failed"
+      },
+      "emptyState": {
+        "title": "No steps yet",
+        "description": "Add steps to build your outreach sequence."
+      },
+      "enrollSheet": {
+        "title": "Enroll Contacts",
+        "searchPlaceholder": "Search contacts…",
+        "noContactsFound": "No contacts found",
+        "allEnrolled": "All matching contacts are already enrolled",
+        "addNewContacts": "Add to sequence",
+        "noEnrollments": "No contacts enrolled yet",
+        "pauseTitle": "Pause",
+        "resumeTitle": "Resume",
+        "unenrollTitle": "Remove"
+      },
+      "toast": {
+        "errorTitle": "Error",
+        "loadFailed": "Failed to load sequence",
+        "savedTitle": "Saved",
+        "savedDescription": "Sequence updated successfully",
+        "saveFailed": "Failed to save sequence",
+        "nameRequiredTitle": "Name required",
+        "enrolledTitle": "Enrolled",
+        "enrollFailed": "Failed to enroll contacts",
+        "unenrolledTitle": "Removed",
+        "unenrollFailed": "Failed to remove contact",
+        "statusUpdateFailed": "Failed to update status"
+      },
+      "validation": {
+        "nameRequired": "Please enter a sequence name"
+      }
     }
   },
   "auditLogs": {

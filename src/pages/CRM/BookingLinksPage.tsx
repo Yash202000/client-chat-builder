@@ -1,8 +1,10 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { format, addDays, startOfDay, isBefore, isAfter } from "date-fns";
 import {
   Plus, Copy, Trash2, Eye, Settings2, Calendar, Clock, Users, ChevronRight, Link2,
+  Ban, PenLine, X, ChevronLeft,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -44,6 +46,8 @@ const DEFAULT_AVAILABILITY: Record<Day, { start: string; end: string }[]> = {
   sunday: [],
 };
 
+type DateOverrides = Record<string, { start: string; end: string }[]>;
+
 interface BookingLink {
   id: number;
   slug: string;
@@ -54,6 +58,7 @@ interface BookingLink {
   buffer_before_minutes: number;
   buffer_after_minutes: number;
   availability: Record<string, { start: string; end: string }[]>;
+  date_overrides?: DateOverrides;
   timezone: string;
   max_advance_days: number;
   min_notice_hours: number;
@@ -141,6 +146,290 @@ function AvailabilityEditor({
   );
 }
 
+// ── Date Overrides Editor ─────────────────────────────────────────────────────
+
+type OverrideMode = "blocked" | "custom";
+
+interface OverrideEditState {
+  dateKey: string;      // "YYYY-MM-DD"
+  mode: OverrideMode;
+  windows: { start: string; end: string }[];
+}
+
+function DateOverridesEditor({
+  value,
+  onChange,
+  maxAdvanceDays,
+}: {
+  value: DateOverrides;
+  onChange: (v: DateOverrides) => void;
+  maxAdvanceDays: number;
+}) {
+  const today = startOfDay(new Date());
+  const maxDate = addDays(today, maxAdvanceDays);
+
+  // calendar month navigation
+  const [calMonth, setCalMonth] = useState(() => new Date(today.getFullYear(), today.getMonth(), 1));
+  // editing popover state
+  const [editing, setEditing] = useState<OverrideEditState | null>(null);
+
+  const daysInMonth = () => {
+    const year = calMonth.getFullYear();
+    const month = calMonth.getMonth();
+    const first = new Date(year, month, 1);
+    const last = new Date(year, month + 1, 0);
+    const days: Date[] = [];
+    // pad from Monday
+    const startDow = (first.getDay() + 6) % 7; // 0=Mon
+    for (let i = 0; i < startDow; i++) days.push(new Date(0)); // placeholder
+    for (let d = 1; d <= last.getDate(); d++) days.push(new Date(year, month, d));
+    return days;
+  };
+
+  const openEdit = (d: Date) => {
+    const key = format(d, "yyyy-MM-dd");
+    const existing = value[key];
+    setEditing({
+      dateKey: key,
+      mode: existing && existing.length === 0 ? "blocked" : "custom",
+      windows: existing && existing.length > 0 ? existing : [{ start: "09:00", end: "17:00" }],
+    });
+  };
+
+  const removeOverride = (key: string) => {
+    const next = { ...value };
+    delete next[key];
+    onChange(next);
+  };
+
+  const saveEdit = () => {
+    if (!editing) return;
+    const next = { ...value };
+    if (editing.mode === "blocked") {
+      next[editing.dateKey] = [];
+    } else {
+      next[editing.dateKey] = editing.windows.filter(w => w.start && w.end);
+    }
+    onChange(next);
+    setEditing(null);
+  };
+
+  const days = daysInMonth();
+  const sortedKeys = Object.keys(value).sort();
+
+  return (
+    <div className="space-y-4">
+      {/* Mini calendar */}
+      <div className="border rounded-lg p-3 bg-gray-50">
+        {/* Month nav */}
+        <div className="flex items-center justify-between mb-2">
+          <button
+            type="button"
+            onClick={() => setCalMonth(m => new Date(m.getFullYear(), m.getMonth() - 1, 1))}
+            className="p-1 rounded hover:bg-gray-200 text-gray-500"
+          >
+            <ChevronLeft className="w-4 h-4" />
+          </button>
+          <span className="text-sm font-semibold text-gray-700">
+            {format(calMonth, "MMMM yyyy")}
+          </span>
+          <button
+            type="button"
+            onClick={() => setCalMonth(m => new Date(m.getFullYear(), m.getMonth() + 1, 1))}
+            className="p-1 rounded hover:bg-gray-200 text-gray-500"
+          >
+            <ChevronLeft className="w-4 h-4 rotate-180" />
+          </button>
+        </div>
+        {/* Day-of-week headers */}
+        <div className="grid grid-cols-7 mb-1">
+          {["Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"].map(d => (
+            <div key={d} className="text-center text-[10px] font-medium text-gray-400 py-0.5">{d}</div>
+          ))}
+        </div>
+        {/* Days */}
+        <div className="grid grid-cols-7 gap-0.5">
+          {days.map((d, idx) => {
+            if (d.getTime() === 0) return <div key={`ph-${idx}`} />;
+            const key = format(d, "yyyy-MM-dd");
+            const isPast = isBefore(d, today);
+            const isFuture = isAfter(d, maxDate);
+            const override = value[key];
+            const isBlocked = override !== undefined && override.length === 0;
+            const isCustom = override !== undefined && override.length > 0;
+            const isDisabled = isPast || isFuture;
+            return (
+              <button
+                key={key}
+                type="button"
+                disabled={isDisabled}
+                onClick={() => openEdit(d)}
+                title={isBlocked ? "Blocked" : isCustom ? "Custom hours" : "Click to add override"}
+                className={[
+                  "relative h-7 w-full rounded text-xs font-medium transition-colors",
+                  isDisabled ? "opacity-30 cursor-not-allowed text-gray-400" : "hover:bg-indigo-50 cursor-pointer",
+                  isBlocked ? "bg-red-100 text-red-600 hover:bg-red-200" : "",
+                  isCustom ? "bg-indigo-100 text-indigo-700 hover:bg-indigo-200" : "",
+                  !isBlocked && !isCustom && !isDisabled ? "text-gray-700" : "",
+                ].join(" ")}
+              >
+                {d.getDate()}
+                {(isBlocked || isCustom) && (
+                  <span className={[
+                    "absolute bottom-0.5 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full",
+                    isBlocked ? "bg-red-500" : "bg-indigo-500",
+                  ].join(" ")} />
+                )}
+              </button>
+            );
+          })}
+        </div>
+        <div className="flex items-center gap-4 mt-2 text-[10px] text-gray-500">
+          <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-sm bg-red-100 border border-red-300 inline-block" /> Blocked</span>
+          <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-sm bg-indigo-100 border border-indigo-300 inline-block" /> Custom hours</span>
+        </div>
+      </div>
+
+      {/* Override edit panel */}
+      {editing && (
+        <div className="border border-indigo-200 rounded-lg p-3 bg-indigo-50 space-y-3">
+          <div className="flex items-center justify-between">
+            <span className="text-sm font-semibold text-indigo-800">
+              {format(new Date(editing.dateKey + "T00:00:00"), "EEE, MMM d yyyy")}
+            </span>
+            <button type="button" onClick={() => setEditing(null)} className="text-gray-400 hover:text-gray-600">
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+          <div className="flex gap-2">
+            <button
+              type="button"
+              onClick={() => setEditing(e => e ? { ...e, mode: "custom" } : e)}
+              className={[
+                "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors",
+                editing.mode === "custom"
+                  ? "bg-indigo-600 text-white border-indigo-600"
+                  : "bg-white text-gray-600 border-gray-200 hover:border-indigo-300",
+              ].join(" ")}
+            >
+              <PenLine className="w-3 h-3" /> Custom hours
+            </button>
+            <button
+              type="button"
+              onClick={() => setEditing(e => e ? { ...e, mode: "blocked" } : e)}
+              className={[
+                "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors",
+                editing.mode === "blocked"
+                  ? "bg-red-600 text-white border-red-600"
+                  : "bg-white text-gray-600 border-gray-200 hover:border-red-300",
+              ].join(" ")}
+            >
+              <Ban className="w-3 h-3" /> Block day
+            </button>
+          </div>
+          {editing.mode === "custom" && (
+            <div className="space-y-2">
+              {editing.windows.map((w, i) => (
+                <div key={i} className="flex items-center gap-2">
+                  <input
+                    type="time"
+                    value={w.start}
+                    onChange={e => setEditing(ed => ed ? {
+                      ...ed,
+                      windows: ed.windows.map((x, j) => j === i ? { ...x, start: e.target.value } : x),
+                    } : ed)}
+                    className="border rounded px-2 py-1 text-xs bg-white"
+                  />
+                  <span className="text-gray-400 text-xs">–</span>
+                  <input
+                    type="time"
+                    value={w.end}
+                    onChange={e => setEditing(ed => ed ? {
+                      ...ed,
+                      windows: ed.windows.map((x, j) => j === i ? { ...x, end: e.target.value } : x),
+                    } : ed)}
+                    className="border rounded px-2 py-1 text-xs bg-white"
+                  />
+                  {editing.windows.length > 1 && (
+                    <button
+                      type="button"
+                      onClick={() => setEditing(ed => ed ? { ...ed, windows: ed.windows.filter((_, j) => j !== i) } : ed)}
+                      className="text-gray-400 hover:text-red-500"
+                    >
+                      <X className="w-3 h-3" />
+                    </button>
+                  )}
+                </div>
+              ))}
+              <button
+                type="button"
+                onClick={() => setEditing(ed => ed ? { ...ed, windows: [...ed.windows, { start: "09:00", end: "17:00" }] } : ed)}
+                className="text-xs text-indigo-600 hover:underline"
+              >
+                + Add time window
+              </button>
+            </div>
+          )}
+          {editing.mode === "blocked" && (
+            <p className="text-xs text-red-600">This date will be completely unavailable for bookings.</p>
+          )}
+          <div className="flex gap-2 pt-1">
+            <button
+              type="button"
+              onClick={saveEdit}
+              className="px-3 py-1.5 bg-indigo-600 text-white text-xs rounded-lg hover:bg-indigo-700 font-medium"
+            >
+              Save
+            </button>
+            {value[editing.dateKey] !== undefined && (
+              <button
+                type="button"
+                onClick={() => { removeOverride(editing.dateKey); setEditing(null); }}
+                className="px-3 py-1.5 text-red-600 text-xs rounded-lg border border-red-200 hover:bg-red-50"
+              >
+                Remove override
+              </button>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* List of existing overrides */}
+      {sortedKeys.length > 0 && (
+        <div className="space-y-1.5">
+          <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Active overrides</p>
+          {sortedKeys.map(key => {
+            const windows = value[key];
+            const isBlocked = windows.length === 0;
+            return (
+              <div key={key} className="flex items-center justify-between px-3 py-2 rounded-lg border bg-white text-sm">
+                <div className="flex items-center gap-2">
+                  {isBlocked
+                    ? <Ban className="w-3.5 h-3.5 text-red-500" />
+                    : <PenLine className="w-3.5 h-3.5 text-indigo-500" />}
+                  <span className="font-medium text-gray-700">
+                    {format(new Date(key + "T00:00:00"), "EEE, MMM d yyyy")}
+                  </span>
+                  <span className={`text-xs ${isBlocked ? "text-red-500" : "text-indigo-500"}`}>
+                    {isBlocked ? "Blocked" : windows.map(w => `${w.start}–${w.end}`).join(", ")}
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => removeOverride(key)}
+                  className="text-gray-300 hover:text-red-500 transition-colors"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
 interface LinkFormState {
   title: string;
   description: string;
@@ -149,6 +438,7 @@ interface LinkFormState {
   buffer_before_minutes: number;
   buffer_after_minutes: number;
   availability: Record<string, { start: string; end: string }[]>;
+  date_overrides: DateOverrides;
   timezone: string;
   max_advance_days: number;
   min_notice_hours: number;
@@ -164,6 +454,7 @@ const blankForm = (): LinkFormState => ({
   buffer_before_minutes: 0,
   buffer_after_minutes: 0,
   availability: { ...DEFAULT_AVAILABILITY },
+  date_overrides: {},
   timezone: "UTC",
   max_advance_days: 60,
   min_notice_hours: 1,
@@ -269,6 +560,7 @@ export default function BookingLinksPage() {
       buffer_before_minutes: link.buffer_before_minutes,
       buffer_after_minutes: link.buffer_after_minutes,
       availability: link.availability,
+      date_overrides: link.date_overrides ?? {},
       timezone: link.timezone,
       max_advance_days: link.max_advance_days,
       min_notice_hours: link.min_notice_hours,
@@ -562,6 +854,20 @@ export default function BookingLinksPage() {
               <AvailabilityEditor
                 value={form.availability}
                 onChange={(v) => setForm({ ...form, availability: v })}
+              />
+            </div>
+
+            <Separator />
+
+            <div>
+              <Label className="mb-1 block">Date Overrides</Label>
+              <p className="text-xs text-gray-500 mb-3">
+                Block specific dates or set custom hours that override your weekly schedule.
+              </p>
+              <DateOverridesEditor
+                value={form.date_overrides}
+                onChange={(v) => setForm({ ...form, date_overrides: v })}
+                maxAdvanceDays={form.max_advance_days}
               />
             </div>
 

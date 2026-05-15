@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useParams } from "react-router-dom";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { format, addDays, isBefore, startOfDay } from "date-fns";
+import { format, addDays, isBefore, startOfDay, parseISO } from "date-fns";
 import { Calendar } from "@/components/ui/calendar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -26,6 +26,7 @@ interface BookingLink {
   color?: string;
   is_active: boolean;
   owner_name?: string;
+  date_overrides?: Record<string, { start: string; end: string }[]>;
 }
 
 interface TimeSlot {
@@ -203,9 +204,25 @@ export default function BookingPage() {
                     setSelectedSlot(null);
                     setStep("time");
                   }}
-                  disabled={(d) =>
-                    isBefore(startOfDay(d), today) || isBefore(maxDate, startOfDay(d))
-                  }
+                  disabled={(d) => {
+                    const day = startOfDay(d);
+                    if (isBefore(day, today) || isBefore(maxDate, day)) return true;
+                    const key = format(d, "yyyy-MM-dd");
+                    const overrides = link.date_overrides ?? {};
+                    // explicitly blocked date (empty array override)
+                    if (key in overrides && overrides[key].length === 0) return true;
+                    return false;
+                  }}
+                  modifiers={{
+                    hasOverride: (d) => {
+                      const key = format(d, "yyyy-MM-dd");
+                      const overrides = link.date_overrides ?? {};
+                      return key in overrides && overrides[key].length > 0;
+                    },
+                  }}
+                  modifiersClassNames={{
+                    hasOverride: "font-bold underline decoration-dotted",
+                  }}
                   className="rounded-lg border-0"
                 />
               </div>

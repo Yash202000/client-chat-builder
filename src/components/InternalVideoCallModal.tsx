@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { LiveKitRoom, VideoConference, useRoomContext } from '@livekit/components-react';
+import { VideoBackgroundEffects } from './VideoBackgroundEffects';
 import { RoomEvent, RemoteParticipant } from 'livekit-client';
 import '@livekit/components-styles';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -485,7 +486,10 @@ const InternalVideoCallModal: React.FC = () => {
                       isLastInRoomRef={isLastInRoomRef}
                     />
                   )}
-                  <VideoConference />
+                  <div className="relative h-full w-full">
+                    <VideoConference />
+                    {!isMinimized && <VideoBackgroundEffects />}
+                  </div>
                 </LiveKitRoom>
               </div>
 

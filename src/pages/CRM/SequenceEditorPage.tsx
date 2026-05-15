@@ -325,7 +325,7 @@ export default function SequenceEditorPage() {
   const fetchTemplates = async () => {
     try {
       const data = await getTemplates();
-      setTemplates(data);
+      setTemplates(Array.isArray(data) ? data : (data.templates ?? []));
     } catch {}
   };
 

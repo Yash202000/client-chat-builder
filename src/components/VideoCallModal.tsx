@@ -2,6 +2,7 @@
 import { useEffect, useState, useRef, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { LiveKitRoom, VideoConference } from '@livekit/components-react';
+import { VideoBackgroundEffects } from './VideoBackgroundEffects';
 import '@livekit/components-styles';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from "@/hooks/useAuth";
@@ -391,7 +392,10 @@ export const VideoCallModal: React.FC<VideoCallModalProps> = ({
                     onClose();
                   }}
                 >
-                  <VideoConference />
+                  <div className="relative h-full w-full">
+                    <VideoConference />
+                    {!isMinimized && <VideoBackgroundEffects />}
+                  </div>
                 </LiveKitRoom>
               </div>
 
