@@ -69,6 +69,7 @@
     "team": "Team",
     "teamManagement": "Team Management",
     "reports": "Reports",
+    "developerPortal": "Developer Portal",
     "auditLogs": "Audit Logs",
     "settings": "Settings",
     "customFields": "Custom Fields",
@@ -147,7 +148,15 @@
     "adminGroup": "Admin",
     "campaignsGroup": "Campaigns",
     "marketingHubGroup": "Marketing Hub",
-    "departments": "Departments"
+    "departments": "Departments",
+    "whatsappWidget": "WA Widget",
+    "ctwa": "Click to WA",
+    "cts": "Click to Social",
+    "broadcast": "Broadcast",
+    "waTemplates": "WA Templates",
+    "catalog": "WA Catalog",
+    "linkShortener": "Link Shortener",
+    "commsAnalytics": "Comms Analytics"
   },
   "email": {
     "title": "Email",

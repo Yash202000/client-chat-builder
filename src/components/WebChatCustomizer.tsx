@@ -188,20 +188,10 @@ export const WebChatCustomizer: React.FC<WebChatCustomizerPropsExtended> = ({
           </div>
 
           <div>
-            <Label htmlFor="preview-type-selector" className="text-xs font-medium text-slate-600 dark:text-slate-300 mb-1 block">{t('designer.previewType')}</Label>
-            <select
-              id="preview-type-selector"
-              value={previewType}
-              onChange={(e) => onPreviewTypeChange?.(e.target.value)}
-              className="w-full p-1.5 border border-slate-200 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-800 dark:text-white focus:ring-2 focus:ring-pink-500/20 focus:border-pink-500 transition-all text-xs"
-            >
-              <option value="web">{t('designer.webChat')}</option>
-              <option value="whatsapp">{t('designer.whatsapp')}</option>
-              <option value="messenger">{t('designer.messenger')}</option>
-              <option value="instagram">{t('designer.instagram')}</option>
-              <option value="telegram">{t('designer.telegram')}</option>
-              <option value="voice">{t('designer.voiceCall')}</option>
-            </select>
+            <Label className="text-xs font-medium text-slate-600 dark:text-slate-300 mb-1 block">{t('designer.previewType')}</Label>
+            <div className="w-full p-1.5 border border-slate-200 dark:border-slate-700 rounded-lg bg-slate-50 dark:bg-slate-900 text-xs text-slate-500 dark:text-slate-400 select-none">
+              {t('designer.webChat')}
+            </div>
           </div>
         </div>
 

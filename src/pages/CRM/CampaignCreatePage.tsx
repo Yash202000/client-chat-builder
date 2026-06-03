@@ -73,6 +73,8 @@ export default function CampaignCreatePage() {
   });
   const [selectedTemplateId, setSelectedTemplateId] = useState<number | null>(null);
   const [selectedTemplate, setSelectedTemplate] = useState<Template | null>(null);
+  const [messageMode, setMessageMode] = useState<'template' | 'raw'>('template');
+  const [rawMessage, setRawMessage] = useState({ subject: '', body: '' });
 
   // Fetch templates based on campaign type
   const { data: templatesData } = useQuery({
@@ -155,8 +157,8 @@ export default function CampaignCreatePage() {
       const response = await axios.post('/api/v1/campaigns/', payload, { headers });
       const campaignId = response.data.id;
 
-      // Create initial campaign message with template if selected
-      if (selectedTemplateId && selectedTemplate) {
+      // Create initial campaign message
+      if (messageMode === 'template' && selectedTemplateId && selectedTemplate) {
         await axios.post(`/api/v1/campaigns/${campaignId}/messages`, {
           campaign_id: campaignId,
           sequence_order: 1,
@@ -169,6 +171,15 @@ export default function CampaignCreatePage() {
           voice_script: selectedTemplate.voice_script,
           tts_voice_id: selectedTemplate.tts_voice_id,
           personalization_tokens: selectedTemplate.personalization_tokens,
+        }, { headers });
+      } else if (messageMode === 'raw' && rawMessage.body.trim()) {
+        await axios.post(`/api/v1/campaigns/${campaignId}/messages`, {
+          campaign_id: campaignId,
+          sequence_order: 1,
+          name: `${formData.name} message`,
+          message_type: formData.campaign_type,
+          subject: rawMessage.subject || null,
+          body: rawMessage.body,
         }, { headers });
       }
 
@@ -317,96 +328,147 @@ export default function CampaignCreatePage() {
           </CardContent>
         </Card>
 
-        {/* Message Template Selection */}
+        {/* Message Content */}
         {formData.campaign_type && formData.campaign_type !== 'multi_channel' && (
           <Card className="border-slate-200 dark:border-slate-700 dark:bg-slate-800">
             <CardHeader>
               <CardTitle className="text-lg font-semibold dark:text-white flex items-center gap-2">
                 <FileText className="h-5 w-5 text-orange-500" />
-                {t('crm.campaigns.create.messageTemplate', 'Message Template')}
+                Message
               </CardTitle>
               <CardDescription className="dark:text-gray-400">
-                {t('crm.campaigns.create.selectTemplate', 'Select a template for your campaign message')}
+                Use a saved template or write your message directly
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              {templates.length > 0 ? (
-                <>
-                  <div className="space-y-2">
-                    <Label>{t('crm.templates.title', 'Template')}</Label>
-                    <Select
-                      value={selectedTemplateId?.toString() || ''}
-                      onValueChange={(val) => setSelectedTemplateId(val ? parseInt(val) : null)}
-                    >
-                      <SelectTrigger className="dark:bg-slate-900 dark:border-slate-600">
-                        <SelectValue placeholder={t('crm.campaigns.create.selectTemplatePlaceholder', 'Choose a template...')} />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {templates.map((template) => (
-                          <SelectItem key={template.id} value={template.id.toString()}>
-                            <div className="flex items-center gap-2">
-                              <span>{template.name}</span>
-                              {template.is_ai_generated && (
-                                <Badge variant="secondary" className="text-xs">
-                                  <Sparkles className="h-3 w-3 mr-1" />
-                                  AI
-                                </Badge>
-                              )}
-                            </div>
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
+              {/* Mode toggle */}
+              <div className="flex rounded-lg border border-slate-200 dark:border-slate-600 overflow-hidden w-fit">
+                <button
+                  type="button"
+                  onClick={() => setMessageMode('template')}
+                  className={cn(
+                    'px-4 py-1.5 text-sm font-medium transition-colors',
+                    messageMode === 'template'
+                      ? 'bg-orange-500 text-white'
+                      : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700'
+                  )}
+                >
+                  Use template
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setMessageMode('raw')}
+                  className={cn(
+                    'px-4 py-1.5 text-sm font-medium transition-colors',
+                    messageMode === 'raw'
+                      ? 'bg-orange-500 text-white'
+                      : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700'
+                  )}
+                >
+                  Write message
+                </button>
+              </div>
 
-                  {/* Template Preview */}
-                  {selectedTemplate && (
-                    <div className="border rounded-lg p-4 bg-slate-50 dark:bg-slate-900 space-y-3">
-                      <div className="flex items-center justify-between">
-                        <h4 className="font-medium dark:text-white">{selectedTemplate.name}</h4>
-                        <Badge variant="outline">{selectedTemplate.template_type}</Badge>
-                      </div>
-                      {selectedTemplate.description && (
-                        <p className="text-sm text-gray-600 dark:text-gray-400">{selectedTemplate.description}</p>
-                      )}
-                      {selectedTemplate.subject && (
-                        <div>
-                          <Label className="text-xs text-gray-500">{t('crm.templates.subject', 'Subject')}</Label>
-                          <p className="text-sm dark:text-gray-300">{selectedTemplate.subject}</p>
-                        </div>
-                      )}
-                      {selectedTemplate.body && (
-                        <div>
-                          <Label className="text-xs text-gray-500">{t('crm.templates.body', 'Body')}</Label>
-                          <p className="text-sm dark:text-gray-300 line-clamp-3">{selectedTemplate.body}</p>
-                        </div>
-                      )}
-                      {selectedTemplate.personalization_tokens && selectedTemplate.personalization_tokens.length > 0 && (
-                        <div className="flex flex-wrap gap-1">
-                          {selectedTemplate.personalization_tokens.map((token) => (
-                            <Badge key={token} variant="secondary" className="text-xs">
-                              {token}
-                            </Badge>
+              {messageMode === 'template' ? (
+                templates.length > 0 ? (
+                  <>
+                    <div className="space-y-2">
+                      <Label>{t('crm.templates.title', 'Template')}</Label>
+                      <Select
+                        value={selectedTemplateId?.toString() || ''}
+                        onValueChange={(val) => setSelectedTemplateId(val ? parseInt(val) : null)}
+                      >
+                        <SelectTrigger className="dark:bg-slate-900 dark:border-slate-600">
+                          <SelectValue placeholder={t('crm.campaigns.create.selectTemplatePlaceholder', 'Choose a template...')} />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {templates.map((template) => (
+                            <SelectItem key={template.id} value={template.id.toString()}>
+                              <div className="flex items-center gap-2">
+                                <span>{template.name}</span>
+                                {template.is_ai_generated && (
+                                  <Badge variant="secondary" className="text-xs">
+                                    <Sparkles className="h-3 w-3 mr-1" />
+                                    AI
+                                  </Badge>
+                                )}
+                              </div>
+                            </SelectItem>
                           ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    {selectedTemplate && (
+                      <div className="border rounded-lg p-4 bg-slate-50 dark:bg-slate-900 space-y-3">
+                        <div className="flex items-center justify-between">
+                          <h4 className="font-medium dark:text-white">{selectedTemplate.name}</h4>
+                          <Badge variant="outline">{selectedTemplate.template_type}</Badge>
                         </div>
-                      )}
+                        {selectedTemplate.description && (
+                          <p className="text-sm text-gray-600 dark:text-gray-400">{selectedTemplate.description}</p>
+                        )}
+                        {selectedTemplate.subject && (
+                          <div>
+                            <Label className="text-xs text-gray-500">{t('crm.templates.subject', 'Subject')}</Label>
+                            <p className="text-sm dark:text-gray-300">{selectedTemplate.subject}</p>
+                          </div>
+                        )}
+                        {selectedTemplate.body && (
+                          <div>
+                            <Label className="text-xs text-gray-500">{t('crm.templates.body', 'Body')}</Label>
+                            <p className="text-sm dark:text-gray-300 line-clamp-3">{selectedTemplate.body}</p>
+                          </div>
+                        )}
+                        {selectedTemplate.personalization_tokens && selectedTemplate.personalization_tokens.length > 0 && (
+                          <div className="flex flex-wrap gap-1">
+                            {selectedTemplate.personalization_tokens.map((token) => (
+                              <Badge key={token} variant="secondary" className="text-xs">
+                                {token}
+                              </Badge>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  <div className="text-center py-6 border-2 border-dashed rounded-lg dark:border-slate-600">
+                    <FileText className="h-10 w-10 mx-auto text-gray-400 mb-2" />
+                    <p className="text-gray-600 dark:text-gray-400 mb-3">
+                      No templates available for this channel
+                    </p>
+                    <Button type="button" variant="outline" onClick={() => navigate('/dashboard/crm/templates/new')}>
+                      <Plus className="h-4 w-4 mr-2" />
+                      {t('crm.templates.create', 'Create Template')}
+                    </Button>
+                  </div>
+                )
+              ) : (
+                <div className="space-y-3">
+                  {formData.campaign_type === 'email' && (
+                    <div className="space-y-1">
+                      <Label>Subject</Label>
+                      <input
+                        type="text"
+                        className="w-full rounded-md border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-900 px-3 py-2 text-sm dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-orange-500"
+                        placeholder="Email subject line"
+                        value={rawMessage.subject}
+                        onChange={e => setRawMessage(r => ({ ...r, subject: e.target.value }))}
+                      />
                     </div>
                   )}
-                </>
-              ) : (
-                <div className="text-center py-6 border-2 border-dashed rounded-lg dark:border-slate-600">
-                  <FileText className="h-10 w-10 mx-auto text-gray-400 mb-2" />
-                  <p className="text-gray-600 dark:text-gray-400 mb-3">
-                    {t('crm.campaigns.create.noTemplates', 'No templates available for this channel')}
-                  </p>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => navigate('/dashboard/crm/templates/new')}
-                  >
-                    <Plus className="h-4 w-4 mr-2" />
-                    {t('crm.templates.create', 'Create Template')}
-                  </Button>
+                  <div className="space-y-1">
+                    <Label>Message</Label>
+                    <Textarea
+                      rows={5}
+                      className="dark:bg-slate-900 dark:border-slate-600 resize-none"
+                      placeholder={`Write your ${formData.campaign_type} message here...`}
+                      value={rawMessage.body}
+                      onChange={e => setRawMessage(r => ({ ...r, body: e.target.value }))}
+                    />
+                    <p className="text-xs text-slate-400">{rawMessage.body.length} chars · Use {'{{name}}'}, {'{{email}}'} for personalisation</p>
+                  </div>
                 </div>
               )}
             </CardContent>

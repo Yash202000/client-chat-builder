@@ -87,7 +87,8 @@ export const AdvancedChatPreview = ({ selectedAgentId: initialAgentId }: { selec
   const [selectedAgentId, setSelectedAgentId] = useState<number | null>(initialAgentId ?? null);
   const [isTyping, setIsTyping] = useState(false);
   const [activeForm, setActiveForm] = useState<any[] | null>(null);
-  const [previewType, setPreviewType] = useState('web');
+  const previewType = 'web';
+  const setPreviewType = (_: string) => {};
   const [isRecording, setIsRecording] = useState(false);
   const [agents, setAgents] = useState<Agent[]>([]);
   const [isExpanded, setIsExpanded] = useState(true);

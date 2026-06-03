@@ -139,6 +139,7 @@ function TemplateForm({
   onCancel: () => void;
   isLoading?: boolean;
 }) {
+  const { t } = useTranslation();
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const [formData, setFormData] = useState({
     name: template?.name || '',
@@ -154,7 +155,7 @@ function TemplateForm({
       name: formData.name,
       shortcut: formData.shortcut,
       content: formData.content,
-      tags: formData.tags.split(',').map(t => t.trim()).filter(Boolean),
+      tags: formData.tags.split(',').map(tag => tag.trim()).filter(Boolean),
       scope: formData.scope as 'personal' | 'shared',
     });
   };

@@ -292,6 +292,8 @@ export const ConversationDetail: React.FC<ConversationDetailProps> = ({ sessionI
   const { startCall: startVideoCall } = useVideoCall();
   const [isAiEnabled, setIsAiEnabled] = useState(true);
   const [suggestedReplies, setSuggestedReplies] = useState<string[]>([]);
+  const [isFetchingSuggestions, setIsFetchingSuggestions] = useState(false);
+  const suggestionDebounceRef = useRef<NodeJS.Timeout>();
   const [isAgentTyping, setIsAgentTyping] = useState(false);
   const [hasInitiallyLoaded, setHasInitiallyLoaded] = useState(false);
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
@@ -323,6 +325,38 @@ export const ConversationDetail: React.FC<ConversationDetailProps> = ({ sessionI
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const { authFetch, token } = useAuth();
   const { makeCall, callState } = useTwilioCall();
+
+  const fetchSuggestions = (msgs: ChatMessage[]) => {
+    if (readOnly || !isAiEnabled) return;
+    const recentMsgs = msgs.slice(-10).filter(m => m.message_type === 'message');
+    if (recentMsgs.length === 0 || recentMsgs[recentMsgs.length - 1]?.sender !== 'user') return;
+    clearTimeout(suggestionDebounceRef.current);
+    suggestionDebounceRef.current = setTimeout(async () => {
+      setIsFetchingSuggestions(true);
+      try {
+        const history = recentMsgs.map(m => `${m.sender === 'user' ? 'Customer' : 'Agent'}: ${m.message}`);
+        const res = await authFetch('/api/v1/suggestions/suggest-replies', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ conversation_history: history }),
+        });
+        if (res.ok) {
+          const data = await res.json();
+          const raw: string[] = data.suggested_replies ?? [];
+          // Clean up numbered lines like "1. ..." or "- ..."
+          const clean = raw
+            .flatMap(r => r.split('\n'))
+            .map(r => r.replace(/^[\d]+[.)\s]+/, '').replace(/^[-*]\s+/, '').trim())
+            .filter(r => r.length > 3 && r.length < 200);
+          setSuggestedReplies(clean.slice(0, 3));
+        }
+      } catch {
+        // Silently ignore — suggestions are non-critical
+      } finally {
+        setIsFetchingSuggestions(false);
+      }
+    }, 600);
+  };
   const { isRecording, startRecording, stopRecording } = useVoiceConnection(agentId, sessionId);
 
   // Load drafts from localStorage when session changes
@@ -560,7 +594,14 @@ export const ConversationDetail: React.FC<ConversationDetailProps> = ({ sessionI
           }
 
           const newPages = [...oldData.pages];
-          newPages[newPages.length - 1] = [...lastPage, newMessage];
+          const updatedLastPage = [...lastPage, newMessage];
+          newPages[newPages.length - 1] = updatedLastPage;
+
+          // Trigger AI suggestions when customer sends a message
+          if (newMessage.sender === 'user' && newMessage.message_type === 'message') {
+            const allMsgs = [...newPages].reverse().flat();
+            fetchSuggestions(allMsgs);
+          }
 
           return { ...oldData, pages: newPages };
         });
@@ -608,14 +649,17 @@ export const ConversationDetail: React.FC<ConversationDetailProps> = ({ sessionI
   // Reset initial load flag and jump to bottom placeholder when session changes
   useEffect(() => {
     setHasInitiallyLoaded(false);
+    setSuggestedReplies([]);
+    clearTimeout(suggestionDebounceRef.current);
     if (messagesContainerRef.current) {
       messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight;
     }
   }, [sessionId]);
 
-  // Scroll to bottom on initial load
+  // Scroll to bottom on initial load + seed suggestions if last msg is from customer
   useEffect(() => {
     if (!isLoading && messages.length > 0 && !hasInitiallyLoaded) {
+      fetchSuggestions(messages);
       const doScroll = () => {
         if (messagesEndRef.current) {
           messagesEndRef.current.scrollIntoView({ behavior: 'instant', block: 'end' });
@@ -933,6 +977,7 @@ export const ConversationDetail: React.FC<ConversationDetailProps> = ({ sessionI
 
     // Send message if there's text (files are already sent above)
     if (message.trim()) {
+      setSuggestedReplies([]);  // Clear suggestions once agent replies
       sendMessageMutation.mutate({ message: messageContent, message_type: 'message', sender: 'agent' });
     }
   };
@@ -1489,7 +1534,7 @@ export const ConversationDetail: React.FC<ConversationDetailProps> = ({ sessionI
           >
             {/* AI suggestion chips — above the card */}
             <AnimatePresence>
-              {suggestedReplies.length > 0 && (
+              {(suggestedReplies.length > 0 || isFetchingSuggestions) && (
                 <motion.div
                   initial={{ opacity: 0, height: 0 }}
                   animate={{ opacity: 1, height: 'auto' }}
@@ -1498,19 +1543,23 @@ export const ConversationDetail: React.FC<ConversationDetailProps> = ({ sessionI
                 >
                   <div className={`flex items-center gap-2 overflow-x-auto pb-1 scrollbar-hide ${isRTL ? 'flex-row-reverse' : ''}`}>
                     <Sparkles className="h-3 w-3 text-purple-500 flex-shrink-0" />
-                    {suggestedReplies.map((reply, index) => (
-                      <motion.button
-                        key={index}
-                        initial={{ opacity: 0, y: 4 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: index * 0.04 }}
-                        whileTap={{ scale: 0.95 }}
-                        onClick={() => setMessage(reply)}
-                        className="flex-shrink-0 px-2.5 py-1 bg-purple-50 dark:bg-white/[0.06] border border-purple-200/60 dark:border-white/[0.10] rounded-full text-[11px] text-purple-700 dark:text-white/70 hover:bg-purple-100 dark:hover:bg-white/[0.10] transition-colors"
-                      >
-                        {reply}
-                      </motion.button>
-                    ))}
+                    {isFetchingSuggestions && suggestedReplies.length === 0 ? (
+                      <span className="text-[11px] text-purple-400 dark:text-purple-500 italic">Thinking…</span>
+                    ) : (
+                      suggestedReplies.map((reply, index) => (
+                        <motion.button
+                          key={index}
+                          initial={{ opacity: 0, y: 4 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: index * 0.04 }}
+                          whileTap={{ scale: 0.95 }}
+                          onClick={() => { setMessage(reply); setSuggestedReplies([]); }}
+                          className="flex-shrink-0 px-2.5 py-1 bg-purple-50 dark:bg-white/[0.06] border border-purple-200/60 dark:border-white/[0.10] rounded-full text-[11px] text-purple-700 dark:text-white/70 hover:bg-purple-100 dark:hover:bg-white/[0.10] transition-colors"
+                        >
+                          {reply}
+                        </motion.button>
+                      ))
+                    )}
                   </div>
                 </motion.div>
               )}

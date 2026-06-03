@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, lazy, Suspense } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import {
@@ -17,6 +17,9 @@ import {
   Loader2,
   FileText,
 } from 'lucide-react';
+
+const MessageTemplatesPage = lazy(() => import('@/pages/MessageTemplatesPage'));
+const WaTemplatesPage = lazy(() => import('@/pages/WaTemplatesPage'));
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -80,6 +83,7 @@ export default function TemplatesPage() {
   const { t } = useTranslation();
   const { toast } = useToast();
 
+  const [activeTab, setActiveTab] = useState<'campaign' | 'quick_replies' | 'wa'>('campaign');
   const [templates, setTemplates] = useState<Template[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
@@ -211,15 +215,54 @@ export default function TemplatesPage() {
               </p>
             </div>
           </div>
-          <Button
-            onClick={() => navigate('/dashboard/crm/templates/new')}
-            className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white rounded-xl h-9 px-4 text-sm"
-          >
-            <Plus className="h-4 w-4 mr-2" />
-            {t('crm.templates.create', 'Create Template')}
-          </Button>
+          {activeTab === 'campaign' && (
+            <Button
+              onClick={() => navigate('/dashboard/crm/templates/new')}
+              className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white rounded-xl h-9 px-4 text-sm"
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              {t('crm.templates.create', 'Create Template')}
+            </Button>
+          )}
         </div>
       </div>
+
+      {/* Tab bar */}
+      <div className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 px-6">
+        <div className="flex gap-0">
+          {([
+            { key: 'campaign',      label: 'Campaign Templates' },
+            { key: 'quick_replies', label: 'Quick Replies' },
+            { key: 'wa',            label: 'WA Templates' },
+          ] as const).map(tab => (
+            <button
+              key={tab.key}
+              onClick={() => setActiveTab(tab.key)}
+              className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
+                activeTab === tab.key
+                  ? 'border-purple-600 text-purple-600 dark:text-purple-400'
+                  : 'border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300'
+              }`}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {activeTab === 'quick_replies' && (
+        <Suspense fallback={<div className="flex items-center justify-center py-16"><Loader2 className="h-6 w-6 animate-spin text-slate-400" /></div>}>
+          <MessageTemplatesPage />
+        </Suspense>
+      )}
+
+      {activeTab === 'wa' && (
+        <Suspense fallback={<div className="flex items-center justify-center py-16"><Loader2 className="h-6 w-6 animate-spin text-slate-400" /></div>}>
+          <WaTemplatesPage />
+        </Suspense>
+      )}
+
+      {activeTab === 'campaign' && (
       <div className="px-6 py-6 space-y-6">
 
       {/* Stats Cards */}
@@ -440,6 +483,7 @@ export default function TemplatesPage() {
       )}
 
       </div>
+      )}
 
       {/* Preview Dialog */}
       <Dialog open={previewDialogOpen} onOpenChange={setPreviewDialogOpen}>

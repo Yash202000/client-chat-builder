@@ -45,7 +45,7 @@ const InternalVideoCallPage = lazy(() => import("./pages/InternalVideoCallPage")
 
 // ─── Lazy: Dashboard shell ────────────────────────────────────────────────────
 const AppLayout             = lazy(() => import("./components/AppLayout"));
-const OnboardingPage        = lazy(() => import("./pages/OnboardingPage").then(m => ({ default: m.OnboardingPage ?? m.default })));
+const OnboardingPage        = lazy(() => import("./pages/OnboardingPage").then(m => ({ default: m.OnboardingPage })));
 const ClientPortalPage      = lazy(() => import("./pages/ClientPortalPage"));
 
 // ─── Lazy: Dashboard core ─────────────────────────────────────────────────────
@@ -161,12 +161,22 @@ const CategoriesPage      = lazy(() => import("./pages/CMS").then(m => ({ defaul
 const MarketplacePage     = lazy(() => import("./pages/CMS").then(m => ({ default: m.MarketplacePage })));
 const CMSSettingsPage     = lazy(() => import("./pages/CMS").then(m => ({ default: m.CMSSettingsPage })));
 
+// ─── Lazy: Developer Portal ───────────────────────────────────────────────────
+const DeveloperPortalPage = lazy(() => import("./pages/DeveloperPortalPage"));
+
 // ─── Lazy: Social / Marketing Hub ────────────────────────────────────────────
 const SocialHubPage      = lazy(() => import("./pages/Social/SocialHubPage"));
 const PostComposerPage   = lazy(() => import("./pages/Social/PostComposerPage"));
 const TrendingPostsPage  = lazy(() => import("./pages/Social/TrendingPostsPage"));
 const SocialAccountsPage = lazy(() => import("./pages/Social/SocialAccountsPage"));
 const SocialAnalyticsPage = lazy(() => import("./pages/Social/SocialAnalyticsPage"));
+const WhatsAppWidgetPage  = lazy(() => import("./pages/WhatsAppWidgetPage"));
+const CTSocialPage        = lazy(() => import("./pages/CTSocialPage"));
+const BroadcastPage       = lazy(() => import("./pages/BroadcastPage"));
+const CommsAnalyticsPage  = lazy(() => import("./pages/CommsAnalyticsPage"));
+const WaTemplatesPage     = lazy(() => import("./pages/WaTemplatesPage"));
+const CatalogPage         = lazy(() => import("./pages/CatalogPage"));
+const LinkShortenerPage   = lazy(() => import("./pages/LinkShortenerPage"));
 
 // ─── Suspense fallback ────────────────────────────────────────────────────────
 const PageLoader = () => (
@@ -251,6 +261,14 @@ const AppRoutes = () => {
             <Route path="builder/:agentId/webhooks" element={<AgentWebhooksPage />} />
             <Route path="builder/:agentId/credentials" element={<AgentCredentialsPage />} />
             <Route path="designer" element={<DesignerPage />} />
+            <Route path="whatsapp-widget" element={<Navigate to="/dashboard/designer" replace />} />
+            <Route path="ctwa" element={<Navigate to="/dashboard/cts" replace />} />
+            <Route path="cts" element={<CTSocialPage />} />
+            <Route path="broadcast" element={<Navigate to="/dashboard/crm/campaigns" replace />} />
+            <Route path="comms-analytics" element={<CommsAnalyticsPage />} />
+            <Route path="wa-templates" element={<Navigate to="/dashboard/crm/templates" replace />} />
+            <Route path="catalog" element={<CatalogPage />} />
+            <Route path="link-shortener" element={<LinkShortenerPage />} />
             <Route path="team" element={<TeamPage />} />
             <Route path="team-chat" element={<InternalChatPage />} />
             <Route path="reports" element={<ReportsPage />} />
@@ -309,7 +327,7 @@ const AppRoutes = () => {
             <Route path="crm/segments" element={<SegmentsPage />} />
             <Route path="crm/templates" element={<TemplatesPage />} />
             <Route path="crm/templates/:id" element={<TemplateEditorPage />} />
-            <Route path="message-templates" element={<MessageTemplatesPage />} />
+            <Route path="message-templates" element={<Navigate to="/dashboard/crm/templates" replace />} />
             <Route path="inbox/email" element={<EmailInboxPage />} />
             <Route path="inbox/sms" element={<SMSInboxPage />} />
             <Route path="call-queue" element={<CallQueuePage />} />
@@ -346,6 +364,8 @@ const AppRoutes = () => {
             <Route path="cms/categories" element={<CategoriesPage />} />
             <Route path="cms/marketplace" element={<MarketplacePage />} />
             <Route path="cms/settings" element={<CMSSettingsPage />} />
+            {/* Developer Portal */}
+            <Route path="developer" element={<DeveloperPortalPage />} />
           </Route>
         </Route>
 

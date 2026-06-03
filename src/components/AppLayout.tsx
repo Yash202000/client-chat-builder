@@ -69,6 +69,12 @@ import {
   Ticket,
   LifeBuoy,
   Workflow,
+  Smartphone,
+  MousePointerClick,
+  FileText,
+  Code2,
+  ShoppingBag,
+  Link2,
 } from "lucide-react";
 import { CreateAgentDialog } from "@/components/CreateAgentDialog";
 import { Permission } from "./Permission";
@@ -716,7 +722,10 @@ const AppLayout = () => {
         { titleKey: "navigation.cms",             url: "/dashboard/cms",                  icon: LayoutTemplate, permission: "page:knowledge_base" },
         { titleKey: "navigation.tools",           url: "/dashboard/tools",                icon: Zap,          permission: "page:tools" },
         { titleKey: "navigation.automations",      url: "/dashboard/workflows",            icon: WorkflowIcon, permission: "page:workflows" },
-        { titleKey: "navigation.messageTemplates", url: "/dashboard/message-templates",   icon: Sparkles,     permission: "page:message_templates" },
+        { titleKey: "navigation.cts",              url: "/dashboard/cts",                  icon: MousePointerClick, permission: "page:agents" },
+        { titleKey: "navigation.catalog",          url: "/dashboard/catalog",              icon: ShoppingBag,       permission: "page:agents" },
+        { titleKey: "navigation.linkShortener",    url: "/dashboard/link-shortener",       icon: Link2,             permission: "page:agents" },
+        { titleKey: "navigation.commsAnalytics",   url: "/dashboard/comms-analytics",      icon: BarChart3,         permission: "page:agents" },
       ],
     },
     // 8. AI — on-demand tools
@@ -742,6 +751,7 @@ const AppLayout = () => {
       collapsible: true,
       items: [
         { titleKey: "navigation.reports", url: "/dashboard/reports", icon: BarChart3, permission: "page:reports" },
+        { titleKey: "navigation.developerPortal", url: "/dashboard/developer", icon: Code2, permission: "page:settings" },
         { titleKey: "navigation.auditLogs", url: "/dashboard/audit-logs", icon: ClipboardList, permission: "page:settings" },
         { titleKey: "navigation.teamManagement", url: "/dashboard/team", icon: Users, permission: "page:team_management" },
         { titleKey: "navigation.settings", url: "/dashboard/settings", icon: Settings, permission: "page:settings" },

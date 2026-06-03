@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { useNotifications } from "@/hooks/useNotifications";
@@ -10,11 +10,13 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import {
   User, Mail, Phone, Briefcase, Lock, Camera, Upload,
-  Loader2, CheckCircle2, Info, Shield, Building2, Tag, X, Plus,
+  Loader2, CheckCircle2, Info, Shield, Building2, Tag, X, Plus, ShieldCheck, ShieldOff, QrCode,
 } from "lucide-react";
 import { useI18n } from "@/hooks/useI18n";
+import { API_BASE_URL } from "@/config/api";
 
 export const ProfilePage = () => {
   const { t, isRTL } = useI18n();
@@ -29,6 +31,13 @@ export const ProfilePage = () => {
   const [skills, setSkills] = useState<string[]>([]);
   const [skillInput, setSkillInput] = useState('');
   const [isSavingSkills, setIsSavingSkills] = useState(false);
+
+  // 2FA state
+  const [twoFaEnabled, setTwoFaEnabled] = useState(false);
+  const [twoFaDialog, setTwoFaDialog] = useState<"setup" | "disable" | null>(null);
+  const [twoFaSetupData, setTwoFaSetupData] = useState<{ qr_code: string; secret: string } | null>(null);
+  const [twoFaCode, setTwoFaCode] = useState("");
+  const [twoFaLoading, setTwoFaLoading] = useState(false);
 
   const [formData, setFormData] = useState({
     email: "",
@@ -51,6 +60,7 @@ export const ProfilePage = () => {
         const data = await response.json();
         setUser(data);
         if (Array.isArray(data.skills)) setSkills(data.skills);
+        setTwoFaEnabled(!!data.totp_enabled);
         setFormData({
           email: data.email || "",
           password: "",
@@ -147,6 +157,60 @@ export const ProfilePage = () => {
       toast({ title: "Failed to update profile", variant: "destructive" });
     } finally {
       setIsSaving(false);
+    }
+  };
+
+  const handle2FASetup = async () => {
+    setTwoFaLoading(true);
+    try {
+      const res = await authFetch(`/api/v1/auth/2fa/setup`, { method: "POST" });
+      if (!res.ok) throw new Error((await res.json()).detail || "Failed");
+      const data = await res.json();
+      setTwoFaSetupData(data);
+      setTwoFaCode("");
+      setTwoFaDialog("setup");
+    } catch (err: any) {
+      toast({ title: "Error", description: err.message, variant: "destructive" });
+    } finally {
+      setTwoFaLoading(false);
+    }
+  };
+
+  const handle2FAVerifySetup = async () => {
+    setTwoFaLoading(true);
+    try {
+      const res = await authFetch(`/api/v1/auth/2fa/verify-setup`, {
+        method: "POST",
+        body: JSON.stringify({ code: twoFaCode }),
+      });
+      if (!res.ok) throw new Error((await res.json()).detail || "Invalid code");
+      setTwoFaEnabled(true);
+      setTwoFaDialog(null);
+      setTwoFaSetupData(null);
+      toast({ title: "2FA Enabled", description: "Your account is now protected with two-factor authentication." });
+    } catch (err: any) {
+      toast({ title: "Error", description: err.message, variant: "destructive" });
+    } finally {
+      setTwoFaLoading(false);
+    }
+  };
+
+  const handle2FADisable = async () => {
+    setTwoFaLoading(true);
+    try {
+      const res = await authFetch(`/api/v1/auth/2fa/disable`, {
+        method: "POST",
+        body: JSON.stringify({ code: twoFaCode }),
+      });
+      if (!res.ok) throw new Error((await res.json()).detail || "Invalid code");
+      setTwoFaEnabled(false);
+      setTwoFaDialog(null);
+      setTwoFaCode("");
+      toast({ title: "2FA Disabled" });
+    } catch (err: any) {
+      toast({ title: "Error", description: err.message, variant: "destructive" });
+    } finally {
+      setTwoFaLoading(false);
     }
   };
 
@@ -468,6 +532,145 @@ export const ProfilePage = () => {
               </div>
             </CardContent>
           </Card>
+
+          {/* Two-Factor Authentication */}
+          <Card className="rounded-2xl border border-border shadow-sm">
+            <CardHeader className="pb-4">
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-lg bg-gradient-to-br from-violet-500 to-purple-600 shadow-lg shadow-violet-500/25">
+                  <ShieldCheck className="h-5 w-5 text-white" />
+                </div>
+                <div>
+                  <CardTitle className="text-xl dark:text-white">Two-Factor Authentication</CardTitle>
+                  <CardDescription className="text-sm dark:text-gray-400">
+                    Add an extra layer of security to your account
+                  </CardDescription>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent className="p-6 pt-0">
+              <div className="flex items-center justify-between p-4 rounded-xl bg-gray-50 dark:bg-gray-800 border border-border">
+                <div className="flex items-center gap-3">
+                  {twoFaEnabled
+                    ? <ShieldCheck className="h-5 w-5 text-green-500" />
+                    : <ShieldOff className="h-5 w-5 text-gray-400" />}
+                  <div>
+                    <p className="text-sm font-medium text-gray-800 dark:text-gray-100">
+                      Authenticator app
+                    </p>
+                    <p className="text-xs text-gray-500">
+                      {twoFaEnabled ? "Active — your account is protected" : "Not configured"}
+                    </p>
+                  </div>
+                  {twoFaEnabled && (
+                    <Badge className="bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 border-0 text-xs">
+                      Enabled
+                    </Badge>
+                  )}
+                </div>
+                {twoFaEnabled ? (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="text-red-600 border-red-200 hover:bg-red-50 dark:text-red-400 dark:border-red-800 dark:hover:bg-red-900/20"
+                    onClick={() => { setTwoFaCode(""); setTwoFaDialog("disable"); }}
+                  >
+                    Disable 2FA
+                  </Button>
+                ) : (
+                  <Button
+                    type="button"
+                    size="sm"
+                    className="bg-violet-600 hover:bg-violet-700 text-white"
+                    onClick={handle2FASetup}
+                    disabled={twoFaLoading}
+                  >
+                    {twoFaLoading ? <Loader2 className="w-4 h-4 animate-spin mr-1" /> : <QrCode className="w-4 h-4 mr-1" />}
+                    Enable 2FA
+                  </Button>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* 2FA Dialogs */}
+          <Dialog open={twoFaDialog === "setup"} onOpenChange={open => !open && setTwoFaDialog(null)}>
+            <DialogContent className="max-w-sm">
+              <DialogHeader>
+                <DialogTitle>Set up two-factor authentication</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4 py-2">
+                <p className="text-sm text-gray-600 dark:text-gray-400">
+                  Scan this QR code with Google Authenticator, Authy, or any TOTP app.
+                </p>
+                {twoFaSetupData?.qr_code && (
+                  <div className="flex justify-center">
+                    <img src={twoFaSetupData.qr_code} alt="QR Code" className="w-44 h-44 rounded-xl border" />
+                  </div>
+                )}
+                {twoFaSetupData?.secret && (
+                  <div className="p-2 bg-gray-100 dark:bg-gray-800 rounded-lg text-center">
+                    <p className="text-xs text-gray-500 mb-1">Manual entry key</p>
+                    <code className="text-xs font-mono break-all text-gray-800 dark:text-gray-200">
+                      {twoFaSetupData.secret}
+                    </code>
+                  </div>
+                )}
+                <div className="space-y-1.5">
+                  <Label>Enter the 6-digit code to confirm</Label>
+                  <Input
+                    placeholder="123456"
+                    value={twoFaCode}
+                    onChange={e => setTwoFaCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
+                    maxLength={6}
+                    inputMode="numeric"
+                  />
+                </div>
+              </div>
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setTwoFaDialog(null)}>Cancel</Button>
+                <Button onClick={handle2FAVerifySetup} disabled={twoFaCode.length !== 6 || twoFaLoading}>
+                  {twoFaLoading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+                  Activate 2FA
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+
+          <Dialog open={twoFaDialog === "disable"} onOpenChange={open => !open && setTwoFaDialog(null)}>
+            <DialogContent className="max-w-sm">
+              <DialogHeader>
+                <DialogTitle>Disable two-factor authentication</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4 py-2">
+                <p className="text-sm text-gray-600 dark:text-gray-400">
+                  Enter your current authenticator code to disable 2FA.
+                </p>
+                <div className="space-y-1.5">
+                  <Label>Authenticator code</Label>
+                  <Input
+                    placeholder="123456"
+                    value={twoFaCode}
+                    onChange={e => setTwoFaCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
+                    maxLength={6}
+                    inputMode="numeric"
+                  />
+                </div>
+              </div>
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setTwoFaDialog(null)}>Cancel</Button>
+                <Button
+                  variant="destructive"
+                  onClick={handle2FADisable}
+                  disabled={twoFaCode.length !== 6 || twoFaLoading}
+                >
+                  {twoFaLoading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+                  Disable 2FA
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
 
           {/* Action Buttons */}
           <div className="flex items-center justify-end gap-3 sticky bottom-6 bg-background/80 dark:bg-card/80 backdrop-blur-xl p-4 rounded-2xl border border-border shadow-lg">
