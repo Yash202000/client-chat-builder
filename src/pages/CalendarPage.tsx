@@ -18,7 +18,7 @@ import {
 import {
   ChevronLeft, ChevronRight, ChevronDown, Plus, Clock, Users, AlignLeft,
   X, Edit2, Trash2, CalendarDays, LayoutGrid, List,
-  MapPin, Video, UserPlus, AlertTriangle, Linkedin, Instagram, Facebook, Rss,
+  MapPin, Video, UserPlus, AlertTriangle, Linkedin, Instagram, Facebook, Rss, MessageSquare,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -70,13 +70,23 @@ interface SocialPost {
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
-const EVENT_TYPE_META: Record<EventType, { label: string; color: string; bg: string; border: string; dot: string }> = {
-  meeting:      { label: 'Meeting',      color: 'text-violet-300',  bg: 'bg-violet-500/20 border-violet-500/40',  border: 'border-violet-500/60',  dot: 'bg-violet-400'  },
-  task:         { label: 'Task',         color: 'text-amber-300',   bg: 'bg-amber-500/20 border-amber-500/40',    border: 'border-amber-500/60',    dot: 'bg-amber-400'   },
-  call:         { label: 'Call',         color: 'text-emerald-300', bg: 'bg-emerald-500/20 border-emerald-500/40',border: 'border-emerald-500/60',  dot: 'bg-emerald-400' },
-  'out-of-office': { label: 'Out of Office', color: 'text-slate-300', bg: 'bg-slate-500/20 border-slate-500/40', border: 'border-slate-500/60',   dot: 'bg-slate-400'   },
-  reminder:     { label: 'Reminder',     color: 'text-cyan-300',    bg: 'bg-cyan-500/20 border-cyan-500/40',      border: 'border-cyan-500/60',     dot: 'bg-cyan-400'    },
+const EVENT_TYPE_META: Record<EventType, {
+  label: string; color: string; bg: string; border: string; dot: string;
+  accent: string; gradientFrom: string; gradientTo: string; glowShadow: string; ringColor: string;
+}> = {
+  meeting:      { label: 'Meeting',      color: 'text-violet-700',  bg: 'bg-violet-500/20', border: 'border-violet-500/60',  dot: 'bg-violet-500',  accent: 'bg-violet-500',  gradientFrom: 'from-violet-100', gradientTo: 'to-violet-50',  glowShadow: 'shadow-violet-300/40',  ringColor: 'ring-violet-400/60'  },
+  task:         { label: 'Task',         color: 'text-amber-700',   bg: 'bg-amber-500/20',  border: 'border-amber-500/60',   dot: 'bg-amber-500',   accent: 'bg-amber-500',   gradientFrom: 'from-amber-100',  gradientTo: 'to-amber-50',   glowShadow: 'shadow-amber-300/40',   ringColor: 'ring-amber-400/60'   },
+  call:         { label: 'Call',         color: 'text-emerald-700', bg: 'bg-emerald-500/20',border: 'border-emerald-500/60', dot: 'bg-emerald-500', accent: 'bg-emerald-500', gradientFrom: 'from-emerald-100',gradientTo: 'to-emerald-50', glowShadow: 'shadow-emerald-300/40', ringColor: 'ring-emerald-400/60' },
+  'out-of-office': { label: 'Out of Office', color: 'text-slate-700', bg: 'bg-slate-500/20', border: 'border-slate-500/60', dot: 'bg-slate-500', accent: 'bg-slate-500', gradientFrom: 'from-slate-100', gradientTo: 'to-slate-50', glowShadow: 'shadow-slate-300/30', ringColor: 'ring-slate-400/50' },
+  reminder:     { label: 'Reminder',     color: 'text-cyan-700',    bg: 'bg-cyan-500/20',   border: 'border-cyan-500/60',    dot: 'bg-cyan-500',    accent: 'bg-cyan-500',    gradientFrom: 'from-cyan-100',   gradientTo: 'to-cyan-50',    glowShadow: 'shadow-cyan-300/40',    ringColor: 'ring-cyan-400/60'    },
 };
+
+function getEventStatus(event: CalEvent): 'past' | 'current' | 'upcoming' {
+  const now = new Date();
+  if (event.end < now) return 'past';
+  if (event.start <= now && event.end >= now) return 'current';
+  return 'upcoming';
+}
 
 const SOCIAL_PLATFORMS = {
   linkedin:  { label: 'LinkedIn',  color: '#0A66C2', lightBg: 'rgba(10,102,194,0.12)',  Icon: Linkedin  },
@@ -212,40 +222,104 @@ function WeekCurrentTimeIndicator({ days }: { days: Date[] }) {
 
 function EventPill({ event, onClick }: { event: CalEvent; onClick: (e: React.MouseEvent, ev: CalEvent) => void }) {
   const meta = EVENT_TYPE_META[event.type];
+  const status = getEventStatus(event);
+  const isPast = status === 'past';
+  const isCurrent = status === 'current';
+
   return (
     <button
       onClick={(e) => onClick(e, event)}
-      className={cn('w-full text-left text-xs px-1.5 py-0.5 rounded truncate border transition-all hover:brightness-125 hover:scale-[1.02]', meta.bg, meta.color)}
       title={event.title}
+      className={cn(
+        'group w-full text-left text-[11px] rounded overflow-hidden flex items-stretch transition-all duration-200',
+        'hover:scale-[1.02] hover:shadow-md active:scale-[0.99]',
+        isCurrent && cn('ring-1 shadow-sm', meta.ringColor, meta.glowShadow),
+      )}
     >
-      <span className={cn('inline-block w-1.5 h-1.5 rounded-full mr-1 align-middle', meta.dot)} />
-      {event.livekit_room_name && <span className="mr-0.5 opacity-70">📹</span>}
-      {event.recurrence_rule && <span className="mr-0.5 opacity-70">↻</span>}
-      {event.title}
+      {/* left accent bar */}
+      <span className={cn('w-[3px] flex-shrink-0', meta.accent, isPast && 'opacity-40', isCurrent && 'animate-pulse')} />
+
+      {/* body */}
+      {isPast ? (
+        <span className="flex-1 flex items-center gap-1 px-1.5 py-[3px] bg-muted/20">
+          <span className={cn('text-[9px] font-bold flex-shrink-0', meta.color, 'opacity-70')}>✓</span>
+          {event.recurrence_rule && <span className="text-[10px] text-muted-foreground/40 flex-shrink-0">↻</span>}
+          <span className="truncate font-medium text-muted-foreground/70 line-through">{event.title}</span>
+        </span>
+      ) : (
+        <span className={cn(
+          'flex-1 flex items-center gap-1 px-1.5 py-[3px] bg-gradient-to-r',
+          meta.gradientFrom, meta.gradientTo,
+          'group-hover:brightness-110 transition-all duration-200',
+        )}>
+          {isCurrent
+            ? <span className={cn('w-1.5 h-1.5 rounded-full flex-shrink-0 animate-pulse', meta.accent)} />
+            : <span className={cn('w-1 h-1 rounded-full flex-shrink-0 opacity-80', meta.dot)} />
+          }
+          {event.livekit_room_name && <span className="flex-shrink-0 text-[9px] opacity-75">📹</span>}
+          {event.recurrence_rule && <span className={cn('flex-shrink-0 text-[10px] font-mono opacity-60', meta.color)}>↻</span>}
+          <span className={cn('truncate font-semibold tracking-tight', meta.color)}>{event.title}</span>
+        </span>
+      )}
     </button>
   );
 }
 
 function TimeEventBlock({ event, onEventClick }: { event: CalEvent; onEventClick: (e: React.MouseEvent, ev: CalEvent) => void }) {
   const meta = EVENT_TYPE_META[event.type];
+  const status = getEventStatus(event);
+  const isPast = status === 'past';
+  const isCurrent = status === 'current';
   const startH = getHours(event.start) + getMinutes(event.start) / 60;
   const endH = getHours(event.end) + getMinutes(event.end) / 60;
   const top = startH * HOUR_HEIGHT;
   const height = Math.max((endH - startH) * HOUR_HEIGHT, 20);
+
   return (
     <button
       onClick={(e) => onEventClick(e, event)}
-      className={cn('absolute left-0.5 right-0.5 rounded border px-1.5 py-1 text-left transition-all hover:brightness-125 hover:z-10 hover:shadow-lg', meta.bg, meta.border)}
-      style={{ top, height }}
       title={event.title}
+      style={{ top, height }}
+      className={cn(
+        'absolute left-0.5 right-0.5 flex overflow-hidden rounded-r-md text-left',
+        'transition-all duration-200 hover:z-10 hover:brightness-110 hover:shadow-xl',
+        isCurrent && cn('ring-1 shadow-lg', meta.ringColor, meta.glowShadow),
+      )}
     >
-      <p className={cn('text-xs font-medium truncate', meta.color)}>
-        {event.livekit_room_name && <span className="mr-0.5 opacity-70">📹</span>}
-        {event.recurrence_rule && <span className="mr-0.5 opacity-70">↻</span>}
-        {event.title}
-      </p>
-      {height > 32 && (
-        <p className="text-[10px] text-muted-foreground font-mono truncate">{formatTimeRange(event.start, event.end)}</p>
+      {/* left accent bar */}
+      <div className={cn('w-[3px] flex-shrink-0', meta.accent, isPast && 'opacity-40', isCurrent && 'animate-pulse')} />
+
+      {/* body */}
+      {isPast ? (
+        <div className="flex-1 min-w-0 px-1.5 py-1 bg-muted/15">
+          <p className="text-[11px] font-medium leading-tight flex items-center gap-1">
+            <span className={cn('text-[10px] flex-shrink-0 opacity-70', meta.color)}>✓</span>
+            {event.recurrence_rule && <span className="flex-shrink-0 opacity-50 text-[10px] text-muted-foreground">↻</span>}
+            <span className="truncate text-muted-foreground/70 line-through">{event.title}</span>
+          </p>
+          {height > 34 && (
+            <p className="text-[10px] text-muted-foreground/40 font-mono mt-0.5 truncate">
+              {formatTimeRange(event.start, event.end)}
+            </p>
+          )}
+        </div>
+      ) : (
+        <div className={cn('flex-1 min-w-0 px-1.5 py-1 bg-gradient-to-br', meta.gradientFrom, meta.gradientTo)}>
+          <p className={cn('text-[11px] font-semibold leading-tight flex items-center gap-1 min-w-0', meta.color)}>
+            {isCurrent && <span className={cn('w-1.5 h-1.5 rounded-full flex-shrink-0 animate-pulse', meta.accent)} />}
+            {event.livekit_room_name && <span className="flex-shrink-0 text-[10px]">📹</span>}
+            {event.recurrence_rule && <span className="flex-shrink-0 opacity-60 text-[10px]">↻</span>}
+            <span className="truncate">{event.title}</span>
+          </p>
+          {height > 34 && (
+            <p className="text-[10px] text-muted-foreground font-mono mt-0.5 truncate opacity-75">
+              {formatTimeRange(event.start, event.end)}
+            </p>
+          )}
+          {height > 54 && event.location && (
+            <p className="text-[10px] text-muted-foreground mt-0.5 truncate opacity-60">📍 {event.location}</p>
+          )}
+        </div>
       )}
     </button>
   );
@@ -888,61 +962,133 @@ function CreateEventModal({ open, onClose, onSave, editing, defaultStart }: {
 
 // ─── Event Detail Popover ─────────────────────────────────────────────────────
 
-function EventDetailPopover({ event, anchor, onClose, onEdit, onDelete, onJoin }: {
+function AttendeeAvatar({ email }: { email: string }) {
+  const initials = email.split('@')[0].slice(0, 2).toUpperCase();
+  const colors = [
+    'bg-violet-500', 'bg-emerald-500', 'bg-amber-500', 'bg-cyan-500',
+    'bg-pink-500', 'bg-blue-500', 'bg-orange-500', 'bg-teal-500',
+  ];
+  const colorIndex = email.charCodeAt(0) % colors.length;
+  return (
+    <div className={cn('w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-bold text-white flex-shrink-0', colors[colorIndex])}>
+      {initials}
+    </div>
+  );
+}
+
+function EventDetailPopover({ event, anchor, onClose, onEdit, onDelete, onJoin, onChat }: {
   event: CalEvent | null; anchor: { x: number; y: number } | null;
   onClose: () => void; onEdit: (ev: CalEvent) => void; onDelete: (id: string) => void;
-  onJoin?: (ev: CalEvent) => void;
+  onJoin?: (ev: CalEvent) => void; onChat?: (ev: CalEvent) => void;
 }) {
   const { t } = useTranslation();
   if (!event || !anchor) return null;
   const meta = EVENT_TYPE_META[event.type];
-  const left = Math.min(anchor.x + 8, window.innerWidth - 308);
-  const top = Math.min(anchor.y + 8, window.innerHeight - 320);
+  const hasAttendees = event.attendees && event.attendees.length > 0;
+  const canJoin = (event.video_enabled || event.livekit_room_name || event.type === 'meeting' || event.type === 'call') && onJoin;
+
   return (
     <>
-      <div className="fixed inset-0 z-40" onClick={onClose} />
-      <div className="fixed z-50 w-[292px] rounded-lg border border-border/50 bg-card shadow-aurora-md p-4 space-y-3" style={{ left, top }}>
-        <div className="flex items-start justify-between gap-2">
-          <div className="flex items-center gap-2 min-w-0">
-            <span className={cn('w-2.5 h-2.5 rounded-full flex-shrink-0', meta.dot)} />
-            <h3 className="font-display font-semibold text-sm text-foreground truncate">{event.title}</h3>
+      <div className="fixed inset-0 z-40 bg-black/30 backdrop-blur-[2px]" onClick={onClose} />
+      <div
+        className="fixed z-50 rounded-xl border border-border/50 bg-card shadow-aurora-md overflow-hidden flex"
+        style={{ top: '50%', left: '50%', transform: 'translate(-50%, -50%)', width: hasAttendees ? 540 : 320, maxHeight: '90vh' }}
+      >
+        {/* Left panel — event details */}
+        <div className="flex-1 p-4 space-y-3 min-w-0">
+          <div className="flex items-start justify-between gap-2">
+            <div className="flex items-center gap-2 min-w-0">
+              <span className={cn('w-2.5 h-2.5 rounded-full flex-shrink-0', meta.dot)} />
+              <h3 className="font-display font-semibold text-sm text-foreground truncate">{event.title}</h3>
+            </div>
+            <button onClick={onClose} className="text-muted-foreground hover:text-foreground flex-shrink-0"><X className="w-4 h-4" /></button>
           </div>
-          <button onClick={onClose} className="text-muted-foreground hover:text-foreground flex-shrink-0"><X className="w-4 h-4" /></button>
-        </div>
-        <div className="flex items-center gap-2">
-          <Badge className={cn('text-[10px] border', meta.bg, meta.color, meta.border)} variant="outline">{t(`calendar.eventTypes.${event.type === 'out-of-office' ? 'outOfOffice' : event.type}`)}</Badge>
-          {event.isAllDay && <Badge className="text-[10px] border border-border/40 text-muted-foreground" variant="outline">All day</Badge>}
-        </div>
-        <div className="flex items-center gap-2 text-xs text-muted-foreground font-mono">
-          <Clock className="w-3.5 h-3.5 flex-shrink-0" />
-          <span>{event.isAllDay ? format(event.start, 'EEE, MMM d') : `${format(event.start, 'EEE, MMM d')} · ${formatTimeRange(event.start, event.end)}`}</span>
-        </div>
-        {event.location && (
+
+          <div className="flex items-center gap-2">
+            <Badge className={cn('text-[10px] border', meta.bg, meta.color, meta.border)} variant="outline">
+              {t(`calendar.eventTypes.${event.type === 'out-of-office' ? 'outOfOffice' : event.type}`)}
+            </Badge>
+            {event.isAllDay && <Badge className="text-[10px] border border-border/40 text-muted-foreground" variant="outline">All day</Badge>}
+          </div>
+
+          <div className="flex items-center gap-2 text-xs text-muted-foreground font-mono">
+            <Clock className="w-3.5 h-3.5 flex-shrink-0" />
+            <span>{event.isAllDay ? format(event.start, 'EEE, MMM d') : `${format(event.start, 'EEE, MMM d')} · ${formatTimeRange(event.start, event.end)}`}</span>
+          </div>
+
+          {event.recurrence_rule ? (
+            <div className="flex items-center gap-2 text-xs text-muted-foreground">
+              <span className="text-sm leading-none opacity-70 flex-shrink-0">↻</span>
+              <span className="capitalize">
+                {event.recurrence_rule}{event.recurrence_interval && event.recurrence_interval > 1 ? ` every ${event.recurrence_interval}` : ''} · Series
+              </span>
+            </div>
+          ) : null}
+
           <div className="flex items-center gap-2 text-xs text-muted-foreground">
-            {/^https?:\/\//i.test(event.location) ? <Video className="w-3.5 h-3.5 flex-shrink-0" /> : <MapPin className="w-3.5 h-3.5 flex-shrink-0" />}
-            <span className="truncate">{event.location}</span>
+            <MapPin className="w-3.5 h-3.5 flex-shrink-0" />
+            {event.location ? (
+              <span className="truncate">{event.location}</span>
+            ) : (
+              <span className="italic opacity-50">No location added</span>
+            )}
           </div>
-        )}
-        {event.description && <div className="flex items-start gap-2 text-xs text-muted-foreground"><AlignLeft className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" /><span className="line-clamp-3">{event.description}</span></div>}
-        {event.attendees && event.attendees.length > 0 && <div className="flex items-start gap-2 text-xs text-muted-foreground"><Users className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" /><span className="font-mono break-all">{event.attendees.join(', ')}</span></div>}
-        {event.recurrence_rule && (
-          <div className="flex items-center gap-2 text-xs text-muted-foreground">
-            <span className="text-base leading-none opacity-70">↻</span>
-            <span className="capitalize">{event.recurrence_rule}{event.recurrence_interval && event.recurrence_interval > 1 ? ` every ${event.recurrence_interval}` : ''}</span>
-          </div>
-        )}
-        <div className="space-y-2 pt-1 border-t border-border/30">
-          {(event.video_enabled || event.livekit_room_name || event.type === 'meeting' || event.type === 'call') && onJoin && (
-            <Button size="sm" className="w-full text-xs gap-1.5 bg-primary hover:bg-primary/90 text-primary-foreground"
-              onClick={() => { onJoin(event); onClose(); }}>
-              <Video className="w-3.5 h-3.5" /> Join Meeting
-            </Button>
+
+          {event.description && (
+            <div className="flex items-start gap-2 text-xs text-muted-foreground">
+              <AlignLeft className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" />
+              <span className="line-clamp-3">{event.description}</span>
+            </div>
           )}
-          <div className="flex gap-2">
-            <Button size="sm" variant="ghost" className="flex-1 text-xs gap-1 text-muted-foreground hover:text-primary" onClick={() => { onEdit(event); onClose(); }}><Edit2 className="w-3 h-3" /> Edit</Button>
-            <Button size="sm" variant="ghost" className="flex-1 text-xs gap-1 text-muted-foreground hover:text-destructive" onClick={() => { onDelete(event.id); onClose(); }}><Trash2 className="w-3 h-3" /> Delete</Button>
+
+          <div className="space-y-2 pt-1 border-t border-border/30">
+            {canJoin && (
+              <Button size="sm" className="w-full text-xs gap-1.5 bg-primary hover:bg-primary/90 text-primary-foreground"
+                onClick={() => { onJoin!(event); onClose(); }}>
+                <Video className="w-3.5 h-3.5" /> Join Meeting
+              </Button>
+            )}
+            {onChat && (
+              <Button size="sm" variant="outline" className="w-full text-xs gap-1.5 text-muted-foreground hover:text-primary"
+                onClick={() => { onChat(event); onClose(); }}>
+                <MessageSquare className="w-3.5 h-3.5" /> Chat
+              </Button>
+            )}
+            <div className="flex gap-2">
+              <Button size="sm" variant="ghost" className="flex-1 text-xs gap-1 text-muted-foreground hover:text-primary" onClick={() => { onEdit(event); onClose(); }}>
+                <Edit2 className="w-3 h-3" /> Edit
+              </Button>
+              <Button size="sm" variant="ghost" className="flex-1 text-xs gap-1 text-muted-foreground hover:text-destructive" onClick={() => { onDelete(event.id); onClose(); }}>
+                <Trash2 className="w-3 h-3" /> Delete
+              </Button>
+            </div>
           </div>
         </div>
+
+        {/* Right panel — participants list */}
+        {hasAttendees && (
+          <div className="w-[188px] flex-shrink-0 border-l border-border/30 bg-muted/20 p-3 flex flex-col">
+            <div className="flex items-center gap-1.5 mb-3">
+              <Users className="w-3.5 h-3.5 text-muted-foreground" />
+              <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide">
+                Participants · {event.attendees!.length}
+              </span>
+            </div>
+            <div className="flex-1 overflow-y-auto space-y-2 pr-0.5">
+              {event.attendees!.map((email) => (
+                <div key={email} className="flex items-center gap-2 min-w-0">
+                  <AttendeeAvatar email={email} />
+                  <div className="min-w-0">
+                    <p className="text-[11px] font-medium text-foreground truncate">
+                      {email.split('@')[0].replace(/[._]/g, ' ')}
+                    </p>
+                    <p className="text-[10px] text-muted-foreground truncate">{email}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
     </>
   );
@@ -1056,6 +1202,19 @@ export default function CalendarPage() {
       });
     } catch (err) {
       console.error('Failed to join meeting', err);
+    }
+  };
+
+  const handleChatEvent = async (ev: CalEvent) => {
+    if (ev.video_enabled || ev.livekit_room_name || ev.type === 'meeting' || ev.type === 'call') {
+      try {
+        const result = await joinMeeting(Number(ev.id));
+        navigate(`/dashboard/team-chat?channelId=${result.channel_id}`);
+      } catch {
+        navigate('/dashboard/team-chat');
+      }
+    } else {
+      navigate('/dashboard/team-chat');
     }
   };
 
@@ -1239,7 +1398,7 @@ export default function CalendarPage() {
         {calendarTab === 'content' && view === 'day'   && <ContentDayView currentDate={currentDate} posts={socialPosts} platformFilter={platformFilter} navigate={navigate} />}
       </div>
 
-      <EventDetailPopover event={selectedEvent} anchor={popoverAnchor} onClose={() => { setSelectedEvent(null); setPopoverAnchor(null); }} onEdit={handleEditEvent} onDelete={handleDeleteEvent} onJoin={handleJoinMeeting} />
+      <EventDetailPopover event={selectedEvent} anchor={popoverAnchor} onClose={() => { setSelectedEvent(null); setPopoverAnchor(null); }} onEdit={handleEditEvent} onDelete={handleDeleteEvent} onJoin={handleJoinMeeting} onChat={handleChatEvent} />
       <CreateEventModal open={modalOpen} onClose={() => { setModalOpen(false); setEditingEvent(null); }} onSave={handleSaveEvent} editing={editingEvent} defaultStart={defaultModalDate} />
 
       {/* Delete confirmation */}
