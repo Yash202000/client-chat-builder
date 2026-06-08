@@ -228,7 +228,7 @@ export const LoginPage = () => {
                     <Label htmlFor="password" className="text-slate-700 dark:text-slate-300 font-medium">
                       Password
                     </Label>
-                    <Link to="#" className="text-xs text-violet-600 dark:text-violet-400 hover:underline font-medium">
+                    <Link to="/forgot-password" className="text-xs text-violet-600 dark:text-violet-400 hover:underline font-medium">
                       Forgot password?
                     </Link>
                   </div>

@@ -34,6 +34,8 @@ const NotFound          = lazy(() => import("./pages/NotFound"));
 
 // Auth callbacks & misc public pages
 const VerifyEmailPage       = lazy(() => import("./pages/VerifyEmailPage"));
+const ForgotPasswordPage    = lazy(() => import("./pages/ForgotPasswordPage"));
+const ResetPasswordPage     = lazy(() => import("./pages/ResetPasswordPage"));
 const QualifyPage           = lazy(() => import("./pages/QualifyPage"));
 const LicenseErrorPage      = lazy(() => import("./pages/LicenseErrorPage"));
 const AcceptInvitationPage  = lazy(() => import("./pages/AcceptInvitationPage").then(m => ({ default: m.AcceptInvitationPage })));
@@ -230,6 +232,8 @@ const AppRoutes = () => {
 
         {/* ── Public / misc (lazy) ── */}
         <Route path="/verify-email" element={<VerifyEmailPage />} />
+        <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+        <Route path="/reset-password" element={<ResetPasswordPage />} />
         <Route path="/qualify" element={<QualifyPage />} />
         <Route path="/license-error" element={<LicenseErrorPage />} />
         <Route path="/accept-invite" element={<AcceptInvitationPage />} />
