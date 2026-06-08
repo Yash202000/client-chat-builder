@@ -25,6 +25,8 @@ import {
   PhoneForwarded,
   Voicemail,
   Building2,
+  AlertCircle,
+  Crown,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -52,6 +54,8 @@ import { useAuth } from "@/hooks/useAuth";
 import { TableHeader, TableRow, TableHead, TableBody, TableCell, Table } from "@/components/ui/table";
 import { useI18n } from '@/hooks/useI18n';
 import { useNotifications } from "@/hooks/useNotifications";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 export const TeamManagement = () => {
   const { t, isRTL } = useI18n();
@@ -132,6 +136,23 @@ export const TeamManagement = () => {
   const [rolePermissions, setRolePermissions] = useState<number[]>([]);
 
   // --- DATA FETCHING ---
+
+  const { data: billingStatus } = useQuery({
+    queryKey: ['billingStatus'],
+    queryFn: async () => {
+      const response = await authFetch(`/api/v1/billing/status`);
+      if (!response.ok) return null;
+      return response.json();
+    },
+  });
+
+  const isAtUserLimit = billingStatus
+    ? billingStatus.current_user_count >= billingStatus.user_limit
+    : false;
+  const usersOverLimit = billingStatus && billingStatus.current_user_count > billingStatus.user_limit
+    ? billingStatus.current_user_count - billingStatus.user_limit
+    : 0;
+
   const { data: users = [], isLoading: isLoadingUsers } = useQuery<User[]>({
     queryKey: ['users', companyId],
     queryFn: async () => {
@@ -552,6 +573,27 @@ export const TeamManagement = () => {
 
             {/* USERS TAB */}
             <TabsContent value="users" className="space-y-4 mt-0">
+              {isAtUserLimit && (
+                <Alert className="border-orange-300 bg-orange-50 dark:bg-orange-950/40 dark:border-orange-700 mb-3">
+                  <AlertCircle className="h-4 w-4 text-orange-600 dark:text-orange-400" />
+                  <AlertTitle className="text-orange-800 dark:text-orange-300 font-semibold">
+                    {usersOverLimit > 0
+                      ? `User limit exceeded by ${usersOverLimit} ${usersOverLimit === 1 ? 'user' : 'users'}`
+                      : 'User limit reached'}
+                  </AlertTitle>
+                  <AlertDescription className="text-orange-700 dark:text-orange-400 flex items-center justify-between gap-4">
+                    <span>
+                      {billingStatus?.current_user_count} / {billingStatus?.user_limit} seats used.
+                      Upgrade your plan to add more team members.
+                    </span>
+                    <a href="/dashboard/billing" className="flex items-center gap-1 text-xs font-semibold text-orange-800 dark:text-orange-300 underline underline-offset-2 shrink-0">
+                      <Crown className="h-3.5 w-3.5" />
+                      Upgrade
+                    </a>
+                  </AlertDescription>
+                </Alert>
+              )}
+
               <div className={`flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 ${isRTL ? 'flex-row-reverse' : ''}`}>
                 <div className="relative flex-1 max-w-md w-full">
                   <Search className={`absolute ${isRTL ? 'right-3' : 'left-3'} top-1/2 transform -translate-y-1/2 text-muted-foreground h-3.5 w-3.5`} />
@@ -564,21 +606,45 @@ export const TeamManagement = () => {
                 </div>
                 <Permission permission="user:create">
                   <div className={`flex items-center gap-2 shrink-0 ${isRTL ? 'flex-row-reverse' : ''}`}>
-                    <Button
-                      onClick={() => setInviteUserModalOpen(true)}
-                      size="sm"
-                      className={`flex items-center gap-1.5 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white rounded-lg shadow-lg shadow-purple-500/25 hover:shadow-xl hover:shadow-purple-500/30 transition-all duration-200 hover:scale-[1.02]`}
-                    >
-                      <Send className="h-3.5 w-3.5" />
-                      <span className="hidden sm:inline">{t('teamManagement.inviteUser')}</span>
-                    </Button>
-                    <Dialog open={isAddUserModalOpen} onOpenChange={setAddUserModalOpen}>
-                      <DialogTrigger asChild>
-                        <Button size="sm" className={`flex items-center gap-1.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-lg shadow-lg shadow-blue-500/25 hover:shadow-xl hover:shadow-blue-500/30 transition-all duration-200 hover:scale-[1.02]`}>
-                          <UserPlus className="h-3.5 w-3.5" />
-                          <span className="hidden sm:inline">{t('teamManagement.addUser')}</span>
-                        </Button>
-                      </DialogTrigger>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <span>
+                          <Button
+                            onClick={() => !isAtUserLimit && setInviteUserModalOpen(true)}
+                            size="sm"
+                            disabled={isAtUserLimit}
+                            className={`flex items-center gap-1.5 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white rounded-lg shadow-lg shadow-purple-500/25 hover:shadow-xl hover:shadow-purple-500/30 transition-all duration-200 hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100`}
+                          >
+                            <Send className="h-3.5 w-3.5" />
+                            <span className="hidden sm:inline">{t('teamManagement.inviteUser')}</span>
+                          </Button>
+                        </span>
+                      </TooltipTrigger>
+                      {isAtUserLimit && (
+                        <TooltipContent>
+                          <p>User limit reached. Upgrade your plan to invite more members.</p>
+                        </TooltipContent>
+                      )}
+                    </Tooltip>
+                    <Dialog open={isAtUserLimit ? false : isAddUserModalOpen} onOpenChange={(open) => !isAtUserLimit && setAddUserModalOpen(open)}>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <span>
+                            <DialogTrigger asChild>
+                              <Button size="sm" disabled={isAtUserLimit} className={`flex items-center gap-1.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-lg shadow-lg shadow-blue-500/25 hover:shadow-xl hover:shadow-blue-500/30 transition-all duration-200 hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100`}>
+                                <UserPlus className="h-3.5 w-3.5" />
+                                <span className="hidden sm:inline">{t('teamManagement.addUser')}</span>
+                              </Button>
+                            </DialogTrigger>
+                          </span>
+                        </TooltipTrigger>
+                        {isAtUserLimit && (
+                          <TooltipContent>
+                            <p>User limit reached. Upgrade your plan to add more members.</p>
+                          </TooltipContent>
+                        )}
+                      </Tooltip>
+
                   <DialogContent className="dark:bg-slate-800 dark:border-slate-700 rounded-2xl sm:rounded-2xl" dir={isRTL ? 'rtl' : 'ltr'}>
                     <DialogHeader className="pb-4 border-b border-slate-200/80 dark:border-slate-700/60">
                       <DialogTitle className={`dark:text-white flex items-center gap-3 ${isRTL ? 'flex-row-reverse' : ''}`}>

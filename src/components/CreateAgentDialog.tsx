@@ -14,6 +14,8 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
+  DialogFooter,
 } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -21,7 +23,7 @@ import { toast } from "@/hooks/use-toast";
 import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { Credential } from "@/types";
 import { useAuth } from "@/hooks/useAuth";
-import { Mic, MicOff, Sparkles, Loader2, Bot } from "lucide-react";
+import { Mic, MicOff, Sparkles, Loader2, Bot, TrendingUp } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 interface CreateAgentDialogProps {
@@ -38,6 +40,8 @@ export const CreateAgentDialog = ({ open, onOpenChange }: CreateAgentDialogProps
   const [description, setDescription] = useState("");
   const [credentialId, setCredentialId] = useState<string>("");
   const [isListening, setIsListening] = useState(false);
+  const [showLimitDialog, setShowLimitDialog] = useState(false);
+  const [limitMessage, setLimitMessage] = useState("");
   const recognitionRef = useRef<SpeechRecognition | null>(null);
 
   const { data: credentials, isLoading: isLoadingCredentials } = useQuery<Credential[]>({
@@ -84,7 +88,12 @@ export const CreateAgentDialog = ({ open, onOpenChange }: CreateAgentDialogProps
           credential_id: parseInt(credentialId),
         }),
       });
-      if (!createRes.ok) throw new Error("Failed to create agent");
+      if (!createRes.ok) {
+        const err = await createRes.json();
+        const error = new Error(err.detail || "Failed to create agent") as Error & { status: number };
+        error.status = createRes.status;
+        throw error;
+      }
       return createRes.json();
     },
     onSuccess: (agent) => {
@@ -94,8 +103,13 @@ export const CreateAgentDialog = ({ open, onOpenChange }: CreateAgentDialogProps
       onOpenChange(false);
       navigate(`/dashboard/builder/${agent.id}`);
     },
-    onError: (error: Error) => {
-      toast({ title: "Failed", description: error.message, variant: "destructive" });
+    onError: (error: Error & { status?: number }) => {
+      if (error.status === 403) {
+        setLimitMessage(error.message);
+        setShowLimitDialog(true);
+      } else {
+        toast({ title: "Failed", description: error.message, variant: "destructive" });
+      }
     },
   });
 
@@ -137,6 +151,7 @@ export const CreateAgentDialog = ({ open, onOpenChange }: CreateAgentDialogProps
   const placeholder = placeholders[0];
 
   return (
+    <>
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[560px]">
         <DialogHeader>
@@ -235,5 +250,33 @@ export const CreateAgentDialog = ({ open, onOpenChange }: CreateAgentDialogProps
         </div>
       </DialogContent>
     </Dialog>
+
+    {/* Plan limit upgrade dialog */}
+    <Dialog open={showLimitDialog} onOpenChange={setShowLimitDialog}>
+      <DialogContent className="sm:max-w-[420px]">
+        <DialogHeader>
+          <div className="flex items-center gap-3 mb-1">
+            <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center shadow-md shadow-violet-500/25">
+              <TrendingUp className="h-5 w-5 text-white" />
+            </div>
+            <div>
+              <DialogTitle className="text-lg">Agent limit reached</DialogTitle>
+              <DialogDescription className="text-sm">Upgrade to create more agents</DialogDescription>
+            </div>
+          </div>
+        </DialogHeader>
+        <p className="text-sm text-muted-foreground">{limitMessage}</p>
+        <DialogFooter className="gap-2 sm:gap-0">
+          <Button variant="outline" onClick={() => setShowLimitDialog(false)}>Cancel</Button>
+          <Button
+            onClick={() => { setShowLimitDialog(false); onOpenChange(false); navigate('/dashboard/billing'); }}
+            className="bg-gradient-to-r from-violet-600 to-purple-700 hover:from-violet-700 hover:to-purple-800 text-white"
+          >
+            View upgrade options
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+    </>
   );
 };

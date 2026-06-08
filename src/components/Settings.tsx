@@ -42,6 +42,8 @@ import {
   Copy,
   RefreshCw,
   Download,
+  AlertTriangle,
+  Loader2,
 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/components/ui/use-toast";
@@ -59,6 +61,7 @@ import { Company } from "@/types";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { useTranslation } from 'react-i18next';
 import { useI18n } from '@/hooks/useI18n';
+import { useNavigate } from 'react-router-dom';
 
 
 export const Settings = () => {
@@ -66,7 +69,8 @@ export const Settings = () => {
   const { isRTL } = useI18n();
   const { toast } = useToast();
   const { playSuccessSound } = useNotifications();
-  const { user, companyId, setCompanyIdGlobaly, authFetch } = useAuth();
+  const { user, companyId, setCompanyIdGlobaly, authFetch, logout } = useAuth();
+  const navigate = useNavigate();
   const queryClient = useQueryClient();
 
   const [settings, setSettings] = useState({
@@ -101,6 +105,11 @@ export const Settings = () => {
 
   const [testingSmtp, setTestingSmtp] = useState(false);
   const [testEmail, setTestEmail] = useState("");
+
+  // Danger Zone state
+  const [dangerDialogType, setDangerDialogType] = useState<'account' | 'workspace' | null>(null);
+  const [dangerPassword, setDangerPassword] = useState("");
+  const [dangerLoading, setDangerLoading] = useState(false);
 
   const { data: companies } = useQuery<Company[]>({
     queryKey: ['companies'],
@@ -300,6 +309,40 @@ export const Settings = () => {
         description: t('settings.unexpectedError'),
         variant: "destructive",
       });
+    }
+  };
+
+  const handleDangerDelete = async () => {
+    if (!dangerPassword) return;
+    const endpoint = dangerDialogType === 'workspace'
+      ? '/api/v1/gdpr/erase-company-data'
+      : '/api/v1/gdpr/erase-my-data';
+    try {
+      setDangerLoading(true);
+      const res = await authFetch(endpoint, {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password: dangerPassword }),
+      });
+      if (res.ok) {
+        toast({
+          title: dangerDialogType === 'workspace' ? 'Workspace deleted' : 'Account deleted',
+          description: dangerDialogType === 'workspace'
+            ? 'The workspace and all its data have been permanently deleted.'
+            : 'Your account and personal data have been permanently deleted.',
+        });
+        setDangerDialogType(null);
+        setDangerPassword('');
+        logout();
+        navigate('/login');
+      } else {
+        const err = await res.json();
+        toast({ title: 'Error', description: err.detail || 'Could not delete. Please check your password.', variant: 'destructive' });
+      }
+    } catch {
+      toast({ title: 'Error', description: 'Unexpected error. Please try again.', variant: 'destructive' });
+    } finally {
+      setDangerLoading(false);
     }
   };
 
@@ -1816,6 +1859,114 @@ export const Settings = () => {
           </div>
         );
       })()}
+
+      {/* ── Danger Zone ─────────────────────────────────────────────── */}
+      <div className="rounded-xl border-2 border-red-300 dark:border-red-800 bg-white dark:bg-slate-900 shadow-sm mt-6">
+        <div className="p-6 border-b border-red-200 dark:border-red-800/50">
+          <h3 className="flex items-center gap-3 text-red-700 dark:text-red-400 text-base font-semibold">
+            <div className="p-1.5 rounded-lg bg-gradient-to-br from-red-500 to-rose-600">
+              <AlertTriangle className="h-4 w-4 text-white" />
+            </div>
+            Danger Zone
+          </h3>
+          <p className="text-red-500/80 dark:text-red-400/70 text-sm mt-1">
+            These actions are permanent and cannot be undone.
+          </p>
+        </div>
+        <div className="p-6 space-y-4">
+          {/* Delete my account */}
+          <div className="flex flex-col sm:flex-row sm:items-center gap-4 p-4 rounded-xl border border-red-200 dark:border-red-800/40 bg-red-50/50 dark:bg-red-900/10">
+            <div className="flex-1">
+              <p className="font-medium text-red-700 dark:text-red-400 text-sm">Delete my account</p>
+              <p className="text-sm text-red-500/80 dark:text-red-400/70 mt-0.5">
+                Permanently delete your user account and all personal data. This cannot be undone.
+              </p>
+            </div>
+            <Button
+              variant="outline"
+              className="rounded-xl border-red-300 text-red-600 hover:bg-red-50 dark:border-red-700 dark:text-red-400 dark:hover:bg-red-900/20 self-start sm:self-auto flex-shrink-0"
+              onClick={() => { setDangerDialogType('account'); setDangerPassword(''); }}
+            >
+              Delete my account
+            </Button>
+          </div>
+
+          {/* Delete workspace — admins only */}
+          {(user?.is_super_admin || user?.is_admin) && (
+            <div className="flex flex-col sm:flex-row sm:items-center gap-4 p-4 rounded-xl border border-red-300 dark:border-red-700/60 bg-red-100/50 dark:bg-red-900/20">
+              <div className="flex-1">
+                <p className="font-medium text-red-700 dark:text-red-400 text-sm">Delete entire workspace</p>
+                <p className="text-sm text-red-500/80 dark:text-red-400/70 mt-0.5">
+                  Permanently delete this workspace, all agents, contacts, conversations, and company data. This cannot be undone.
+                </p>
+              </div>
+              <Button
+                className="rounded-xl bg-red-600 hover:bg-red-700 text-white self-start sm:self-auto flex-shrink-0"
+                onClick={() => { setDangerDialogType('workspace'); setDangerPassword(''); }}
+              >
+                Delete workspace
+              </Button>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Danger Zone Dialog */}
+      <Dialog open={dangerDialogType !== null} onOpenChange={(open) => { if (!open) { setDangerDialogType(null); setDangerPassword(''); } }}>
+        <DialogContent className="dark:bg-slate-900 dark:border-slate-700 rounded-2xl sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="dark:text-white flex items-center gap-2 text-red-600 dark:text-red-400">
+              <AlertTriangle className="h-4 w-4" />
+              {dangerDialogType === 'workspace' ? 'Delete Entire Workspace' : 'Delete My Account'}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div className="p-3 rounded-xl bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800/40 text-sm text-red-700 dark:text-red-400">
+              {dangerDialogType === 'workspace' ? (
+                <>This will <strong>permanently delete</strong> this entire workspace — all agents, contacts, conversations, and company data. <strong>This cannot be undone.</strong></>
+              ) : (
+                <>This will <strong>permanently delete</strong> your user account and all personal data. Your messages will be anonymised. <strong>This cannot be undone.</strong></>
+              )}
+            </div>
+            <div>
+              <Label htmlFor="danger-password" className="dark:text-gray-300">Enter your password to confirm</Label>
+              <Input
+                id="danger-password"
+                type="password"
+                value={dangerPassword}
+                onChange={(e) => setDangerPassword(e.target.value)}
+                className="dark:bg-slate-800 dark:border-slate-600 dark:text-white mt-1.5 rounded-xl"
+                placeholder="Your current password"
+                onKeyDown={(e) => { if (e.key === 'Enter' && dangerPassword) handleDangerDelete(); }}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              variant="ghost"
+              className="rounded-xl dark:text-slate-300"
+              onClick={() => { setDangerDialogType(null); setDangerPassword(''); }}
+              disabled={dangerLoading}
+            >
+              Cancel
+            </Button>
+            <Button
+              disabled={dangerLoading || !dangerPassword}
+              className="bg-red-600 hover:bg-red-700 text-white rounded-xl"
+              onClick={handleDangerDelete}
+            >
+              {dangerLoading ? (
+                <span className="flex items-center gap-2">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Deleting…
+                </span>
+              ) : (
+                dangerDialogType === 'workspace' ? 'Delete workspace' : 'Delete my account'
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <div className={`flex ${isRTL ? 'justify-start' : 'justify-end'} mt-6`}>
         <Button onClick={handleSaveChanges} className="bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-700 hover:to-blue-700 text-white rounded-xl px-8 py-2.5">

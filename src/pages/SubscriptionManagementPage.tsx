@@ -31,8 +31,25 @@ export const SubscriptionManagementPage = () => {
     razorpay_plan_id: "",
     default_user_limit: 5,
     trial_days: 14,
+    warn_threshold: 0,
+    addon_seat_cap: 0,
+    addon_seat_price_usd: 0,
+    addon_seat_price_inr: 0,
+    grace_period_days: 0,
     description: "",
     billing_interval: "month",
+    max_agents: 0,
+    max_active_agents: 0,
+    max_monthly_conversations: 0,
+    max_kb_upload_bytes: 0,
+    max_knowledge_bases: 0,
+    max_channels: 0,
+    max_contacts: 0,
+    max_leads: 0,
+    max_workflows: 0,
+    max_campaigns: 0,
+    max_monthly_emails: 0,
+    max_storage_bytes: 0,
   });
 
   const { data: plans, isLoading, isError } = useQuery<SubscriptionPlan[]>({ 
@@ -72,8 +89,25 @@ export const SubscriptionManagementPage = () => {
         razorpay_plan_id: "",
         default_user_limit: 5,
         trial_days: 14,
+        warn_threshold: 0,
+        addon_seat_cap: 0,
+        addon_seat_price_usd: 0,
+        addon_seat_price_inr: 0,
+        grace_period_days: 0,
         description: "",
         billing_interval: "month",
+        max_agents: 0,
+        max_active_agents: 0,
+        max_monthly_conversations: 0,
+        max_kb_upload_bytes: 0,
+        max_knowledge_bases: 0,
+        max_channels: 0,
+        max_contacts: 0,
+        max_leads: 0,
+        max_workflows: 0,
+        max_campaigns: 0,
+        max_monthly_emails: 0,
+        max_storage_bytes: 0,
       });
     },
     onError: (error) => {
@@ -141,8 +175,25 @@ export const SubscriptionManagementPage = () => {
       razorpay_plan_id: plan.razorpay_plan_id || "",
       default_user_limit: plan.default_user_limit || 5,
       trial_days: plan.trial_days || 14,
+      warn_threshold: plan.warn_threshold || 0,
+      addon_seat_cap: plan.addon_seat_cap || 0,
+      addon_seat_price_usd: plan.addon_seat_price_usd || 0,
+      addon_seat_price_inr: plan.addon_seat_price_inr || 0,
+      grace_period_days: plan.grace_period_days || 0,
       description: plan.description || "",
       billing_interval: plan.billing_interval || "month",
+      max_agents: plan.max_agents || 0,
+      max_active_agents: plan.max_active_agents || 0,
+      max_monthly_conversations: plan.max_monthly_conversations || 0,
+      max_kb_upload_bytes: plan.max_kb_upload_bytes || 0,
+      max_knowledge_bases: plan.max_knowledge_bases || 0,
+      max_channels: plan.max_channels || 0,
+      max_contacts: plan.max_contacts || 0,
+      max_leads: plan.max_leads || 0,
+      max_workflows: plan.max_workflows || 0,
+      max_campaigns: plan.max_campaigns || 0,
+      max_monthly_emails: plan.max_monthly_emails || 0,
+      max_storage_bytes: plan.max_storage_bytes || 0,
     });
     setIsEditPlanDialogOpen(true);
   };
@@ -386,6 +437,193 @@ export const SubscriptionManagementPage = () => {
                 </select>
               </div>
             </div>
+            <div className="grid grid-cols-3 gap-4">
+              <div>
+                <Label htmlFor="warn_threshold" className="dark:text-gray-300">Warn Threshold</Label>
+                <Input
+                  id="warn_threshold"
+                  type="number"
+                  min="0"
+                  value={formData.warn_threshold}
+                  onChange={(e) => setFormData({ ...formData, warn_threshold: parseInt(e.target.value) })}
+                  className="dark:bg-slate-900 dark:border-slate-600 dark:text-white"
+                  placeholder="0"
+                />
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Show warning at this user count</p>
+              </div>
+              <div>
+                <Label htmlFor="addon_seat_cap" className="dark:text-gray-300">Max Addon Seats</Label>
+                <Input
+                  id="addon_seat_cap"
+                  type="number"
+                  min="0"
+                  value={formData.addon_seat_cap}
+                  onChange={(e) => setFormData({ ...formData, addon_seat_cap: parseInt(e.target.value) })}
+                  className="dark:bg-slate-900 dark:border-slate-600 dark:text-white"
+                  placeholder="0"
+                />
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">0 = no addons allowed</p>
+              </div>
+              <div>
+                <Label htmlFor="grace_period_days" className="dark:text-gray-300">Grace Period (days)</Label>
+                <Input
+                  id="grace_period_days"
+                  type="number"
+                  min="0"
+                  value={formData.grace_period_days}
+                  onChange={(e) => setFormData({ ...formData, grace_period_days: parseInt(e.target.value) })}
+                  className="dark:bg-slate-900 dark:border-slate-600 dark:text-white"
+                  placeholder="0"
+                />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="addon_seat_price_usd" className="dark:text-gray-300">Addon Seat Price (USD)</Label>
+                <Input
+                  id="addon_seat_price_usd"
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  value={formData.addon_seat_price_usd}
+                  onChange={(e) => setFormData({ ...formData, addon_seat_price_usd: parseFloat(e.target.value) })}
+                  className="dark:bg-slate-900 dark:border-slate-600 dark:text-white"
+                  placeholder="5.00"
+                />
+              </div>
+              <div>
+                <Label htmlFor="addon_seat_price_inr" className="dark:text-gray-300">Addon Seat Price (INR)</Label>
+                <Input
+                  id="addon_seat_price_inr"
+                  type="number"
+                  min="0"
+                  step="1"
+                  value={formData.addon_seat_price_inr}
+                  onChange={(e) => setFormData({ ...formData, addon_seat_price_inr: parseFloat(e.target.value) })}
+                  className="dark:bg-slate-900 dark:border-slate-600 dark:text-white"
+                  placeholder="400"
+                />
+              </div>
+            </div>
+            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide pt-1">Agent & AI Limits</p>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="max_agents" className="dark:text-gray-300">Max Total Agents</Label>
+                <Input
+                  id="max_agents"
+                  type="number"
+                  min="0"
+                  value={formData.max_agents}
+                  onChange={(e) => setFormData({ ...formData, max_agents: parseInt(e.target.value) })}
+                  className="dark:bg-slate-900 dark:border-slate-600 dark:text-white"
+                  placeholder="0 = unlimited"
+                />
+              </div>
+              <div>
+                <Label htmlFor="max_active_agents" className="dark:text-gray-300">Max Active (Published) Agents</Label>
+                <Input
+                  id="max_active_agents"
+                  type="number"
+                  min="0"
+                  value={formData.max_active_agents}
+                  onChange={(e) => setFormData({ ...formData, max_active_agents: parseInt(e.target.value) })}
+                  className="dark:bg-slate-900 dark:border-slate-600 dark:text-white"
+                  placeholder="0 = unlimited"
+                />
+              </div>
+              <div>
+                <Label htmlFor="max_monthly_conversations" className="dark:text-gray-300">Max Monthly Conversations</Label>
+                <Input
+                  id="max_monthly_conversations"
+                  type="number"
+                  min="0"
+                  value={formData.max_monthly_conversations}
+                  onChange={(e) => setFormData({ ...formData, max_monthly_conversations: parseInt(e.target.value) })}
+                  className="dark:bg-slate-900 dark:border-slate-600 dark:text-white"
+                  placeholder="0 = unlimited"
+                />
+              </div>
+              <div>
+                <Label htmlFor="max_kb_upload_bytes" className="dark:text-gray-300">Max KB File Size (bytes)</Label>
+                <Input
+                  id="max_kb_upload_bytes"
+                  type="number"
+                  min="0"
+                  value={formData.max_kb_upload_bytes}
+                  onChange={(e) => setFormData({ ...formData, max_kb_upload_bytes: parseInt(e.target.value) })}
+                  className="dark:bg-slate-900 dark:border-slate-600 dark:text-white"
+                  placeholder="e.g. 26214400 = 25 MB"
+                />
+              </div>
+              <div>
+                <Label htmlFor="max_knowledge_bases" className="dark:text-gray-300">Max Knowledge Bases</Label>
+                <Input
+                  id="max_knowledge_bases"
+                  type="number"
+                  min="0"
+                  value={formData.max_knowledge_bases}
+                  onChange={(e) => setFormData({ ...formData, max_knowledge_bases: parseInt(e.target.value) })}
+                  className="dark:bg-slate-900 dark:border-slate-600 dark:text-white"
+                  placeholder="0 = unlimited"
+                />
+              </div>
+              <div>
+                <Label htmlFor="max_channels" className="dark:text-gray-300">Max Team Chat Channels</Label>
+                <Input
+                  id="max_channels"
+                  type="number"
+                  min="0"
+                  value={formData.max_channels}
+                  onChange={(e) => setFormData({ ...formData, max_channels: parseInt(e.target.value) })}
+                  className="dark:bg-slate-900 dark:border-slate-600 dark:text-white"
+                  placeholder="0 = unlimited"
+                />
+              </div>
+            </div>
+            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide pt-1">CRM & Automation Limits</p>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="max_contacts" className="dark:text-gray-300">Max Contacts</Label>
+                <Input id="max_contacts" type="number" min="0" value={formData.max_contacts}
+                  onChange={(e) => setFormData({ ...formData, max_contacts: parseInt(e.target.value) })}
+                  className="dark:bg-slate-900 dark:border-slate-600 dark:text-white" placeholder="0 = unlimited" />
+              </div>
+              <div>
+                <Label htmlFor="max_leads" className="dark:text-gray-300">Max Leads</Label>
+                <Input id="max_leads" type="number" min="0" value={formData.max_leads}
+                  onChange={(e) => setFormData({ ...formData, max_leads: parseInt(e.target.value) })}
+                  className="dark:bg-slate-900 dark:border-slate-600 dark:text-white" placeholder="0 = unlimited" />
+              </div>
+              <div>
+                <Label htmlFor="max_workflows" className="dark:text-gray-300">Max Workflows</Label>
+                <Input id="max_workflows" type="number" min="0" value={formData.max_workflows}
+                  onChange={(e) => setFormData({ ...formData, max_workflows: parseInt(e.target.value) })}
+                  className="dark:bg-slate-900 dark:border-slate-600 dark:text-white" placeholder="0 = unlimited" />
+              </div>
+              <div>
+                <Label htmlFor="max_campaigns" className="dark:text-gray-300">Max Campaigns</Label>
+                <Input id="max_campaigns" type="number" min="0" value={formData.max_campaigns}
+                  onChange={(e) => setFormData({ ...formData, max_campaigns: parseInt(e.target.value) })}
+                  className="dark:bg-slate-900 dark:border-slate-600 dark:text-white" placeholder="0 = unlimited" />
+              </div>
+            </div>
+            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide pt-1">Outreach & Storage Limits</p>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="max_monthly_emails" className="dark:text-gray-300">Max Monthly Emails</Label>
+                <Input id="max_monthly_emails" type="number" min="0" value={formData.max_monthly_emails}
+                  onChange={(e) => setFormData({ ...formData, max_monthly_emails: parseInt(e.target.value) })}
+                  className="dark:bg-slate-900 dark:border-slate-600 dark:text-white" placeholder="e.g. 25000" />
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">0 = unlimited</p>
+              </div>
+              <div>
+                <Label htmlFor="max_storage_bytes" className="dark:text-gray-300">Max Storage (bytes)</Label>
+                <Input id="max_storage_bytes" type="number" min="0" value={formData.max_storage_bytes}
+                  onChange={(e) => setFormData({ ...formData, max_storage_bytes: parseInt(e.target.value) })}
+                  className="dark:bg-slate-900 dark:border-slate-600 dark:text-white" placeholder="e.g. 2147483648 = 2 GB" />
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">0 = unlimited</p>
+              </div>
+            </div>
             <div className={`flex items-center ${isRTL ? 'space-x-reverse' : ''} space-x-2`}>
               <Switch
                 id="is_active"
@@ -519,6 +757,193 @@ export const SubscriptionManagementPage = () => {
                   <option value="month">Monthly</option>
                   <option value="year">Yearly</option>
                 </select>
+              </div>
+            </div>
+            <div className="grid grid-cols-3 gap-4">
+              <div>
+                <Label htmlFor="edit-warn_threshold" className="dark:text-gray-300">Warn Threshold</Label>
+                <Input
+                  id="edit-warn_threshold"
+                  type="number"
+                  min="0"
+                  value={formData.warn_threshold}
+                  onChange={(e) => setFormData({ ...formData, warn_threshold: parseInt(e.target.value) })}
+                  className="dark:bg-slate-900 dark:border-slate-600 dark:text-white"
+                  placeholder="0"
+                />
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Show warning at this user count</p>
+              </div>
+              <div>
+                <Label htmlFor="edit-addon_seat_cap" className="dark:text-gray-300">Max Addon Seats</Label>
+                <Input
+                  id="edit-addon_seat_cap"
+                  type="number"
+                  min="0"
+                  value={formData.addon_seat_cap}
+                  onChange={(e) => setFormData({ ...formData, addon_seat_cap: parseInt(e.target.value) })}
+                  className="dark:bg-slate-900 dark:border-slate-600 dark:text-white"
+                  placeholder="0"
+                />
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">0 = no addons allowed</p>
+              </div>
+              <div>
+                <Label htmlFor="edit-grace_period_days" className="dark:text-gray-300">Grace Period (days)</Label>
+                <Input
+                  id="edit-grace_period_days"
+                  type="number"
+                  min="0"
+                  value={formData.grace_period_days}
+                  onChange={(e) => setFormData({ ...formData, grace_period_days: parseInt(e.target.value) })}
+                  className="dark:bg-slate-900 dark:border-slate-600 dark:text-white"
+                  placeholder="0"
+                />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="edit-addon_seat_price_usd" className="dark:text-gray-300">Addon Seat Price (USD)</Label>
+                <Input
+                  id="edit-addon_seat_price_usd"
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  value={formData.addon_seat_price_usd}
+                  onChange={(e) => setFormData({ ...formData, addon_seat_price_usd: parseFloat(e.target.value) })}
+                  className="dark:bg-slate-900 dark:border-slate-600 dark:text-white"
+                  placeholder="5.00"
+                />
+              </div>
+              <div>
+                <Label htmlFor="edit-addon_seat_price_inr" className="dark:text-gray-300">Addon Seat Price (INR)</Label>
+                <Input
+                  id="edit-addon_seat_price_inr"
+                  type="number"
+                  min="0"
+                  step="1"
+                  value={formData.addon_seat_price_inr}
+                  onChange={(e) => setFormData({ ...formData, addon_seat_price_inr: parseFloat(e.target.value) })}
+                  className="dark:bg-slate-900 dark:border-slate-600 dark:text-white"
+                  placeholder="400"
+                />
+              </div>
+            </div>
+            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide pt-1">Agent & AI Limits</p>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="edit-max_agents" className="dark:text-gray-300">Max Total Agents</Label>
+                <Input
+                  id="edit-max_agents"
+                  type="number"
+                  min="0"
+                  value={formData.max_agents}
+                  onChange={(e) => setFormData({ ...formData, max_agents: parseInt(e.target.value) })}
+                  className="dark:bg-slate-900 dark:border-slate-600 dark:text-white"
+                  placeholder="0 = unlimited"
+                />
+              </div>
+              <div>
+                <Label htmlFor="edit-max_active_agents" className="dark:text-gray-300">Max Active (Published) Agents</Label>
+                <Input
+                  id="edit-max_active_agents"
+                  type="number"
+                  min="0"
+                  value={formData.max_active_agents}
+                  onChange={(e) => setFormData({ ...formData, max_active_agents: parseInt(e.target.value) })}
+                  className="dark:bg-slate-900 dark:border-slate-600 dark:text-white"
+                  placeholder="0 = unlimited"
+                />
+              </div>
+              <div>
+                <Label htmlFor="edit-max_monthly_conversations" className="dark:text-gray-300">Max Monthly Conversations</Label>
+                <Input
+                  id="edit-max_monthly_conversations"
+                  type="number"
+                  min="0"
+                  value={formData.max_monthly_conversations}
+                  onChange={(e) => setFormData({ ...formData, max_monthly_conversations: parseInt(e.target.value) })}
+                  className="dark:bg-slate-900 dark:border-slate-600 dark:text-white"
+                  placeholder="0 = unlimited"
+                />
+              </div>
+              <div>
+                <Label htmlFor="edit-max_kb_upload_bytes" className="dark:text-gray-300">Max KB File Size (bytes)</Label>
+                <Input
+                  id="edit-max_kb_upload_bytes"
+                  type="number"
+                  min="0"
+                  value={formData.max_kb_upload_bytes}
+                  onChange={(e) => setFormData({ ...formData, max_kb_upload_bytes: parseInt(e.target.value) })}
+                  className="dark:bg-slate-900 dark:border-slate-600 dark:text-white"
+                  placeholder="e.g. 26214400 = 25 MB"
+                />
+              </div>
+              <div>
+                <Label htmlFor="edit-max_knowledge_bases" className="dark:text-gray-300">Max Knowledge Bases</Label>
+                <Input
+                  id="edit-max_knowledge_bases"
+                  type="number"
+                  min="0"
+                  value={formData.max_knowledge_bases}
+                  onChange={(e) => setFormData({ ...formData, max_knowledge_bases: parseInt(e.target.value) })}
+                  className="dark:bg-slate-900 dark:border-slate-600 dark:text-white"
+                  placeholder="0 = unlimited"
+                />
+              </div>
+              <div>
+                <Label htmlFor="edit-max_channels" className="dark:text-gray-300">Max Team Chat Channels</Label>
+                <Input
+                  id="edit-max_channels"
+                  type="number"
+                  min="0"
+                  value={formData.max_channels}
+                  onChange={(e) => setFormData({ ...formData, max_channels: parseInt(e.target.value) })}
+                  className="dark:bg-slate-900 dark:border-slate-600 dark:text-white"
+                  placeholder="0 = unlimited"
+                />
+              </div>
+            </div>
+            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide pt-1">CRM & Automation Limits</p>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="edit-max_contacts" className="dark:text-gray-300">Max Contacts</Label>
+                <Input id="edit-max_contacts" type="number" min="0" value={formData.max_contacts}
+                  onChange={(e) => setFormData({ ...formData, max_contacts: parseInt(e.target.value) })}
+                  className="dark:bg-slate-900 dark:border-slate-600 dark:text-white" placeholder="0 = unlimited" />
+              </div>
+              <div>
+                <Label htmlFor="edit-max_leads" className="dark:text-gray-300">Max Leads</Label>
+                <Input id="edit-max_leads" type="number" min="0" value={formData.max_leads}
+                  onChange={(e) => setFormData({ ...formData, max_leads: parseInt(e.target.value) })}
+                  className="dark:bg-slate-900 dark:border-slate-600 dark:text-white" placeholder="0 = unlimited" />
+              </div>
+              <div>
+                <Label htmlFor="edit-max_workflows" className="dark:text-gray-300">Max Workflows</Label>
+                <Input id="edit-max_workflows" type="number" min="0" value={formData.max_workflows}
+                  onChange={(e) => setFormData({ ...formData, max_workflows: parseInt(e.target.value) })}
+                  className="dark:bg-slate-900 dark:border-slate-600 dark:text-white" placeholder="0 = unlimited" />
+              </div>
+              <div>
+                <Label htmlFor="edit-max_campaigns" className="dark:text-gray-300">Max Campaigns</Label>
+                <Input id="edit-max_campaigns" type="number" min="0" value={formData.max_campaigns}
+                  onChange={(e) => setFormData({ ...formData, max_campaigns: parseInt(e.target.value) })}
+                  className="dark:bg-slate-900 dark:border-slate-600 dark:text-white" placeholder="0 = unlimited" />
+              </div>
+            </div>
+            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide pt-1">Outreach & Storage Limits</p>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="edit-max_monthly_emails" className="dark:text-gray-300">Max Monthly Emails</Label>
+                <Input id="edit-max_monthly_emails" type="number" min="0" value={formData.max_monthly_emails}
+                  onChange={(e) => setFormData({ ...formData, max_monthly_emails: parseInt(e.target.value) })}
+                  className="dark:bg-slate-900 dark:border-slate-600 dark:text-white" placeholder="e.g. 25000" />
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">0 = unlimited</p>
+              </div>
+              <div>
+                <Label htmlFor="edit-max_storage_bytes" className="dark:text-gray-300">Max Storage (bytes)</Label>
+                <Input id="edit-max_storage_bytes" type="number" min="0" value={formData.max_storage_bytes}
+                  onChange={(e) => setFormData({ ...formData, max_storage_bytes: parseInt(e.target.value) })}
+                  className="dark:bg-slate-900 dark:border-slate-600 dark:text-white" placeholder="e.g. 2147483648 = 2 GB" />
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">0 = unlimited</p>
               </div>
             </div>
             <div className={`flex items-center ${isRTL ? 'space-x-reverse' : ''} space-x-2`}>

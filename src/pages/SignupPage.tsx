@@ -5,11 +5,27 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { Mail, Lock, Loader2, ArrowRight, Bot, CheckCircle2 } from "lucide-react";
+import { Mail, Lock, Loader2, ArrowRight, Bot, CheckCircle2, Phone, AlertTriangle } from "lucide-react";
 import { apiFetch } from "@/lib/api";
 import { useAuth } from "@/hooks/useAuth";
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+const PERSONAL_DOMAINS = new Set([
+  "gmail.com", "yahoo.com", "yahoo.co.in", "yahoo.co.uk", "hotmail.com",
+  "outlook.com", "live.com", "icloud.com", "me.com", "mac.com",
+  "protonmail.com", "proton.me", "aol.com", "msn.com", "rediffmail.com",
+  "yandex.com", "yandex.ru", "zoho.com", "gmx.com", "gmx.net",
+]);
+
+function isPersonalEmail(email: string): boolean {
+  try {
+    const domain = email.split("@")[1]?.toLowerCase();
+    return !!domain && PERSONAL_DOMAINS.has(domain);
+  } catch {
+    return false;
+  }
+}
 
 const PERKS = [
   "Free forever plan — no credit card needed",
@@ -22,12 +38,15 @@ const PERKS = [
 export const SignupPage = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [phone, setPhone] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [emailError, setEmailError] = useState("");
   const [passwordError, setPasswordError] = useState("");
   const navigate = useNavigate();
   const { toast } = useToast();
   const { login } = useAuth();
+
+  const showPersonalEmailNote = email.includes("@") && isPersonalEmail(email);
 
   const validateEmail = (value: string): string => {
     if (!value) return "Email is required.";
@@ -54,10 +73,13 @@ export const SignupPage = () => {
 
     setIsLoading(true);
     try {
+      const body: Record<string, string> = { email, password };
+      if (phone.trim()) body.phone_number = phone.trim();
+
       const response = await apiFetch("/api/v1/auth/signup", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify(body),
       });
 
       if (response.ok) {
@@ -70,7 +92,7 @@ export const SignupPage = () => {
           const { access_token } = await loginRes.json();
           await login(access_token);
           toast({ title: "Account created!", description: "Welcome! Let's get you set up." });
-          navigate("/dashboard/onboarding");
+          navigate("/qualify");
         } else {
           toast({ title: "Account created!", description: "You can now sign in with your credentials." });
           navigate("/login");
@@ -100,18 +122,15 @@ export const SignupPage = () => {
 
       {/* Left panel — brand */}
       <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-violet-600 via-purple-700 to-violet-900 relative overflow-hidden flex-col justify-between p-12">
-        {/* Decorative blobs */}
         <div className="absolute top-0 right-0 w-96 h-96 bg-white/5 rounded-full -translate-y-1/2 translate-x-1/2" />
         <div className="absolute bottom-0 left-0 w-64 h-64 bg-white/5 rounded-full translate-y-1/2 -translate-x-1/2" />
         <div className="absolute top-1/2 left-1/2 w-48 h-48 bg-purple-500/20 rounded-full -translate-x-1/2 -translate-y-1/2 blur-2xl" />
 
-        {/* Logo */}
         <Link to="/" className="relative z-10 flex items-center gap-3">
           <img src="/icon.png" alt="HeyGenAlly" className="h-10 w-10 rounded-xl object-contain" />
           <span className="text-2xl font-bold text-white font-syne">HeyGenAlly</span>
         </Link>
 
-        {/* Centre copy */}
         <div className="relative z-10">
           <div className="inline-flex items-center gap-2 bg-white/10 text-white text-xs font-semibold px-3 py-1.5 rounded-full mb-6">
             <Bot className="h-3.5 w-3.5" />
@@ -133,7 +152,6 @@ export const SignupPage = () => {
           </ul>
         </div>
 
-        {/* Bottom stat strip */}
         <div className="relative z-10 border-t border-white/10 pt-8 grid grid-cols-3 gap-4">
           {[
             { value: "10k+", label: "Active agents" },
@@ -165,6 +183,7 @@ export const SignupPage = () => {
           </div>
 
           <form onSubmit={handleSignup} className="space-y-5" noValidate>
+            {/* Email */}
             <div className="space-y-1.5">
               <Label htmlFor="email" className="text-slate-700 dark:text-slate-300 font-medium">
                 Work email
@@ -185,8 +204,15 @@ export const SignupPage = () => {
                 />
               </div>
               {emailError && <p className="text-xs text-destructive">{emailError}</p>}
+              {!emailError && showPersonalEmailNote && (
+                <p className="flex items-center gap-1.5 text-xs text-amber-600">
+                  <AlertTriangle className="h-3 w-3 flex-shrink-0" />
+                  Using a personal email? You can still sign up — but a work email unlocks team collaboration features.
+                </p>
+              )}
             </div>
 
+            {/* Password */}
             <div className="space-y-1.5">
               <Label htmlFor="password" className="text-slate-700 dark:text-slate-300 font-medium">
                 Password
@@ -211,6 +237,26 @@ export const SignupPage = () => {
               ) : (
                 <p className="text-xs text-slate-400 dark:text-slate-500">Must be at least 8 characters</p>
               )}
+            </div>
+
+            {/* Phone (optional) */}
+            <div className="space-y-1.5">
+              <Label htmlFor="phone" className="text-slate-700 dark:text-slate-300 font-medium">
+                Phone number <span className="text-slate-400 font-normal">(optional)</span>
+              </Label>
+              <div className="relative">
+                <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                <Input
+                  id="phone"
+                  type="tel"
+                  placeholder="+1 555 000 0000"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  disabled={isLoading}
+                  className="pl-10 h-11 dark:bg-slate-900 dark:border-slate-700 dark:text-white focus-visible:ring-violet-500 focus-visible:border-violet-500"
+                />
+              </div>
+              <p className="text-xs text-slate-400 dark:text-slate-500">Used for account security and alerts</p>
             </div>
 
             <Button

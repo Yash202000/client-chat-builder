@@ -10,7 +10,7 @@ import { ThemeProvider } from "./hooks/useTheme";
 import { VideoCallProvider } from "./contexts/VideoCallContext";
 import { PersonalizationProvider } from "./contexts/PersonalizationContext";
 import { ProtectedRoute } from "./components/ProtectedRoute";
-import { useAuth } from "./hooks/useAuth";
+import { RequirePermission } from "./components/RequirePermission";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { CookieConsentBanner } from "./components/CookieConsentBanner";
 
@@ -33,6 +33,8 @@ const BlogPostPage      = lazy(() => import("./pages/BlogPostPage"));
 const NotFound          = lazy(() => import("./pages/NotFound"));
 
 // Auth callbacks & misc public pages
+const VerifyEmailPage       = lazy(() => import("./pages/VerifyEmailPage"));
+const QualifyPage           = lazy(() => import("./pages/QualifyPage"));
 const LicenseErrorPage      = lazy(() => import("./pages/LicenseErrorPage"));
 const AcceptInvitationPage  = lazy(() => import("./pages/AcceptInvitationPage").then(m => ({ default: m.AcceptInvitationPage })));
 const LinkedInCallback      = lazy(() => import("./pages/LinkedInCallback").then(m => ({ default: m.LinkedInCallback })));
@@ -163,6 +165,7 @@ const CMSSettingsPage     = lazy(() => import("./pages/CMS").then(m => ({ defaul
 
 // ─── Lazy: Developer Portal ───────────────────────────────────────────────────
 const DeveloperPortalPage = lazy(() => import("./pages/DeveloperPortalPage"));
+const UnauthorizedPage    = lazy(() => import("./pages/UnauthorizedPage"));
 
 // ─── Lazy: Social / Marketing Hub ────────────────────────────────────────────
 const SocialHubPage      = lazy(() => import("./pages/Social/SocialHubPage"));
@@ -206,8 +209,6 @@ const queryClient = new QueryClient({
 
 // ─── Routes ───────────────────────────────────────────────────────────────────
 const AppRoutes = () => {
-  const { user } = useAuth();
-
   return (
     <Suspense fallback={<PageLoader />}>
       <Routes>
@@ -228,6 +229,8 @@ const AppRoutes = () => {
         <Route path="/security" element={<SecurityPage />} />
 
         {/* ── Public / misc (lazy) ── */}
+        <Route path="/verify-email" element={<VerifyEmailPage />} />
+        <Route path="/qualify" element={<QualifyPage />} />
         <Route path="/license-error" element={<LicenseErrorPage />} />
         <Route path="/accept-invite" element={<AcceptInvitationPage />} />
         <Route path="/preview/:publishId" element={<PublishedPreviewPage mode="widget" />} />
@@ -244,128 +247,247 @@ const AppRoutes = () => {
         <Route path="/dashboard" element={<ProtectedRoute />}>
           <Route path="onboarding" element={<OnboardingPage />} />
           <Route element={<AppLayout />}>
+
+            {/* ── No page permission required ── */}
             <Route index element={<DashboardPage />} />
-            <Route path="conversations" element={<ConversationsPage channel="web_chat" />} />
-            <Route path="inbox/whatsapp" element={<ConversationsPage channel="whatsapp" />} />
-            <Route path="inbox/instagram" element={<ConversationsPage channel="instagram" />} />
-            <Route path="inbox/messenger" element={<ConversationsPage channel="messenger" />} />
-            <Route path="inbox/telegram" element={<ConversationsPage channel="telegram" />} />
-            <Route path="inbox/twilio" element={<ConversationsPage channel="twilio_voice" />} />
-            <Route path="inbox/api" element={<ConversationsPage channel="api" />} />
-            <Route path="agents" element={<AgentsPage />} />
-            <Route path="builder" element={<BuilderPage />} />
-            <Route path="builder/:agentId" element={<BuilderPage />} />
-            <Route path="builder/:agentId/prompt" element={<AgentPromptPage />} />
-            <Route path="builder/:agentId/tools" element={<AgentToolsPage />} />
-            <Route path="builder/:agentId/knowledge" element={<AgentKnowledgePage />} />
-            <Route path="builder/:agentId/webhooks" element={<AgentWebhooksPage />} />
-            <Route path="builder/:agentId/credentials" element={<AgentCredentialsPage />} />
-            <Route path="designer" element={<DesignerPage />} />
+            <Route path="profile" element={<ProfilePage />} />
+            <Route path="unauthorized" element={<UnauthorizedPage />} />
+
+            {/* Redirects */}
             <Route path="whatsapp-widget" element={<Navigate to="/dashboard/designer" replace />} />
             <Route path="ctwa" element={<Navigate to="/dashboard/cts" replace />} />
-            <Route path="cts" element={<CTSocialPage />} />
             <Route path="broadcast" element={<Navigate to="/dashboard/crm/campaigns" replace />} />
-            <Route path="comms-analytics" element={<CommsAnalyticsPage />} />
             <Route path="wa-templates" element={<Navigate to="/dashboard/crm/templates" replace />} />
-            <Route path="catalog" element={<CatalogPage />} />
-            <Route path="link-shortener" element={<LinkShortenerPage />} />
-            <Route path="team" element={<TeamPage />} />
-            <Route path="team-chat" element={<InternalChatPage />} />
-            <Route path="reports" element={<ReportsPage />} />
-            <Route path="settings" element={<SettingsPage />} />
-            <Route path="settings/custom-fields" element={<CustomFieldsPage />} />
-            <Route path="settings/routing-rules" element={<RoutingRulesPage />} />
-            <Route path="settings/hierarchy" element={<HierarchyPage />} />
-            <Route path="settings/departments" element={<DepartmentPage />} />
-            <Route path="vault" element={<VaultPage />} />
-            <Route path="knowledge-base" element={<Navigate to="/dashboard/knowledge-base/manage" replace />} />
-            <Route path="tools" element={<ToolManagementPage />} />
-            <Route path="knowledge-base/manage" element={<KnowledgeBaseManagementPage />} />
-            <Route path="knowledge-base/processing" element={<KnowledgeBaseProcessing />} />
-            <Route path="knowledge-base/:id" element={<KnowledgeBaseDetailPage />} />
-            <Route path="knowledge-base/:id/content/types/new" element={<KBContentTypeCreatePage />} />
-            <Route path="knowledge-base/:id/content/types/:slug" element={<KBContentTypeEditPage />} />
-            <Route path="knowledge-base/:id/content/:typeSlug" element={<KBContentItemsListPage />} />
-            <Route path="knowledge-base/:id/content/:typeSlug/new" element={<KBContentItemCreatePage />} />
-            <Route path="knowledge-base/:id/content/:typeSlug/:itemId" element={<KBContentItemEditPage />} />
-            <Route path="workflows" element={<WorkflowManagementPage />} />
-            <Route path="workflows/:workflowId" element={<WorkflowBuilderPage />} />
-            <Route path="profile" element={<ProfilePage />} />
-            <Route path="billing" element={<ClientBillingPage />} />
-            {user?.is_super_admin && <Route path="companies" element={<CompaniesPage />} />}
-            <Route path="admin/subscriptions" element={<SubscriptionManagementPage />} />
-            <Route path="ai-image-generator" element={<AIImageGeneratorPage />} />
-            <Route path="ai-image-gallery" element={<AIImageGalleryPage />} />
-            <Route path="ai-chat" element={<AIChatPage />} />
-            <Route path="ai-tools" element={<AIToolsPage />} />
-            <Route path="ai-tools/new" element={<AIToolCreatePage />} />
-            <Route path="ai-tools/:id" element={<AIToolDetailPage />} />
-            <Route path="ai-tools/:id/edit" element={<AIToolEditPage />} />
-            <Route path="contacts" element={<ContactHubPage />} />
-            {/* Tickets */}
-            <Route path="tickets" element={<TicketProjectsPage />} />
-            <Route path="tickets/:projectKey/board" element={<TicketBoardPage />} />
-            <Route path="tickets/:projectKey/list" element={<TicketListPage />} />
-            <Route path="tickets/:projectKey/backlog" element={<TicketBacklogPage />} />
-            <Route path="tickets/:projectKey/analytics" element={<TicketAnalyticsPage />} />
-            <Route path="tickets/:projectKey/:ticketNumber" element={<TicketDetailPage />} />
-            <Route path="tickets/settings/workflows" element={<WorkflowEditorPage />} />
-            {/* CRM */}
-            <Route path="crm" element={<CRMDashboard />} />
-            <Route path="crm/leads" element={<LeadsPage />} />
-            <Route path="crm/leads/:id" element={<LeadDetailPage />} />
-            <Route path="crm/contacts" element={<ContactsPage />} />
-            <Route path="crm/deals" element={<DealsPage />} />
-            <Route path="crm/deals/:id" element={<DealDetailPage />} />
-            <Route path="crm/accounts" element={<AccountsPage />} />
-            <Route path="crm/accounts/:id" element={<AccountDetailPage />} />
-            <Route path="crm/campaigns" element={<CampaignsPage />} />
-            <Route path="crm/campaigns/new" element={<CampaignCreatePage />} />
-            <Route path="crm/campaigns/:id" element={<CampaignDetailPage />} />
-            <Route path="crm/campaigns/:id/edit" element={<CampaignEditPage />} />
-            <Route path="crm/tags" element={<TagsPage />} />
-            <Route path="crm/segments" element={<SegmentsPage />} />
-            <Route path="crm/templates" element={<TemplatesPage />} />
-            <Route path="crm/templates/:id" element={<TemplateEditorPage />} />
             <Route path="message-templates" element={<Navigate to="/dashboard/crm/templates" replace />} />
-            <Route path="inbox/email" element={<EmailInboxPage />} />
-            <Route path="inbox/sms" element={<SMSInboxPage />} />
-            <Route path="call-queue" element={<CallQueuePage />} />
-            <Route path="voice-calls" element={<VoiceCallLogPage />} />
-            <Route path="supervisor" element={<SupervisorDashboardPage />} />
-            <Route path="call-analytics" element={<CallAnalyticsPage />} />
-            <Route path="dialer" element={<DialerPage />} />
-            <Route path="crm/analytics" element={<AnalyticsPage />} />
-            <Route path="crm/linkedin-leads" element={<LinkedInLeadsPage />} />
-            <Route path="crm/booking-links" element={<BookingLinksPage />} />
-            <Route path="crm/sequences" element={<SequencesPage />} />
-            <Route path="crm/sequences/:id" element={<SequenceEditorPage />} />
-            <Route path="crm/forms" element={<FormsPage />} />
-            <Route path="crm/forms/:id" element={<FormEditorPage />} />
-            {/* Social */}
-            <Route path="social" element={<SocialHubPage />} />
-            <Route path="social/compose" element={<PostComposerPage />} />
+            <Route path="knowledge-base" element={<Navigate to="/dashboard/knowledge-base/manage" replace />} />
             <Route path="social/calendar" element={<Navigate to="/dashboard/calendar" replace />} />
-            <Route path="social/trending" element={<TrendingPostsPage />} />
-            <Route path="social/accounts" element={<SocialAccountsPage />} />
-            <Route path="social/analytics" element={<SocialAnalyticsPage />} />
-            <Route path="calendar" element={<CalendarPage />} />
-            <Route path="drive" element={<DrivePage />} />
-            <Route path="audit-logs" element={<AuditLogsPage />} />
-            {/* CMS */}
-            <Route path="cms" element={<CMSDashboardPage />} />
-            <Route path="cms/types" element={<ContentTypesPage />} />
-            <Route path="cms/types/new" element={<ContentTypeCreatePage />} />
-            <Route path="cms/types/:slug" element={<ContentTypeEditPage />} />
-            <Route path="cms/content/:typeSlug" element={<ContentItemsPage />} />
-            <Route path="cms/content/:typeSlug/new" element={<ContentItemCreatePage />} />
-            <Route path="cms/content/:typeSlug/:id" element={<ContentItemEditPage />} />
-            <Route path="cms/media" element={<MediaLibraryPage />} />
-            <Route path="cms/categories" element={<CategoriesPage />} />
-            <Route path="cms/marketplace" element={<MarketplacePage />} />
-            <Route path="cms/settings" element={<CMSSettingsPage />} />
-            {/* Developer Portal */}
-            <Route path="developer" element={<DeveloperPortalPage />} />
+
+            {/* ── Permission-gated routes ── */}
+
+            <Route element={<RequirePermission permission="page:conversations" />}>
+              <Route path="conversations" element={<ConversationsPage channel="web_chat" />} />
+              <Route path="inbox/whatsapp" element={<ConversationsPage channel="whatsapp" />} />
+              <Route path="inbox/instagram" element={<ConversationsPage channel="instagram" />} />
+              <Route path="inbox/messenger" element={<ConversationsPage channel="messenger" />} />
+              <Route path="inbox/telegram" element={<ConversationsPage channel="telegram" />} />
+              <Route path="inbox/twilio" element={<ConversationsPage channel="twilio_voice" />} />
+              <Route path="inbox/api" element={<ConversationsPage channel="api" />} />
+              <Route path="inbox/email" element={<EmailInboxPage />} />
+              <Route path="inbox/sms" element={<SMSInboxPage />} />
+            </Route>
+
+            <Route element={<RequirePermission permission="page:team_chat" />}>
+              <Route path="team-chat" element={<InternalChatPage />} />
+            </Route>
+
+            <Route element={<RequirePermission permission="page:agents" />}>
+              <Route path="agents" element={<AgentsPage />} />
+              <Route path="builder" element={<BuilderPage />} />
+              <Route path="builder/:agentId" element={<BuilderPage />} />
+              <Route path="builder/:agentId/prompt" element={<AgentPromptPage />} />
+              <Route path="builder/:agentId/tools" element={<AgentToolsPage />} />
+              <Route path="builder/:agentId/knowledge" element={<AgentKnowledgePage />} />
+              <Route path="builder/:agentId/webhooks" element={<AgentWebhooksPage />} />
+              <Route path="builder/:agentId/credentials" element={<AgentCredentialsPage />} />
+            </Route>
+
+            {/* Pro-tier builder features */}
+            <Route element={<RequirePermission permission="page:agents" feature="catalog" />}>
+              <Route path="catalog" element={<CatalogPage />} />
+            </Route>
+
+            <Route element={<RequirePermission permission="page:agents" feature="link_shortener" />}>
+              <Route path="link-shortener" element={<LinkShortenerPage />} />
+            </Route>
+
+            <Route element={<RequirePermission permission="page:agents" feature="cts" />}>
+              <Route path="cts" element={<CTSocialPage />} />
+            </Route>
+
+            <Route element={<RequirePermission permission="page:agents" feature="comms_analytics" />}>
+              <Route path="comms-analytics" element={<CommsAnalyticsPage />} />
+            </Route>
+
+            <Route element={<RequirePermission permission="page:widget_designer" />}>
+              <Route path="designer" element={<DesignerPage />} />
+            </Route>
+
+            <Route element={<RequirePermission permission="page:tools" />}>
+              <Route path="tools" element={<ToolManagementPage />} />
+            </Route>
+
+            <Route element={<RequirePermission permission="page:knowledge_base" />}>
+              <Route path="knowledge-base/manage" element={<KnowledgeBaseManagementPage />} />
+              <Route path="knowledge-base/processing" element={<KnowledgeBaseProcessing />} />
+              <Route path="knowledge-base/:id" element={<KnowledgeBaseDetailPage />} />
+              <Route path="knowledge-base/:id/content/types/new" element={<KBContentTypeCreatePage />} />
+              <Route path="knowledge-base/:id/content/types/:slug" element={<KBContentTypeEditPage />} />
+              <Route path="knowledge-base/:id/content/:typeSlug" element={<KBContentItemsListPage />} />
+              <Route path="knowledge-base/:id/content/:typeSlug/new" element={<KBContentItemCreatePage />} />
+              <Route path="knowledge-base/:id/content/:typeSlug/:itemId" element={<KBContentItemEditPage />} />
+              <Route path="cms" element={<CMSDashboardPage />} />
+              <Route path="cms/types" element={<ContentTypesPage />} />
+              <Route path="cms/types/new" element={<ContentTypeCreatePage />} />
+              <Route path="cms/types/:slug" element={<ContentTypeEditPage />} />
+              <Route path="cms/content/:typeSlug" element={<ContentItemsPage />} />
+              <Route path="cms/content/:typeSlug/new" element={<ContentItemCreatePage />} />
+              <Route path="cms/content/:typeSlug/:id" element={<ContentItemEditPage />} />
+              <Route path="cms/media" element={<MediaLibraryPage />} />
+              <Route path="cms/categories" element={<CategoriesPage />} />
+              <Route path="cms/marketplace" element={<MarketplacePage />} />
+              <Route path="cms/settings" element={<CMSSettingsPage />} />
+            </Route>
+
+            <Route element={<RequirePermission permission="page:workflows" feature="workflows" />}>
+              <Route path="workflows" element={<WorkflowManagementPage />} />
+              <Route path="workflows/:workflowId" element={<WorkflowBuilderPage />} />
+              <Route path="tickets/settings/workflows" element={<WorkflowEditorPage />} />
+            </Route>
+
+            <Route element={<RequirePermission permission="page:crm_dashboard" feature="crm_dashboard" />}>
+              <Route path="crm" element={<CRMDashboard />} />
+            </Route>
+
+            <Route element={<RequirePermission permission="page:leads" />}>
+              <Route path="crm/leads" element={<LeadsPage />} />
+              <Route path="crm/leads/:id" element={<LeadDetailPage />} />
+            </Route>
+
+            <Route element={<RequirePermission permission="page:leads" feature="social" />}>
+              <Route path="crm/linkedin-leads" element={<LinkedInLeadsPage />} />
+            </Route>
+
+            <Route element={<RequirePermission permission="page:campaigns" feature="campaigns" />}>
+              <Route path="crm/campaigns" element={<CampaignsPage />} />
+              <Route path="crm/campaigns/new" element={<CampaignCreatePage />} />
+              <Route path="crm/campaigns/:id" element={<CampaignDetailPage />} />
+              <Route path="crm/campaigns/:id/edit" element={<CampaignEditPage />} />
+              <Route path="crm/sequences" element={<SequencesPage />} />
+              <Route path="crm/sequences/:id" element={<SequenceEditorPage />} />
+            </Route>
+
+            <Route element={<RequirePermission permission="page:tags" feature="tags" />}>
+              <Route path="crm/tags" element={<TagsPage />} />
+            </Route>
+
+            <Route element={<RequirePermission permission="page:segments" feature="segments" />}>
+              <Route path="crm/segments" element={<SegmentsPage />} />
+            </Route>
+
+            <Route element={<RequirePermission permission="page:crm_templates" feature="crm_templates" />}>
+              <Route path="crm/templates" element={<TemplatesPage />} />
+              <Route path="crm/templates/:id" element={<TemplateEditorPage />} />
+            </Route>
+
+            <Route element={<RequirePermission permission="page:ai_chat" feature="ai_chat" />}>
+              <Route path="ai-chat" element={<AIChatPage />} />
+            </Route>
+
+            <Route element={<RequirePermission permission="page:ai_tools" feature="ai_tools" />}>
+              <Route path="ai-tools" element={<AIToolsPage />} />
+              <Route path="ai-tools/new" element={<AIToolCreatePage />} />
+              <Route path="ai-tools/:id" element={<AIToolDetailPage />} />
+              <Route path="ai-tools/:id/edit" element={<AIToolEditPage />} />
+            </Route>
+
+            <Route element={<RequirePermission permission="page:ai_image_generator" feature="ai_images" />}>
+              <Route path="ai-image-generator" element={<AIImageGeneratorPage />} />
+            </Route>
+
+            <Route element={<RequirePermission permission="page:ai_image_gallery" feature="ai_images" />}>
+              <Route path="ai-image-gallery" element={<AIImageGalleryPage />} />
+            </Route>
+
+            <Route element={<RequirePermission permission="page:reports" feature="reports" />}>
+              <Route path="reports" element={<ReportsPage />} />
+              <Route path="crm/analytics" element={<AnalyticsPage />} />
+            </Route>
+
+            <Route element={<RequirePermission permission="page:settings" />}>
+              <Route path="settings" element={<SettingsPage />} />
+              <Route path="settings/custom-fields" element={<CustomFieldsPage />} />
+              <Route path="settings/routing-rules" element={<RoutingRulesPage />} />
+              <Route path="settings/hierarchy" element={<HierarchyPage />} />
+              <Route path="settings/departments" element={<DepartmentPage />} />
+              <Route path="developer" element={<DeveloperPortalPage />} />
+              <Route path="audit-logs" element={<AuditLogsPage />} />
+            </Route>
+
+            <Route element={<RequirePermission permission="page:team_management" />}>
+              <Route path="team" element={<TeamPage />} />
+            </Route>
+
+            <Route element={<RequirePermission permission="page:api_vault" feature="api_vault" />}>
+              <Route path="vault" element={<VaultPage />} />
+            </Route>
+
+            <Route element={<RequirePermission permission="page:billing" />}>
+              <Route path="billing" element={<ClientBillingPage />} />
+            </Route>
+
+            <Route element={<RequirePermission permission="page:contacts" />}>
+              <Route path="contacts" element={<ContactHubPage />} />
+              <Route path="crm/contacts" element={<ContactsPage />} />
+            </Route>
+
+            <Route element={<RequirePermission permission="page:voice_lab" feature="voice_lab" />}>
+              <Route path="voice-calls" element={<VoiceCallLogPage />} />
+              <Route path="call-queue" element={<CallQueuePage />} />
+              <Route path="supervisor" element={<SupervisorDashboardPage />} />
+              <Route path="call-analytics" element={<CallAnalyticsPage />} />
+              <Route path="dialer" element={<DialerPage />} />
+            </Route>
+
+            <Route element={<RequirePermission permission="page:tickets" feature="tickets" />}>
+              <Route path="tickets" element={<TicketProjectsPage />} />
+              <Route path="tickets/:projectKey/board" element={<TicketBoardPage />} />
+              <Route path="tickets/:projectKey/list" element={<TicketListPage />} />
+              <Route path="tickets/:projectKey/backlog" element={<TicketBacklogPage />} />
+              <Route path="tickets/:projectKey/analytics" element={<TicketAnalyticsPage />} />
+              <Route path="tickets/:projectKey/:ticketNumber" element={<TicketDetailPage />} />
+            </Route>
+
+            <Route element={<RequirePermission permission="page:deals" feature="deals" />}>
+              <Route path="crm/deals" element={<DealsPage />} />
+              <Route path="crm/deals/:id" element={<DealDetailPage />} />
+            </Route>
+
+            <Route element={<RequirePermission permission="page:accounts" feature="accounts" />}>
+              <Route path="crm/accounts" element={<AccountsPage />} />
+              <Route path="crm/accounts/:id" element={<AccountDetailPage />} />
+            </Route>
+
+            <Route element={<RequirePermission permission="page:forms" />}>
+              <Route path="crm/forms" element={<FormsPage />} />
+              <Route path="crm/forms/:id" element={<FormEditorPage />} />
+            </Route>
+
+            <Route element={<RequirePermission permission="page:booking_links" feature="booking_links" />}>
+              <Route path="crm/booking-links" element={<BookingLinksPage />} />
+            </Route>
+
+            <Route element={<RequirePermission permission="page:social" feature="social" />}>
+              <Route path="social" element={<SocialHubPage />} />
+              <Route path="social/compose" element={<PostComposerPage />} />
+              <Route path="social/trending" element={<TrendingPostsPage />} />
+              <Route path="social/accounts" element={<SocialAccountsPage />} />
+              <Route path="social/analytics" element={<SocialAnalyticsPage />} />
+            </Route>
+
+            <Route element={<RequirePermission permission="page:calendar" />}>
+              <Route path="calendar" element={<CalendarPage />} />
+            </Route>
+
+            <Route element={<RequirePermission permission="page:drive" />}>
+              <Route path="drive" element={<DrivePage />} />
+            </Route>
+
+            {/* Super-admin only */}
+            <Route element={<RequirePermission adminOnly />}>
+              <Route path="companies" element={<CompaniesPage />} />
+              <Route path="admin/subscriptions" element={<SubscriptionManagementPage />} />
+            </Route>
+
           </Route>
         </Route>
 

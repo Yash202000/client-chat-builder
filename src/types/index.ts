@@ -206,6 +206,8 @@ export interface User {
   subscription_status?: string;
   subscription_start_date?: string;
   subscription_end_date?: string;
+  email_verified?: boolean;
+  phone_verified?: boolean;
 }
 
 export interface Team {
@@ -268,6 +270,23 @@ export interface SubscriptionPlan {
   razorpay_plan_id?: string;
   default_user_limit?: number;
   trial_days?: number;
+  warn_threshold?: number;
+  addon_seat_cap?: number;
+  addon_seat_price_usd?: number;
+  addon_seat_price_inr?: number;
+  grace_period_days?: number;
+  max_agents?: number;
+  max_active_agents?: number;
+  max_monthly_conversations?: number;
+  max_kb_upload_bytes?: number;
+  max_knowledge_bases?: number;
+  max_channels?: number;
+  max_contacts?: number;
+  max_leads?: number;
+  max_workflows?: number;
+  max_campaigns?: number;
+  max_monthly_emails?: number;
+  max_storage_bytes?: number;
   description?: string;
   billing_interval?: string;
   created_at: string;

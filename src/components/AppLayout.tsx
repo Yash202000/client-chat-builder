@@ -1,5 +1,6 @@
 
 import { useAuth } from "@/hooks/useAuth";
+import { usePlanFeatures } from "@/hooks/usePlanFeatures";
 import { useTheme } from "@/hooks/useTheme";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { CircleUser, Moon, Sun, PanelLeftClose, PanelLeftOpen, ChevronDown, ChevronRight, MoreHorizontal } from "lucide-react";
@@ -75,6 +76,7 @@ import {
   Code2,
   ShoppingBag,
   Link2,
+  MessageCircle,
 } from "lucide-react";
 import { CreateAgentDialog } from "@/components/CreateAgentDialog";
 import { Permission } from "./Permission";
@@ -92,6 +94,7 @@ import { CommandPalette, CommandPaletteTrigger } from "@/components/CommandPalet
 import { GreetingBar } from "@/components/GreetingBar";
 import { AccentPicker } from "@/components/AccentPicker";
 import UserStatusPicker from "@/components/UserStatusPicker";
+import { TrialExpiredGate } from "@/components/TrialExpiredGate";
 
 const WhatsAppIcon = ({ className }: { className?: string }) => (
   <svg viewBox="0 0 24 24" className={className} fill="currentColor">
@@ -133,6 +136,7 @@ const AppLayout = () => {
     admin: true,
   });
   const { user, logout, refetchUser, authFetch } = useAuth();
+  const { hasFeature, isSubscriptionExpired, conversationsNearLimit, monthlyConversationCount, maxMonthlyConversations, storageNearLimit, totalStorageBytes, maxStorageBytes, emailsNearLimit, monthlyEmailCount, maxMonthlyEmails } = usePlanFeatures();
   const { theme, toggleTheme } = useTheme();
   const { t } = useTranslation();
   const { isRTL } = useI18n();
@@ -140,9 +144,46 @@ const AppLayout = () => {
   const { data: systemConfig } = useSystemConfig();
   const isManagedCredentials = systemConfig?.managed_credentials ?? false;
   const { toast } = useToast();
+  const [emailBannerDismissed, setEmailBannerDismissed] = useState(false);
+  const [resendingVerification, setResendingVerification] = useState(false);
+  const [convoBannerDismissed, setConvoBannerDismissed] = useState(false);
+  const [storageBannerDismissed, setStorageBannerDismissed] = useState(false);
+  const [emailQuotaBannerDismissed, setEmailQuotaBannerDismissed] = useState(false);
+  const supportAgentId = import.meta.env.VITE_SUPPORT_AGENT_ID;
+  const [supportChatOpen, setSupportChatOpen] = useState(false);
+
+  const resendVerificationEmail = async () => {
+    setResendingVerification(true);
+    try {
+      await authFetch(`${API_BASE_URL}/auth/resend-verification`, { method: 'POST' });
+      toast({ title: 'Verification email sent', description: 'Check your inbox for the verification link.' });
+    } catch {
+      toast({ title: 'Failed to send email', description: 'Please try again later.', variant: 'destructive' });
+    } finally {
+      setResendingVerification(false);
+    }
+  };
   const navigate = useNavigate();
   const { soundEnabled, enableSound, showNotification, playNotificationSound } = useNotifications();
   const queryClient = useQueryClient();
+
+  // Redirect to qualification screen if onboarding not completed (checked once per session)
+  const { data: onboardingStatus } = useQuery<{ onboarding_completed: boolean } | null>({
+    queryKey: ['onboarding-status', user?.company_id],
+    queryFn: async () => {
+      const res = await authFetch(`${API_BASE_URL}/onboarding/status`);
+      if (!res.ok) return null;
+      return res.json();
+    },
+    enabled: !!user?.company_id,
+    staleTime: Infinity,
+  });
+
+  useEffect(() => {
+    if (onboardingStatus && !onboardingStatus.onboarding_completed) {
+      navigate('/qualify', { replace: true });
+    }
+  }, [onboardingStatus, navigate]);
 
   const { data: integrations = [] } = useQuery<{ type: string }[]>({
     queryKey: ['integrations', user?.company_id],
@@ -587,6 +628,7 @@ const AppLayout = () => {
     url: string;
     icon: React.ElementType;
     permission?: string;
+    feature?: string; // plan-level feature gate
     admin?: boolean;
   };
 
@@ -600,12 +642,12 @@ const AppLayout = () => {
   };
 
   const channelInboxItems: SidebarItem[] = [
-    ...(integrationTypes.has('whatsapp') ? [{ titleKey: "navigation.whatsappInbox", url: "/dashboard/inbox/whatsapp", icon: WhatsAppIcon }] : []),
-    ...(integrationTypes.has('instagram') ? [{ titleKey: "navigation.instagramInbox", url: "/dashboard/inbox/instagram", icon: InstagramIcon }] : []),
-    ...(integrationTypes.has('messenger') ? [{ titleKey: "navigation.messengerInbox", url: "/dashboard/inbox/messenger", icon: MessengerIcon }] : []),
-    ...(integrationTypes.has('telegram') ? [{ titleKey: "navigation.telegramInbox", url: "/dashboard/inbox/telegram", icon: TelegramIcon }] : []),
-    ...(integrationTypes.has('twilio_voice') ? [{ titleKey: "navigation.twilioInbox", url: "/dashboard/inbox/twilio", icon: TwilioIcon }] : []),
-    ...(hasApiIntegration ? [{ titleKey: "navigation.apiInbox", url: "/dashboard/inbox/api", icon: ApiIcon }] : []),
+    ...(integrationTypes.has('whatsapp') ? [{ titleKey: "navigation.whatsappInbox", url: "/dashboard/inbox/whatsapp", icon: WhatsAppIcon, permission: "page:conversations" }] : []),
+    ...(integrationTypes.has('instagram') ? [{ titleKey: "navigation.instagramInbox", url: "/dashboard/inbox/instagram", icon: InstagramIcon, permission: "page:conversations" }] : []),
+    ...(integrationTypes.has('messenger') ? [{ titleKey: "navigation.messengerInbox", url: "/dashboard/inbox/messenger", icon: MessengerIcon, permission: "page:conversations" }] : []),
+    ...(integrationTypes.has('telegram') ? [{ titleKey: "navigation.telegramInbox", url: "/dashboard/inbox/telegram", icon: TelegramIcon, permission: "page:conversations" }] : []),
+    ...(integrationTypes.has('twilio_voice') ? [{ titleKey: "navigation.twilioInbox", url: "/dashboard/inbox/twilio", icon: TwilioIcon, permission: "page:conversations" }] : []),
+    ...(hasApiIntegration ? [{ titleKey: "navigation.apiInbox", url: "/dashboard/inbox/api", icon: ApiIcon, permission: "page:conversations" }] : []),
   ];
 
   const sidebarGroups: SidebarGroup[] = [
@@ -631,21 +673,21 @@ const AppLayout = () => {
         // Inbox
         { titleKey: "navigation.activeClients", url: "/dashboard/conversations", icon: Globe, permission: "page:conversations" },
         ...channelInboxItems,
-        ...(integrationTypes.has('gmail') ? [{ titleKey: "navigation.emailInbox", url: "/dashboard/inbox/email", icon: Mail }] : []),
-        ...(integrationTypes.has('twilio_voice') ? [{ titleKey: "navigation.smsInbox", url: "/dashboard/inbox/sms", icon: MessageSquare }] : []),
-        { titleKey: "navigation.contactHub", url: "/dashboard/contacts", icon: Users },
+        ...(integrationTypes.has('gmail') ? [{ titleKey: "navigation.emailInbox", url: "/dashboard/inbox/email", icon: Mail, permission: "page:conversations" }] : []),
+        ...(integrationTypes.has('twilio_voice') ? [{ titleKey: "navigation.smsInbox", url: "/dashboard/inbox/sms", icon: MessageSquare, permission: "page:conversations" }] : []),
+        { titleKey: "navigation.contactHub", url: "/dashboard/contacts", icon: Users, permission: "page:contacts" },
         // Voice Center
-        { titleKey: "navigation.callLog", url: "/dashboard/voice-calls", icon: PhoneCall },
+        { titleKey: "navigation.callLog", url: "/dashboard/voice-calls", icon: PhoneCall, permission: "page:voice_lab", feature: "voice_lab" },
         ...(integrationTypes.has('twilio_voice') ? [
-          { titleKey: "navigation.callQueue",        url: "/dashboard/call-queue",     icon: Phone },
-          { titleKey: "navigation.supervisor",       url: "/dashboard/supervisor",     icon: Radio },
-          { titleKey: "navigation.predictiveDialer", url: "/dashboard/dialer",         icon: Headphones },
-          { titleKey: "navigation.callAnalytics",    url: "/dashboard/call-analytics", icon: BarChart3 },
+          { titleKey: "navigation.callQueue",        url: "/dashboard/call-queue",     icon: Phone,      permission: "page:voice_lab", feature: "voice_lab" },
+          { titleKey: "navigation.supervisor",       url: "/dashboard/supervisor",     icon: Radio,      permission: "page:voice_lab", feature: "voice_lab" },
+          { titleKey: "navigation.predictiveDialer", url: "/dashboard/dialer",         icon: Headphones, permission: "page:voice_lab", feature: "voice_lab" },
+          { titleKey: "navigation.callAnalytics",    url: "/dashboard/call-analytics", icon: BarChart3,  permission: "page:voice_lab", feature: "voice_lab" },
         ] : []),
         // Team & files
         { titleKey: "navigation.teamChat", url: "/dashboard/team-chat", icon: MessageSquare, permission: "page:team_chat" },
-        { titleKey: "navigation.calendar", url: "/dashboard/calendar", icon: Calendar },
-        { titleKey: "navigation.drive",    url: "/dashboard/drive",    icon: HardDrive },
+        { titleKey: "navigation.calendar", url: "/dashboard/calendar", icon: Calendar, permission: "page:calendar" },
+        { titleKey: "navigation.drive",    url: "/dashboard/drive",    icon: HardDrive, permission: "page:drive" },
       ],
     },
     // 3. Support & Tickets
@@ -656,9 +698,9 @@ const AppLayout = () => {
       icon: LifeBuoy,
       collapsible: true,
       items: [
-        { titleKey: "navigation.myTickets",   url: '/dashboard/tickets?assignee=me',        icon: Ticket },
-        { titleKey: "navigation.allProjects", url: '/dashboard/tickets',                   icon: KanbanSquare },
-        { titleKey: "navigation.workflows",   url: '/dashboard/tickets/settings/workflows', icon: Workflow },
+        { titleKey: "navigation.myTickets",   url: '/dashboard/tickets?assignee=me',        icon: Ticket,       permission: "page:tickets",    feature: "tickets" },
+        { titleKey: "navigation.allProjects", url: '/dashboard/tickets',                   icon: KanbanSquare, permission: "page:tickets",    feature: "tickets" },
+        { titleKey: "navigation.workflows",   url: '/dashboard/tickets/settings/workflows', icon: Workflow,     permission: "page:workflows",  feature: "workflows" },
       ],
     },
     // 4. CRM — pipeline only
@@ -669,11 +711,11 @@ const AppLayout = () => {
       icon: TrendingUp,
       collapsible: true,
       items: [
-        { titleKey: "navigation.crm",          url: "/dashboard/crm",               icon: TrendingUp,  permission: "page:crm_dashboard" },
-        { titleKey: "navigation.leads",        url: "/dashboard/crm/leads",         icon: Target,      permission: "page:leads" },
-        { titleKey: "navigation.deals",        url: "/dashboard/crm/deals",         icon: KanbanSquare },
-        { titleKey: "navigation.companies",    url: "/dashboard/crm/accounts",      icon: Building2 },
-        { titleKey: "navigation.bookingLinks", url: "/dashboard/crm/booking-links", icon: Calendar },
+        { titleKey: "navigation.crm",          url: "/dashboard/crm",               icon: TrendingUp,   permission: "page:crm_dashboard", feature: "crm_dashboard" },
+        { titleKey: "navigation.leads",        url: "/dashboard/crm/leads",         icon: Target,       permission: "page:leads" },
+        { titleKey: "navigation.deals",        url: "/dashboard/crm/deals",         icon: KanbanSquare, permission: "page:deals",         feature: "deals" },
+        { titleKey: "navigation.companies",    url: "/dashboard/crm/accounts",      icon: Building2,    permission: "page:accounts",      feature: "accounts" },
+        { titleKey: "navigation.bookingLinks", url: "/dashboard/crm/booking-links", icon: Calendar,     permission: "page:booking_links", feature: "booking_links" },
       ],
     },
     // 5. Campaigns — outreach & engagement
@@ -684,12 +726,12 @@ const AppLayout = () => {
       icon: Send,
       collapsible: true,
       items: [
-        { titleKey: "navigation.campaigns", url: "/dashboard/crm/campaigns",  icon: Send,          permission: "page:campaigns" },
-        { titleKey: "navigation.sequences", url: "/dashboard/crm/sequences",  icon: GitBranch },
-        { titleKey: "navigation.forms",     url: "/dashboard/crm/forms",      icon: FormInput },
-        { titleKey: "navigation.tags",      url: "/dashboard/crm/tags",       icon: Tag,           permission: "page:tags" },
-        { titleKey: "navigation.segments",  url: "/dashboard/crm/segments",   icon: Layers,        permission: "page:segments" },
-        { titleKey: "navigation.templates", url: "/dashboard/crm/templates",  icon: LayoutTemplate, permission: "page:crm_templates" },
+        { titleKey: "navigation.campaigns", url: "/dashboard/crm/campaigns",  icon: Send,          permission: "page:campaigns",     feature: "campaigns" },
+        { titleKey: "navigation.sequences", url: "/dashboard/crm/sequences",  icon: GitBranch, permission: "page:campaigns",        feature: "campaigns" },
+        { titleKey: "navigation.forms",     url: "/dashboard/crm/forms",      icon: FormInput, permission: "page:forms" },
+        { titleKey: "navigation.tags",      url: "/dashboard/crm/tags",       icon: Tag,           permission: "page:tags",           feature: "tags" },
+        { titleKey: "navigation.segments",  url: "/dashboard/crm/segments",   icon: Layers,        permission: "page:segments",       feature: "segments" },
+        { titleKey: "navigation.templates", url: "/dashboard/crm/templates",  icon: LayoutTemplate, permission: "page:crm_templates", feature: "crm_templates" },
       ],
     },
     // 6. Marketing Hub — social media
@@ -700,12 +742,12 @@ const AppLayout = () => {
       icon: Megaphone,
       collapsible: true,
       items: [
-        { titleKey: "navigation.socialHub",       url: "/dashboard/social",             icon: Share2 },
-        { titleKey: "navigation.postComposer",    url: "/dashboard/social/compose",     icon: PenLine },
-        { titleKey: "navigation.trendingPosts",   url: "/dashboard/social/trending",    icon: TrendingUp },
-        { titleKey: "navigation.linkedinLeads",   url: "/dashboard/crm/linkedin-leads", icon: Linkedin },
-        { titleKey: "navigation.socialAnalytics", url: "/dashboard/social/analytics",  icon: BarChart3 },
-        { titleKey: "navigation.socialAccounts",  url: "/dashboard/social/accounts",   icon: Settings2 },
+        { titleKey: "navigation.socialHub",       url: "/dashboard/social",             icon: Share2,     permission: "page:social", feature: "social" },
+        { titleKey: "navigation.postComposer",    url: "/dashboard/social/compose",     icon: PenLine,    permission: "page:social", feature: "social" },
+        { titleKey: "navigation.trendingPosts",   url: "/dashboard/social/trending",    icon: TrendingUp, permission: "page:social", feature: "social" },
+        { titleKey: "navigation.linkedinLeads",   url: "/dashboard/crm/linkedin-leads", icon: Linkedin,   permission: "page:social", feature: "social" },
+        { titleKey: "navigation.socialAnalytics", url: "/dashboard/social/analytics",  icon: BarChart3,  permission: "page:social", feature: "social" },
+        { titleKey: "navigation.socialAccounts",  url: "/dashboard/social/accounts",   icon: Settings2,  permission: "page:social", feature: "social" },
       ],
     },
     // 7. Builder — agents, knowledge, automation
@@ -721,11 +763,11 @@ const AppLayout = () => {
         { titleKey: "navigation.content",         url: "/dashboard/knowledge-base/manage", icon: BookOpen,    permission: "page:knowledge_base" },
         { titleKey: "navigation.cms",             url: "/dashboard/cms",                  icon: LayoutTemplate, permission: "page:knowledge_base" },
         { titleKey: "navigation.tools",           url: "/dashboard/tools",                icon: Zap,          permission: "page:tools" },
-        { titleKey: "navigation.automations",      url: "/dashboard/workflows",            icon: WorkflowIcon, permission: "page:workflows" },
-        { titleKey: "navigation.cts",              url: "/dashboard/cts",                  icon: MousePointerClick, permission: "page:agents" },
-        { titleKey: "navigation.catalog",          url: "/dashboard/catalog",              icon: ShoppingBag,       permission: "page:agents" },
-        { titleKey: "navigation.linkShortener",    url: "/dashboard/link-shortener",       icon: Link2,             permission: "page:agents" },
-        { titleKey: "navigation.commsAnalytics",   url: "/dashboard/comms-analytics",      icon: BarChart3,         permission: "page:agents" },
+        { titleKey: "navigation.automations",      url: "/dashboard/workflows",            icon: WorkflowIcon,      permission: "page:workflows", feature: "workflows" },
+        { titleKey: "navigation.cts",              url: "/dashboard/cts",                  icon: MousePointerClick, permission: "page:agents",    feature: "cts" },
+        { titleKey: "navigation.catalog",          url: "/dashboard/catalog",              icon: ShoppingBag,       permission: "page:agents",    feature: "catalog" },
+        { titleKey: "navigation.linkShortener",    url: "/dashboard/link-shortener",       icon: Link2,             permission: "page:agents",    feature: "link_shortener" },
+        { titleKey: "navigation.commsAnalytics",   url: "/dashboard/comms-analytics",      icon: BarChart3,         permission: "page:agents",    feature: "comms_analytics" },
       ],
     },
     // 8. AI — on-demand tools
@@ -736,10 +778,10 @@ const AppLayout = () => {
       icon: Sparkles,
       collapsible: true,
       items: [
-        { titleKey: "navigation.aiChat", url: "/dashboard/ai-chat", icon: MessageSquare, permission: "page:ai_chat" },
-        { titleKey: "navigation.aiTools", url: "/dashboard/ai-tools", icon: Zap, permission: "page:ai_tools" },
-        { titleKey: "navigation.aiImageGenerator", url: "/dashboard/ai-image-generator", icon: Wand2, permission: "page:ai_image_generator" },
-        { titleKey: "navigation.aiImageGallery", url: "/dashboard/ai-image-gallery", icon: Images, permission: "page:ai_image_gallery" },
+        { titleKey: "navigation.aiChat",           url: "/dashboard/ai-chat",           icon: MessageSquare, permission: "page:ai_chat",           feature: "ai_chat" },
+        { titleKey: "navigation.aiTools",          url: "/dashboard/ai-tools",          icon: Zap,           permission: "page:ai_tools",          feature: "ai_tools" },
+        { titleKey: "navigation.aiImageGenerator", url: "/dashboard/ai-image-generator", icon: Wand2,        permission: "page:ai_image_generator", feature: "ai_images" },
+        { titleKey: "navigation.aiImageGallery",   url: "/dashboard/ai-image-gallery",  icon: Images,        permission: "page:ai_image_gallery",   feature: "ai_images" },
       ],
     },
     // 9. Admin — settings, reports, billing (least daily)
@@ -750,7 +792,7 @@ const AppLayout = () => {
       icon: Settings,
       collapsible: true,
       items: [
-        { titleKey: "navigation.reports", url: "/dashboard/reports", icon: BarChart3, permission: "page:reports" },
+        { titleKey: "navigation.reports", url: "/dashboard/reports", icon: BarChart3, permission: "page:reports", feature: "reports" },
         { titleKey: "navigation.developerPortal", url: "/dashboard/developer", icon: Code2, permission: "page:settings" },
         { titleKey: "navigation.auditLogs", url: "/dashboard/audit-logs", icon: ClipboardList, permission: "page:settings" },
         { titleKey: "navigation.teamManagement", url: "/dashboard/team", icon: Users, permission: "page:team_management" },
@@ -759,7 +801,7 @@ const AppLayout = () => {
         { titleKey: "navigation.routingRules", url: "/dashboard/settings/routing-rules", icon: GitBranch, permission: "page:settings" },
         { titleKey: "navigation.hierarchy", url: "/dashboard/settings/hierarchy", icon: WorkflowIcon, permission: "page:settings" },
         { titleKey: "navigation.departments", url: "/dashboard/settings/departments", icon: Building2, permission: "page:settings" },
-        ...(!isManagedCredentials ? [{ titleKey: "navigation.apiVault", url: "/dashboard/vault", icon: Key, permission: "page:api_vault" }] : []),
+        ...(!isManagedCredentials ? [{ titleKey: "navigation.apiVault", url: "/dashboard/vault", icon: Key, permission: "page:api_vault", feature: "api_vault" }] : []),
         { titleKey: "navigation.billing", url: "/dashboard/billing", icon: CreditCard, permission: "page:billing" },
         { titleKey: "navigation.managePlans", url: "/dashboard/admin/subscriptions", icon: Sparkles, admin: true },
         { titleKey: "navigation.companies", url: "/dashboard/companies", icon: Building, admin: true },
@@ -896,6 +938,8 @@ const AppLayout = () => {
               const visibleItems = group.items.filter(item => {
                 if (item.admin && !user?.is_super_admin) return false;
                 if (item.permission && !user?.is_super_admin && !userPermissions.includes(item.permission)) return false;
+                // Hide plan-gated features only when subscription is active (expired shows full sidebar — gate handles UI)
+                if (item.feature && !user?.is_super_admin && !isSubscriptionExpired && !hasFeature(item.feature)) return false;
                 return true;
               });
               if (visibleItems.length === 0) return null;
@@ -1093,7 +1137,97 @@ const AppLayout = () => {
 
           <main className="flex-1 overflow-y-auto bg-background transition-colors">
             <GreetingBar />
-            <Outlet />
+            {conversationsNearLimit && !convoBannerDismissed && maxMonthlyConversations && (
+              <div className="flex items-center gap-3 px-4 py-2.5 bg-orange-50 border-b border-orange-200 text-orange-800 text-sm">
+                <BarChart3 className="h-4 w-4 flex-shrink-0 text-orange-600" />
+                <span className="flex-1">
+                  You've used <strong>{monthlyConversationCount}</strong> of <strong>{maxMonthlyConversations}</strong> AI conversations this month.
+                  {' '}Upgrade your plan to avoid hitting the limit.
+                </span>
+                <button
+                  onClick={() => navigate('/dashboard/billing')}
+                  className="text-orange-700 underline underline-offset-2 hover:text-orange-900 whitespace-nowrap"
+                >
+                  Upgrade plan
+                </button>
+                <button
+                  onClick={() => setConvoBannerDismissed(true)}
+                  className="ml-1 text-orange-600 hover:text-orange-900"
+                  aria-label="Dismiss"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+            )}
+            {user && user.email_verified === false && !emailBannerDismissed && (
+              <div className="flex items-center gap-3 px-4 py-2.5 bg-amber-50 border-b border-amber-200 text-amber-800 text-sm">
+                <Mail className="h-4 w-4 flex-shrink-0 text-amber-600" />
+                <span className="flex-1">
+                  Please verify your email address. Check your inbox for a verification link.
+                </span>
+                <button
+                  onClick={resendVerificationEmail}
+                  disabled={resendingVerification}
+                  className="text-amber-700 underline underline-offset-2 hover:text-amber-900 disabled:opacity-50 whitespace-nowrap"
+                >
+                  {resendingVerification ? 'Sending…' : 'Resend email'}
+                </button>
+                <button
+                  onClick={() => setEmailBannerDismissed(true)}
+                  className="ml-1 text-amber-600 hover:text-amber-900"
+                  aria-label="Dismiss"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+            )}
+            {storageNearLimit && !storageBannerDismissed && maxStorageBytes && (
+              <div className="flex items-center gap-3 px-4 py-2.5 bg-orange-50 border-b border-orange-200 text-orange-800 text-sm">
+                <HardDrive className="h-4 w-4 flex-shrink-0 text-orange-600" />
+                <span className="flex-1">
+                  Storage almost full — <strong>{(totalStorageBytes / (1024 ** 3)).toFixed(2)} GB</strong> of <strong>{(maxStorageBytes / (1024 ** 3)).toFixed(1)} GB</strong> used.
+                  {' '}Delete files or upgrade to avoid upload blocks.
+                </span>
+                <button
+                  onClick={() => navigate('/dashboard/billing')}
+                  className="text-orange-700 underline underline-offset-2 hover:text-orange-900 whitespace-nowrap"
+                >
+                  Upgrade plan
+                </button>
+                <button
+                  onClick={() => setStorageBannerDismissed(true)}
+                  className="ml-1 text-orange-600 hover:text-orange-900"
+                  aria-label="Dismiss"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+            )}
+            {emailsNearLimit && !emailQuotaBannerDismissed && maxMonthlyEmails && (
+              <div className="flex items-center gap-3 px-4 py-2.5 bg-orange-50 border-b border-orange-200 text-orange-800 text-sm">
+                <Mail className="h-4 w-4 flex-shrink-0 text-orange-600" />
+                <span className="flex-1">
+                  Email quota nearly used — <strong>{monthlyEmailCount.toLocaleString()}</strong> of <strong>{maxMonthlyEmails.toLocaleString()}</strong> sends used this month.
+                  {' '}Upgrade to keep campaign emails flowing.
+                </span>
+                <button
+                  onClick={() => navigate('/dashboard/billing')}
+                  className="text-orange-700 underline underline-offset-2 hover:text-orange-900 whitespace-nowrap"
+                >
+                  Upgrade plan
+                </button>
+                <button
+                  onClick={() => setEmailQuotaBannerDismissed(true)}
+                  className="ml-1 text-orange-600 hover:text-orange-900"
+                  aria-label="Dismiss"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+            )}
+            <TrialExpiredGate>
+              <Outlet />
+            </TrialExpiredGate>
           </main>
         </div>
 
@@ -1155,6 +1289,37 @@ const AppLayout = () => {
 
       {/* Global ringtone — pre-loaded at app level so it's always ready to play */}
       <audio id="global-ringtone" src="/microsoft_teams_default.mp3" preload="auto" loop style={{ display: 'none' }} />
+
+      {/* Floating support chat */}
+      {supportAgentId && (
+        <>
+          {supportChatOpen && (
+            <div className="fixed bottom-20 right-6 z-50 w-96 h-[500px] rounded-2xl shadow-2xl border border-slate-200 bg-white flex flex-col overflow-hidden">
+              <div className="flex items-center justify-between px-4 py-3 bg-gradient-to-r from-violet-600 to-purple-700 text-white">
+                <div className="flex items-center gap-2 text-sm font-semibold">
+                  <MessageCircle className="h-4 w-4" />
+                  Support Chat
+                </div>
+                <button onClick={() => setSupportChatOpen(false)} className="hover:opacity-75">
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+              <iframe
+                src={`/chat/${supportAgentId}?embedded=true`}
+                className="flex-1 border-0"
+                title="Support Chat"
+              />
+            </div>
+          )}
+          <button
+            onClick={() => setSupportChatOpen(prev => !prev)}
+            className="fixed bottom-6 right-6 z-50 h-12 w-12 rounded-full bg-gradient-to-br from-violet-600 to-purple-700 text-white shadow-lg hover:shadow-violet-500/30 hover:scale-105 transition-all flex items-center justify-center"
+            title="Support Chat"
+          >
+            {supportChatOpen ? <X className="h-5 w-5" /> : <MessageCircle className="h-5 w-5" />}
+          </button>
+        </>
+      )}
     </div>
   );
 };
