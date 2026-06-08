@@ -1161,6 +1161,17 @@ export const Billing = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Footer — ToS + Privacy links (required by Razorpay merchant terms) */}
+      <div className="border-t border-slate-200 dark:border-slate-800 mt-8 pt-6 pb-2 text-center">
+        <p className="text-xs text-slate-400 dark:text-slate-500">
+          By subscribing you agree to our{' '}
+          <a href="/terms" target="_blank" rel="noopener noreferrer" className="underline hover:text-violet-600 transition-colors">Terms of Service</a>
+          {' '}and{' '}
+          <a href="/privacy-policy" target="_blank" rel="noopener noreferrer" className="underline hover:text-violet-600 transition-colors">Privacy Policy</a>.
+          {' '}Payments are processed securely by Razorpay. Cancel anytime.
+        </p>
+      </div>
     </div>
   );
 };

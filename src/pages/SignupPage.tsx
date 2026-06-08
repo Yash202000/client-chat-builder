@@ -39,6 +39,8 @@ export const SignupPage = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [phone, setPhone] = useState("");
+  const [agreedToTerms, setAgreedToTerms] = useState(false);
+  const [termsError, setTermsError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [emailError, setEmailError] = useState("");
   const [passwordError, setPasswordError] = useState("");
@@ -68,6 +70,8 @@ export const SignupPage = () => {
 
     setEmailError(emailErr);
     setPasswordError(passwordErr);
+    if (!agreedToTerms) { setTermsError("You must agree to the Terms and Privacy Policy to continue."); return; }
+    setTermsError("");
 
     if (emailErr || passwordErr) return;
 
@@ -277,12 +281,23 @@ export const SignupPage = () => {
               )}
             </Button>
 
-            <p className="text-xs text-center text-slate-400 dark:text-slate-500">
-              By signing up you agree to our{" "}
-              <Link to="/terms" className="underline hover:text-violet-600">Terms</Link>
-              {" "}and{" "}
-              <Link to="/privacy-policy" className="underline hover:text-violet-600">Privacy Policy</Link>.
-            </p>
+            <div className="space-y-1">
+              <label className="flex items-start gap-2.5 cursor-pointer group">
+                <input
+                  type="checkbox"
+                  checked={agreedToTerms}
+                  onChange={(e) => { setAgreedToTerms(e.target.checked); if (e.target.checked) setTermsError(""); }}
+                  className="mt-0.5 h-4 w-4 rounded border-slate-300 text-violet-600 accent-violet-600 flex-shrink-0"
+                />
+                <span className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
+                  I agree to the{" "}
+                  <Link to="/terms" target="_blank" className="underline hover:text-violet-600 transition-colors">Terms of Service</Link>
+                  {" "}and{" "}
+                  <Link to="/privacy-policy" target="_blank" className="underline hover:text-violet-600 transition-colors">Privacy Policy</Link>
+                </span>
+              </label>
+              {termsError && <p className="text-xs text-destructive pl-6">{termsError}</p>}
+            </div>
           </form>
 
           <p className="mt-8 text-center text-sm text-slate-500 dark:text-slate-400">
