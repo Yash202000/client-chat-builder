@@ -462,25 +462,87 @@ export const AgentList = () => {
 
       {/* ── Agent cards grid ─────────────────────────────────────────────────── */}
       {filteredAgents.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-24 text-center">
-          <div className="h-16 w-16 rounded-2xl bg-muted flex items-center justify-center mb-4 border border-border">
-            <Bot className="h-8 w-8 text-muted-foreground" />
+        agentSearch ? (
+          <div className="flex flex-col items-center justify-center py-24 text-center">
+            <div className="h-14 w-14 rounded-2xl bg-muted flex items-center justify-center mb-4 border border-border">
+              <Bot className="h-7 w-7 text-muted-foreground" />
+            </div>
+            <p className="text-base font-medium text-foreground mb-1">No agents match your search</p>
+            <p className="text-sm text-muted-foreground">Try a different search term</p>
           </div>
-          <p className="text-base font-medium text-foreground mb-1">
-            {agentSearch ? 'No agents match your search' : t('agents.noAgents', 'No agents yet')}
-          </p>
-          <p className="text-sm text-muted-foreground mb-4">
-            {agentSearch ? 'Try a different search term' : 'Create your first AI agent to get started'}
-          </p>
-          {!agentSearch && (
-            <Permission permission="agent:create">
-              <Button onClick={() => setIsCreateDialogOpen(true)} size="sm" variant="outline" className="gap-1.5">
-                <PlusCircle className="h-4 w-4" />
-                {t('agents.createAgent')}
-              </Button>
-            </Permission>
-          )}
-        </div>
+        ) : (
+          <div className="space-y-8 py-6">
+            {/* Hero prompt */}
+            <div className="text-center">
+              <div className="inline-flex h-16 w-16 rounded-2xl bg-violet-50 dark:bg-violet-900/20 border border-violet-200 dark:border-violet-800 items-center justify-center mb-4">
+                <Bot className="h-8 w-8 text-violet-500" />
+              </div>
+              <h2 className="text-xl font-bold text-foreground mb-2">Build your first AI agent</h2>
+              <p className="text-sm text-muted-foreground max-w-md mx-auto mb-6">
+                Agents handle customer conversations 24/7. Give it a name, a persona, and connect it to a channel — done in minutes.
+              </p>
+              <Permission permission="agent:create">
+                <Button
+                  onClick={() => setIsCreateDialogOpen(true)}
+                  className="gap-2 bg-violet-600 hover:bg-violet-700 text-white shadow-lg shadow-violet-200 dark:shadow-violet-900/30"
+                >
+                  <PlusCircle className="h-4 w-4" />
+                  Create your first agent
+                </Button>
+              </Permission>
+            </div>
+
+            {/* How it works steps */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-2xl mx-auto">
+              {[
+                { step: '1', icon: Bot, title: 'Create an agent', desc: 'Name it, write a persona, pick a language model', color: 'text-violet-500 bg-violet-50 dark:bg-violet-900/20 border-violet-200 dark:border-violet-800' },
+                { step: '2', icon: Globe, title: 'Connect a channel', desc: 'Website chat, WhatsApp, Instagram, email and more', color: 'text-emerald-500 bg-emerald-50 dark:bg-emerald-900/20 border-emerald-200 dark:border-emerald-800' },
+                { step: '3', icon: MessageSquare, title: 'Go live', desc: 'Test with the preview, then embed on your site', color: 'text-blue-500 bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800' },
+              ].map(({ step, icon: Icon, title, desc, color }) => (
+                <div key={step} className="flex flex-col items-center text-center p-5 rounded-xl border border-border bg-card">
+                  <div className={`h-10 w-10 rounded-xl border flex items-center justify-center mb-3 ${color}`}>
+                    <Icon className="h-5 w-5" />
+                  </div>
+                  <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-1">Step {step}</span>
+                  <p className="text-sm font-semibold text-foreground mb-1">{title}</p>
+                  <p className="text-xs text-muted-foreground leading-relaxed">{desc}</p>
+                </div>
+              ))}
+            </div>
+
+            {/* Ghost sample cards */}
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 opacity-40 pointer-events-none select-none" aria-hidden="true">
+              {[
+                { name: 'Sales Assistant', status: 'active', model: 'GPT-4o', sessions: 142 },
+                { name: 'Support Bot', status: 'active', model: 'Claude Sonnet', sessions: 89 },
+                { name: 'Lead Qualifier', status: 'inactive', model: 'GPT-4o Mini', sessions: 0 },
+              ].map((ghost) => (
+                <div key={ghost.name} className="rounded-xl border border-border bg-card overflow-hidden">
+                  <div className="h-0.5 w-full bg-gradient-to-r from-violet-400 to-purple-500" />
+                  <div className="p-4">
+                    <div className="flex items-center gap-3 mb-3">
+                      <div className="h-9 w-9 rounded-lg bg-violet-100 dark:bg-violet-900/30 flex items-center justify-center flex-shrink-0">
+                        <Bot className="h-4 w-4 text-violet-500" />
+                      </div>
+                      <div>
+                        <p className="text-sm font-semibold text-foreground">{ghost.name}</p>
+                        <p className="text-xs text-muted-foreground">{ghost.model}</p>
+                      </div>
+                      <span className={`ml-auto text-[10px] font-semibold px-2 py-0.5 rounded-full ${ghost.status === 'active' ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400' : 'bg-muted text-muted-foreground'}`}>
+                        {ghost.status}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                      <MessageSquare className="h-3 w-3" />
+                      <span>{ghost.sessions} conversations</span>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <p className="text-center text-xs text-muted-foreground -mt-4">Sample preview — your agents will appear here</p>
+          </div>
+        )
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
           <AnimatePresence>

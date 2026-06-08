@@ -6,7 +6,7 @@ import { useNavigate } from 'react-router-dom';
 import {
   MessageSquare, Users, CheckCircle2, TrendingUp,
   Bot, Phone, Clock, Star, ArrowRight, Activity,
-  Inbox, BarChart3, Zap,
+  Inbox, BarChart3, Zap, Globe, Sparkles,
 } from 'lucide-react';
 import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid,
@@ -200,6 +200,45 @@ export const DashboardPage = () => {
     { label: 'AI Tools', sub: 'Custom AI utilities', icon: Zap, color: 'bg-cyan-500', to: '/dashboard/ai-tools' },
   ];
 
+  const isNewWorkspace = !metrics || (
+    metrics.total_sessions === 0 &&
+    metrics.active_agents === 0 &&
+    metrics.total_users <= 1
+  );
+
+  const SETUP_STEPS = [
+    {
+      num: 1,
+      icon: Bot,
+      title: 'Create your first AI agent',
+      desc: 'Give it a name, a persona and a knowledge base. Takes 5 minutes.',
+      cta: 'Build agent',
+      to: '/dashboard/agents',
+      color: 'bg-violet-50 dark:bg-violet-900/20 border-violet-200 dark:border-violet-800 text-violet-600',
+      done: metrics ? metrics.active_agents > 0 : false,
+    },
+    {
+      num: 2,
+      icon: Globe,
+      title: 'Connect a channel',
+      desc: 'Website widget, WhatsApp, Instagram, SMS — pick what your customers use.',
+      cta: 'Add channel',
+      to: '/dashboard/channels',
+      color: 'bg-emerald-50 dark:bg-emerald-900/20 border-emerald-200 dark:border-emerald-800 text-emerald-600',
+      done: metrics ? metrics.total_sessions > 0 : false,
+    },
+    {
+      num: 3,
+      icon: MessageSquare,
+      title: 'Send a test conversation',
+      desc: 'Use the live preview to chat with your agent before going live.',
+      cta: 'Open conversations',
+      to: '/dashboard/conversations',
+      color: 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800 text-blue-600',
+      done: metrics ? metrics.total_sessions > 0 : false,
+    },
+  ];
+
   return (
     <div className="flex flex-col h-full overflow-hidden">
       {/* Header */}
@@ -209,16 +248,67 @@ export const DashboardPage = () => {
             {greeting}, {firstName} 👋
           </h1>
           <p className="text-xs text-muted-foreground mt-0.5">
-            Here's what's happening with your workspace today
+            {isNewWorkspace ? 'Welcome to HeyGenAlly — let\'s get you set up' : 'Here\'s what\'s happening with your workspace today'}
           </p>
         </div>
         <div className="flex items-center gap-1.5">
-          <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
-          <span className="text-xs text-muted-foreground">Live</span>
+          <span className={`h-2 w-2 rounded-full ${isNewWorkspace ? 'bg-amber-400' : 'bg-emerald-500 animate-pulse'}`} />
+          <span className="text-xs text-muted-foreground">{isNewWorkspace ? 'Setup' : 'Live'}</span>
         </div>
       </div>
 
       <div className="flex-1 overflow-y-auto p-6 space-y-6">
+        {/* Getting started checklist — shown for new workspaces */}
+        {isNewWorkspace && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="rounded-2xl border border-violet-200 dark:border-violet-800 bg-gradient-to-br from-violet-50 to-purple-50 dark:from-violet-950/30 dark:to-purple-950/20 p-6"
+          >
+            <div className="flex items-center gap-3 mb-5">
+              <div className="h-9 w-9 rounded-xl bg-violet-100 dark:bg-violet-900/40 flex items-center justify-center">
+                <Sparkles className="h-4 w-4 text-violet-600 dark:text-violet-400" />
+              </div>
+              <div>
+                <h2 className="text-sm font-bold text-foreground">Get started in 3 steps</h2>
+                <p className="text-xs text-muted-foreground">Complete setup to go live with your first AI agent</p>
+              </div>
+              <span className="ml-auto text-xs font-semibold text-violet-600 dark:text-violet-400 bg-violet-100 dark:bg-violet-900/40 px-2.5 py-1 rounded-full">
+                {SETUP_STEPS.filter(s => s.done).length} / {SETUP_STEPS.length} done
+              </span>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+              {SETUP_STEPS.map((step) => (
+                <motion.button
+                  key={step.num}
+                  onClick={() => navigate(step.to)}
+                  whileHover={{ scale: 1.01 }}
+                  className={`flex items-start gap-3 p-4 rounded-xl border bg-white dark:bg-card text-left transition-all ${
+                    step.done
+                      ? 'border-emerald-200 dark:border-emerald-800 opacity-60'
+                      : 'border-border hover:border-violet-300 dark:hover:border-violet-700 hover:shadow-sm'
+                  }`}
+                >
+                  <div className={`h-8 w-8 rounded-lg border flex items-center justify-center flex-shrink-0 ${step.done ? 'bg-emerald-50 border-emerald-200 dark:bg-emerald-900/20 dark:border-emerald-800' : step.color}`}>
+                    {step.done ? <CheckCircle2 className="h-4 w-4 text-emerald-500" /> : <step.icon className="h-4 w-4" />}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className={`text-xs font-bold mb-0.5 ${step.done ? 'line-through text-muted-foreground' : 'text-foreground'}`}>
+                      {step.title}
+                    </p>
+                    <p className="text-[11px] text-muted-foreground leading-relaxed">{step.desc}</p>
+                    {!step.done && (
+                      <span className="inline-flex items-center gap-1 mt-2 text-[11px] font-semibold text-violet-600 dark:text-violet-400">
+                        {step.cta} <ArrowRight className="h-3 w-3" />
+                      </span>
+                    )}
+                  </div>
+                </motion.button>
+              ))}
+            </div>
+          </motion.div>
+        )}
+
         {/* Stat cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {statCards.map((card, i) => (

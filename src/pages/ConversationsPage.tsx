@@ -1209,11 +1209,34 @@ const ConversationsPage: React.FC<ConversationsPageProps> = ({ channel }) => {
               </div>
               <div>
                 <p className="conv-empty-title">
-                  {searchQuery ? t('conversations.emptyState.noMatches') : 'No conversations'}
+                  {searchQuery ? t('conversations.emptyState.noMatches') : `No ${activeTab} conversations`}
                 </p>
                 <p className="conv-empty-desc">
-                  {searchQuery ? 'Try adjusting your search' : `No ${activeTab} conversations`}
+                  {searchQuery
+                    ? 'Try adjusting your search or filters'
+                    : activeTab === 'all' || activeTab === 'open'
+                      ? 'When customers message your agents, conversations will appear here'
+                      : `No ${activeTab} conversations right now`}
                 </p>
+                {!searchQuery && (activeTab === 'all' || activeTab === 'open') && (
+                  <div className="flex flex-col items-center gap-2 mt-4">
+                    <p className="text-[11px] text-muted-foreground/70 font-medium uppercase tracking-widest">Quick actions</p>
+                    <div className="flex gap-2 flex-wrap justify-center">
+                      <button
+                        onClick={() => window.location.href = '/dashboard/agents'}
+                        className="text-xs px-3 py-1.5 rounded-lg border border-border bg-card hover:bg-muted transition-colors text-foreground flex items-center gap-1.5"
+                      >
+                        <span>🤖</span> Build an agent
+                      </button>
+                      <button
+                        onClick={() => window.location.href = '/dashboard/channels'}
+                        className="text-xs px-3 py-1.5 rounded-lg border border-border bg-card hover:bg-muted transition-colors text-foreground flex items-center gap-1.5"
+                      >
+                        <span>🌐</span> Connect a channel
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
             </motion.div>
           )}

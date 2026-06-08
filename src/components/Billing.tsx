@@ -347,7 +347,7 @@ export const Billing = () => {
         email: user?.email || '',
       },
       theme: {
-        color: "#3b82f6", // Blue color matching the app theme
+        color: "#7c3aed",
       },
       modal: {
         ondismiss: function () {
@@ -390,7 +390,7 @@ export const Billing = () => {
       {/* Header */}
       <div className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 px-6 py-6">
         <div className="flex items-center gap-3">
-          <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center flex-shrink-0">
+          <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center flex-shrink-0">
             <CreditCard className="h-6 w-6 text-white" />
           </div>
           <div>
@@ -466,7 +466,7 @@ export const Billing = () => {
       )}
 
       {isOnPremise && isLicenseAtUserLimit && (
-        <Alert variant="destructive" className="border-blue-500 bg-blue-50 dark:bg-blue-950/50">
+        <Alert variant="destructive" className="border-violet-500 bg-violet-50 dark:bg-violet-950/50">
           <Users className="h-4 w-4" />
           <AlertTitle>User Limit Reached</AlertTitle>
           <AlertDescription>
@@ -499,7 +499,7 @@ export const Billing = () => {
       )}
 
       {!isOnPremise && isAtUserLimit && (
-        <Alert variant="destructive" className="border-blue-500 bg-blue-50 dark:bg-blue-950/50">
+        <Alert variant="destructive" className="border-violet-500 bg-violet-50 dark:bg-violet-950/50">
           <Users className="h-4 w-4" />
           <AlertTitle>{t('billing.userLimitReached')}</AlertTitle>
           <AlertDescription>
@@ -528,7 +528,7 @@ export const Billing = () => {
             <div className="flex items-center justify-between">
               <div>
                 <h3 className="text-base font-semibold text-slate-900 dark:text-white flex items-center gap-2">
-                  <Shield className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                  <Shield className="h-5 w-5 text-violet-600 dark:text-violet-400" />
                   On-Premise License
                 </h3>
                 <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">Enterprise license for self-hosted deployment</p>
@@ -551,7 +551,7 @@ export const Billing = () => {
                 <div className={`flex flex-col md:flex-row md:items-center ${isRTL ? 'md:flex-row-reverse' : ''} md:justify-between gap-4`}>
                   <div className={`flex items-center gap-4 ${isRTL ? 'flex-row-reverse' : ''}`}>
                     <div className="w-16 h-16 bg-gradient-to-br from-blue-100 to-indigo-100 dark:from-blue-900/50 dark:to-indigo-900/50 rounded-xl flex items-center justify-center shadow-sm">
-                      <Building2 className="h-8 w-8 text-blue-600 dark:text-blue-400" />
+                      <Building2 className="h-8 w-8 text-violet-600 dark:text-violet-400" />
                     </div>
                     <div>
                       <p className="text-2xl font-bold dark:text-white">
@@ -578,7 +578,7 @@ export const Billing = () => {
                   <div className="space-y-2">
                     <div className="flex justify-between items-center">
                       <span className="text-sm font-medium dark:text-white flex items-center gap-2">
-                        <Users className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                        <Users className="h-4 w-4 text-violet-600 dark:text-violet-400" />
                         Instance User Limit
                       </span>
                       <span className={`text-sm font-medium ${isLicenseAtUserLimit ? 'text-red-600 dark:text-red-400' : 'dark:text-gray-400'}`}>
@@ -587,7 +587,7 @@ export const Billing = () => {
                     </div>
                     <Progress
                       value={licenseUserLimitPercentage}
-                      className={`h-2 ${isLicenseAtUserLimit ? '[&>div]:bg-red-500' : '[&>div]:bg-blue-500'}`}
+                      className={`h-2 ${isLicenseAtUserLimit ? '[&>div]:bg-red-500' : '[&>div]:bg-violet-500'}`}
                     />
                     {!isLicenseAtUserLimit && licenseStatus.users_remaining !== null && (
                       <p className="text-xs text-gray-500 dark:text-gray-400">
@@ -602,7 +602,7 @@ export const Billing = () => {
                   <div className="space-y-2">
                     <div className="flex justify-between items-center">
                       <span className="text-sm font-medium dark:text-white flex items-center gap-2">
-                        <Building2 className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                        <Building2 className="h-4 w-4 text-violet-600 dark:text-violet-400" />
                         Company Limit
                       </span>
                       <span className="text-sm font-medium dark:text-gray-400">
@@ -613,7 +613,7 @@ export const Billing = () => {
                       value={licenseStatus.current_company_count && licenseStatus.max_companies
                         ? (licenseStatus.current_company_count / licenseStatus.max_companies) * 100
                         : 0}
-                      className="h-2 [&>div]:bg-blue-500"
+                      className="h-2 [&>div]:bg-violet-500"
                     />
                   </div>
                 )}
@@ -665,7 +665,7 @@ export const Billing = () => {
           <div className="flex items-center justify-between">
             <div>
               <h3 className="text-base font-semibold text-slate-900 dark:text-white flex items-center gap-2">
-                <CreditCard className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                <CreditCard className="h-5 w-5 text-violet-600 dark:text-violet-400" />
                 {t('billing.currentPlan')}
               </h3>
               <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">{t('billing.activeSubscription')}</p>
@@ -684,7 +684,7 @@ export const Billing = () => {
               <div className={`flex flex-col md:flex-row md:items-center ${isRTL ? 'md:flex-row-reverse' : ''} md:justify-between gap-4`}>
                 <div className={`flex items-center gap-4 ${isRTL ? 'flex-row-reverse' : ''}`}>
                   <div className="w-16 h-16 bg-gradient-to-br from-blue-100 to-indigo-100 dark:from-blue-900/50 dark:to-indigo-900/50 rounded-xl flex items-center justify-center shadow-sm">
-                    <Crown className="h-8 w-8 text-blue-600 dark:text-blue-400" />
+                    <Crown className="h-8 w-8 text-violet-600 dark:text-violet-400" />
                   </div>
                   <div>
                     <p className="text-2xl font-bold dark:text-white">
@@ -692,7 +692,7 @@ export const Billing = () => {
                     </p>
                     <p className={`text-sm capitalize flex items-center gap-1 mt-1 ${isRTL ? 'flex-row-reverse' : ''} ${
                       status.status === 'active' ? 'text-green-600 dark:text-green-400' :
-                      status.status === 'trial' ? 'text-blue-600 dark:text-blue-400' :
+                      status.status === 'trial' ? 'text-violet-600 dark:text-violet-400' :
                       status.status === 'past_due' ? 'text-orange-600 dark:text-orange-400' :
                       'text-red-600 dark:text-red-400'
                     }`}>
@@ -726,7 +726,7 @@ export const Billing = () => {
               <div className="space-y-2">
                 <div className="flex justify-between items-center">
                   <span className="text-sm font-medium dark:text-white flex items-center gap-2">
-                    <Users className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                    <Users className="h-4 w-4 text-violet-600 dark:text-violet-400" />
                     {t('billing.userLimit')}
                   </span>
                   <span className={`text-sm font-medium ${isAtUserLimit ? 'text-red-600 dark:text-red-400' : 'dark:text-gray-400'}`}>
@@ -735,7 +735,7 @@ export const Billing = () => {
                 </div>
                 <Progress
                   value={userLimitPercentage}
-                  className={`h-2 ${isAtUserLimit ? '[&>div]:bg-red-500' : '[&>div]:bg-blue-500'}`}
+                  className={`h-2 ${isAtUserLimit ? '[&>div]:bg-red-500' : '[&>div]:bg-violet-500'}`}
                 />
                 {isOverUserLimit ? (
                   <p className="text-xs text-red-600 dark:text-red-400 font-medium">
@@ -783,7 +783,7 @@ export const Billing = () => {
                 <div className="space-y-2">
                   <div className="flex justify-between items-center">
                     <span className="text-sm font-medium dark:text-white flex items-center gap-2">
-                      <Mail className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                      <Mail className="h-4 w-4 text-violet-600 dark:text-violet-400" />
                       Email Sends (this month)
                     </span>
                     <span className={`text-sm font-medium ${status.emails_near_limit ? 'text-orange-600 dark:text-orange-400' : 'dark:text-gray-400'}`}>
@@ -792,7 +792,7 @@ export const Billing = () => {
                   </div>
                   <Progress
                     value={Math.min(100, (status.monthly_email_count / status.max_monthly_emails) * 100)}
-                    className={`h-2 ${status.emails_near_limit ? '[&>div]:bg-orange-500' : '[&>div]:bg-blue-500'}`}
+                    className={`h-2 ${status.emails_near_limit ? '[&>div]:bg-orange-500' : '[&>div]:bg-violet-500'}`}
                   />
                   {status.monthly_email_count >= status.max_monthly_emails ? (
                     <p className="text-xs text-red-600 dark:text-red-400 font-medium">Monthly email limit reached — upgrade to send more</p>
