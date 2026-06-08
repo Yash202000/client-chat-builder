@@ -220,9 +220,9 @@ export const SubscriptionManagementPage = () => {
   );
 
   return (
-    <div className="min-h-full bg-slate-50 dark:bg-slate-950" dir={isRTL ? 'rtl' : 'ltr'}>
+    <div className="min-h-full app-surface" dir={isRTL ? 'rtl' : 'ltr'}>
       {/* Header */}
-      <div className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 px-6 py-6">
+      <div className="bg-card/80 backdrop-blur-sm border-b border-border px-6 py-6">
         <div className={`flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 ${isRTL ? 'lg:flex-row-reverse' : ''}`}>
           <div className="flex items-center gap-3">
             <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-violet-500 to-orange-600 flex items-center justify-center flex-shrink-0">
@@ -239,7 +239,7 @@ export const SubscriptionManagementPage = () => {
         </div>
       </div>
       <div className="px-6 py-6">
-        <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm overflow-hidden">
+        <div className="rounded-xl border border-border bg-card shadow-sm overflow-hidden">
           <div className="p-6 border-b border-slate-200 dark:border-slate-800">
             <h3 className="text-base font-semibold text-slate-900 dark:text-white">{t('subscriptionPlans.allPlans')}</h3>
           </div>

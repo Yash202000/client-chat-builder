@@ -204,7 +204,7 @@ export default function DealDetailPage() {
   const wfColor = deal.wf_status?.color;
 
   return (
-    <div className="flex flex-col h-full bg-background overflow-auto">
+    <div className="flex flex-col h-full app-surface overflow-auto">
       {/* Header */}
       <div className="border-b border-border px-6 py-4 flex items-center justify-between">
         <div className="flex items-center gap-3">

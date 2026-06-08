@@ -1,5 +1,6 @@
 import { motion } from 'framer-motion';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { getAvatarColor } from '@/lib/avatarColor';
 import {
   User,
   Clock,
@@ -73,13 +74,13 @@ export const ConversationSidebar: React.FC<ConversationSidebarProps> = ({
       initial={{ opacity: 0, x: 20 }}
       animate={{ opacity: 1, x: 0 }}
       transition={{ duration: 0.3 }}
-      className={`w-80 bg-gradient-to-b from-slate-50 to-white dark:from-slate-900 dark:to-slate-800 flex flex-col overflow-y-auto ${isRTL ? 'border-r' : 'border-l'} border-slate-200 dark:border-slate-700`}
+      className={`w-80 app-surface flex flex-col overflow-y-auto ${isRTL ? 'border-r' : 'border-l'} border-slate-200 dark:border-slate-700`}
     >
       {/* Profile Header */}
       <div className="relative">
-        {/* Gradient Background */}
-        <div className="h-24 bg-gradient-to-br from-blue-500 via-indigo-500 to-purple-600 relative overflow-hidden">
-          <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxnIGZpbGw9IiNmZmYiIGZpbGwtb3BhY2l0eT0iMC4xIj48cGF0aCBkPSJNMzYgMzRjMC0yIDItNCAyLTRzLTItMi00LTItNCAwLTQgMiAyIDQgMiA0cy0yIDItMiA0IDIgNCA0IDQgNC0yIDQtNC0yLTQtMi00eiIvPjwvZz48L2c+PC9zdmc+')] opacity-30" />
+        {/* Banner */}
+        <div className="h-24 bg-gradient-to-br from-violet-500 via-violet-600 to-purple-700 relative overflow-hidden">
+          <div className="absolute inset-0 opacity-20" style={{backgroundImage:'radial-gradient(circle at 30% 50%, rgba(255,255,255,0.4) 0%, transparent 60%), radial-gradient(circle at 80% 20%, rgba(255,255,255,0.2) 0%, transparent 50%)'}} />
         </div>
 
         {/* Avatar */}
@@ -91,8 +92,7 @@ export const ConversationSidebar: React.FC<ConversationSidebarProps> = ({
             className="relative"
           >
             <Avatar className="h-20 w-20 border-4 border-white dark:border-slate-800 shadow-xl">
-              <AvatarImage src={`https://avatar.vercel.sh/${contactEmail}.png`} alt={contactName} />
-              <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white text-xl font-bold">
+              <AvatarFallback className={`text-xl font-bold ${getAvatarColor(contactName)}`}>
                 {getInitials(contactName)}
               </AvatarFallback>
             </Avatar>

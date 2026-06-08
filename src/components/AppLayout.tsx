@@ -1060,7 +1060,7 @@ const AppLayout = () => {
         <div className="flex-1 flex flex-col overflow-hidden">
 
           {/* Slim top bar — right side only, sidebar logo is top-left */}
-          <header className="flex-shrink-0 h-11 bg-background border-b border-border/50 flex items-center px-3 gap-2 relative">
+          <header className="flex-shrink-0 h-11 app-surface border-b border-border/50 flex items-center px-3 gap-2 relative">
             <div className="pointer-events-none absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-violet-500/20 to-transparent" />
             {/* Left: hamburger (mobile/tablet) + breadcrumb (desktop) */}
             <div className="flex items-center gap-2 flex-shrink-0">
@@ -1135,7 +1135,7 @@ const AppLayout = () => {
             </div>
           </header>
 
-          <main className="flex-1 overflow-y-auto bg-background transition-colors">
+          <main className="flex-1 overflow-y-auto app-surface transition-colors">
             <GreetingBar />
             {conversationsNearLimit && !convoBannerDismissed && maxMonthlyConversations && (
               <div className="flex items-center gap-3 px-4 py-2.5 bg-orange-50 border-b border-orange-200 text-orange-800 text-sm">

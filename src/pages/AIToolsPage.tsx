@@ -188,7 +188,7 @@ const AIToolsPage = () => {
       {/* Main Content */}
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Header */}
-        <div className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 px-4 sm:px-6 py-4 sm:py-5">
+        <div className="bg-card/80 backdrop-blur-sm border-b border-border px-4 sm:px-6 py-4 sm:py-5">
           <div className="flex items-center justify-between gap-3 mb-4">
             <div className="flex items-center gap-2 sm:gap-3 min-w-0">
               <button

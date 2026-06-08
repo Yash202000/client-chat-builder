@@ -48,9 +48,9 @@ export const CompaniesPage = () => {
   };
 
   return (
-    <div className="min-h-full bg-slate-50 dark:bg-slate-950" dir={isRTL ? 'rtl' : 'ltr'}>
+    <div className="min-h-full app-surface" dir={isRTL ? 'rtl' : 'ltr'}>
       {/* Header */}
-      <div className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 px-4 sm:px-6 py-4 sm:py-6">
+      <div className="bg-card/80 backdrop-blur-sm border-b border-border px-4 sm:px-6 py-4 sm:py-6">
         <div className={`flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 ${isRTL ? 'sm:flex-row-reverse' : ''}`}>
           <div className="flex items-center gap-3">
             <div className="h-9 w-9 sm:h-12 sm:w-12 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center flex-shrink-0">
@@ -70,7 +70,7 @@ export const CompaniesPage = () => {
         </div>
       </div>
       <div className="px-4 sm:px-6 py-4 sm:py-6">
-        <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm overflow-hidden">
+        <div className="rounded-xl border border-border bg-card shadow-sm overflow-hidden">
           <div className="p-4 sm:p-6 border-b border-slate-200 dark:border-slate-800">
             <h3 className="text-base font-semibold text-slate-900 dark:text-white">{t('companies.allCompanies')}</h3>
             <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">{t('companies.viewAndManage')}</p>

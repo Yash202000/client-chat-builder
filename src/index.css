@@ -16,13 +16,13 @@
 
 @layer base {
   :root {
-    /* ── Light mode: soft aurora mist ── */
-    --background: 240 25% 98%;
+    /* ── Light mode: soft violet-cool mist ── */
+    --background: 248 30% 97%;
     --foreground: 250 30% 10%;
 
-    --card: 0 0% 100%;
+    --card: 248 28% 99%;
     --card-foreground: 250 30% 10%;
-    --card-elevated: 240 20% 99%;
+    --card-elevated: 248 25% 98%;
 
     --popover: 0 0% 100%;
     --popover-foreground: 250 30% 10%;
@@ -1679,9 +1679,16 @@ html.light .lk-participant-tile .lk-participant-placeholder svg {
   position: sticky;
   top: 0;
   z-index: 10;
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  background: hsl(var(--card) / 0.92);
+  backdrop-filter: blur(10px) saturate(160%);
+  -webkit-backdrop-filter: blur(10px) saturate(160%);
+  background: linear-gradient(
+    to right,
+    hsl(248 30% 97% / 0.88),
+    hsl(248 30% 97% / 0.82)
+  );
+}
+.dark .conv-group-header {
+  background: hsl(263 52% 8% / 0.88);
 }
 .conv-group-dot {
   width: 5px;
@@ -1828,7 +1835,16 @@ html.light .lk-participant-tile .lk-participant-placeholder svg {
     transparent 100%
   );
 }
-.conv-card-assigned { border-left-color: hsl(var(--aurora-violet) / 0.6); }
+.conv-card-assigned  { border-left-color: hsl(var(--aurora-violet) / 0.6); }
+.conv-card-mine      { border-left-color: #7c3aed; }
+.conv-card-unassigned { border-left-color: #f59e0b; }
+.conv-card-critical  { border-left-color: #ef4444; }
+
+@keyframes conv-sla-pulse {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.45; }
+}
+.conv-sla-breach { animation: conv-sla-pulse 1.8s ease-in-out infinite; }
 
 /* ── Avatar ───────────────────────────────────────────────────────────── */
 .conv-avatar {
@@ -1914,6 +1930,71 @@ html.light .lk-participant-tile .lk-participant-placeholder svg {
 }
 
 /* ═══════════════════════════════════════════════════════════════════════
+   CHAT MESSAGE BUBBLES — light mode
+   ═══════════════════════════════════════════════════════════════════════ */
+
+/* Shared surface background — used on chat area, sidebars, panels */
+.app-surface,
+.msg-chat-area {
+  background: radial-gradient(ellipse at 65% 35%, #ede9ff 0%, #f3f4f9 45%, #edf0f7 100%);
+}
+
+/* ── Global surface unification ──────────────────────────────────────
+   Any remaining hardcoded bg-white inside the app's main content area
+   adopts the tinted card background so pure white never appears.
+   Tiny decorative whites (avatar borders, icon squares) are too small
+   to need overriding — they are fine as-is.
+   ─────────────────────────────────────────────────────────────────── */
+main .bg-white,
+[data-slot="content"] .bg-white {
+  background-color: hsl(var(--card)) !important;
+}
+
+/* Page-header bars that use backdrop blur should be glass, not solid */
+main .backdrop-blur-sm {
+  background-color: hsl(var(--card) / 0.75) !important;
+  backdrop-filter: blur(12px) saturate(160%);
+  -webkit-backdrop-filter: blur(12px) saturate(160%);
+}
+
+/* Customer bubble — clean white card, shadow ring, no border */
+.msg-bubble-user {
+  background: #ffffff;
+  border: none;
+  box-shadow:
+    0 1px 2px rgb(15 23 42 / 0.06),
+    0 2px 8px rgb(15 23 42 / 0.04),
+    0 0 0 1px rgb(15 23 42 / 0.05);
+  color: #1e293b;
+}
+
+/* Agent/bot bubble — rich violet gradient with inner shine */
+.msg-bubble-agent {
+  background: linear-gradient(145deg, #7c3aed 0%, #6d28d9 100%);
+  border: none;
+  box-shadow:
+    0 3px 12px rgb(109 40 217 / 0.28),
+    0 1px 3px rgb(109 40 217 / 0.18),
+    inset 0 1px 0 rgb(255 255 255 / 0.16);
+  color: #ffffff;
+}
+
+/* User avatar */
+.msg-avatar-user {
+  background: #e2e8f0;
+  border-color: #cbd5e1;
+  box-shadow: 0 1px 3px rgb(15 23 42 / 0.08);
+}
+
+/* Bot avatar */
+.msg-avatar-bot {
+  background: #ede9fe;
+  border-color: #ddd6fe;
+  box-shadow: 0 1px 3px rgb(109 40 217 / 0.12);
+}
+.msg-avatar-bot svg { color: #7c3aed; }
+
+/* ═══════════════════════════════════════════════════════════════════════
    CHAT MESSAGE BUBBLES — dark mode violet-dark theme
    ═══════════════════════════════════════════════════════════════════════ */
 
@@ -1962,8 +2043,9 @@ html.light .lk-participant-tile .lk-participant-placeholder svg {
 }
 .dark .msg-private-note-time { color: rgb(255 255 255 / 0.35); }
 
-/* Chat area background */
-.dark .msg-chat-area { background: rgb(255 255 255 / 0.015); }
+/* Chat + surface background — dark mode */
+.dark .app-surface,
+.dark .msg-chat-area { background: radial-gradient(ellipse at 60% 40%, rgb(124 58 237 / 0.05) 0%, transparent 65%); }
 
 /* ── Workflow Nodes — glass treatment (dark mode) ───────────────────── */
 /* Same shimmer gradient as .dark .msg-bubble-agent (0.18 → 0.09) */
@@ -2018,16 +2100,18 @@ html.light .lk-participant-tile .lk-participant-placeholder svg {
   align-items: center;
   letter-spacing: 0.01em;
 }
-.conv-status-active   { background: hsl(142 72% 36% / 0.10); color: hsl(142 72% 30%); }
-.conv-status-inactive { background: hsl(var(--muted)); color: hsl(var(--muted-foreground) / 0.65); }
-.conv-status-pending  { background: hsl(0 70% 51% / 0.10);   color: hsl(0 70% 44%);  }
-.conv-status-resolved { background: hsl(214 85% 52% / 0.10); color: hsl(214 85% 44%); }
-.conv-status-mine     { background: hsl(var(--aurora-violet) / 0.10); color: hsl(var(--aurora-violet)); }
-.dark .conv-status-active   { background: hsl(142 72% 36% / 0.16); color: hsl(142 72% 58%); }
-.dark .conv-status-inactive { background: hsl(var(--muted) / 0.5); color: hsl(var(--muted-foreground) / 0.55); }
-.dark .conv-status-pending  { background: hsl(0 70% 51% / 0.16);   color: hsl(0 70% 62%);  }
-.dark .conv-status-resolved { background: hsl(214 85% 52% / 0.16); color: hsl(214 85% 65%); }
-.dark .conv-status-mine     { background: hsl(var(--aurora-violet) / 0.13); color: hsl(var(--aurora-violet) / 0.82); }
+.conv-status-active     { background: hsl(142 72% 36% / 0.10); color: hsl(142 72% 30%); }
+.conv-status-inactive   { background: hsl(var(--muted)); color: hsl(var(--muted-foreground) / 0.65); }
+.conv-status-pending    { background: hsl(0 70% 51% / 0.10);   color: hsl(0 70% 44%);  }
+.conv-status-resolved   { background: hsl(214 85% 52% / 0.10); color: hsl(214 85% 44%); }
+.conv-status-mine       { background: hsl(var(--aurora-violet) / 0.10); color: hsl(var(--aurora-violet)); }
+.conv-status-unassigned { background: hsl(38 92% 50% / 0.10); color: hsl(32 90% 35%); border-color: hsl(38 92% 50% / 0.30) !important; }
+.dark .conv-status-active     { background: hsl(142 72% 36% / 0.16); color: hsl(142 72% 58%); }
+.dark .conv-status-inactive   { background: hsl(var(--muted) / 0.5); color: hsl(var(--muted-foreground) / 0.55); }
+.dark .conv-status-pending    { background: hsl(0 70% 51% / 0.16);   color: hsl(0 70% 62%);  }
+.dark .conv-status-resolved   { background: hsl(214 85% 52% / 0.16); color: hsl(214 85% 65%); }
+.dark .conv-status-mine       { background: hsl(var(--aurora-violet) / 0.13); color: hsl(var(--aurora-violet) / 0.82); }
+.dark .conv-status-unassigned { background: hsl(38 92% 50% / 0.14); color: hsl(38 92% 65%); border-color: hsl(38 92% 50% / 0.25) !important; }
 
 /* ── Checkbox ─────────────────────────────────────────────────────────── */
 .conv-checkbox {

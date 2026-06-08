@@ -402,7 +402,7 @@ function DateOverridesEditor({
             const windows = value[key];
             const isBlocked = windows.length === 0;
             return (
-              <div key={key} className="flex items-center justify-between px-3 py-2 rounded-lg border bg-white text-sm">
+              <div key={key} className="flex items-center justify-between px-3 py-2 rounded-lg border bg-card text-sm">
                 <div className="flex items-center gap-2">
                   {isBlocked
                     ? <Ban className="w-3.5 h-3.5 text-red-500" />
@@ -626,7 +626,7 @@ export default function BookingLinksPage() {
           </Button>
         </div>
       ) : (
-        <div className="bg-white rounded-xl border border-gray-100 overflow-hidden">
+        <div className="bg-card rounded-xl border border-border overflow-hidden">
           <div className="overflow-x-auto">
           <Table>
             <TableHeader>

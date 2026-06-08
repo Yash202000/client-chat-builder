@@ -298,9 +298,9 @@ export default function SegmentsPage() {
   const totalReach = segments.reduce((sum, s) => sum + s.contact_count + s.lead_count, 0);
 
   return (
-    <div className="min-h-full bg-slate-50 dark:bg-slate-950">
+    <div className="min-h-full app-surface">
       {/* Header bar */}
-      <div className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800">
+      <div className="bg-card/80 backdrop-blur-sm border-b border-border">
         <div className="px-6 py-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
@@ -328,7 +328,7 @@ export default function SegmentsPage() {
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div className="p-5 rounded-2xl border border-purple-200/80 dark:border-purple-700/60 bg-white dark:bg-slate-800 shadow-sm hover:shadow-md transition-all duration-200">
+        <div className="p-5 rounded-2xl border border-purple-200/80 dark:border-purple-700/60 bg-card shadow-sm hover:shadow-md transition-all duration-200">
           <div className="flex items-start justify-between">
             <div>
               <p className="text-xs font-medium text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1.5">
@@ -342,7 +342,7 @@ export default function SegmentsPage() {
           </div>
         </div>
 
-        <div className="p-5 rounded-2xl border border-blue-200/80 dark:border-blue-700/60 bg-white dark:bg-slate-800 shadow-sm hover:shadow-md transition-all duration-200">
+        <div className="p-5 rounded-2xl border border-blue-200/80 dark:border-blue-700/60 bg-card shadow-sm hover:shadow-md transition-all duration-200">
           <div className="flex items-start justify-between">
             <div>
               <p className="text-xs font-medium text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1.5">
@@ -356,7 +356,7 @@ export default function SegmentsPage() {
           </div>
         </div>
 
-        <div className="p-5 rounded-2xl border border-green-200/80 dark:border-green-700/60 bg-white dark:bg-slate-800 shadow-sm hover:shadow-md transition-all duration-200">
+        <div className="p-5 rounded-2xl border border-green-200/80 dark:border-green-700/60 bg-card shadow-sm hover:shadow-md transition-all duration-200">
           <div className="flex items-start justify-between">
             <div>
               <p className="text-xs font-medium text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1.5">
@@ -370,7 +370,7 @@ export default function SegmentsPage() {
           </div>
         </div>
 
-        <div className="p-5 rounded-2xl border border-indigo-200/80 dark:border-indigo-700/60 bg-white dark:bg-slate-800 shadow-sm hover:shadow-md transition-all duration-200">
+        <div className="p-5 rounded-2xl border border-indigo-200/80 dark:border-indigo-700/60 bg-card shadow-sm hover:shadow-md transition-all duration-200">
           <div className="flex items-start justify-between">
             <div>
               <p className="text-xs font-medium text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1.5">
@@ -386,7 +386,7 @@ export default function SegmentsPage() {
       </div>
 
       {/* Filters */}
-      <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4">
+      <div className="rounded-xl border border-border bg-card p-4">
         <div className="flex flex-col sm:flex-row gap-4 items-stretch sm:items-center">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-slate-400" />
@@ -415,7 +415,7 @@ export default function SegmentsPage() {
       </div>
 
       {/* Segments Table */}
-      <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm overflow-hidden">
+      <div className="rounded-xl border border-border bg-card shadow-sm overflow-hidden">
         <div className="overflow-x-auto">
         <Table>
           <TableHeader>

@@ -412,7 +412,7 @@ export const AgentPropertiesPanel = ({ agent, selectedNode, onNodeDelete, isColl
   // Collapsed view
   if (isCollapsed) {
     return (
-      <aside className={`w-0 overflow-hidden md:w-14 bg-white dark:bg-background ${isRTL ? 'border-r' : 'border-l'} border-slate-200 dark:border-white/[0.10] flex flex-col h-full transition-all duration-200 ease-in-out`}>
+      <aside className={`w-0 overflow-hidden md:w-14 app-surface ${isRTL ? 'border-r' : 'border-l'} border-slate-200 dark:border-white/[0.10] flex flex-col h-full transition-all duration-200 ease-in-out`}>
         <div className="flex items-center justify-center p-4">
           {onToggle && (
             <Button
@@ -439,7 +439,7 @@ export const AgentPropertiesPanel = ({ agent, selectedNode, onNodeDelete, isColl
 
   if (!selectedNode) {
     return (
-      <aside className={`fixed md:relative inset-y-0 right-0 md:inset-auto z-50 md:z-auto w-[280px] md:w-80 p-4 bg-white dark:bg-background ${isRTL ? 'border-r' : 'border-l'} border-slate-200 dark:border-white/[0.10] flex flex-col h-full transition-all duration-200 ease-in-out shadow-2xl md:shadow-none`}>
+      <aside className={`fixed md:relative inset-y-0 right-0 md:inset-auto z-50 md:z-auto w-[280px] md:w-80 p-4 app-surface ${isRTL ? 'border-r' : 'border-l'} border-slate-200 dark:border-white/[0.10] flex flex-col h-full transition-all duration-200 ease-in-out shadow-2xl md:shadow-none`}>
         {/* Header with toggle */}
         <div className="flex items-center justify-end mb-4">
           {onToggle && (
@@ -483,7 +483,7 @@ export const AgentPropertiesPanel = ({ agent, selectedNode, onNodeDelete, isColl
   const selectClassName = "w-full p-2 text-sm border rounded-md bg-white dark:bg-white/[0.07] dark:border-white/[0.12] dark:text-white focus:ring-2 focus:ring-green-500 transition-all";
 
   return (
-    <aside className={`fixed md:relative inset-y-0 right-0 md:inset-auto z-50 md:z-auto w-[280px] md:w-80 bg-white dark:bg-background ${isRTL ? 'border-r' : 'border-l'} border-slate-200 dark:border-white/[0.10] flex flex-col h-full transition-all duration-200 ease-in-out shadow-2xl md:shadow-none`}>
+    <aside className={`fixed md:relative inset-y-0 right-0 md:inset-auto z-50 md:z-auto w-[280px] md:w-80 app-surface ${isRTL ? 'border-r' : 'border-l'} border-slate-200 dark:border-white/[0.10] flex flex-col h-full transition-all duration-200 ease-in-out shadow-2xl md:shadow-none`}>
       {/* Header */}
       <div className={`flex justify-between items-center p-4 border-b border-slate-200 dark:border-white/[0.10] ${isRTL ? 'flex-row-reverse' : ''}`}>
         <div className="flex items-center gap-2 flex-1 min-w-0">

@@ -59,7 +59,7 @@ const ManageChannelMembersModal: React.FC<ManageChannelMembersModalProps> = ({
 
   return (
     <div className={cn(
-      'h-full flex-shrink-0 flex flex-col border-l border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 overflow-hidden transition-all duration-300 ease-in-out',
+      'h-full flex-shrink-0 flex flex-col border-l border-border bg-card overflow-hidden transition-all duration-300 ease-in-out',
       isOpen ? 'w-80' : 'w-0 border-l-0'
     )} dir={isRTL ? 'rtl' : 'ltr'}>
       {/* Header */}

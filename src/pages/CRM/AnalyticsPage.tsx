@@ -97,9 +97,9 @@ export default function AnalyticsPage() {
     : 0;
 
   return (
-    <div className="min-h-full bg-slate-50 dark:bg-slate-950">
+    <div className="min-h-full app-surface">
       {/* Header */}
-      <div className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 px-6 py-6">
+      <div className="bg-card/80 backdrop-blur-sm border-b border-border px-6 py-6">
         <div className="flex items-center gap-3">
           <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center flex-shrink-0">
             <BarChart3 className="h-6 w-6 text-white" />
@@ -120,7 +120,7 @@ export default function AnalyticsPage() {
             { label: 'Conversion Rate', value: `${conversionRate.toFixed(1)}%`, sub: `${data.leadStats.customer_count || 0} / ${data.leadStats.total_leads || 0} leads`, icon: TrendingUp, iconBg: 'bg-purple-50 dark:bg-purple-900/20', iconColor: 'text-purple-600 dark:text-purple-400' },
             { label: 'Avg. Lead Score', value: `${data.leadStats.avg_score ? data.leadStats.avg_score.toFixed(0) : 0}/100`, sub: null, icon: BarChart3, iconBg: 'bg-violet-50 dark:bg-violet-900/20', iconColor: 'text-violet-600 dark:text-violet-400', progress: data.leadStats.avg_score || 0 },
           ].map(({ label, value, sub, icon: Icon, iconBg, iconColor, progress }) => (
-            <div key={label} className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm p-5">
+            <div key={label} className="rounded-xl border border-border bg-card shadow-sm p-5">
               <div className="flex items-center justify-between mb-3">
                 <span className="text-sm font-medium text-slate-600 dark:text-slate-400">{label}</span>
                 <div className={`h-10 w-10 rounded-lg ${iconBg} flex items-center justify-center`}>
@@ -135,7 +135,7 @@ export default function AnalyticsPage() {
         </div>
 
         {/* Lead Funnel */}
-        <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm">
+        <div className="rounded-xl border border-border bg-card shadow-sm">
           <div className="p-6 border-b border-slate-200 dark:border-slate-800">
             <h3 className="text-base font-semibold text-slate-900 dark:text-white">Lead Funnel Analysis</h3>
             <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">Track leads through your sales pipeline</p>
@@ -161,7 +161,7 @@ export default function AnalyticsPage() {
 
         {/* Campaign + Lead Quality */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm">
+          <div className="rounded-xl border border-border bg-card shadow-sm">
             <div className="p-6 border-b border-slate-200 dark:border-slate-800">
               <h3 className="text-base font-semibold text-slate-900 dark:text-white">Campaign Overview</h3>
               <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">Active campaign metrics</p>
@@ -181,7 +181,7 @@ export default function AnalyticsPage() {
             </div>
           </div>
 
-          <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm">
+          <div className="rounded-xl border border-border bg-card shadow-sm">
             <div className="p-6 border-b border-slate-200 dark:border-slate-800">
               <h3 className="text-base font-semibold text-slate-900 dark:text-white">Lead Quality Metrics</h3>
               <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">Lead qualification breakdown</p>
@@ -205,7 +205,7 @@ export default function AnalyticsPage() {
         </div>
 
         {/* Key Insights */}
-        <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm">
+        <div className="rounded-xl border border-border bg-card shadow-sm">
           <div className="p-6 border-b border-slate-200 dark:border-slate-800">
             <h3 className="text-base font-semibold text-slate-900 dark:text-white">Key Insights</h3>
             <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">Performance highlights and recommendations</p>

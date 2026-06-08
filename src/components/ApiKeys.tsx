@@ -114,7 +114,7 @@ export const ApiKeys = () => {
         </CardHeader>
         <CardContent className="space-y-3 p-6">
           {apiKeys.map((apiKey) => (
-            <div key={apiKey.id} className={`group flex items-center justify-between p-4 bg-white dark:bg-slate-900/50 rounded-xl border border-slate-200/80 dark:border-slate-700/60 hover:shadow-lg hover:shadow-cyan-500/5 hover:border-cyan-200 dark:hover:border-cyan-700/50 transition-all ${isRTL ? 'flex-row-reverse' : ''}`}>
+            <div key={apiKey.id} className={`group flex items-center justify-between p-4 app-surface rounded-xl border border-border hover:shadow-lg hover:shadow-cyan-500/5 hover:border-cyan-200 dark:hover:border-cyan-700/50 transition-all ${isRTL ? 'flex-row-reverse' : ''}`}>
               <div className={`flex items-center gap-4 ${isRTL ? 'flex-row-reverse' : ''}`}>
                 <div className="p-2.5 rounded-lg bg-gradient-to-br from-cyan-100 to-blue-100 dark:from-cyan-900/40 dark:to-blue-900/40">
                   <Key className="h-5 w-5 text-cyan-600 dark:text-cyan-400" />

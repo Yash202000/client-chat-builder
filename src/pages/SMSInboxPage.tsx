@@ -151,7 +151,7 @@ const ContactSelector: React.FC<ContactSelectorProps> = ({ contacts, value, onCh
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -4 }}
             transition={{ duration: 0.15 }}
-            className="absolute left-14 right-0 top-full z-50 bg-white dark:bg-card border border-slate-200 dark:border-white/[0.10] rounded-xl shadow-lg overflow-hidden"
+            className="absolute left-14 right-0 top-full z-50 bg-card border border-border rounded-xl shadow-lg overflow-hidden"
           >
             {filtered.map((c: any) => (
               <button
@@ -197,7 +197,7 @@ const ComposeSMSPanel: React.FC<ComposeSMSPanelProps> = ({ contacts, onSend, onD
   const canSend = !!recipient && message.trim().length > 0 && !isSending;
 
   return (
-    <Card className="h-full flex flex-col shadow-sm bg-white dark:bg-card border-slate-200 dark:border-white/[0.08] overflow-hidden">
+    <Card className="h-full flex flex-col shadow-sm app-surface border border-border overflow-hidden">
       {/* Header */}
       <div className="flex items-center justify-between px-5 py-3.5 border-b border-slate-200 dark:border-white/[0.08] flex-shrink-0">
         <div className="flex items-center gap-2.5">
@@ -414,7 +414,7 @@ const SMSInboxPage: React.FC = () => {
           transition={{ duration: 0.4, ease: 'easeOut' }}
           className={`h-full overflow-hidden transition-all duration-500 ease-out ${isSidebarCollapsed ? 'md:col-span-1' : 'md:col-span-3'} ${(selectedSessionId || centerView === 'compose') ? 'hidden md:block' : 'block'}`}
         >
-          <Card className="h-full flex flex-col shadow-sm bg-white dark:bg-card border-slate-200 dark:border-white/[0.08] relative overflow-hidden">
+          <Card className="h-full flex flex-col shadow-sm app-surface border border-border relative overflow-hidden">
             <motion.button
               whileHover={{ scale: 1.1 }}
               whileTap={{ scale: 0.95 }}
@@ -426,7 +426,7 @@ const SMSInboxPage: React.FC = () => {
               </motion.div>
             </motion.button>
 
-            <CardHeader className={`border-b border-slate-200 dark:border-white/[0.08] bg-white dark:bg-card flex-shrink-0 py-4 ${isSidebarCollapsed ? 'px-2' : 'space-y-4'}`}>
+            <CardHeader className={`border-b border-border app-surface flex-shrink-0 py-4 ${isSidebarCollapsed ? 'px-2' : 'space-y-4'}`}>
               <AnimatePresence mode="wait">
                 {!isSidebarCollapsed && (
                   <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }} className="space-y-4">
@@ -622,7 +622,7 @@ const SMSInboxPage: React.FC = () => {
           transition={{ duration: 0.4, delay: 0.2 }}
           className={`h-full overflow-hidden transition-all duration-500 ease-out ${isRightCollapsed ? 'md:col-span-1' : 'md:col-span-3'} hidden md:block`}
         >
-          <Card className="h-full flex flex-col shadow-sm bg-white dark:bg-card border-slate-200 dark:border-white/[0.08] relative overflow-hidden">
+          <Card className="h-full flex flex-col shadow-sm app-surface border border-border relative overflow-hidden">
             <motion.button
               whileHover={{ scale: 1.1 }}
               whileTap={{ scale: 0.95 }}

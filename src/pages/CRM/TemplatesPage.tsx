@@ -198,9 +198,9 @@ export default function TemplatesPage() {
   };
 
   return (
-    <div className="min-h-full bg-slate-50 dark:bg-slate-950">
+    <div className="min-h-full app-surface">
       {/* Header */}
-      <div className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 px-6 py-6">
+      <div className="bg-card/80 backdrop-blur-sm border-b border-border px-6 py-6">
         <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
           <div className="flex items-center gap-3">
             <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center flex-shrink-0">
@@ -228,7 +228,7 @@ export default function TemplatesPage() {
       </div>
 
       {/* Tab bar */}
-      <div className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 px-6">
+      <div className="bg-card/80 backdrop-blur-sm border-b border-border px-6">
         <div className="flex gap-0">
           {([
             { key: 'campaign',      label: 'Campaign Templates' },
@@ -279,7 +279,7 @@ export default function TemplatesPage() {
           return (
             <div
               key={type}
-              className="p-5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm hover:shadow-md cursor-pointer transition-all duration-300"
+              className="p-5 rounded-xl border border-border bg-card shadow-sm hover:shadow-md cursor-pointer transition-all duration-300"
               onClick={() => setTypeFilter(type)}
             >
               <div className="flex items-start justify-between">
@@ -299,7 +299,7 @@ export default function TemplatesPage() {
       </div>
 
       {/* Filters */}
-      <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm p-3">
+      <div className="rounded-xl border border-border bg-card shadow-sm p-3">
         <div className="flex flex-col sm:flex-row gap-3">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
@@ -332,7 +332,7 @@ export default function TemplatesPage() {
           <Loader2 className="h-6 w-6 animate-spin text-slate-400" />
         </div>
       ) : templates.length === 0 ? (
-        <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm">
+        <div className="rounded-xl border border-border bg-card shadow-sm">
           <div className="p-12 text-center">
             <div className="h-16 w-16 rounded-xl bg-purple-50 dark:bg-purple-900/20 flex items-center justify-center mx-auto mb-4">
               <Mail className="h-8 w-8 text-purple-500" />
@@ -371,7 +371,7 @@ export default function TemplatesPage() {
             return (
               <div
                 key={template.id}
-                className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden group"
+                className="rounded-xl border border-border bg-card shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden group"
               >
                 <div className="p-4 pb-3">
                   <div className="flex items-start justify-between">

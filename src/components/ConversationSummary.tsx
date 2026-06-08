@@ -76,7 +76,7 @@ export const ConversationSummary: React.FC<ConversationSummaryProps> = ({ sessio
   };
 
   return (
-    <Card className="h-full flex flex-col card-shadow-lg bg-white dark:bg-slate-800 overflow-hidden">
+    <Card className="h-full flex flex-col card-shadow-lg bg-card overflow-hidden">
       <CardHeader className="border-b border-slate-200 dark:border-slate-700 bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-900/30 dark:to-pink-900/30 flex-shrink-0 py-4 px-5">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">

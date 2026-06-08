@@ -1234,7 +1234,7 @@ const InternalChatPage: React.FC = () => {
 
         {/* ── LEFT SIDEBAR ─────────────────────────────────────────────────── */}
         <div className={cn(
-          'flex flex-col bg-card border-r border-border transition-all duration-300',
+          'flex flex-col app-surface border-r border-border transition-all duration-300',
           // Mobile: absolute overlay within the page container (doesn't cover AppLayout header)
           'absolute top-0 left-0 bottom-0 w-full z-20',
           // Desktop: inline sidebar
@@ -1538,7 +1538,7 @@ const InternalChatPage: React.FC = () => {
         </div>
 
         {/* ── MAIN CHAT AREA ────────────────────────────────────────────────── */}
-        <div className="flex-1 flex flex-col h-full overflow-hidden bg-background">
+        <div className="flex-1 flex flex-col h-full overflow-hidden app-surface">
           {selectedChannel ? (
             <>
               {/* Header */}
@@ -2184,7 +2184,7 @@ const InternalChatPage: React.FC = () => {
             </>
           ) : (
             /* Empty state — no channel selected */
-            <div className="flex-1 flex items-center justify-center bg-background">
+            <div className="flex-1 flex items-center justify-center app-surface">
               <div className="text-center">
                 <div className="h-16 w-16 rounded-2xl bg-muted flex items-center justify-center mx-auto mb-5">
                   <MessageSquare className="h-8 w-8 text-muted-foreground" />
@@ -2230,7 +2230,7 @@ const InternalChatPage: React.FC = () => {
         {/* ── PHONE DIRECTORY PANEL ────────────────────────────────────────── */}
         {isPhoneDirectoryOpen && <div className="fixed inset-0 bg-black/40 z-30 md:hidden" onClick={() => setIsPhoneDirectoryOpen(false)} />}
         <div className={cn(
-          'flex-shrink-0 flex flex-col border-l border-border bg-card overflow-hidden transition-all duration-300 ease-in-out',
+          'flex-shrink-0 flex flex-col border-l border-border app-surface overflow-hidden transition-all duration-300 ease-in-out',
           isPhoneDirectoryOpen
             ? 'fixed inset-y-0 right-0 w-[85vw] sm:w-80 md:relative md:w-72 h-full z-40 md:z-auto'
             : 'w-0 border-l-0 md:relative'
@@ -2350,7 +2350,7 @@ const InternalChatPage: React.FC = () => {
         {/* ── CALL HISTORY PANEL ───────────────────────────────────────────── */}
         {isCallHistoryOpen && <div className="fixed inset-0 bg-black/40 z-30 md:hidden" onClick={() => setIsCallHistoryOpen(false)} />}
         <div className={cn(
-          'flex-shrink-0 flex flex-col border-l border-border bg-card overflow-hidden transition-all duration-300 ease-in-out',
+          'flex-shrink-0 flex flex-col border-l border-border app-surface overflow-hidden transition-all duration-300 ease-in-out',
           isCallHistoryOpen
             ? 'fixed inset-y-0 right-0 w-[85vw] sm:w-80 md:relative md:w-72 h-full z-40 md:z-auto'
             : 'w-0 border-l-0 md:relative'

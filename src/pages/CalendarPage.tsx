@@ -1221,7 +1221,7 @@ export default function CalendarPage() {
   const isLoading = calendarTab === 'events' ? eventsLoading : postsLoading;
 
   return (
-    <div className="flex flex-col h-full bg-background overflow-hidden">
+    <div className="flex flex-col h-full app-surface overflow-hidden">
       {/* ── Page Header ───────────────────────────────────────────────── */}
       <div className="flex-shrink-0 px-6 pt-5 pb-4 border-b border-border/30 space-y-3">
 

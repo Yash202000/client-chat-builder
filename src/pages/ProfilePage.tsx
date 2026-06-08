@@ -238,7 +238,7 @@ export const ProfilePage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background p-6 relative overflow-hidden" dir={isRTL ? 'rtl' : 'ltr'}>
+    <div className="min-h-screen app-surface p-6 relative overflow-hidden" dir={isRTL ? 'rtl' : 'ltr'}>
       {/* Aurora ambient bloom */}
       <div className="pointer-events-none fixed inset-0 z-0">
         <div className="absolute -top-32 -right-32 w-96 h-96 rounded-full bg-violet-600/[0.05] dark:bg-violet-500/[0.07] blur-[100px]" />

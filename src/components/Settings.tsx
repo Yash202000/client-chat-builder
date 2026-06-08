@@ -347,9 +347,9 @@ export const Settings = () => {
   };
 
   return (
-    <div className="min-h-full bg-slate-50 dark:bg-slate-950" dir={isRTL ? 'rtl' : 'ltr'}>
+    <div className="min-h-full app-surface" dir={isRTL ? 'rtl' : 'ltr'}>
       {/* Header */}
-      <div className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 px-4 sm:px-6 py-4 sm:py-6">
+      <div className="bg-card/80 backdrop-blur-sm border-b border-border px-4 sm:px-6 py-4 sm:py-6">
         <div className={`flex items-center gap-3 ${isRTL ? 'flex-row-reverse' : ''}`}>
           <div className="h-10 w-10 sm:h-12 sm:w-12 rounded-xl bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center flex-shrink-0">
             <SettingsIcon className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
@@ -416,7 +416,7 @@ export const Settings = () => {
         <TabsContent value="general" className="space-y-4" dir={isRTL ? 'rtl' : 'ltr'}>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
             {user?.is_super_admin && companies && (
-              <div className="rounded-xl border border-cyan-200 dark:border-cyan-800/50 bg-white dark:bg-slate-900 shadow-sm">
+              <div className="rounded-xl border border-cyan-200 dark:border-cyan-800/50 bg-card shadow-sm">
                 <div className="p-5 pb-3 border-b border-cyan-100 dark:border-cyan-800/30">
                   <h3 className={`dark:text-white flex items-center gap-2 text-base font-semibold`}>
                     <div className="p-1.5 rounded-lg bg-gradient-to-br from-cyan-500 to-blue-600">
@@ -449,7 +449,7 @@ export const Settings = () => {
               </div>
             )}
 
-            <div className="rounded-xl border border-cyan-200 dark:border-cyan-800/50 bg-white dark:bg-slate-900 shadow-sm lg:col-span-2">
+            <div className="rounded-xl border border-cyan-200 dark:border-cyan-800/50 bg-card shadow-sm lg:col-span-2">
               <div className="p-5 pb-3 border-b border-cyan-100 dark:border-cyan-800/30">
                 <h3 className={`flex items-center gap-2 dark:text-white text-base font-semibold`}>
                   <div className="p-1.5 rounded-lg bg-gradient-to-br from-cyan-500 to-blue-600">
@@ -566,7 +566,7 @@ export const Settings = () => {
         </TabsContent>
 
         <TabsContent value="email" className="space-y-6" dir={isRTL ? 'rtl' : 'ltr'}>
-          <div className="rounded-xl border border-blue-200 dark:border-blue-800/50 bg-white dark:bg-slate-900 shadow-sm">
+          <div className="rounded-xl border border-blue-200 dark:border-blue-800/50 bg-card shadow-sm">
             <div className="p-6 border-b border-blue-100 dark:border-blue-800/30">
               <h3 className="flex items-center gap-3 dark:text-white text-base font-semibold">
                 <div className="p-1.5 rounded-lg bg-gradient-to-br from-blue-500 to-cyan-600">
@@ -707,7 +707,7 @@ export const Settings = () => {
         </TabsContent>
 
         <TabsContent value="notifications" className="space-y-6" dir={isRTL ? 'rtl' : 'ltr'}>
-          <div className="rounded-xl border border-violet-200 dark:border-violet-800/50 bg-white dark:bg-slate-900 shadow-sm">
+          <div className="rounded-xl border border-violet-200 dark:border-violet-800/50 bg-card shadow-sm">
             <div className="p-6 border-b border-violet-100 dark:border-violet-800/30">
               <h3 className="flex items-center gap-3 dark:text-white text-base font-semibold">
                 <div className="p-1.5 rounded-lg bg-gradient-to-br from-violet-500 to-orange-600">
@@ -755,7 +755,7 @@ export const Settings = () => {
         </TabsContent>
 
         <TabsContent value="security" className="space-y-6" dir={isRTL ? 'rtl' : 'ltr'}>
-          <div className="rounded-xl border border-emerald-200 dark:border-emerald-800/50 bg-white dark:bg-slate-900 shadow-sm">
+          <div className="rounded-xl border border-emerald-200 dark:border-emerald-800/50 bg-card shadow-sm">
             <div className="p-6 border-b border-emerald-100 dark:border-emerald-800/30">
               <h3 className="flex items-center gap-3 dark:text-white text-base font-semibold">
                 <div className="p-1.5 rounded-lg bg-gradient-to-br from-emerald-500 to-teal-600">
@@ -843,7 +843,7 @@ export const Settings = () => {
 
             return (
               <>
-                <div className="rounded-xl border border-red-200 dark:border-red-800/50 bg-white dark:bg-slate-900 shadow-sm">
+                <div className="rounded-xl border border-red-200 dark:border-red-800/50 bg-card shadow-sm">
                   <div className="p-6 border-b border-red-100 dark:border-red-800/30">
                     <h3 className="flex items-center gap-3 dark:text-white text-base font-semibold">
                       <div className="p-1.5 rounded-lg bg-gradient-to-br from-red-500 to-rose-600">
@@ -955,7 +955,7 @@ export const Settings = () => {
         </TabsContent>
 
         <TabsContent value="appearance" className="space-y-6" dir={isRTL ? 'rtl' : 'ltr'}>
-          <div className="rounded-xl border border-purple-200 dark:border-purple-800/50 bg-white dark:bg-slate-900 shadow-sm">
+          <div className="rounded-xl border border-purple-200 dark:border-purple-800/50 bg-card shadow-sm">
             <div className="p-6 border-b border-purple-100 dark:border-purple-800/30">
               <h3 className="flex items-center gap-3 dark:text-white text-base font-semibold">
                 <div className="p-1.5 rounded-lg bg-gradient-to-br from-purple-500 to-pink-600">
@@ -1072,7 +1072,7 @@ export const Settings = () => {
         </TabsContent>
 
         <TabsContent value="developer" className="space-y-6" dir={isRTL ? 'rtl' : 'ltr'}>
-          <div className="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-sm p-6">
+          <div className="rounded-xl border border-border bg-card shadow-sm p-6">
             <div className="flex items-center gap-3 mb-6 pb-5 border-b border-slate-200 dark:border-slate-700">
               <div className="p-1.5 rounded-lg bg-gradient-to-br from-slate-600 to-slate-800">
                 <Database className="h-4 w-4 text-white" />
@@ -1132,7 +1132,7 @@ export const Settings = () => {
             return (
               <>
                 {/* Enable SSO */}
-                <div className="rounded-xl border border-indigo-200 dark:border-indigo-800/50 bg-white dark:bg-slate-900 shadow-sm">
+                <div className="rounded-xl border border-indigo-200 dark:border-indigo-800/50 bg-card shadow-sm">
                   <div className="p-6 border-b border-indigo-100 dark:border-indigo-800/30">
                     <h3 className="flex items-center gap-3 dark:text-white text-base font-semibold">
                       <div className="p-1.5 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600">
@@ -1323,7 +1323,7 @@ export const Settings = () => {
             return (
               <>
                 {/* Invite form */}
-                <div className="rounded-xl border border-emerald-200 dark:border-emerald-800/50 bg-white dark:bg-slate-900 shadow-sm">
+                <div className="rounded-xl border border-emerald-200 dark:border-emerald-800/50 bg-card shadow-sm">
                   <div className="p-6 border-b border-emerald-100 dark:border-emerald-800/30">
                     <h3 className="flex items-center gap-3 dark:text-white text-base font-semibold">
                       <div className="p-1.5 rounded-lg bg-gradient-to-br from-emerald-500 to-teal-600">
@@ -1382,7 +1382,7 @@ export const Settings = () => {
                 </div>
 
                 {/* Active Guests table */}
-                <div className="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-sm overflow-hidden">
+                <div className="rounded-xl border border-border bg-card shadow-sm overflow-hidden">
                   <div className="px-6 py-4 border-b border-slate-200 dark:border-slate-700">
                     <h4 className="font-semibold dark:text-white">Active Guests</h4>
                   </div>
@@ -1467,7 +1467,7 @@ export const Settings = () => {
                 </div>
 
                 {/* Guest Access Settings */}
-                <div className="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-sm">
+                <div className="rounded-xl border border-border bg-card shadow-sm">
                   <div className="px-6 py-4 border-b border-slate-200 dark:border-slate-700">
                     <h4 className="font-semibold dark:text-white">Guest Access Settings</h4>
                   </div>
@@ -1528,7 +1528,7 @@ export const Settings = () => {
             return (
               <>
                 {/* Data Retention Rules */}
-                <div className="rounded-xl border border-amber-200 dark:border-amber-800/50 bg-white dark:bg-slate-900 shadow-sm overflow-hidden">
+                <div className="rounded-xl border border-amber-200 dark:border-amber-800/50 bg-card shadow-sm overflow-hidden">
                   <div className="p-6 border-b border-amber-100 dark:border-amber-800/30">
                     <h3 className="flex items-center gap-3 dark:text-white text-base font-semibold">
                       <div className="p-1.5 rounded-lg bg-gradient-to-br from-amber-500 to-orange-600">
@@ -1655,7 +1655,7 @@ export const Settings = () => {
                 )}
 
                 {/* Audit Log Export */}
-                <div className="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-sm">
+                <div className="rounded-xl border border-border bg-card shadow-sm">
                   <div className="px-6 py-4 border-b border-slate-200 dark:border-slate-700">
                     <h4 className="font-semibold dark:text-white flex items-center gap-2">
                       <Download className="h-4 w-4 text-amber-500" />
@@ -1712,7 +1712,7 @@ export const Settings = () => {
                 </div>
 
                 {/* Legal Hold */}
-                <div className="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-sm">
+                <div className="rounded-xl border border-border bg-card shadow-sm">
                   <div className="px-6 py-4 border-b border-slate-200 dark:border-slate-700">
                     <h4 className="font-semibold dark:text-white flex items-center gap-2">
                       <Lock className="h-4 w-4 text-red-500" />
@@ -1827,7 +1827,7 @@ export const Settings = () => {
         };
 
         return (
-          <div className="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-sm mt-6">
+          <div className="rounded-xl border border-border bg-card shadow-sm mt-6">
             <div className="p-6 border-b border-slate-200 dark:border-slate-700">
               <h3 className="flex items-center gap-3 dark:text-white text-base font-semibold">
                 <div className="p-1.5 rounded-lg bg-gradient-to-br from-emerald-500 to-teal-600">

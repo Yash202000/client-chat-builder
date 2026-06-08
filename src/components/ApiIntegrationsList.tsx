@@ -178,7 +178,7 @@ export const ApiIntegrationsList = () => {
 
   return (
     <>
-      <Card dir={isRTL ? 'rtl' : 'ltr'} className="dark:bg-slate-800 dark:border-slate-700">
+      <Card dir={isRTL ? 'rtl' : 'ltr'} className="app-surface">
         <CardHeader className="flex flex-row items-center justify-between dark:border-slate-700">
           <div>
             <CardTitle className="flex items-center gap-2 dark:text-white">
@@ -221,7 +221,7 @@ export const ApiIntegrationsList = () => {
               {integrations.map((integration) => (
                 <div
                   key={integration.id}
-                  className="p-4 bg-gray-50 dark:bg-slate-900/50 rounded-lg border border-slate-200 dark:border-slate-700"
+                  className="p-4 app-surface rounded-lg border border-border"
                 >
                   <div className="flex items-start justify-between">
                     <div className="space-y-2 flex-1">
@@ -341,7 +341,7 @@ export const ApiIntegrationsList = () => {
       )}
 
       <AlertDialog open={!!deletingIntegration} onOpenChange={() => setDeletingIntegration(null)}>
-        <AlertDialogContent className="dark:bg-slate-800 dark:border-slate-700">
+        <AlertDialogContent className="app-surface">
           <AlertDialogHeader>
             <AlertDialogTitle className="dark:text-white">
               {t('apiIntegrations.deleteTitle', 'Delete Integration')}

@@ -61,7 +61,7 @@ function DatePicker({ date, setDate, placeholder, isRTL }) {
         <Button
           variant={"outline"}
           className={cn(
-            `w-[200px] font-normal rounded-xl border-slate-200/80 dark:border-slate-600/80 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 dark:text-white shadow-sm hover:shadow-md transition-all duration-200 flex items-center ${isRTL ? 'flex-row-reverse justify-end text-right' : 'justify-start text-left'}`,
+            `w-[200px] font-normal rounded-xl border-border app-surface hover:bg-muted/60 dark:hover:bg-white/[0.07] dark:text-white shadow-sm hover:shadow-md transition-all duration-200 flex items-center ${isRTL ? 'flex-row-reverse justify-end text-right' : 'justify-start text-left'}`,
             !date && "text-slate-500 dark:text-slate-400"
           )}
         >
@@ -475,7 +475,7 @@ export const Reports = () => {
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.2, delay: i * 0.04 }}
-              className="rounded-xl border border-border bg-card p-3.5"
+              className="rounded-xl border border-border app-surface p-3.5"
             >
               <div className="flex items-center gap-2 mb-2">
                 <div className={`p-1.5 rounded-lg bg-muted`}>
@@ -555,7 +555,7 @@ export const Reports = () => {
 
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 {/* Daily Volume — Line Chart */}
-                <div className="lg:col-span-2 rounded-xl border border-border bg-card p-4">
+                <div className="lg:col-span-2 rounded-xl border border-border app-surface p-4">
                   <h3 className="text-sm font-semibold text-foreground mb-4 flex items-center gap-2">
                     <LineChartIcon className="h-4 w-4 text-orange-500" />
                     Daily Volume
@@ -572,7 +572,7 @@ export const Reports = () => {
                 </div>
 
                 {/* Status Breakdown — Pie Chart */}
-                <div className="rounded-xl border border-border bg-card p-4">
+                <div className="rounded-xl border border-border app-surface p-4">
                   <h3 className="text-sm font-semibold text-foreground mb-4">Status Breakdown</h3>
                   <ResponsiveContainer width="100%" height={200}>
                     <PieChart>
@@ -589,7 +589,7 @@ export const Reports = () => {
 
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {/* Sessions per Channel — Bar Chart */}
-                <div className="rounded-xl border border-border bg-card p-4">
+                <div className="rounded-xl border border-border app-surface p-4">
                   <h3 className="text-sm font-semibold text-foreground mb-4">Sessions by Channel</h3>
                   <ResponsiveContainer width="100%" height={200}>
                     <BarChart data={summaryData.sessions_per_channel} layout="vertical">
@@ -607,7 +607,7 @@ export const Reports = () => {
                 </div>
 
                 {/* Agent Leaderboard */}
-                <div className="rounded-xl border border-border bg-card p-4">
+                <div className="rounded-xl border border-border app-surface p-4">
                   <h3 className="text-sm font-semibold text-foreground mb-4">Agent Leaderboard</h3>
                   {summaryData.sessions_per_agent.length === 0 ? (
                     <p className="text-sm text-muted-foreground text-center py-8">No assigned sessions yet</p>
@@ -639,7 +639,7 @@ export const Reports = () => {
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Conversation Status Distribution */}
-            <div className="rounded-xl border border-border bg-card p-4">
+            <div className="rounded-xl border border-border app-surface p-4">
               <div className={`flex items-center gap-3 mb-4 ${isRTL ? 'flex-row-reverse' : ''}`}>
                 <div className="p-2 rounded-lg bg-muted">
                   <Activity className="h-4 w-4 text-blue-500" />
@@ -675,7 +675,7 @@ export const Reports = () => {
             </div>
 
             {/* Channel Distribution */}
-            <div className="rounded-xl border border-border bg-card p-4">
+            <div className="rounded-xl border border-border app-surface p-4">
               <div className={`flex items-center gap-3 mb-4 ${isRTL ? 'flex-row-reverse' : ''}`}>
                 <div className="p-2 rounded-lg bg-muted">
                   <MessageSquare className="h-4 w-4 text-orange-500" />
@@ -715,7 +715,7 @@ export const Reports = () => {
           </div>
 
           {/* Conversation Trends */}
-          <div className="rounded-xl border border-border bg-card p-4">
+          <div className="rounded-xl border border-border app-surface p-4">
             <div className={`flex items-center gap-3 mb-4 ${isRTL ? 'flex-row-reverse' : ''}`}>
               <div className="p-2 rounded-lg bg-muted">
                 <BarChart3 className="h-4 w-4 text-purple-500" />
@@ -762,7 +762,7 @@ export const Reports = () => {
         </TabsContent>
 
         <TabsContent value="agents" className="space-y-6">
-          <div className="rounded-xl border border-border bg-card p-4">
+          <div className="rounded-xl border border-border app-surface p-4">
             <div className={`flex items-center gap-3 mb-4 ${isRTL ? 'flex-row-reverse' : ''}`}>
               <div className="p-2 rounded-lg bg-muted">
                 <Bot className="h-4 w-4 text-violet-500" />
@@ -819,7 +819,7 @@ export const Reports = () => {
         <TabsContent value="customers" className="space-y-6">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Customer Satisfaction */}
-            <div className="rounded-xl border border-border bg-card p-4">
+            <div className="rounded-xl border border-border app-surface p-4">
               <div className={`flex items-center gap-3 mb-4 ${isRTL ? 'flex-row-reverse' : ''}`}>
                 <div className="p-2 rounded-lg bg-muted">
                   <Star className="h-4 w-4 text-yellow-500" />
@@ -860,7 +860,7 @@ export const Reports = () => {
             </div>
 
             {/* Top Issues */}
-            <div className="rounded-xl border border-border bg-card p-4">
+            <div className="rounded-xl border border-border app-surface p-4">
               <div className={`flex items-center gap-3 mb-4 ${isRTL ? 'flex-row-reverse' : ''}`}>
                 <div className="p-2 rounded-lg bg-muted">
                   <AlertCircle className="h-4 w-4 text-rose-500" />
@@ -892,7 +892,7 @@ export const Reports = () => {
         </TabsContent>
 
         <TabsContent value="trends" className="space-y-6">
-          <div className="rounded-xl border border-border bg-card p-4">
+          <div className="rounded-xl border border-border app-surface p-4">
             <div className={`flex items-center gap-3 mb-4 ${isRTL ? 'flex-row-reverse' : ''}`}>
               <div className="p-2 rounded-lg bg-muted">
                 <LineChartIcon className="h-4 w-4 text-teal-500" />
@@ -926,7 +926,7 @@ export const Reports = () => {
         </TabsContent>
 
         <TabsContent value="alerts" className="space-y-6">
-          <div className="rounded-xl border border-border bg-card p-4">
+          <div className="rounded-xl border border-border app-surface p-4">
             <div className={`flex items-center gap-3 mb-4 ${isRTL ? 'flex-row-reverse' : ''}`}>
               <div className="p-2 rounded-lg bg-muted">
                 <Bell className="h-4 w-4 text-violet-500" />
@@ -980,7 +980,7 @@ export const Reports = () => {
         </TabsContent>
 
         <TabsContent value="optimization" className="space-y-6">
-          <div className="rounded-xl border border-border bg-card p-4">
+          <div className="rounded-xl border border-border app-surface p-4">
             <div className={`flex items-center gap-3 mb-4 ${isRTL ? 'flex-row-reverse' : ''}`}>
               <div className="p-2 rounded-lg bg-muted">
                 <Zap className="h-4 w-4 text-emerald-500" />

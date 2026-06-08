@@ -32,6 +32,7 @@ import remarkGfm from 'remark-gfm';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { oneDark } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import { replaceTemplateVariables } from '@/services/messageTemplateService';
+import { getAvatarColor, getAvatarInitial } from '@/lib/avatarColor';
 
 // Animation variants for Framer Motion
 const messageVariants = {
@@ -296,6 +297,7 @@ export const ConversationDetail: React.FC<ConversationDetailProps> = ({ sessionI
   const suggestionDebounceRef = useRef<NodeJS.Timeout>();
   const [isAgentTyping, setIsAgentTyping] = useState(false);
   const [hasInitiallyLoaded, setHasInitiallyLoaded] = useState(false);
+  const [newMsgCount, setNewMsgCount] = useState(0);
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [isUploadingFiles, setIsUploadingFiles] = useState(false);
   const [hasDraft, setHasDraft] = useState(false);
@@ -602,6 +604,10 @@ export const ConversationDetail: React.FC<ConversationDetailProps> = ({ sessionI
             const allMsgs = [...newPages].reverse().flat();
             fetchSuggestions(allMsgs);
           }
+          // Count incoming messages when scrolled away from bottom
+          if (!isNearBottomRef.current && newMessage.message_type === 'message') {
+            setNewMsgCount(prev => prev + 1);
+          }
 
           return { ...oldData, pages: newPages };
         });
@@ -646,37 +652,32 @@ export const ConversationDetail: React.FC<ConversationDetailProps> = ({ sessionI
     }
   };
 
-  // Reset initial load flag and jump to bottom placeholder when session changes
+  // Reset on session change
   useEffect(() => {
     setHasInitiallyLoaded(false);
     setSuggestedReplies([]);
+    setNewMsgCount(0);
     clearTimeout(suggestionDebounceRef.current);
-    if (messagesContainerRef.current) {
-      messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight;
-    }
   }, [sessionId]);
 
-  // Scroll to bottom on initial load + seed suggestions if last msg is from customer
+  // Scroll to bottom once messages are loaded — fire at multiple checkpoints
+  // to survive Framer Motion's staggered render + any layout shifts
   useEffect(() => {
-    if (!isLoading && messages.length > 0 && !hasInitiallyLoaded) {
-      fetchSuggestions(messages);
-      const doScroll = () => {
-        if (messagesEndRef.current) {
-          messagesEndRef.current.scrollIntoView({ behavior: 'instant', block: 'end' });
-        } else if (messagesContainerRef.current) {
-          messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight;
-        }
-        setHasInitiallyLoaded(true);
-      };
+    if (isLoading || messages.length === 0 || hasInitiallyLoaded) return;
 
-      requestAnimationFrame(() => {
-        requestAnimationFrame(() => {
-          doScroll();
-        });
-      });
-      const fallback = setTimeout(doScroll, 150);
-      return () => clearTimeout(fallback);
-    }
+    fetchSuggestions(messages);
+    setHasInitiallyLoaded(true);
+
+    const snap = () => {
+      const c = messagesContainerRef.current;
+      if (c) c.scrollTop = c.scrollHeight;
+    };
+
+    snap();                           // immediate
+    requestAnimationFrame(snap);      // after first paint
+    const t1 = setTimeout(snap, 80);  // after stagger animation starts
+    const t2 = setTimeout(snap, 300); // after animation fully settles
+    return () => { clearTimeout(t1); clearTimeout(t2); };
   }, [isLoading, messages.length, hasInitiallyLoaded]);
 
   // Scroll to bottom when new messages arrive (only if user was near the bottom before the message rendered)
@@ -697,6 +698,7 @@ export const ConversationDetail: React.FC<ConversationDetailProps> = ({ sessionI
     const handleScroll = () => {
       // Track whether user is near the bottom so new-message auto-scroll knows what to do
       isNearBottomRef.current = container.scrollHeight - container.scrollTop - container.clientHeight < 150;
+      if (isNearBottomRef.current) setNewMsgCount(0);
 
       // Check if user has scrolled to top (within 100px from top)
       if (container.scrollTop < 100 && hasNextPage && !isFetchingNextPage) {
@@ -999,7 +1001,7 @@ export const ConversationDetail: React.FC<ConversationDetailProps> = ({ sessionI
           initial={{ y: -20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ duration: 0.4, ease: "easeOut" }}
-          className="flex-shrink-0 bg-card relative overflow-hidden"
+          className="flex-shrink-0 app-surface relative overflow-hidden"
         >
           {/* Aurora bloom + gradient bottom border */}
           <div className="pointer-events-none absolute -top-10 -right-10 w-48 h-48 rounded-full bg-violet-600/[0.04] dark:bg-violet-500/[0.06] blur-3xl" />
@@ -1031,9 +1033,15 @@ export const ConversationDetail: React.FC<ConversationDetailProps> = ({ sessionI
                   animate={{ scale: 1 }}
                   transition={{ type: "spring", stiffness: 200, damping: 15 }}
                 >
-                  <div className="h-8 w-8 sm:h-10 sm:w-10 rounded-full bg-muted flex items-center justify-center border border-border hover:ring-2 hover:ring-primary/30 transition-all">
-                    <UserIcon className="h-4 w-4 sm:h-5 sm:w-5 text-muted-foreground" />
-                  </div>
+                  {contact?.name ? (
+                    <div className={`h-8 w-8 sm:h-10 sm:w-10 rounded-full flex items-center justify-center font-bold text-sm sm:text-base hover:ring-2 hover:ring-primary/30 transition-all ${getAvatarColor(contact.name)}`}>
+                      {getAvatarInitial(contact.name)}
+                    </div>
+                  ) : (
+                    <div className="h-8 w-8 sm:h-10 sm:w-10 rounded-full bg-muted flex items-center justify-center border border-border hover:ring-2 hover:ring-primary/30 transition-all">
+                      <UserIcon className="h-4 w-4 sm:h-5 sm:w-5 text-muted-foreground" />
+                    </div>
+                  )}
                 </motion.div>
                 {/* Online indicator */}
                 {sessionDetails?.is_client_connected && (
@@ -1183,9 +1191,25 @@ export const ConversationDetail: React.FC<ConversationDetailProps> = ({ sessionI
               className="flex items-center gap-1 sm:gap-2 px-3 sm:px-4 py-1 sm:py-2 bg-gradient-to-r from-violet-500/[0.04] to-transparent border-t border-violet-500/10 overflow-x-auto w-full min-w-0"
             >
               {/* AI Toggle */}
-              <div className="flex items-center gap-1 sm:gap-1.5 bg-muted rounded-md px-1.5 sm:px-2.5 py-1 sm:py-1.5 border border-border flex-shrink-0">
-                <Bot className={`h-3 w-3 sm:h-3.5 sm:w-3.5 transition-colors flex-shrink-0 ${isAiEnabled ? 'text-blue-500' : 'text-muted-foreground'}`} />
-                <Label htmlFor="ai-toggle" className="hidden sm:block text-xs font-medium cursor-pointer text-foreground whitespace-nowrap">
+              <div
+                className={`flex items-center gap-1 sm:gap-1.5 rounded-md px-1.5 sm:px-2.5 py-1 sm:py-1.5 border flex-shrink-0 transition-all duration-200 ${
+                  isAiEnabled
+                    ? 'bg-violet-50 border-violet-200 dark:bg-violet-950/40 dark:border-violet-700/50'
+                    : 'bg-muted border-border'
+                }`}
+              >
+                <div className="relative flex-shrink-0">
+                  <Bot className={`h-3 w-3 sm:h-3.5 sm:w-3.5 transition-colors ${isAiEnabled ? 'text-violet-600 dark:text-violet-400' : 'text-muted-foreground'}`} />
+                  {isAiEnabled && (
+                    <span className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 rounded-full bg-violet-500 animate-pulse" />
+                  )}
+                </div>
+                <Label
+                  htmlFor="ai-toggle"
+                  className={`hidden sm:block text-xs font-medium cursor-pointer whitespace-nowrap transition-colors ${
+                    isAiEnabled ? 'text-violet-700 dark:text-violet-300' : 'text-muted-foreground'
+                  }`}
+                >
                   {t('conversations.detail.aiReplies')}
                 </Label>
                 <Switch
@@ -1193,19 +1217,19 @@ export const ConversationDetail: React.FC<ConversationDetailProps> = ({ sessionI
                   id="ai-toggle"
                   checked={isAiEnabled}
                   onCheckedChange={toggleAiMutation.mutate}
-                  className="scale-[0.65] sm:scale-75 data-[state=checked]:bg-blue-500"
+                  className="scale-[0.65] sm:scale-75 data-[state=checked]:bg-violet-600"
                 />
               </div>
 
               {/* Assign To */}
-              <div className="flex items-center gap-1 sm:gap-1.5 bg-muted rounded-md px-1.5 sm:px-2.5 py-1 sm:py-1.5 border border-border flex-shrink-0">
-                <Users className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-muted-foreground flex-shrink-0" />
+              <div className={`flex items-center gap-1 sm:gap-1.5 rounded-md px-1.5 sm:px-2.5 py-1 sm:py-1.5 border flex-shrink-0 transition-all duration-200 ${sessionDetails?.assignee_id ? 'bg-emerald-50 border-emerald-200 dark:bg-emerald-950/30 dark:border-emerald-700/50' : 'bg-muted border-border'}`}>
+                <Users className={`h-3 w-3 sm:h-3.5 sm:w-3.5 flex-shrink-0 transition-colors ${sessionDetails?.assignee_id ? 'text-emerald-600 dark:text-emerald-400' : 'text-muted-foreground'}`} />
                 <Select
                   key={`assignee-${sessionId}`}
                   value={sessionDetails?.assignee_id?.toString() || undefined}
                   onValueChange={(value) => assigneeMutation.mutate(parseInt(value))}
                 >
-                  <SelectTrigger className="border-0 h-auto p-0 focus:ring-0 w-[72px] sm:w-[130px] text-[11px] sm:text-xs font-medium text-foreground">
+                  <SelectTrigger className={`border-0 h-auto p-0 focus:ring-0 w-[72px] sm:w-[130px] text-[11px] sm:text-xs font-medium ${sessionDetails?.assignee_id ? 'text-emerald-700 dark:text-emerald-300' : 'text-foreground'}`}>
                     <SelectValue placeholder={t('conversations.detail.assignTo')} />
                   </SelectTrigger>
                   <SelectContent className="rounded-xl">
@@ -1235,14 +1259,14 @@ export const ConversationDetail: React.FC<ConversationDetailProps> = ({ sessionI
               </div>
 
               {/* Priority Selector */}
-              <div className="flex items-center gap-1 sm:gap-1.5 bg-muted rounded-md px-1.5 sm:px-2.5 py-1 sm:py-1.5 border border-border flex-shrink-0">
+              <div className={`flex items-center gap-1 sm:gap-1.5 rounded-md px-1.5 sm:px-2.5 py-1 sm:py-1.5 border flex-shrink-0 transition-all duration-200 ${conversationPriority > 0 ? 'bg-amber-50 border-amber-200 dark:bg-amber-950/30 dark:border-amber-700/50' : 'bg-muted border-border'}`}>
                 <Flag className={`h-3 w-3 sm:h-3.5 sm:w-3.5 flex-shrink-0 ${conversationPriority > 0 ? PRIORITY_CONFIG[conversationPriority]?.color : 'text-muted-foreground'}`} />
                 <Select
                   key={`priority-${sessionId}-${conversationPriority}`}
                   value={conversationPriority.toString()}
                   onValueChange={(value) => priorityMutation.mutate(parseInt(value))}
                 >
-                  <SelectTrigger className="border-0 h-auto p-0 focus:ring-0 w-[58px] sm:w-[90px] text-[11px] sm:text-xs font-medium text-foreground">
+                  <SelectTrigger className={`border-0 h-auto p-0 focus:ring-0 w-[58px] sm:w-[90px] text-[11px] sm:text-xs font-medium ${conversationPriority > 0 ? PRIORITY_CONFIG[conversationPriority]?.color : 'text-foreground'}`}>
                     <SelectValue placeholder={t('conversations.priority.label', { defaultValue: 'Priority' })} />
                   </SelectTrigger>
                   <SelectContent className="rounded-xl">
@@ -1270,7 +1294,8 @@ export const ConversationDetail: React.FC<ConversationDetailProps> = ({ sessionI
         </motion.header>
 
         {/* Enhanced Messages Area */}
-        <main ref={messagesContainerRef} className="flex-grow overflow-y-auto min-h-0 p-4 bg-muted/20 msg-chat-area relative">
+        <div className="relative flex-grow min-h-0 overflow-hidden">
+        <main ref={messagesContainerRef} className="h-full overflow-y-auto p-4 bg-muted/20 msg-chat-area">
 
           <AnimatePresence mode="wait">
             {isLoading ? (
@@ -1332,27 +1357,29 @@ export const ConversationDetail: React.FC<ConversationDetailProps> = ({ sessionI
 
                 {messages.map((msg, index) => {
                   const showDateSeparator = index === 0 || isDifferentDay(messages[index - 1].timestamp, msg.timestamp);
+                  const prevMsg = index > 0 ? messages[index - 1] : null;
+                  const nextMsg = index < messages.length - 1 ? messages[index + 1] : null;
+                  const isRegularMsg = msg.message_type === 'message';
+                  const isSameGroupAsPrev = !!(prevMsg && prevMsg.sender === msg.sender && isRegularMsg && prevMsg.message_type === 'message' && !isDifferentDay(prevMsg.timestamp, msg.timestamp) && new Date(msg.timestamp).getTime() - new Date(prevMsg.timestamp).getTime() < 120000);
+                  const isSameGroupAsNext = !!(nextMsg && nextMsg.sender === msg.sender && isRegularMsg && nextMsg.message_type === 'message' && !isDifferentDay(nextMsg.timestamp, msg.timestamp) && new Date(nextMsg.timestamp).getTime() - new Date(msg.timestamp).getTime() < 120000);
+                  const showAvatar = !isSameGroupAsNext;
+                  const showSenderLabel = !isSameGroupAsPrev && isRegularMsg;
+                  const showTimestamp = !isSameGroupAsNext;
 
                   return (
                     <motion.div
                       key={`${msg.id}-${index}`}
                       variants={messageVariants}
+                      className={isSameGroupAsPrev ? 'mt-0.5' : index > 0 ? 'mt-3' : ''}
                     >
                       {/* Enhanced Date Separator */}
                       {showDateSeparator && (
-                        <div className="flex items-center justify-center my-8">
-                          <div className="flex items-center gap-4">
-                            <div className="h-px w-16 bg-gradient-to-r from-transparent via-border to-border" />
-                            <div className="bg-card px-4 py-1.5 rounded-full shadow-sm border border-border">
-                              <div className="flex items-center gap-2">
-                                <Clock className="h-3 w-3 text-muted-foreground" />
-                                <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
-                                  {formatDateSeparator(new Date(msg.timestamp))}
-                                </p>
-                              </div>
-                            </div>
-                            <div className="h-px w-16 bg-gradient-to-l from-transparent via-border to-border" />
-                          </div>
+                        <div className="flex items-center gap-3 my-6 px-2">
+                          <div className="flex-1 h-px bg-gradient-to-r from-transparent to-slate-200 dark:to-white/10" />
+                          <span className="flex-shrink-0 text-[10px] font-semibold text-slate-400 dark:text-white/30 uppercase tracking-widest">
+                            {formatDateSeparator(new Date(msg.timestamp))}
+                          </span>
+                          <div className="flex-1 h-px bg-gradient-to-l from-transparent to-slate-200 dark:to-white/10" />
                         </div>
                       )}
 
@@ -1386,19 +1413,26 @@ export const ConversationDetail: React.FC<ConversationDetailProps> = ({ sessionI
                         /* Enhanced Regular Message */
                         <div className={`flex items-end gap-2 ${msg.sender === 'user' ? 'justify-start' : 'justify-end'}`}>
                           {msg.sender === 'user' && (
-                            <div className="h-7 w-7 flex-shrink-0 rounded-full bg-muted border border-border msg-avatar-user flex items-center justify-center">
-                              <UserIcon className="h-3.5 w-3.5 text-muted-foreground" />
-                            </div>
+                            showAvatar ? (
+                              <div className="h-7 w-7 flex-shrink-0 rounded-full msg-avatar-user flex items-center justify-center">
+                                <UserIcon className="h-3.5 w-3.5" />
+                              </div>
+                            ) : <div className="h-7 w-7 flex-shrink-0" />
                           )}
                           <div className={`flex flex-col ${msg.sender === 'user' ? 'items-start' : 'items-end'} max-w-[85%] sm:max-w-[65%]`}>
+                            {showSenderLabel && (
+                              <span className={`text-[11px] font-semibold px-1 mb-1 tracking-tight ${msg.sender === 'user' ? 'text-slate-400' : 'text-violet-400'}`}>
+                                {msg.sender === 'user' ? (contact?.name || 'Customer') : 'You'}
+                              </span>
+                            )}
                             <div
                               className={`px-3.5 py-2.5 rounded-2xl ${
                                 msg.sender === 'user'
-                                  ? `bg-card border border-border msg-bubble-user ${isRTL ? 'rounded-br-md' : 'rounded-bl-md'} text-foreground shadow-sm`
-                                  : `bg-primary text-primary-foreground msg-bubble-agent ${isRTL ? 'rounded-bl-md' : 'rounded-br-md'} shadow-sm`
+                                  ? `msg-bubble-user ${isRTL ? 'rounded-br-sm' : 'rounded-bl-sm'}`
+                                  : `msg-bubble-agent ${isRTL ? 'rounded-bl-sm' : 'rounded-br-sm'}`
                               }`}
                             >
-                              <div className="prose prose-sm dark:prose-invert max-w-full prose-p:my-1 prose-headings:my-2">
+                              <div className={`prose prose-sm max-w-full prose-p:my-1 prose-headings:my-2 ${msg.sender === 'user' ? 'prose-slate' : 'prose-invert'}`}>
                                 <ReactMarkdown
                                   remarkPlugins={[remarkGfm]}
                                   components={{
@@ -1466,15 +1500,18 @@ export const ConversationDetail: React.FC<ConversationDetailProps> = ({ sessionI
                                 </div>
                               )}
                             </div>
-                            <p className="text-[10px] mt-1 px-1 flex items-center gap-1 text-muted-foreground/60">
-                              <Clock className="h-2.5 w-2.5" />
-                              {new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                            </p>
+                            {showTimestamp && (
+                              <p className="text-[10px] mt-1 px-1 text-muted-foreground/45">
+                                {new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                              </p>
+                            )}
                           </div>
                           {msg.sender !== 'user' && (
-                            <div className="h-7 w-7 flex-shrink-0 rounded-full bg-primary/10 border border-primary/20 msg-avatar-bot flex items-center justify-center">
-                              <Bot className="h-3.5 w-3.5 text-primary" />
-                            </div>
+                            showAvatar ? (
+                              <div className="h-7 w-7 flex-shrink-0 rounded-full msg-avatar-bot flex items-center justify-center">
+                                <Bot className="h-3.5 w-3.5" />
+                              </div>
+                            ) : <div className="h-7 w-7 flex-shrink-0" />
                           )}
                         </div>
                       )}
@@ -1524,6 +1561,23 @@ export const ConversationDetail: React.FC<ConversationDetailProps> = ({ sessionI
           </AnimatePresence>
         </main>
 
+        {/* Jump-to-new-messages button */}
+        <AnimatePresence>
+          {newMsgCount > 0 && (
+            <motion.button
+              initial={{ opacity: 0, y: 8, scale: 0.95 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 8, scale: 0.95 }}
+              onClick={() => { scrollToBottom(); setNewMsgCount(0); }}
+              className="absolute bottom-4 left-1/2 -translate-x-1/2 z-20 flex items-center gap-1.5 px-3 py-1.5 bg-violet-600 hover:bg-violet-700 text-white text-xs font-semibold rounded-full shadow-lg cursor-pointer transition-colors"
+            >
+              <ArrowDown className="h-3 w-3" />
+              {newMsgCount} new message{newMsgCount !== 1 ? 's' : ''}
+            </motion.button>
+          )}
+        </AnimatePresence>
+        </div>
+
         {/* Composer */}
         {!readOnly && (
           <motion.footer
@@ -1554,9 +1608,10 @@ export const ConversationDetail: React.FC<ConversationDetailProps> = ({ sessionI
                           transition={{ delay: index * 0.04 }}
                           whileTap={{ scale: 0.95 }}
                           onClick={() => { setMessage(reply); setSuggestedReplies([]); }}
-                          className="flex-shrink-0 px-2.5 py-1 bg-purple-50 dark:bg-white/[0.06] border border-purple-200/60 dark:border-white/[0.10] rounded-full text-[11px] text-purple-700 dark:text-white/70 hover:bg-purple-100 dark:hover:bg-white/[0.10] transition-colors"
+                          title={reply}
+                          className="flex-shrink-0 max-w-[200px] flex items-center gap-1 px-2.5 py-1 bg-violet-50 dark:bg-white/[0.06] border border-violet-200/60 dark:border-white/[0.10] rounded-full text-[11px] text-violet-700 dark:text-white/70 hover:bg-violet-100 dark:hover:bg-white/[0.10] transition-colors"
                         >
-                          {reply}
+                          <span className="truncate">{reply}</span>
                         </motion.button>
                       ))
                     )}
@@ -1576,7 +1631,7 @@ export const ConversationDetail: React.FC<ConversationDetailProps> = ({ sessionI
                 className={`rounded-xl border shadow-sm transition-colors duration-200 ${
                   activeComposerTab === 'note'
                     ? 'bg-violet-50/60 dark:bg-violet-900/10 border-violet-200/70 dark:border-violet-700/30'
-                    : 'bg-card border-border'
+                    : 'app-surface border-border'
                 }`}
               >
                 {/* ── Top bar: tabs + draft indicator ── */}

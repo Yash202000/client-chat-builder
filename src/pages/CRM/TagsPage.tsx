@@ -231,9 +231,9 @@ export default function TagsPage() {
   }
 
   return (
-    <div className="min-h-full bg-slate-50 dark:bg-slate-950">
+    <div className="min-h-full app-surface">
       {/* Header */}
-      <div className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 px-4 sm:px-6 py-4 sm:py-6">
+      <div className="bg-card/80 backdrop-blur-sm border-b border-border px-4 sm:px-6 py-4 sm:py-6">
         <div className="flex items-center justify-between gap-3">
           <div className="flex items-center gap-3">
             <div className="h-9 w-9 sm:h-12 sm:w-12 rounded-xl bg-gradient-to-br from-orange-500 to-red-600 flex items-center justify-center flex-shrink-0">
@@ -260,7 +260,7 @@ export default function TagsPage() {
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-5">
-        <div className="p-5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm hover:shadow-md transition-all duration-300">
+        <div className="p-5 rounded-xl border border-border bg-card shadow-sm hover:shadow-md transition-all duration-300">
           <div className="flex items-start justify-between">
             <div>
               <p className="text-xs font-medium text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1.5">
@@ -274,7 +274,7 @@ export default function TagsPage() {
           </div>
         </div>
 
-        <div className="p-5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm hover:shadow-md transition-all duration-300">
+        <div className="p-5 rounded-xl border border-border bg-card shadow-sm hover:shadow-md transition-all duration-300">
           <div className="flex items-start justify-between">
             <div>
               <p className="text-xs font-medium text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1.5">
@@ -288,7 +288,7 @@ export default function TagsPage() {
           </div>
         </div>
 
-        <div className="p-5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm hover:shadow-md transition-all duration-300">
+        <div className="p-5 rounded-xl border border-border bg-card shadow-sm hover:shadow-md transition-all duration-300">
           <div className="flex items-start justify-between">
             <div>
               <p className="text-xs font-medium text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1.5">
@@ -304,7 +304,7 @@ export default function TagsPage() {
       </div>
 
       {/* Search */}
-      <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm p-3">
+      <div className="rounded-xl border border-border bg-card shadow-sm p-3">
         <div className="relative">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-slate-400" />
           <Input
@@ -318,7 +318,7 @@ export default function TagsPage() {
 
       {/* Tags Grid */}
       {filteredTags.length === 0 ? (
-        <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm">
+        <div className="rounded-xl border border-border bg-card shadow-sm">
           <div className="py-12">
             <div className="flex flex-col items-center">
               <div className="h-16 w-16 rounded-xl bg-orange-50 dark:bg-orange-900/20 flex items-center justify-center mb-4">
@@ -340,7 +340,7 @@ export default function TagsPage() {
           {filteredTags.map((tag) => (
             <div
               key={tag.id}
-              className="p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm hover:shadow-md transition-all duration-300"
+              className="p-4 rounded-xl border border-border bg-card shadow-sm hover:shadow-md transition-all duration-300"
             >
               <div className="flex items-start justify-between mb-3">
                 <div className="flex items-center gap-3">

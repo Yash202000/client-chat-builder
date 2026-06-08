@@ -180,7 +180,7 @@ export default function AuditLogsPage() {
 
       {/* Filter bar */}
       <div className="flex-shrink-0 px-4 sm:px-6 pb-3 sm:pb-4">
-        <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700 p-3 sm:p-4 shadow-sm">
+        <div className="bg-card rounded-xl border border-border p-3 sm:p-4 shadow-sm">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
             {/* Entity type */}
             <div>
@@ -280,7 +280,7 @@ export default function AuditLogsPage() {
                 const { date, time } = formatDateTime(log.created_at);
                 const displayName = log.user?.full_name ?? log.user?.email ?? `User #${log.user_id}`;
                 return (
-                  <div key={log.id} className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700 p-3 shadow-sm">
+                  <div key={log.id} className="bg-card rounded-xl border border-border p-3 shadow-sm">
                     {/* Row 1: date + action badge */}
                     <div className="flex items-center justify-between gap-2 mb-2">
                       <div className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400">
@@ -322,7 +322,7 @@ export default function AuditLogsPage() {
             </div>
 
             {/* ── Desktop table (hidden below sm) ── */}
-            <div className="hidden sm:block bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden">
+            <div className="hidden sm:block bg-card rounded-xl border border-border shadow-sm overflow-hidden">
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead>

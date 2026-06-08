@@ -208,7 +208,7 @@ export function SlashCommandPlugin({ onTemplateInsert }: SlashCommandPluginProps
   if (!showDropdown) return null;
 
   return (
-    <div className="absolute bottom-full left-0 mb-2 w-full max-w-2xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg shadow-xl" style={{ zIndex: 9999 }}>
+    <div className="absolute bottom-full left-0 mb-2 w-full max-w-2xl bg-card border border-border rounded-lg shadow-xl" style={{ zIndex: 9999 }}>
       {isLoading ? (
         <div className="p-4 text-center text-sm text-slate-500">
           Searching templates...

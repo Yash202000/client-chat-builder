@@ -191,9 +191,9 @@ export default function CRMDashboard() {
   ];
 
   return (
-    <div className="min-h-full bg-slate-50 dark:bg-slate-950">
+    <div className="min-h-full app-surface">
       {/* Header */}
-      <div className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 px-6 py-6">
+      <div className="app-surface border-b border-border px-6 py-6">
         <div className="flex items-center gap-3">
           <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-orange-500 to-red-600 flex items-center justify-center flex-shrink-0">
             <LayoutDashboard className="h-6 w-6 text-white" />
@@ -222,7 +222,7 @@ export default function CRMDashboard() {
           };
           const colors = colorMap[metric.iconColor] || colorMap['text-blue-600 dark:text-blue-400'];
           return (
-            <div key={metric.title} className="p-5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm hover:shadow-md transition-all duration-300">
+            <div key={metric.title} className="p-5 rounded-xl border border-border app-surface shadow-sm hover:shadow-md transition-all duration-300">
               <div className="flex items-start justify-between mb-3">
                 <div className={`h-10 w-10 rounded-lg bg-gradient-to-br ${colors.iconBg} flex items-center justify-center`}>
                   <IconComponent className="h-6 w-6 text-white" />
@@ -251,7 +251,7 @@ export default function CRMDashboard() {
       </div>
 
       {/* Sales Pipeline */}
-      <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm overflow-hidden">
+      <div className="rounded-xl border border-border app-surface shadow-sm overflow-hidden">
         <div className="p-6 border-b border-slate-200 dark:border-slate-800">
           <h3 className="text-lg font-semibold text-slate-900 dark:text-white">{t('crm.dashboard.pipelineOverview')}</h3>
           <p className="text-sm text-slate-500 dark:text-slate-400">{t('crm.dashboard.pipelineDescription')}</p>
@@ -261,7 +261,7 @@ export default function CRMDashboard() {
             {pipelineStages.map((item) => (
               <div
                 key={item.stage}
-                className="text-center p-4 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:shadow-sm transition-all duration-200 cursor-pointer"
+                className="text-center p-4 rounded-xl app-surface border border-border hover:shadow-sm transition-all duration-200 cursor-pointer"
                 onClick={() => navigate(`/dashboard/crm/leads?stage=${item.stage}`)}
               >
                 <div className="text-2xl font-bold text-slate-900 dark:text-white mb-1">{item.count}</div>
@@ -276,7 +276,7 @@ export default function CRMDashboard() {
       {/* Main Content Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Recent Leads */}
-        <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm overflow-hidden">
+        <div className="rounded-xl border border-border app-surface shadow-sm overflow-hidden">
           <div className="p-6 border-b border-slate-200 dark:border-slate-800">
             <div className="flex items-center justify-between">
               <div>
@@ -299,7 +299,7 @@ export default function CRMDashboard() {
               {data.recentLeads.slice(0, 5).map((lead: any) => (
                 <div
                   key={lead.id}
-                  className="flex items-center justify-between p-3 rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-900/50 cursor-pointer transition-all duration-200 hover:shadow-sm"
+                  className="flex items-center justify-between p-3 rounded-xl border border-border app-surface hover:brightness-[0.98] cursor-pointer transition-all duration-200 hover:shadow-sm"
                   onClick={() => navigate(`/dashboard/crm/leads/${lead.id}`)}
                 >
                   <div className="flex items-center gap-3">
@@ -344,7 +344,7 @@ export default function CRMDashboard() {
         </div>
 
         {/* Active Campaigns */}
-        <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm overflow-hidden">
+        <div className="rounded-xl border border-border app-surface shadow-sm overflow-hidden">
           <div className="p-6 border-b border-slate-200 dark:border-slate-800">
             <div className="flex items-center justify-between">
               <div>
@@ -371,7 +371,7 @@ export default function CRMDashboard() {
                 return (
                   <div
                     key={campaign.id}
-                    className="p-4 rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-900/50 cursor-pointer transition-all duration-200 hover:shadow-sm"
+                    className="p-4 rounded-xl border border-border app-surface hover:brightness-[0.98] cursor-pointer transition-all duration-200 hover:shadow-sm"
                     onClick={() => navigate(`/dashboard/crm/campaigns/${campaign.id}`)}
                   >
                     <div className="flex items-center justify-between mb-3">
@@ -440,7 +440,7 @@ export default function CRMDashboard() {
           return (
             <div
               key={action.title}
-              className="p-5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm cursor-pointer hover:shadow-md transition-all duration-300 group"
+              className="p-5 rounded-xl border border-border bg-card shadow-sm cursor-pointer hover:shadow-md transition-all duration-300 group"
               onClick={() => navigate(action.path)}
             >
               <div className={`h-10 w-10 rounded-lg bg-gradient-to-r ${action.gradient} flex items-center justify-center mb-4`}>

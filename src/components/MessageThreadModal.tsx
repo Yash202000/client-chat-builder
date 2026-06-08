@@ -187,7 +187,7 @@ const MessageThreadModal: React.FC<MessageThreadModalProps> = ({
                           'p-3 rounded-lg',
                           reply.sender_id === currentUserId
                             ? 'bg-gradient-to-br from-purple-500 to-indigo-600 text-white'
-                            : 'bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700'
+                            : 'bg-card border border-border'
                         )}
                       >
                         <div
@@ -228,7 +228,7 @@ const MessageThreadModal: React.FC<MessageThreadModalProps> = ({
           </ScrollArea>
 
           {/* Reply Input */}
-          <div className="p-4 border-t border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800">
+          <div className="p-4 border-t border-border bg-card">
             <div className="flex items-center gap-2">
               <Input
                 placeholder="Reply to thread..."

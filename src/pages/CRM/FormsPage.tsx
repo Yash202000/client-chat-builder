@@ -121,7 +121,7 @@ export default function FormsPage() {
   const filtered = forms.filter(f => f.name.toLowerCase().includes(search.toLowerCase()));
 
   return (
-    <div className="h-full flex flex-col overflow-hidden bg-background">
+    <div className="h-full flex flex-col overflow-hidden app-surface">
       {/* Header */}
       <div className="flex-shrink-0 px-6 py-4 border-b border-border">
         <div className="flex items-center justify-between mb-4">

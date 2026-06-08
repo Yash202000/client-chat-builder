@@ -282,7 +282,7 @@ export const AgentList = () => {
         </div>
 
         {/* Filters */}
-        <div className="flex flex-wrap gap-2 items-center p-3 rounded-xl border border-border bg-card">
+        <div className="flex flex-wrap gap-2 items-center p-3 rounded-xl border border-border app-surface">
           <div className="relative w-full sm:flex-1 sm:min-w-[180px]">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
             <Input
@@ -330,7 +330,7 @@ export const AgentList = () => {
         </div>
 
         {/* Sessions list */}
-        <div className="rounded-xl border border-border bg-card overflow-hidden">
+        <div className="rounded-xl border border-border app-surface overflow-hidden">
           {isLoadingSessions ? (
             <div className="p-8 text-center">
               <div className="space-y-3">
@@ -499,7 +499,7 @@ export const AgentList = () => {
                 { step: '2', icon: Globe, title: 'Connect a channel', desc: 'Website chat, WhatsApp, Instagram, email and more', color: 'text-emerald-500 bg-emerald-50 dark:bg-emerald-900/20 border-emerald-200 dark:border-emerald-800' },
                 { step: '3', icon: MessageSquare, title: 'Go live', desc: 'Test with the preview, then embed on your site', color: 'text-blue-500 bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800' },
               ].map(({ step, icon: Icon, title, desc, color }) => (
-                <div key={step} className="flex flex-col items-center text-center p-5 rounded-xl border border-border bg-card">
+                <div key={step} className="flex flex-col items-center text-center p-5 rounded-xl border border-border app-surface">
                   <div className={`h-10 w-10 rounded-xl border flex items-center justify-center mb-3 ${color}`}>
                     <Icon className="h-5 w-5" />
                   </div>
@@ -517,7 +517,7 @@ export const AgentList = () => {
                 { name: 'Support Bot', status: 'active', model: 'Claude Sonnet', sessions: 89 },
                 { name: 'Lead Qualifier', status: 'inactive', model: 'GPT-4o Mini', sessions: 0 },
               ].map((ghost) => (
-                <div key={ghost.name} className="rounded-xl border border-border bg-card overflow-hidden">
+                <div key={ghost.name} className="rounded-xl border border-border app-surface overflow-hidden">
                   <div className="h-0.5 w-full bg-gradient-to-r from-violet-400 to-purple-500" />
                   <div className="p-4">
                     <div className="flex items-center gap-3 mb-3">
@@ -561,7 +561,7 @@ export const AgentList = () => {
                 >
                   <div
                     className={cn(
-                      'group relative flex flex-col rounded-xl border border-border bg-card overflow-hidden',
+                      'group relative flex flex-col rounded-xl border border-border app-surface overflow-hidden',
                       'transition-all duration-200 hover:border-border/80 hover:shadow-md hover:shadow-black/5 dark:hover:shadow-black/20',
                       'cursor-pointer'
                     )}

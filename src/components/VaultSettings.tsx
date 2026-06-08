@@ -367,7 +367,7 @@ export const VaultSettings = () => {
           ))}
         </div>
       ) : (
-        <div className="flex flex-col items-center justify-center py-16 border-2 border-dashed border-slate-300 dark:border-slate-700 rounded-2xl bg-slate-50/50 dark:bg-slate-900/30">
+        <div className="flex flex-col items-center justify-center py-16 border-2 border-dashed border-border rounded-2xl app-surface">
           <div className="relative mb-6">
             <div className="relative w-24 h-24 bg-gradient-to-br from-violet-500 to-purple-600 rounded-full flex items-center justify-center shadow-xl shadow-violet-500/25">
               <Vault className="h-12 w-12 text-white" />

@@ -99,12 +99,12 @@ const Sidebar = ({ mobileOpen = false, onMobileClose }: { mobileOpen?: boolean; 
         md:relative md:inset-auto md:z-auto
         ${mobileOpen ? 'translate-x-0' : isRTL ? 'translate-x-full md:translate-x-0' : '-translate-x-full md:translate-x-0'}
         ${isCollapsed ? 'w-14' : 'w-60'}
-        flex-shrink-0 border-r border-border bg-card overflow-y-auto transition-all duration-300 ease-in-out
+        flex-shrink-0 border-r border-border app-surface overflow-y-auto transition-all duration-300 ease-in-out
       `}
       dir={isRTL ? 'rtl' : 'ltr'}
     >
       {/* Header */}
-      <div className={`sticky top-0 z-10 flex items-center ${isCollapsed ? 'justify-center px-1.5' : 'justify-between px-3'} py-2.5 bg-card border-b border-border`}>
+      <div className={`sticky top-0 z-10 flex items-center ${isCollapsed ? 'justify-center px-1.5' : 'justify-between px-3'} py-2.5 app-surface border-b border-border`}>
         {!isCollapsed && (
           <div className="flex items-center gap-2">
             <div className="p-1 rounded-md bg-violet-500/10 border border-violet-500/20">

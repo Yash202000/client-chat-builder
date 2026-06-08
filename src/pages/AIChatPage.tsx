@@ -284,7 +284,7 @@ const AIChatPage: React.FC = () => {
     <>
       <style>{STYLES}</style>
       <div
-        className="h-full flex bg-background overflow-hidden"
+        className="h-full flex app-surface overflow-hidden"
         dir={isRTL ? 'rtl' : 'ltr'}
       >
 
@@ -466,10 +466,10 @@ const AIChatPage: React.FC = () => {
         </aside>
 
         {/* ══════════════════ MAIN CHAT ══════════════════ */}
-        <div className="flex-1 flex flex-col overflow-hidden bg-background">
+        <div className="flex-1 flex flex-col overflow-hidden app-surface">
 
           {/* Chat header */}
-          <header className="flex-shrink-0 px-3 md:px-5 py-3 border-b border-border flex items-center gap-3 bg-background/95 backdrop-blur-sm">
+          <header className="flex-shrink-0 px-3 md:px-5 py-3 border-b border-border flex items-center gap-3 bg-card/80 backdrop-blur-sm">
             {/* Mobile sidebar toggle — only visible when a conversation is active */}
             {conversationId && (
               <button
@@ -637,7 +637,7 @@ const AIChatPage: React.FC = () => {
           </div>
 
           {/* ══ Composer ══ */}
-          <div className="flex-shrink-0 px-4 pb-4 pt-2 bg-background border-t border-border">
+          <div className="flex-shrink-0 px-4 pb-4 pt-2 bg-card/80 backdrop-blur-sm border-t border-border">
             <div className="max-w-3xl mx-auto">
               <div className={cn(
                 'flex items-end gap-2.5 rounded-2xl border border-border bg-card',

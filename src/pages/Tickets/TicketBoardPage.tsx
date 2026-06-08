@@ -377,7 +377,7 @@ export default function TicketBoardPage() {
   return (
     <div className="flex flex-col h-full">
       {/* ── Header ── */}
-      <div className="flex-shrink-0 border-b bg-background">
+      <div className="flex-shrink-0 border-b app-surface">
         {/* Row 1 — project + views + create */}
         <div className="flex items-center gap-2 px-5 py-2.5 border-b border-border/50">
           <Button variant="ghost" size="icon" className="h-7 w-7 rounded-lg -ml-1"

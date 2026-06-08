@@ -118,9 +118,9 @@ const AIToolDetailPage = () => {
   const canExecute = tool.questions?.every((q: any) => answers[q.id]?.trim());
 
   return (
-    <div className="min-h-full bg-slate-50 dark:bg-slate-950" dir={isRTL ? 'rtl' : 'ltr'}>
+    <div className="min-h-full app-surface" dir={isRTL ? 'rtl' : 'ltr'}>
       {/* Header bar */}
-      <div className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800">
+      <div className="bg-card/80 backdrop-blur-sm border-b border-border">
         <div className="px-4 sm:px-6 py-3 sm:py-4">
           <div className="flex items-center justify-between gap-3">
             <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0">

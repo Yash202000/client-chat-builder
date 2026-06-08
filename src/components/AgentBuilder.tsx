@@ -472,7 +472,7 @@ export const AgentBuilder = ({ agent, showTester = false }: AgentBuilderProps) =
   const contextValue = { handleInspect: () => {} }; // handleInspect is not used anymore
 
   return (
-    <div className="relative flex h-[calc(100vh-9rem)] sm:h-[calc(100vh-11rem)] w-full rounded-xl overflow-hidden border border-border bg-card">
+    <div className="relative flex h-[calc(100vh-9rem)] sm:h-[calc(100vh-11rem)] w-full rounded-xl overflow-hidden border border-border app-surface">
       <AgentBuilderContext.Provider value={contextValue}>
         <ReactFlowProvider>
 
@@ -540,7 +540,7 @@ export const AgentBuilder = ({ agent, showTester = false }: AgentBuilderProps) =
                   color="hsl(var(--muted-foreground))"
                   className="dark:opacity-20"
                 />
-                <Controls className="bg-white/90 dark:bg-slate-800/90 backdrop-blur-sm rounded-xl shadow-lg border border-slate-200 dark:border-slate-700 overflow-hidden" />
+                <Controls className="bg-card/90 backdrop-blur-sm rounded-xl shadow-lg border border-border overflow-hidden" />
               </ReactFlow>
             </div>
             {showTester ? (

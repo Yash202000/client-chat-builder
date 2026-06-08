@@ -140,7 +140,7 @@ const MentionInput: React.FC<MentionInputProps> = ({
       {showMentions && filteredUsers.length > 0 && (
         <div
           ref={mentionListRef}
-          className="absolute bottom-full left-0 mb-2 w-full max-w-md bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg shadow-lg overflow-hidden z-50"
+          className="absolute bottom-full left-0 mb-2 w-full max-w-md bg-card border border-border rounded-lg shadow-lg overflow-hidden z-50"
         >
           <div className="max-h-60 overflow-y-auto">
             {filteredUsers.map((user, index) => (

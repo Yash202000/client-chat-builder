@@ -284,9 +284,9 @@ export default function CampaignsPage() {
   ];
 
   return (
-    <div className="min-h-full bg-slate-50 dark:bg-slate-950">
+    <div className="min-h-full app-surface">
       {/* Header bar */}
-      <div className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800">
+      <div className="bg-card/80 backdrop-blur-sm border-b border-border">
         <div className="px-4 sm:px-6 py-4 sm:py-6">
           <div className="flex items-center justify-between gap-2">
             <div className="flex items-center gap-3 min-w-0">
@@ -396,7 +396,7 @@ export default function CampaignsPage() {
       </div>
 
       {/* Filters */}
-      <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4">
+      <div className="rounded-xl border border-border bg-card p-4">
         <div className="flex flex-col md:flex-row items-center gap-3">
           <div className="flex-1 relative w-full">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-slate-400" />
@@ -438,7 +438,7 @@ export default function CampaignsPage() {
 
       {/* Campaigns Table / Calendar */}
       {viewMode === 'list' ? (
-      <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm overflow-hidden">
+      <div className="rounded-xl border border-border bg-card shadow-sm overflow-hidden">
         <Table>
           <TableHeader>
             <TableRow className="bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700">
@@ -604,7 +604,7 @@ export default function CampaignsPage() {
       </div>
       ) : (
       /* Calendar View */
-      <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm p-6">
+      <div className="rounded-xl border border-border bg-card shadow-sm p-6">
           {/* Calendar Header */}
           <div className="flex items-center justify-between mb-6">
             <h3 className="text-xl font-semibold dark:text-white">{monthName}</h3>

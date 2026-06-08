@@ -135,7 +135,7 @@ export const WebChatCustomizer: React.FC<WebChatCustomizerPropsExtended> = ({
   };
 
   return (
-    <Card className="border-0 shadow-xl shadow-slate-200/50 dark:shadow-none bg-white dark:bg-slate-800 h-fit flex flex-col rounded-2xl overflow-hidden">
+    <Card className="border-0 shadow-xl shadow-slate-200/50 dark:shadow-none app-surface h-fit flex flex-col rounded-2xl overflow-hidden">
       <CardHeader className="border-b border-slate-100 dark:border-slate-700 bg-gradient-to-r from-slate-50 to-white dark:from-slate-800 dark:to-slate-900 flex-shrink-0 py-2 px-4">
         <div className={`flex items-center justify-between mb-2`}>
           <div className="flex items-center gap-2 sm:gap-3 min-w-0">
@@ -178,7 +178,7 @@ export const WebChatCustomizer: React.FC<WebChatCustomizerPropsExtended> = ({
               id="agent-selector"
               value={selectedAgentId ?? ""}
               onChange={(e) => onAgentChange?.(parseInt(e.target.value))}
-              className="w-full p-1.5 border border-slate-200 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-800 dark:text-white focus:ring-2 focus:ring-pink-500/20 focus:border-pink-500 transition-all text-xs"
+              className="w-full p-1.5 border border-border rounded-lg bg-card text-foreground focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-xs"
             >
               <option value="" disabled>{t('designer.selectAnAgent')}</option>
               {agents?.map(agent => (
@@ -189,7 +189,7 @@ export const WebChatCustomizer: React.FC<WebChatCustomizerPropsExtended> = ({
 
           <div>
             <Label className="text-xs font-medium text-slate-600 dark:text-slate-300 mb-1 block">{t('designer.previewType')}</Label>
-            <div className="w-full p-1.5 border border-slate-200 dark:border-slate-700 rounded-lg bg-slate-50 dark:bg-slate-900 text-xs text-slate-500 dark:text-slate-400 select-none">
+            <div className="w-full p-1.5 border border-slate-200 dark:border-slate-700 rounded-lg bg-muted/60 text-xs text-muted-foreground select-none">
               {t('designer.webChat')}
             </div>
           </div>
@@ -289,14 +289,14 @@ export const WebChatCustomizer: React.FC<WebChatCustomizerPropsExtended> = ({
                   </select>
                 </div>
 
-                <div className={`col-span-1 flex items-center justify-between p-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800`}>
+                <div className={`col-span-1 flex items-center justify-between p-2 rounded-lg border border-border app-surface`}>
                   <Label className="text-xs dark:text-white font-medium">{t('designer.darkModeWidget')}</Label>
                   <Switch
                     checked={customization.dark_mode}
                     onCheckedChange={(checked) => updateCustomization("dark_mode", checked)}
                   />
                 </div>
-                <div className={`col-span-1 flex items-center justify-between p-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800`}>
+                <div className={`col-span-1 flex items-center justify-between p-2 rounded-lg border border-border app-surface`}>
                   <Label className="text-xs dark:text-white font-medium">{t('designer.rtlMode')}</Label>
                   <Switch
                     checked={customization.meta?.rtl_enabled || false}
@@ -390,7 +390,7 @@ export const WebChatCustomizer: React.FC<WebChatCustomizerPropsExtended> = ({
                     { label: t('designer.aiSuggestions'), key: 'suggestions_enabled', value: customization.suggestions_enabled },
                     { label: t('designer.typingIndicator'), key: 'typing_indicator_enabled', value: customization.typing_indicator_enabled },
                   ].map(({ label, key, value }) => (
-                    <div key={key} className={`flex items-center justify-between px-2 py-1 rounded border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                    <div key={key} className={`flex items-center justify-between px-2 py-1 rounded border border-border bg-card ${isRTL ? 'flex-row-reverse' : ''}`}>
                       <Label className="text-xs dark:text-white">{label}</Label>
                       <Switch checked={value} onCheckedChange={(checked) => updateCustomization(key, checked)} />
                     </div>

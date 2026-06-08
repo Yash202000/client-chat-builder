@@ -63,20 +63,7 @@ function getChannelMeta(channel?: string) {
   };
 }
 
-// Avatar gradient based on name
-function getAvatarGradient(name?: string): string {
-  const gradients = [
-    'from-violet-500 to-purple-600',
-    'from-blue-500 to-cyan-600',
-    'from-emerald-500 to-teal-600',
-    'from-orange-500 to-amber-600',
-    'from-rose-500 to-pink-600',
-    'from-indigo-500 to-blue-600',
-  ];
-  if (!name) return gradients[0];
-  const idx = name.charCodeAt(0) % gradients.length;
-  return gradients[idx];
-}
+import { getAvatarColor, getAvatarInitial } from '@/lib/avatarColor';
 
 function getInitials(name?: string, email?: string): string {
   if (name) {
@@ -246,8 +233,9 @@ export const ContactProfile: React.FC<ContactProfileProps> = ({ sessionId, onTog
   };
 
   const channelMeta = getChannelMeta(contact?.channel);
-  const gradient = getAvatarGradient(contact?.name || contact?.email);
-  const initials = getInitials(contact?.name, contact?.email);
+  const avatarName = contact?.name || contact?.email || '';
+  const avatarColorClass = getAvatarColor(avatarName);
+  const avatarInitial = avatarName ? getAvatarInitial(avatarName) : getInitials(contact?.name, contact?.email);
 
   const waLink = contact?.phone_number && contact.channel === 'whatsapp'
     ? `https://wa.me/${contact.phone_number.replace(/\D/g, '')}`
@@ -255,7 +243,7 @@ export const ContactProfile: React.FC<ContactProfileProps> = ({ sessionId, onTog
 
   if (isLoading) {
     return (
-      <div className="h-full flex items-center justify-center bg-card border border-border rounded-xl">
+      <div className="h-full flex items-center justify-center app-surface border border-border rounded-xl">
         <div className="flex flex-col items-center gap-3">
           <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
           <p className="text-xs text-muted-foreground">Loading…</p>
@@ -269,7 +257,7 @@ export const ContactProfile: React.FC<ContactProfileProps> = ({ sessionId, onTog
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.2 }}
-      className="h-full flex flex-col bg-card border border-border rounded-xl overflow-hidden"
+      className="h-full flex flex-col app-surface border border-border rounded-xl overflow-hidden"
     >
       {/* ── Top bar ───────────────────────────────────────────────────────── */}
       <div className="flex-shrink-0 flex items-center justify-between px-3 pt-3 pb-2">
@@ -340,10 +328,10 @@ export const ContactProfile: React.FC<ContactProfileProps> = ({ sessionId, onTog
               />
             ) : null}
             <div
-              className={`h-16 w-16 rounded-full bg-gradient-to-br ${gradient} items-center justify-center shadow-md`}
+              className={`h-16 w-16 rounded-full ${avatarColorClass} items-center justify-center shadow-md font-bold text-xl select-none`}
               style={{ display: contact?.profile_picture_url ? 'none' : 'flex' }}
             >
-              <span className="text-white font-bold text-xl select-none">{initials}</span>
+              {avatarInitial}
             </div>
 
             {/* Set photo button — opens edit mode */}

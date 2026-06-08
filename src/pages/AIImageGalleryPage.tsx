@@ -64,9 +64,9 @@ const AIImageGalleryPage: React.FC = () => {
   }
 
   return (
-    <div className="min-h-full bg-slate-50 dark:bg-slate-950" dir={isRTL ? 'rtl' : 'ltr'}>
+    <div className="min-h-full app-surface" dir={isRTL ? 'rtl' : 'ltr'}>
       {/* Header bar */}
-      <div className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800">
+      <div className="bg-card/80 backdrop-blur-sm border-b border-border">
         <div className="px-6 py-6">
           <div className={`flex items-center justify-between ${isRTL ? 'flex-row-reverse' : ''}`}>
             <div className={`flex items-center gap-4 ${isRTL ? 'flex-row-reverse' : ''}`}>

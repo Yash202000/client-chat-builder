@@ -313,7 +313,7 @@ export default function DealsPage() {
     : [];
 
   return (
-    <div className="flex flex-col h-full bg-background">
+    <div className="flex flex-col h-full app-surface">
       {/* Header */}
       <div className="border-b border-border px-4 sm:px-6 py-3 sm:py-4">
         <div className="flex items-center justify-between mb-3 sm:mb-4">
