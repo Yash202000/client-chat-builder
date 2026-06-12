@@ -640,7 +640,7 @@ export default function BookingLinksPage() {
             </TableHeader>
             <TableBody>
               {links.map((link) => (
-                <TableRow key={link.id} className="hover:bg-gray-50">
+                <TableRow key={link.id} className="row-hover-active cursor-pointer">
                   <TableCell>
                     <div className="flex items-center gap-3">
                       <div

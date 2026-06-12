@@ -482,8 +482,8 @@ export default function DepartmentPage() {
         {/* Sidebar header */}
         <div className="px-4 py-4 border-b border-border">
           <div className="flex items-center gap-2">
-            <div className="p-1.5 rounded-lg bg-blue-600/20">
-              <Building2 className="w-4 h-4 text-blue-400" />
+            <div className="p-1.5 rounded-lg bg-muted dark:bg-white/[0.09] border border-border dark:border-white/[0.07]">
+              <Building2 className="w-4 h-4 text-foreground/60 dark:text-white/70" />
             </div>
             <h2 className="text-sm font-semibold text-foreground">Departments</h2>
           </div>
@@ -502,8 +502,8 @@ export default function DepartmentPage() {
                   className={cn(
                     'w-full text-left px-3 py-2.5 rounded-lg flex items-center gap-2 group transition-colors',
                     selectedDept?.id === dept.id
-                      ? 'bg-blue-600/20 border border-blue-500/30'
-                      : 'hover:bg-muted/60 border border-transparent'
+                      ? 'team-channel-active border border-transparent'
+                      : 'row-hover-active border border-transparent'
                   )}
                 >
                   <Building2
@@ -819,7 +819,7 @@ export default function DepartmentPage() {
                                   return (
                                     <label
                                       key={node.id}
-                                      className="flex items-center gap-2 px-3 py-1.5 hover:bg-muted/60 cursor-pointer group"
+                                      className="flex items-center gap-2 px-3 py-1.5 row-hover-active cursor-pointer group"
                                       style={{ paddingLeft: `${12 + depth * 10}px` }}
                                     >
                                       <input
@@ -904,7 +904,7 @@ export default function DepartmentPage() {
                         const isRemoving = removingMember === member.id;
 
                         return (
-                          <tr key={member.id} className="hover:bg-muted/40 transition-colors group">
+                          <tr key={member.id} className="row-hover-active group">
                             <td className="px-4 py-3">
                               <div className="flex items-center gap-3">
                                 <Avatar className="w-7 h-7 flex-shrink-0">

@@ -2,23 +2,11 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import {
-  Users,
-  Send,
-  TrendingUp,
-  TrendingDown,
-  DollarSign,
-  Target,
-  Star,
-  ArrowUpRight,
-  BarChart3,
-  UserPlus,
-  Zap,
-  CircleDollarSign,
-  Percent,
-  Loader2,
-  LayoutDashboard,
+  Users, Send, TrendingUp, TrendingDown, DollarSign,
+  Target, Star, ArrowUpRight, BarChart3, UserPlus,
+  Zap, CircleDollarSign, Percent, Loader2, LayoutDashboard,
+  ArrowRight, ChevronRight,
 } from 'lucide-react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
@@ -43,23 +31,18 @@ interface DashboardData {
   activeCampaigns: any[];
 }
 
-const STAGE_COLORS: Record<string, string> = {
-  lead: 'from-slate-500 to-slate-600',
-  mql: 'from-blue-500 to-blue-600',
-  sql: 'from-purple-500 to-purple-600',
-  opportunity: 'from-violet-500 to-violet-600',
-  customer: 'from-green-500 to-green-600',
-  lost: 'from-red-500 to-red-600',
+const STAGE_META: Record<string, { color: string; dot: string; label?: string }> = {
+  lead:        { color: 'text-slate-500',   dot: '#94a3b8' },
+  mql:         { color: 'text-blue-600',    dot: '#3b82f6' },
+  sql:         { color: 'text-violet-600',  dot: '#7c3aed' },
+  opportunity: { color: 'text-orange-600',  dot: '#f97316' },
+  customer:    { color: 'text-emerald-600', dot: '#10b981' },
+  lost:        { color: 'text-red-500',     dot: '#ef4444' },
 };
 
-const STAGE_BG_COLORS: Record<string, string> = {
-  lead: 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300',
-  mql: 'bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300',
-  sql: 'bg-purple-100 text-purple-700 dark:bg-purple-900/50 dark:text-purple-300',
-  opportunity: 'bg-violet-100 text-violet-700 dark:bg-violet-900/50 dark:text-violet-300',
-  customer: 'bg-green-100 text-green-700 dark:bg-green-900/50 dark:text-green-300',
-  lost: 'bg-red-100 text-red-700 dark:bg-red-900/50 dark:text-red-300',
-};
+function getInitials(name: string) {
+  return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) || '?';
+}
 
 export default function CRMDashboard() {
   const navigate = useNavigate();
@@ -67,21 +50,17 @@ export default function CRMDashboard() {
   const [data, setData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    fetchDashboardData();
-  }, []);
+  useEffect(() => { fetchDashboardData(); }, []);
 
   const fetchDashboardData = async () => {
     try {
       const token = localStorage.getItem('accessToken');
       const headers = { Authorization: `Bearer ${token}` };
-
       const [leadStatsRes, recentLeadsRes, campaignsRes] = await Promise.all([
         axios.get('/api/v1/leads/stats', { headers }),
         axios.get('/api/v1/leads/', { headers, params: { limit: 5 } }),
         axios.get('/api/v1/campaigns/active', { headers, params: { limit: 5 } }).catch(() => ({ data: [] })),
       ]);
-
       setData({
         leadStats: leadStatsRes.data,
         recentLeads: recentLeadsRes.data,
@@ -97,15 +76,14 @@ export default function CRMDashboard() {
   if (loading || !data) {
     return (
       <div className="flex items-center justify-center min-h-64">
-        <Loader2 className="h-6 w-6 animate-spin text-slate-400" />
+        <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
       </div>
     );
   }
 
-  const conversionRate =
-    data.leadStats.total_leads > 0
-      ? (((data.leadStats.customer_count || 0) / data.leadStats.total_leads) * 100).toFixed(1)
-      : 0;
+  const conversionRate = data.leadStats.total_leads > 0
+    ? (((data.leadStats.customer_count || 0) / data.leadStats.total_leads) * 100).toFixed(1)
+    : 0;
 
   const metrics = [
     {
@@ -113,299 +91,271 @@ export default function CRMDashboard() {
       value: data.leadStats.total_leads,
       subtext: `${data.leadStats.qualified_count || 0} ${t('crm.leads.qualification.qualified').toLowerCase()}`,
       icon: Users,
-      gradient: 'from-blue-100 to-blue-200 dark:from-blue-900/50 dark:to-blue-800/50',
-      iconColor: 'text-blue-600 dark:text-blue-400',
-      trend: '+12%',
-      trendUp: true,
+      trend: '+12%', trendUp: true,
     },
     {
       title: t('crm.dashboard.stats.pipelineValue'),
       value: `$${(data.leadStats.total_pipeline_value || 0).toLocaleString()}`,
       subtext: `${data.leadStats.opportunity_count} ${t('crm.leads.stages.opportunity').toLowerCase()}`,
       icon: CircleDollarSign,
-      gradient: 'from-green-100 to-green-200 dark:from-green-900/50 dark:to-green-800/50',
-      iconColor: 'text-green-600 dark:text-green-400',
-      trend: '+8%',
-      trendUp: true,
+      trend: '+8%', trendUp: true,
     },
     {
       title: t('crm.dashboard.stats.conversionRate'),
       value: `${conversionRate}%`,
       subtext: `${data.leadStats.customer_count} ${t('crm.dashboard.customersWon')}`,
       icon: Percent,
-      gradient: 'from-purple-100 to-purple-200 dark:from-purple-900/50 dark:to-purple-800/50',
-      iconColor: 'text-purple-600 dark:text-purple-400',
-      trend: '+2.3%',
-      trendUp: true,
+      trend: '+2.3%', trendUp: true,
     },
     {
       title: t('crm.leads.stats.avgScore'),
       value: `${data.leadStats.avg_score ? data.leadStats.avg_score.toFixed(0) : 0}/100`,
       subtext: t('crm.leads.fields.score'),
       icon: Star,
-      gradient: 'from-yellow-100 to-yellow-200 dark:from-yellow-900/50 dark:to-yellow-800/50',
-      iconColor: 'text-yellow-600 dark:text-yellow-400',
-      trend: '+5',
-      trendUp: true,
+      trend: '+5', trendUp: true,
     },
   ];
 
   const pipelineStages = [
-    { stage: 'lead', label: t('crm.leads.stages.new'), count: data.leadStats.lead_count || 0 },
-    { stage: 'mql', label: 'MQL', count: data.leadStats.mql_count || 0 },
-    { stage: 'sql', label: 'SQL', count: data.leadStats.sql_count || 0 },
-    { stage: 'opportunity', label: t('crm.leads.stages.opportunity'), count: data.leadStats.opportunity_count || 0 },
-    { stage: 'customer', label: t('crm.leads.stages.customer'), count: data.leadStats.customer_count || 0 },
-    { stage: 'lost', label: t('crm.leads.stages.lost'), count: data.leadStats.lost_count || 0 },
+    { stage: 'lead',        label: t('crm.leads.stages.new'),         count: data.leadStats.lead_count || 0 },
+    { stage: 'mql',         label: 'MQL',                              count: data.leadStats.mql_count || 0 },
+    { stage: 'sql',         label: 'SQL',                              count: data.leadStats.sql_count || 0 },
+    { stage: 'opportunity', label: t('crm.leads.stages.opportunity'),  count: data.leadStats.opportunity_count || 0 },
+    { stage: 'customer',    label: t('crm.leads.stages.customer'),     count: data.leadStats.customer_count || 0 },
+    { stage: 'lost',        label: t('crm.leads.stages.lost'),         count: data.leadStats.lost_count || 0 },
   ];
+  const maxStageCount = Math.max(...pipelineStages.map(s => s.count), 1);
 
   const quickActions = [
-    {
-      title: t('crm.contacts.title'),
-      description: t('crm.dashboard.quickActions.contactsDesc'),
-      icon: Users,
-      path: '/dashboard/crm/contacts',
-      gradient: 'from-blue-500 to-blue-600',
-    },
-    {
-      title: t('crm.leads.title'),
-      description: t('crm.dashboard.quickActions.leadsDesc'),
-      icon: UserPlus,
-      path: '/dashboard/crm/leads',
-      gradient: 'from-purple-500 to-purple-600',
-    },
-    {
-      title: t('crm.campaigns.title'),
-      description: t('crm.dashboard.quickActions.campaignsDesc'),
-      icon: Send,
-      path: '/dashboard/crm/campaigns',
-      gradient: 'from-orange-500 to-orange-600',
-    },
-    {
-      title: t('crm.dashboard.quickActions.analytics'),
-      description: t('crm.dashboard.quickActions.analyticsDesc'),
-      icon: BarChart3,
-      path: '/dashboard/crm/analytics',
-      gradient: 'from-green-500 to-green-600',
-    },
+    { title: t('crm.contacts.title'),                  description: t('crm.dashboard.quickActions.contactsDesc'),  icon: Users,    path: '/dashboard/crm/contacts' },
+    { title: t('crm.leads.title'),                     description: t('crm.dashboard.quickActions.leadsDesc'),     icon: UserPlus, path: '/dashboard/crm/leads' },
+    { title: t('crm.campaigns.title'),                 description: t('crm.dashboard.quickActions.campaignsDesc'), icon: Send,     path: '/dashboard/crm/campaigns' },
+    { title: t('crm.dashboard.quickActions.analytics'),description: t('crm.dashboard.quickActions.analyticsDesc'),icon: BarChart3, path: '/dashboard/crm/analytics' },
   ];
 
   return (
-    <div className="min-h-full app-surface">
-      {/* Header */}
-      <div className="app-surface border-b border-border px-6 py-6">
+    <div className="min-h-full bg-background">
+
+      {/* ── Page header ─────────────────────────────────────────────── */}
+      <div className="bg-card border-b border-border px-6 py-5">
         <div className="flex items-center gap-3">
-          <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-orange-500 to-red-600 flex items-center justify-center flex-shrink-0">
-            <LayoutDashboard className="h-6 w-6 text-white" />
+          <div className="h-9 w-9 rounded-lg bg-muted dark:bg-white/[0.09] border border-border dark:border-white/[0.07] flex items-center justify-center flex-shrink-0">
+            <LayoutDashboard className="h-4.5 w-4.5 text-foreground/60 dark:text-white/70" style={{ width: 18, height: 18 }} />
           </div>
           <div>
-            <h1 className="text-2xl font-bold text-slate-900 dark:text-white leading-tight">
+            <h1 className="text-lg font-semibold text-foreground leading-tight">
               {t('crm.dashboard.title')}
             </h1>
-            <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">
+            <p className="text-xs text-muted-foreground mt-0.5">
               {t('crm.dashboard.subtitle')}
             </p>
           </div>
         </div>
       </div>
+
       <div className="px-6 py-6 space-y-6">
 
-      {/* Key Metrics */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
-        {metrics.map((metric) => {
-          const IconComponent = metric.icon;
-          const colorMap: Record<string, { border: string; shadow: string; iconBg: string }> = {
-            'text-blue-600 dark:text-blue-400': { border: 'border-blue-200/80 dark:border-blue-700/60', iconBg: 'from-blue-500 to-blue-600' },
-            'text-green-600 dark:text-green-400': { border: 'border-green-200/80 dark:border-green-700/60', iconBg: 'from-green-500 to-green-600' },
-            'text-purple-600 dark:text-purple-400': { border: 'border-purple-200/80 dark:border-purple-700/60', iconBg: 'from-purple-500 to-purple-600' },
-            'text-yellow-600 dark:text-yellow-400': { border: 'border-yellow-200/80 dark:border-yellow-700/60', iconBg: 'from-yellow-500 to-yellow-600' },
-          };
-          const colors = colorMap[metric.iconColor] || colorMap['text-blue-600 dark:text-blue-400'];
-          return (
-            <div key={metric.title} className="p-5 rounded-xl border border-border app-surface shadow-sm hover:shadow-md transition-all duration-300">
-              <div className="flex items-start justify-between mb-3">
-                <div className={`h-10 w-10 rounded-lg bg-gradient-to-br ${colors.iconBg} flex items-center justify-center`}>
-                  <IconComponent className="h-6 w-6 text-white" />
-                </div>
-                <div className={`flex items-center gap-1 px-2 py-1 rounded-full ${metric.trendUp ? 'bg-green-100 dark:bg-green-900/30' : 'bg-red-100 dark:bg-red-900/30'}`}>
-                  {metric.trendUp ? (
-                    <TrendingUp className="h-3.5 w-3.5 text-green-500" />
-                  ) : (
-                    <TrendingDown className="h-3.5 w-3.5 text-red-500" />
-                  )}
-                  <span className={`text-xs font-medium ${metric.trendUp ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
+        {/* ── Metric cards ─────────────────────────────────────────── */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          {metrics.map((metric) => {
+            const Icon = metric.icon;
+            return (
+              <div key={metric.title}
+                className="p-5 rounded-xl border border-border bg-card shadow-sm hover:shadow-md transition-all duration-200 row-hover-active">
+                <div className="flex items-start justify-between mb-4">
+                  <div className="h-9 w-9 rounded-lg bg-muted dark:bg-white/[0.09] border border-border dark:border-white/[0.07] flex items-center justify-center flex-shrink-0">
+                    <Icon className="h-4 w-4 text-foreground/60 dark:text-white/70" />
+                  </div>
+                  <div className={cn(
+                    'flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium',
+                    metric.trendUp
+                      ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400'
+                      : 'bg-red-50 text-red-700 dark:bg-red-950/40 dark:text-red-400'
+                  )}>
+                    {metric.trendUp
+                      ? <TrendingUp className="h-3 w-3" />
+                      : <TrendingDown className="h-3 w-3" />}
                     {metric.trend}
-                  </span>
+                  </div>
                 </div>
-              </div>
-              <div>
-                <p className="text-xs font-medium text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1.5">
+                <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest mb-1">
                   {metric.title}
                 </p>
-                <p className="text-2xl font-bold text-slate-900 dark:text-white mb-1">{metric.value}</p>
-                <p className="text-xs text-slate-500 dark:text-slate-400">{metric.subtext}</p>
+                <p className="text-2xl font-bold text-foreground mb-0.5 tabular-nums">{metric.value}</p>
+                <p className="text-xs text-muted-foreground">{metric.subtext}</p>
               </div>
-            </div>
-          );
-        })}
-      </div>
-
-      {/* Sales Pipeline */}
-      <div className="rounded-xl border border-border app-surface shadow-sm overflow-hidden">
-        <div className="p-6 border-b border-slate-200 dark:border-slate-800">
-          <h3 className="text-lg font-semibold text-slate-900 dark:text-white">{t('crm.dashboard.pipelineOverview')}</h3>
-          <p className="text-sm text-slate-500 dark:text-slate-400">{t('crm.dashboard.pipelineDescription')}</p>
+            );
+          })}
         </div>
-        <div className="p-6">
-          <div className="grid grid-cols-2 md:grid-cols-6 gap-4">
-            {pipelineStages.map((item) => (
-              <div
-                key={item.stage}
-                className="text-center p-4 rounded-xl app-surface border border-border hover:shadow-sm transition-all duration-200 cursor-pointer"
-                onClick={() => navigate(`/dashboard/crm/leads?stage=${item.stage}`)}
-              >
-                <div className="text-2xl font-bold text-slate-900 dark:text-white mb-1">{item.count}</div>
-                <div className="text-sm text-slate-600 dark:text-slate-400 mb-3">{item.label}</div>
-                <div className={`h-2 rounded-full bg-gradient-to-r ${STAGE_COLORS[item.stage]} shadow-sm`} />
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
 
-      {/* Main Content Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Recent Leads */}
-        <div className="rounded-xl border border-border app-surface shadow-sm overflow-hidden">
-          <div className="p-6 border-b border-slate-200 dark:border-slate-800">
-            <div className="flex items-center justify-between">
-              <div>
-                <h3 className="text-lg font-semibold text-slate-900 dark:text-white">{t('crm.dashboard.recentLeads')}</h3>
-                <p className="text-sm text-slate-500 dark:text-slate-400">{t('crm.dashboard.recentLeadsDesc')}</p>
-              </div>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => navigate('/dashboard/crm/leads')}
-                className="text-orange-600 hover:text-orange-700 hover:bg-orange-50 dark:hover:bg-orange-900/20 rounded-xl"
-              >
-                {t('crm.common.showMore')}
-                <ArrowUpRight className="h-4 w-4 ml-1" />
-              </Button>
+        {/* ── Pipeline overview ────────────────────────────────────── */}
+        <div className="rounded-xl border border-border bg-card shadow-sm overflow-hidden">
+          <div className="px-6 py-4 border-b border-border flex items-center justify-between">
+            <div>
+              <h3 className="text-sm font-semibold text-foreground">{t('crm.dashboard.pipelineOverview')}</h3>
+              <p className="text-xs text-muted-foreground mt-0.5">{t('crm.dashboard.pipelineDescription')}</p>
             </div>
+            <button
+              onClick={() => navigate('/dashboard/crm/leads')}
+              className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
+            >
+              View all <ArrowUpRight className="h-3.5 w-3.5" />
+            </button>
           </div>
           <div className="p-6">
-            <div className="space-y-3">
-              {data.recentLeads.slice(0, 5).map((lead: any) => (
-                <div
-                  key={lead.id}
-                  className="flex items-center justify-between p-3 rounded-xl border border-border app-surface hover:brightness-[0.98] cursor-pointer transition-all duration-200 hover:shadow-sm"
-                  onClick={() => navigate(`/dashboard/crm/leads/${lead.id}`)}
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="h-10 w-10 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
-                      <span className="text-sm font-semibold text-slate-600 dark:text-slate-300">
-                        {lead.contact?.name?.charAt(0).toUpperCase() || '?'}
+            <div className="grid grid-cols-2 md:grid-cols-6 gap-3">
+              {pipelineStages.map((item) => {
+                const meta = STAGE_META[item.stage];
+                const pct = Math.round((item.count / maxStageCount) * 100);
+                return (
+                  <div
+                    key={item.stage}
+                    className="rounded-xl border border-border bg-background p-4 row-hover-active cursor-pointer transition-all text-center group"
+                    onClick={() => navigate(`/dashboard/crm/leads?stage=${item.stage}`)}
+                  >
+                    <div className="flex items-center justify-center gap-1.5 mb-2">
+                      <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: meta.dot }} />
+                      <span className="text-[11px] font-medium text-muted-foreground group-hover:text-foreground transition-colors truncate">
+                        {item.label}
                       </span>
                     </div>
-                    <div>
-                      <div className="font-medium dark:text-white">{lead.contact?.name || 'Unknown'}</div>
-                      <div className="text-xs text-gray-500 dark:text-gray-400">{lead.contact?.email}</div>
+                    <p className="text-2xl font-bold text-foreground tabular-nums mb-2">{item.count}</p>
+                    <div className="h-1 rounded-full bg-muted overflow-hidden">
+                      <div
+                        className="h-full rounded-full transition-all"
+                        style={{ width: `${pct}%`, backgroundColor: meta.dot, opacity: 0.7 }}
+                      />
                     </div>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <div className="flex items-center gap-1 bg-yellow-50 dark:bg-yellow-900/30 px-2 py-1 rounded-full">
-                      <Star className="h-3 w-3 text-yellow-500 fill-yellow-500" />
-                      <span className="text-xs font-medium text-yellow-700 dark:text-yellow-400">{lead.score}</span>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+
+        {/* ── Recent Leads + Active Campaigns ──────────────────────── */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+          {/* Recent Leads */}
+          <div className="rounded-xl border border-border bg-card shadow-sm overflow-hidden">
+            <div className="px-6 py-4 border-b border-border flex items-center justify-between">
+              <div>
+                <h3 className="text-sm font-semibold text-foreground">{t('crm.dashboard.recentLeads')}</h3>
+                <p className="text-xs text-muted-foreground mt-0.5">{t('crm.dashboard.recentLeadsDesc')}</p>
+              </div>
+              <button
+                onClick={() => navigate('/dashboard/crm/leads')}
+                className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
+              >
+                {t('crm.common.showMore')} <ArrowUpRight className="h-3.5 w-3.5" />
+              </button>
+            </div>
+            <div className="divide-y divide-border/50">
+              {data.recentLeads.slice(0, 5).map((lead: any) => {
+                const meta = STAGE_META[lead.stage] || STAGE_META.lead;
+                return (
+                  <div
+                    key={lead.id}
+                    className="flex items-center gap-3 px-6 py-3 row-hover-active cursor-pointer"
+                    onClick={() => navigate(`/dashboard/crm/leads/${lead.id}`)}
+                  >
+                    <div className="h-8 w-8 rounded-full bg-muted border border-border flex items-center justify-center flex-shrink-0">
+                      <span className="text-xs font-semibold text-muted-foreground">
+                        {getInitials(lead.contact?.name || '')}
+                      </span>
                     </div>
-                    <Badge className={cn("border-0 text-xs", STAGE_BG_COLORS[lead.stage])}>
-                      {lead.stage?.toUpperCase() ?? '—'}
-                    </Badge>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-foreground truncate">{lead.contact?.name || 'Unknown'}</p>
+                      <p className="text-xs text-muted-foreground truncate">{lead.contact?.email}</p>
+                    </div>
+                    <div className="flex items-center gap-2 flex-shrink-0">
+                      <div className="flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-muted border border-border">
+                        <Star className="h-2.5 w-2.5 text-amber-500 fill-amber-500" />
+                        <span className="text-[10px] font-semibold text-foreground tabular-nums">{lead.score}</span>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: meta.dot }} />
+                        <span className={cn('text-[10px] font-semibold uppercase', meta.color)}>
+                          {lead.stage ?? '—'}
+                        </span>
+                      </div>
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
               {data.recentLeads.length === 0 && (
-                <div className="text-center py-8">
-                  <div className="h-14 w-14 rounded-xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center mx-auto mb-4">
-                    <Users className="h-7 w-7 text-orange-500" />
+                <div className="flex flex-col items-center py-10 gap-3">
+                  <div className="h-10 w-10 rounded-xl bg-muted border border-border flex items-center justify-center">
+                    <Users className="h-5 w-5 text-muted-foreground" />
                   </div>
-                  <p className="text-slate-500 dark:text-slate-400 mb-2">{t('crm.leads.noLeads')}</p>
-                  <Button
-                    variant="link"
-                    className="text-orange-600 hover:text-orange-700"
+                  <p className="text-sm text-muted-foreground">{t('crm.leads.noLeads')}</p>
+                  <button
+                    className="text-xs text-muted-foreground hover:text-foreground underline underline-offset-2"
                     onClick={() => navigate('/dashboard/crm/leads')}
                   >
                     {t('crm.leads.noLeadsMessage')}
-                  </Button>
+                  </button>
                 </div>
               )}
             </div>
           </div>
-        </div>
 
-        {/* Active Campaigns */}
-        <div className="rounded-xl border border-border app-surface shadow-sm overflow-hidden">
-          <div className="p-6 border-b border-slate-200 dark:border-slate-800">
-            <div className="flex items-center justify-between">
+          {/* Active Campaigns */}
+          <div className="rounded-xl border border-border bg-card shadow-sm overflow-hidden">
+            <div className="px-6 py-4 border-b border-border flex items-center justify-between">
               <div>
-                <h3 className="text-lg font-semibold text-slate-900 dark:text-white">{t('crm.dashboard.activeCampaigns')}</h3>
-                <p className="text-sm text-slate-500 dark:text-slate-400">{t('crm.dashboard.activeCampaignsDesc')}</p>
+                <h3 className="text-sm font-semibold text-foreground">{t('crm.dashboard.activeCampaigns')}</h3>
+                <p className="text-xs text-muted-foreground mt-0.5">{t('crm.dashboard.activeCampaignsDesc')}</p>
               </div>
-              <Button
-                variant="ghost"
-                size="sm"
+              <button
                 onClick={() => navigate('/dashboard/crm/campaigns')}
-                className="text-orange-600 hover:text-orange-700 hover:bg-orange-50 dark:hover:bg-orange-900/20 rounded-xl"
+                className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
               >
-                {t('crm.common.showMore')}
-                <ArrowUpRight className="h-4 w-4 ml-1" />
-              </Button>
+                {t('crm.common.showMore')} <ArrowUpRight className="h-3.5 w-3.5" />
+              </button>
             </div>
-          </div>
-          <div className="p-6">
-            <div className="space-y-3">
+            <div className="divide-y divide-border/50">
               {data.activeCampaigns.map((campaign: any) => {
                 const progress = campaign.total_contacts > 0
                   ? (campaign.contacts_reached / campaign.total_contacts) * 100
                   : 0;
+                const engagedPct = campaign.contacts_reached > 0
+                  ? ((campaign.contacts_engaged / campaign.contacts_reached) * 100).toFixed(0)
+                  : 0;
+                const convertedPct = campaign.contacts_reached > 0
+                  ? ((campaign.contacts_converted / campaign.contacts_reached) * 100).toFixed(0)
+                  : 0;
                 return (
                   <div
                     key={campaign.id}
-                    className="p-4 rounded-xl border border-border app-surface hover:brightness-[0.98] cursor-pointer transition-all duration-200 hover:shadow-sm"
+                    className="px-6 py-4 row-hover-active cursor-pointer"
                     onClick={() => navigate(`/dashboard/crm/campaigns/${campaign.id}`)}
                   >
-                    <div className="flex items-center justify-between mb-3">
-                      <div className="font-medium dark:text-white">{campaign.name}</div>
-                      <Badge className="bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 border-0">
-                        {t('crm.campaigns.status.active')}
-                      </Badge>
+                    <div className="flex items-center justify-between mb-2.5">
+                      <p className="text-sm font-medium text-foreground truncate flex-1 mr-3">{campaign.name}</p>
+                      <div className="flex items-center gap-1 flex-shrink-0">
+                        <div className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                        <span className="text-[10px] font-semibold text-emerald-600 dark:text-emerald-400">
+                          {t('crm.campaigns.status.active')}
+                        </span>
+                      </div>
                     </div>
                     <div className="space-y-2">
-                      <div className="flex justify-between text-sm">
-                        <span className="text-gray-500 dark:text-gray-400">{t('crm.campaigns.progress')}</span>
-                        <span className="font-medium dark:text-white">
+                      <div className="flex items-center justify-between text-xs">
+                        <span className="text-muted-foreground">{t('crm.campaigns.progress')}</span>
+                        <span className="font-medium text-foreground tabular-nums">
                           {campaign.contacts_reached}/{campaign.total_contacts}
                         </span>
                       </div>
-                      <div className="relative">
-                        <Progress value={progress} className="h-2 bg-slate-200 dark:bg-slate-700" />
-                      </div>
-                      <div className="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400">
+                      <Progress value={progress} className="h-1.5" />
+                      <div className="flex items-center justify-between text-[11px] text-muted-foreground">
                         <div className="flex items-center gap-1">
-                          <Zap className="h-3 w-3 text-blue-500" />
-                          <span>
-                            {campaign.contacts_engaged > 0
-                              ? ((campaign.contacts_engaged / campaign.contacts_reached) * 100).toFixed(0)
-                              : 0}% {t('crm.dashboard.engaged')}
-                          </span>
+                          <Zap className="h-3 w-3" />
+                          <span>{engagedPct}% {t('crm.dashboard.engaged')}</span>
                         </div>
                         <div className="flex items-center gap-1">
-                          <Target className="h-3 w-3 text-purple-500" />
-                          <span>
-                            {campaign.contacts_converted > 0
-                              ? ((campaign.contacts_converted / campaign.contacts_reached) * 100).toFixed(0)
-                              : 0}% {t('crm.dashboard.converted')}
-                          </span>
+                          <Target className="h-3 w-3" />
+                          <span>{convertedPct}% {t('crm.dashboard.converted')}</span>
                         </div>
                       </div>
                     </div>
@@ -413,45 +363,46 @@ export default function CRMDashboard() {
                 );
               })}
               {data.activeCampaigns.length === 0 && (
-                <div className="text-center py-8">
-                  <div className="h-14 w-14 rounded-xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center mx-auto mb-4">
-                    <Send className="h-7 w-7 text-orange-500" />
+                <div className="flex flex-col items-center py-10 gap-3">
+                  <div className="h-10 w-10 rounded-xl bg-muted border border-border flex items-center justify-center">
+                    <Send className="h-5 w-5 text-muted-foreground" />
                   </div>
-                  <p className="text-slate-500 dark:text-slate-400 mb-2">{t('crm.dashboard.noActiveCampaigns')}</p>
-                  <Button
-                    variant="link"
-                    className="text-orange-600 hover:text-orange-700"
+                  <p className="text-sm text-muted-foreground">{t('crm.dashboard.noActiveCampaigns')}</p>
+                  <button
+                    className="text-xs text-muted-foreground hover:text-foreground underline underline-offset-2"
                     onClick={() => navigate('/dashboard/crm/campaigns/new')}
                   >
                     {t('crm.campaigns.addCampaign')}
-                  </Button>
+                  </button>
                 </div>
               )}
             </div>
           </div>
         </div>
-      </div>
 
-      {/* Quick Actions */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        {quickActions.map((action) => {
-
-          const IconComponent = action.icon;
-          return (
-            <div
-              key={action.title}
-              className="p-5 rounded-xl border border-border bg-card shadow-sm cursor-pointer hover:shadow-md transition-all duration-300 group"
-              onClick={() => navigate(action.path)}
-            >
-              <div className={`h-10 w-10 rounded-lg bg-gradient-to-r ${action.gradient} flex items-center justify-center mb-4`}>
-                <IconComponent className="h-6 w-6 text-white" />
+        {/* ── Quick actions ────────────────────────────────────────── */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
+          {quickActions.map((action) => {
+            const Icon = action.icon;
+            return (
+              <div
+                key={action.title}
+                className="p-4 rounded-xl border border-border bg-card cursor-pointer row-hover-active group flex items-center gap-3"
+                onClick={() => navigate(action.path)}
+              >
+                <div className="h-9 w-9 rounded-lg bg-muted dark:bg-white/[0.09] border border-border dark:border-white/[0.07] flex items-center justify-center flex-shrink-0">
+                  <Icon className="h-4 w-4 text-foreground/60 dark:text-white/70" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-semibold text-foreground truncate">{action.title}</p>
+                  <p className="text-xs text-muted-foreground truncate">{action.description}</p>
+                </div>
+                <ChevronRight className="h-4 w-4 text-muted-foreground flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity" />
               </div>
-              <h3 className="font-semibold text-slate-900 dark:text-white mb-1">{action.title}</h3>
-              <p className="text-sm text-slate-500 dark:text-slate-400">{action.description}</p>
-            </div>
-          );
-        })}
-      </div>
+            );
+          })}
+        </div>
+
       </div>
     </div>
   );

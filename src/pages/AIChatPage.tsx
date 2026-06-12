@@ -414,8 +414,8 @@ const AIChatPage: React.FC = () => {
                       className={cn(
                         'session-item w-full text-left px-3 py-2.5 rounded-lg group',
                         isActive
-                          ? 'bg-primary/8 border-l-[2px] border-l-primary text-foreground'
-                          : 'hover:bg-muted text-foreground border-l-[2px] border-l-transparent',
+                          ? 'team-channel-active border-l-[2px] border-l-primary'
+                          : 'row-hover-active border-l-[2px] border-l-transparent',
                       )}
                     >
                       <div className="flex items-start gap-2.5">

@@ -1062,7 +1062,7 @@ export default function ContactHubPage() {
                   return (
                     <TableRow
                       key={contact.id}
-                      className={cn("group", isSelected && "bg-muted/50")}
+                      className={cn("group row-hover-active", isSelected && "team-channel-active")}
                     >
                       <TableCell className="pr-0">
                         <Checkbox

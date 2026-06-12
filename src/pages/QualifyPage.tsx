@@ -7,7 +7,6 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { Loader2, Building2, Users, Sparkles, ArrowRight, CheckCircle2 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { API_BASE_URL } from "@/config/api";
 
 const TEAM_SIZES = [
   { value: "solo", label: "Just me", description: "Solo founder or freelancer" },
@@ -43,7 +42,7 @@ export default function QualifyPage() {
 
     setIsSubmitting(true);
     try {
-      const res = await authFetch(`${API_BASE_URL}/onboarding/qualify`, {
+      const res = await authFetch(`/api/v1/onboarding/qualify`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -56,7 +55,7 @@ export default function QualifyPage() {
         const err = await res.json();
         throw new Error(err.detail || "Failed to save");
       }
-      navigate("/dashboard/onboarding");
+      navigate("/select-plan");
     } catch (err) {
       toast({ title: "Error", description: (err as Error).message, variant: "destructive" });
     } finally {

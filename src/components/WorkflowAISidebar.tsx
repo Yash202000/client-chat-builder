@@ -108,15 +108,15 @@ function MessageBubble({ msg }: { msg: ChatMessage }) {
   return (
     <div className={cn("flex gap-2 mb-3", isUser ? "justify-end" : "justify-start")}>
       {!isUser && (
-        <div className="flex-shrink-0 w-6 h-6 rounded-lg bg-violet-500/10 border border-violet-500/20 flex items-center justify-center mt-0.5">
-          <Bot className="w-3 h-3 text-violet-600 dark:text-violet-400" />
+        <div className="flex-shrink-0 w-6 h-6 rounded-lg bg-muted dark:bg-white/[0.09] border border-border dark:border-white/[0.07] flex items-center justify-center mt-0.5">
+          <Bot className="w-3 h-3 text-foreground/60 dark:text-white/70" />
         </div>
       )}
       <div
         className={cn(
           "max-w-[85%] rounded-xl px-3 py-2 text-xs leading-relaxed",
           isUser
-            ? "bg-violet-500 text-white rounded-br-sm"
+            ? "bg-foreground dark:bg-white/[0.15] text-background dark:text-white rounded-br-sm"
             : "bg-muted text-foreground border border-border rounded-bl-sm"
         )}
       >
@@ -481,7 +481,7 @@ const WorkflowAISidebar = forwardRef<WorkflowAISidebarHandle, WorkflowAISidebarP
             className={cn(
               "flex items-center gap-1 px-2 sm:px-3 py-2 text-xs font-semibold rounded-t-lg transition-all flex-shrink-0",
               activeTab === "chat"
-                ? "bg-violet-50 dark:bg-violet-950/30 text-violet-700 dark:text-violet-300 border border-b-0 border-violet-200 dark:border-violet-800"
+                ? "bg-white dark:bg-white/[0.10] text-foreground dark:text-white border border-b-0 border-border dark:border-white/[0.10] shadow-sm"
                 : "text-muted-foreground hover:text-foreground"
             )}
           >
@@ -493,7 +493,7 @@ const WorkflowAISidebar = forwardRef<WorkflowAISidebarHandle, WorkflowAISidebarP
             className={cn(
               "flex items-center gap-1 px-2 sm:px-3 py-2 text-xs font-semibold rounded-t-lg transition-all flex-shrink-0",
               activeTab === "test"
-                ? "bg-emerald-50 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-300 border border-b-0 border-emerald-200 dark:border-emerald-800"
+                ? "bg-white dark:bg-white/[0.10] text-foreground dark:text-white border border-b-0 border-border dark:border-white/[0.10] shadow-sm"
                 : "text-muted-foreground hover:text-foreground"
             )}
           >
@@ -539,8 +539,8 @@ const WorkflowAISidebar = forwardRef<WorkflowAISidebarHandle, WorkflowAISidebarP
             {/* Chat header */}
             <div className="flex-shrink-0 flex items-center justify-between px-3 py-2 border-b border-border">
               <div className="flex items-center gap-2">
-                <div className="w-6 h-6 rounded-md bg-violet-500/10 border border-violet-500/20 flex items-center justify-center">
-                  <Workflow className="w-3 h-3 text-violet-600 dark:text-violet-400" />
+                <div className="w-6 h-6 rounded-md bg-muted dark:bg-white/[0.09] border border-border dark:border-white/[0.07] flex items-center justify-center">
+                  <Workflow className="w-3 h-3 text-foreground/60 dark:text-white/70" />
                 </div>
                 <span className="text-xs font-semibold text-foreground font-mono">
                   Workflow Assistant
@@ -747,15 +747,15 @@ const WorkflowAISidebar = forwardRef<WorkflowAISidebarHandle, WorkflowAISidebarP
                 {testMessages.map((msg) => (
                   <div key={msg.id} className={cn("flex gap-2", msg.role === "user" ? "justify-end" : "justify-start")}>
                     {msg.role === "bot" && (
-                      <div className="w-6 h-6 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center flex-shrink-0 mt-0.5">
-                        <Bot className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
+                      <div className="w-6 h-6 rounded-lg bg-muted dark:bg-white/[0.09] border border-border dark:border-white/[0.07] flex items-center justify-center flex-shrink-0 mt-0.5">
+                        <Bot className="w-3 h-3 text-foreground/60 dark:text-white/70" />
                       </div>
                     )}
                     <div className="max-w-[85%] space-y-1.5">
                       <div className={cn(
                         "rounded-xl px-3 py-2 text-xs leading-relaxed",
                         msg.role === "user"
-                          ? "bg-emerald-500 text-white rounded-br-sm"
+                          ? "bg-foreground dark:bg-white/[0.15] text-background dark:text-white rounded-br-sm"
                           : "bg-muted text-foreground border border-border rounded-bl-sm"
                       )}>
                         {msg.isLoading ? (

@@ -231,7 +231,7 @@ function SprintSection({
 function TicketRow({ ticket, projectKey }: { ticket: Ticket; projectKey: string }) {
   return (
     <Link to={`/dashboard/tickets/${projectKey}/${ticket.ticket_number}`}>
-      <div className="flex items-center gap-2 px-2 py-1.5 rounded hover:bg-muted/50 cursor-pointer text-sm group">
+      <div className="flex items-center gap-2 px-2 py-1.5 rounded row-hover-active cursor-pointer text-sm group">
         <Grip className="h-3 w-3 text-muted-foreground opacity-0 group-hover:opacity-100" />
         <span className="text-xs text-muted-foreground w-20 shrink-0">{ticket.ticket_number}</span>
         <span className="flex-1 truncate">{ticket.title}</span>

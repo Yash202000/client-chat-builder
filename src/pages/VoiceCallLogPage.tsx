@@ -377,8 +377,8 @@ function EntryRow({ entry, isExpanded, onToggle }: {
 
   return (
     <div className={cn(
-      'group px-3 sm:px-5 py-1 rounded-xl transition-colors cursor-pointer',
-      isExpanded ? 'bg-muted/40 dark:bg-muted/20' : 'hover:bg-muted/30 dark:hover:bg-muted/10',
+      'group px-3 sm:px-5 py-1 rounded-xl transition-all duration-150 cursor-pointer',
+      isExpanded ? 'team-channel-active' : 'hover:bg-muted/30 dark:hover:bg-muted/10',
     )} onClick={onToggle}>
       <div className="flex items-center gap-2 sm:gap-3 py-2.5">
         <CallAvatar entry={entry} />

@@ -1251,8 +1251,8 @@ const InternalChatPage: React.FC = () => {
           )}>
             {!channelSidebarCollapsed && (
               <div className="flex items-center gap-2">
-                <div className="h-7 w-7 rounded-md bg-primary/10 flex items-center justify-center">
-                  <MessageSquare className="w-3.5 h-3.5 text-primary" />
+                <div className="h-7 w-7 rounded-md bg-muted dark:bg-white/10 flex items-center justify-center">
+                  <MessageSquare className="w-3.5 h-3.5 text-foreground/60 dark:text-white/70" />
                 </div>
                 <span className="text-sm font-semibold text-foreground">{t('teamChat.channels')}</span>
               </div>
@@ -1289,7 +1289,7 @@ const InternalChatPage: React.FC = () => {
 
           {/* Channel list */}
           <ScrollArea className="flex-1">
-            <div className={cn('py-2', channelSidebarCollapsed ? 'px-1.5' : 'px-2')}>
+            <div className={cn('py-1', channelSidebarCollapsed ? 'px-1.5' : 'px-1')}>
               {/* Group channels */}
               {!channelSidebarCollapsed && channels?.some(c => c.channel_type?.toUpperCase() !== 'DM') && (
                 <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/50 px-2 mb-1 mt-1">
@@ -1305,32 +1305,35 @@ const InternalChatPage: React.FC = () => {
                 return (
                   <Tooltip key={channel.id}>
                     <TooltipTrigger asChild>
-                      <div className="relative group/channel">
+                      <div className="relative group/channel border-b border-border/30 last:border-b-0">
                       <motion.button
                         whileTap={{ scale: 0.98 }}
                         onClick={() => handleChannelSelect(channel)}
                         className={cn(
-                          'w-full flex items-center gap-2.5 rounded-lg text-left transition-all duration-150 relative',
-                          channelSidebarCollapsed ? 'p-1.5 justify-center' : 'px-2 py-2',
+                          'w-full flex items-center gap-2.5 rounded-lg text-left transition-all duration-150 relative overflow-hidden',
+                          channelSidebarCollapsed ? 'p-1.5 justify-center' : 'px-3 py-2.5',
                           isSelected
-                            ? 'bg-primary/10 text-foreground'
+                            ? 'team-channel-active'
                             : unread
                             ? 'bg-muted/60 text-foreground hover:bg-muted'
                             : 'text-muted-foreground hover:bg-muted hover:text-foreground'
                         )}
                       >
                         {isSelected && (
-                          <span className={cn('absolute inset-y-1 w-0.5 bg-primary rounded-full', isRTL ? 'right-0' : 'left-0')} />
+                          <span className={cn(
+                            'absolute inset-y-2 w-[3px] rounded-full bg-primary dark:bg-white',
+                            isRTL ? 'right-0' : 'left-0'
+                          )} />
                         )}
                         {/* Avatar */}
                         {(avatar as any).isMeeting ? (
-                          <div className={cn('flex-shrink-0 flex items-center justify-center rounded-lg', channelSidebarCollapsed ? 'h-8 w-8' : 'h-8 w-8', isSelected ? 'bg-primary/20' : 'bg-muted')}>
-                            <Video className={cn('w-3.5 h-3.5', isSelected ? 'text-primary' : 'text-muted-foreground')} />
+                          <div className={cn('flex-shrink-0 flex items-center justify-center rounded-lg', channelSidebarCollapsed ? 'h-8 w-8' : 'h-8 w-8', isSelected ? 'bg-white dark:bg-white/20 shadow-sm' : 'bg-muted')}>
+                            <Video className={cn('w-3.5 h-3.5', isSelected ? 'text-primary dark:text-white' : 'text-muted-foreground')} />
                           </div>
                         ) : (
                           <Avatar className="flex-shrink-0 h-8 w-8">
                             {avatar.url && <AvatarImage src={avatar.url} />}
-                            <AvatarFallback className={cn('text-xs font-semibold', isSelected ? 'bg-primary/20 text-primary' : 'bg-muted text-muted-foreground')}>
+                            <AvatarFallback className={cn('text-xs font-semibold', isSelected ? 'bg-white dark:bg-white/20 text-primary dark:text-white shadow-sm' : 'bg-muted text-muted-foreground')}>
                               {avatar.fallback}
                             </AvatarFallback>
                           </Avatar>
@@ -1422,27 +1425,30 @@ const InternalChatPage: React.FC = () => {
                 return (
                   <Tooltip key={channel.id}>
                     <TooltipTrigger asChild>
-                      <div className="relative group/dm">
+                      <div className="relative group/dm border-b border-border/30 last:border-b-0">
                       <motion.button
                         whileTap={{ scale: 0.98 }}
                         onClick={() => handleChannelSelect(channel)}
                         className={cn(
-                          'w-full flex items-center gap-2.5 rounded-lg text-left transition-all duration-150 relative',
-                          channelSidebarCollapsed ? 'p-1.5 justify-center' : 'px-2 py-2',
+                          'w-full flex items-center gap-2.5 rounded-lg text-left transition-all duration-150 relative overflow-hidden',
+                          channelSidebarCollapsed ? 'p-1.5 justify-center' : 'px-3 py-2.5',
                           isSelected
-                            ? 'bg-primary/10 text-foreground'
+                            ? 'team-channel-active'
                             : unread
                             ? 'bg-muted/60 text-foreground hover:bg-muted'
                             : 'text-muted-foreground hover:bg-muted hover:text-foreground'
                         )}
                       >
                         {isSelected && (
-                          <span className={cn('absolute inset-y-1 w-0.5 bg-primary rounded-full', isRTL ? 'right-0' : 'left-0')} />
+                          <span className={cn(
+                            'absolute inset-y-2 w-[3px] rounded-full bg-primary dark:bg-white',
+                            isRTL ? 'right-0' : 'left-0'
+                          )} />
                         )}
                         <div className="relative flex-shrink-0">
                           <Avatar className="h-8 w-8">
                             {avatar.url && <AvatarImage src={avatar.url} />}
-                            <AvatarFallback className={cn('text-xs font-semibold', isSelected ? 'bg-primary/20 text-primary' : 'bg-muted text-muted-foreground')}>
+                            <AvatarFallback className={cn('text-xs font-semibold', isSelected ? 'bg-white dark:bg-white/20 text-primary dark:text-white shadow-sm' : 'bg-muted text-muted-foreground')}>
                               {avatar.fallback}
                             </AvatarFallback>
                           </Avatar>
@@ -1561,15 +1567,15 @@ const InternalChatPage: React.FC = () => {
                     const avatar = getChannelAvatar(selectedChannel, user?.id);
                     if ((avatar as any).isMeeting) {
                       return (
-                        <div className="h-8 w-8 flex-shrink-0 flex items-center justify-center rounded-lg bg-primary/10">
-                          <Video className="w-4 h-4 text-primary" />
+                        <div className="h-8 w-8 flex-shrink-0 flex items-center justify-center rounded-lg bg-muted dark:bg-white/10">
+                          <Video className="w-4 h-4 text-foreground/60 dark:text-white/70" />
                         </div>
                       );
                     }
                     return (
                       <Avatar className="h-8 w-8 flex-shrink-0">
                         {avatar.url && <AvatarImage src={avatar.url} />}
-                        <AvatarFallback className="bg-primary/10 text-primary text-xs font-bold">
+                        <AvatarFallback className="bg-muted dark:bg-white/10 text-foreground/70 dark:text-white/80 text-xs font-bold">
                           {avatar.fallback}
                         </AvatarFallback>
                       </Avatar>

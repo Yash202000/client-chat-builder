@@ -727,7 +727,7 @@ export default function LeadsPage() {
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0 }}
                       transition={{ duration: 0.18, delay: i * 0.025 }}
-                      className="border-border hover:bg-muted/40 transition-colors cursor-pointer"
+                      className="border-border row-hover-active cursor-pointer"
                       onClick={() => navigate(`/dashboard/crm/leads/${lead.id}`)}
                     >
                       <TableCell className="font-medium text-foreground">

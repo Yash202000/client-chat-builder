@@ -155,7 +155,7 @@ const AppLayout = () => {
   const resendVerificationEmail = async () => {
     setResendingVerification(true);
     try {
-      await authFetch(`${API_BASE_URL}/auth/resend-verification`, { method: 'POST' });
+      await authFetch(`/api/v1/auth/resend-verification`, { method: 'POST' });
       toast({ title: 'Verification email sent', description: 'Check your inbox for the verification link.' });
     } catch {
       toast({ title: 'Failed to send email', description: 'Please try again later.', variant: 'destructive' });
@@ -171,7 +171,7 @@ const AppLayout = () => {
   const { data: onboardingStatus } = useQuery<{ onboarding_completed: boolean } | null>({
     queryKey: ['onboarding-status', user?.company_id],
     queryFn: async () => {
-      const res = await authFetch(`${API_BASE_URL}/onboarding/status`);
+      const res = await authFetch(`/api/v1/onboarding/status`);
       if (!res.ok) return null;
       return res.json();
     },
@@ -712,7 +712,7 @@ const AppLayout = () => {
       collapsible: true,
       items: [
         { titleKey: "navigation.crm",          url: "/dashboard/crm",               icon: TrendingUp,   permission: "page:crm_dashboard", feature: "crm_dashboard" },
-        { titleKey: "navigation.leads",        url: "/dashboard/crm/leads",         icon: Target,       permission: "page:leads" },
+        { titleKey: "navigation.leads",        url: "/dashboard/crm/leads",         icon: Target,       permission: "page:leads",          feature: "leads" },
         { titleKey: "navigation.deals",        url: "/dashboard/crm/deals",         icon: KanbanSquare, permission: "page:deals",         feature: "deals" },
         { titleKey: "navigation.companies",    url: "/dashboard/crm/accounts",      icon: Building2,    permission: "page:accounts",      feature: "accounts" },
         { titleKey: "navigation.bookingLinks", url: "/dashboard/crm/booking-links", icon: Calendar,     permission: "page:booking_links", feature: "booking_links" },
@@ -728,7 +728,7 @@ const AppLayout = () => {
       items: [
         { titleKey: "navigation.campaigns", url: "/dashboard/crm/campaigns",  icon: Send,          permission: "page:campaigns",     feature: "campaigns" },
         { titleKey: "navigation.sequences", url: "/dashboard/crm/sequences",  icon: GitBranch, permission: "page:campaigns",        feature: "campaigns" },
-        { titleKey: "navigation.forms",     url: "/dashboard/crm/forms",      icon: FormInput, permission: "page:forms" },
+        { titleKey: "navigation.forms",     url: "/dashboard/crm/forms",      icon: FormInput, permission: "page:forms",           feature: "forms" },
         { titleKey: "navigation.tags",      url: "/dashboard/crm/tags",       icon: Tag,           permission: "page:tags",           feature: "tags" },
         { titleKey: "navigation.segments",  url: "/dashboard/crm/segments",   icon: Layers,        permission: "page:segments",       feature: "segments" },
         { titleKey: "navigation.templates", url: "/dashboard/crm/templates",  icon: LayoutTemplate, permission: "page:crm_templates", feature: "crm_templates" },
@@ -797,10 +797,10 @@ const AppLayout = () => {
         { titleKey: "navigation.auditLogs", url: "/dashboard/audit-logs", icon: ClipboardList, permission: "page:settings" },
         { titleKey: "navigation.teamManagement", url: "/dashboard/team", icon: Users, permission: "page:team_management" },
         { titleKey: "navigation.settings", url: "/dashboard/settings", icon: Settings, permission: "page:settings" },
-        { titleKey: "navigation.customFields", url: "/dashboard/settings/custom-fields", icon: FormInput, permission: "page:settings" },
-        { titleKey: "navigation.routingRules", url: "/dashboard/settings/routing-rules", icon: GitBranch, permission: "page:settings" },
-        { titleKey: "navigation.hierarchy", url: "/dashboard/settings/hierarchy", icon: WorkflowIcon, permission: "page:settings" },
-        { titleKey: "navigation.departments", url: "/dashboard/settings/departments", icon: Building2, permission: "page:settings" },
+        { titleKey: "navigation.customFields", url: "/dashboard/settings/custom-fields", icon: FormInput,     permission: "page:settings", feature: "forms" },
+        { titleKey: "navigation.routingRules", url: "/dashboard/settings/routing-rules", icon: GitBranch,    permission: "page:settings", feature: "routing_rules" },
+        { titleKey: "navigation.hierarchy",    url: "/dashboard/settings/hierarchy",     icon: WorkflowIcon, permission: "page:settings", feature: "routing_rules" },
+        { titleKey: "navigation.departments",  url: "/dashboard/settings/departments",   icon: Building2,    permission: "page:settings", feature: "routing_rules" },
         ...(!isManagedCredentials ? [{ titleKey: "navigation.apiVault", url: "/dashboard/vault", icon: Key, permission: "page:api_vault", feature: "api_vault" }] : []),
         { titleKey: "navigation.billing", url: "/dashboard/billing", icon: CreditCard, permission: "page:billing" },
         { titleKey: "navigation.managePlans", url: "/dashboard/admin/subscriptions", icon: Sparkles, admin: true },

@@ -90,7 +90,7 @@ export const CompaniesPage = () => {
                 </TableHeader>
                 <TableBody>
                   {companies.map((company) => (
-                    <TableRow key={company.id} className="border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/50">
+                    <TableRow key={company.id} className="border-border row-hover-active cursor-pointer">
                       <TableCell className="font-mono text-sm text-slate-500 dark:text-slate-400">{company.id}</TableCell>
                       <TableCell className="font-medium text-slate-900 dark:text-white">
                         <div className="flex items-center gap-2">

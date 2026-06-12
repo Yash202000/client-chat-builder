@@ -5,7 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { Mail, Lock, Loader2, ArrowRight, Bot, CheckCircle2, Phone, AlertTriangle } from "lucide-react";
+import { Mail, Lock, Loader2, ArrowRight, Bot, CheckCircle2, AlertTriangle } from "lucide-react";
+import { PhoneInput } from "@/components/PhoneInput";
 import { apiFetch } from "@/lib/api";
 import { useAuth } from "@/hooks/useAuth";
 
@@ -248,19 +249,31 @@ export const SignupPage = () => {
               <Label htmlFor="phone" className="text-slate-700 dark:text-slate-300 font-medium">
                 Phone number <span className="text-slate-400 font-normal">(optional)</span>
               </Label>
-              <div className="relative">
-                <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-                <Input
-                  id="phone"
-                  type="tel"
-                  placeholder="+1 555 000 0000"
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                  disabled={isLoading}
-                  className="pl-10 h-11 dark:bg-slate-900 dark:border-slate-700 dark:text-white focus-visible:ring-violet-500 focus-visible:border-violet-500"
-                />
-              </div>
+              <PhoneInput
+                id="phone"
+                value={phone}
+                onChange={setPhone}
+                disabled={isLoading}
+              />
               <p className="text-xs text-slate-400 dark:text-slate-500">Used for account security and alerts</p>
+            </div>
+
+            <div className="space-y-1">
+              <label className="flex items-start gap-2.5 cursor-pointer group">
+                <input
+                  type="checkbox"
+                  checked={agreedToTerms}
+                  onChange={(e) => { setAgreedToTerms(e.target.checked); if (e.target.checked) setTermsError(""); }}
+                  className="mt-0.5 h-4 w-4 rounded border-slate-300 text-violet-600 accent-violet-600 flex-shrink-0"
+                />
+                <span className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
+                  I agree to the{" "}
+                  <Link to="/terms" target="_blank" className="underline hover:text-violet-600 transition-colors">Terms of Service</Link>
+                  {" "}and{" "}
+                  <Link to="/privacy-policy" target="_blank" className="underline hover:text-violet-600 transition-colors">Privacy Policy</Link>
+                </span>
+              </label>
+              {termsError && <p className="text-xs text-destructive pl-6">{termsError}</p>}
             </div>
 
             <Button
@@ -280,24 +293,6 @@ export const SignupPage = () => {
                 </>
               )}
             </Button>
-
-            <div className="space-y-1">
-              <label className="flex items-start gap-2.5 cursor-pointer group">
-                <input
-                  type="checkbox"
-                  checked={agreedToTerms}
-                  onChange={(e) => { setAgreedToTerms(e.target.checked); if (e.target.checked) setTermsError(""); }}
-                  className="mt-0.5 h-4 w-4 rounded border-slate-300 text-violet-600 accent-violet-600 flex-shrink-0"
-                />
-                <span className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
-                  I agree to the{" "}
-                  <Link to="/terms" target="_blank" className="underline hover:text-violet-600 transition-colors">Terms of Service</Link>
-                  {" "}and{" "}
-                  <Link to="/privacy-policy" target="_blank" className="underline hover:text-violet-600 transition-colors">Privacy Policy</Link>
-                </span>
-              </label>
-              {termsError && <p className="text-xs text-destructive pl-6">{termsError}</p>}
-            </div>
           </form>
 
           <p className="mt-8 text-center text-sm text-slate-500 dark:text-slate-400">

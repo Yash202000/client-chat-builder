@@ -159,8 +159,8 @@ const AIToolsPage = () => {
               onClick={() => setSelectedCategory(null)}
               className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
                 selectedCategory === null
-                  ? 'bg-violet-50 dark:bg-violet-900/20 text-violet-700 dark:text-violet-300'
-                  : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800'
+                  ? 'team-channel-active'
+                  : 'text-muted-foreground row-hover-active'
               }`}
             >
               <Sparkles className="h-3.5 w-3.5 flex-shrink-0" />
@@ -173,8 +173,8 @@ const AIToolsPage = () => {
                 onClick={() => setSelectedCategory(category.id)}
                 className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
                   selectedCategory === category.id
-                    ? 'bg-violet-50 dark:bg-violet-900/20 text-violet-700 dark:text-violet-300'
-                    : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800'
+                    ? 'team-channel-active'
+                    : 'text-muted-foreground row-hover-active'
                 }`}
               >
                 {category.icon ? <i className={`${category.icon} text-xs flex-shrink-0`}></i> : <Wrench className="h-3.5 w-3.5 flex-shrink-0" />}

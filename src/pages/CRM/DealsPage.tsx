@@ -520,7 +520,7 @@ export default function DealsPage() {
                         <motion.tr key={deal.id}
                           initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
                           transition={{ duration: 0.15, delay: i * 0.02 }}
-                          className="border-border hover:bg-muted/40 transition-colors cursor-pointer"
+                          className="border-border row-hover-active cursor-pointer"
                           onClick={() => navigate(`/dashboard/crm/deals/${deal.id}`)}
                         >
                           <TableCell className="font-medium text-foreground">{deal.title}</TableCell>

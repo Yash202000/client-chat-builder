@@ -16,7 +16,6 @@ import {
   Plus, Send, Trash2, Users, CheckCircle2, XCircle,
   Clock, Radio, BarChart3, MessageSquare, Phone, CalendarClock, Mail,
 } from 'lucide-react';
-import { API_BASE_URL } from '@/config/api';
 import { formatDistanceToNow, format } from 'date-fns';
 
 interface Segment { id: number; name: string; contact_count: number; }
@@ -66,7 +65,7 @@ export default function BroadcastPage() {
   const { data: broadcasts = [], isLoading } = useQuery<Broadcast[]>({
     queryKey: ['broadcasts'],
     queryFn: async () => {
-      const res = await authFetch(`${API_BASE_URL}/api/v1/broadcasts`);
+      const res = await authFetch(`/api/v1/broadcasts`);
       if (!res.ok) throw new Error('Failed');
       return res.json();
     },
@@ -79,7 +78,7 @@ export default function BroadcastPage() {
   const { data: segments = [] } = useQuery<Segment[]>({
     queryKey: ['segments-list'],
     queryFn: async () => {
-      const res = await authFetch(`${API_BASE_URL}/api/v1/segments`);
+      const res = await authFetch(`/api/v1/segments`);
       if (!res.ok) return [];
       const data = await res.json();
       return data.segments || data;
@@ -90,7 +89,7 @@ export default function BroadcastPage() {
     queryKey: ['broadcast-contacts', detailBroadcast?.id],
     enabled: !!detailBroadcast,
     queryFn: async () => {
-      const res = await authFetch(`${API_BASE_URL}/api/v1/broadcasts/${detailBroadcast!.id}/contacts?limit=200`);
+      const res = await authFetch(`/api/v1/broadcasts/${detailBroadcast!.id}/contacts?limit=200`);
       if (!res.ok) return [];
       return res.json();
     },
@@ -98,7 +97,7 @@ export default function BroadcastPage() {
 
   const createMut = useMutation({
     mutationFn: async (payload: Record<string, any>) => {
-      const res = await authFetch(`${API_BASE_URL}/api/v1/broadcasts`, {
+      const res = await authFetch(`/api/v1/broadcasts`, {
         method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload),
       });
       if (!res.ok) throw new Error(await res.text());
@@ -117,7 +116,7 @@ export default function BroadcastPage() {
 
   const sendMut = useMutation({
     mutationFn: async (id: number) => {
-      const res = await authFetch(`${API_BASE_URL}/api/v1/broadcasts/${id}/send`, { method: 'POST' });
+      const res = await authFetch(`/api/v1/broadcasts/${id}/send`, { method: 'POST' });
       if (!res.ok) throw new Error(await res.text());
       return res.json();
     },
@@ -127,7 +126,7 @@ export default function BroadcastPage() {
 
   const deleteMut = useMutation({
     mutationFn: async (id: number) => {
-      const res = await authFetch(`${API_BASE_URL}/api/v1/broadcasts/${id}`, { method: 'DELETE' });
+      const res = await authFetch(`/api/v1/broadcasts/${id}`, { method: 'DELETE' });
       if (!res.ok) throw new Error('Delete failed');
     },
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['broadcasts'] }); setDeleteTarget(null); toast({ title: 'Broadcast deleted' }); },

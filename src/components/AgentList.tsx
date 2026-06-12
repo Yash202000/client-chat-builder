@@ -346,7 +346,7 @@ export const AgentList = () => {
                   <div
                     key={session.conversation_id}
                     onClick={() => setSelectedSessionId(session.conversation_id)}
-                    className="group flex items-center gap-3 px-4 py-3.5 hover:bg-muted/50 cursor-pointer transition-colors"
+                    className="group flex items-center gap-3 px-4 py-3.5 row-hover-active cursor-pointer"
                   >
                     <div className="h-9 w-9 rounded-full bg-muted flex items-center justify-center flex-shrink-0">
                       {getChannelIcon(session.channel)}

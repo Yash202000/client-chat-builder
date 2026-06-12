@@ -12,9 +12,10 @@ import { Separator } from "@/components/ui/separator";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import {
-  User, Mail, Phone, Briefcase, Lock, Camera, Upload,
+  User, Mail, Briefcase, Lock, Camera, Upload,
   Loader2, CheckCircle2, Info, Shield, Building2, Tag, X, Plus, ShieldCheck, ShieldOff, QrCode,
 } from "lucide-react";
+import { PhoneInput } from "@/components/PhoneInput";
 import { useI18n } from "@/hooks/useI18n";
 import { API_BASE_URL } from "@/config/api";
 
@@ -365,17 +366,14 @@ export const ProfilePage = () => {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="phoneNumber" className="text-sm font-medium dark:text-gray-200 flex items-center gap-2">
-                    <Phone className="h-4 w-4 text-violet-600 dark:text-violet-400" />
+                  <Label htmlFor="phoneNumber" className="text-sm font-medium dark:text-gray-200">
                     Phone Number
                   </Label>
-                  <Input
+                  <PhoneInput
                     id="phoneNumber"
-                    type="tel"
                     value={formData.phoneNumber}
-                    onChange={(e) => handleChange("phoneNumber", e.target.value)}
-                    className="rounded-xl h-11"
-                    placeholder="+1 (555) 000-0000"
+                    onChange={(val) => handleChange("phoneNumber", val)}
+                    className="rounded-xl"
                   />
                 </div>
                 <div className="space-y-2 md:col-span-2">

@@ -380,7 +380,7 @@ export default function TrendingPostsPage() {
                 ) : trends.length > 0 ? (
                   trends.slice(0, 20).map((item: any, i: number) => (
                     <button key={i} onClick={() => handleTrendClick(item)} disabled={isGenerating}
-                      className={`trend-item w-full group flex items-start gap-2.5 px-2 py-2.5 rounded-xl text-left transition-colors hover:bg-muted disabled:opacity-40 ${selectedTrend === item ? 'bg-muted border border-border' : ''}`}
+                      className={`trend-item w-full group flex items-start gap-2.5 px-2 py-2.5 rounded-xl text-left disabled:opacity-40 ${selectedTrend === item ? 'team-channel-active' : 'row-hover-active'}`}
                       style={{ animationDelay: `${i * 0.03}s` }}>
                       <span className="shrink-0 text-muted-foreground/30 text-2xl font-bold select-none leading-none mt-0.5">
                         {String(i + 1).padStart(2, '0')}
@@ -496,7 +496,7 @@ export default function TrendingPostsPage() {
                     )}
                   {(liSearchData?.posts ?? []).map((post: any, i: number) => (
                     <button key={i} onClick={() => handleTrendClick(post)} disabled={isGenerating}
-                      className={`trend-item w-full group text-left rounded-xl px-2.5 py-2.5 transition-colors hover:bg-muted disabled:opacity-40 space-y-1.5 ${selectedTrend === post ? 'bg-muted border border-border' : ''}`}
+                      className={`trend-item w-full group text-left rounded-xl px-2.5 py-2.5 disabled:opacity-40 space-y-1.5 ${selectedTrend === post ? 'team-channel-active' : 'row-hover-active'}`}
                       style={{ animationDelay: `${i * 0.03}s` }}>
                       {/* Author */}
                       <div className="flex items-center gap-1.5">

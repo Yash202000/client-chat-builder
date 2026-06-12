@@ -37,6 +37,7 @@ const VerifyEmailPage       = lazy(() => import("./pages/VerifyEmailPage"));
 const ForgotPasswordPage    = lazy(() => import("./pages/ForgotPasswordPage"));
 const ResetPasswordPage     = lazy(() => import("./pages/ResetPasswordPage"));
 const QualifyPage           = lazy(() => import("./pages/QualifyPage"));
+const SelectPlanPage        = lazy(() => import("./pages/SelectPlanPage"));
 const LicenseErrorPage      = lazy(() => import("./pages/LicenseErrorPage"));
 const AcceptInvitationPage  = lazy(() => import("./pages/AcceptInvitationPage").then(m => ({ default: m.AcceptInvitationPage })));
 const LinkedInCallback      = lazy(() => import("./pages/LinkedInCallback").then(m => ({ default: m.LinkedInCallback })));
@@ -235,6 +236,7 @@ const AppRoutes = () => {
         <Route path="/forgot-password" element={<ForgotPasswordPage />} />
         <Route path="/reset-password" element={<ResetPasswordPage />} />
         <Route path="/qualify" element={<QualifyPage />} />
+        <Route path="/select-plan" element={<SelectPlanPage />} />
         <Route path="/license-error" element={<LicenseErrorPage />} />
         <Route path="/accept-invite" element={<AcceptInvitationPage />} />
         <Route path="/preview/:publishId" element={<PublishedPreviewPage mode="widget" />} />

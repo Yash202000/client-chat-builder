@@ -685,7 +685,7 @@ export default function ContactsPage() {
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0 }}
                     transition={{ duration: 0.18, delay: i * 0.03 }}
-                    className="border-border hover:bg-muted/40 transition-colors group"
+                    className="border-border row-hover-active cursor-pointer group"
                   >
                     <TableCell>
                       <Checkbox

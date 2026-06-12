@@ -47,6 +47,7 @@ const WorkflowManagementPage = () => {
   const [isImporting, setIsImporting] = useState(false);
   const [subworkflowUsage, setSubworkflowUsage] = useState<Record<number, {id: number, name: string}[]>>({});
   const [searchQuery, setSearchQuery] = useState('');
+  const [openWorkflow, setOpenWorkflow] = useState<string | undefined>(undefined);
   const { authFetch } = useAuth();
   const navigate = useNavigate();
 
@@ -360,9 +361,14 @@ const WorkflowManagementPage = () => {
                     animate="visible"
                     layout
                   >
-                    <Accordion type="single" collapsible>
+                    <Accordion type="single" collapsible value={openWorkflow === `wf-${workflow.id}` ? `wf-${workflow.id}` : ''} onValueChange={v => setOpenWorkflow(v || undefined)}>
                       <AccordionItem value={`wf-${workflow.id}`} className="border-0">
-                        <div className="rounded-xl border border-border bg-card overflow-hidden transition-all duration-200 hover:border-border/70 hover:shadow-sm hover:shadow-black/5 dark:hover:shadow-black/20">
+                        <div className={cn(
+                          'rounded-xl border border-border overflow-hidden transition-all duration-200',
+                          openWorkflow === `wf-${workflow.id}`
+                            ? 'team-channel-active border-transparent'
+                            : 'bg-card row-hover-active'
+                        )}>
 
                           {/* Left accent bar — active = emerald, inactive = blue/indigo */}
                           <div className={cn(
@@ -474,7 +480,7 @@ const WorkflowManagementPage = () => {
                                 {[workflow, ...(workflow.versions || [])]
                                   .sort((a, b) => b.version - a.version)
                                   .map((version) => (
-                                    <div key={version.id} className="transition-colors hover:bg-muted/40">
+                                    <div key={version.id} className="row-hover-active">
 
                                       {/* ── Mobile layout ── */}
                                       <div className="sm:hidden px-3 py-3 flex flex-col gap-2">

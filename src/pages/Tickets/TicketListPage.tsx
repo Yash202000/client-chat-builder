@@ -789,7 +789,7 @@ export default function TicketListPage() {
             {filtered.map(ticket => {
               const IssueIcon = ISSUE_ICONS[ticket.issue_type?.name?.toLowerCase() || ''] || CheckSquare;
               return (
-                <TableRow key={ticket.id} className="cursor-pointer hover:bg-accent/50"
+                <TableRow key={ticket.id} className="cursor-pointer row-hover-active"
                   onClick={() => navigate(`/dashboard/tickets/${projectKey}/${ticket.ticket_number}`)}>
                   <TableCell>
                     <div className="flex items-center gap-1.5">

@@ -1194,20 +1194,20 @@ export const ConversationDetail: React.FC<ConversationDetailProps> = ({ sessionI
               <div
                 className={`flex items-center gap-1 sm:gap-1.5 rounded-md px-1.5 sm:px-2.5 py-1 sm:py-1.5 border flex-shrink-0 transition-all duration-200 ${
                   isAiEnabled
-                    ? 'bg-violet-50 border-violet-200 dark:bg-violet-950/40 dark:border-violet-700/50'
+                    ? 'bg-white dark:bg-white/[0.10] border-border dark:border-white/[0.10] shadow-sm'
                     : 'bg-muted border-border'
                 }`}
               >
                 <div className="relative flex-shrink-0">
-                  <Bot className={`h-3 w-3 sm:h-3.5 sm:w-3.5 transition-colors ${isAiEnabled ? 'text-violet-600 dark:text-violet-400' : 'text-muted-foreground'}`} />
+                  <Bot className={`h-3 w-3 sm:h-3.5 sm:w-3.5 transition-colors ${isAiEnabled ? 'text-foreground dark:text-white' : 'text-muted-foreground'}`} />
                   {isAiEnabled && (
-                    <span className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 rounded-full bg-violet-500 animate-pulse" />
+                    <span className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
                   )}
                 </div>
                 <Label
                   htmlFor="ai-toggle"
                   className={`hidden sm:block text-xs font-medium cursor-pointer whitespace-nowrap transition-colors ${
-                    isAiEnabled ? 'text-violet-700 dark:text-violet-300' : 'text-muted-foreground'
+                    isAiEnabled ? 'text-foreground dark:text-white' : 'text-muted-foreground'
                   }`}
                 >
                   {t('conversations.detail.aiReplies')}
@@ -1217,19 +1217,19 @@ export const ConversationDetail: React.FC<ConversationDetailProps> = ({ sessionI
                   id="ai-toggle"
                   checked={isAiEnabled}
                   onCheckedChange={toggleAiMutation.mutate}
-                  className="scale-[0.65] sm:scale-75 data-[state=checked]:bg-violet-600"
+                  className="scale-[0.65] sm:scale-75 data-[state=checked]:bg-foreground dark:data-[state=checked]:bg-white"
                 />
               </div>
 
               {/* Assign To */}
-              <div className={`flex items-center gap-1 sm:gap-1.5 rounded-md px-1.5 sm:px-2.5 py-1 sm:py-1.5 border flex-shrink-0 transition-all duration-200 ${sessionDetails?.assignee_id ? 'bg-emerald-50 border-emerald-200 dark:bg-emerald-950/30 dark:border-emerald-700/50' : 'bg-muted border-border'}`}>
-                <Users className={`h-3 w-3 sm:h-3.5 sm:w-3.5 flex-shrink-0 transition-colors ${sessionDetails?.assignee_id ? 'text-emerald-600 dark:text-emerald-400' : 'text-muted-foreground'}`} />
+              <div className={`flex items-center gap-1 sm:gap-1.5 rounded-md px-1.5 sm:px-2.5 py-1 sm:py-1.5 border flex-shrink-0 transition-all duration-200 ${sessionDetails?.assignee_id ? 'bg-white dark:bg-white/[0.10] border-border dark:border-white/[0.10] shadow-sm' : 'bg-muted border-border'}`}>
+                <Users className={`h-3 w-3 sm:h-3.5 sm:w-3.5 flex-shrink-0 transition-colors ${sessionDetails?.assignee_id ? 'text-foreground dark:text-white' : 'text-muted-foreground'}`} />
                 <Select
                   key={`assignee-${sessionId}`}
                   value={sessionDetails?.assignee_id?.toString() || undefined}
                   onValueChange={(value) => assigneeMutation.mutate(parseInt(value))}
                 >
-                  <SelectTrigger className={`border-0 h-auto p-0 focus:ring-0 w-[72px] sm:w-[130px] text-[11px] sm:text-xs font-medium ${sessionDetails?.assignee_id ? 'text-emerald-700 dark:text-emerald-300' : 'text-foreground'}`}>
+                  <SelectTrigger className={`border-0 h-auto p-0 focus:ring-0 w-[72px] sm:w-[130px] text-[11px] sm:text-xs font-medium ${sessionDetails?.assignee_id ? 'text-foreground dark:text-white' : 'text-foreground'}`}>
                     <SelectValue placeholder={t('conversations.detail.assignTo')} />
                   </SelectTrigger>
                   <SelectContent className="rounded-xl">
