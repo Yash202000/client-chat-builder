@@ -44,6 +44,7 @@ import {
 import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
+import { apiFetch } from "@/lib/api";
 import { SubscriptionPlan } from "@/types";
 
 // ─── Animated Counter ────────────────────────────────────────────────────────
@@ -136,6 +137,31 @@ const fadeUp = {
   visible: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 90, damping: 14 } },
 };
 
+// ─── Plan feature map (keyed by lowercase plan name) ─────────────────────────
+const PLAN_FEATURES_MAP: Record<string, string[]> = {
+  "free trial": ["1 AI agent", "100 conversations / month", "Web chat widget", "Basic knowledge base", "WhatsApp, Instagram, Facebook channels", "Lead & contact management (100)", "Community support"],
+  starter: ["3 AI agents", "1,000 conversations / month", "All messaging channels", "Knowledge base (5 KB, 50 MB)", "CRM — Leads, Contacts, Deals", "Basic workflow automation", "Campaign broadcasts", "Voice AI (inbound)", "Email support (48 h SLA)"],
+  growth: ["10 AI agents", "5,000 conversations / month", "All channels + Email inbox", "Knowledge base (20 KB, 500 MB)", "Full CRM — Pipelines, Deals, Tags", "Advanced workflow automation", "Campaign broadcasts + scheduling", "Voice AI (inbound + outbound)", "Social media hub", "Analytics & reports", "Priority support (24 h SLA)"],
+  pro: ["Unlimited AI agents", "20,000 conversations / month", "All channels + Omnichannel inbox", "Unlimited knowledge base (5 GB)", "Full CRM + Sales pipelines", "Advanced workflows + API integrations", "Voice AI + call queue + supervisor", "Social media hub + post scheduler", "White-label chat widget", "Developer API & webhooks", "Dedicated Slack support", "99.9% uptime SLA"],
+  enterprise: ["Everything in Pro — unlimited", "Custom conversation volume", "Self-hosted deployment (Docker/K8s)", "SSO & SAML authentication", "Custom AI model integrations", "Dedicated infrastructure", "Data residency & GDPR compliance", "Custom SLA & uptime guarantee", "Dedicated customer success manager", "White-glove onboarding", "Custom integrations & dev support", "Invoice billing & PO support"],
+};
+
+const getPlanFeaturesIndex = (plan: SubscriptionPlan): string[] => {
+  const key = plan.name.toLowerCase().trim();
+  if (PLAN_FEATURES_MAP[key]) return PLAN_FEATURES_MAP[key];
+  const match = Object.keys(PLAN_FEATURES_MAP).find((k) => key.includes(k) || k.includes(key));
+  if (match) return PLAN_FEATURES_MAP[match];
+  if (plan.features && plan.features !== "all") return plan.features.split(",").map((f) => f.trim()).filter(Boolean);
+  return [];
+};
+
+const getPlanCTAIndex = (plan: SubscriptionPlan) => {
+  const key = plan.name.toLowerCase();
+  if (key.includes("enterprise")) return { label: "Contact Sales", href: "/contact" };
+  if (plan.price === 0) return { label: "Start Free", href: "/signup" };
+  return { label: "Get Started", href: "/signup" };
+};
+
 // ─── Component ────────────────────────────────────────────────────────────────
 const Index = () => {
   const { authFetch } = useAuth();
@@ -145,14 +171,20 @@ const Index = () => {
   const heroOpacity = useTransform(smooth, [0, 0.18], [1, 0]);
   const heroScale = useTransform(smooth, [0, 0.18], [1, 0.96]);
 
-  const { data: plans, isLoading, isError } = useQuery<SubscriptionPlan[]>({
-    queryKey: ["subscriptionPlans"],
+  const { data: plans, isLoading: plansLoading, isError: plansError } = useQuery<SubscriptionPlan[]>({
+    queryKey: ["publicSubscriptionPlans"],
     queryFn: async () => {
-      const res = await authFetch("/api/v1/subscription/plans/");
+      const res = await apiFetch("/api/v1/billing/plans");
       if (!res.ok) throw new Error("Failed to fetch plans");
       return res.json();
     },
   });
+
+  const formatPlanPrice = (price: number, currency: string) => {
+    if (price === 0) return { symbol: "", amount: "Free" };
+    const symbol = currency?.toUpperCase() === "INR" ? "₹" : "$";
+    return { symbol, amount: price.toLocaleString() };
+  };
 
   const storyRef = useRef(null);
   const allyRef = useRef(null);
@@ -873,8 +905,7 @@ const Index = () => {
       {/* ══════════════════════════════════════════════════════════════════════
           PRICING
       ══════════════════════════════════════════════════════════════════════ */}
-      {plans && plans.length > 0 && (
-        <section id="pricing" ref={pricingRef} className="py-32 bg-white dark:bg-slate-900">
+      <section id="pricing" ref={pricingRef} className="py-32 bg-white dark:bg-slate-900">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <motion.div
               initial="hidden"
@@ -896,60 +927,100 @@ const Index = () => {
               </motion.p>
             </motion.div>
 
-            {isLoading && (
+            {plansLoading && (
               <div className="text-center py-12">
                 <div className="w-12 h-12 border-4 border-violet-500 border-t-transparent rounded-full animate-spin mx-auto" />
               </div>
             )}
-            {isError && <div className="text-center text-red-500 py-8">Could not load plans. Please try again.</div>}
+            {plansError && <div className="text-center text-red-500 py-8">Could not load plans. Please try again.</div>}
 
-            <motion.div
-              initial="hidden"
-              animate={pricingInView ? "visible" : "hidden"}
-              variants={stagger}
-              className="grid md:grid-cols-3 gap-8"
-            >
-              {plans.map((plan) => {
-                const isPro = plan.name.toLowerCase().includes("pro");
-                return (
-                  <motion.div key={plan.id} variants={fadeUp}>
-                    <motion.div whileHover={{ y: -8, scale: 1.02 }} transition={{ type: "spring", stiffness: 300 }}>
-                      <Card className={`relative h-full flex flex-col justify-between p-8 border-2 ${isPro ? "border-violet-500 dark:border-violet-400 shadow-2xl shadow-violet-500/20" : "border-slate-200/50 dark:border-slate-700/50 hover:border-violet-300 dark:hover:border-violet-600"} transition-all duration-300 bg-white dark:bg-slate-800/50 overflow-hidden`}>
-                        {isPro && (
-                          <div className="absolute top-0 right-0 bg-gradient-to-r from-violet-600 to-purple-700 text-white px-4 py-1.5 rounded-bl-xl text-sm font-semibold">
-                            Most Popular
-                          </div>
-                        )}
-                        <div>
-                          <CardTitle className="text-2xl font-bold font-syne mb-4 text-slate-900 dark:text-white">{plan.name}</CardTitle>
-                          <div className="mb-8">
-                            <span className="text-5xl font-bold text-slate-900 dark:text-white">{plan.price}</span>
-                            <span className="text-xl text-slate-500 dark:text-slate-400 ml-2">{plan.currency}/month</span>
-                          </div>
-                          <ul className="space-y-4 mb-8">
-                            {plan.features &&
-                              plan.features.split(",").map((f, i) => (
-                                <motion.li key={i} initial={{ opacity: 0, x: -10 }} whileInView={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.05 }} className="flex items-start gap-3 text-slate-700 dark:text-slate-300">
-                                  <CheckCircle className="h-5 w-5 text-violet-500 mt-0.5 flex-shrink-0" />
-                                  <span className="text-sm">{f.trim()}</span>
+            {plans && plans.length > 0 && (
+              <motion.div
+                initial="hidden"
+                animate={pricingInView ? "visible" : "hidden"}
+                variants={stagger}
+                className="grid md:grid-cols-2 lg:grid-cols-3 gap-8"
+              >
+                {plans.map((plan) => {
+                  const isPro = plan.name.toLowerCase().includes("pro");
+                  const isEnterprise = plan.name.toLowerCase().includes("enterprise");
+                  const { symbol, amount } = formatPlanPrice(plan.price, plan.currency);
+                  const features = getPlanFeaturesIndex(plan);
+                  const cta = getPlanCTAIndex(plan);
+                  return (
+                    <motion.div key={plan.id} variants={fadeUp} className="flex">
+                      <motion.div whileHover={{ y: -8, scale: 1.02 }} transition={{ type: "spring", stiffness: 300 }} className="w-full">
+                        <Card className={`relative w-full h-full flex flex-col p-8 border-2 ${
+                          isPro
+                            ? "border-violet-500 dark:border-violet-400 shadow-2xl shadow-violet-500/20"
+                            : isEnterprise
+                            ? "border-slate-700 bg-slate-900 dark:bg-slate-800"
+                            : "border-slate-200/50 dark:border-slate-700/50 hover:border-violet-300 dark:hover:border-violet-600"
+                        } transition-all duration-300 overflow-hidden`}>
+                          {isPro && (
+                            <div className="absolute top-0 right-0 bg-gradient-to-r from-violet-600 to-purple-700 text-white px-4 py-1.5 rounded-bl-xl text-sm font-semibold">
+                              Most Popular
+                            </div>
+                          )}
+                          {isEnterprise && (
+                            <div className="absolute top-0 right-0 bg-gradient-to-r from-slate-700 to-slate-900 text-white px-4 py-1.5 rounded-bl-xl text-sm font-semibold">
+                              Custom
+                            </div>
+                          )}
+                          <div className="flex-1">
+                            <CardTitle className={`text-2xl font-bold font-syne mb-2 ${isEnterprise ? "text-white" : "text-slate-900 dark:text-white"}`}>
+                              {plan.name}
+                            </CardTitle>
+                            <div className="mb-6 mt-4">
+                              {amount === "Free" ? (
+                                <div>
+                                  <span className={`text-5xl font-bold ${isEnterprise ? "text-white" : "text-slate-900 dark:text-white"}`}>Free</span>
+                                  <span className="text-sm ml-2 text-slate-500 dark:text-slate-400">no credit card</span>
+                                </div>
+                              ) : isEnterprise ? (
+                                <div>
+                                  <span className="text-4xl font-bold text-white">Custom</span>
+                                  <span className="text-sm ml-2 text-slate-300">pricing</span>
+                                </div>
+                              ) : (
+                                <div>
+                                  <span className="text-2xl font-bold text-slate-900 dark:text-white">{symbol}</span>
+                                  <span className="text-5xl font-bold text-slate-900 dark:text-white">{amount}</span>
+                                  <span className="text-sm text-slate-500 dark:text-slate-400 ml-2">/ month</span>
+                                </div>
+                              )}
+                            </div>
+                            <ul className="space-y-3 mb-8">
+                              {features.map((f, i) => (
+                                <motion.li key={i} initial={{ opacity: 0, x: -10 }} whileInView={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.04 }} className={`flex items-start gap-3 ${isEnterprise ? "text-slate-200" : "text-slate-700 dark:text-slate-300"}`}>
+                                  <CheckCircle className={`h-4 w-4 mt-0.5 flex-shrink-0 ${isEnterprise ? "text-violet-400" : "text-violet-500"}`} />
+                                  <span className="text-sm leading-snug">{f}</span>
                                 </motion.li>
                               ))}
-                          </ul>
-                        </div>
-                        <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-                          <Button className={`w-full py-6 text-base font-semibold ${isPro ? "bg-gradient-to-r from-violet-600 to-purple-700 hover:from-violet-700 hover:to-purple-800 shadow-lg shadow-violet-500/25" : "bg-slate-900 hover:bg-slate-800 dark:bg-slate-700 dark:hover:bg-slate-600"} text-white`}>
-                            Get Your Ally
-                          </Button>
-                        </motion.div>
-                      </Card>
+                            </ul>
+                          </div>
+                          <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+                            <Link to={cta.href}>
+                              <Button className={`w-full py-6 text-base font-semibold ${
+                                isPro
+                                  ? "bg-gradient-to-r from-violet-600 to-purple-700 hover:from-violet-700 hover:to-purple-800 shadow-lg shadow-violet-500/25 text-white"
+                                  : isEnterprise
+                                  ? "bg-white text-slate-900 hover:bg-slate-100"
+                                  : "bg-slate-900 hover:bg-slate-800 dark:bg-slate-700 dark:hover:bg-slate-600 text-white"
+                              }`}>
+                                {cta.label}
+                              </Button>
+                            </Link>
+                          </motion.div>
+                        </Card>
+                      </motion.div>
                     </motion.div>
-                  </motion.div>
-                );
-              })}
-            </motion.div>
+                  );
+                })}
+              </motion.div>
+            )}
           </div>
         </section>
-      )}
 
       {/* ══════════════════════════════════════════════════════════════════════
           CTA  — Final emotional close

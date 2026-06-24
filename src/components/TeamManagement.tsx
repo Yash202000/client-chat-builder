@@ -631,7 +631,7 @@ export const TeamManagement = () => {
                         <TooltipTrigger asChild>
                           <span>
                             <DialogTrigger asChild>
-                              <Button size="sm" disabled={isAtUserLimit} className={`flex items-center gap-1.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-lg shadow-lg shadow-blue-500/25 hover:shadow-xl hover:shadow-blue-500/30 transition-all duration-200 hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100`}>
+                              <Button size="sm" disabled={isAtUserLimit} className={`flex items-center gap-1.5 bg-violet-600 hover:bg-violet-700 text-white rounded-lg shadow-sm transition-colors duration-150 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer`}>
                                 <UserPlus className="h-3.5 w-3.5" />
                                 <span className="hidden sm:inline">{t('teamManagement.addUser')}</span>
                               </Button>
@@ -648,7 +648,7 @@ export const TeamManagement = () => {
                   <DialogContent className="dark:bg-slate-800 dark:border-slate-700 rounded-2xl sm:rounded-2xl" dir={isRTL ? 'rtl' : 'ltr'}>
                     <DialogHeader className="pb-4 border-b border-slate-200/80 dark:border-slate-700/60">
                       <DialogTitle className={`dark:text-white flex items-center gap-3 ${isRTL ? 'flex-row-reverse' : ''}`}>
-                        <div className="p-2 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 shadow-lg shadow-blue-500/25">
+                        <div className="p-2 rounded-xl bg-violet-600">
                           <UserPlus className="h-5 w-5 text-white" />
                         </div>
                         {t('teamManagement.dialogs.addUser.title')}
@@ -685,7 +685,7 @@ export const TeamManagement = () => {
                       <Button
                         onClick={handleCreateUser}
                         disabled={createUserMutation.isPending}
-                        className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-xl shadow-lg shadow-blue-500/25"
+                        className="bg-violet-600 hover:bg-violet-700 text-white rounded-xl cursor-pointer"
                       >
                         {createUserMutation.isPending ? t('teamManagement.dialogs.addUser.adding') : t('teamManagement.dialogs.addUser.button')}
                       </Button>
@@ -1149,7 +1149,7 @@ export const TeamManagement = () => {
         <DialogContent className="dark:bg-slate-800 dark:border-slate-700 rounded-2xl sm:rounded-2xl" dir={isRTL ? 'rtl' : 'ltr'}>
           <DialogHeader className="pb-4 border-b border-slate-200/80 dark:border-slate-700/60">
             <DialogTitle className={`dark:text-white flex items-center gap-3 ${isRTL ? 'flex-row-reverse' : ''}`}>
-              <div className="p-2 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 shadow-lg shadow-blue-500/25">
+              <div className="p-2 rounded-xl bg-violet-600">
                 <UserPlus className="h-5 w-5 text-white" />
               </div>
               {t('teamManagement.dialogs.addMember.title', { teamName: selectedTeamForMember?.name })}
@@ -1191,7 +1191,7 @@ export const TeamManagement = () => {
                         <div className="relative">
                           <Avatar className="h-8 w-8">
                             <AvatarImage src={user.profile_picture_url} />
-                            <AvatarFallback className="text-xs bg-gradient-to-br from-blue-100 to-indigo-100 dark:from-blue-900/50 dark:to-indigo-900/50 text-blue-700 dark:text-blue-300">
+                            <AvatarFallback className="text-xs bg-violet-100 dark:bg-violet-900/50 text-violet-700 dark:text-violet-300">
                               {user.email.charAt(0).toUpperCase()}
                             </AvatarFallback>
                           </Avatar>
@@ -1257,7 +1257,7 @@ export const TeamManagement = () => {
             <Button
               onClick={handleAddMember}
               disabled={addMemberMutation.isPending || selectedUserIds.length === 0}
-              className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-xl shadow-lg shadow-blue-500/25"
+              className="bg-violet-600 hover:bg-violet-700 text-white rounded-xl cursor-pointer"
             >
               {addMemberMutation.isPending ? (
                 <>
@@ -1316,7 +1316,7 @@ export const TeamManagement = () => {
         <DialogContent className="dark:bg-slate-800 dark:border-slate-700 rounded-2xl sm:rounded-2xl flex flex-col max-h-[90vh]" dir={isRTL ? 'rtl' : 'ltr'}>
           <DialogHeader className="pb-4 border-b border-slate-200/80 dark:border-slate-700/60 shrink-0">
             <DialogTitle className={`dark:text-white flex items-center gap-3 ${isRTL ? 'flex-row-reverse' : ''}`}>
-              <div className="p-2 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 shadow-lg shadow-blue-500/25">
+              <div className="p-2 rounded-xl bg-violet-600">
                 <Edit className="h-5 w-5 text-white" />
               </div>
               {t('teamManagement.dialogs.editUser.title')}
@@ -1594,7 +1594,7 @@ export const TeamManagement = () => {
             <Button
               onClick={handleUpdateUser}
               disabled={updateUserMutation.isPending}
-              className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-xl shadow-lg shadow-blue-500/25"
+              className="bg-violet-600 hover:bg-violet-700 text-white rounded-xl cursor-pointer"
             >
               {updateUserMutation.isPending ? t('teamManagement.dialogs.editUser.updating') : t('teamManagement.dialogs.editUser.button')}
             </Button>

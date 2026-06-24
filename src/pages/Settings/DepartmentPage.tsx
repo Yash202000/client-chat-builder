@@ -509,13 +509,13 @@ export default function DepartmentPage() {
                   <Building2
                     className={cn(
                       'w-4 h-4 flex-shrink-0',
-                      selectedDept?.id === dept.id ? 'text-blue-400' : 'text-muted-foreground'
+                      selectedDept?.id === dept.id ? 'text-violet-500' : 'text-muted-foreground'
                     )}
                   />
                   <span
                     className={cn(
                       'flex-1 text-sm font-medium truncate',
-                      selectedDept?.id === dept.id ? 'text-blue-700 dark:text-blue-100' : 'text-foreground'
+                      selectedDept?.id === dept.id ? 'text-violet-700 dark:text-violet-200' : 'text-foreground'
                     )}
                   >
                     {dept.name}
@@ -565,7 +565,7 @@ export default function DepartmentPage() {
                   size="sm"
                   onClick={handleCreateDept}
                   disabled={savingNew || !newDeptName.trim()}
-                  className="flex-1 h-7 text-xs bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-foreground border-0"
+                  className="flex-1 h-7 text-xs bg-violet-600 hover:bg-violet-700 text-white border-0 rounded-lg"
                 >
                   {savingNew ? <Loader2 className="w-3 h-3 animate-spin" /> : <><Check className="w-3 h-3 mr-1" />Save</>}
                 </Button>
@@ -635,7 +635,7 @@ export default function DepartmentPage() {
                       size="sm"
                       onClick={handleSaveHeader}
                       disabled={savingHeader || !editName.trim()}
-                      className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-foreground border-0"
+                      className="bg-violet-600 hover:bg-violet-700 text-white border-0 rounded-lg"
                     >
                       {savingHeader
                         ? <Loader2 className="w-4 h-4 animate-spin mr-1.5" />
@@ -718,7 +718,7 @@ export default function DepartmentPage() {
             <div className="rounded-xl border border-border bg-card p-6 space-y-5">
               <div>
                 <div className="flex items-center gap-2">
-                  <MapPin className="w-4 h-4 text-blue-400" />
+                  <MapPin className="w-4 h-4 text-violet-500" />
                   <h2 className="text-base font-semibold text-foreground">Jurisdiction</h2>
                 </div>
                 <p className="text-sm text-muted-foreground mt-0.5">Locations &amp; classifications this department covers</p>
@@ -753,7 +753,7 @@ export default function DepartmentPage() {
                           </div>
                           <button
                             onClick={() => togglePicker(ht.id)}
-                            className="flex items-center gap-1 text-xs text-blue-400 hover:text-blue-300 font-medium transition-colors"
+                            className="flex items-center gap-1 text-xs text-violet-600 hover:text-violet-700 dark:text-violet-400 dark:hover:text-violet-300 font-medium transition-colors cursor-pointer"
                           >
                             {isOpen ? (
                               <><X className="w-3 h-3" />Close</>
@@ -771,16 +771,16 @@ export default function DepartmentPage() {
                             {assigned.map(({ assignment, node }) => (
                               <div
                                 key={assignment.id}
-                                className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-blue-600/20 border border-blue-500/30 text-xs text-blue-300"
+                                className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-violet-100 dark:bg-violet-600/20 border border-violet-200 dark:border-violet-500/30 text-xs text-violet-700 dark:text-violet-300"
                               >
                                 <span>{node?.name ?? `Node #${assignment.node_id}`}</span>
                                 {node?.code && (
-                                  <span className="text-blue-500/60 font-mono">({node.code})</span>
+                                  <span className="text-violet-400 dark:text-violet-500/70 font-mono">({node.code})</span>
                                 )}
                                 <button
                                   onClick={() => handleRemoveNode(assignment.id)}
                                   disabled={removingNode === assignment.id}
-                                  className="ml-0.5 text-blue-400 hover:text-foreground transition-colors disabled:opacity-50"
+                                  className="ml-0.5 text-violet-400 hover:text-red-500 dark:hover:text-red-400 transition-colors disabled:opacity-50 cursor-pointer"
                                 >
                                   {removingNode === assignment.id
                                     ? <Loader2 className="w-2.5 h-2.5 animate-spin" />
@@ -853,7 +853,7 @@ export default function DepartmentPage() {
                                   size="sm"
                                   onClick={() => handleAddNodes(ht.id)}
                                   disabled={isAdding}
-                                  className="h-7 text-xs bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-foreground border-0"
+                                  className="h-7 text-xs bg-violet-600 hover:bg-violet-700 text-white border-0 rounded-lg"
                                 >
                                   {isAdding
                                     ? <><Loader2 className="w-3 h-3 animate-spin mr-1.5" />Adding...</>
@@ -873,7 +873,7 @@ export default function DepartmentPage() {
             {/* ── C) MEMBERS CARD ───────────────────────────────────────────── */}
             <div className="rounded-xl border border-border bg-card p-6 space-y-5">
               <div className="flex items-center gap-2">
-                <Users className="w-4 h-4 text-blue-400" />
+                <Users className="w-4 h-4 text-violet-500" />
                 <h2 className="text-base font-semibold text-foreground">Members</h2>
                 <span className="ml-auto text-xs text-muted-foreground">{members.length} member{members.length !== 1 ? 's' : ''}</span>
               </div>
@@ -996,7 +996,7 @@ export default function DepartmentPage() {
                   size="sm"
                   onClick={handleAddMember}
                   disabled={addingMember || !addMemberUserId}
-                  className="h-9 px-4 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-foreground border-0 flex-shrink-0"
+                  className="h-9 px-4 bg-violet-600 hover:bg-violet-700 text-white border-0 rounded-lg flex-shrink-0"
                 >
                   {addingMember
                     ? <Loader2 className="w-4 h-4 animate-spin" />

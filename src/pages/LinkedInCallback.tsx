@@ -44,15 +44,30 @@ export const LinkedInCallback: React.FC = () => {
           if (response.ok) {
             toast({ title: 'LinkedIn connected!', description: 'Your account has been linked.' });
             queryClient.invalidateQueries({ queryKey: ['social-accounts'] });
-            navigate('/dashboard/social/accounts?connected=linkedin');
+            if (window.opener) {
+              window.opener.postMessage({ type: 'oauth_complete', platform: 'linkedin' }, window.location.origin);
+              window.close();
+            } else {
+              navigate('/dashboard/social/accounts?connected=linkedin');
+            }
           } else {
             const err = await response.json().catch(() => ({}));
             toast({ title: 'Error', description: err.detail || 'Failed to connect LinkedIn account.', variant: 'destructive' });
-            navigate('/dashboard/social/accounts');
+            if (window.opener) {
+              window.opener.postMessage({ type: 'oauth_error', platform: 'linkedin' }, window.location.origin);
+              window.close();
+            } else {
+              navigate('/dashboard/social/accounts');
+            }
           }
         } catch {
           toast({ title: 'Error', description: 'An unexpected error occurred.', variant: 'destructive' });
-          navigate('/dashboard/social/accounts');
+          if (window.opener) {
+            window.opener.postMessage({ type: 'oauth_error', platform: 'linkedin' }, window.location.origin);
+            window.close();
+          } else {
+            navigate('/dashboard/social/accounts');
+          }
         }
         return;
       }

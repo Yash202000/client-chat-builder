@@ -2,13 +2,14 @@ import { Button } from "@/components/ui/button";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
-import { CheckCircle2, CreditCard, Loader2, Crown, Zap, Users, AlertTriangle, Clock, Shield, Key, Building2, XCircle, Lock, MessageSquare, Mail, HardDrive, HeartCrack } from "lucide-react";
+import { CheckCircle2, CreditCard, Loader2, Crown, Zap, Users, AlertTriangle, Clock, Shield, Key, Building2, XCircle, Lock, MessageSquare, Mail, HardDrive, HeartCrack, Sparkles, Phone, BarChart3, Bot, Globe } from "lucide-react";
 import { useI18n } from '@/hooks/useI18n';
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   Dialog,
   DialogContent,
@@ -144,41 +145,48 @@ const PLAN_HIGHLIGHTS: Record<string, string[]> = {
     '1 Knowledge Base (5 MB)',
     'Up to 5 team members',
   ],
+  'spark': [
+    '1 AI chat agent with knowledge base',
+    'Live chat inbox (website widget)',
+    'Contact management (1,000 contacts)',
+    'Agent builder — prompt + tool config',
+    'Email support',
+  ],
   'starter': [
-    '5 AI Agents (3 active)',
-    '3 Channels',
-    '1,000 conversations / month',
-    'Contacts & Leads CRM',
-    '2 Campaigns',
-    'Up to 10 team members',
+    '1 AI chat agent with knowledge base',
+    'Live chat inbox (website widget)',
+    'Contact management (1,000 contacts)',
+    'Agent builder — prompt + tool config',
+    'Email support',
   ],
   'growth': [
-    '20 AI Agents (10 active)',
-    '15 Channels',
-    '5,000 conversations / month',
-    'Campaigns & Workflow Automation',
-    'Reports & Analytics',
-    '15,000 CRM contacts',
-    'Up to 25 team members',
+    'Full CRM — leads, deals, campaigns',
+    'Social media posting & scheduling',
+    'Marketing automation + workflows',
+    'Reports & analytics dashboard',
+    '5,000 contacts · 25 team members',
   ],
   'pro': [
-    '60 AI Agents (30 active)',
-    '50 Channels',
-    '20,000 conversations / month',
-    'Voice & Call Center',
-    'AI Tool Library & Image Generation',
-    'Social Selling',
-    'Up to 50 team members',
+    'Voice Lab — inbound/outbound AI calls',
+    'AI image generation (50 images/mo)',
+    'AI Tools — GPT-4o automations',
+    'Advanced inbox routing + supervisor',
+    'Unlimited contacts · priority support',
   ],
 };
 
 const PLAN_TAGLINES: Record<string, string> = {
   'free trial': 'Try the full platform, free',
-  'starter': 'Launch your first agent',
-  'growth': 'Scale your customer experience',
-  'pro': 'Full-stack AI operations',
-  'enterprise': 'Custom AI for your entire org',
+  'spark': 'Your first AI agent, live in 30 minutes.',
+  'starter': 'Your first AI agent, live in 30 minutes.',
+  'growth': 'Turn conversations into customers, automatically.',
+  'pro': 'AI that calls, creates, and converts — all in one place.',
+  'enterprise': 'Built for your team. Deployed your way.',
 };
+
+const ANNUAL_DISCOUNT = 0.20;
+
+const getDisplayName = (name: string) => name;
 
 export const Billing = () => {
   const { t, isRTL } = useI18n();
@@ -187,6 +195,9 @@ export const Billing = () => {
   const [searchParams] = useSearchParams();
   const lockedFeature = searchParams.get('locked');
   const isTrialExpiredRedirect = searchParams.get('expired') === 'true';
+
+  // Billing period toggle — default annual (higher conversion)
+  const [billingPeriod, setBillingPeriod] = useState<'monthly' | 'annual'>('annual');
 
   // Cancellation reason modal state
   const [showCancelModal, setShowCancelModal] = useState(false);
@@ -886,142 +897,242 @@ export const Billing = () => {
         };
 
         const isGrowth = (p: SubscriptionPlan) => p.name.toLowerCase().includes('growth');
-        const isDark = (p: SubscriptionPlan) => p.name.toLowerCase().includes('pro') && !p.name.toLowerCase().includes('enterprise');
+        const isPro = (p: SubscriptionPlan) => p.name.toLowerCase().includes('pro') && !p.name.toLowerCase().includes('enterprise');
+
+        const getDisplayPrice = (plan: SubscriptionPlan) => {
+          if (plan.price === 0) return 0;
+          return billingPeriod === 'annual'
+            ? Math.round(plan.price * (1 - ANNUAL_DISCOUNT))
+            : plan.price;
+        };
 
         return (
           <div className="space-y-6">
-            <div>
-              <h2 className="text-xl font-bold text-slate-900 dark:text-white">Choose your plan</h2>
-              <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">Start free. Scale as you grow. Cancel anytime.</p>
+            {/* Header + toggle */}
+            <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+              <div>
+                <h2 className="text-xl font-bold text-slate-900 dark:text-white">Choose your plan</h2>
+                <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">Start free. Scale as you grow. Cancel anytime.</p>
+              </div>
+
+              {/* Billing period toggle */}
+              <div className="flex items-center gap-2 self-start sm:self-auto">
+                <button
+                  onClick={() => setBillingPeriod('monthly')}
+                  className={`text-sm font-medium transition-colors cursor-pointer ${billingPeriod === 'monthly' ? 'text-slate-900 dark:text-white' : 'text-slate-400 dark:text-slate-500 hover:text-slate-600'}`}
+                >
+                  Monthly
+                </button>
+                <button
+                  onClick={() => setBillingPeriod(billingPeriod === 'monthly' ? 'annual' : 'monthly')}
+                  className="relative w-12 h-6 rounded-full bg-violet-600 transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-violet-500 focus:ring-offset-2"
+                  aria-label="Toggle billing period"
+                >
+                  <motion.div
+                    layout
+                    animate={{ x: billingPeriod === 'annual' ? 24 : 2 }}
+                    transition={{ type: 'spring', stiffness: 500, damping: 35 }}
+                    className="absolute top-1 w-4 h-4 rounded-full bg-white shadow"
+                  />
+                </button>
+                <button
+                  onClick={() => setBillingPeriod('annual')}
+                  className={`text-sm font-medium transition-colors cursor-pointer flex items-center gap-1.5 ${billingPeriod === 'annual' ? 'text-slate-900 dark:text-white' : 'text-slate-400 dark:text-slate-500 hover:text-slate-600'}`}
+                >
+                  Annual
+                  <AnimatePresence>
+                    {billingPeriod === 'annual' && (
+                      <motion.span
+                        initial={{ opacity: 0, scale: 0.8 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, scale: 0.8 }}
+                        transition={{ duration: 0.15 }}
+                        className="text-[10px] font-bold bg-emerald-500 text-white px-1.5 py-0.5 rounded-full"
+                      >
+                        2 months free
+                      </motion.span>
+                    )}
+                  </AnimatePresence>
+                </button>
+              </div>
             </div>
 
             {/* Plan cards */}
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-5 items-start">
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5 items-stretch">
               {regularPlans.map((plan) => {
                 const isCurrentPlan = status?.plan_id === plan.id;
                 const highlighted = isGrowth(plan);
-                const dark = isDark(plan);
+                const dark = isPro(plan);
                 const highlights = getHighlights(plan);
                 const tagline = getTagline(plan);
+                const displayName = getDisplayName(plan.name);
+                const displayPrice = getDisplayPrice(plan);
 
                 return (
-                  <div
+                  <motion.div
                     key={plan.id}
-                    className={`relative flex flex-col rounded-2xl border transition-all duration-200
+                    layout
+                    className={`relative flex flex-col rounded-2xl border transition-shadow duration-200
                       ${highlighted
-                        ? 'border-violet-400 ring-2 ring-violet-400/30 shadow-xl shadow-violet-100/60 dark:shadow-violet-900/20 -mt-2'
+                        ? 'border-violet-400 ring-2 ring-violet-400/30 shadow-2xl shadow-violet-100/70 dark:shadow-violet-900/30 -mt-3'
                         : dark
                           ? 'border-slate-700 bg-slate-900 shadow-lg'
                           : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-sm hover:shadow-md'
                       }`}
+                    style={highlighted ? {
+                      background: 'linear-gradient(135deg, rgba(245,243,255,1) 0%, rgba(237,233,254,0.6) 100%)',
+                    } : undefined}
                   >
+                    {/* Most Popular badge */}
                     {highlighted && (
-                      <div className="absolute -top-3.5 left-0 right-0 flex justify-center">
-                        <span className="bg-gradient-to-r from-violet-600 to-purple-600 text-white text-xs font-bold px-4 py-1 rounded-full shadow-lg">
-                          ★ Most Popular
+                      <div className="absolute -top-4 left-0 right-0 flex justify-center">
+                        <span className="bg-gradient-to-r from-violet-600 to-purple-600 text-white text-xs font-bold px-4 py-1.5 rounded-full shadow-lg flex items-center gap-1">
+                          <Sparkles className="h-3 w-3" /> Most Popular
                         </span>
                       </div>
                     )}
                     {isCurrentPlan && (
-                      <div className="absolute -top-3.5 right-4">
-                        <span className="bg-gradient-to-r from-emerald-500 to-green-600 text-white text-xs font-bold px-3 py-1 rounded-full shadow">
-                          ✓ Current
+                      <div className="absolute -top-4 right-4">
+                        <span className="bg-gradient-to-r from-emerald-500 to-green-600 text-white text-xs font-bold px-3 py-1.5 rounded-full shadow">
+                          <CheckCircle2 className="h-3 w-3 inline mr-1" />Current
                         </span>
                       </div>
                     )}
 
-                    <div className={`p-5 ${highlighted ? 'pt-7' : 'pt-5'}`}>
-                      <h3 className={`text-base font-bold mb-0.5 ${dark ? 'text-white' : 'text-slate-900 dark:text-white'}`}>
-                        {plan.name}
+                    <div className={`p-6 ${highlighted ? 'pt-8' : 'pt-6'}`}>
+                      <h3 className={`text-lg font-bold mb-1 ${dark ? 'text-white' : 'text-slate-900 dark:text-white'}`}>
+                        {displayName}
                       </h3>
-                      <p className={`text-xs mb-4 ${dark ? 'text-slate-400' : 'text-slate-500 dark:text-slate-400'}`}>
+                      <p className={`text-xs leading-relaxed mb-5 ${dark ? 'text-slate-400' : 'text-slate-500 dark:text-slate-400'}`}>
                         {tagline}
                       </p>
 
                       {/* Price */}
-                      <div className="mb-4">
+                      <div className="mb-5">
                         {plan.price === 0 ? (
-                          <div className="flex items-baseline gap-1">
-                            <span className={`text-3xl font-black ${dark ? 'text-white' : 'text-slate-900 dark:text-white'}`}>Free</span>
-                            <span className={`text-xs ${dark ? 'text-slate-400' : 'text-slate-400'}`}>· 14 days</span>
+                          <div className="flex items-baseline gap-1.5">
+                            <span className={`text-4xl font-black ${dark ? 'text-white' : 'text-slate-900 dark:text-white'}`}>Free</span>
+                            <span className={`text-sm ${dark ? 'text-slate-400' : 'text-slate-400'}`}>14-day trial</span>
                           </div>
                         ) : (
-                          <div className="flex items-baseline gap-0.5">
-                            <span className={`text-3xl font-black ${dark ? 'text-white' : highlighted ? 'text-violet-700 dark:text-violet-400' : 'text-slate-900 dark:text-white'}`}>
-                              {plan.currency === 'INR' ? '₹' : '$'}{plan.price.toLocaleString()}
-                            </span>
-                            <span className={`text-xs ml-1 ${dark ? 'text-slate-400' : 'text-slate-500 dark:text-slate-400'}`}>
-                              /{plan.billing_interval === 'year' ? 'yr' : 'mo'}
-                            </span>
-                          </div>
+                          <>
+                            <div className="flex items-baseline gap-1">
+                              <span className={`text-4xl font-black tracking-tight ${dark ? 'text-white' : highlighted ? 'text-violet-700 dark:text-violet-400' : 'text-slate-900 dark:text-white'}`}>
+                                {plan.currency === 'INR' ? '₹' : '$'}{displayPrice.toLocaleString()}
+                              </span>
+                              <span className={`text-sm ml-1 ${dark ? 'text-slate-400' : 'text-slate-500 dark:text-slate-400'}`}>/mo</span>
+                            </div>
+                            <AnimatePresence mode="wait">
+                              <motion.p
+                                key={billingPeriod}
+                                initial={{ opacity: 0, y: -4 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, y: 4 }}
+                                transition={{ duration: 0.15 }}
+                                className={`text-xs mt-1 ${dark ? 'text-slate-500' : 'text-slate-400'}`}
+                              >
+                                {billingPeriod === 'annual'
+                                  ? `Billed ₹${(displayPrice * 12).toLocaleString()}/yr · save ₹${(plan.price * 12 * ANNUAL_DISCOUNT).toLocaleString()}`
+                                  : `Billed monthly · switch to annual and save 20%`}
+                              </motion.p>
+                            </AnimatePresence>
+                          </>
                         )}
-                        <p className={`text-xs mt-0.5 ${dark ? 'text-slate-500' : 'text-slate-400'}`}>
-                          Up to {plan.default_user_limit} users
-                        </p>
                       </div>
 
                       {/* CTA */}
                       {isCurrentPlan ? (
                         <button
                           disabled
-                          className={`w-full py-2 rounded-xl text-xs font-semibold border-2 flex items-center justify-center gap-1.5
+                          className={`w-full py-2.5 rounded-xl text-sm font-semibold border-2 flex items-center justify-center gap-1.5 cursor-default
                             ${dark ? 'border-emerald-500 text-emerald-400' : 'border-emerald-500 text-emerald-600 dark:text-emerald-400'}`}
                         >
-                          <CheckCircle2 className="h-3.5 w-3.5" /> Current Plan
+                          <CheckCircle2 className="h-4 w-4" /> Current Plan
                         </button>
-                      ) : highlighted ? (
+                      ) : plan.price === 0 ? (
                         <button
                           onClick={() => createSubscription(plan.id)}
                           disabled={isCreatingSubscription}
-                          className="w-full py-2 rounded-xl text-xs font-bold bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-700 hover:to-purple-700 text-white shadow-lg shadow-violet-200 dark:shadow-violet-900/30 transition-all flex items-center justify-center gap-1.5"
+                          className="w-full py-2.5 rounded-xl text-sm font-semibold border border-slate-200 text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800 transition-all flex items-center justify-center gap-1.5 cursor-pointer"
                         >
-                          {isCreatingSubscription && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
-                          {status?.plan_id ? 'Switch to Growth' : 'Get Started'}
-                        </button>
-                      ) : dark ? (
-                        <button
-                          onClick={() => createSubscription(plan.id)}
-                          disabled={isCreatingSubscription}
-                          className="w-full py-2 rounded-xl text-xs font-bold bg-white text-slate-900 hover:bg-slate-100 transition-all flex items-center justify-center gap-1.5"
-                        >
-                          {isCreatingSubscription && <Loader2 className="h-3.5 w-3.5 animate-spin text-slate-900" />}
-                          {status?.plan_id ? 'Switch to Pro' : 'Get Pro'}
+                          {isCreatingSubscription ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+                          Start for Free
                         </button>
                       ) : (
-                        <button
-                          onClick={() => createSubscription(plan.id)}
-                          disabled={isCreatingSubscription}
-                          className={`w-full py-2 rounded-xl text-xs font-semibold border transition-all flex items-center justify-center gap-1.5
-                            ${plan.price === 0
-                              ? 'border-slate-200 text-slate-600 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800'
-                              : 'border-slate-800 bg-slate-800 text-white hover:bg-slate-700 dark:border-slate-300 dark:bg-transparent dark:text-slate-200 dark:hover:bg-slate-800'
-                            }`}
-                        >
-                          {isCreatingSubscription && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
-                          {plan.price === 0 ? 'Start Free Trial' : status?.plan_id ? `Switch to ${plan.name}` : `Get ${plan.name}`}
-                        </button>
+                        <div className="space-y-2">
+                          {/* Show trial CTA only if user has no subscription record at all */}
+                          {(plan.trial_days ?? 0) > 0 && !status ? (
+                            <>
+                              <button
+                                onClick={() => createSubscription(plan.id)}
+                                disabled={isCreatingSubscription}
+                                className={`w-full py-2.5 rounded-xl text-sm font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer
+                                  ${highlighted
+                                    ? 'bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-700 hover:to-purple-700 text-white shadow-lg shadow-violet-200 dark:shadow-violet-900/40'
+                                    : dark
+                                    ? 'bg-white text-slate-900 hover:bg-slate-100'
+                                    : 'bg-slate-800 text-white hover:bg-slate-700 dark:bg-slate-700 dark:hover:bg-slate-600'
+                                  }`}
+                              >
+                                {isCreatingSubscription ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+                                Start {plan.trial_days}-day Free Trial
+                              </button>
+                              <button
+                                onClick={() => createSubscription(plan.id)}
+                                disabled={isCreatingSubscription}
+                                className={`w-full py-1.5 rounded-xl text-xs font-medium border transition-all flex items-center justify-center gap-1 cursor-pointer
+                                  ${dark
+                                    ? 'border-slate-600 text-slate-400 hover:text-white hover:border-slate-400'
+                                    : 'border-slate-200 text-slate-400 hover:text-slate-700 hover:border-slate-400 dark:border-slate-700 dark:text-slate-500 dark:hover:text-slate-300'
+                                  }`}
+                              >
+                                Subscribe directly, skip trial →
+                              </button>
+                            </>
+                          ) : (
+                            <button
+                              onClick={() => createSubscription(plan.id)}
+                              disabled={isCreatingSubscription}
+                              className={`w-full py-2.5 rounded-xl text-sm font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer
+                                ${highlighted
+                                  ? 'bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-700 hover:to-purple-700 text-white shadow-lg'
+                                  : dark
+                                  ? 'bg-white text-slate-900 hover:bg-slate-100'
+                                  : 'bg-slate-800 text-white hover:bg-slate-700 dark:bg-slate-700 dark:hover:bg-slate-600'
+                                }`}
+                            >
+                              {isCreatingSubscription ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+                              {status?.status === 'trial' ? 'Upgrade Now' : 'Subscribe Now'}
+                            </button>
+                          )}
+                        </div>
                       )}
                     </div>
 
-                    <div className={`mx-5 border-t ${dark ? 'border-slate-700' : 'border-slate-100 dark:border-slate-800'}`} />
+                    <div className={`mx-6 border-t ${dark ? 'border-slate-700' : highlighted ? 'border-violet-200/60' : 'border-slate-100 dark:border-slate-800'}`} />
 
-                    <div className="p-5 pt-4 flex-1">
-                      <p className={`text-[10px] font-bold uppercase tracking-widest mb-3 ${dark ? 'text-slate-500' : 'text-slate-400'}`}>
+                    <div className="p-6 pt-4 flex-1">
+                      <p className={`text-[10px] font-bold uppercase tracking-widest mb-3 ${dark ? 'text-slate-500' : highlighted ? 'text-violet-400' : 'text-slate-400'}`}>
                         What's included
                       </p>
-                      <ul className="space-y-2">
+                      <ul className="space-y-2.5">
                         {highlights.map((h, i) => (
                           <li key={i} className="flex items-start gap-2">
-                            <CheckCircle2 className={`h-3.5 w-3.5 flex-shrink-0 mt-0.5 ${highlighted ? 'text-violet-500' : dark ? 'text-slate-400' : 'text-emerald-500'}`} />
+                            <CheckCircle2 className={`h-4 w-4 flex-shrink-0 mt-0.5 ${highlighted ? 'text-violet-500' : dark ? 'text-slate-400' : 'text-emerald-500'}`} />
                             <span className={`text-xs leading-relaxed ${dark ? 'text-slate-300' : 'text-slate-600 dark:text-slate-400'}`}>{h}</span>
                           </li>
                         ))}
                       </ul>
                     </div>
-                  </div>
+                  </motion.div>
                 );
               })}
             </div>
+
+            {/* Trust signal */}
+            <p className="text-center text-xs text-slate-400 dark:text-slate-500">
+              No credit card required &nbsp;·&nbsp; 14-day free trial &nbsp;·&nbsp; Cancel anytime
+            </p>
 
             {/* Enterprise Banner */}
             {enterprisePlan && (
@@ -1033,7 +1144,7 @@ export const Billing = () => {
                       <Crown className="h-4 w-4 text-amber-400" />
                       <span className="text-xs font-bold text-amber-400 uppercase tracking-widest">Enterprise</span>
                     </div>
-                    <h3 className="text-2xl font-black text-white mb-2">{enterprisePlan.name}</h3>
+                    <h3 className="text-2xl font-black text-white mb-2">Built for your team. Deployed your way.</h3>
                     <p className="text-slate-400 text-sm max-w-lg leading-relaxed">
                       Unlimited agents, dedicated infrastructure, SSO, custom SLAs, white-labelling, and a named customer success manager. Built around your scale.
                     </p>
@@ -1050,7 +1161,7 @@ export const Billing = () => {
                     </div>
                     <button
                       onClick={() => window.location.href = 'mailto:sales@heygenally.com'}
-                      className="px-8 py-3 rounded-xl bg-white text-slate-900 font-bold text-sm hover:bg-slate-100 transition-all shadow-xl whitespace-nowrap"
+                      className="px-8 py-3 rounded-xl bg-white text-slate-900 font-bold text-sm hover:bg-slate-100 transition-all shadow-xl whitespace-nowrap cursor-pointer"
                     >
                       Talk to Sales →
                     </button>

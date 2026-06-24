@@ -227,6 +227,7 @@ const AppRoutes = () => {
         <Route path="/blog/:slug" element={<BlogPostPage />} />
         <Route path="/privacy-policy" element={<PrivacyPolicy />} />
         <Route path="/terms" element={<TermsOfService />} />
+        <Route path="/terms-of-service" element={<Navigate to="/terms" replace />} />
         <Route path="/data-deletion" element={<DataDeletionPage />} />
         <Route path="/cookie-policy" element={<CookiePolicyPage />} />
         <Route path="/security" element={<SecurityPage />} />

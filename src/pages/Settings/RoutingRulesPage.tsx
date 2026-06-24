@@ -280,19 +280,27 @@ interface RuleRowProps {
 function RuleRow({ rule: r, idx, allTransitions, hierarchyNodes, noValueOps, actionLabel, onEdit, onDelete, onToggle }: RuleRowProps) {
   const transition = r.trigger_transition_id ? allTransitions.find(t => t.id === r.trigger_transition_id) : null;
   return (
-    <div className={cn('flex items-center gap-4 p-4 bg-card hover:bg-muted/30 transition-colors', !r.is_active && 'opacity-50')}>
+    <div className={cn(
+      'group flex items-center gap-4 p-4 bg-card hover:bg-muted/20 transition-colors relative',
+      r.is_active && 'border-l-2 border-l-violet-500',
+      !r.is_active && 'opacity-50 border-l-2 border-l-transparent',
+    )}>
       <div className="flex items-center gap-2 shrink-0">
-        <GripVertical className="h-4 w-4 text-muted-foreground cursor-grab" />
+        <GripVertical className="h-4 w-4 text-muted-foreground cursor-grab opacity-0 group-hover:opacity-100 transition-opacity" />
         <span className="text-xs font-mono text-muted-foreground w-5 text-center">{idx + 1}</span>
       </div>
 
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 flex-wrap">
-          <span className="font-medium text-sm">{r.name}</span>
-          <Badge variant="outline" className="text-xs capitalize">{r.trigger.replace(/_/g, ' ')}</Badge>
-          {transition && <Badge variant="secondary" className="text-xs">→ {transition.name}</Badge>}
+          <span className="font-semibold text-sm text-slate-900 dark:text-white">{r.name}</span>
+          <Badge variant="outline" className="text-xs capitalize border-violet-200 dark:border-violet-800 text-violet-600 dark:text-violet-400 bg-violet-50 dark:bg-violet-950/30">
+            {r.trigger.replace(/_/g, ' ')}
+          </Badge>
+          {transition && (
+            <Badge variant="secondary" className="text-xs">→ {transition.name}</Badge>
+          )}
         </div>
-        <div className="flex items-center gap-1 mt-1 text-xs text-muted-foreground flex-wrap">
+        <div className="flex items-center gap-1 mt-1.5 text-xs text-muted-foreground flex-wrap">
           {(r.conditions || []).length === 0 ? (
             <span className="italic">Match all</span>
           ) : (
@@ -311,24 +319,34 @@ function RuleRow({ rule: r, idx, allTransitions, hierarchyNodes, noValueOps, act
                 }
               }
               return (
-                <span key={i} className="bg-muted rounded px-1.5 py-0.5">
+                <span key={i} className="bg-slate-100 dark:bg-muted text-slate-600 dark:text-slate-400 rounded-md px-1.5 py-0.5">
                   {c.field} {opLabel}{valSummary}
                 </span>
               );
             })
           )}
-          <ChevronRight className="h-3 w-3 mx-1" />
+          <ChevronRight className="h-3 w-3 mx-1 flex-shrink-0" />
           <span className="text-foreground font-medium">{actionLabel(r)}</span>
         </div>
       </div>
 
-      <div className="flex items-center gap-2 shrink-0">
-        <Switch checked={r.is_active} onCheckedChange={() => onToggle(r)} />
-        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => onEdit(r)}>
-          <Edit2 className="h-4 w-4" />
+      <div className="flex items-center gap-1 shrink-0">
+        <Switch checked={r.is_active} onCheckedChange={() => onToggle(r)} className="data-[state=checked]:bg-violet-600" />
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 cursor-pointer"
+          onClick={() => onEdit(r)}
+        >
+          <Edit2 className="h-3.5 w-3.5" />
         </Button>
-        <Button variant="ghost" size="icon" className="h-8 w-8 text-red-500 hover:text-red-600" onClick={() => onDelete(r.id)}>
-          <Trash2 className="h-4 w-4" />
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity text-slate-400 hover:text-red-600 dark:hover:text-red-400 cursor-pointer"
+          onClick={() => onDelete(r.id)}
+        >
+          <Trash2 className="h-3.5 w-3.5" />
         </Button>
       </div>
     </div>
@@ -581,14 +599,22 @@ export default function RoutingRulesPage() {
 
   return (
     <div className="p-6 max-w-4xl mx-auto space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold">{t('routingRules.title')}</h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            Auto-assign tickets, leads and deals based on conditions. Rules run in priority order — first match wins.
-          </p>
+      <div className="flex items-center justify-between gap-4">
+        <div className="flex items-center gap-3">
+          <div className="h-9 w-9 rounded-xl bg-violet-50 dark:bg-violet-900/30 flex items-center justify-center flex-shrink-0">
+            <Zap className="w-5 h-5 text-violet-600 dark:text-violet-400" />
+          </div>
+          <div>
+            <h1 className="text-base font-bold text-slate-900 dark:text-white">{t('routingRules.title')}</h1>
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+              Auto-assign based on conditions. Rules run in priority order — first match wins.
+            </p>
+          </div>
         </div>
-        <Button onClick={() => openCreate()} className="gap-2">
+        <Button
+          onClick={() => openCreate()}
+          className="gap-2 h-9 text-sm bg-violet-600 hover:bg-violet-700 text-white rounded-xl cursor-pointer shadow-sm flex-shrink-0"
+        >
           <Plus className="h-4 w-4" />Add Rule
         </Button>
       </div>

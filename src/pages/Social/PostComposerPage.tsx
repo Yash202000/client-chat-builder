@@ -6,8 +6,25 @@ import {
   Linkedin, Instagram, Facebook,
   Hash, Calendar, Send, Save, Clock,
   Loader2, X, Plus, Sparkles, Eye, EyeOff,
-  Link2, ImagePlus, ExternalLink,
+  Link2, ImagePlus, ExternalLink, Globe,
+  AlertTriangle, AlertCircle, CheckCircle2,
 } from 'lucide-react';
+
+function TwitterXIcon({ className, style }: { className?: string; style?: React.CSSProperties }) {
+  return (
+    <svg className={className} style={style} viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+      <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.741l7.73-8.835L1.254 2.25H8.08l4.253 5.622zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+    </svg>
+  );
+}
+
+function RedditIcon({ className, style }: { className?: string; style?: React.CSSProperties }) {
+  return (
+    <svg className={className} style={style} viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+      <path d="M12 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0zm5.01 4.744c.688 0 1.25.561 1.25 1.249a1.25 1.25 0 0 1-2.498.056l-2.597-.547-.8 3.747c1.824.07 3.48.632 4.674 1.488.308-.309.73-.491 1.207-.491.968 0 1.754.786 1.754 1.754 0 .716-.435 1.333-1.01 1.614a3.111 3.111 0 0 1 .042.52c0 2.694-3.13 4.87-7.004 4.87-3.874 0-7.004-2.176-7.004-4.87 0-.183.015-.366.043-.534A1.748 1.748 0 0 1 4.028 12c0-.968.786-1.754 1.754-1.754.463 0 .898.196 1.207.49 1.207-.883 2.878-1.43 4.744-1.487l.885-4.182a.342.342 0 0 1 .14-.197.35.35 0 0 1 .238-.042l2.906.617a1.214 1.214 0 0 1 1.108-.701zM9.25 12C8.561 12 8 12.562 8 13.25c0 .687.561 1.248 1.25 1.248.687 0 1.248-.561 1.248-1.249 0-.688-.561-1.249-1.249-1.249zm5.5 0c-.687 0-1.248.561-1.248 1.25 0 .687.561 1.248 1.249 1.248.688 0 1.249-.561 1.249-1.249 0-.687-.562-1.249-1.25-1.249zm-5.466 3.99a.327.327 0 0 0-.231.094.33.33 0 0 0 0 .463c.842.842 2.484.913 2.961.913.477 0 2.105-.056 2.961-.913a.361.361 0 0 0 .029-.463.33.33 0 0 0-.464 0c-.547.533-1.684.73-2.512.73-.828 0-1.979-.196-2.512-.73a.326.326 0 0 0-.232-.095z"/>
+    </svg>
+  );
+}
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/components/ui/use-toast';
@@ -34,16 +51,31 @@ const PLATFORMS = [
     key: 'linkedin', label: 'LinkedIn', Icon: Linkedin, maxChars: 3000,
     color: '#0A66C2', bg: 'rgba(10,102,194,0.08)', border: 'rgba(10,102,194,0.25)',
     gradient: 'linear-gradient(135deg, #0A66C2, #0073b1)',
+    supportsImage: true, requiresImage: false,
   },
   {
     key: 'instagram', label: 'Instagram', Icon: Instagram, maxChars: 2200,
     color: '#E1306C', bg: 'rgba(225,48,108,0.07)', border: 'rgba(225,48,108,0.22)',
     gradient: 'linear-gradient(135deg, #833ab4, #fd1d1d, #fcb045)',
+    supportsImage: true, requiresImage: true,
   },
   {
     key: 'facebook', label: 'Facebook', Icon: Facebook, maxChars: 63206,
     color: '#1877F2', bg: 'rgba(24,119,242,0.07)', border: 'rgba(24,119,242,0.22)',
     gradient: 'linear-gradient(135deg, #1877F2, #42a5f5)',
+    supportsImage: true, requiresImage: false,
+  },
+  {
+    key: 'reddit', label: 'Reddit', Icon: RedditIcon, maxChars: 40000,
+    color: '#FF4500', bg: 'rgba(255,69,0,0.07)', border: 'rgba(255,69,0,0.22)',
+    gradient: 'linear-gradient(135deg, #FF4500, #FF6534)',
+    supportsImage: false, requiresImage: false,
+  },
+  {
+    key: 'twitter', label: 'X', Icon: TwitterXIcon, maxChars: 280,
+    color: '#000000', bg: 'rgba(0,0,0,0.05)', border: 'rgba(0,0,0,0.18)',
+    gradient: 'linear-gradient(135deg, #000000, #333333)',
+    supportsImage: false, requiresImage: false,
   },
 ];
 
@@ -77,8 +109,10 @@ export default function PostComposerPage() {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const [activeTab, setActiveTab] = useState('linkedin');
-  const [contents, setContents] = useState<Record<string, string>>({ linkedin: '', instagram: '', facebook: '' });
-  const [hashtags, setHashtags] = useState<Record<string, string[]>>({ linkedin: [], instagram: [], facebook: [] });
+  const [contents, setContents] = useState<Record<string, string>>({ linkedin: '', instagram: '', facebook: '', reddit: '', twitter: '' });
+  const [hashtags, setHashtags] = useState<Record<string, string[]>>({ linkedin: [], instagram: [], facebook: [], reddit: [], twitter: [] });
+  const [redditSubreddit, setRedditSubreddit] = useState('');
+  const [redditTitle, setRedditTitle] = useState('');
   const [hashtagInput, setHashtagInput] = useState('');
   const [selectedAccountId, setSelectedAccountId] = useState<string>('');
   const [scheduleMode, setScheduleMode] = useState(false);
@@ -91,6 +125,11 @@ export default function PostComposerPage() {
   const [prefilled, setPrefilled] = useState(false);
   const [aiOpen, setAiOpen] = useState(true);
   const [showPreview, setShowPreview] = useState(false);
+
+  // Cross-post state
+  const [crossPost, setCrossPost] = useState(false);
+  const [selectedPlatforms, setSelectedPlatforms] = useState<Set<string>>(new Set());
+  const [showPrePublishModal, setShowPrePublishModal] = useState(false);
 
   const { data: editPost, isError: editNotFound } = useQuery({
     queryKey: ['social-post', editId],
@@ -116,6 +155,8 @@ export default function PostComposerPage() {
       }
       if (editPost.source_url) setLinkUrl(editPost.source_url);
       if (editPost.media_urls?.length) setMediaUrls(editPost.media_urls);
+      if (editPost.post_metadata?.subreddit) setRedditSubreddit(editPost.post_metadata.subreddit);
+      if (editPost.post_metadata?.title) setRedditTitle(editPost.post_metadata.title);
       setPrefilled(true);
     }
   }, [editPost]);
@@ -185,6 +226,39 @@ export default function PostComposerPage() {
     onError: () => toast({ title: t('social.composer.publishFailed'), variant: 'destructive' }),
   });
 
+  const crossPublishMutation = useMutation({
+    mutationFn: async () => {
+      const platforms = Array.from(selectedPlatforms).filter(p => connectedPlatforms.has(p));
+      const results = await Promise.allSettled(
+        platforms.map(async (platform) => {
+          const account = accounts.find(a => a.status === 'active' && a.platform === platform);
+          if (!account) throw new Error(`No active ${platform} account`);
+          const payload = {
+            social_account_id: account.id,
+            platform,
+            content: contents[activeTab],
+            hashtags: hashtags[activeTab],
+            ai_generated: false,
+            ...(linkUrl.trim() ? { source_url: linkUrl.trim() } : {}),
+            ...(mediaUrls.length ? { media_urls: mediaUrls } : {}),
+            ...(platform === 'reddit' ? { post_metadata: { subreddit: redditSubreddit.trim().replace(/^r\//, ''), title: redditTitle.trim() || contents[activeTab].slice(0, 300) } } : {}),
+          };
+          const post = await authFetch('/api/v1/social/posts', { method: 'POST', body: JSON.stringify(payload) });
+          return authFetch(`/api/v1/social/posts/${post.id}/publish`, { method: 'POST' });
+        })
+      );
+      const ok = results.filter(r => r.status === 'fulfilled').length;
+      const fail = results.filter(r => r.status === 'rejected').length;
+      return { ok, fail };
+    },
+    onSuccess: ({ ok, fail }) => {
+      toast({ title: `Published to ${ok} platform${ok !== 1 ? 's' : ''}${fail ? ` · ${fail} failed` : ''}` });
+      setShowPrePublishModal(false);
+      navigate('/dashboard/social');
+    },
+    onError: () => toast({ title: 'Publish failed', variant: 'destructive' }),
+  });
+
   const buildPayload = (platform = activeTab) => ({
     social_account_id: selectedAccountId ? parseInt(selectedAccountId) : null,
     platform,
@@ -194,18 +268,107 @@ export default function PostComposerPage() {
     ...(linkUrl.trim() ? { source_url: linkUrl.trim() } : {}),
     ...(mediaUrls.length ? { media_urls: mediaUrls } : {}),
     ...(scheduleMode && scheduledAt ? { scheduled_at: toUTCISOString(scheduledAt) } : {}),
+    ...(platform === 'reddit' ? {
+      post_metadata: {
+        subreddit: redditSubreddit.trim().replace(/^r\//, ''),
+        title: redditTitle.trim() || contents['reddit'].slice(0, 300),
+      }
+    } : {}),
   });
 
-  const isBusy = saveMutation.isPending || publishMutation.isPending || scheduleMutation.isPending;
-  const activePlatform = PLATFORMS.find(p => p.key === activeTab)!;
+  const isBusy = saveMutation.isPending || publishMutation.isPending || scheduleMutation.isPending || crossPublishMutation.isPending;
+  const activePlatform = PLATFORMS.find(p => p.key === activeTab)!
+
+  const getValidation = (platform: string) => {
+    const p = PLATFORMS.find(pl => pl.key === platform);
+    const content = contents[platform] || '';
+    const errors: string[] = [];
+    const warnings: string[] = [];
+    if (!content.trim()) errors.push('Content required');
+    if (p && content.length > p.maxChars) errors.push(`Over ${p.maxChars} char limit by ${content.length - p.maxChars}`);
+    if (platform === 'instagram' && mediaUrls.length === 0) errors.push('Image required for Instagram');
+    if (platform === 'reddit' && !redditSubreddit.trim()) errors.push('Subreddit is required');
+    if (platform === 'twitter' && mediaUrls.length > 0) warnings.push('Images not supported on free tier');
+    return { errors, warnings, valid: errors.length === 0 };
+  };
+  const activeValidation = getValidation(activeTab);;
   const charCount = contents[activeTab].length;
   const pct = Math.min(100, (charCount / activePlatform.maxChars) * 100);
   const selectedAccount = activeAccounts.find(a => String(a.id) === selectedAccountId) ?? activeAccounts[0];
   const previewName = selectedAccount?.account_name ?? 'Your Name';
   const previewAvatar = selectedAccount?.metadata_?.avatar_url ?? null;
 
+  // ── Pre-publish confirmation modal ──
+  const PrePublishModal = () => {
+    const platforms = Array.from(selectedPlatforms).filter(p => connectedPlatforms.has(p));
+    const allValid = platforms.every(p => {
+      const v = getValidation(p);
+      return v.valid;
+    });
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 dark:bg-black/70">
+        <div className="bg-white dark:bg-zinc-900 rounded-2xl shadow-2xl w-full max-w-md flex flex-col max-h-[80vh]">
+          <div className="px-5 py-4 border-b border-zinc-100 dark:border-zinc-800 flex items-center justify-between shrink-0">
+            <div>
+              <h2 className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">Review & Publish</h2>
+              <p className="text-[11px] text-zinc-400 mt-0.5">Publishing to {platforms.length} platform{platforms.length !== 1 ? 's' : ''}</p>
+            </div>
+            <button onClick={() => setShowPrePublishModal(false)}
+              className="h-7 w-7 rounded-lg flex items-center justify-center hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-400 transition-colors">
+              <X className="h-4 w-4" />
+            </button>
+          </div>
+          <div className="flex-1 overflow-y-auto px-5 py-3 space-y-2">
+            {platforms.map(pk => {
+              const p = PLATFORMS.find(pl => pl.key === pk)!;
+              const account = accounts.find(a => a.status === 'active' && a.platform === pk);
+              const v = getValidation(pk);
+              const Icon = p.Icon;
+              return (
+                <div key={pk} className="rounded-xl border p-3 flex items-start gap-3"
+                  style={{ borderColor: v.valid ? p.border : 'rgba(239,68,68,0.3)', background: v.valid ? p.bg : 'rgba(254,242,242,0.5)' }}>
+                  <div className="h-7 w-7 rounded-lg flex items-center justify-center shrink-0 text-white"
+                    style={{ background: p.gradient }}>
+                    <Icon className="h-3.5 w-3.5" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs font-semibold text-zinc-800 dark:text-zinc-200">{p.label}</span>
+                      {account && <span className="text-[10px] text-zinc-400 truncate">· {account.account_name}</span>}
+                      {v.valid
+                        ? <CheckCircle2 className="h-3.5 w-3.5 text-green-500 ml-auto shrink-0" />
+                        : <AlertCircle className="h-3.5 w-3.5 text-red-400 ml-auto shrink-0" />}
+                    </div>
+                    {v.errors.map(e => <p key={e} className="text-[10px] text-red-500 mt-0.5">✗ {e}</p>)}
+                    {v.warnings.map(w => <p key={w} className="text-[10px] text-amber-500 mt-0.5">⚠ {w}</p>)}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+          <div className="px-5 py-4 border-t border-zinc-100 dark:border-zinc-800 flex gap-2.5 shrink-0">
+            <button onClick={() => setShowPrePublishModal(false)}
+              className="flex-1 py-2.5 rounded-xl text-sm font-medium text-zinc-600 dark:text-zinc-400 border border-zinc-200 dark:border-zinc-700 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors">
+              Back
+            </button>
+            <button
+              onClick={() => crossPublishMutation.mutate()}
+              disabled={!allValid || crossPublishMutation.isPending}
+              className="flex-1 py-2.5 rounded-xl text-sm font-semibold text-white flex items-center justify-center gap-2 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+              style={{ background: allValid ? 'linear-gradient(135deg,#16a34a,#15803d)' : '#9ca3af', boxShadow: allValid ? '0 4px 14px #16a34a35' : 'none' }}
+            >
+              {crossPublishMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+              {crossPublishMutation.isPending ? 'Publishing…' : `Confirm & Publish`}
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div className="flex h-full overflow-hidden bg-zinc-50 dark:bg-zinc-950">
+      {showPrePublishModal && <PrePublishModal />}
 
       {/* ── Main area ── */}
       <div className="flex flex-col flex-1 min-w-0 overflow-hidden">
@@ -248,6 +411,25 @@ export default function PostComposerPage() {
 
           {/* Right controls */}
           <div className="flex items-center gap-1.5 shrink-0">
+            {/* Cross-post toggle */}
+            {availablePlatforms.length > 1 && (
+              <button
+                onClick={() => {
+                  const next = !crossPost;
+                  setCrossPost(next);
+                  if (next && selectedPlatforms.size === 0)
+                    setSelectedPlatforms(new Set(availablePlatforms.map(p => p.key)));
+                }}
+                className="flex items-center gap-1.5 px-2 sm:px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-200"
+                style={crossPost
+                  ? { background: 'linear-gradient(135deg,#16a34a,#15803d)', color: '#fff', boxShadow: '0 2px 8px #16a34a40' }
+                  : { color: '#16a34a', border: '1px solid #bbf7d0', backgroundColor: '#f0fdf4' }
+                }
+              >
+                <Globe className="h-3.5 w-3.5" />
+                <span className="hidden sm:inline">Cross-post</span>
+              </button>
+            )}
             <button
               onClick={() => setShowPreview(v => !v)}
               className="flex items-center gap-1.5 px-2 sm:px-3 py-1.5 rounded-lg text-xs font-medium text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
@@ -268,6 +450,35 @@ export default function PostComposerPage() {
             </button>
           </div>
         </div>
+
+        {/* Cross-post platform selector strip */}
+        {crossPost && (
+          <div className="flex items-center gap-2 px-3 sm:px-5 py-2 bg-white dark:bg-zinc-900 border-b border-zinc-200 dark:border-zinc-800 shrink-0 overflow-x-auto">
+            <span className="text-[10px] uppercase tracking-widest text-zinc-400 font-semibold shrink-0">Post to:</span>
+            {availablePlatforms.map(p => {
+              const sel = selectedPlatforms.has(p.key);
+              const Icon = p.Icon;
+              return (
+                <button key={p.key}
+                  onClick={() => setSelectedPlatforms(prev => {
+                    const next = new Set(prev);
+                    next.has(p.key) ? next.delete(p.key) : next.add(p.key);
+                    return next;
+                  })}
+                  className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold border transition-all duration-200 shrink-0"
+                  style={sel
+                    ? { background: p.gradient, color: '#fff', borderColor: 'transparent', boxShadow: `0 2px 6px ${p.color}35` }
+                    : { borderColor: '#e4e4e7', color: '#71717a', background: 'transparent' }
+                  }
+                >
+                  <Icon className="h-3.5 w-3.5" />
+                  {p.label}
+                  {sel && <CheckCircle2 className="h-3 w-3" />}
+                </button>
+              );
+            })}
+          </div>
+        )}
 
         {/* Body */}
         <div className="flex flex-1 min-h-0 overflow-hidden">
@@ -315,8 +526,13 @@ export default function PostComposerPage() {
                       </div>
                     )}
                     {mediaUrls.length > 0 && (
-                      <div className="mx-4 mb-3 rounded-lg overflow-hidden bg-zinc-100 dark:bg-zinc-800 h-32 flex items-center justify-center text-xs text-zinc-400">
-                        <ImagePlus className="h-4 w-4 mr-1" /> {mediaUrls.length} image{mediaUrls.length > 1 ? 's' : ''} attached
+                      <div className="mx-4 mb-3 flex gap-2 overflow-x-auto">
+                        {mediaUrls.map((url, i) => (
+                          <div key={i} className="shrink-0 rounded-lg overflow-hidden bg-zinc-100 dark:bg-zinc-800 h-32 w-48">
+                            <img src={url} alt="" className="h-full w-full object-cover"
+                              onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+                          </div>
+                        ))}
                       </div>
                     )}
                     <div className="px-4 pb-3 flex items-center gap-4 text-xs text-zinc-400 border-t border-zinc-100 dark:border-zinc-800 pt-2">
@@ -515,6 +731,44 @@ export default function PostComposerPage() {
               )}
             </div>
 
+            {/* Twitter free-tier notice */}
+            {activeTab === 'twitter' && (
+              <div className="p-4 border-b border-zinc-100 dark:border-zinc-800">
+                <p className="text-[10px] uppercase tracking-widest text-zinc-400 font-semibold mb-2">X (Twitter) — Free tier</p>
+                <p className="text-[11px] text-zinc-500 leading-relaxed">
+                  280 character limit · text only · 1,500 tweets/month
+                </p>
+              </div>
+            )}
+
+            {/* Reddit-specific fields */}
+            {activeTab === 'reddit' && (
+              <div className="p-4 border-b border-zinc-100 dark:border-zinc-800 space-y-3">
+                <p className="text-[10px] uppercase tracking-widest text-zinc-400 font-semibold">Reddit details</p>
+                <div>
+                  <label className="text-[10px] text-zinc-400 font-medium block mb-1">Subreddit <span className="text-red-400">*</span></label>
+                  <div className="flex items-center border border-zinc-200 dark:border-zinc-700 rounded-lg overflow-hidden">
+                    <span className="px-2 text-xs text-zinc-400 bg-zinc-50 dark:bg-zinc-800 border-r border-zinc-200 dark:border-zinc-700 h-full flex items-center py-2">r/</span>
+                    <input
+                      className="flex-1 text-xs px-2.5 py-2 bg-transparent focus:outline-none text-zinc-700 dark:text-zinc-300 placeholder:text-zinc-400"
+                      placeholder="AskIndia"
+                      value={redditSubreddit}
+                      onChange={e => setRedditSubreddit(e.target.value.replace(/^r\//, ''))}
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label className="text-[10px] text-zinc-400 font-medium block mb-1">Post title</label>
+                  <input
+                    className="w-full text-xs border border-zinc-200 dark:border-zinc-700 rounded-lg px-2.5 py-2 bg-transparent focus:outline-none focus:ring-1 focus:ring-orange-400 text-zinc-700 dark:text-zinc-300 placeholder:text-zinc-400"
+                    placeholder="Leave blank to use post text"
+                    value={redditTitle}
+                    onChange={e => setRedditTitle(e.target.value)}
+                  />
+                </div>
+              </div>
+            )}
+
             {/* Schedule */}
             <div className="p-4 border-b border-zinc-100 dark:border-zinc-800 space-y-3">
               <div className="flex items-center justify-between">
@@ -535,11 +789,31 @@ export default function PostComposerPage() {
               )}
             </div>
 
+            {/* Validation */}
+            {(activeValidation.errors.length > 0 || activeValidation.warnings.length > 0) && (
+              <div className="px-4 pb-0 pt-2 space-y-1.5">
+                {activeValidation.errors.map(e => (
+                  <div key={e} className="flex items-center gap-1.5 text-[11px] text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-950/30 rounded-lg px-2.5 py-1.5">
+                    <AlertCircle className="h-3 w-3 shrink-0" /> {e}
+                  </div>
+                ))}
+                {activeValidation.warnings.map(w => (
+                  <div key={w} className="flex items-center gap-1.5 text-[11px] text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/30 rounded-lg px-2.5 py-1.5">
+                    <AlertTriangle className="h-3 w-3 shrink-0" /> {w}
+                  </div>
+                ))}
+              </div>
+            )}
+
             {/* Actions */}
             <div className="p-4 space-y-2.5 mt-auto">
               <button
-                disabled={isBusy || !contents[activeTab]}
+                disabled={isBusy || !contents[activeTab] || (!crossPost && !activeValidation.valid)}
                 onClick={() => {
+                  if (crossPost) {
+                    setShowPrePublishModal(true);
+                    return;
+                  }
                   const payload = buildPayload();
                   if (scheduleMode && scheduledAt) {
                     scheduleMutation.mutate({ ...payload, scheduled_at: toUTCISOString(scheduledAt) });
@@ -548,20 +822,25 @@ export default function PostComposerPage() {
                   }
                 }}
                 className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl text-sm font-semibold text-white transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed"
-                style={{ background: isBusy ? '#9ca3af' : activePlatform.gradient, boxShadow: contents[activeTab] ? `0 4px 14px ${activePlatform.color}35` : 'none' }}
+                style={{
+                  background: isBusy ? '#9ca3af' : crossPost ? 'linear-gradient(135deg,#16a34a,#15803d)' : activePlatform.gradient,
+                  boxShadow: contents[activeTab] ? crossPost ? '0 4px 14px #16a34a35' : `0 4px 14px ${activePlatform.color}35` : 'none',
+                }}
               >
-                {isBusy ? <Loader2 className="h-4 w-4 animate-spin" /> : scheduleMode ? <Calendar className="h-4 w-4" /> : <Send className="h-4 w-4" />}
-                {scheduleMode ? 'Schedule' : 'Publish Now'}
+                {isBusy ? <Loader2 className="h-4 w-4 animate-spin" /> : scheduleMode ? <Calendar className="h-4 w-4" /> : crossPost ? <Globe className="h-4 w-4" /> : <Send className="h-4 w-4" />}
+                {crossPost ? `Post to ${selectedPlatforms.size} platform${selectedPlatforms.size !== 1 ? 's' : ''}` : scheduleMode ? 'Schedule' : 'Publish Now'}
               </button>
 
-              <button
-                disabled={isBusy || !contents[activeTab]}
-                onClick={() => saveMutation.mutate({ ...buildPayload(), status: 'draft' })}
-                className="w-full flex items-center justify-center gap-2 py-2 px-4 rounded-xl text-sm font-medium text-zinc-600 dark:text-zinc-400 border border-zinc-200 dark:border-zinc-700 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors disabled:opacity-40"
-              >
-                <Save className="h-3.5 w-3.5" />
-                Save Draft
-              </button>
+              {!crossPost && (
+                <button
+                  disabled={isBusy || !contents[activeTab]}
+                  onClick={() => saveMutation.mutate({ ...buildPayload(), status: 'draft' })}
+                  className="w-full flex items-center justify-center gap-2 py-2 px-4 rounded-xl text-sm font-medium text-zinc-600 dark:text-zinc-400 border border-zinc-200 dark:border-zinc-700 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors disabled:opacity-40"
+                >
+                  <Save className="h-3.5 w-3.5" />
+                  Save Draft
+                </button>
+              )}
             </div>
 
           </div>

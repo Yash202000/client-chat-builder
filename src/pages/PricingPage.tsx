@@ -13,6 +13,95 @@ import { apiFetch } from "@/lib/api";
 const fadeUp = { hidden: { opacity: 0, y: 30 }, visible: { opacity: 1, y: 0, transition: { duration: 0.6 } } };
 const stagger = { visible: { transition: { staggerChildren: 0.1 } } };
 
+const PLAN_FEATURES: Record<string, string[]> = {
+  "free trial": [
+    "1 AI agent",
+    "100 conversations / month",
+    "Web chat widget",
+    "Basic knowledge base (1 KB)",
+    "WhatsApp, Instagram, Facebook channels",
+    "Lead & contact management (up to 100)",
+    "Email support",
+    "Community access",
+  ],
+  starter: [
+    "3 AI agents",
+    "1,000 conversations / month",
+    "All messaging channels (WhatsApp, Instagram, FB, SMS)",
+    "Knowledge base (5 KB, 50 MB storage)",
+    "CRM — Leads, Contacts, Deals",
+    "Basic workflow automation",
+    "Campaign broadcasts",
+    "Voice AI (inbound)",
+    "Email support (48 h SLA)",
+  ],
+  growth: [
+    "10 AI agents",
+    "5,000 conversations / month",
+    "All channels + Email inbox",
+    "Knowledge base (20 KB, 500 MB storage)",
+    "Full CRM — Pipelines, Deals, Tags, Segments",
+    "Advanced workflow automation",
+    "Campaign broadcasts + scheduling",
+    "Voice AI (inbound + outbound)",
+    "Social media hub",
+    "Analytics & reports",
+    "Priority email support (24 h SLA)",
+  ],
+  pro: [
+    "Unlimited AI agents",
+    "20,000 conversations / month",
+    "All channels + Omnichannel inbox",
+    "Knowledge base (unlimited, 5 GB storage)",
+    "Full CRM + Sales pipelines",
+    "Advanced workflows + API integrations",
+    "Voice AI + call queue + supervisor dashboard",
+    "Social media hub + post scheduler",
+    "White-label chat widget",
+    "Developer API & webhooks",
+    "Dedicated Slack support",
+    "99.9% uptime SLA",
+  ],
+  enterprise: [
+    "Everything in Pro — unlimited",
+    "Custom conversation volume",
+    "Self-hosted deployment (Docker / Kubernetes)",
+    "SSO & SAML authentication",
+    "Custom AI model integrations",
+    "Dedicated infrastructure",
+    "Data residency & GDPR compliance",
+    "Custom SLA & uptime guarantee",
+    "Dedicated customer success manager",
+    "White-glove onboarding",
+    "Custom integrations & development support",
+    "Invoice billing & PO support",
+  ],
+};
+
+const getPlanFeatures = (plan: SubscriptionPlan): string[] => {
+  const key = plan.name.toLowerCase().trim();
+  if (PLAN_FEATURES[key]) return PLAN_FEATURES[key];
+  // fuzzy match prefix
+  const match = Object.keys(PLAN_FEATURES).find((k) => key.includes(k) || k.includes(key));
+  if (match) return PLAN_FEATURES[match];
+  // fallback: parse comma-separated from DB
+  if (plan.features && plan.features !== "all") return plan.features.split(",").map((f) => f.trim()).filter(Boolean);
+  return [];
+};
+
+const getPlanCTA = (plan: SubscriptionPlan) => {
+  const key = plan.name.toLowerCase();
+  if (key.includes("enterprise")) return { label: "Contact Sales", href: "/contact" };
+  if (plan.price === 0) return { label: "Start Free", href: "/signup" };
+  return { label: "Get Started", href: "/signup" };
+};
+
+const formatPrice = (price: number, currency: string) => {
+  if (price === 0) return { symbol: "", amount: "Free" };
+  const symbol = currency?.toUpperCase() === "INR" ? "₹" : "$";
+  return { symbol, amount: price.toLocaleString("en-IN") };
+};
+
 const FAQS = [
   {
     q: "Is there really a free plan?",
@@ -44,10 +133,13 @@ const PricingPage = () => {
   const { data: plans, isLoading, isError } = useQuery<SubscriptionPlan[]>({
     queryKey: ["subscription-plans"],
     queryFn: async () => {
-      const res = await apiFetch("/api/v1/subscription/plans");
+      const res = await apiFetch("/api/v1/billing/plans");
+      if (!res.ok) throw new Error("Failed to fetch plans");
       return res.json();
     },
   });
+
+  const showFallback = isError || (!isLoading && (!plans || plans.length === 0));
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 overflow-x-hidden">
@@ -99,7 +191,7 @@ const PricingPage = () => {
               <p className="text-slate-500 mt-4">Loading plans…</p>
             </div>
           )}
-          {isError && (
+          {showFallback && (
             <div className="max-w-3xl mx-auto">
               <motion.div
                 initial="hidden"
@@ -178,36 +270,74 @@ const PricingPage = () => {
               initial="hidden"
               animate="visible"
               variants={stagger}
-              className="grid md:grid-cols-3 gap-8"
+              className="grid md:grid-cols-2 lg:grid-cols-3 gap-8"
             >
               {plans.map((plan) => {
                 const isPro = plan.name.toLowerCase().includes("pro");
+                const isEnterprise = plan.name.toLowerCase().includes("enterprise");
+                const { symbol, amount } = formatPrice(plan.price, plan.currency);
+                const features = getPlanFeatures(plan);
+                const cta = getPlanCTA(plan);
                 return (
-                  <motion.div key={plan.id} variants={fadeUp}>
-                    <Card className={`relative h-full flex flex-col justify-between p-8 border-2 ${isPro ? "border-violet-500 dark:border-violet-400 shadow-2xl shadow-violet-500/20" : "border-slate-200/50 dark:border-slate-700/50"} bg-white dark:bg-slate-800/50`}>
+                  <motion.div key={plan.id} variants={fadeUp} className="flex">
+                    <Card className={`relative w-full flex flex-col p-8 border-2 ${
+                      isPro
+                        ? "border-violet-500 dark:border-violet-400 shadow-2xl shadow-violet-500/20"
+                        : isEnterprise
+                        ? "border-slate-700 dark:border-slate-500 bg-slate-900 dark:bg-slate-800"
+                        : "border-slate-200/50 dark:border-slate-700/50"
+                    } bg-white dark:bg-slate-800/50`}>
                       {isPro && (
                         <div className="absolute top-0 right-0 bg-gradient-to-r from-violet-600 to-purple-700 text-white px-4 py-1.5 rounded-bl-xl text-sm font-semibold">
                           Most Popular
                         </div>
                       )}
-                      <div>
-                        <CardTitle className="text-2xl font-bold font-syne mb-4 text-slate-900 dark:text-white">{plan.name}</CardTitle>
-                        <div className="mb-8">
-                          <span className="text-5xl font-bold text-slate-900 dark:text-white">{plan.price}</span>
-                          <span className="text-xl text-slate-500 dark:text-slate-400 ml-2">{plan.currency}/month</span>
+                      {isEnterprise && (
+                        <div className="absolute top-0 right-0 bg-gradient-to-r from-slate-700 to-slate-900 text-white px-4 py-1.5 rounded-bl-xl text-sm font-semibold">
+                          Custom
                         </div>
-                        <ul className="space-y-4 mb-8">
-                          {plan.features && plan.features.split(",").map((f, i) => (
-                            <li key={i} className="flex items-start gap-3 text-slate-700 dark:text-slate-300">
-                              <CheckCircle className="h-5 w-5 text-violet-500 mt-0.5 flex-shrink-0" />
-                              <span className="text-sm">{f.trim()}</span>
+                      )}
+                      <div className="flex-1">
+                        <CardTitle className={`text-2xl font-bold font-syne mb-2 ${isEnterprise ? "text-white" : "text-slate-900 dark:text-white"}`}>
+                          {plan.name}
+                        </CardTitle>
+                        <div className="mb-6 mt-4">
+                          {amount === "Free" ? (
+                            <div>
+                              <span className={`text-5xl font-bold ${isEnterprise ? "text-white" : "text-slate-900 dark:text-white"}`}>Free</span>
+                              <span className={`text-sm ml-2 ${isEnterprise ? "text-slate-300" : "text-slate-500 dark:text-slate-400"}`}>no credit card</span>
+                            </div>
+                          ) : isEnterprise ? (
+                            <div>
+                              <span className="text-4xl font-bold text-white">Custom</span>
+                              <span className="text-sm ml-2 text-slate-300">pricing</span>
+                            </div>
+                          ) : (
+                            <div>
+                              <span className="text-2xl font-bold text-slate-900 dark:text-white">{symbol}</span>
+                              <span className="text-5xl font-bold text-slate-900 dark:text-white">{amount}</span>
+                              <span className="text-sm text-slate-500 dark:text-slate-400 ml-2">/ month</span>
+                            </div>
+                          )}
+                        </div>
+                        <ul className="space-y-3 mb-8">
+                          {features.map((f, i) => (
+                            <li key={i} className={`flex items-start gap-3 ${isEnterprise ? "text-slate-200" : "text-slate-700 dark:text-slate-300"}`}>
+                              <CheckCircle className={`h-4 w-4 mt-0.5 flex-shrink-0 ${isEnterprise ? "text-violet-400" : "text-violet-500"}`} />
+                              <span className="text-sm leading-snug">{f}</span>
                             </li>
                           ))}
                         </ul>
                       </div>
-                      <Link to="/signup" className="w-full">
-                        <Button className={`w-full py-6 text-base font-semibold ${isPro ? "bg-gradient-to-r from-violet-600 to-purple-700 hover:from-violet-700 hover:to-purple-800 shadow-lg" : "bg-slate-900 hover:bg-slate-800 dark:bg-slate-700 dark:hover:bg-slate-600"} text-white`}>
-                          Get Your Ally
+                      <Link to={cta.href} className="w-full">
+                        <Button className={`w-full py-6 text-base font-semibold ${
+                          isPro
+                            ? "bg-gradient-to-r from-violet-600 to-purple-700 hover:from-violet-700 hover:to-purple-800 shadow-lg shadow-violet-500/25 text-white"
+                            : isEnterprise
+                            ? "bg-white text-slate-900 hover:bg-slate-100"
+                            : "bg-slate-900 hover:bg-slate-800 dark:bg-slate-700 dark:hover:bg-slate-600 text-white"
+                        }`}>
+                          {cta.label}
                         </Button>
                       </Link>
                     </Card>
